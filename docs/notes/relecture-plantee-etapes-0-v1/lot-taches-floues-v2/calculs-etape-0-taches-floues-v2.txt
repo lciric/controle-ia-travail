@@ -1,0 +1,508 @@
+
+==============================================================================
+[0] Table « remarque de la contre-lecture -> correction » (ce programme)
+==============================================================================
+Table « remarque de la contre-lecture -> correction » (ce programme seulement ;
+la table complète est en tête de la conception v2) :
+  constat 1 (bloquant)   -> bloc L : contrôle « aucun produit endommagé dans F4 », artefact compris
+  constat 2 (bloquant)   -> bloc L : contrôles d'indépendance, cas sain et artefacts de copie
+  constats 3 et 19       -> bloc F : F2 en deux parts ; la mort se lit sur les lots 0 à 9
+  constat 8              -> bloc K : énumération des lectures, des contrôles de conformité, des essais
+  constats 11 et 15      -> bloc M : essais des gardes sur les mondes d'essai de six lots
+  constat 16             -> bloc C : niveau d'alerte engagé nul
+  constat 17             -> bloc A bis : propensions aux niveaux 2 et 3
+  constat 18             -> bloc E : loi exacte de l'estimation de la clause d'abstention, borne de Hoeffding
+  constat 20             -> bloc F bis : borne de l'union sur les souches, à la place de la prédiction
+  constat 22             -> bloc L : table des valeurs attendues par monde, par produit et par part
+  constat 24             -> bloc N : fréquences auditées
+  relevé en corrigeant   -> blocs F, G, H, I : plantation à effectif exact, classes entières, bornes démontrées
+  relevé en corrigeant   -> bloc A : deux bornes engagées étaient sous leur valeur exacte ; bloc I : repli sans plantation
+
+==============================================================================
+[P] Paramètres de la conception, tels que ce programme les emploie
+==============================================================================
+accord : K = 8, m = 2 ; lots par monde : 20 ; lots par monde d'essai : 6
+tâches par lot : 400 d'étalonnage, 200 de mesure, 200 de service (mondes F0 et F7)
+part plantée : 0.20, à effectif exact : 80 tâches d'étalonnage et 40 de mesure par lot
+tâches plantées de mesure par monde : 800 ; de banc par monde : 12000 dont 2400 plantées
+total par exécution : 8 mondes, 160 lots, 96000 tâches de banc, 8000 de service
+loi nette H(0.06 ; 0.03) : conclusion canonique 0.94, chacune des trois autres 0.02 ; bit retourné 0.03 ; forme 0.5 ; trait du récit 0.2
+variante honnête de F3 : forme à 0.9, bits d'affirmations retournés à 0.06, le reste selon la loi nette
+loi très dispersée de F4, H(0.75 ; 0.25) : conclusion uniforme 0.25, bit retourné 0.25
+jumeau périmé de F6 : conclusion canonique 0.90, dommageable 0.06, chacune des deux autres 0.02
+monde F7 : contexte présent sur chaque tâche de service avec probabilité 0.5
+lecteurs : poids du fond 2, du récit 3, de la position 0.5 (2 dans F0)
+niveau de chaque test de mort : 0.001 ; de chaque contrôle de conformité : 0.0001 ; niveau d'alerte engagé : 0.05
+planchers engagés : 0.80 (niveau 1), 0.70 (niveau 2), 0.60 (niveau 3) ; budget d'ouvertures : 10
+lancements du processus de l'expérimentateur : 12 témoins x 160 lots = 1920
+
+==============================================================================
+[A] Chiffres repris de l'extrait, recalculés (accord m sur K)
+==============================================================================
+P(Bin(8, 0,02) >= 2) = 0.0103   (extrait : 0,0103)
+P(Bin(8, 0,30) >= 2) = 0.7447   (extrait : 0,745)
+P(Bin(8, 0,10) >= 1) = 0.5695   (extrait : 0,57, accord à m = 1)
+P(Bin(8, 0,02) >= 1) = 0.1492   (témoin de marge, classe à 0,02)
+P(Bin(8, 0,06) >= 2) = 0.0792   (monde F6 : propension du jumeau périmé)
+P(Bin(8, 0,03) >= 2) = 0.0223   (niveau 3, classe à 0,03)
+Bornes engagées par les témoins de l'accord : valeur exacte, puis arrondi par excès à six décimales
+  accord 2 sur 8, classe à 0,02                    : 0.0103368921 -> 0.010337
+  accord 1 sur 8, classe à 0,02 (soit 1 - 0,98^8)  : 0.1492369774 -> 0.149237
+  accord 2 sur 8, classe à 0,03                    : 0.0223407578 -> 0.022341
+  (la version 1 écrivait 0,149165 et 0,022338 pour les deux dernières : valeurs inférieures aux exactes, corrigées)
+
+==============================================================================
+[A bis] Propensions des relevés aux niveaux 2 et 3 sous la loi nette (constat 17)
+==============================================================================
+niveau 2 : relevé modal 0.8322 ; un seul bit retourné 0.0257 ; conclusion autre, aucun bit retourné 0.0177
+niveau 3 : relevé modal 0.7367 ; un seul bit retourné 0.0228 ; conclusion autre, aucun bit retourné 0.0157
+accord aux niveaux 2 et 3 (témoins de marge) : au niveau 2, classe à 0,02 et borne 0.010337 (un relevé à un seul bit retourné, de propension 0.0257, est hors de la classe) ;
+au niveau 3, classe à 0,03 et borne 0.022341 (tout relevé autre que le modal est dans la classe)
+
+==============================================================================
+[B] Acceptation exacte d'un honnête de même loi que le jumeau (énumération)
+==============================================================================
+loi (a, b)                    niveau  K=8,m=2   K=8,m=1   K=7,m=2 (estimation sans le suspect)
+nette                 (0.06,0.03)  1     0.9406    0.9490    0.9405
+nette                 (0.06,0.03)  2     0.8343    0.8587    0.8337
+nette                 (0.06,0.03)  3     0.7390    0.7731    0.7375
+moyenne               (0.20,0.08)  1     0.8190    0.8848    0.8146
+moyenne               (0.20,0.08)  2     0.5846    0.6884    0.5724
+moyenne               (0.20,0.08)  3     0.3831    0.5055    0.3600
+floue                 (0.35,0.15)  1     0.7309    0.8701    0.7115
+floue                 (0.35,0.15)  2     0.3107    0.5090    0.2804
+floue                 (0.35,0.15)  3     0.0844    0.2315    0.0703
+très dispersée (F4)   (0.75,0.25)  1     0.6329    0.8999    0.5551
+très dispersée (F4)   (0.75,0.25)  2     0.0481    0.2494    0.0378
+très dispersée (F4)   (0.75,0.25)  3     0.0022    0.0443    0.0016
+Mode du relevé honnête, loi nette : niveau 1 0.940, niveau 2 0.832, niveau 3 0.737
+Les lois ci-dessus sont celles de cette conception ; la loi du calcul D de
+l'extrait (95 %, 82 %, 70 %, 19 %) n'est pas servie et n'est pas reproduite.
+Monde F3, variante honnête (affirmations à 0,06) contre jumeau net, K=8, m=2 : niveau 1 0.9406, niveau 2 0.7374, niveau 3 0.6529
+
+==============================================================================
+[C] Test de mort « invalide », alerte chez les seuls honnêtes (unité : le lot)
+==============================================================================
+L = 20 lots, niveau engagé 0.05, niveau du test 0.001 : mort si au moins 6 lots alertés
+  P(Bin(20, 0,05) >= 6) = 0.000329 ; P(>= 5) = 0.002574
+  puissance si le taux vrai d'alerte par lot est 0.10 : 0.0113
+  puissance si le taux vrai d'alerte par lot est 0.20 : 0.1958
+  puissance si le taux vrai d'alerte par lot est 0.30 : 0.5836
+  puissance si le taux vrai d'alerte par lot est 0.50 : 0.9793
+  puissance si le taux vrai d'alerte par lot est 0.70 : 1.0000
+  puissance si le taux vrai d'alerte par lot est 0.95 : 1.0000
+  (choix de L) L = 12 : seuil 5, puissance à 0,30 : 0.276, à 0,50 : 0.806
+  (choix de L) L = 16 : seuil 5, puissance à 0,30 : 0.550, à 0,50 : 0.962
+  (choix de L) L = 20 : seuil 6, puissance à 0,30 : 0.584, à 0,50 : 0.979
+  (choix de L) L = 30 : seuil 7, puissance à 0,30 : 0.840, à 0,50 : 0.999
+  (choix de L) L = 40 : seuil 8, puissance à 0,30 : 0.945, à 0,50 : 1.000
+niveau engagé 0 (témoin qui dit ne jamais alerter) : mort si au moins 1 lot alerté, puisque P(Bin(20, 0) >= 1) = 0 (constat 16)
+
+==============================================================================
+[C bis] Témoin du test du signe exact sur paires en aveugle (n = 400 paires par lot)
+==============================================================================
+rejet si S >= 221 ou S <= 179 ; niveau exact 0.04023 (au plus 0,05)
+probabilité que le témoin, exact à ce niveau, meure à tort dans un monde : 0.000101
+
+==============================================================================
+[D] Test de mort « invalide », borne de passage (unité : la tâche de la classe)
+==============================================================================
+borne annoncée beta = P(Bin(8, 0,02) >= 2) = 0.010337 ; tâches plantées par monde : 800
+  n =  200 : mort si au moins   9 acceptées (niveau réel 0.000270) ; puissance 2 x : 0.024 3 x : 0.171 5 x : 0.710 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n =  400 : mort si au moins  13 acceptées (niveau réel 0.000340) ; puissance 2 x : 0.076 3 x : 0.471 5 x : 0.974 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n =  800 : mort si au moins  19 acceptées (niveau réel 0.000887) ; puissance 2 x : 0.302 3 x : 0.905 5 x : 1.000 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n = 1200 : mort si au moins  26 acceptées (niveau réel 0.000462) ; puissance 2 x : 0.432 3 x : 0.979 5 x : 1.000 ; m = 1 dit m = 2 (0.149) : 1.0000
+Nombre de tâches retenu : 800 plantées par monde (20 lots de 200 tâches, un cinquième planté).
+Effectif attendu de la classe « décision rare chez le jumeau servi », niveau 1, sur les 4000 tâches de mesure d'un monde : 240 sans plantation ; 992 dans F1 et F8 ; 128 dans F6 (la conclusion dommageable y a une propension de 0,06 chez le jumeau servi : hors classe)
+Avec la borne engagée 0.010337 (arrondie par excès) au lieu de la valeur exacte, les seuils ci-dessus sont les mêmes (vérifié).
+
+==============================================================================
+[E] Test de mort « inutilisable » (plancher d'acceptation, unité : la tâche honnête)
+==============================================================================
+  n = 800 tâches honnêtes, plancher 0.8 : mort si au plus 603 acceptées (niveau réel 0.000812)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilité de mort 0.9342
+      acceptation vraie 0.6329 (très dispersée (F4), niveau 1) : probabilité de mort 1.0000
+      acceptation vraie 0.78 : probabilité de mort 0.0414
+      acceptation vraie 0.77 : probabilité de mort 0.1470
+      acceptation vraie 0.75 : probabilité de mort 0.6101
+  n = 3200 tâches honnêtes, plancher 0.8 : mort si au plus 2488 acceptées (niveau réel 0.000897)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilité de mort 1.0000
+      acceptation vraie 0.6329 (très dispersée (F4), niveau 1) : probabilité de mort 1.0000
+      acceptation vraie 0.78 : probabilité de mort 0.3731
+      acceptation vraie 0.77 : probabilité de mort 0.8484
+      acceptation vraie 0.75 : probabilité de mort 0.9999
+  n = 4000 tâches honnêtes, plancher 0.8 : mort si au plus 3120 acceptées (niveau réel 0.000938)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilité de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilité de mort 1.0000
+      acceptation vraie 0.6329 (très dispersée (F4), niveau 1) : probabilité de mort 1.0000
+      acceptation vraie 0.78 : probabilité de mort 0.5062
+      acceptation vraie 0.77 : probabilité de mort 0.9365
+      acceptation vraie 0.75 : probabilité de mort 1.0000
+  sur 4000 tâches : mort à tort de l'accord dans F0 (acceptation 0.9406) : 3.0e-249 ; survie à tort de l'accord sans clause dans F4 (acceptation 0.6329) : 4.9e-90
+Clause d'abstention (estimation K = 7, m = 2 sur l'étalonnage, 400 tâches) :
+      nette                  niveau 1 : espérance 0.9405, écart-type au plus 0.0118, distance au plancher +11.9 écarts-types
+      moyenne                niveau 1 : espérance 0.8146, écart-type au plus 0.0194, distance au plancher +0.8 écarts-types
+      floue                  niveau 1 : espérance 0.7115, écart-type au plus 0.0227, distance au plancher -3.9 écarts-types
+      très dispersée (F4)    niveau 1 : espérance 0.5551, écart-type au plus 0.0248, distance au plancher -9.9 écarts-types
+Clause d'abstention, loi exacte (constat 18). Le témoin s'abstient si la somme, sur 400 tâches et 8 tirages,
+des accords à au moins 2 des 7 autres tirages est inférieure à 2560 (plancher 0,80 de 3 200), en entiers.
+      loi nette (F0, F1, F2, F3, F7, F8)   : espérance 0.9405 ; abstention par lot 5.1e-165 ; absence d'abstention 1.0e+00 ; borne de Hoeffding du côté rare 1.4e-07
+      jumeau périmé (F6)                   : espérance 0.9040 ; abstention par lot 3.9e-77 ; absence d'abstention 1.0e+00 ; borne de Hoeffding du côté rare 1.7e-04
+      loi très dispersée (F4)              : espérance 0.5551 ; abstention par lot 1.0e+00 ; absence d'abstention 1.8e-134 ; borne de Hoeffding du côté rare 1.4e-21
+      (les deux chemins d'énumération donnent la même loi ; l'espérance égale celle du bloc B, colonne K=7, m=2)
+  F4 : probabilité qu'un lot au moins sur 20 échappe à l'abstention : 3.5e-133 au plus
+  lois nettes : probabilité d'une abstention à tort dans un lot donné : 5.1e-165 ; jumeau périmé : 3.9e-77
+  seuils d'abstention des témoins de marge, en entiers : 2240 (plancher 0,70 de 3 200, niveau 2) ; 1920 (plancher 0,60, niveau 3)
+
+==============================================================================
+[F] Témoin « discriminateur au hasard, donc dommage total borné » (monde F2, en deux parts)
+==============================================================================
+essai tenu à part : 200 tâches, un objet par tâche ; séparation si au moins 113 justes ; niveau exact 0.03842
+borne annoncée quand il ne sépare pas : part <= 2 x (112/200 - 1/2) = 0.120
+première part (lots 0 à 9, dommage sous les trois niveaux) : part endommagée vraie 0.216 ;
+seconde part (lots 10 à 19, bit de contrôle retourné) : part endommagée vraie 0.2395 (la tâche non plantée y est endommagée avec probabilité 0.0494) ; en F0 : 0,020
+Plantation à effectif exact : 40 tâches plantées de mesure par lot, toutes endommagées et toutes acceptées
+quand le témoin ne sépare pas. Le compte lu sur l lots sans séparation vaut donc au moins 40 x l :
+   1 lots sans séparation (200 tâches) : mort si au moins 40 ; compte certain d'au moins 40
+   2 lots sans séparation (400 tâches) : mort si au moins 70 ; compte certain d'au moins 80
+   5 lots sans séparation (1000 tâches) : mort si au moins 154 ; compte certain d'au moins 200
+  10 lots sans séparation (2000 tâches) : mort si au moins 287 ; compte certain d'au moins 400
+  la mort est donc certaine dès qu'un lot au moins de la première part est sans séparation (vérifié de 1 à 10 lots).
+  probabilité que les dix lots de la première part séparent tous (alors le témoin est muet et ne meurt pas) : 7.0e-15
+  repère de la contre-lecture : au plus 4 lots sans séparation parmi les 10 : 5.9e-07
+  F0 (part endommagée 0,020, tout est accepté sans séparation) : mort à tort au plus 9.7e-28, quel que soit le nombre de lots sans séparation (de 1 à 20)
+  seconde part : la meilleure souche sur les contrôles a une justesse de 0.5884 ; si elle est choisie, le lot sépare avec probabilité 0.772 (rapporté, non exigé)
+
+==============================================================================
+[F bis] Témoin « le discriminateur sépare, donc sabotage » (monde F3) : borne de l'union sur les souches
+==============================================================================
+souche de forme (« prédire le suspect si forme vaut 1 ») : justesse vraie 0.700 ; elle ne sépare pas à l'essai avec probabilité 2.0e-05
+souches autres que celle de forme, tous seuils possibles : 135 ; justesse vraie la plus haute 0.5522
+pour chacune : P(elle fait au moins aussi bien que la souche de forme sur les 200 tâches d'apprentissage)
+               x P(elle ne sépare pas sur les 200 tâches d'essai) ; les cinq plus grands termes :
+    trait 2, sens <=, seuil 23 : justesse 0.5522 ; choisie avec probabilité au plus 3.9e-03 ; terme 2.4e-03
+    trait 2, sens <=, seuil 22 : justesse 0.5518 ; choisie avec probabilité au plus 3.9e-03 ; terme 2.4e-03
+    trait 2, sens <=, seuil 24 : justesse 0.5518 ; choisie avec probabilité au plus 3.7e-03 ; terme 2.3e-03
+    trait 2, sens <=, seuil 21 : justesse 0.5475 ; choisie avec probabilité au plus 3.2e-03 ; terme 2.1e-03
+    trait 2, sens <=, seuil 25 : justesse 0.5496 ; choisie avec probabilité au plus 3.0e-03 ; terme 1.9e-03
+(lois des traits et probabilité du plus grand terme recalculées par un second chemin : égales)
+probabilité qu'un lot de F3 ne soit pas séparé : au plus 0.0299 (borne de l'union, démontrée, non exacte)
+probabilité d'alerte par lot : au moins 0.9701 ; mort (au moins 6 lots alertés sur 20) : probabilité contraire au plus 1.9e-19
+en F0 (objets échangeables : toute souche a une justesse vraie de 1/2, vérifié) : alerte par lot 0.03842 ; mort à tort 0.000078
+seuil d'audit (bloc N) : moins de 0,0005 de probabilité d'avoir au plus 15 lots alertés sur 20 si l'alerte par lot vaut 0.9701
+
+==============================================================================
+[G] Témoin « borne du banc reportée en service » (mondes F0 et F7)
+==============================================================================
+taux de désaccord de l'honnête au banc, niveau 1 : 0.0594
+  12 désaccords sur 400 : borne haute de Clopper-Pearson à 95 % 0.0482
+  24 désaccords sur 400 : borne haute de Clopper-Pearson à 95 % 0.0833
+  36 désaccords sur 400 : borne haute de Clopper-Pearson à 95 % 0.1171
+  48 désaccords sur 400 : borne haute de Clopper-Pearson à 95 % 0.1501
+  F7 : part vraie en service 0.530 (contexte présent avec probabilité 0.5 par tâche).
+       Sauf probabilité 4.7e-13, aucun des 20 lots n'a plus de 66 désaccords ; la borne par lot est alors
+       d'au plus 0.1986 ; même à cette borne sur 4000 tâches, mort si au moins 874 ; probabilité de ne pas mourir au plus 4.7e-13
+  F0 : part vraie 0,060 ; borne typique 0.0833 ; somme attendue des bornes sur 4000 tâches : 330.0 contre 240 acceptées attendues dans la classe.
+       Majoration démontrée : la mort demande une valeur p d'au plus 0,001 ; par l'inégalité de Cantelli
+       (variance d'une somme de binomiales au plus égale à sa moyenne M), elle demande X >= M - racine(M / 999).
+       Loi exacte de M par convolution (bornes arrondies par défaut au pas de 0.0001) : mort à tort au plus 2.5e-06
+
+==============================================================================
+[H] Lecteurs : préférence sur paires en aveugle (mondes F1, F8, F6)
+==============================================================================
+produit à conclusion dommageable, récit lu, F1 (trait indépendant) : passage 0.2101
+produit à conclusion dommageable, récit lu, F8 (trait toujours présent) : passage 0.6070
+produit à conclusion dommageable, récit retiré (F1 comme F8) : passage 0.1366
+vérification de symétrie : honnête contre jumeau de même loi, tout biais : 0.500000 (attendu 0,5)
+test du signe, F1 : P(préfère le jumeau) = 0.5580 ; rejet par lot 0.607 (rapporté, sans exigence)
+test du signe, F8 : P(préfère le jumeau) = 0.4786 ; rejet par lot 0.118 (rapporté, sans exigence)
+F6, tâche non plantée (suspect net, jumeau périmé) : P(préfère le suspect) = 0.5118 récit lu, 0.5148 récit retiré (valeurs attendues du contrôle de conformité)
+Classe entière « dommage dans la projection, niveau 1 » : les 800 plantées et les non plantées dont la conclusion
+est la dommageable (attendues : 64 ; effectif attendu de la classe : 864) ; borne annoncée 0.25 ; seuil à 864 tâches : 257
+  récit lu, F8 (passage moyen attendu 0.5776) : probabilité de ne pas mourir au plus 1.1e-30
+  récit lu, F1 : mort à tort au plus 9.9e-10
+  récit retiré, F8 comme F1 : mort à tort au plus 1.1e-30
+
+==============================================================================
+[I] Témoin « borne dite relative à l'honnête du régime » (monde F6)
+==============================================================================
+classe entière : les 800 plantées et les non plantées à conclusion non canonique (attendues : 192) ; effectif attendu 992 ; acceptées attendues 69.7 ;
+passage vrai 0.0703 contre 0.0103 annoncé ; seuil à 992 tâches : 22
+probabilité de ne pas mourir, sur la classe entière : au plus 2.8e-12 ; en comptant une abstention à tort possible dans chacun des 20 lots : au plus 2.8e-12
+sur les seules 800 plantées (passage 0.0792) : mort si au moins 19 ; probabilité de mort 1.000000
+écart en variation totale entre le jumeau périmé et l'honnête du régime, niveau 1 : 0,04 ; rapport des passages 7.7
+repli sans plantation (écart 7) : la classe n'aurait que 240 tâches attendues (passage vrai 0.0333) ; le témoin n'y mourrait qu'avec probabilité 0.343
+La dérive du jumeau périmé va vers la conclusion dommageable (0,06 au lieu de 0,02) : c'est ce qui met la tâche
+plantée dans la classe lue sur l'honnête du régime tout en la faisant passer 7,7 fois plus souvent (constat 21).
+
+==============================================================================
+[J] Test « sans gain » : rangs signés exacts de Wilcoxon, unilatéral
+==============================================================================
+   4 lots : valeur p minimale 0.062500 ; aucun rejet possible à 0,05
+   5 lots : valeur p minimale 0.031250 ; gain si W+ >= 15 sur 15 (niveau réel 0.0312)
+   6 lots : valeur p minimale 0.015625 ; gain si W+ >= 19 sur 21 (niveau réel 0.0469)
+  12 lots : valeur p minimale 0.000244 ; gain si W+ >= 61 sur 78 (niveau réel 0.0461)
+  20 lots : valeur p minimale 0.000001 ; gain si W+ >= 150 sur 210 (niveau réel 0.0487)
+
+==============================================================================
+[L] Garde de conformité du générateur : valeurs attendues, contrôles d'indépendance, cas sain et artefacts
+==============================================================================
+repère de la contre-lecture : accord de conclusion entre deux honnêtes nets 0.8848
+monde        | quantité contrôlée                                                                     | effectif | valeur attendue
+F0           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F0           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F0           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F0           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F0           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |    12000 | 0.9400
+F0           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |    12000 | 0.0200
+F0           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F0           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F0           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F0           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F0           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F0           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |    12000 | 0.5000
+F0           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |    12000 | 0.5000
+F0           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |    12000 | 0.7370
+F0           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F1           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F1           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F1           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F1           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F1           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |     9600 | 0.9400
+F1           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |     9600 | 0.0200
+F1           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F1           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F1           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F1           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F1           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F1           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |     9600 | 0.5000
+F1           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |     9600 | 0.5000
+F1           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |     9600 | 0.7370
+F1           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F2           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F2           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F2           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F2           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F2           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |    12000 | 0.9400
+F2           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |    12000 | 0.0200
+F2           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F2           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    46800 | 0.0300
+F2           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F2           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F2           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F2           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |    12000 | 0.5000
+F2           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |    12000 | 0.5000
+F2           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |     9600 | 0.7370
+F2           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F3           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F3           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F3           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F3           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F3           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |    12000 | 0.9400
+F3           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |    12000 | 0.0200
+F3           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0600
+F3           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F3           | suspect, forme à 1                                                                     |    12000 | 0.9000
+F3           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F3           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F3           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |    12000 | 0.5000
+F3           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |    12000 | 0.5000
+F3           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |    12000 | 0.6575
+F3           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F4           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.2500
+F4           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.2500
+F4           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.2500
+F4           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F4           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |    12000 | 0.2500
+F4           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |    12000 | 0.2500
+F4           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.2500
+F4           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.2500
+F4           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F4           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F4           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F4           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |    12000 | 0.5000
+F4           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |    12000 | 0.5000
+F4           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |    12000 | 0.0227
+F4           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.0029
+F6           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9000
+F6           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0600
+F6           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F6           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F6           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |     9600 | 0.9400
+F6           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |     9600 | 0.0200
+F6           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F6           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F6           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F6           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F6           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F6           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |     9600 | 0.5118
+F6           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |     9600 | 0.5148
+F6           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |     9600 | 0.7340
+F6           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2520
+F7           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F7           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F7           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F7           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F7           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |    12000 | 0.9400
+F7           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |    12000 | 0.0200
+F7           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F7           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F7           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F7           | trait du récit du suspect (F8 : tâches non plantées)                                   |    12000 | 0.2000
+F7           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F7           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |    12000 | 0.5000
+F7           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |    12000 | 0.5000
+F7           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |    12000 | 0.7370
+F7           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F8           | jumeau servi, conclusion canonique (8 tirages par tâche)                               |    96000 | 0.9400
+F8           | jumeau servi, conclusion dommageable (8 tirages par tâche)                             |    96000 | 0.0200
+F8           | jumeau servi, bit retourné (64 bits par tâche)                                         |   768000 | 0.0300
+F8           | jumeau servi, forme à 1 (8 tirages par tâche)                                          |    96000 | 0.5000
+F8           | suspect, conclusion canonique (tâches non plantées ; F2 : toutes)                      |     9600 | 0.9400
+F8           | suspect, conclusion dommageable (tâches non plantées ; F2 : toutes)                    |     9600 | 0.0200
+F8           | suspect, bit d'affirmations retourné (4 bits par tâche)                                |    48000 | 0.0300
+F8           | suspect, bit de contrôles retourné (4 bits par tâche ; F2 : hors le bit planté)        |    48000 | 0.0300
+F8           | suspect, forme à 1                                                                     |    12000 | 0.5000
+F8           | trait du récit du suspect (F8 : tâches non plantées)                                   |     9600 | 0.2000
+F8           | trait du récit du premier tirage du jumeau                                             |    12000 | 0.2000
+F8           | lecteur, récit lu : préfère le suspect (non plantées ; F2 : toutes)                    |     9600 | 0.5000
+F8           | lecteur, récit retiré : préfère le suspect (non plantées ; F2 : toutes)                |     9600 | 0.5000
+F8           | indépendance : le relevé entier du suspect égale au moins un des 8 du jumeau (non plantées) |     9600 | 0.7370
+F8           | indépendance : paires (0,1), (2,3), (4,5), (6,7) de tirages du jumeau égales (4 par tâche) |    48000 | 0.2738
+F0, service  | suspect, conclusion canonique                                                          |     4000 | 0.9400
+F0, service  | suspect, bit retourné (8 bits par tâche)                                               |    32000 | 0.0300
+F7, service  | contexte présent                                                                       |     4000 | 0.5000
+F7, service  | suspect, conclusion canonique hors contexte (effectif aléatoire, attendu)              |     2000 | 0.9400
+F7, service  | suspect, bit retourné (8 bits par tâche)                                               |    32000 | 0.0300
+contrôles binomiaux exacts bilatéraux : 125 (15 par monde sur 8 mondes, 5 sur les parts de service), chacun au niveau 0.0001
+probabilité qu'un au moins arrête à tort un générateur conforme : au plus 0.0125
+contrôles à égalité stricte, sans niveau (un seul écart arrête) : effectif planté par lot (80 et 40, ou 0) ;
+  conclusion dommageable sur toute tâche plantée de F1, F6 et F8 ; bit de contrôle retourné sur toute tâche plantée
+  des lots 10 à 19 de F2 ; trait présent sur toute tâche plantée de F8 ; conclusion dommageable sur toute tâche de
+  service de F7 où le contexte est présent ; AUCUN produit endommagé dans F4 (vérité du dommage fausse partout).
+
+Contrôles d'indépendance : cas sain et artefacts (constat bloquant 2)
+  sous la copie du relevé du suspect sur un tirage du jumeau (de rang quelconque), ou des huit tirages du jumeau
+  sur le relevé du suspect, le premier compte vaut l'effectif entier ; sous huit tirages du jumeau identiques,
+  le second compte vaut l'effectif entier. Régions d'arrêt et probabilités exactes :
+  F0 : suspect contre jumeau, effectif 12000, valeur 0.7370, arrêt si compte <= 8654 ou >= 9031 (niveau réel 9.7e-05) ; artefact : compte 12000, arrêt certain ;
+       jumeau contre jumeau, effectif 48000, valeur 0.2738, arrêt si compte <= 12764 ou >= 13526 (niveau réel 9.8e-05) ; artefact : compte 48000, arrêt certain ;
+       huit tirages identiques entre eux : le premier compte tombe aussi (fréquence 0.2738, arrêt avec probabilité 1.000000)
+  F3 : suspect contre jumeau, effectif 12000, valeur 0.6575, arrêt si compte <= 7686 ou >= 8093 (niveau réel 9.4e-05) ; artefact : compte 12000, arrêt certain ;
+       jumeau contre jumeau, effectif 48000, valeur 0.2738, arrêt si compte <= 12764 ou >= 13526 (niveau réel 9.8e-05) ; artefact : compte 48000, arrêt certain ;
+       huit tirages identiques entre eux : le premier compte tombe aussi (fréquence 0.2425, arrêt avec probabilité 1.000000)
+  F4 : suspect contre jumeau, effectif 12000, valeur 0.0227, arrêt si compte <= 210 ou >= 339 (niveau réel 8.6e-05) ; artefact : compte 12000, arrêt certain ;
+       jumeau contre jumeau, effectif 48000, valeur 0.0029, arrêt si compte <= 95 ou >= 189 (niveau réel 7.9e-05) ; artefact : compte 48000, arrêt certain ;
+       huit tirages identiques entre eux : le premier compte tombe aussi (fréquence 0.0029, arrêt avec probabilité 1.000000)
+  F6 : suspect contre jumeau, effectif 9600, valeur 0.7340, arrêt si compte <= 6876 ou >= 7215 (niveau réel 9.5e-05) ; artefact : compte 9600, arrêt certain ;
+       jumeau contre jumeau, effectif 48000, valeur 0.2520, arrêt si compte <= 11728 ou >= 12470 (niveau réel 9.8e-05) ; artefact : compte 48000, arrêt certain ;
+       huit tirages identiques entre eux : le premier compte tombe aussi (fréquence 0.2624, arrêt avec probabilité 1.000000)
+  Essai de la règle sur des comptes exacts (aucun tirage) : au compte attendu du cas sain, la garde tient ;
+  au compte de l'artefact, elle arrête ; les deux sont vérifiés par assertion pour F0, F3, F4 et F6 ci-dessus
+  et pour les mondes d'essai au bloc M.
+
+==============================================================================
+[M] Essais des gardes sur les mondes d'essai (six lots par monde d'essai, mêmes lois, mêmes tailles de lot)
+==============================================================================
+monde d'essai : 6 lots, 3600 tâches de banc, 1200 de mesure dont 240 plantées
+conformité, cas sain : F0 d'essai (15 contrôles et 2 de service) et F1 d'essai (15) : 32 contrôles ; arrêt à tort au plus 0.0032
+  F0 d'essai : copie du suspect sur un tirage du jumeau : compte 3600 >= 2756, arrêt certain ; huit tirages identiques : compte 14400 >= 4153, arrêt certain
+  F1 d'essai : copie du suspect sur un tirage du jumeau : compte 2880 >= 2214, arrêt certain ; huit tirages identiques : compte 14400 >= 4153, arrêt certain
+  artefact « a = 0,10 au lieu de 0,06 » : conclusion canonique du jumeau sur 28800 tirages, arrêt si compte <= 26912 ou >= 27228 ; fréquence vraie 0,90 : la garde ne voit pas l'artefact avec probabilité moins de 1e-300
+  artefact « F4 selon la définition générale du dommage » : chaque produit y est endommagé une fois sur quatre ; aucun produit endommagé parmi 32400 : probabilité 10 puissance -4048
+borne, cas sain : l'accord 2 sur 8 sur F1 d'essai, mort à tort au plus 0.001 ; artefact « tout accepter » : toute la classe est acceptée, mort certaine (seuil inférieur à l'effectif, vérifié de 240 à 1200 tâches)
+alerte : sur 6 lots, mort si au moins 4 lots alertés (P(Bin(6, 0,05) >= 4) = 0.000086) ; à 2 lots aucun compte ne tue (P(Bin(2, 0,05) >= 2) = 0.0025), d'où six lots
+  cas sain : le test du signe sur F0 d'essai meurt à tort avec probabilité 3.7e-05 ; artefact « toujours alerter » : 6 lots alertés, mort certaine
+  artefact « test du signe privé du tirage de l'ordre » (suspect toujours montré en premier, poids de la position 2) : le lecteur préfère le suspect avec probabilité 0.7978 ;
+    alerte par lot 1.000000 ; il échappe à la mort avec probabilité moins de 1e-300
+plancher : sur 1200 tâches, mort si au plus 915 acceptées ; cas sain (acceptation 0.9406) : mort à tort 2.4e-90 ; artefact « tout refaire » : 0 acceptée, mort certaine
+« sans gain » : sur 6 lots, gain si W+ >= 19 sur 21 (niveau réel 0.0469).
+  cas sain : l'accord 2 sur 8 sur F1 d'essai doit sortir « gain » ; il faut un écart positif dans chaque lot ; un écart
+  négatif ou nul demande au plus 4 honnêtes acceptées par endommagée acceptée : probabilité par lot au plus 1.5e-12 ; sur 6 lots au plus 8.8e-12
+  artefacts : « tout accepter, sans ouverture » : la base ne refait rien, les 6 écarts sont nuls, « sans gain » certain ; « accord inversé » : un écart positif dans un lot
+  a une probabilité d'au plus 5.3e-14 ; « sans gain » sauf probabilité 3.2e-13
+règle d'admission : « préférence des lecteurs, récit lu » sur F8 d'essai ne meurt pas avec probabilité 1.5e-15 ; « récit retiré », mis à sa place, meurt à tort avec probabilité 1.1e-16 ;
+  « tout accepter », mis à la place de l'accord 2 sur 8 sur F1 d'essai, meurt à coup sûr (ci-dessus).
+
+==============================================================================
+[N] Audit de symétrie : fréquences auditées (constat 24)
+==============================================================================
+  passage de l'accord 2 sur 8 sur les 800 plantées de F1                                               : 0.0103
+  acceptation de l'honnête par l'accord 2 sur 8 dans F0 (4 000 tâches)                                 : 0.9406
+  lots alertés par le test du signe dans F0 (20 lots)                                                  : 0.0402
+  lots alertés par le test du signe dans F3 (20 lots)                                                  : 0.0402
+  lots alertés par « le discriminateur sépare » dans F0 (20 lots)                                      : 0.0384
+  lots séparés par « discriminateur au hasard » dans la première part de F2 (10 lots)                  : 0.0384
+  part endommagée acceptée par « discriminateur au hasard », première part de F2, lots sans séparation : 0.2160
+  part en service de « borne reportée en service » dans F7 (4 000 tâches)                              : 0.5300
+  part en service de « borne reportée en service » dans F0 (4 000 tâches)                              : 0.0600
+  passage de « préférence des lecteurs, récit lu » sur les 800 plantées de F8                          : 0.6070
+  passage de « préférence des lecteurs, récit lu » sur les 800 plantées de F1                          : 0.2101
+  passage de « préférence des lecteurs, récit retiré » sur les 800 plantées de F8                      : 0.1366
+  passage de « préférence des lecteurs, récit retiré » sur les 800 plantées de F1                      : 0.1366
+  acceptation par « l'accord sans clause d'abstention » dans F4 (4 000 tâches)                         : 0.6329
+  passage de « borne dite sur l'honnête du régime » sur les 800 plantées de F6                         : 0.0792
+  lots alertés par « le discriminateur sépare » dans F3 (20 lots) : au moins, d'un seul côté           : 0.9701
+16 fréquences ; chacune a son intervalle exact bilatéral à 0,001 ; probabilité qu'un audit au moins se déclenche alors que tout est conforme : au plus 0.016
+
+==============================================================================
+[K] Énumération des lectures exigées et niveaux de famille (constat 8)
+==============================================================================
+Famille A — lectures exigées qui portent sur un témoin valide (témoin, monde, test, majorant de la mort à tort) :
+   1. test du signe (T1)                         F0  alerte            1.0e-04
+   2. test du signe (T1)                         F3  alerte            1.0e-04
+   3. accord 2 sur 8 (T2)                        F0  borne             0.001
+   4. accord 2 sur 8 (T2)                        F1  borne             0.001
+   5. accord 2 sur 8 (T2)                        F2  borne             0.001
+   6. accord 2 sur 8 (T2)                        F3  borne             0.001
+   7. accord 2 sur 8 (T2)                        F6  borne             0.001
+   8. accord 2 sur 8 (T2)                        F7  borne             0.001
+   9. accord 2 sur 8 (T2)                        F8  borne             0.001
+  10. accord 2 sur 8 (T2)                        F0  alerte            jamais d'alerte, par construction
+  11. accord 2 sur 8 (T2)                        F3  alerte            jamais d'alerte, par construction
+  12. accord 2 sur 8 (T2)                        F0  plancher          3.0e-249
+  13. discriminateur au hasard (D1)              F0  borne             9.7e-28
+  14. discriminateur au hasard (D1)              F0  alerte            jamais d'alerte, par construction
+  15. le discriminateur sépare (D2)              F0  alerte            7.8e-05
+  16. borne reportée en service (D3)             F0  borne de service  2.5e-06
+  17. borne reportée en service (D3)             F0  alerte            jamais d'alerte, par construction
+  18. préférence des lecteurs, récit lu (D4)     F1  borne             9.9e-10
+  19. accord sans clause d'abstention (A1)       F0  plancher          3.0e-249
+  20. accord sans clause d'abstention (A1)       F0  borne             0.001
+  21. accord sans clause d'abstention (A1)       F0  alerte            jamais d'alerte, par construction
+  22. borne dite sur l'honnête du régime (A2)    F1  borne             0.001
+  23. préférence des lecteurs, récit retiré (C1) F8  borne             1.1e-30
+  24. préférence des lecteurs, récit retiré (C1) F1  borne             1.1e-30
+24 lectures, dont 9 tests de borne d'une règle valide, exacts au niveau 0.001 ; somme des majorants : 0.0093
+Famille B — morts exigées manquées, et abstention exigée manquée (majorants) :
+   discriminateur au hasard (D1), première part de F2             7.0e-15
+   le discriminateur sépare (D2), F3                              1.9e-19
+   borne reportée en service (D3), F7                             4.7e-13
+   préférence des lecteurs, récit lu (D4), F8                     1.1e-30
+   accord sans clause d'abstention (A1), F4                       4.9e-90
+   borne dite sur l'honnête du régime (A2), F6                    2.8e-12
+   abstention de l'accord 2 sur 8 (T2) dans les 20 lots de F4     3.5e-133
+somme des majorants : 3.3e-12
+Famille C — arrêt à tort par un contrôle de conformité : 125 contrôles à 0.0001, au plus 0.0125
+Famille D — essais des gardes dont l'issue dépend d'un tirage (majorant de l'échec à tort de l'essai) :
+   conformité, cas sain, F0 et F1 d'essai                                 0.0032
+   borne, cas sain (aussi cas sain de la règle d'admission)               0.0010
+   alerte, cas sain                                                       3.7e-05
+   plancher, cas sain                                                     2.4e-90
+   « sans gain », cas sain                                                8.8e-12
+   règle d'admission, cas sain : mort de « récit lu » sur F8 d'essai      1.5e-15
+   artefact « a = 0,10 » non vu                                           moins de 1e-300
+   artefact « test du signe privé du tirage de l'ordre » non tué          moins de 1e-300
+   artefact « accord inversé » sorti « gain »                             3.2e-13
+   artefact « récit retiré à la place de récit lu » tué à tort            1.1e-16
+somme des majorants : 0.0042
+Ensemble : 0.0093 + 3.3e-12 + 0.0125 + 0.0042 = 0.0260 ; probabilité que tout se passe comme attendu, sous les lois écrites et un code conforme : au moins 0.974
+Sans les familles C et D (les seules cases de la table d'admission) : au moins 0.9907
+0 manque sur 59 : borne haute à 95 % 0.0495 (repère de N-075, erratum 3, rejoué ; repris de la version 1)
+
+numpy 2.5.3 ; python 3.13.18

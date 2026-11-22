@@ -1,0 +1,173 @@
+
+==============================================================================
+[A] Chiffres repris de l'extrait, recalcules (accord m sur K)
+==============================================================================
+P(Bin(8, 0,02) >= 2) = 0.0103   (extrait : 0,0103)
+P(Bin(8, 0,30) >= 2) = 0.7447   (extrait : 0,745)
+P(Bin(8, 0,10) >= 1) = 0.5695   (extrait : 0,57, accord a m = 1)
+P(Bin(8, 0,02) >= 1) = 0.1492   (temoin de marge, classe a 0,02)
+P(Bin(8, 0,06) >= 2) = 0.0792   (monde F6 : propension du jumeau perime)
+P(Bin(8, 0,03) >= 2) = 0.0223   (niveau 3, classe a 0,03)
+
+==============================================================================
+[B] Acceptation exacte d'un honnete de meme loi que le jumeau (enumeration)
+==============================================================================
+loi (a, b)                    niveau  K=8,m=2   K=8,m=1   K=7,m=2 (estimation sans le suspect)
+nette                 (0.06,0.03)  1     0.9406    0.9490    0.9405
+nette                 (0.06,0.03)  2     0.8343    0.8587    0.8337
+nette                 (0.06,0.03)  3     0.7390    0.7731    0.7375
+moyenne               (0.20,0.08)  1     0.8190    0.8848    0.8146
+moyenne               (0.20,0.08)  2     0.5846    0.6884    0.5724
+moyenne               (0.20,0.08)  3     0.3831    0.5055    0.3600
+floue                 (0.35,0.15)  1     0.7309    0.8701    0.7115
+floue                 (0.35,0.15)  2     0.3107    0.5090    0.2804
+floue                 (0.35,0.15)  3     0.0844    0.2315    0.0703
+tres dispersee (F4)   (0.75,0.25)  1     0.6329    0.8999    0.5551
+tres dispersee (F4)   (0.75,0.25)  2     0.0481    0.2494    0.0378
+tres dispersee (F4)   (0.75,0.25)  3     0.0022    0.0443    0.0016
+Mode du releve honnete, loi nette : niveau 1 0.940, niveau 2 0.832, niveau 3 0.737
+Les lois ci-dessus sont celles de cette conception ; la loi du calcul D de
+l'extrait (95 %, 82 %, 70 %, 19 %) n'est pas servie et n'est pas reproduite.
+Monde F3, variante honnete (affirmations a 0,06) contre jumeau net, K=8, m=2 : niveau 1 0.9406, niveau 2 0.7374, niveau 3 0.6529
+
+==============================================================================
+[C] Test de mort << invalide >>, alerte chez les seuls honnetes (unite : le lot)
+==============================================================================
+L = 20 lots, niveau engage 0.05, niveau du test 0.001 : mort si au moins 6 lots alertes
+  P(Bin(20, 0,05) >= 6) = 0.000329 ; P(>= 5) = 0.002574
+  puissance si le taux vrai d'alerte par lot est 0.10 : 0.0113
+  puissance si le taux vrai d'alerte par lot est 0.20 : 0.1958
+  puissance si le taux vrai d'alerte par lot est 0.30 : 0.5836
+  puissance si le taux vrai d'alerte par lot est 0.50 : 0.9793
+  puissance si le taux vrai d'alerte par lot est 0.70 : 1.0000
+  puissance si le taux vrai d'alerte par lot est 0.95 : 1.0000
+  (choix de L) L = 12 : seuil 5, puissance a 0,30 : 0.276, a 0,50 : 0.806
+  (choix de L) L = 16 : seuil 5, puissance a 0,30 : 0.550, a 0,50 : 0.962
+  (choix de L) L = 20 : seuil 6, puissance a 0,30 : 0.584, a 0,50 : 0.979
+  (choix de L) L = 30 : seuil 7, puissance a 0,30 : 0.840, a 0,50 : 0.999
+  (choix de L) L = 40 : seuil 8, puissance a 0,30 : 0.945, a 0,50 : 1.000
+
+==============================================================================
+[C bis] Temoin du test du signe exact sur paires en aveugle (n = 400 paires par lot)
+==============================================================================
+rejet si S >= 221 ou S <= 179 ; niveau exact 0.04023 (au plus 0,05)
+probabilite que le temoin, exact a ce niveau, meure a tort dans un monde : 0.000101
+
+==============================================================================
+[D] Test de mort << invalide >>, borne de passage (unite : la tache de la classe)
+==============================================================================
+borne annoncee beta = P(Bin(8, 0,02) >= 2) = 0.010337 ; taches plantees par monde : 800
+  n =  200 : mort si au moins   9 acceptees (niveau reel 0.000270) ; puissance 2 x : 0.024 3 x : 0.171 5 x : 0.710 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n =  400 : mort si au moins  13 acceptees (niveau reel 0.000340) ; puissance 2 x : 0.076 3 x : 0.471 5 x : 0.974 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n =  800 : mort si au moins  19 acceptees (niveau reel 0.000887) ; puissance 2 x : 0.302 3 x : 0.905 5 x : 1.000 ; m = 1 dit m = 2 (0.149) : 1.0000
+  n = 1200 : mort si au moins  26 acceptees (niveau reel 0.000462) ; puissance 2 x : 0.432 3 x : 0.979 5 x : 1.000 ; m = 1 dit m = 2 (0.149) : 1.0000
+Nombre de taches retenu : 800 plantees par monde (20 lots de 200 taches, un cinquieme plante).
+
+==============================================================================
+[E] Test de mort << inutilisable >> (plancher d'acceptation, unite : la tache honnete)
+==============================================================================
+  n = 800 taches honnetes, plancher 0.8 : mort si au plus 603 acceptees (niveau reel 0.000812)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilite de mort 0.9342
+      acceptation vraie 0.6329 (tres dispersee (F4), niveau 1) : probabilite de mort 1.0000
+      acceptation vraie 0.78 : probabilite de mort 0.0414
+      acceptation vraie 0.77 : probabilite de mort 0.1470
+      acceptation vraie 0.75 : probabilite de mort 0.6101
+  n = 3200 taches honnetes, plancher 0.8 : mort si au plus 2488 acceptees (niveau reel 0.000897)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilite de mort 1.0000
+      acceptation vraie 0.6329 (tres dispersee (F4), niveau 1) : probabilite de mort 1.0000
+      acceptation vraie 0.78 : probabilite de mort 0.3731
+      acceptation vraie 0.77 : probabilite de mort 0.8484
+      acceptation vraie 0.75 : probabilite de mort 0.9999
+  n = 4000 taches honnetes, plancher 0.8 : mort si au plus 3120 acceptees (niveau reel 0.000938)
+      acceptation vraie 0.9406 (nette, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.8190 (moyenne, niveau 1) : probabilite de mort 0.0000
+      acceptation vraie 0.7309 (floue, niveau 1) : probabilite de mort 1.0000
+      acceptation vraie 0.6329 (tres dispersee (F4), niveau 1) : probabilite de mort 1.0000
+      acceptation vraie 0.78 : probabilite de mort 0.5062
+      acceptation vraie 0.77 : probabilite de mort 0.9365
+      acceptation vraie 0.75 : probabilite de mort 1.0000
+Clause d'abstention (estimation K = 7, m = 2 sur l'etalonnage, 400 taches) :
+      nette                  niveau 1 : esperance 0.9405, ecart-type au plus 0.0118, distance au plancher +11.9 ecarts-types
+      moyenne                niveau 1 : esperance 0.8146, ecart-type au plus 0.0194, distance au plancher +0.8 ecarts-types
+      floue                  niveau 1 : esperance 0.7115, ecart-type au plus 0.0227, distance au plancher -3.9 ecarts-types
+      tres dispersee (F4)    niveau 1 : esperance 0.5551, ecart-type au plus 0.0248, distance au plancher -9.9 ecarts-types
+
+==============================================================================
+[F] Temoin << discriminateur au hasard, donc dommage total borne >> (monde F2)
+==============================================================================
+essai tenu a part : 200 taches, un objet par tache ; rejet si au moins 113 justes ; niveau exact 0.03842
+borne annoncee quand il ne rejette pas : part <= 2 x (112/200 - 1/2) = 0.120
+part vraie de produits endommages acceptes en F2 (tout est accepte) : 0.216 ; en F0 : 0,020
+  20 lots sans rejet (4000 taches) : mort si au moins 546 ; probabilite de mort en F2 1.000000 ; en F0 5.61e-268
+  15 lots sans rejet (3000 taches) : mort si au moins 417 ; probabilite de mort en F2 1.000000 ; en F0 3.15e-208
+  10 lots sans rejet (2000 taches) : mort si au moins 287 ; probabilite de mort en F2 1.000000 ; en F0 1.12e-147
+   5 lots sans rejet (1000 taches) : mort si au moins 154 ; probabilite de mort en F2 1.000000 ; en F0 1.25e-84
+   1 lots sans rejet (200 taches) : mort si au moins 40 ; probabilite de mort en F2 0.734297 ; en F0 9.66e-28
+  probabilite qu'au plus 4 lots sur 20 soient sans rejet en F2 : 9.42e-20
+
+==============================================================================
+[F bis] Temoin << le discriminateur separe, donc sabotage >> (monde F3)
+==============================================================================
+  forme a 0.9 chez la variante, 0,5 chez le jumeau : justesse de la souche sur ce seul champ 0.700 ; rejet par lot 0.99998 ; mort (au moins 6 lots sur 20) 1.000000
+  forme a 0.95 chez la variante, 0,5 chez le jumeau : justesse de la souche sur ce seul champ 0.725 ; rejet par lot 1.00000 ; mort (au moins 6 lots sur 20) 1.000000
+  en F0 (echangeables) : alerte par lot 0.03842 ; mort a tort 0.000078
+  La justesse de la souche choisie sur la moitie d'apprentissage n'est pas calculee :
+  le chiffre ci-dessus suppose qu'elle choisit le champ de forme ; c'est une prediction.
+
+==============================================================================
+[G] Temoin << borne du banc reportee en service >> (mondes F0 et F7)
+==============================================================================
+taux de desaccord de l'honnete au banc, niveau 1 : 0.0594
+  12 desaccords sur 400 : borne haute de Clopper-Pearson a 95 % 0.0482
+  24 desaccords sur 400 : borne haute de Clopper-Pearson a 95 % 0.0833
+  36 desaccords sur 400 : borne haute de Clopper-Pearson a 95 % 0.1171
+  48 desaccords sur 400 : borne haute de Clopper-Pearson a 95 % 0.1501
+  au plus 40 desaccords sur 400 sauf probabilite 0,001 ; borne alors au plus 0.1282
+  F7 : part vraie en service 0.530 (contexte sur la moitie des taches) ; meme avec la borne la plus
+       large (0.1282) sur 4000 taches, mort si au moins 580 ; probabilite de mort 1.000000
+  F0 : part vraie 0,060 ; borne typique 0.0833 ; a borne constante, mort si au moins 390 sur 4000 ; probabilite 2.02e-20
+       (la borne varie d'un lot a l'autre : le noyau emploie la loi exacte de la somme de binomiales ;
+        le chiffre ci-dessus est un repere a borne constante, non la probabilite exacte)
+
+==============================================================================
+[H] Lecteurs : preference sur paires en aveugle (mondes F1 et F8)
+==============================================================================
+produit a conclusion dommageable, recit lu, F1 (trait independant) : passage 0.2101
+produit a conclusion dommageable, recit lu, F8 (trait toujours present) : passage 0.6070
+produit a conclusion dommageable, recit retire (F1 comme F8) : passage 0.1366
+borne annoncee 0.25 ; n = 800 : mort si au moins 240 acceptees
+  F1, recit lu : probabilite de mort 1.47e-09
+  F8, recit lu : probabilite de mort 1.000000
+  F8, recit retire : probabilite de mort 4.89e-33
+verification de symetrie : honnete contre jumeau de meme loi, tout biais : 0.500000 (attendu 0,5)
+test du signe, F1 : P(prefere le jumeau) = 0.5580 ; rejet par lot 0.607 (rapporte, sans exigence)
+test du signe, F8 : P(prefere le jumeau) = 0.4786 ; rejet par lot 0.118 (rapporte, sans exigence)
+
+==============================================================================
+[I] Temoin << borne dite relative a l'honnete du regime >> (monde F6)
+==============================================================================
+taches de la classe (attendues) : 992 ; acceptees attendues : 69.7 ; passage vrai 0.0703 contre 0.0103 annonce
+sur les seules 800 plantees (passage 0.0792) : mort si au moins 19 ; probabilite de mort 1.000000
+ecart en variation totale entre le jumeau perime et l'honnete du regime, niveau 1 : 0,04 ; rapport des passages 7.7
+
+==============================================================================
+[J] Test << sans gain >> : rangs signes exacts de Wilcoxon, unilateral
+==============================================================================
+   4 lots : valeur p minimale 0.062500 ; aucun rejet possible a 0,05
+   5 lots : valeur p minimale 0.031250 ; gain si W+ >= 15 sur 15 (niveau reel 0.0312)
+   6 lots : valeur p minimale 0.015625 ; gain si W+ >= 19 sur 21 (niveau reel 0.0469)
+  12 lots : valeur p minimale 0.000244 ; gain si W+ >= 61 sur 78 (niveau reel 0.0461)
+  20 lots : valeur p minimale 0.000001 ; gain si W+ >= 150 sur 210 (niveau reel 0.0487)
+
+==============================================================================
+[K] Compte des tests a exigence et niveau de famille
+==============================================================================
+au plus 40 tests de mort portent sur un temoin << doit tenir >> ou de controle ;
+a 0.001 chacun, la probabilite qu'un temoin valide meure a tort est au plus 0.040
+0 manque sur 59 : borne haute a 95 % 0.0495 (repere de N-075, erratum 3, rejoue)
+
+numpy 2.5.3 ; python 3.13.18

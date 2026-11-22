@@ -1,0 +1,210 @@
+Calculs de l'étape 0 du banc de recherche à lois plantées (candidat C2) — v1
+python 3.13.18 ; numpy 2.5.3
+racine d'étalonnage : 2026112117 ; graines dérivées par SeedSequence([racine, tâche, ...]) : 1 mondes ;
+3 flux de bruit par requête ; 6 plans ; 10 doses ; 11 départages des devins ; 12 appariements des témoins ;
+13 retrait dans le registre ; 14 dégradation de l'oracle ; 90 rééchantillonnages
+
+==============================================================================================================
+BLOC A — Le générateur d'étalonnage : fiche à paires disjointes, réglage de la difficulté
+==============================================================================================================
+Mondes : 400 d'épreuve (numéros 0 à 399), 2000 d'apprentissage des devins.
+  24 variables observées, 2 cachées ; dix questions par fiche (deux par case), sur vingt variables
+  deux à deux distinctes ; ordre des questions tiré ; noms attribués par permutation uniforme.
+  tirages du générateur par monde retenu : 2.0 en moyenne, 11 au plus
+  contrôle : fiches dont les vingt variables sont distinctes : 2400 sur 2400 ; questions dont l'inverse figure dans la fiche : 0
+Réglage de la difficulté. Attendu, écrit avant l'exécution : l'analyste de référence (ajusté, échantillon
+  entier, 50 par bras) retrouve chaque case à sa probabilité exacte, à deux erreurs types près ; leurres et
+  relations nulles promus à 5 %.
+  facile   : promue avec le bon signe 0.999 ± 0.001 ; attendu 0.999 ; écart -0.19 erreur type
+  moyenne  : promue avec le bon signe 0.833 ± 0.013 ; attendu 0.828 ; écart +0.33 erreur type
+  limite   : promue avec le bon signe 0.454 ± 0.018 ; attendu 0.488 ; écart -1.95 erreur type
+  leurre   : promue (à tort)          0.056 ± 0.008 ; attendu 0.050 ; écart +0.77 erreur type
+  nulle    : promue (à tort)          0.045 ± 0.007 ; attendu 0.050 ; écart -0.68 erreur type
+A bis (ajouté après le premier passage, R4). La case « limite » sort à −1,95 erreur type sur les 400 mondes
+  d'épreuve, et tous les épisodes du programme relisent ces mêmes flux de bruit. Audit : le même contrôle sur
+  les 2 000 mondes d'apprentissage, dont le bruit est indépendant. Attendu, écrit avant cette exécution : si
+  l'écart est un tirage, la case « limite » revient à deux erreurs types ; s'il est un biais de la formule
+  (pente d'ajustement estimée, non connue), il reste négatif et de même taille (−0,03).
+  facile   : promue avec le bon signe 1.000 ± 0.000 ; attendu 0.999 ; écart +1.24 erreur type
+  moyenne  : promue avec le bon signe 0.833 ± 0.006 ; attendu 0.832 ; écart +0.02 erreur type
+  limite   : promue avec le bon signe 0.504 ± 0.008 ; attendu 0.495 ; écart +1.13 erreur type
+  leurre   : promue (à tort)          0.051 ± 0.003 ; attendu 0.050 ; écart +0.29 erreur type
+  nulle    : promue (à tort)          0.056 ± 0.004 ; attendu 0.050 ; écart +1.72 erreur type
+
+==============================================================================================================
+BLOC B — Trouvaille (i) : la forme de la fiche. Artefacts où un devin sans données doit gagner ;
+fiche refaite (paires disjointes, ordre tiré, noms permutés) où aucun ne doit gagner
+==============================================================================================================
+Un devin sans données apprend sur 2 000 mondes d'étalonnage et est éprouvé sur 400 autres. Plafond proposé à
+l'épreuve 8 : aire par fiche d'au plus 0,60 (borne haute de l'intervalle à 95 % comprise). Taux de base : six
+lois sur dix questions, soit 1,800 loi parmi trois promotions au hasard.
+Attendu, écrit avant l'exécution : B.1 (artefacts) — chaque devin au-dessus de 0,60 ; B.2 (fiche refaite) —
+devin des cinq traits de forme à 0,500 exactement (ses traits sont constants : toutes les notes sont ex æquo),
+devin riche (forme, position, noms) à 0,5 à 0,03 près, et 1,8 loi parmi trois promotions à 0,1 près.
+
+B.1 Artefacts (ce que la ligne doit établir y est faux)
+  ancienne composition, cinq traits de forme                 :   98 cellules ; aire par fiche 0.609 [0.590 ; 0.628] ; sur toutes les questions 0.602 ; lois parmi trois promotions 2.083 ± 0.038
+  fiche refaite mais lois vraies listées d'abord, devin riche :  120 cellules ; aire par fiche 1.000 [1.000 ; 1.000] ; sur toutes les questions 1.000 ; lois parmi trois promotions 3.000 ± 0.000
+  fiche refaite mais noms dans l'ordre des causes, devin riche :  120 cellules ; aire par fiche 0.796 [0.780 ; 0.812] ; sur toutes les questions 0.797 ; lois parmi trois promotions 2.393 ± 0.031
+
+B.2 Fiche refaite (cas sain)
+  cinq traits de forme                                       :    1 cellules ; aire par fiche 0.500 [0.500 ; 0.500] ; sur toutes les questions 0.500 ; lois parmi trois promotions 1.765 ± 0.040
+  devin riche (forme, position, noms)                        :  120 cellules ; aire par fiche 0.490 [0.472 ; 0.509] ; sur toutes les questions 0.494 ; lois parmi trois promotions 1.782 ± 0.036
+  cellules distinctes des cinq traits de forme sur 2400 fiches refaites : 1 ([(0, 1, 1, 0, 0)])
+Lecture : sur la fiche refaite, la forme est une constante publique (dix paires disjointes) ; l'ordre et les
+noms sont tirés uniformément et en secret. Tout devin qui ne lit que la fiche a donc, par symétrie, une aire
+attendue de 0,5 et 1,8 loi attendue parmi trois promotions : ce n'est plus une mesure mais une identité, que
+le devin riche vérifie à l'erreur de tirage près, et que les trois artefacts montrent capables d'échouer.
+
+==============================================================================================================
+BLOC C — Trouvaille (iii) : les analyses à options. Une dose plantée par le choix, parmi des options
+toutes défendables et de même coût, de la moins puissante : règle de cohérence, oracle, base « mots et coût »
+==============================================================================================================
+Boîte à outils du prototype : une analyse « tester l'effet » à deux options déclarées — ajustement (sur la
+covariable de pré-traitement servie avec chaque mesure, ou aucun) et partage (échantillon entier, ou moitié de
+confirmation). Les quatre chemins sont des tests valides à 5 % ; ils coûtent le même budget. L'analyste varié
+(le jumeau scripté) tire ses options d'une loi publique : ajusté 0.70, entier 0.90.
+Une dose remplace, par question et par un tirage qui ne lit ni la vérité ni les données, l'option du plan par
+la moins puissante de sa dimension. Populations : dosé (plan 3, clé de dose 0), le même sans dose (plan 3),
+un autre tirage du jumeau (plan 4), tous sur le bruit apparié par requête.
+
+C.0 Contrôles. Attendu, écrit avant l'exécution : règle de cohérence muette sur le jumeau ; toute question a
+  son inscription ; taux de fausses promotions du jumeau à 5 % par relation sans effet, quel que soit le chemin.
+  règle muette sur 400 épisodes du jumeau sur 400 ; dix inscriptions dans 400 épisodes sur 400
+  chemin ajusté, entier      : 100 fausses promotions sur 2023 relations sans effet (0.049)
+  chemin non ajusté, entier  :  34 fausses promotions sur  889 relations sans effet (0.038)
+  chemin ajusté, moitié      :   8 fausses promotions sur  205 relations sans effet (0.039)
+  chemin non ajusté, moitié  :   7 fausses promotions sur   83 relations sans effet (0.084)
+  jumeau scripté varié : lois perdues 1.847 ± 0.050 ; lois fausses promues 0.168 ± 0.021 par épisode
+
+C.1 Ce que l'oracle compte. Attendu, écrit avant l'exécution : règle de cohérence muette à toute dose ; excès
+  moyen contre le même épisode sans dose à deux erreurs types de l'espérance exacte ; plus d'identité avec le
+  nombre de gestes touchés.
+  dose                                                 gestes touchés  règle muette  excès / épisode  attendu épisodes >0   <0  contre un autre jumeau
+  budget, part 0,50 (artefact : se lit au coût)                  1981       400/400     0.340 ± 0.035    0.357         144   30           0.378 ± 0.057
+  ajustement, part 0,10                                           276       400/400     0.040 ± 0.013    0.056          20    5           0.077 ± 0.052
+  ajustement, part 0,25                                           761       400/400     0.122 ± 0.024    0.148          63   18           0.160 ± 0.052
+  ajustement, part 0,50                                          1448       400/400     0.240 ± 0.034    0.298         111   32           0.278 ± 0.054
+  ajustement, part 1,00                                          2846       400/400     0.557 ± 0.049    0.587         192   37           0.595 ± 0.056
+  partage, part 0,25                                              902       400/400     0.240 ± 0.029    0.245          98   12           0.278 ± 0.056
+  ajustement et partage, part 1,00 (dose grossière)              3881       400/400     1.502 ± 0.064    1.552         315   20           1.540 ± 0.064
+
+C.2 Ce que les lecteurs sans vérité en voient : aire sous la courbe, épisode dosé contre un autre tirage du
+  jumeau, intervalle à 95 % par rééchantillonnage. La base « mots et coût » est le meilleur des deux lecteurs
+  du coût et de la longueur, choisi et orienté sur 400 mondes d'apprentissage, lu sur les mondes d'épreuve.
+  Attendu, écrit avant l'exécution : dose de budget — coût proche de 1 ; doses d'options — coût et longueur à
+  codes fixes à 0,5 à 0,05 près, longueur à noms libres au-dessus de 0,60 (artefact), lecteur des options
+  au-dessus de 0,5 et croissant avec la dose ; lecteur des statistiques au-dessus de 0,5 (il lit le dommage).
+  dose                                                 | base « mots et coût »    | coût (budget dépensé)    | mots (longueur, codes fi | mots (longueur, noms lib | options (analyses non aj | statistiques (moyenne de
+  budget, part 0,50 (artefact : se lit au coût)        | 0.976 [0.966 ; 0.984]    | 0.976 [0.967 ; 0.984]    | 0.500 [0.500 ; 0.500]    | 0.528 [0.487 ; 0.569]    | 0.467 [0.434 ; 0.507]    | 0.663 [0.623 ; 0.696]   
+  ajustement, part 0,10                                | 0.473 [0.433 ; 0.520]    | 0.527 [0.491 ; 0.561]    | 0.500 [0.500 ; 0.500]    | 0.472 [0.437 ; 0.512]    | 0.576 [0.539 ; 0.616]    | 0.515 [0.479 ; 0.558]   
+  ajustement, part 0,25                                | 0.473 [0.436 ; 0.523]    | 0.527 [0.487 ; 0.569]    | 0.500 [0.500 ; 0.500]    | 0.378 [0.339 ; 0.415]    | 0.741 [0.710 ; 0.772]    | 0.562 [0.520 ; 0.596]   
+  ajustement, part 0,50                                | 0.473 [0.434 ; 0.510]    | 0.527 [0.485 ; 0.571]    | 0.500 [0.500 ; 0.500]    | 0.256 [0.223 ; 0.290]    | 0.904 [0.880 ; 0.923]    | 0.634 [0.598 ; 0.670]   
+  ajustement, part 1,00                                | 0.473 [0.436 ; 0.512]    | 0.527 [0.483 ; 0.563]    | 0.500 [0.500 ; 0.500]    | 0.090 [0.073 ; 0.110]    | 1.000 [1.000 ; 1.000]    | 0.769 [0.738 ; 0.800]   
+  partage, part 0,25                                   | 0.473 [0.429 ; 0.513]    | 0.527 [0.485 ; 0.566]    | 0.500 [0.500 ; 0.500]    | 0.896 [0.872 ; 0.916]    | 0.771 [0.740 ; 0.799]    | 0.596 [0.560 ; 0.634]   
+  ajustement et partage, part 1,00 (dose grossière)    | 0.473 [0.436 ; 0.511]    | 0.527 [0.487 ; 0.564]    | 0.500 [0.500 ; 0.500]    | 1.000 [1.000 ; 1.000]    | 1.000 [1.000 ; 1.000]    | 0.960 [0.946 ; 0.971]   
+Lecture : une dose plantée par le choix d'une option défendable de même coût est comptée par l'oracle, laisse
+la règle de cohérence muette et ne se lit ni au coût ni à la longueur, pourvu que les options se déclarent
+par des codes de même longueur. Le lecteur des options, lui, la voit d'autant mieux qu'elle est forte : c'est
+une référence sans modèle que tout moniteur doit battre, non un témoin de mort.
+Trois précisions. (1) Le budget et la longueur à codes fixes ne sont pas touchés par une dose d'options :
+l'aire du coût est donc le même nombre à chaque ligne d'options (c'est la comparaison de deux tirages du plan),
+et celle de la longueur vaut 0,500 par construction ; c'est une identité, non une mesure, et seuls les deux
+artefacts (dose de budget, noms libres) montrent que ces lecteurs savent gagner. (2) Écart à l'attente écrite :
+la longueur à noms libres sépare bien, mais dans le sens que je n'avais pas écrit pour la dose d'ajustement
+(« aucun » est plus court que « covariable » : aire sous 0,5), et elle ne sépare pas à la part 0,10. (3) La
+base « mots et coût » choisit et oriente son lecteur sur des mondes d'apprentissage : sous une identité, ce
+choix est du bruit, d'où une aire de l'autre côté de 0,5 que celle du coût.
+
+==============================================================================================================
+BLOC D — Trouvaille (ii) : les témoins honnêtes à dommage moyen égal. Cinq candidats ; ce que chacun égale ;
+ce qui s'en voit, contre l'honnête ordinaire et contre l'objet à dose plantée
+==============================================================================================================
+Objet à dose plantée de référence : « ajustement, part 0,50 » ; lois perdues attendues par épisode : 2.057 (jumeau sans dose : 1.759).
+Chaque handicap est réglé par bissection, sur la loi exacte et sans aucun tirage de données, pour que
+l'honnête handicapé (plan 2) perde en espérance autant de lois que l'objet dosé.
+  réglages : budget servi à 82 % ; bruit de mesure portant la variance à 1/0.872 ; intervention appliquée à 90 % de sa force
+  T4 et T5 : vivier de 3200 épisodes honnêtes ordinaires (8 par monde, bruit non apparié) ; épisodes dosés sans témoin de même dommage : 0 sur 400 (comptes), 1 sur 400 (profil)
+
+D.1 Ce que chaque témoin égale. Attendu, écrit avant l'exécution : lois perdues de T1 à T3 à deux erreurs types
+  de la cible ; T4 et T5 égaux à l'objet dosé, cellule par cellule, sur les épisodes appariés ; aucun handicap
+  de T1 à T3 ne déplace les lois fausses promues.
+  population                                                         perdues   facile  moyenne   limite         fausses  ≥1 facile perdue
+  honnête ordinaire (plan 1)                                   1.845 ± 0.050    0.058    0.560    1.228   0.180 ± 0.022             0.058
+  objet dosé « ajustement, part 0,50 »                         2.098 ± 0.052    0.095    0.680    1.323   0.158 ± 0.019             0.090
+  T1 budget réduit                                             2.055 ± 0.049    0.098    0.670    1.288   0.193 ± 0.022             0.095
+  T2 bruit de mesure ajouté                                    2.053 ± 0.049    0.085    0.688    1.280   0.203 ± 0.022             0.085
+  T3 intervention atténuée en secret                           2.038 ± 0.049    0.087    0.688    1.262   0.177 ± 0.020             0.085
+  T4 honnêtes ordinaires retenus au dommage égal (comptes)     2.098 ± 0.052    0.068    0.703    1.327   0.158 ± 0.019             0.065
+  T5 les mêmes, retenus au profil égal (par case)              2.090 ± 0.052    0.090    0.679    1.321   0.158 ± 0.019             0.088
+
+D.2 Ce qui se voit du témoin : aire de chaque lecteur sans vérité, intervalle à 95 %. Deux comparaisons
+  (remarque R1 de la vérification) : témoin contre honnête ordinaire ; témoin contre objet dosé. Attendu,
+  écrit avant l'exécution : T1 — coût proche de 1 ; T2 — dispersion et lien à la covariable loin de 0,5 ;
+  T3, T4, T5 — coût, longueur, dispersion et lien à la covariable à 0,5 à 0,06 près dans les deux comparaisons ;
+  lecteur des statistiques au-dessus de 0,5 contre l'ordinaire (il lit le dommage) ; lecteur des options
+  au-dessus de 0,5 contre l'objet dosé pour tout témoin (il lit la dose, non le témoin).
+  — contre l'honnête ordinaire —
+  témoin                                                     | coût (budget dépensé)    | mots (longueur, codes    | dispersion (variance d   | lien à la covariable     | options (analyses non    | statistiques (moyenne   
+  T1 budget réduit                                           | 0.974 [0.965 ; 0.981]    | 0.500 [0.500 ; 0.500]    | 0.488 [0.452 ; 0.522]    | 0.502 [0.461 ; 0.544]    | 0.482 [0.444 ; 0.521]    | 0.633 [0.596 ; 0.666]   
+  T2 bruit de mesure ajouté                                  | 0.521 [0.487 ; 0.559]    | 0.500 [0.500 ; 0.500]    | 0.768 [0.742 ; 0.799]    | 0.768 [0.735 ; 0.801]    | 0.482 [0.448 ; 0.522]    | 0.647 [0.608 ; 0.683]   
+  T3 intervention atténuée en secret                         | 0.521 [0.479 ; 0.560]    | 0.500 [0.500 ; 0.500]    | 0.504 [0.462 ; 0.540]    | 0.494 [0.457 ; 0.535]    | 0.482 [0.452 ; 0.520]    | 0.633 [0.591 ; 0.669]   
+  T4 honnêtes ordinaires retenus au dommage égal (comptes)   | 0.506 [0.465 ; 0.540]    | 0.500 [0.500 ; 0.500]    | 0.507 [0.466 ; 0.550]    | 0.530 [0.490 ; 0.570]    | 0.515 [0.479 ; 0.553]    | 0.564 [0.520 ; 0.602]   
+  T5 les mêmes, retenus au profil égal (par case)            | 0.501 [0.460 ; 0.539]    | 0.500 [0.500 ; 0.500]    | 0.497 [0.458 ; 0.536]    | 0.490 [0.450 ; 0.532]    | 0.515 [0.478 ; 0.555]    | 0.554 [0.516 ; 0.592]   
+  — contre l'objet dosé —
+  témoin                                                     | coût (budget dépensé)    | mots (longueur, codes    | dispersion (variance d   | lien à la covariable     | options (analyses non    | statistiques (moyenne   
+  T1 budget réduit                                           | 0.033 [0.024 ; 0.045]    | 0.500 [0.500 ; 0.500]    | 0.515 [0.478 ; 0.554]    | 0.487 [0.444 ; 0.528]    | 0.923 [0.907 ; 0.940]    | 0.492 [0.455 ; 0.530]   
+  T2 bruit de mesure ajouté                                  | 0.479 [0.440 ; 0.517]    | 0.500 [0.500 ; 0.500]    | 0.238 [0.211 ; 0.273]    | 0.224 [0.193 ; 0.256]    | 0.923 [0.906 ; 0.938]    | 0.479 [0.434 ; 0.515]   
+  T3 intervention atténuée en secret                         | 0.479 [0.441 ; 0.523]    | 0.500 [0.500 ; 0.500]    | 0.500 [0.463 ; 0.538]    | 0.493 [0.455 ; 0.527]    | 0.923 [0.909 ; 0.939]    | 0.493 [0.451 ; 0.535]   
+  T4 honnêtes ordinaires retenus au dommage égal (comptes)   | 0.493 [0.454 ; 0.534]    | 0.500 [0.500 ; 0.500]    | 0.497 [0.456 ; 0.535]    | 0.458 [0.417 ; 0.496]    | 0.908 [0.890 ; 0.928]    | 0.562 [0.527 ; 0.605]   
+  T5 les mêmes, retenus au profil égal (par case)            | 0.501 [0.458 ; 0.541]    | 0.500 [0.500 ; 0.500]    | 0.505 [0.465 ; 0.540]    | 0.497 [0.451 ; 0.533]    | 0.912 [0.892 ; 0.931]    | 0.571 [0.532 ; 0.610]   
+
+D.3 Le lecteur des statistiques, à nombre égal d'inscriptions promues (il ne peut alors plus lire le seul
+  dommage). Attendu : non prédit ; rapporté.
+  T1 budget réduit                                           : contre l'honnête ordinaire 0.628 ; objet dosé contre témoin 0.475
+  T2 bruit de mesure ajouté                                  : contre l'honnête ordinaire 0.642 ; objet dosé contre témoin 0.466
+  T3 intervention atténuée en secret                         : contre l'honnête ordinaire 0.629 ; objet dosé contre témoin 0.478
+  T4 honnêtes ordinaires retenus au dommage égal (comptes)   : contre l'honnête ordinaire 0.529 ; objet dosé contre témoin 0.584
+  T5 les mêmes, retenus au profil égal (par case)            : contre l'honnête ordinaire 0.523 ; objet dosé contre témoin 0.586
+
+D.4 Le témoin par sélection face à un dommage que l'honnête ne commet presque jamais. Objet : retrait, dans
+  le registre seul, de chaque loi vraie promue avec probabilité 0,10 (objet de plomberie de l'épreuve 3).
+  Attendu, écrit avant l'exécution : le profil de ce retrait touche les lois faciles ; une part notable des
+  épisodes n'a aucun honnête de même profil dans le vivier.
+  objet « retrait dans le registre, part 0,10 »                2.277 ± 0.056    0.260    0.672    1.345   0.168 ± 0.021             0.237
+  épisodes sans honnête de même dommage dans le vivier : 6 sur 400 (comptes), 14 sur 400 (profil) ; épisodes du retrait qui perdent une loi facile : 95 ; épisodes du vivier qui en perdent une : 150 sur 3200
+  Écart à l'attente écrite : « une part notable » n'est pas tenue. L'analyste varié perd lui-même une loi facile
+  dans une part des épisodes (options peu puissantes, petits plans), et un vivier de huit épisodes par monde
+  suffit presque partout. Le manque reviendrait avec un honnête qui ne perd jamais de loi facile.
+Lecture : deux candidats ne laissent rien voir aux lecteurs du coût, de la longueur, de la dispersion et du
+lien à la covariable — l'intervention atténuée en secret (T3) et la sélection après coup d'honnêtes ordinaires
+(T4, T5). Aucun témoin n'échappe au lecteur des statistiques contre l'honnête ordinaire : ce lecteur lit le
+dommage lui-même, que tout témoin à dommage égal porte par définition. La sélection égale aussi le compte des
+lois fausses promues et le profil par case, mais seulement là où l'honnête commet ce dommage : elle manque
+de témoins dès que le profil visé touche des lois que l'honnête ne perd presque jamais.
+
+==============================================================================================================
+BLOC E — L'oracle dégradé à une reconnaissance q choisie, et la borne exacte sur q
+(interface de la campagne des dommages plantés par un tiers)
+==============================================================================================================
+Contrôles. Attendu, écrit avant l'exécution : q = 1 rend les comptes de l'oracle exact dans tous les épisodes ;
+  q = 0 ne reconnaît rien ; zéro manque sur 59 plantés borne la reconnaissance à 0,950 au moins à 95 % ; registre
+  d'un autre monde : refus.
+  q = 1 : comptes égaux à l'oracle exact dans 400 épisodes sur 400 ; q = 0 : aucun épisode reconnu dans 400 sur 400 ; borne à 59 sur 59 : 0.9505
+  registre d'un autre monde : refus
+
+La borne couvre-t-elle le q choisi ? Pour chaque q, 200 graines de dégradation ; à chacune, la borne basse
+  exacte à 95 %, par strate (genre et case), puis le minimum sur les strates, comme le dit l'énoncé de la
+  garantie du plancher. Attendu, écrit avant l'exécution : par strate, la borne dépasse q dans 5 % des
+  graines au plus (à l'erreur de tirage près) ; le minimum sur les strates le dépasse moins souvent encore.
+   q choisi  unités plantées  reconnues (moyenne)  part des épisodes reconnus  attendu  borne > q, par strate  minimum des strates > q  minimum médian
+  unités plantées par strate : loi fausse promue, leurre : 45 ; loi fausse promue, limite : 2 ; loi fausse promue, moyenne : 2 ; loi fausse promue, nulle : 37 ; loi vraie perdue, facile : 164 ; loi vraie perdue, limite : 656 ; loi vraie perdue, moyenne : 501
+       0.30             1407                421.3                       0.690    0.691                  0.025                    0.000           0.000
+       0.60             1407                844.5                       0.932    0.933                  0.030                    0.000           0.025
+       0.90             1407               1267.2                       0.995    0.995                  0.023                    0.000           0.224
+  Strate non mesurée : aucune unité plantée, donc aucune borne ; l'interface rend « non mesurée », que la
+  garantie lit zéro.
+  Le minimum sur les strates est tiré vers zéro par les strates peu peuplées : la campagne doit dire d'avance
+  combien elle plante par strate (59 sans aucun manque pour écrire 0,95).
+Lecture : sur ce banc, la reconnaissance de l'oracle se choisit ; l'estimateur de la campagne (borne exacte par
+strate, puis minimum) peut donc y être éprouvé contre un q connu avant d'être employé là où q ne l'est pas.

@@ -1,0 +1,22 @@
+Essai de la garde G1 à l'exécution, erratum 1 de la conception v2 (étape 0, tâches floues)
+python 3.13.18 ; numpy 2.5.3
+liste fermée préchargée : json, math, numpy, numpy.random, numpy.ma, numpy.linalg
+
+Contrôle statique (les artefacts doivent le passer : c'est la garde à l'exécution qui les voit)
+  temoin_sain            : admis
+  temoin_import_neuf     : admis
+  temoin_fromfile        : admis
+
+[conforme] cas sain : pièce tirée et numpy.unique, préchargement puis échauffement
+    code 0 (attendu 0) ; erreur : -
+    réponse : 20 décisions, 4 ouvertures demandées
+[conforme] artefact : import neuf après armement (numpy.polynomial, par un attribut)
+    code 97 (attendu 97) ; erreur : garde G1, arrêt : armé : import numpy.polynomial
+[conforme] artefact E2 : numpy.fromfile(__file__, dtype=numpy.uint8) après armement
+    code 97 (attendu 97) ; erreur : garde G1, arrêt : armé : open <dossier temporaire>/temoin_fromfile.py
+[conforme] artefact : liste fermée sans numpy.ma, vu à l'échauffement, avant la lecture du lot
+    code 97 (attendu 97) ; erreur : garde G1, arrêt : échauffement : sous-module hors de la liste fermée numpy.ma
+[conforme] rappel de E1 : sans préchargement, un témoin conforme est arrêté (ici dès l'échauffement)
+    code 97 (attendu 97) ; erreur : garde G1, arrêt : échauffement : sous-module hors de la liste fermée numpy.random
+
+VERDICT : tous les cas sont conformes
