@@ -21,10 +21,10 @@ tableaux non modifiables, dont l'empreinte a été écrite dans le journal des g
 « épreuve ouverte avant le gel ». Une épreuve ne s'ouvre qu'une fois, pour une seule sonde gelée.
 
 **Statistiques.** Réemployées : `aire_sous_courbe`, `intervalle_blocs`, `plancher_apparie` (sondes.evaluation),
-`difference_aires_appariee` (sondes.temoins). Neuves : `changement_signe` ; `interaction_quatre_cases` ;
+`difference_aires_appariee` (sondes.temoins). Neuves : `changement_signe` ;
 `nul_reetiquetage` (rejoue toute la sélection, boucle interne comprise) ; capacité de mémorisation (aire
-d'apprentissage, rapportée, jamais décisive) ; `etalon_transport` ; sonde d'identité (une ligne dont l'étiquette est le
-jeu de poids, `etiquettes_identite`) ; `contraste_apparie` [provisoire (Q13)].
+d'apprentissage, rapportée, jamais décisive) ; `contraste_apparie` [provisoire (Q13), confirmé par la mère]. L'étalon de
+transport, la sonde d'identité et le rejeu croisé (interaction) sont redéfinis par l'erratum 1 : `statistiques_v1`.
 
 **Prédicteurs triviaux** à côté de chaque ligne : longueur, rang du pas, valeur déclarée seule ; une ligne est « non
 interprétable » si l'un d'eux sépare au moins autant (max(aire, 1 − aire) ≥ aire de la sonde, mêmes plis) [provisoire (Q9)].
@@ -367,7 +367,7 @@ def intervalle_ou_non_calculable(scores, y, blocs, n_tirages: int, graine: int) 
     return {"etat": "calculé", **r, "graine": graine}
 
 
-def changement_signe(valeurs, rng: np.random.Generator | None = None, n_tirages: int = 100_000) -> dict:
+def changement_signe(valeurs, rng: np.random.Generator | None = None, n_tirages: int = 10_000) -> dict:
     """Test par changement de signe à l'unité. Statistique : moyenne des valeurs par unité [provisoire (Q8)]. Jusqu'à
     `SEUIL_EXACT_SIGNES` unités : les 2ⁿ combinaisons ; au-delà : `n_tirages` tirages (`rng` exigé),
     p = (1 + #)/(1 + m). Rend p au-dessus (unilatérale), p au-dessous, p bilatérale (|T*| ≥ |T|)."""
@@ -472,6 +472,8 @@ def choisir_reglage(conf: Configuration, jeu_app: Jeu, rng: np.random.Generator,
     if len(fc.REGLAGES[conf.famille]) == 1:  # aucun choix à faire : la boucle interne n'a pas d'objet
         return {"reglage": fc.REGLAGES[conf.famille][0], "table": [], "plis_internes": 0}
     internes = plis_internes(jeu_app, conf.k_internes, rng)
+    if conf.famille == "ridge_honnetes":
+        return _choisir_ridge(conf, jeu_app, internes, nom)
     table = []
     for reglage in fc.REGLAGES[conf.famille]:
         aires, ecartes = [], 0
@@ -490,6 +492,30 @@ def choisir_reglage(conf: Configuration, jeu_app: Jeu, rng: np.random.Generator,
         table.append({"reglage": reglage, "aire_interne": float(np.mean(aires)), "aires_plis": aires,
                       "plis_ecartes": ecartes})
     return {"reglage": departager(table, conf.tolerance_ex_aequo), "table": table, "plis_internes": len(internes)}
+
+
+def _choisir_ridge(conf: Configuration, jeu_app: Jeu, internes, nom: str) -> dict:
+    """[Q4, choix provisoire confirmé par la mère] alpha choisi par l'erreur quadratique moyenne de prédiction de
+    log(valeur) sur les seuls épisodes honnêtes des plis internes (aucune étiquette de sabotage) ; ex aequo à 0,5 % près
+    de la meilleure erreur départagés par l'ordre de simplicité (alpha le plus grand d'abord)."""
+    table = []
+    for alpha in fc.ALPHAS_RIDGE:
+        erreurs, ecartes = [], 0
+        for i, (a, e) in enumerate(internes):
+            ja, je = jeu_app.sous(a), jeu_app.sous(e)
+            ha, he = ja.y == 0, je.y == 0
+            if ha.sum() < 2 or he.sum() < 1:
+                ecartes += 1
+                continue
+            Xa, Xe = _vecteurs_avant_champ(ja, nom)[ha], _vecteurs_avant_champ(je, nom)[he]
+            s = fc.regression_ridge_honnetes(f"{nom}/interne-{i}", Xa, ja.valeur[ha], alpha, conf.couche)
+            erreurs.append(float(np.mean((np.log(je.valeur[he]) - s.scores_par_jeton(Xe)) ** 2)))
+        if not erreurs:
+            raise GardeArret(f"{nom} : aucun pli interne avec des épisodes honnêtes (alpha {alpha})")
+        table.append({"reglage": alpha, "erreur_interne_honnetes": float(np.mean(erreurs)), "plis_ecartes": ecartes})
+    meilleure = min(r["erreur_interne_honnetes"] for r in table)
+    choisi = next(r for r in table if r["erreur_interne_honnetes"] <= meilleure * 1.005)["reglage"]
+    return {"reglage": choisi, "table": table, "plis_internes": len(internes)}
 
 
 def departager(table: list[dict], tolerance: float = TOLERANCE_EX_AEQUO):
@@ -673,79 +699,6 @@ def contraste_apparie(scores: dict, jeu: Jeu, unites, rng: np.random.Generator |
     return {"aires_par_unite": par_unite, "test": changement_signe(valeurs, rng)}
 
 
-def etalon_transport(unites: list[dict], rng: np.random.Generator | None = None) -> dict:
-    """Étalon de transport d'une direction gelée [provisoire (Q9)] : par unité u, aire(saboteur de u contre honnête non
-    apparié) − aire(honnête de u contre honnête non apparié), puis changement de signe sur les unités. `unites` : dicts
-    {nom, saboteur, honnete_apparie, honnete_non_apparie} de **scores** rendus par des sondes gelées (`SondeGelee`)
-    sur des lignes d'épreuve (le non apparié vient d'un jeu de poids honnête d'une autre unité)."""
-    valeurs, detail = [], {}
-    for u in unites:
-        s_sab, s_hon, s_np = (np.asarray(u[k], dtype=np.float64) for k in
-                              ("saboteur", "honnete_apparie", "honnete_non_apparie"))
-        if min(s_sab.size, s_hon.size, s_np.size) < 1:
-            raise GardeArret(f"étalon de transport : unité {u['nom']} sans scores")
-        a1 = aire_sous_courbe(np.r_[s_sab, s_np], np.r_[np.ones(s_sab.size), np.zeros(s_np.size)])
-        a0 = aire_sous_courbe(np.r_[s_hon, s_np], np.r_[np.ones(s_hon.size), np.zeros(s_np.size)])
-        detail[u["nom"]] = {"aire_saboteur_non_apparie": a1, "aire_honnete_non_apparie": a0}
-        valeurs.append(a1 - a0)
-    return {"par_unite": detail, "test": changement_signe(valeurs, rng)}
-
-
-def interaction_quatre_cases(scores: dict, jeu: Jeu, plis_ids: dict, role_poids: dict,
-                             rng: np.random.Generator | None = None) -> dict:
-    """Interaction du plan à quatre cases (source du texte × poids qui lisent), sur les scores bruts d'épreuve
-    [provisoire (Q7, Q12)]. `role_poids` : {série : "saboteur" ou "honnete"}. Pour chaque clé lue sous les deux rôles
-    (même unité) : déplacement = score(saboteur) − score(honnête), divisé par l'écart-type des scores du pli d'épreuve ;
-    par tâche : moyenne des déplacements sur le texte « sabote » moins moyenne sur le texte « honnete » ; puis changement
-    de signe sur les tâches. Une tâche sans les deux sources est écartée et comptée."""
-    if jeu.sources is None:
-        raise GardeArret("interaction : jeu sans source de texte")
-    if set(np.unique(jeu.sources)) != {"sabote", "honnete"}:
-        raise GardeArret("interaction : sources « sabote » et « honnete » attendues")
-    if set(role_poids.values()) != {"saboteur", "honnete"} or set(role_poids) != set(np.unique(jeu.series)):
-        raise GardeArret("interaction : rôle de chaque série (saboteur ou honnete) exigé")
-    pli_de = {}
-    ecart_pli = {}
-    for p, ids in plis_ids.items():
-        v = np.array([scores[i] for i in ids])
-        sd = float(v.std())
-        if not sd > 0.0:
-            raise GardeArret(f"interaction : pli {p} de scores constants")
-        ecart_pli[p] = sd
-        for i in ids:
-            pli_de[i] = p
-    index = {jeu.ids[i]: i for i in range(len(jeu))}
-    groupes: dict = {}
-    for i_id, s in scores.items():
-        i = index[i_id]
-        k = (jeu.cles[i], None if jeu.unites is None else jeu.unites[i], jeu.sources[i])
-        groupes.setdefault(k, {})[role_poids[jeu.series[i]]] = (s, pli_de[i_id], jeu.taches[i])
-    deltas: dict = {}
-    incomplets = 0
-    for (cle, u, src), g in groupes.items():
-        if set(g) != {"saboteur", "honnete"}:
-            incomplets += 1
-            continue
-        (ss, ps, t), (sh, ph, _) = g["saboteur"], g["honnete"]
-        if ps != ph:
-            raise GardeArret(f"interaction : clé {cle} lue sous les deux rôles dans deux plis différents")
-        deltas.setdefault(t, {}).setdefault(src, []).append((ss - sh) / ecart_pli[ps])
-    valeurs, ecartees = [], 0
-    par_tache = {}
-    for t in sorted(deltas):
-        d = deltas[t]
-        if set(d) != {"sabote", "honnete"}:
-            ecartees += 1
-            continue
-        v = float(np.mean(d["sabote"]) - np.mean(d["honnete"]))
-        par_tache[t] = v
-        valeurs.append(v)
-    if not valeurs:
-        raise GardeArret("interaction : aucune tâche avec les deux sources")
-    return {"par_tache": par_tache, "taches_ecartees": ecartees, "cles_incompletes": incomplets,
-            "test": changement_signe(valeurs, rng)}
-
-
 # ------------------------------------------------------------------------------------------------------------ sortie
 
 def manifeste_lecture(config: dict, graines: dict, commit: str | None = None) -> dict:
@@ -823,6 +776,6 @@ def exiger_sans_resultat(resume: dict) -> None:
 __all__ = ["Jeu", "construire_jeu", "jeu_depuis_series", "paires_du_jeu", "verifier_pli", "plis_externes",
            "plis_internes", "lire_engagement", "geler", "SondeGelee", "Epreuve", "changement_signe", "lecture_signee",
            "Configuration", "choisir_reglage", "lire_ligne", "nul_reetiquetage", "permuter_etiquettes",
-           "etiquettes_identite", "contraste_apparie", "etalon_transport", "interaction_quatre_cases",
+           "etiquettes_identite", "contraste_apparie",
            "intervalle_ou_non_calculable", "degeneres_blocs", "manifeste_lecture", "ecrire_lecture",
            "resume_sans_nombre", "exiger_sans_resultat", "deriver_graines", "generateur", "entier_de_graine"]

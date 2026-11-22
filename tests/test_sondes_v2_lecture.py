@@ -305,47 +305,6 @@ def test_nul_reetiquetage(tmp_path):
     assert len(n["memorisation_nul"]) == 9
 
 
-def test_etalon_transport_a_la_main():
-    unites = [{"nom": f"u{i}", "saboteur": [2.0, 3.0], "honnete_apparie": [0.0, 1.0],
-               "honnete_non_apparie": [0.5, 1.5]} for i in range(6)]
-    r = lc.etalon_transport(unites)
-    assert r["par_unite"]["u0"] == {"aire_saboteur_non_apparie": 1.0, "aire_honnete_non_apparie": 0.25}
-    assert r["test"]["p_au_dessus"] == 1 / 64
-    with pytest.raises(GardeArret):
-        lc.etalon_transport([{"nom": "u", "saboteur": [], "honnete_apparie": [1.0], "honnete_non_apparie": [1.0]}])
-
-
-def _jeu_quatre_cases(delta_sab, delta_hon, n_taches=6):
-    lignes, et, scores, plis = [], {}, {}, {}
-    rng = np.random.default_rng(0)
-    for t in range(n_taches):
-        for src, delta in (("sabote", delta_sab), ("honnete", delta_hon)):
-            for a in range(2):
-                base = float(rng.standard_normal())
-                for serie, lab, sc in (("S0", 1, base + delta), ("H0", 0, base)):
-                    cle = f"t{t}-{src}-a{a}"
-                    lignes.append({"serie": serie, "cle": cle, "tache": f"t{t}", "unite": "u0", "source": src,
-                                   "sequence": np.zeros((1, 2)), "pas": 0, "valeur_declaree": None})
-                    et[f"{serie}/{cle}"] = lab
-                    scores[f"{serie}/{cle}"] = sc
-                    plis.setdefault(f"p{t % 2}", []).append(f"{serie}/{cle}")
-    return lc.construire_jeu(lignes, et), scores, plis
-
-
-def test_interaction_quatre_cases():
-    roles = {"S0": "saboteur", "H0": "honnete"}
-    j, s, p = _jeu_quatre_cases(2.0, 0.0)
-    r = lc.interaction_quatre_cases(s, j, p, roles)
-    assert lc.lecture_signee(r["test"], 0.05) == "établie"
-    j, s, p = _jeu_quatre_cases(0.0, 2.0)
-    assert lc.lecture_signee(lc.interaction_quatre_cases(s, j, p, roles)["test"], 0.05) == "contraire"
-    j, s, p = _jeu_quatre_cases(1.0, 1.0)
-    r = lc.interaction_quatre_cases(s, j, p, roles)
-    assert r["test"]["statistique"] == pytest.approx(0.0, abs=1e-12)
-    with pytest.raises(GardeArret, match="rôle"):
-        lc.interaction_quatre_cases(s, j, p, {"S0": "saboteur"})
-
-
 def test_sortie_et_resume(tmp_path):
     res = {"famille": "logistique_l2", "effectifs_plan": {"lignes": 36, "taches": 6}, "n_plis": 5,
            "ligne": {"aire": 0.73, "etat": "calculée"}, "nul": {"p": float("nan")}}
@@ -406,7 +365,7 @@ def test_ligne_ridge(tmp_path):
                       tmp_path / "j.jsonl", "ridge")
     assert r["etat"] == "calculée" and r["aire"] > 0.9
     for p in r["plis"]:
-        assert p["reglage"] in fc.ALPHAS_RIDGE
+        assert p["reglage"] in fc.ALPHAS_RIDGE and "erreur_interne_honnetes" in p["table_interne"][0]
     # artefact : plusieurs jetons par ligne
     j2 = lc.construire_jeu(*_lignes())
     with pytest.raises(GardeArret, match="un seul jeton"):
