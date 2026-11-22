@@ -56,8 +56,8 @@ Un agent de langue mène seul une tâche de centaines d'actions ; il peut sabote
 - **L'antériorité.** Les cinq citent Greenblatt, Shlegeris, Sachan et Roger comme antériorité la plus proche pour le cadre du contrôle.
 - **Diffus contre concentré.** Fable, Opus, Argon et Carbon distinguent un sabotage réparti d'un sabotage concentré sur quelques décisions ; Astra, occasions et témoins.
 - **Les deux signaux possibles des activations.** Fable, Opus, Argon et Carbon formulent la même alternative : un signal d'acte, présent aux seuls actes sabotés et qui se dilue, ou un signal d'état, présent à chaque action et qui s'accumule.
-- **Les comparaisons circulaires.** Les cinq notent que des exécutions de comparaison produites par le modèle suspect peuvent partager son biais.
-- **Les issues sans intérêt.** Quatre modèles nomment presque les mêmes : saboteur incapable de rester discret, agent honnête déjà en échec, vérification du seul résultat final suffisante.
+- **Les comparaisons circulaires.** Fable, Opus, Argon et Carbon notent que des exécutions de comparaison produites par le modèle suspect peuvent partager son biais.
+- **Les issues sans intérêt.** Fable, Argon et Carbon nomment presque les mêmes (saboteur incapable de rester discret, agent honnête déjà en échec, vérification finale suffisante) ; Opus en donne de voisines.
 
 ### Convergence née des critiques
 
