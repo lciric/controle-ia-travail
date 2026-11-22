@@ -14,13 +14,13 @@ Aucun juge : calcul, base bibliographique, liste, coût. Cohérent avec N-058.
 
 **Constat 2 (pièce 1) : aucune balise de duel.** Le code ne balise que les pièces injectées ; les sections sont demandées en prose, et le tour III.3 n'exige pas la forme H_A contre H_B. « Balise du script » ne désigne rien.
 
-**Constat 3 (pièce 1) : loi nulle de τ mal choisie.** « Toutes lettres confondues » mêle de vraies concordances entre modèles et omet le style propre au modèle, alors que l'appariement compare un modèle à lui-même.
+**Constat 3 (pièce 1).** La loi nulle de τ « toutes lettres confondues » mêle de vraies concordances et omet le style propre au modèle comparé à lui-même.
 
 **Constat 4 (pièce 2c) : injection ignorée par consigne.** Le tour III.3 dit « Ne réponds qu'aux sections qui visent ta proposition » ; le dernier paragraphe d'une critique vise la dernière lettre, pas forcément le destinataire.
 
 **Constat 5 (pièce 2b) : arrêt certain.** Les invites du tour III.3 et la mémoire de l'essaim contiennent des textes de modèles qui citeront la liste : « élément retrouvé dans une invite » se déclencherait toujours.
 
-**Constat 6 (fuite).** Listes et erreurs sont déjà dans le dépôt (`reponse-10/`), lu par les sessions qui rédigent les faits. La garde de motifs du v9 est le lieu du contrôle.
+**Constat 6 (fuite).** Listes et erreurs sont déjà dans le dépôt, lu par les sessions qui rédigent les faits.
 
 ## Calculs refaits (pièce 2c)
 
@@ -30,9 +30,9 @@ Aucun juge : calcul, base bibliographique, liste, coût. Cohérent avec N-058.
 
 ## Références
 
-**Candidates.** Les 57 me sont connues de mémoire comme existantes ; C11 et T12 moins sûres ; Howard et al. : prépublication 2018, parution 2021. Rien vérifié sur fichier source (R7). Plafond probable de M2 (G1 à G12 cités partout).
+**Candidates.** Les 57 me sont connues de mémoire comme existantes ; C11 et T12 moins sûres ; Howard et al. : prépublication 2018, parution 2021. Rien vérifié sur PDF (R7). Plafond probable de M2 (G1 à G12 cités partout).
 
-**Inventées.** Inexistence non vérifiable par moi (aucune base interrogée). Des patronymes existent (Okhuysen, de mémoire un universitaire en management ; Brennecke, Dellacroce, Feldhausen) : « ne désignent personne » n'est pas garanti. Les titres amorcent le fond (« Shared weights, shared blind spots » répond à la question B) : M2 en est contaminée, dans les deux modes.
+**Inventées.** Inexistence non vérifiée (aucune base interrogée). Des patronymes existent (Okhuysen, de mémoire un universitaire en management ; Brennecke, Dellacroce, Feldhausen) : « ne désignent personne » n'est pas garanti. Les titres amorcent le fond (« Shared weights, shared blind spots » répond à la question B) : M2 en est contaminée, dans les deux modes.
 
 ## Corrections, mot à mot
 
