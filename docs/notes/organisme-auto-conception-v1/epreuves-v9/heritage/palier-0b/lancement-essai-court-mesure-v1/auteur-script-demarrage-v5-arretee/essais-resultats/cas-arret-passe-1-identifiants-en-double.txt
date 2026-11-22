@@ -1,0 +1,79 @@
+script : 53ebcf5e10cc137b9932b6065147450bed21e5b6f61dea8947b91e1a32d6260b
+fonctions extraites : 77 lignes, sha256 4b992f31c847631e…
+n1-non-chef-arbre-cg | ref5, code du départ 5 | attendu code 86, programme et descendants morts, étranger vivant | rendu code 86 | TENU
+   00:11:12 programme arrete (identifiant:heure de depart) : 22174:3080733 22170:3080732 22174:3080733 22175:3080733 22176:3080733 22177:3080733 ; forces : aucun ; groupe de controle : /sys/fs/cgroup/unified/essai-3-banc-v5-arret-n1-non-chef-arbre-cg, membres restants : [] ECHEC code 86 : depart code 5
+   processus : 22169:etranger-sans-lien:VIVANT 22174:programme:mort 22175:enfant-sleep:mort 22176:enfant-sous-shell:mort 22177:petit-enfant-sleep:mort
+   membres du groupe après la fonction : []
+n2-chef-code-5-cg | ref5, code du départ 5 | attendu code 0, suite, rien tué | rendu code 0 | TENU
+   00:11:13 ATTENTION : depart, code 5 ; identite prise par ce script : session et groupe 22248, depart 3080777 SUITE : ref5 passe sans echec
+   processus : 22247:etranger-sans-lien:VIVANT 22248:programme:VIVANT 22253:enfant-sleep:VIVANT 22254:enfant-sous-shell:VIVANT 22255:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [22248 22253 22254 22255 ]
+n2b-chef-code-0-cg | ref0, code du départ 0 | attendu code 0, référence prise, rien tué | rendu code 0 | TENU
+   reference : 3080789 SUITE : ref0 passe sans echec
+   processus : 22301:etranger-sans-lien:VIVANT 22302:programme:VIVANT 22306:enfant-sleep:VIVANT 22307:enfant-sous-shell:VIVANT 22308:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [22302 22306 22307 22308 ]
+n3-mort-cg | ref5, code du départ 5 | attendu code 86, rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22354 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22353:etranger-sans-lien:VIVANT 22354:programme:mort
+   membres du groupe après la fonction : []
+n4-orphelin-non-chef-cg | ref5, code du départ 5 | attendu code 86, tout mort, petit-fils orphelin compris ; étranger vivant | rendu code 86 | TENU
+   00:11:13 programme arrete (identifiant:heure de depart) : 22386:3080805 22382:3080804 22386:3080805 22388:3080806 22389:3080806 ; forces : aucun ; groupe de controle : /sys/fs/cgroup/unified/essai-3-banc-v5-arret-n4-orphelin-non-chef-cg, membres restants : [] ECHEC code 86 : depart code 5 : programm
+   processus : 22381:etranger-sans-lien:VIVANT 22386:programme:mort 22388:enfant-sleep-vivant:mort 22389:petit-fils-orphelin:mort
+   membres du groupe après la fonction : []
+n4b-orphelin-chef-arret-cg | arreter, code du départ 5 | attendu code 0, arreter : tout mort, orphelin compris ; étranger vivant | rendu code 0 | TENU
+   00:11:13 programme arrete (identifiant:heure de depart) : 22456:3080848 22456:3080848 22461:3080849 22462:3080849 ; forces : aucun ; groupe de controle : /sys/fs/cgroup/unified/essai-3-banc-v5-arret-n4b-orphelin-chef-arret-cg, membres restants : [] SUITE : arreter passe sans echec
+   processus : 22455:etranger-sans-lien:VIVANT 22456:programme:mort 22461:enfant-sleep-vivant:mort 22462:petit-fils-orphelin:mort
+   membres du groupe après la fonction : []
+n5-identifiant-repris-chef-cg | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22522 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22521:etranger-sans-lien:VIVANT 22522:etranger-qui-reprend-l-identifiant:VIVANT
+   membres du groupe après la fonction : []
+n6-identifiant-repris-non-chef-cg | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22555 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22554:etranger-sans-lien:VIVANT 22555:etranger-qui-reprend-l-identifiant:VIVANT
+   membres du groupe après la fonction : []
+n7-arret-reference-autre-cg | arreter, code du départ 5 | attendu code 0, arreter : rien tué (référence autre d'un top) | rendu code 0 | TENU
+   00:11:13 arret : 22588 n'est pas le programme lance (reference absente ou heure de depart autre) : rien n'est arrete SUITE : arreter passe sans echec
+   processus : 22587:etranger-sans-lien:VIVANT 22588:programme:VIVANT 22592:enfant-sleep:VIVANT 22593:enfant-sous-shell:VIVANT 22594:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [22588 22592 22593 22594 ]
+n8-descendant-session-neuve-pere-mort-cg | arreter, code du départ 5 | attendu code 0, arreter : tout mort, descendant en session neuve compris ; étranger vivant | rendu code 0 | TENU
+   00:11:14 programme arrete (identifiant:heure de depart) : 22641:3080884 22641:3080884 22646:3080885 22647:3080885 ; forces : aucun ; groupe de controle : /sys/fs/cgroup/unified/essai-3-banc-v5-arret-n8-descendant-session-neuve-pere-mort-cg, membres restants : [] SUITE : arreter passe sans echec
+   processus : 22640:etranger-sans-lien:VIVANT 22641:programme:mort 22646:enfant-sleep-vivant:mort 22647:descendant-session-neuve-pere-mort:mort
+   membres du groupe après la fonction : []
+n9-code-0-heure-du-depart-autre-cg | ref0, code du départ 0 | attendu code 86, référence refusée (heure écrite par le départ autre d'un top) : rien tué | rendu code 86 | TENU
+   ECHEC code 86 : reference refusee : rien n'est arrete
+   processus : 22707:etranger-sans-lien:VIVANT 22708:programme:VIVANT 22712:enfant-sleep:VIVANT 22713:enfant-sous-shell:VIVANT 22714:petit-enfant-sleep:VIVANT
+   membres du groupe après la fonction : [22708 22712 22713 22714 ]
+n1-non-chef-arbre-sans | ref5, code du départ 5 | attendu code 86, référence refusée en repli au code 5 : rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22760 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22756:etranger-sans-lien:VIVANT 22760:programme:VIVANT 22762:enfant-sleep:VIVANT 22763:enfant-sous-shell:VIVANT 22764:petit-enfant-sleep:VIVANT
+n2-chef-code-5-sans | ref5, code du départ 5 | attendu code 86, référence refusée en repli au code 5 : rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22804 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22803:etranger-sans-lien:VIVANT 22804:programme:VIVANT 22807:enfant-sleep:VIVANT 22808:enfant-sous-shell:VIVANT 22809:petit-enfant-sleep:VIVANT
+n2b-chef-code-0-sans | ref0, code du départ 0 | attendu code 0, référence prise, rien tué | rendu code 0 | TENU
+   reference : 3081000 SUITE : ref0 passe sans echec
+   processus : 22845:etranger-sans-lien:VIVANT 22846:programme:VIVANT 22849:enfant-sleep:VIVANT 22851:enfant-sous-shell:VIVANT 22852:petit-enfant-sleep:VIVANT
+n3-mort-sans | ref5, code du départ 5 | attendu code 86, rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22890 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22889:etranger-sans-lien:VIVANT 22890:programme:mort
+n4-orphelin-non-chef-sans | ref5, code du départ 5 | attendu code 86, référence refusée en repli au code 5 : rien tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22914 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22910:etranger-sans-lien:VIVANT 22914:programme:VIVANT 22917:enfant-sleep-vivant:VIVANT 22918:petit-fils-orphelin:VIVANT
+n4b-orphelin-chef-arret-sans | arreter, code du départ 5 | attendu code 0, arreter : tout mort, orphelin compris ; étranger vivant | rendu code 0 | TENU
+   00:11:15 programme arrete (identifiant:heure de depart) : 22954:3081069 22958:3081069 22959:3081069 ; forces : aucun ; groupe de controle : aucun (repli : arbre, session et groupe) SUITE : arreter passe sans echec
+   processus : 22953:etranger-sans-lien:VIVANT 22954:programme:mort 22958:enfant-sleep-vivant:mort 22959:petit-fils-orphelin:mort
+n5-identifiant-repris-chef-sans | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 22995 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 22994:etranger-sans-lien:VIVANT 22995:etranger-qui-reprend-l-identifiant:VIVANT
+n6-identifiant-repris-non-chef-sans | ref5, code du départ 5 | attendu code 86, étranger ni adopté ni tué | rendu code 86 | TENU
+   ECHEC code 86 : depart code 5 : identite de 23020 non confirmee (reference absente, ou heure de depart autre) : rien n'est arrete
+   processus : 23019:etranger-sans-lien:VIVANT 23020:etranger-qui-reprend-l-identifiant:VIVANT
+n7-arret-reference-autre-sans | arreter, code du départ 5 | attendu code 0, arreter : rien tué (référence autre d'un top) | rendu code 0 | TENU
+   00:11:15 arret : 23045 n'est pas le programme lance (reference absente ou heure de depart autre) : rien n'est arrete SUITE : arreter passe sans echec
+   processus : 23044:etranger-sans-lien:VIVANT 23045:programme:VIVANT 23048:enfant-sleep:VIVANT 23049:enfant-sous-shell:VIVANT 23050:petit-enfant-sleep:VIVANT
+n8-descendant-session-neuve-pere-mort-sans | arreter, code du départ 5 | attendu code 0, arreter en repli : arbre, session et groupe morts ; descendant en session neuve VIVANT (limite du repli) | rendu code 0 | TENU
+   00:11:16 programme arrete (identifiant:heure de depart) : 23089:3081084 23093:3081084 ; forces : aucun ; groupe de controle : aucun (repli : arbre, session et groupe) SUITE : arreter passe sans echec
+   processus : 23088:etranger-sans-lien:VIVANT 23089:programme:mort 23093:enfant-sleep-vivant:mort 23094:descendant-session-neuve-pere-mort:VIVANT
+n9-code-0-heure-du-depart-autre-sans | ref0, code du départ 0 | attendu code 86, référence refusée (heure écrite par le départ autre d'un top) : rien tué | rendu code 86 | TENU
+   ECHEC code 86 : reference refusee : rien n'est arrete
+   processus : 23130:etranger-sans-lien:VIVANT 23131:programme:VIVANT 23134:enfant-sleep:VIVANT 23135:enfant-sous-shell:VIVANT 23136:petit-enfant-sleep:VIVANT

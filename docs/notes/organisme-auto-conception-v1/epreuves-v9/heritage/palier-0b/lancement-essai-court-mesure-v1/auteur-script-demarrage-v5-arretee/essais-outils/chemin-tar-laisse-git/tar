@@ -1,0 +1,9 @@
+#!/bin/bash
+# Faux tar (artefact) : joue le vrai tar, puis, pour une extraction « -x -C DOSSIER » (celle de la racine), laisse un
+# dossier .git dans DOSSIER/docs/ (comme une racine faite par un dépôt extrait au lieu de git archive).
+/usr/bin/tar "$@"
+c=$?
+if [ "${1:-}" = -x ] && [ "${2:-}" = -C ] && [ -n "${3:-}" ]; then
+  mkdir -p "$3/docs/.git" && echo "ref: refs/heads/main" > "$3/docs/.git/HEAD"
+fi
+exit $c
