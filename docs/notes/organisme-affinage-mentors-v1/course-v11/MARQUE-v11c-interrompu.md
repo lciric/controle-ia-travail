@@ -1,0 +1,3 @@
+# Lanceur v11c de l'affinage — travail interrompu, non scellé, non contre-lu
+
+Versé le 2026-11-22 vers 23:07Z par session_013QMaymD1EsQJ68Qivpubes. Le développeur Opus a été arrêté pendant la passe finale de ses essais, sur la consigne d'autonomie de la nuit (GO-2026-11-22-147, -150, R-5086 : pause des chantiers hors barreau 5 et bras A). Les fichiers v11c, la commande Gemini en flux v2 et la sonde commune d'Astra v3 sont des brouillons : ni compagnons, ni essais finaux, ni rapport fini. À reprendre au réveil de Lazar : relancer les essais des fichiers touchés, finir le rapport, sceller, puis faire contre-lire. Corrections visées : constats 1 et 3 à 15 de contre-lecture-lanceur-v11b-v1.md (cd7e5455…).
