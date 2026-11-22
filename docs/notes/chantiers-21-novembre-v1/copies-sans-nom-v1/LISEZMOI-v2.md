@@ -1,0 +1,5 @@
+# Copies sans nom — chantiers du 21 novembre, ajout du 22 novembre vers 12:10Z (v2 ; la v1 reste telle quelle)
+
+Ajout sur le mot de la mère (« (a) », 22 novembre vers 12:07Z), même écart que les copies sans nom du 22 :
+- `contre-lecture-reponse-3-audit-apres-coup-opus-v1-sans-motif-v1.md`, copie de `docs/notes/chantiers-21-novembre-v1/contre-lectures-v1/contre-lecture-reponse-3-audit-apres-coup-opus-v1.md` (empreinte `fc76b2a8d5c13b0f50de7320acedeb37c1f30fb9b98738cebe6ff19356aa1d94`, laissé intact). Seule la ligne 429 change. Ligne d'origine en clair : « - **Rien sous** `diag/`, `runs/`, `archives-reponses-modeles/`, `quarantaine/` ni `matiere-premiere/` ; aucun fichier « consigne-privee » ni « conception-ii-b » ; aucun résultat d'expérience. » Phrase de remplacement : « aucun fichier dont le nom est interdit », à la place de « aucun fichier « consigne-privee » ni « conception-ii-b » ».
+- `inventaire-canaux-devins-v1-sans-motif-v1.md` (écrit vers 11:34Z) : **non servi** à Fable. La mère l'a écarté (« on ne le maquille pas ») ; il reste au dépôt comme trace.
