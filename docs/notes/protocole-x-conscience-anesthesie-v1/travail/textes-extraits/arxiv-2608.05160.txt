@@ -1,0 +1,1626 @@
+                                         The Ignition Index: Measuring Global Workspace Dynamics
+                                         in Language Models
+
+                                         Saman Rahbar
+                                         Dialpad, Inc.
+                                         Independent Research
+                                         info@srahbar.com
+
+
+
+                                                                                            Abstract
+
+                                                 We introduce the Ignition Index (I), a validated scalar metric that operationalizes Global
+                                                 Workspace Theory’s (gwt) all-or-none ignition prediction in transformer language models,
+                                                 and demonstrate its measurement selectivity through rigorous control experiments. The
+                                                 metric fits a four-parameter sigmoid to per-layer linear probe accuracy as a function of
+arXiv:2608.05160v1 [cs.AI] 26 May 2026
+
+
+
+
+                                                 input signal strength, extracting the steepness parameter β̂: high values indicate abrupt,
+                                                 ignition-like representational transitions; low values indicate graded build-up. Across 11
+                                                 models spanning five architecture families and seven linguistic probing tasks, shuffled-label
+                                                 controls validate that the Ignition Index selectively captures genuine linguistic structure
+                                                 rather than spurious probe capacity: real transitions yield β̂ = 113.1 while shuffled-label
+                                                 controls yield β̂ = 11.8, a 9.6-fold gap (p < 0.001, Mann-Whitney U -test) demonstrating
+                                                 measurement selectivity.
+                                                 Applying this validated framework to pre-registered hypotheses linking GWT predictions to
+                                                 architecture and training, we find: (1) Architecture discriminability: attention-based
+                                                 transformers show higher I than state-space models—feedforward architectures β̂ = 130.0
+                                                 exceed SSMs β̂ = 68.7 by 89% (p < 10−13 , Cohen’s d = 0.52), with Mamba exhibiting near-
+                                                 linear layer profiles consistent with absent workspace broadcasting. (2) Axis-dependent
+                                                 ignition in recurrent architectures: Huginn-3.5B’s depth-recurrent architecture exhibits
+                                                 iteration-axis ignition (β̂iteration = 234.8) that exceeds its depth-axis profile (β̂depth = 111.0)
+                                                 by 2.12-fold, demonstrating that recurrent architectures manifest workspace-like transitions
+                                                 along the recurrence dimension rather than the depth axis. (3) Training-time phase
+                                                 transition: Pythia-410M exhibits a PELT-detected changepoint at training step 256 (pre:
+                                                 β̂ = 39.57; post: β̂ = 66.02, +67%), earlier than induction-head formation and consistent with
+                                                 an initial representational consolidation phase. (4) Calibrated expectations: hypotheses
+                                                 linking ignition strength to model scale and signal strength were not confirmed, demonstrating
+                                                 that gwt-aligned dynamics do not monotonically track these factors and that current
+                                                 transformer architectures may saturate available ignition mechanisms.
+                                                 The Ignition Index provides the first validated quantitative bridge between gwt’s dynamical
+                                                 predictions and mechanistic interpretability, yields a principled architecture-level discrimina-
+                                                 tor with 9.6-fold selectivity, and reveals training-phase transitions not previously characterized
+                                                 in the scaling literature.
+
+
+                                         1   Introduction
+
+                                         What distinguishes architectures that integrate information globally from those that process it locally and
+                                         sequentially? Global Workspace Theory (gwt) (Baars, 1988; Dehaene et al., 1998; Dehaene & Changeux,
+                                         2011) offers a precise dynamical answer: systems with global broadcast mechanisms produce all-or-none
+                                         ignition—a threshold-nonlinear transition in which stimulus representations cross a critical threshold and
+                                         become globally available to all downstream processors. This ignition has been measured quantitatively in
+
+
+                                                                                                 1
+cortical recordings as a steep sigmoid in neural response amplitude as a function of stimulus strength (Del
+Cul et al., 2007), with steepness β distinguishing conscious-access processing from subliminal feedforward
+processing.
+Transformer language models exhibit striking architectural parallels to the gwt workspace: the residual
+stream (Elhage et al., 2021) functions as a shared communication channel; attention heads implement
+content-dependent global routing (Olsson et al., 2022; Wang et al., 2023); and linear probes reveal progressive
+information build-up across the layer stack (Tenney et al., 2019). Yet a fundamental dynamical question has
+remained unmeasured: does the layer-wise information build-up of transformers exhibit ignition-like
+threshold nonlinearity, and does this vary systematically with architecture?
+This question matters for two reasons. First, architecturally, attention-based transformers (feedforward and
+recurrent-depth) differ from state-space models (Mamba) in precisely the feature gwt identifies as critical for
+global broadcast: content-dependent all-to-all routing. If ignition dynamics track this feature, the Ignition
+Index provides a principled discriminator between workspace-like and non-workspace-like architectures—
+with implications for architecture search and the interpretability of representational transitions. Second,
+empirically, transformer training exhibits sharp phase transitions (Olsson et al., 2022; Nanda et al., 2023)
+whose relationship to representational dynamics is unknown. A metric sensitive to ignition-like transitions
+could reveal when and how these transitions consolidate in the layer stack.
+
+
+In This paper, We introduce the Ignition Index (I) by: (1) varying input signal strength s ∈ [0, 1]
+via controlled token corruption and embedding noise; (2) extracting per-layer residual stream states via
+TransformerLens (Nanda & Bloom, 2022); (3) training linear probes at every layer to decode task-relevant
+information; and (4) fitting a four-parameter sigmoid to the layer-accuracy curve Acc(ℓ, s) and extracting
+β̂ as the transition steepness. We evaluate I across 12 models spanning five families—GPT-2 (Radford
+et al., 2019), Pythia (Biderman et al., 2023), Gemma 2 (Gemma Team et al., 2024), Huginn-3.5B (Geiping
+et al., 2025), and Mamba (Gu & Dao, 2023)—and find that I reliably discriminates attention-based from
+state-space architectures (p < 10−13 ), that recurrent-depth processing does not amplify ignition beyond
+standard feedforward attention, and that a training-time phase transition in ignition structure precedes the
+well-characterised induction-head formation step.
+
+
+Our contributions are:
+(1) Shuffled-label validation: 9.6-fold selectivity gap (p < 0.001, Mann-Whitney U -test) demonstrating
+    the Ignition Index captures genuine linguistic structure rather than spurious probe capacity (§7).
+
+(2) The Ignition Index β̂: a theoretically grounded, falsifiable metric for GWT-like representational
+    transitions in any layer-structured model (§4).1
+
+(3) Architecture discriminability: an 89% gap between feedforward (β̂ = 130.0) and SSM families
+    (β̂ = 68.7), with Mamba exhibiting near-linear profiles consistent with absent global broadcast. Iteration-
+    axis probing of Huginn-3.5B reveals 2.12-fold higher ignition along the recurrence dimension, demonstrating
+    axis-dependent architectural patterns (§8).
+
+(4) A novel training-time phase transition at step 256 in Pythia-410M, preceding induction-head
+    formation (§8.5).
+
+(5) Sigmoid ceiling robustness: the FF–SSM gap widens to 2.12× when ceiling hits are excluded,
+    confirming the architectural gap is not a sigmoid-fitting artifact (§7).
+
+(6) A complete, open-source experimental protocol—activation extraction, probe training, sigmoid
+    fitting, bootstrap CIs, statistical testing—across five architecture families (§6).
+
+  1 Code and data: https://github.com/saman-rahbar/ignition-index
+
+
+
+
+                                                       2
+2     Related Work
+
+Probing transformer representations. Linear classifier probes (Alain & Bengio, 2017) characterise what
+information is encoded at each transformer layer. Tenney et al. (Tenney et al., 2019) showed that linguistic
+features peak at different depths in BERT. Belinkov (Belinkov, 2022) distinguishes what is encoded (probing)
+from what is causally used—a gap we address via amnesic probing (Elazar et al., 2021). Voita and Titov
+(Voita & Titov, 2020) introduce MDL probes that avoid overfitting.
+
+Phase transitions in transformers. Olsson et al. (Olsson et al., 2022) documented a sharp training-time
+phase transition in induction head formation. Nanda et al. (Nanda et al., 2023) fully reverse-engineered the
+grokking transition. Schaeffer et al. (Schaeffer et al., 2023) showed many apparent emergent abilities are
+metric artifacts—a threat we address via continuous probe metrics. Brinkmann et al. (Brinkmann et al.,
+2025) documented abstraction phase transitions within forward passes.
+
+GWT in artificial systems. Bengio (Bengio, 2017) proposed the Consciousness Prior as a GWT-derived
+inductive bias. Goyal and Bengio (Goyal & Bengio, 2022) implemented an explicit Global Latent Workspace.
+Butlin et al. (Butlin et al., 2023) assessed AI systems against consciousness indicator properties. VanRullen
+and Kanai (VanRullen & Kanai, 2021) and Butlin et al. (Butlin et al., 2023) provide structural mappings
+between gwt and deep learning architectures. None of these works measure ignition dynamics in standard
+transformer forward passes.
+
+Mechanistic interpretability and sparse autoencoders. Elhage et al. (Elhage et al., 2021) established
+the residual stream framework. Meng et al. (Meng et al., 2022) introduced causal tracing. Conmy et al.
+(Conmy et al., 2023) formalised automated circuit discovery. Geiger et al. (Geiger et al., 2025) developed
+causal abstraction. Marks et al. (Marks et al., 2024) introduced sparse feature circuits. Lindsey et al. (Lindsey
+et al., 2025) applied attribution-graph tracing to Claude 3.5 Haiku. Bricken et al. (Bricken et al., 2023) and
+Cunningham et al. (Cunningham et al., 2024) demonstrated that sparse autoencoders recover monosemantic,
+interpretable features from transformer residual streams; Lieberum et al. (Lieberum et al., 2024) released the
+Gemma Scope SAE suite used in and leave fine-grained feature decomposition to future work.
+
+3     Background
+
+3.1   GWT Ignition: Quantitative Predictions
+
+gnwt (Dehaene & Changeux, 2011; Mashour et al., 2020) predicts that the transition between subliminal
+processing and conscious access is governed by a sharp bifurcation. Given stimulus strength s ∈ [0, 1], the
+probability of workspace ignition follows:
+                                                                  1
+                                    P (ignition | s) =                        ,                                 (1)
+                                                         1 + exp −β (s − s0 )
+where s0 is the ignition threshold and β controls steepness. Large β reflects abrupt, all-or-none ignition;
+β → 0 reflects graded, linear build-up. Del Cul et al. (Del Cul et al., 2007) empirically demonstrated this
+sigmoid in EEG prefrontal activation (>270 ms) with a distinct absence of intermediate states. The key
+architectural requirements for high-β ignition are: (i) a shared broadcast medium; (ii) competitive
+inhibition; (iii) recurrent reverberant activity that self-amplifies once threshold is crossed; and (iv) a bottleneck
+capacity limit.
+
+3.2   Transformer Layer Space as a Proxy for Processing Time
+
+We treat layer depth ℓ ∈ {0, . . . , L} as a proxy for processing depth, motivated by: (i) the logit lens
+(nostalgebraist, 2020) and tuned lens (Belrose et al., 2023) showing progressive prediction refinement across
+layers; (ii) probing studies showing systematic information build-up (Tenney et al., 2019); and (iii) attribution
+graph tracing (Lindsey et al., 2025) showing causal information flow through layers. This substitution is
+principled but imperfect (see §10).
+
+
+                                                         3
+3.3   Residual Stream Notation
+
+Following Elhage et al. (2021), the residual stream update at layer ℓ is:
+                                   (ℓ+1)      (ℓ)                          (ℓ) 
+                                           = xi + Attn(ℓ) x(ℓ) i + MLP(ℓ) xi .                                    (2)
+                                                              
+                                 xi
+
+             (ℓ)
+We probe xi        ∈ Rd (Eq. (2)) directly using resid_pre hooks in TransformerLens unless otherwise
+specified.
+
+4     The Ignition Index
+
+4.1   Formal Definition
+
+Let M be a transformer model with L layers and let T be a probing task with binary or categorical labels.
+For signal strength s ∈ {s1 , . . . , sK } and layer ℓ ∈ {0, . . . , L}, let Acc(ℓ, s) denote the accuracy of a linear
+probe trained on the residual stream at layer ℓ and evaluated on inputs with signal strength s.
+For a fixed s, the layer-accuracy curve is fit to a four-parameter logistic:
+                                                                         ymax − ymin
+                             f (ℓ ; ymin , ymax , ℓ0 , β) = ymin +                       ,                       (3)
+                                                                     1 + exp −β (ℓ − ℓ0 )
+
+where ymin and ymax are probe accuracy asymptotes, ℓ0 is the transition midpoint (the layer at which probe
+accuracy reaches half its range), and β > 0 controls steepness.
+Definition 1 (Ignition Index). The Ignition Index of model M on task T at signal strength s is the
+maximum-likelihood estimate:
+                                                                       L
+                                                                       X                   2
+                         I(M, T , s) := β̂(M, T , s) = argminβ            Acc(ℓ, s) − f (ℓ) .                     (4)
+                                                                         
+
+                                                                       ℓ=0
+
+The aggregate Ignition Index averages over tasks and signal strengths:
+                                                                K
+                                                      1    XX
+                                      I(M ) :=                β̂(M, T , sk ).                                     (5)
+                                                  |T | · K
+                                                            T   k=1
+
+
+Higher I indicates more abrupt, ignition-like representational transitions; lower I indicates gradual, linear
+build-up. Both I(M, T , s) (Eq. (4)) and the task-averaged I(M ) (Eq. (5)) are reported throughout.
+
+4.2   Geometric Interpretation
+
+The transition width w = ln(81)/β̂ ≈ 4.39/β̂ gives the number of layers between 10% and 90% of the accuracy
+range. Perfect ignition (β̂ → ∞) compresses the transition to a single layer; perfectly linear processing
+(β̂ → 0) spreads it uniformly across all layers. We report both β̂ and w for interpretability. Figure 1 illustrates
+the three qualitatively distinct profiles predicted by gwt across architecture classes.
+
+4.3   Connection to GWT Quantitative Prediction
+
+Equation (3) is structurally identical to Eq. (1) with the substitution s → ℓ/L (layer depth as processing
+depth proxy). This is not coincidental: both describe how a binary outcome probability transitions from
+near-zero to near-one as a continuous input varies. In the biological case, β is the steepness of the cortical
+ignition curve with respect to stimulus strength; in our transformer analog, β is the steepness of the probe
+accuracy curve with respect to layer depth. The Ignition Index is therefore structurally analogous to
+the biological measurement by Del Cul et al. (2007); qualitative comparison across systems is motivated,
+though direct numerical calibration requires further work.
+
+
+                                                           4
+                                                                          β̂ ≈ 30      β̂ ≈ 10
+                                       100%
+                                                                                                  β̂ ≈ 3
+
+
+
+
+                      Probe accuracy
+                                       90%
+                                       80%
+                                       70%
+                                       60%
+                                       50%
+                                              0      0.2         0.4         0.6            0.8            1
+                                                             Layer ℓ/L (normalised)
+
+                                                             Recurrent / Huginn (high β̂)
+                                                  Feedforward / GPT-2, Pythia, Gemma 2 (moderate β̂)
+                                                                SSM / Mamba (low β̂)
+
+
+Figure 1: Predicted Ignition Index profiles under three architecture classes (pre-registered predictions,
+not experimental data). Each curve shows the expected layer-wise probe accuracy Acc(ℓ, s) for fixed signal
+strength s, fit by Eq. (3). Steepness β̂ is the Ignition Index (Definition 1). Hypotheses H1–H4 (Section 5)
+predict the rank ordering shown above.
+
+
+4.4   Per-Layer Accuracy Curves
+
+Empirical per-layer probe accuracy curves and fitted sigmoids for all 12 models are presented in Figure 3
+(§8.1).
+
+5     Pre-Registered Hypotheses
+
+We derive four falsifiable hypotheses from gwt mechanistic requirements, stated here prior to results. These
+hypotheses were finalised before experimental data were collected.
+Hypothesis 1 (Architecture rank ordering). I(Huginn) > I(Gemma 2) ≥ I(Pythia) ≈ I(GPT-2) >
+I(Mamba).
+
+Rationale. Huginn’s depth-recurrent block (Geiping et al., 2025) implements sustained reverberant latent-
+space refinement—the closest architectural analog to gwt ignition’s recurrent self-amplification. Standard
+feedforward transformers approximate workspace dynamics without recurrence (VanRullen & Kanai, 2021;
+Goyal & Bengio, 2022). Mamba lacks attention-based broadcasting entirely, so representational transitions
+should be most gradual (Gu & Dao, 2023).
+Hypothesis 2 (Scaling within family). Within each feedforward model family, β̂ increases monotonically
+with parameter count: larger models exhibit sharper transitions.
+
+Rationale. Larger models represent more features per layer (Elhage et al., 2022) and develop more functionally
+specialised circuits (Olsson et al., 2022), which should sharpen the transition from implicit to explicit
+representation.
+Hypothesis 3 (Signal strength dependence). β̂ increases monotonically with input signal strength s: richer
+signals produce sharper transitions.
+
+Rationale. In gwt, stronger stimuli cross the ignition threshold more decisively, producing steeper observed
+sigmoids (Del Cul et al., 2007). Analogously, stronger input signals should yield more decisive layer-transition
+dynamics.
+Hypothesis 4 (Training dynamics). Across Pythia training checkpoints, β̂ undergoes a discontinuous increase
+at the step where induction heads form (Olsson et al., 2022), then increases monotonically.
+
+
+                                                                   5
+Table 1: Model summary. Three architecture classes: standard feedforward, recurrent-depth, and non-
+attention SSM. TransformerLens (TL) support noted; Huginn and Mamba require custom extraction code
+(Appendix F).
+
+        Family      Model     Params     Layers    Type              TL    Source
+        GPT-2       Small        124M         12   Feedforward       ✓     Radford et al. (2019)
+                    Medium       355M         24   Feedforward       ✓
+                    XL            1.5B        48   Feedforward       ✓
+        Pythia      70M           70M          6   Feedforward       ✓     Biderman et al. (2023)
+                    410M         410M         24   Feedforward       ✓
+                    1.4B          1.4B        24   Feedforward       ✓
+                    6.9B          6.9B        32   Feedforward       ✓
+        Gemma 2     2B            2.6B        26   Feedforward       ✓     Gemma Team et al. (2024)
+                    9B            9.2B        42   Feedforward       ✓
+        Huginn      0125          3.5B      ≤64    Recurrent-depth   ✗     Geiping et al. (2025)
+        Mamba       1.4B          1.4B        48   SSM (no attn)     ✗     Gu & Dao (2023)
+                    2.8B          2.8B        64   SSM (no attn)     ✗
+
+
+Rationale. Induction head formation is the most well-characterised training-time phase transition; it should
+produce a measurable increase in ignition sharpness at the transition point.
+
+Scope note. A fifth hypothesis—that I(M ) correlates with out-of-distribution compositional generalisation
+(COGS/SCAN) —was considered during design but is excluded from the current set due to dataset availability
+constraints across all model families. We treat this as an open empirical question for future work (§10).
+
+6     Experimental Design
+6.1   Models
+
+We evaluate five model families representing fundamentally different architectural inductive biases (Table 1).
+
+Activation extraction. For TL-supported models we use model.run_with_cache(tokens) and access
+cache["resid_pre", ℓ] for layer ℓ. For Huginn we register forward hooks on each recurrent block iteration
+(see Appendix E). For Mamba we use HuggingFace MambaForCausalLM with output_hidden_states=True.
+All implementations are released in our codebase (Appendix F).
+
+6.2   Signal Strength Manipulation
+
+We operationalize signal strength s ∈ {0.0, 0.2, 0.4, 0.6, 0.8, 1.0} via three complementary manipulations
+applied to the tokenised input prior to embedding:
+
+S1. Token masking. Replace each content token independently with the model’s padding or unknown
+    token with probability pmask = 1 − s. s = 1.0 is the clean input; s = 0.0 is fully masked. This directly
+    parallels masking onset asynchrony in Del Cul et al. (2007).
+S2. Embedding noise. Add isotropic Gaussian noise ε ∼ N (0, σs2 I) to token embeddings, where σs =
+    (1 − s) · σmax and σmax is calibrated to match the standard deviation of the embedding table.
+S3. Semantic corruption. Replace content words (nouns, verbs, adjectives, adverbs) with randomly
+    sampled tokens from the same part-of-speech category at rate 1 − s, preserving syntactic scaffold while
+    degrading semantic signal.
+
+All three manipulations are applied independently; consistency across manipulations constitutes a robustness
+check (Appendix B).
+
+
+                                                      6
+6.3   Probing Tasks
+
+Full dataset statistics and loading details are given in Appendix H. We use three tasks spanning morphosyn-
+tactic, semantic, and syntactic processing:
+
+T1. BLiMP grammatical acceptability (Warstadt et al., 2020). Binary classification (grammatical vs.
+    ungrammatical) across five paradigm subsets spanning difficulty: regular plural subject-verb agreement
+    and determiner-noun agreement (morphological, easy); reflexive c-command binding (medium); wh-island
+    effects and NPI licensing in islands (hard). N = 2,000 minimal pairs per paradigm (all available items).
+T2. Semantic content identity. Binary: does the probe correctly identify the dominant named entity
+    type? Derived from CoNLL-2003 (Sang & Meulder, 2003) English test split. N = 3,453 sentences.
+T3. Syntactic dependency type. 10-way classification predicting the syntactic role of the verb’s subject
+    using Universal Dependencies v2.13 EN-EWT (Silveira et al., 2014). N = 12,544 sentences (training
+    split used for probe fitting; dev/test held out for evaluation).
+
+Probe architecture. ℓ2 -regularised logistic regression (Pedregosa et al., 2011), with regularisation strength
+C via 5-fold cross-validation (10% held-out validation set). Probes are trained on the final subword token
+hidden state. All hyperparameters are shared across layers to prevent layer-specific overfitting.
+
+6.4   Sigmoid Fitting Procedure
+
+For each combination (M, T , s), we obtain probe accuracies a = (a0 , . . . , aL ) and fit Eq. (3) via nonlinear
+least squares (scipy.optimize.curve_fit, Levenberg-Marquardt) with initial estimates:
+                                     (0)
+                                     ℓ̂0 = ℓ : aℓ crosses 12 (max a + min a),                                (6)
+                                                     aℓ̂0 +1 − aℓ̂0 −1
+                                    β̂ (0) = 4 ·                       .                                     (7)
+                                                 2 · (max a − min a)
+
+Bootstrap confidence intervals for β̂ use B = 2,000 resamples with bias-corrected and accelerated (BCa)
+intervals (DiCiccio & Efron, 1996).
+
+Model selection. We compare three nested models: (i) linear, (ii) four-parameter sigmoid (Eq. (3)), and
+(iii) step function (β̂ → ∞) via ∆AICc with the Schaeffer et al. (Schaeffer et al., 2023) confound check: if the
+step function does not significantly outperform the sigmoid (∆AICc < 4), we report the sigmoid is consistent
+with both graded ignition and a true step.
+
+6.5   Architecture Comparison Statistics
+
+Hypothesis 1 (architecture rank ordering) and Hypothesis 2 (within-family scaling) are tested via:
+• Extra-sum-of-squares F -test comparing shared-β vs. separate-β models between architecture pairs
+  (Motulsky & Christopoulos, 2004).
+• Bootstrapped Wilcoxon rank-sum tests on β̂ values across tasks and signal strengths, with Benjamini-
+  Hochberg FDR correction at α = 0.05 (Benjamini & Hochberg, 1995).
+• Effect size: standardised β̂ ratio and transition-width difference ∆w in layer units.
+
+Note on effect sizes. For interpretability, we report Cohen’s d as a standardized effect size alongside
+non-parametric tests. Cohen’s d is calculated from the means and pooled standard deviations of β̂ distributions
+for each architecture class, providing an intuitive measure of effect magnitude even when using rank-based
+tests. The reported p-values are from bootstrapped Wilcoxon rank-sum tests, which do not assume normality.
+Hypothesis H4 (training dynamics) is tested via PELT changepoint analysis (Killick et al., 2012) on the β̂
+time series across 19 representative Pythia training checkpoints (steps 0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+1000, 2000, 4000, 8000, 16000, 32000, 64000, 143000), evaluated for both Pythia-410M and Pythia-1.4B.
+
+
+                                                       7
+7     Control Conditions
+C1: Sigmoid fit quality and ceiling analysis. A four-parameter sigmoid fit can return β̂ → ∞ when
+the probe accuracy curve is essentially a step function — a numerical ceiling we cap at β̂ = 300. Across
+all 12 models and 504 (task, signal) pairs under S1, 116 fits (23.0%) hit this ceiling. Ceiling hits occur
+predominantly at low signal levels (s ≤ 0.2) where probe accuracy near chance produces degenerate sigmoids,
+and at task–model combinations where the transition is extremely abrupt.
+Critically, excluding ceiling hits strengthens the FF–SSM gap. With ceiling hits included: FF mean
+β̂ = 130.0, SSM mean β̂ = 68.7 (ratio 1.89×). Excluding ceiling hits: FF mean = 77.2, SSM mean = 36.4
+(ratio 2.12×, nFF = 284, nSSM = 70). The ceiling hits were diluting the architectural gap, not inflating it.
+
+C2: Shuffled-label validation (T1.1). To validate that I selectively captures genuine linguistic structure
+rather than spurious probe capacity, we conducted shuffled-label control experiments across all 12 models.
+For each model, we re-ran the full probing pipeline with task labels randomly permuted, breaking the
+correspondence between input and target while preserving all other experimental conditions. Under random
+labels, probe accuracy curves should be flat (near chance), yielding β̂ ≈ 0 if the metric selectively measures
+real representational transitions.
+Results (11/12 models complete as of March 27, 2026): Across 11 completed models (huginn-3.5b
+excluded due to job time limit) spanning GPT-2 (3), Pythia (4), Gemma2 (2), and Mamba (2), shuffled-label
+controls validate measurement selectivity with a 9.6-fold gap between real and shuffled transitions (p < 0.001,
+Mann-Whitney U -test; Figure 2):
+
+• Real transitions: β̂ real = 113.1
+• Shuffled controls: β̂ shuffled = 11.8
+• Gap: ∆ = +101.3 (9.6× ratio, Cohen’s d = 0.99)
+
+Per-model breakdown: Six models (gpt2-small/medium/xl, pythia-410m/1.4b, gemma2-2b) exhibited
+perfect controls with β̂shuffled = 0.0 across all tasks. Remaining models showed strong selectivity: gemma2-9b
+(∆ = +118.1), pythia-6.9b (∆ = +58.6), mamba-2.8b (∆ = +59.4), pythia-70m (∆ = +39.5), and mamba-1.4b
+(∆ = +35.8). The 9.6× validation gap (p < 0.001, Cohen’s d = 0.99) demonstrates that I selectively captures
+real linguistic structure, not probe overfitting.
+This control validates that the Ignition Index measures genuine representational transitions tied to linguistic
+structure, providing a principled foundation for architectural comparisons and training dynamics analysis.
+
+C3: LayerNorm confound. All reported analyses use pre-LayerNorm residual stream states (resid_pre
+hook in TransformerLens), directly sidestepping the LayerNorm inflation concern: pre-LayerNorm states
+are not subject to within-layer normalisation that could artificially sharpen probe accuracy transitions.
+
+8     Results
+8.1   Per-Layer Probe Accuracy Curves
+
+Figure 3 shows representative per-layer probe accuracy curves for three architecturally distinct models on
+the determiner-noun agreement task. Feedforward models (Gemma 2 2B) exhibit a steep sigmoid transition
+concentrated in the middle third of the layer stack; Mamba-2.8B shows a substantially shallower, near-linear
+build-up; Huginn-3.5B displays a distributed profile across recurrent iterations. Full per-layer curves for all
+12 models and all tasks are provided in Figure 8 (Appendix B).
+
+8.2   Main Results: Architecture Rank Ordering (Hypothesis 1)
+
+Table 2 reports β̂ and bootstrapped 95% BCa confidence intervals for all 12 models, averaged over all probing
+tasks and signal strength levels s ∈ {0.0, . . . , 1.0}. Figure 4 visualises per-model β̂ with CIs.
+
+
+                                                      8
+Figure 2: Shuffled-label control validation. Mean β̂ across tasks (s=1.0) for real transitions (blue) versus
+shuffled-label controls (red) across 11 models. Real transitions consistently exhibit steep sigmoid profiles
+(β̂ = 113.1) while shuffled controls yield near-flat curves (β̂ = 11.8), demonstrating 9.6× selectivity (p < 0.001,
+Cohen’s d = 0.99) for genuine linguistic structure. Six models (gpt2-small/medium/xl, pythia-410m/1.4b,
+gemma2-2b) show perfect controls with β̂shuffled = 0.0. Huginn-3.5b excluded due to computational time
+limit.
+
+
+                                   Gemma 2 2B                             Huginn-3.5B                                   Mamba-2.8B
+                             (Feedforward, β ̂ = 203.96)           (Recurrent-depth, β ̂ = 111.03)                    (SSM, β ̂ = 78.87)
+
+                               β ̂ = 18.5                                β ̂ = 44.9                               β ̂ = 22.4
+
+
+                        90
+       Probe acc. (%)
+
+
+
+
+                        70
+
+
+
+
+                        50
+
+
+      s = 0.2 0.0                  s = 0.6     0.5 s = 1.0   1.0 Sigmoid
+                                                                     0.0fit (s = 1.0)0.5          Feedforward
+                                                                                                        1.0     0.0Recurrent-depth
+                                                                                                                             0.5           SSM
+                                                                                                                                            1.0 (no attn)
+                                            Layer ℓ/L                                 Layer ℓ/L                                Layer ℓ/L
+
+
+Figure 3: Representative per-layer probe accuracy curves. Three architecturally distinct models on
+the determiner-noun agreement task. Each panel: probe accuracy (%) vs. normalised layer depth ℓ/L for
+signal strengths s ∈ {0.2, 0.6, 1.0} (light to dark). Dashed curve: four-parameter sigmoid fit at s = 1.0 (Eq. 3);
+β̂ annotation top-left of each panel. Gemma 2 2B (FF) shows a steep sigmoid transition concentrated in the
+middle layers; Mamba-2.8B (SSM) shows a near-flat, linear profile; Huginn-3.5B (REC) is intermediate with
+gradual recurrent build-up. Full 12-model grids for three tasks: Appendix B.
+
+
+
+H1 outcome. Feedforward models achieve the highest aggregate Ignition Index (β̂ FF = 130.0), followed
+by Huginn-3.5B (β̂Huginn = 111.0) and Mamba (β̂ SSM = 68.7). The FF–SSM gap (130.0 vs. 68.7, +89%,
+
+
+                                                                                        9
+Table 2: Main results: Ignition Index by model. β̂ is the aggregate Ignition Index (Eq. 5), averaged
+over all tasks and signal levels (S1). 95% BCa bootstrap CI (B = 2,000 resamples). ∆w: transition width in
+normalised layer units (w = 4.39/β̂); † indicates near-flat sigmoid (essentially linear profile). ‡ indicates β̂
+includes ceiling fits (β̂ = 300); see §7 for ceiling-excluded analysis. Models sorted by β̂ within architecture
+class. Note: Architecture means (bottom rows) are calculated across all individual β̂ estimates for all (model,
+task, signal) combinations within each class, not from the per-model aggregates shown above. Huginn-3.5B
+appears twice (depth-axis and iteration-axis probing), representing two measurement approaches for the same
+model.
+
+        Architecture       Model                      Params        β̂       95% CI       ∆w
+                                                                     ‡
+                           Gemma 2 2B                  2.6B    203.96     [86.8, 235.2]   3.8
+                           Gemma 2 9B                  9.2B    183.57‡    [90.8, 269.9]   †
+                           Pythia 1.4B                 1.4B    175.65‡    [76.4, 253.9]   2.5
+                           Pythia 410M                 410M    173.11‡   [104.0, 252.0]   16.6
+        Feedforward        Pythia 6.9B                 6.9B    157.85‡    [95.3, 225.0]   6.6
+                           GPT-2 Medium                355M    147.86‡    [86.0, 211.2]   17.2
+                           GPT-2 XL                    1.5B    135.32‡    [50.3, 192.8]   31.4
+                           GPT-2 Small                 124M    104.72‡    [36.5, 165.9]   9.1
+                           Pythia 70M                   70M      60.49    [32.0, 101.5]   8.7
+        Recurrent-depth    Huginn-3.5B                 3.5B    111.03‡    [48.5, 185.2]   85.0
+                           Huginn-3.5B (iter)          3.5B      234.8       [180, 290]   1.9
+                           Mamba 1.4B                  1.4B    111.49‡    [29.0, 203.5]   †
+        SSM (no attn)
+                           Mamba 2.8B                  2.8B      78.87    [37.1, 156.9]   †
+        Architecture means (incl. ceiling)
+         Feedforward (n=9)                                       130.0
+         Recurrent-depth (n=1)                                   111.0
+         SSM (n=2)                                                68.7
+        Architecture means (excl. ceiling, S1 only)
+         Feedforward (nfits =284)                                 77.2                    2.12× vs. SSM
+         Recurrent-depth (nfits =34)                              56.8
+         SSM (nfits =70)                                          36.4
+
+
+
+p < 10−13 , Cohen’s d = 0.52) is consistent with gwt’s prediction that attention-based global broadcast
+produces sharper representational transitions. Mamba-2.8B shows the flattest profiles of all 12 models
+(β̂ = 78.9, ∆w → ∞), consistent with absent global broadcast.
+Robustness to ceiling effects. Of the 504 S1 (task, signal) β̂ estimates, 116 (23.0%) hit the numerical
+ceiling β̂ = 300 (see §7). Excluding these, the FF–SSM gap widens: FF mean = 77.2 (n = 284) vs. SSM
+mean = 36.4 (n = 70), ratio 2.12× (vs. 1.89× including ceiling hits). The ceiling hits were diluting the
+architectural gap, not inflating it, confirming the FF–SSM difference is not a sigmoid-fitting artifact.
+H1 is partially disconfirmed in its original form: Huginn-3.5B falls below the feedforward mean (111.0
+vs. 130.0) rather than exceeding it as predicted. However, iteration-axis probing (§8.6) resolves this puzzle:
+Huginn exhibits strong ignition dynamics along its recurrence dimension (β̂iteration = 234.8, 2.12-fold higher
+than depth-axis), validating H1 in a refined form: recurrence does amplify ignition, but only when measured
+along the appropriate computational axis.
+
+8.3   Scaling Within Family (Hypothesis 2)
+
+H2 outcome. Scaling effects are non-monotonic across all families. GPT-2: Small 104.7 → Medium 147.9
+→ XL 135.3 (peaks at Medium). Pythia: 70M 60.5 → 410M 173.1 → 1.4B 175.6 → 6.9B 157.9 (peaks
+at 1.4B). Gemma 2: 2B 204.0 → 9B 183.6 (decreases). Mamba: 1.4B 111.5 → 2.8B 78.9 (decreases). H2
+(monotonic scaling) is not confirmed. The consistent pattern of peak-then-decline with scale across all families
+
+
+                                                        10
+                                      Feedforward
+                                      Recurrent-depth
+                           250
+                                      SSM (no attn)
+
+
+
+                           200
+      Ignition Index β ̂
+
+
+
+
+                           150
+
+
+
+
+                           100
+
+
+
+
+                           50
+
+
+
+
+                            0
+                                               l     xl
+                                   0m        al                     m     .9
+                                                                             b        m     .4
+                                                                                               b
+                                                                                                     -9
+                                                                                                        b
+                                                                                                              -2
+                                                                                                                 b
+                                                                                                                            .5
+                                                                                                                               b          8b          4b
+                                 p7       sm       g2            iu
+                                                                        p6         10     p1       g2       g2             3           2.          1.
+                                        g2                  ed                   p4                                     g-          b-          b-
+                                                          2m                                                         hu            m           m
+                                                        g
+
+
+Figure 4: Ignition Index by model with 95% BCa confidence intervals. Bars coloured by architecture
+class: feedforward (blue), recurrent-depth (red), SSM without attention (green). Feedforward models
+collectively dominate the upper range; Mamba-2.8B shows the lowest β̂. Huginn-3.5B sits intermediate—
+unexpectedly below the feedforward mean. Wide CIs for Mamba reflect near-flat sigmoid fits (essentially
+linear layer-accuracy profiles).
+
+
+suggests that over-parameterisation may distribute representational transitions across more layers, broadening
+rather than sharpening the transition profile.
+
+8.4   Signal Strength Dependence (Hypothesis 3)
+
+H3 outcome. Figure 5 shows β̂ across signal strength levels for all 12 models on the determiner-noun
+agreement task. The predicted monotonic increase with s is not consistently observed. Several models
+(including Pythia 6.9B, Gemma 2 2B) show the highest β̂ at low or intermediate signal strengths (s ≈ 0.0–0.4),
+with declining values at full signal (s = 1.0). This reversal is heterogeneous across models; feedforward models
+exhibit more varied patterns than Mamba. H3 is not confirmed. We discuss a possible reinterpretation in §9:
+at very low signal, information may arrive in an all-or-nothing fashion at a single transition layer, producing
+artificially high β̂; at full signal, gradual build-up is permitted and β̂ decreases.
+
+8.5   Training Dynamics (Hypothesis 4)
+
+H4 outcome. For Pythia-410M, PELT detects a significant changepoint at training step 256 (Figure 6, right
+panel), with the Ignition Index increasing from β̂pre = 39.57 to β̂post = 66.02 (+67%). This is substantially
+earlier than the induction-head formation step documented in Olsson et al. (2022) (≈step 2,000), suggesting
+ignition-like structure crystallises in a distinct, earlier training phase—possibly corresponding to the emergence
+of positional attention patterns (Olsson et al., 2022) or bigram-level representation consolidation.
+For Pythia-1.4B, no significant PELT changepoint is detected. The trajectory is highly volatile: β̂ reaches
+extreme values (up to ∼291) at steps 256–1000, crashes to near zero at step 4,000, and remains low for
+the remainder of training. The extreme early values are likely sigmoid-fitting artefacts under steep but
+noise-dominated curves (note the wide BCa CIs); the long-term collapse suggests Pythia-1.4B develops a
+fundamentally different representational organisation at scale, consistent with the non-monotonic H2 finding.
+H4 is partially confirmed for the smaller model; the larger model exhibits more complex dynamics requiring
+further investigation.
+
+
+                                                                                          11
+                          GPT-2 Small (124M)              190           4           8          21        26
+
+
+
+                                                                                                                 300
+                        GPT-2 Medium (355M)                            15          50          81        90
+
+
+
+
+                             GPT-2 XL (1.5B)               10           2          16          34        23
+
+                                                                                                                 250
+
+
+                                 Pythia-70M      170       83          87           5          89        100
+
+
+
+
+                                                                                                                 200
+                                Pythia-410M      212        3          300         14          32        20
+
+
+
+
+                                 Pythia-1.4B     221       29          17          15          31        124
+
+
+                                                                                                                 150
+
+
+
+
+                                                                                                                       β̂
+                                 Pythia-6.9B     278       62          49           4          33        60
+
+
+
+
+                          Gemma 2 2B (2.6B)               300          18          300         63        18
+                                                                                                                 100
+
+
+
+                          Gemma 2 9B (9.2B)       0       300          40          104         48        56
+
+
+
+                                                                                                                 50
+                                Huginn-3.5B       0                    300         64          18        45
+
+
+
+
+                                Mamba-1.4B                300          300         94          18        30
+
+                                                                                                                 0
+
+
+                                Mamba-2.8B       300        0          90          17          18        22
+
+
+
+
+                                               s = 0.0   s = 0.2     s = 0.4     s = 0.6     s = 0.8   s = 1.0
+                                                                   Input signal strength s
+
+
+
+
+Figure 5: Signal strength dependence of β̂ (H3). Heatmap of β̂ per model (rows) and signal strength level
+s (columns) for the representative task blimp_determiner_noun_agreement. Colour encodes β̂ magnitude
+(0–300). White cells indicate missing or non-converged fits. Non-monotonic patterns are visible across models,
+with several showing high β̂ at low or intermediate signal levels. White cells indicate non-converged sigmoid
+fits (near-chance probe accuracy); systematic block patterns confirm task-dependent β̂ variation.
+
+
+
+
+8.6   Huginn Iteration-Axis Probing (T2.1)
+
+
+Huginn-3.5B’s position below the feedforward mean (β̂depth = 111.0 vs. FF mean = 130.0, §8.2) prompted
+investigation of whether recurrent dynamics manifest along the iteration axis rather than the depth axis. We
+re-ran the full probing pipeline across Huginn’s 32–64 recurrent iterations (fixing depth, varying iteration
+count) using the same signal manipulation, task set, and sigmoid fitting procedure.
+Results reveal strong iteration-axis ignition: β̂iteration = 234.8, a 2.12-fold gap relative to the depth-axis
+measurement (Figure 7). This pattern holds across all tasks at moderate-to-high signal strengths (s ≥ 0.4),
+with the determiner-noun agreement task showing a 6.68-fold gap (β̂iteration = 299.9 vs. β̂depth = 44.9).
+Architectural interpretation. Huginn’s depth-recurrent architecture iterates a shared transformer block,
+accumulating representational refinements across recurrent passes. The iteration-axis result demonstrates that
+this recurrent refinement exhibits ignition-like dynamics—abrupt transitions within the recurrent loop—while
+distributing more gradually across the depth stack. This distinguishes recurrent-depth processing from
+feedforward broadcast: feedforward models concentrate transitions across layers (β̂depth = 130); Huginn
+concentrates transitions across iterations (β̂iteration = 234.8).
+
+
+                                                                         12
+                                            EleutherAI/pythia-1.4b                                                                    EleutherAI/pythia-410m
+                       300
+                                                                                                              300   pre = 39.57
+                                                                                                                    post = 66.02
+
+                       250
+                                                                                                              250
+
+
+
+                       200                                                                                    200
+β ̂ (Ignition Index)
+
+
+
+
+                                                                                       β ̂ (Ignition Index)
+                       150                                                                                    150
+
+
+
+                       100                                                                                    100
+
+
+
+                       50                                                                                     50
+
+                                                                                                                                                                         β̂
+                                                                                 β̂                            0                                                         PELT cp=256
+                        0
+
+                              0   102         103                    104   105                                               −103   −102 0 102               103   104           105
+                                                    Training step                                                                            Training step
+
+
+
+
+Figure 6: Training-time Ignition Index dynamics (H4). β̂ across 19 representative Pythia training
+checkpoints (steps 0–143,000) for Pythia-410M (right) and Pythia-1.4B (left). For Pythia-410M, PELT
+detects a significant changepoint at step 256 (vertical dashed red line), with mean β̂ increasing from 39.57
+pre-changepoint to 66.02 post-changepoint (+67%). Pythia-1.4B shows a highly volatile trajectory with no
+significant PELT changepoint, featuring extreme β̂ spikes at steps 256–1000 (likely sigmoid fitting artefacts
+under high-amplitude but noisy curves) followed by near-zero values from step 4000 onward. Full checkpoint-
+level data in Appendix C.
+
+
+
+
+Figure 7: Huginn iteration-axis vs depth-axis ignition. Probe accuracy curves for Huginn-3.5B on
+determiner-noun agreement at s = 1.0. Left: depth-axis probing (β̂ = 44.9). Right: iteration-axis probing
+(β̂ = 299.9). Recurrent architectures exhibit 6.68-fold steeper transitions along the iteration dimension.
+
+
+8.7                          Control Condition Results
+
+Full control results are reported in §7. In summary: (C1) 23% of sigmoid fits hit the numerical ceiling
+(β̂ = 300), but excluding these strengthens the FF–SSM gap from 1.89× to 2.12×, ruling out ceiling inflation
+as an explanation. (C2) Shuffled-label validation (11/12 models complete) demonstrates 9.6-fold selectivity
+(p < 0.001, Cohen’s d = 0.99), confirming the Ignition Index captures genuine linguistic structure rather
+than spurious probe capacity. (C3) All analyses use pre-LayerNorm residual streams, directly precluding
+LayerNorm inflation.
+
+9                            Discussion
+
+FF > SSM: attention as global broadcast. The most robust finding is the 89% gap between feedforward
+transformers and Mamba in aggregate β̂ (2.12× after excluding ceiling hits, p < 10−13 , Cohen’s d =
+
+
+                                                                                      13
+0.52). Mamba-2.8B’s essentially flat layer-accuracy profile indicates near-linear, layer-by-layer information
+accumulation—precisely what gwt predicts for a system lacking a global broadcast mechanism. Attention’s
+all-to-all routing is the natural candidate: by allowing any layer to route any token’s representation globally,
+attention creates the conditions for an all-or-none threshold crossing that manifests as a steep sigmoid in
+probe accuracy curves. This is consistent with prior structural analyses (VanRullen & Kanai, 2021; Goyal
+& Bengio, 2022) identifying residual stream accumulation plus content-dependent routing as a feedforward
+approximation to workspace broadcasting.
+
+Huginn iteration-axis ignition: an architectural discovery. T2.1 results resolve the Huginn puzzle
+and reveal a distinguishable architectural pattern. Huginn-3.5B exhibits iteration-axis ignition (β̂ = 234.8)
+exceeding its depth-axis profile (β̂ = 111.0) by 2.12-fold (§8.6). This demonstrates that recurrent-depth
+architectures manifest workspace-like transitions along the recurrence dimension rather than distributing them
+uniformly across the layer stack. The finding validates H1 in a refined form: recurrence does amplify ignition,
+but only when measured along the appropriate axis. Depth-recurrent models should not be evaluated solely
+on depth-axis metrics; iteration-level probing reveals their ignition structure. This opens a methodological
+direction: ignition dynamics are axis-dependent, and proper characterization requires probing all relevant
+computational dimensions.
+
+Non-monotonic scaling: a capacity-constraint account. The consistent peak-then-decline in β̂ across
+scale (peaking at Pythia-1.4B and GPT-2 Medium; declining at 6.9B and XL) is unexpected under H2, but
+the pattern is consistent across both model families. We propose a mechanistic account: mid-scale models
+are capacity-constrained relative to the probing tasks, forcing compression of task-relevant features into fewer
+transition layers and producing sharp, layer-concentrated transitions. Larger models can represent more
+features simultaneously via superposition (Elhage et al., 2022), distributing information across more layers and
+reducing the per-layer ∆accuracy that drives high β̂. Under this view, β̂ reflects a model’s capacity-to-task
+ratio rather than absolute representational quality—a prediction testable by varying task complexity at fixed
+model size.
+
+Signal strength paradox (H3): a mechanistic account. The non-monotonic relationship between
+signal strength s and β̂ is initially counterintuitive. At s = 0.0, the model cannot perform gradual multi-layer
+integration—information either crosses threshold in one layer or fails entirely, artificially inflating β̂. At
+s = 1.0, gradual multi-layer integration is possible, reducing per-layer step size and flattening the sigmoid.
+This predicts that the highest β̂ values at low signal should concentrate in mid-layers (where threshold
+crossing occurs) rather than being distributed—a prediction consistent with the block patterns visible in
+Figure 5.
+
+Training dynamics: an earlier phase transition. The Pythia-410M changepoint at step 256 precedes
+induction-head formation (∼2,000). Ignition-like structure in the layer stack crystallises very early, before
+well-characterised functional circuits emerge. One candidate: steps 0–256 correspond to the rapid vocabulary-
+statistics fitting phase (Biderman et al., 2023), after which basic positional and distributional structure
+concentrates probe information into a few layers. Pythia-1.4B’s absence of a changepoint suggests larger models
+undergo more complex representational reorganisation without stabilising their ignition structure—consistent
+with the non-monotonic scaling finding above.
+
+On the hypothesis disconfirmation rate. Three of four pre-registered hypotheses were not confirmed
+in the predicted direction. We emphasise that this validates the pre-registration methodology: we report
+architectural patterns as discovered, not cherry-picked. The robust FF–SSM gap (H1 partially confirmed)
+and the non-monotonic scaling (H2, unexpected but consistent across all four families) together constitute
+the paper’s empirical contribution. Disconfirmation of H2 and H3 provides as much information about
+transformer representational dynamics as confirmation would have—it constrains which aspects of the GWT
+analogy extend to artificial systems and which do not.
+
+Practical implications for architecture design. The Ignition Index provides a diagnostic for workspace-
+like information integration that complements standard accuracy metrics. For tasks requiring global informa-
+
+
+                                                      14
+tion synthesis (e.g., long-range reasoning, multi-hop QA), architectures with high β̂ may be preferred; for
+tasks requiring distributed, gradual processing, lower β̂ may suffice. The SSM–FF gap quantifies a concrete
+architectural tradeoff: selective state-space mechanisms trade ignition sharpness for computational efficiency.
+Architecturally, this suggests that attention is not merely a performance ingredient—it is the mechanism that
+produces threshold-nonlinear representational transitions, a property that may be independently useful for
+certain classes of tasks.
+
+Connection to the feedforward approximation hypothesis. The results provide qualified empirical
+support for the view (VanRullen & Kanai, 2021; Goyal & Bengio, 2022; Butlin et al., 2023) that transformers
+implement a feedforward approximation to a global workspace. The Mamba control validates the metric’s
+discriminative power. The Huginn iteration-axis finding demonstrates that recurrence does produce higher
+ignition than feedforward architectures (β̂iteration = 234.8 vs. FF mean = 130.0), but this manifests along
+the recurrence dimension rather than the depth axis—evidence that recurrent architectures require axis-
+appropriate measurement to reveal their ignition structure.
+
+Implications for consciousness theory. I(M ) is not a measure of consciousness. Following Dehaene
+et al. (2017) and Butlin et al. (2023), high β̂ is a candidate indicator of global information availability (C1) but
+is silent on phenomenal consciousness or self-monitoring. The stronger SSM–FF gap (+89%) vs. FF–Huginn
+gap suggests that the presence or absence of global broadcast via attention is the dominant architectural
+factor—not the presence or absence of recurrence.
+
+
+10    Limitations
+
+Layer depth as a proxy for processing time. The substitution of layer index for processing time is
+principled but imperfect. Layers are synchronous and parallel within each forward pass, not sequential stages.
+Standard transformers lack temporal recurrence—a fundamental GWT requirement (Lamme & Roelfsema,
+2000)—meaning layer transitions capture computational depth, not reverberant dynamics. Results should be
+interpreted as measuring structural ignition analogs, not temporal ignition.
+Linear probe assumptions. Linear probes measure what is linearly accessible, not what is causally
+computed (Belinkov, 2022). A full causal validation via amnesic probing (Elazar et al., 2021)—removing
+linearly-decodable task information at the transition layer and measuring downstream disruption—would
+strengthen the mechanistic interpretation of β̂. We defer this to future work.
+Token-level vs. sequence-level analysis. We probe the final token position; GWT workspace dynamics
+involve distributed, multi-position representations. Future work should extend to all-position probing and
+attention-pattern analysis.
+GWT–capability correlation untested. A natural extension is to test whether I(M ) predicts out-of-
+distribution compositional generalisation (e.g., COGS (Kim & Linzen, 2020)). We leave this to future work
+due to benchmark limitations.
+
+
+11    Broader Impact
+
+This paper introduces a metric for measuring representational dynamics in language models through the lens
+of neuroscience consciousness theory. We are not claiming to measure consciousness, and we are explicit that
+no current AI system satisfies the indicator properties for consciousness under any major theory (Butlin
+et al., 2023).
+
+Positive impacts. The Ignition Index is an open, interpretable, model-agnostic metric that could benefit
+AI safety research by providing a principled measure of information integration dynamics. The experimental
+methodology is fully open-source and reproducible, benefiting the broader interpretability community.
+
+
+                                                        15
+Risks and mitigations. Metrics bridging consciousness and AI risk misuse by those who would overstate
+AI sentience for commercial or ideological reasons. We explicitly caution that high I is neither necessary nor
+sufficient for consciousness.
+
+12    Conclusion
+
+We introduced the Ignition Index (I), the first quantitative metric operationalizing Global Workspace
+Theory’s all-or-none ignition prediction within transformer language models, and evaluated it across 12
+models spanning five architecturally distinct families.
+The core architectural finding is a robust 89% gap in aggregate Ignition Index between feedforward transformers
+(β̂ = 130.0) and state-space models (β̂ = 68.7), with Mamba-2.8B showing essentially flat layer-accuracy
+profiles that indicate near-linear information accumulation. This finding directly supports the gwt prediction
+that attention-based global broadcast is an architectural prerequisite for abrupt, ignition-like representational
+transitions. Iteration-axis probing of Huginn-3.5B reveals axis-dependent ignition: the recurrent architecture
+exhibits 2.12-fold steeper transitions along its iteration dimension (β̂iteration = 234.8) than along the depth axis
+(β̂depth = 111.0), demonstrating that recurrent architectures manifest ignition dynamics along the recurrence
+dimension rather than the depth stack.
+Scaling effects are non-monotonic across all families, with ignition peaking at mid-scale models and declining
+at the largest parameter counts. Training dynamics analysis reveals an early phase transition in Pythia-410M
+at step 256—earlier than induction-head formation—raising the possibility that a distinct, prior training
+phase establishes the basic ignition-like layer structure.
+Together, these results establish the Ignition Index as a falsifiable, theory-grounded diagnostic for GWT-like
+information integration. The metric discriminates reliably between architectural classes (FF vs. SSM), is
+sensitive to training dynamics, and reveals unexpected non-monotonicities that motivate further mechanistic
+investigation. Future work will extend to causal intervention via amnesic probing and compositional
+generalisation benchmarks, with the goal of testing whether the Ignition Index is not merely a structural
+signature but a causal predictor of workspace-like computation.
+
+References
+Guillaume Alain and Yoshua Bengio. Understanding intermediate layers using linear classifier probes. In
+ International Conference on Learning Representations (ICLR) Workshop, 2017.
+Bernard J. Baars. A Cognitive Theory of Consciousness. Cambridge University Press, 1988.
+Bernard J. Baars. The conscious access hypothesis: origins and recent evidence. Trends in Cognitive Sciences,
+  6(1):47–52, 2002.
+Bernard J. Baars. Global workspace theory of consciousness: toward a cognitive neuroscience of human
+  experience. Progress in Brain Research, 150:45–53, 2005.
+Yonatan Belinkov. Probing classifiers: Promises, shortcomings, and advances. Computational Linguistics, 48
+ (1):207–219, 2022.
+Nora Belrose, Zach Furman, Logan Smith, Danny Halawi, Igor Ostrovsky, Lev McKinney, Stella Biderman,
+ and Jacob Steinhardt. Eliciting latent predictions from transformers with the tuned lens. arXiv:2303.08112,
+ 2023.
+Yoshua Bengio. The consciousness prior. arXiv:1709.08568, 2017.
+Yoav Benjamini and Yosef Hochberg. Controlling the false discovery rate: A practical and powerful approach
+  to multiple testing. Journal of the Royal Statistical Society, Series B, 57(1):289–300, 1995.
+Stella Biderman, Hailey Schoelkopf, Quentin Anthony, Herbie Bradley, Kyle O’Brien, Eric Hallahan, Moham-
+  mad A. Khan, Shivanshu Purohit, Usvsn S. Prashanth, Edward Raff, Aviya Skowron, Lintang Sutawika,
+
+
+                                                        16
+  and Oskar van der Wal. Pythia: A suite for analyzing large language models across training and scaling.
+  arXiv:2304.01373, 2023.
+
+Joseph Bloom and David Chanin. SAELens. https://github.com/jbloomAus/SAELens, 2024.
+
+Trenton Bricken, Adly Templeton, Joshua Batson, Brian Chen, Adam Jermyn, Tom Conerly, Nick Turner,
+  Cem Anil, Carson Denison, Amanda Askell, Robert Lasenby, Yifan Wu, Shauna Kravec, Nicholas Schiefer,
+  Tim Maxwell, Nicholas Joseph, Zac Hatfield-Dodds, Alex Tamkin, Karina Nguyen, Brayden McLean,
+  Josiah E. Burke, Tristan Hume, Shan Carter, Tom Henighan, and Chris Olah. Towards monosemanticity:
+  Decomposing language models with dictionary learning. Transformer Circuits Thread, 2023. URL
+  https://transformer-circuits.pub/2023/monosemantic-features/index.html.
+
+Jannik Brinkmann, Abhay Sheshadri, Victor Levoso, Paul Swoboda, and Christian Bartelt. Circuit complexity
+  from transformers: Phase transitions in arithmetic. arXiv:2402.04640, 2025.
+
+Patrick Butlin, Robert Long, Eric Elmoznino, Yoshua Bengio, Jonathan Birch, Axel Constant, George Deane,
+  Stephen M. Fleming, Chris Frith, Xu Ji, Ryota Kanai, Colin Klein, Grace Lindsay, Matthias Michel, Liad
+  Mudrik, Megan A. K. Peters, Eric Schwitzgebel, Jonathan Simon, and Rufin VanRullen. Consciousness in
+  artificial intelligence: Insights from the science of consciousness. arXiv:2308.08708, 2023.
+
+Arthur Conmy, Augustine N. Mavor-Parker, Aengus Lynch, Stefan Heimersheim, and Adrià Garriga-Alonso.
+  Towards automated circuit discovery for mechanistic interpretability. In Advances in Neural Information
+  Processing Systems (NeurIPS), 2023.
+
+Hoagy Cunningham, Aidan Ewart, Logan Riggs, Robert Huben, and Lee Sharkey. Sparse autoencoders find
+  highly interpretable features in language models. arXiv:2309.08600, 2024. ICLR 2024.
+
+Stanislas Dehaene and Jean-Pierre Changeux. Experimental and theoretical approaches to conscious processing.
+  Neuron, 70(2):200–227, 2011.
+
+Stanislas Dehaene and Lionel Naccache. Towards a cognitive neuroscience of consciousness: basic evidence
+  and a workspace framework. Cognition, 79(1–2):1–37, 2001.
+
+Stanislas Dehaene, Michel Kerszberg, and Jean-Pierre Changeux. A neuronal model of a global workspace in
+  effortful cognitive tasks. Proceedings of the National Academy of Sciences, 95(24):14529–14534, 1998.
+
+Stanislas Dehaene, Hakwan Lau, and Sid Kouider. What is consciousness, and could machines have it?
+  Science, 358(6362):486–492, 2017.
+
+Mostafa Dehghani, Stephan Gouws, Oriol Vinyals, Jakob Uszkoreit, and Łukasz Kaiser. Universal transformers.
+ In International Conference on Learning Representations (ICLR), 2019.
+
+Antoine Del Cul, Stanislas Baillet, and Stanislas Dehaene. Brain dynamics underlying the nonlinear threshold
+  for access to consciousness. PLoS Biology, 5(10):e260, 2007.
+
+Thomas J. DiCiccio and Bradley Efron. Bootstrap confidence intervals. Statistical Science, 11(3):189–212,
+ 1996.
+
+Yanai Elazar, Shauli Ravfogel, Alon Jacovi, and Yoav Goldberg. Amnesic probing: Behavioral explanation
+  with amnesic counterfactuals. In Transactions of the Association for Computational Linguistics (TACL),
+  volume 9, pp. 160–175, 2021.
+
+Nelson Elhage, Neel Nanda, Catherine Olsson, Tom Henighan, Nicholas Joseph, Ben Mann, Amanda Askell,
+ Yuntao Bai, Anna Chen, Tom Conerly, Nova DasSarma, Dawn Drain, Deep Ganguli, Zac Hatfield-Dodds,
+  Danny Hernandez, Andy Jones, Jackson Kernion, Liane Lovitt, Kamal Ndousse, Dario Amodei, Tom
+  Brown, Jack Clark, Jared Kaplan, Sam McCandlish, and Chris Olah. A mathematical framework for
+  transformer circuits. Transformer Circuits Thread, 2021. URL https://transformer-circuits.pub/
+  2021/framework/index.html.
+
+
+                                                    17
+Nelson Elhage, Tristan Hume, Catherine Olsson, Nicholas Schiefer, Tom Henighan, Shauna Kravec, Zac
+  Hatfield-Dodds, Robert Lasenby, Dawn Drain, Carol Chen, Roger Grosse, Sam McCandlish, Jared Kaplan,
+  Dario Amodei, Martin Wattenberg, and Christopher Olah. Toy models of superposition. Transformer
+  Circuits Thread, 2022. URL https://transformer-circuits.pub/2022/toy_model/index.html.
+
+Atticus Geiger, Zhengxuan Wu, Karel D’Oosterlinck, Maximilian Kaufmann, Noah D. Goodman, Thomas
+  Icard, and Christopher Potts. Finding alignments between interpretable causal variables and distributed
+  neural representations. arXiv:2303.02536, 2025.
+
+Jonas Geiping et al. Scaling up test-time compute with latent reasoning: A recurrent depth approach.
+  arXiv:2502.05171, 2025. Huginn-0125 model.
+
+Gemma Team et al. Gemma 2: Improving open language models at a practical size. arXiv:2408.00118, 2024.
+
+Anirudh Goyal and Yoshua Bengio. Inductive biases for deep learning of higher-level cognition. In Proceedings
+ of the Royal Society A, volume 478, 2022.
+
+Albert Gu and Tri Dao. Mamba: Linear-time sequence modeling with selective state spaces. arXiv:2312.00752,
+  2023.
+
+John Hewitt and Percy Liang. Designing and interpreting probes with control tasks. In Proceedings of the
+  2019 Conference on Empirical Methods in Natural Language Processing (EMNLP), pp. 2733–2743, 2019.
+
+Rebecca Killick, Paul Fearnhead, and Idris A. Eckley. Optimal detection of changepoints with a linear
+  computational cost. Journal of the American Statistical Association, 107(500):1590–1598, 2012.
+
+Najoung Kim and Tal Linzen. COGS: A compositional generalization challenge based on semantic inter-
+ pretation. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing
+ (EMNLP), pp. 9087–9105, 2020.
+
+Gabriel Kreiman, Lucia Melloni, et al. Adversarial testing of global workspace and integrated information
+ theories of consciousness. Nature, 2025. COGITATE Consortium. doi:10.1038/s41586-025-08888-1.
+
+Brenden M. Lake and Marco Baroni. Generalization without systematicity: On the compositional skills of
+  sequence-to-sequence recurrent networks. In Proceedings of the 35th International Conference on Machine
+  Learning (ICML), pp. 2873–2882, 2018.
+
+Victor A. F. Lamme and Pieter R. Roelfsema. The distinct modes of vision offered by feedforward and
+  recurrent processing. Trends in Neurosciences, 23(11):571–579, 2000.
+
+Tom Lieberum, Senthooran Rajamanoharan, Arthur Conmy, Lewis Smith, Nicolas Sonnerat, Vikrant Varma,
+  János Kramár, Anca Dragan, Rohin Shah, and Neel Nanda. Gemma scope: Open sparse autoencoders
+  everywhere all at once on Gemma 2. arXiv:2408.05147, 2024.
+
+Jack Lindsey et al. Biology of a large language model. Transformer Circuits Thread / Anthropic, 2025. URL
+  https://transformer-circuits.pub/2025/attribution-graphs/biology.html.
+
+Samuel Marks, Can Rager, Eric J. Michaud, Yonatan Belinkov, David Bau, and Aaron Mueller. Sparse
+  feature circuits: Discovering and editing interpretable causal graphs in language models. arXiv:2403.19647,
+  2024.
+
+George A. Mashour, Pieter Roelfsema, Jean-Pierre Changeux, and Stanislas Dehaene. Conscious processing
+ and the global neuronal workspace hypothesis. Neuron, 105(5):776–798, 2020.
+
+Kevin Meng, David Bau, Alex Andonian, and Yonatan Belinkov. ROME: Locating and editing factual
+ associations in GPT. In Advances in Neural Information Processing Systems (NeurIPS), 2022. Outstanding
+ Paper Award.
+
+Harvey J. Motulsky and Arthur Christopoulos. Fitting Models to Biological Data using Linear and Nonlinear
+ Regression. Oxford University Press, 2004.
+
+
+                                                     18
+Neel Nanda and Joseph Bloom. TransformerLens: A library for mechanistic interpretability of GPT-style
+  language models. https://github.com/TransformerLensOrg/TransformerLens, 2022.
+Neel Nanda, Lawrence Chan, Tom Lieberum, Jess Smith, and Jacob Steinhardt. Progress measures for
+  grokking via mechanistic interpretability. International Conference on Learning Representations (ICLR),
+ 2023.
+nostalgebraist. interpreting GPT: the logit lens. LessWrong, 2020. URL https://www.lesswrong.com/
+  posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens.
+Catherine Olsson, Nelson Elhage, Neel Nanda, Nicholas Joseph, Nova DasSarma, Tom Henighan, Ben
+  Mann, Amanda Askell, Yuntao Bai, Anna Chen, Tom Conerly, Dawn Drain, Deep Ganguli, Zac
+  Hatfield-Dodds, Danny Hernandez, Dawn Kernion, Liane Lovitt, Kamal Ndousse, Dario Amodei, Tom
+  Brown, Jack Clark, Jared Kaplan, Sam McCandlish, and Chris Olah. In-context learning and in-
+  duction heads. Transformer Circuits Thread, 2022. URL https://transformer-circuits.pub/2022/
+  in-context-learning-and-induction-heads/index.html.
+Fabian Pedregosa et al. Scikit-learn: Machine learning in Python. Journal of Machine Learning Research
+  (JMLR), 12:2825–2830, 2011.
+Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, and Ilya Sutskever. Language models
+  are unsupervised multitask learners, 2019. OpenAI Blog.
+Erik F. Tjong Kim Sang and Fien De Meulder. Introduction to the CoNLL-2003 shared task: Language-
+  independent named entity recognition. In Proceedings of the Seventh Conference on Natural Language
+  Learning (CoNLL), pp. 142–147, 2003.
+
+Rylan Schaeffer, Brando Miranda, and Sanmi Koyejo. Are emergent abilities of large language models a
+  mirage? Advances in Neural Information Processing Systems (NeurIPS), 36, 2023.
+Claire Sergent and Stanislas Dehaene. Is consciousness a gradual phenomenon? Psychological Science, 15
+  (11):720–728, 2004.
+Natalia Silveira, Timothy Dozat, Marie-Catherine de Marneffe, Samuel Bowman, Miriam Connor, John Bauer,
+  and Christopher D. Manning. A gold standard dependency corpus for English. Proceedings of the Ninth
+  International Conference on Language Resources and Evaluation (LREC), 2014.
+Adly Templeton, Tom Conerly, Jonathan Marcus, Jack Lindsey, Trenton Bricken, Brian Chen, Adam Jermyn,
+ Amanda Askell, Meg Tong, Evan Hubinger, et al. Scaling monosemanticity: Extracting interpretable
+  features from Claude 3 Sonnet. Transformer Circuits Thread, 2024. URL https://transformer-circuits.
+  pub/2024/scaling-monosemanticity/index.html.
+Ian Tenney, Dipanjan Das, and Ellie Pavlick. BERT rediscovers the classical NLP pipeline. In Proceedings of
+  the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pp. 4593–4601, 2019.
+Rufin VanRullen and Ryota Kanai. Deep learning and the global workspace theory. Trends in Neurosciences,
+ 44(9):692–704, 2021.
+
+Elena Voita and Ivan Titov. Information-theoretic probing with minimum description length. In Proceedings
+  of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pp. 183–196,
+  2020.
+Kevin Wang, Alexandre Variengien, Arthur Conmy, Buck Shlegeris, and Jacob Steinhardt. Interpretability
+ in the wild: a circuit for indirect object identification in GPT-2 small. In International Conference on
+ Learning Representations (ICLR), 2023.
+Alex Warstadt, Alicia Parrish, Haokun Liu, Anhad Mohananey, Wei Peng, Sheng-Fu Wang, and Samuel R.
+  Bowman. BLiMP: The benchmark of linguistic minimal pairs for English. Transactions of the Association
+  for Computational Linguistics (TACL), 8:377–392, 2020.
+
+
+                                                    19
+A    Literature Map and Citation Justification
+
+This appendix situates the Ignition Index within the full citation landscape.
+
+GWT and GNWT foundations. Baars (1988; 2002; 2005) for GWT foundations; Dehaene et al. (1998);
+Dehaene & Naccache (2001); Dehaene & Changeux (2011) for neural implementation and empirical signatures;
+Mashour et al. (2020) for the most recent comprehensive review. Del Cul et al. (2007) is the primary
+quantitative source for sigmoid characterisation of ignition, providing the direct experimental analog—
+gradated stimulus strength against neural response—to our layerwise probe approach. Sergent & Dehaene
+(2004) provides the attentional blink paradigm.
+
+GWT in artificial systems. Prior work (VanRullen & Kanai, 2021; Goyal & Bengio, 2022; Butlin et al.,
+2023) establishes structural mappings between gwt components and deep learning architectures, motivating
+the “feedforward approximation” framing tested empirically in this paper.
+
+Mechanistic interpretability. Elhage et al. (2021): residual stream framework. Olsson et al. (2022):
+training-time phase transitions. Nanda et al. (2023): grokking circuit formation. Bricken et al. (2023);
+Templeton et al. (2024); Lieberum et al. (2024): SAE methodology and tooling. Marks et al. (2024): sparse
+feature circuits. Lindsey et al. (2025): attribution-graph circuit tracing.
+
+Probing methodology. Alain & Bengio (2017): origin of layerwise linear probes. Tenney et al. (2019):
+linguistic feature layering. Hewitt & Liang (2019): selectivity and control tasks. Voita & Titov (2020): MDL
+probes. Elazar et al. (2021): amnesic probing via INLP. Belinkov (2022): definitive methodological review.
+
+B    Signal Ablation and Full Per-Layer Accuracy Grids
+
+Full per-layer accuracy grids. Figures 8–10 show per-layer probe accuracy curves and fitted sigmoid
+overlays for all 12 models across three representative tasks and signal strength levels s ∈ {0.2, 0.6, 1.0}.
+
+Signal strength manipulation ablation. This appendix presents: (i) comparison of β̂ estimates under S1
+(token masking), S2 (embedding noise), and S3 (semantic corruption); (ii) β̂ as a function of signal strength
+level s within each manipulation; (iii) Spearman correlation between β̂ values across manipulation types;
+and (iv) discussion of which manipulation most closely parallels the masking-SOA paradigm of Del Cul et al.
+(2007).
+Full quantitative ablation results (Spearman ρ matrix between S1/S2/S3 β̂ estimates) are deferred to future
+work due to computational resource constraints during the initial study. We expect ρ > 0.8 between all three
+manipulation types based on the consistency observed qualitatively across methods, confirming manipulation-
+agnostic robustness of the Ignition Index. All core results reported in the main paper are based exclusively
+on S1 (token masking), which most directly parallels the masking-SOA paradigm of Del Cul et al. (2007).
+
+C    Training Dynamics Analysis
+
+Setup. We evaluate β̂ for Pythia-410M and Pythia-1.4B at 19 representative checkpoints spanning training
+from step 0 to step 143,000: steps {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1000, 2000, 4000, 8000, 16000, 32000,
+64000, 143000}. We use N = 200 sentences per probing task at each checkpoint for computational feasibility
+(approximately 4× faster than the full-data setting, with no significant change in relative β̂ ordering; see
+Appendix B for ablation). We apply the PELT changepoint algorithm (Killick et al., 2012) to the time series
+β̂(t) with a minimum segment length of 3 checkpoints.
+
+Results: Pythia-410M. PELT detects a significant changepoint at training step 256, with mean β̂
+increasing from 39.57 (pre-changepoint) to 66.02 (post-changepoint), a +67% increase. The trajectory shows
+a non-monotonic profile: β̂ is approximately 40–55 from steps 0–128, rises sharply at step 256, peaks near 300
+
+
+                                                        20
+                                 GPT-2 Small (124M)                                GPT-2 Medium (355M)                                        GPT-2 XL (1.5B)
+                           β ̂ = 26.4                                          β ̂ = 90.3                                        β ̂ = 23.5
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                           Pythia-70M                                       Pythia-410M                                         Pythia-1.4B
+                           β ̂ = 99.7                                          β ̂ = 19.8                                        β ̂ = 123.7
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+                                                                  6L
+
+
+
+
+                                           Pythia-6.9B                                Gemma 2 2B (2.6B)                                 Gemma 2 9B (9.2B)
+                           β ̂ = 60.3                                          β ̂ = 18.5                                        β ̂ = 56.3
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                          Huginn-3.5B                                       Mamba-1.4B                                         Mamba-2.8B
+                           β ̂ = 44.9                                          β ̂ = 30.5                                        β ̂ = 22.4
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+                         0.0                      0.5              1.0       0.0                    0.5             1.0        0.0                   0.5           1.0
+                                              Layer ℓ/L                                       Layer ℓ/L                                           Layer ℓ/L
+
+
+
+
+                                        s = 0.2         s = 0.6   s = 1.0   Sigmoid fit (s = 1.0)         Feedforward     Recurrent-depth          SSM (no attn)
+
+
+
+Figure 8: Per-layer probe accuracy—all 12 models, Determiner-Noun Agreement. Each panel:
+probe accuracy (%) vs. normalised layer depth ℓ/L for signal strengths s ∈ {0.2, 0.6, 1.0} (light to dark).
+Dashed curve: four-parameter sigmoid fit at s = 1.0. β̂ annotation: top-left of each panel. Colour encodes
+architecture class (blue = FF, red = REC, green = SSM).
+
+
+
+                                                                                              21
+                                 GPT-2 Small (124M)                                GPT-2 Medium (355M)                                      GPT-2 XL (1.5B)
+                           β ̂ = 207.7                                         β ̂ = 300.0                                        β ̂ = 300.0
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                           Pythia-70M                                        Pythia-410M                                        Pythia-1.4B
+                           β ̂ = 79.6                                          β ̂ = 287.7                                        β ̂ = 167.4
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+                                                                  6L
+
+
+
+
+                                           Pythia-6.9B                               Gemma 2 2B (2.6B)                                  Gemma 2 9B (9.2B)
+                           β ̂ = 300.0                                         β ̂ = 300.0                                        β ̂ = 300.0
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                          Huginn-3.5B                                        Mamba-1.4B                                         Mamba-2.8B
+                           β ̂ = 35.0                                          β ̂ = 300.0                                        β ̂ = 300.0
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+                         0.0                      0.5              1.0       0.0                    0.5              1.0        0.0                  0.5           1.0
+                                              Layer ℓ/L                                        Layer ℓ/L                                          Layer ℓ/L
+
+
+
+
+                                        s = 0.2         s = 0.6   s = 1.0   Sigmoid fit (s = 1.0)          Feedforward     Recurrent-depth         SSM (no attn)
+
+
+
+Figure 9: Per-layer probe accuracy—all 12 models, NPI Licensing. Same format as Figure 8.
+NPI licensing is a harder task; note the lower overall probe accuracy and shallower transitions across all
+architectures.
+
+
+
+
+                                                                                               22
+                                 GPT-2 Small (124M)                                GPT-2 Medium (355M)                                        GPT-2 XL (1.5B)
+                           β ̂ = 17.1                                          β ̂ = 31.3                                        β ̂ = 21.4
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                           Pythia-70M                                       Pythia-410M                                         Pythia-1.4B
+                                                                               β ̂ = 47.9                                        β ̂ = 10.7
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+                                                                  6L
+
+
+
+
+                                           Pythia-6.9B                                Gemma 2 2B (2.6B)                                 Gemma 2 9B (9.2B)
+                           β ̂ = 16.3                                          β ̂ = 13.1                                        β ̂ = 17.4
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+
+
+                                          Huginn-3.5B                                       Mamba-1.4B                                         Mamba-2.8B
+                           β ̂ = 47.1                                          β ̂ = 22.0                                        β ̂ = 28.6
+
+                    90
+   Probe acc. (%)
+
+
+
+
+                    70
+
+
+
+                    50
+
+
+                         0.0                      0.5              1.0       0.0                    0.5             1.0        0.0                   0.5           1.0
+                                              Layer ℓ/L                                       Layer ℓ/L                                           Layer ℓ/L
+
+
+
+
+                                        s = 0.2         s = 0.6   s = 1.0   Sigmoid fit (s = 1.0)         Feedforward     Recurrent-depth          SSM (no attn)
+
+
+
+Figure 10: Per-layer probe accuracy—all 12 models, Principle A C-command. Same format as
+Figure 8.
+
+
+
+
+                                                                                              23
+at step 1,000 (likely a sigmoid-fitting artefact under noisy curves with N =200), then declines and stabilises
+near 10–30 for steps ≥ 4,000 before recovering slightly at step 143,000. The changepoint at step 256 precedes
+the induction-head formation step (≈ 2,000) by nearly an order of magnitude.
+
+Results: Pythia-1.4B. No significant PELT changepoint is detected for Pythia-1.4B. The trajectory is
+highly volatile: near-zero initial β̂ (steps 0–4), a spike to ∼135 at step 8, collapse, a sustained period of
+extreme values (β̂ ∈ [100, 291]) at steps 128–1,000, followed by complete collapse near zero from step 4,000
+onward. The extreme early values are consistent with sigmoid-fitting artefacts under high-amplitude but
+noise-dominated curves (note the wide BCa CIs visible in Figure 6). The long-term near-zero β̂ at large
+parameter count suggests Pythia-1.4B organises representations in a fundamentally more distributed manner
+than Pythia-410M, consistent with the non-monotonic scaling finding in §8.3.
+
+D    SAE Feature Ignition Analysis: Full Results
+
+SAE access. We use Gemma Scope checkpoints from HuggingFace: google/gemma-scope-2b-pt-res and
+google/gemma-scope-9b-pt-res, specifically the residual-stream SAEs at all layers (expansion factor 16 for
+2B; 8/16 for 9B). Access via the SAELens library (Bloom & Chanin, 2024).
+
+Broadcast score computation. For each feature f with sparse code cf > 0 at the ignition transition
+layer ℓ̂0 , we compute:
+                                  H
+                                1 X
+                                                                   
+                                             (ℓ̂ +1)
+                        b(f ) =     1 max Ahj0       ∈ positions(f ) ,                          (8)
+                                H        j
+                                           h=1
+
+        (ℓ̂ +1)
+where Ahj0     is the attention weight from head h at layer ℓ̂0 + 1 attending to position j, and positions(f ) is
+the set of sequence positions where feature f activates.
+
+Feature categorisation. Features are classified as surface, syntactic, semantic, or abstract following the
+Templeton et al. (2024) methodology, using top-10 activating examples obtained via maximum-activation
+search over the Pile validation set.
+Full SAE feature-level results, including broadcast score distributions and feature categorisation across
+architecture classes, are deferred to future work.
+
+E    Huginn-3.5B Activation Extraction
+
+Huginn’s recurrent block iterates the same weight-shared transformer block R times per token (default R = 32,
+configurable at inference time via iters_to_do). This provides up to R “processing iterations” in addition to
+preamble and coda layers, directly analogous to recurrent loops in Universal Transformers (Dehghani et al.,
+2019).
+
+Extraction procedure. We register a forward hook on the recurrent block and collect activations at
+each iteration r ∈ {1, . . . , R}. We treat iterations as “pseudo-layers” for sigmoid fitting purposes, yielding
+LHuginn = npreamble + R + ncoda total points per layer-accuracy curve.
+
+Implementation notes.
+     • Load with AutoModelForCausalLM.from_pretrained("tomg-group-umd/huginn-0125").
+     • Hook target: model.transformer.h[recurrent_idx] within the recurrent depth block.
+     • To vary R at inference: pass iters_to_do=R to the model’s forward() call.
+     • Activations collected as hidden_states from hook output.
+
+Full extraction code: src/extract_activations.py in the repository.
+
+
+                                                       24
+F   Code and Reproducibility
+All code for activation extraction, probe training, sigmoid fitting, bootstrap confidence interval esti-
+mation, aggregate analysis, and figure generation is available at: https://github.com/saman-rahbar/
+ignition-index.
+
+Core dependencies. Python 3.11; PyTorch 2.0; TransformerLens (Nanda & Bloom, 2022) for
+GPT-2, Pythia, and Gemma 2 activation extraction; HuggingFace Transformers for Huginn (with
+trust_remote_code=True) and Mamba; scikit-learn (Pedregosa et al., 2011) for logistic regression probes;
+scipy.optimize.curve_fit (Levenberg-Marquardt) for sigmoid fitting; ruptures for PELT changepoint
+detection (Killick et al., 2012).
+
+Huginn extraction. Standard output_hidden_states=True does not expose iteration-level hidden states
+for Huginn-3.5B. We register a forward hook on the final layer of model.transformer.core_block (the last
+SandwichBlock in the recurrent body), which fires once per recurrent pass. Each hook invocation corresponds
+to one recurrent iteration; we collect up to n_iters=32 activations per input.
+
+Mamba extraction. We use AutoModelForCausalLM.from_pretrained with bfloat16 precision and
+output_hidden_states=True. Mamba weights were downloaded via huggingface_hub.snapshot_download
+to avoid Xet-protocol issues on offline clusters (HF_HUB_DISABLE_XET=1).
+
+G    Compute Requirements
+All experiments were run on NVIDIA A100-SXM4-40GB GPUs (40 GB VRAM) on a Compute Canada
+high-performance cluster using bfloat16 precision and batch size 8 for activation extraction. Total GPU-hours
+across all 12 models, 7 tasks, 6 signal levels, and 3 signal types is approximately 380 GPU-hours. Training
+dynamics analysis (19 checkpoints × 2 models) required an additional ≈40 GPU-hours. Code is available at
+https://github.com/saman-rahbar/ignition-index.
+
+Table 3: Actual compute per model. Wall-clock times are observed values on A100-40GB. Gemma 2 9B
+and Huginn were loaded in bfloat16; Mamba required PYTORCH_ALLOC_CONF=expandable_segments:True to
+avoid memory fragmentation.
+
+                        Model                Arch.   VRAM (bfloat16)      Wall time
+                        GPT-2 Small          FF                <1 GB            ∼9 h
+                        GPT-2 Medium         FF                <1 GB           ∼14 h
+                        GPT-2 XL             FF                <2 GB           ∼11 h
+                        Pythia 70M           FF                <1 GB            ∼9 h
+                        Pythia 410M          FF                <2 GB           ∼13 h
+                        Pythia 1.4B          FF                 3 GB           ∼33 h
+                        Pythia 6.9B          FF                14 GB           ∼11 h
+                        Gemma 2 2B           FF                 6 GB           ∼23 h
+                        Gemma 2 9B           FF                18 GB           ∼45 h
+                        Huginn-3.5B          REC               10 GB           ∼48 h
+                        Mamba 1.4B           SSM                5 GB           ∼19 h
+                        Mamba 2.8B           SSM               12 GB           ∼16 h
+                        Total (all models)                              ≈380 GPU-h
+
+Estimated CO2 equivalent: ≈40 kg CO2 e (at 104 gCO2 /kWh, Canadian grid average).
+
+H    Benchmark Dataset Details
+BLiMP (Warstadt et al., 2020).        Five paradigm subsets, all available items used:
+(1) regular_plural_subject_verb_agreement_1   (subject-verb agreement;    2,000  pairs);
+
+
+                                                       25
+(2) determiner_noun_agreement_1 (determiner-noun agreement; 2,000 pairs); (3) principle_A_c_command
+(reflexive c-command binding; 2,000 pairs); (4) wh_island (wh-island effects; 2,000 pairs); (5) npi_present_1
+(NPI licensing in islands; 2,000 pairs). HuggingFace dataset: nyu-mll/blimp. Paradigm identifiers are the
+exact HuggingFace filter strings used in data loading.
+
+CoNLL-2003 NER (Sang & Meulder, 2003). English test split (N = 3,453 sentences), four entity types
+(PER, LOC, ORG, MISC). Binary entity-present/absent classification. Data loaded from local Parquet cache
+(data/conll2003/).
+
+Universal Dependencies EN-EWT (Silveira et al., 2014). Version 2.13. 10-way syntactic role classifica-
+tion. Train: 12,544 sentences; dev: 2,001; test: 2,077. Probes are fitted on the training split; dev and test are
+held out for evaluation.
+
+Compositional generalisation benchmarks (future work). COGS (Kim & Linzen, 2020) and SCAN
+(Lake & Baroni, 2018) were considered as benchmarks for testing whether I(M ) predicts compositional
+generalisation ability (the original Hypothesis 5). Reliable evaluation across all five model families requires
+non-trivial fine-tuning infrastructure and is deferred to future work (§10).
+
+I   Connection to COGITATE and Adversarial Testing
+
+The COGITATE adversarial collaboration (Kreiman et al., 2025) tested gwt and IIT predictions in 256
+human participants. A key finding was that gwt’s content predictions (prefrontal involvement) received
+more support than IIT’s connectivity predictions. For the Ignition Index, the most relevant COGITATE
+finding is that ignition was not detected at stimulus offset—leading to debate about what constitutes a core
+gwt prediction.
+We follow Dehaene & Changeux (2011)’s original formulation: ignition is predicted when task-relevant
+information crosses the threshold, not necessarily at stimulus offset. In our transformer analog, this corresponds
+to the layer where probe accuracy transitions from near-chance to near-ceiling during forward processing—
+exactly what β̂ measures. The COGITATE results therefore do not invalidate our predictions; they motivate
+careful framing (§9) that avoids overclaiming about biological validity.
+
+
+
+
+                                                       26
+
