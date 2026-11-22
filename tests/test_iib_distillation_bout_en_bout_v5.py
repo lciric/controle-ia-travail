@@ -299,8 +299,7 @@ def test_prefixe_de_la_course_artefacts(course, monkeypatch):
     with pytest.raises(GardeArret, match="préfixe propre"):
         dg.prefixe_de_la_course({"prefixe_graines": "essai/"})
     monkeypatch.undo()
-    if course["conditions"]["issue"] not in ("N", "P"):
-        pytest.skip("la course jouet n'est pas partie")
+    assert course["conditions"]["issue"] in ("N", "P"), "la course jouet devait partir"          # cl1, m3 : jamais un saut
     vraie = dg.configuration_de_course
 
     def sans_prefixe_propre(c, racine, chemin):                                         # artefact : la course reprend le préfixe de l'étalonnage
@@ -314,3 +313,64 @@ def test_prefixe_de_la_course_artefacts(course, monkeypatch):
     with pytest.raises(GardeArret, match="préfixe propre de la course"):
         la.phase_course(course["config"], racine, "course", d.modele, course["monde"], d, carte=False)
     assert not (racine / "course" / "tours").exists()
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+# Correctif 0019 : contre-lecture cl1 du code de la course (M1, m1)
+# ------------------------------------------------------------------------------------------------------------------------------
+def test_course_engagee_scellee_et_poussee_avant_le_premier_tour(point_d_entree):
+    """M1 : le témoin d'engagement est scellé et poussé avant le premier tour (son commit précède celui du tour 1), sur la
+    branche distante ; une machine neuve qui clone la branche le trouve et refuse un second passage."""
+    import subprocess
+
+    from test_iib_versement_v5 import BRANCHE, git
+
+    d, origine = point_d_entree["d"], point_d_entree["origine"]
+    f = d / "diag" / RUN_E / la.ENGAGEMENT
+    e = json.loads(f.read_text(encoding="utf-8"))
+    assert verifier(f) and e["run"] == RUN_C and e["oracle_de_la_regle"] in ("N", "P")
+    messages = git(origine, "log", "--reverse", "--format=%s", BRANCHE).splitlines()
+    i_e = next(i for i, m in enumerate(messages) if "(versement course engagee)" in m)
+    i_t = next(i for i, m in enumerate(messages) if "(versement tour 001)" in m)
+    assert i_e < i_t
+    neuve = point_d_entree["r"].parent / "machine-neuve"
+    subprocess.run(["git", "clone", "-q", "--branch", BRANCHE, str(origine), str(neuve)], check=True, capture_output=True)
+    with pytest.raises(GardeArret, match="course-engagee-iib-v5.json"):
+        la.exiger_course_non_jouee(neuve / "diag" / RUN_E)
+
+
+def test_course_morte_avant_son_premier_tour_ne_se_relance_pas(tmp_path):
+    """M1, artefact : seul le témoin d'engagement existe (course morte avant d'écrire un tour) : refus ; cas sain : dossier
+    d'étalonnage sans aucune sortie de course : permis."""
+    d = tmp_path / "diag" / RUN_E
+    d.mkdir(parents=True)
+    la.exiger_course_non_jouee(d)
+    (d / la.ENGAGEMENT).write_text("{}\n", encoding="utf-8")
+    with pytest.raises(GardeArret, match="course déjà jouée"):
+        la.exiger_course_non_jouee(d)
+
+
+def test_identifiants_de_l_etalonnage_exiges_en_mode_reel(tmp_path):
+    """m1 : en mode réel, autant de fichiers d'identifiants que de lots déclarés par le résumé scellé de l'étalonnage, et au
+    moins un ; sinon refus. Mode jouet : rendus tels quels."""
+    from controle_ia.scellement import sceller
+
+    lots = tmp_path / "donnees" / RUN_E / "lots"
+    lots.mkdir(parents=True)
+    r = tmp_path / "diag" / RUN_E / "resume.json"
+    r.parent.mkdir(parents=True)
+    r.write_text(json.dumps({"resultat": {"lots": 3}}) + "\n", encoding="utf-8")
+    sceller(r)
+    with pytest.raises(GardeArret, match="0 fichier"):
+        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")
+    assert la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "jouet") == []
+    for k in (1, 2):
+        (lots / f"ids-lot-00{k}-etalonnage-honnete.json").write_text("{}\n", encoding="utf-8")
+        sceller(lots / f"ids-lot-00{k}-etalonnage-honnete.json")
+    with pytest.raises(GardeArret, match="2 fichier.*pour 3 lots"):
+        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")
+    (lots / "ids-lot-003-etalonnage-plante.json").write_text("{}\n", encoding="utf-8")
+    assert len(la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")) == 3                # cas sain
+    r.unlink()
+    with pytest.raises(GardeArret, match="résumé de l'étalonnage"):
+        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")

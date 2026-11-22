@@ -601,7 +601,10 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
     code = [l for l in d if not l[1:].lstrip().startswith("#")]
     moins = [l[1:] for l in code if l[0] == "-"]
     plus = [l[1:] for l in code if l[0] == "+"]
-    assert len(moins) == 5 and len(plus) == 8, (moins, plus)
+    # correctif 0019 (c6) : dix lignes de plus, les neuf de `engager_course` et son appel (`ENGAGEE=` est sur la ligne de RUN_ETAL)
+    assert len(moins) == 5 and len(plus) == 18, (moins, plus)
+    corps = c.split("# --- (c6) engagement de la course\n", 1)[1].split("# --- fin (c6)\n", 1)[0]
+    assert len([l for l in corps.splitlines() if not l.lstrip().startswith("#")]) == 9 and plus.count('engager_course "$ENGAGEE"') == 1
     assert all(any(m in l for m in ("LISTE_TESTS=", 'RUN="$(date', 'journal "run : $RUN', "lanceur_v5 --phase etalonnage", 'ajouter "runs/$RUN"')) for l in moins)
     assert sum(l.startswith(("DES=", "{ [ -n \"$DES\" ]", "RUN_ETAL=")) for l in plus) == 3
     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
@@ -622,3 +625,30 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
     assert r.returncode == 2 and "ni l'amorce de l'étalonnage ni celle de la course" in r.stdout + r.stderr
     v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     assert "scripts/amorce_instance_iib_course_v5.sh) A=\"$IIB_AMORCE\"" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3
+
+
+def test_amorce_de_la_course_engagement_unique_par_etalonnage(tmp_path):
+    """Correctif 0019 (cl1, M1) : la fonction `engager_course` de l'amorce de la course, jouée telle qu'écrite contre une origine
+    nue locale. Cas sain : référence absente, poussée. Artefact : référence présente (une course déjà engagée sur cet
+    étalonnage, depuis une autre machine) : refus, rien n'est poussé de plus."""
+    import re
+    import subprocess
+
+    texte = (DEPOT / "scripts" / "amorce_instance_iib_course_v5.sh").read_text(encoding="utf-8")
+    bloc = re.search(r"# --- \(c6\) engagement de la course\n(.*?)# --- fin \(c6\)\n", texte, re.S).group(1)
+    assert 'engager_course "$ENGAGEE"' in texte and 'ENGAGEE="refs/heads/essai/iib-course-engagee-$RUN_ETAL"' in texte
+    origine, d = tmp_path / "o.git", tmp_path / "d"
+    subprocess.run(["git", "init", "-q", "--bare", str(origine)], check=True)
+    subprocess.run(["git", "init", "-q", str(d)], check=True)
+    for a in (("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"), ("commit", "-q", "--allow-empty", "-m", "c"),
+              ("remote", "add", "origin", str(origine))):
+        subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
+    script = tmp_path / "e.sh"
+    script.write_text("T=$1; cd $2\nrefus() { echo \"REFUS : $1\"; exit 2; }\njournal() { echo \"$*\"; }\n" + bloc +
+                      'engager_course "refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"\necho FIN\n', encoding="utf-8")
+    sain = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
+    assert sain.returncode == 0 and "course engagée" in sain.stdout and "FIN" in sain.stdout, sain.stdout + sain.stderr
+    refs = subprocess.run(["git", "-C", str(origine), "for-each-ref", "--format=%(refname)"], capture_output=True, text=True).stdout.split()
+    assert refs == ["refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"]
+    deux = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
+    assert deux.returncode == 2 and "course déjà engagée sur cet étalonnage" in deux.stdout and "FIN" not in deux.stdout

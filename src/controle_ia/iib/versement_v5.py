@@ -19,7 +19,7 @@ from ..gardes import GardeArret
 
 CONSIGNER = "IIB_CONSIGNER"          # chemin du script de consignation écrit par l'amorce (`$R/iib-consigner.sh`)
 REFUS_CONSECUTIFS_MAX = 3            # trois poussées refusées de suite : arrêt (lots scellés sur le disque, machine arrêtée par l'amorce)
-DELAI_CONSIGNATION_S = 3000          # verrou (1 500 s au plus) et trois poussées (600 s au plus chacune) du script de l'amorce
+DELAI_CONSIGNATION_S = 3600          # verrou (1 500 s) et trois poussées (600 s chacune) et leurs attentes (15 + 60 s) : 3 375 s au pire (cl1, m2)
 
 
 class Versement:

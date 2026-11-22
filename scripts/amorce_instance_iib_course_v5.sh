@@ -8,6 +8,9 @@
 #  (c4) la suite ciblée figée est `scripts/tests-cibles-iib-course-v5-v1.txt` : celle de l'étalonnage (v6) plus l'essai du moteur à
 #       torch du distillateur, qui sur la machine de la course trouve torch, transformers et scipy et se joue (rapport du distillateur,
 #       § 3 point 2 : qu'un défaut du moteur se voie dans les premières minutes, non après les tours) ; TESTS_ATTENDUS en tient compte ;
+#  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
+#       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
+#       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
 #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
 # Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` (seule autre valeur permise).
 # Écrite et éprouvée à blanc en essai local seulement ; jamais lancée par son développeur.
@@ -356,7 +359,7 @@ FIN_CONFIG=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p' 
 journal "calendrier : $CAL"
 DES=$(ls -1 diag/*-iib-*/designation-iib-v5.json 2>/dev/null)      # (c2) le run de l'étalonnage, par sa désignation scellée
 { [ -n "$DES" ] && [ "$(printf '%s\n' "$DES" | wc -l)" = 1 ] && [ -f "$DES.sha256" ]; } || refus "course : il faut une et une seule désignation scellée diag/*-iib-*/designation-iib-v5.json dans le commit ($(printf '%s' "$DES" | tr '\n' ' '))"
-RUN_ETAL=$(basename "$(dirname "$DES")"); journal "course : étalonnage $RUN_ETAL (désignation $DES) ; identifiants des lots : $(ls -1 donnees/"$RUN_ETAL"/lots/ids-lot-*.json 2>/dev/null | wc -l)"
+RUN_ETAL=$(basename "$(dirname "$DES")"); ENGAGEE="refs/heads/essai/iib-course-engagee-$RUN_ETAL"; journal "course : étalonnage $RUN_ETAL (désignation $DES) ; identifiants des lots : $(ls -1 donnees/"$RUN_ETAL"/lots/ids-lot-*.json 2>/dev/null | wc -l)"
 code_branche=0
 timeout -k 5 300 git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>"$T/ls-remote.err" || code_branche=$?
 case "$code_branche" in
@@ -364,6 +367,18 @@ case "$code_branche" in
     2) ;;
     *) refus "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche)";;
 esac
+# --- (c6) engagement de la course
+engager_course() {  # $1 = référence d'engagement ; 0 si absente puis poussée ; refus sinon (aucune course ne part deux fois sur un étalonnage)
+    local c=0; timeout -k 5 300 git ls-remote --exit-code origin "$1" >/dev/null 2>"$T/engagement.err" || c=$?
+    case "$c" in
+        0) refus "course déjà engagée sur cet étalonnage ($1 présente sur le dépôt distant) : second passage refusé, toute reprise est une course neuve sous devis neuf";;
+        2) ;;
+        *) refus "vérification de l'engagement de la course impossible (git ls-remote $1, code $c)";;
+    esac
+    timeout -k 5 300 git push -q origin "HEAD:$1" 2>"$T/engagement-poussee.err" || refus "poussée de l'engagement de la course ($1) refusée"
+    journal "course engagée : $1 poussée (avant l'installation)"; }
+# --- fin (c6)
+engager_course "$ENGAGEE"
 git checkout -q -b "$BRANCHE"
 timeout -k 5 300 git push -q origin "$BRANCHE" 2>"$T/poussee-initiale.err" || refus "poussée initiale de la branche $BRANCHE refusée (droit d'écriture du jeton ?)"
 journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"

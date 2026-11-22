@@ -388,6 +388,7 @@ def phase_conditions(config: dict, racine, dossier) -> dict:
 # C. Course
 # ------------------------------------------------------------------------------------------------------------------------------
 SORTIES_DE_LA_COURSE = ("course", "oracle_course", "ids_course", "temoins", "evaluation", "ids_evaluation")
+ENGAGEMENT = "course-engagee-iib-v5.json"   # correctif 0019 (contre-lecture cl1, M1) : témoin scellé et poussé avant le premier tour
 
 
 def _fichiers_scelles(*chemins) -> list[Path]:
@@ -398,14 +399,14 @@ def exiger_course_non_jouee(dossier_abs: Path) -> None:
     """Aucune sortie de course dans le dossier de l'étalonnage (ni résumé, ni tour, ni évaluation) : sinon refus, avant le premier
     tour (sans cette garde, un second passage jouait tous ses tours avant de buter sur un fichier existant)."""
     deja = [NOMS[k] for k in SORTIES_DE_LA_COURSE if (Path(dossier_abs) / NOMS[k]).exists()] + [
-        d for d in ("tours", "evaluation") if (Path(dossier_abs) / d).exists()]
+        d for d in ("tours", "evaluation", ENGAGEMENT) if (Path(dossier_abs) / d).exists()]
     if deja:
         raise GardeArret(f"course déjà jouée dans ce dossier ({', '.join(deja)}) : toute reprise est une course neuve, sous devis neuf "
                          "(refus avant le premier tour)")
 
 
 def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None,
-                 versement: vs.Versement | None = None) -> dict:
+                 versement: vs.Versement | None = None, run: str | None = None) -> dict:
     """`config` : configuration de l'étalonnage ; la configuration de course est dérivée ici du résultat scellé de la
     désignation. `dossier` : chemin relatif à `racine` du dossier de l'étalonnage et de la course. `versement` : poussée de
     chaque tour, puis des témoins, de la distillation et de chaque condition de l'évaluation, dès que scellés (exigée en mode
@@ -463,6 +464,13 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
                                                                 course, validite)
         return [{"episode": e["episode"], "tache": e["tache"], "sorties": e["oracle"][oracle]} for e in eps]
     sorties = {}
+    # correctif 0019 (M1) : toutes les gardes d'avant le premier tour ont passé ; la course est engagée, et c'est scellé et poussé
+    # avant le premier épisode : tout second passage (même disque, ou machine neuve qui clone ce dossier) est refusé
+    from datetime import datetime, timezone
+
+    sorties[ENGAGEMENT] = _ecrire(dossier_abs, ENGAGEMENT, {"run": run, "instant_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                                           "oracle_de_la_regle": oracle, "tours_prevus": R})
+    verser("course engagee", _fichiers_scelles(dossier_abs / ENGAGEMENT))
     progres(etape="course", phase="debut", tours_prevus=R, oracle=oracle)
     res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument,
                               apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"], replis=len(replis_de(modele))))
@@ -717,6 +725,26 @@ def exiger_configuration_de_l_etalonnage(config: dict, racine, etalonnage: str) 
     return m["config_sha256"]
 
 
+def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> list[Path]:
+    """Fichiers des identifiants d'actions de l'étalonnage, un par lot (`donnees/<étalonnage>/lots/ids-lot-*.json`). Correctif
+    0019 (contre-lecture cl1, m1) : en mode réel, refus s'il n'y en a aucun, ou si leur nombre diffère des lots que le résumé
+    scellé de l'étalonnage déclare (`diag/<étalonnage>/resume.json`) ; sans eux, les faux positifs des motifs ne seraient pas
+    calculés. En mode jouet : rendus tels quels."""
+    from ..scellement import verifier as _verifier
+
+    ids = sorted((Path(racine) / "donnees" / etalonnage / "lots").glob("ids-lot-*.json"))
+    if mode != "reel":
+        return ids
+    chemin = Path(racine) / "diag" / etalonnage / "resume.json"
+    if not chemin.is_file():
+        raise GardeArret(f"course : résumé de l'étalonnage {chemin} absent (refus)")
+    _verifier(chemin)
+    lots = json.loads(chemin.read_text(encoding="utf-8")).get("resultat", {}).get("lots")
+    if not ids or lots != len(ids):
+        raise GardeArret(f"course : {len(ids)} fichier(s) d'identifiants de l'étalonnage pour {lots!r} lots déclarés par son résumé (refus)")
+    return ids
+
+
 def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
                      autoriser_depot_sale: bool, carte) -> dict:
     from ..gardes import motif_d_arret
@@ -730,6 +758,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
     if not (racine / dossier / NOMS["designation"]).is_file():
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
     exiger_course_non_jouee(racine / dossier)
+    ids = exiger_identifiants_de_l_etalonnage(racine, etalonnage, config["mode"])
     versement = vs.Versement(racine, environnement, config["mode"], progres)
     chemin_m, _ = creer_manifeste(racine, run_id, config, [dg.prefixe_de_la_course(config) + "iib/v5/manifeste"], entropie=int(config["entropie"]),
                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
@@ -747,7 +776,6 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
         else:
             modele = modele if modele is not None else modele_v5.construire_modele(config)
             monde = monde if monde is not None else MondeReel(config, racine)
-        ids = sorted((racine / "donnees" / etalonnage / "lots").glob("ids-lot-*.json"))
         if distillateur is None:
             if config["mode"] == "reel":
                 distillateur = dv.distillateur_du_mode_reel(modele, racine, racine / dossier, progres=progres, ids_etalonnage=ids)
@@ -755,7 +783,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
                 distillateur = dv.Distillateur(modele, MoteurJouet(modele), racine, racine / dossier, motifs=MOTIFS_JOUET, progres=progres,
                                                ids_etalonnage=ids)
         etat["etape"] = "course"
-        r = phase_course(config, racine, str(dossier), distillateur.modele, monde, distillateur, environnement, carte, versement)
+        r = phase_course(config, racine, str(dossier), distillateur.modele, monde, distillateur, environnement, carte, versement, run_id)
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),

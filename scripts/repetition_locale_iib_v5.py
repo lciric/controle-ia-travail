@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 290        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe de la course (0018) 2
+ATTENDUS = 294        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; contre-lecture cl1 (0019) 4
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
@@ -285,6 +285,15 @@ def course(m: dict, t: Path, rap: Path, run: str, figee: bool) -> None:
     assert all(f"diag/{run}/evaluation/oracles-evaluation-{c}.json" in fichiers for c in ("H", "B50", "B100", "TJ100"))
     dire(f"\nbranche essai/iib-explo-v6 poussée : course {runs_c[0]} sur l'étalonnage {run} ; {len(tours)} tours poussés un par un, "
          "évaluation par condition, résumé présent")
+    # correctif 0019 (cl1, M1) : une seconde machine neuve, sous une branche neuve, sur le même étalonnage : refus, rien ne part
+    assert f"refs/heads/essai/iib-course-engagee-{run}" in git(m["origine"], "for-each-ref", "--format=%(refname)").split()
+    inst2 = t / "instance-course-2"
+    inst2.mkdir()
+    r2 = subprocess.run(["bash", str(amorce)], env={**env, "RACINE_AMORCE": str(inst2), "BRANCHE": "essai/iib-explo-v7"}, capture_output=True, text=True,
+                        timeout=600)
+    assert r2.returncode == 2 and "course déjà engagée sur cet étalonnage" in r2.stdout and not (inst2 / "iib-fin-normale").exists(), r2.stdout[-800:]
+    assert "essai/iib-explo-v7" not in git(m["origine"], "for-each-ref", "--format=%(refname)")
+    dire("seconde machine sur le même étalonnage : refus (« course déjà engagée »), aucune branche poussée")
     reponse = d / "creation-brute-essai1.json"
     reponse.write_text(json.dumps({"success": True, "new_contract": int(ID)}), encoding="utf-8")
     assert f"CRÉÉE : instance {ID}" in session(m2, "apres-creation", reponse, 0, d, **sup)
