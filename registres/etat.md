@@ -1,3 +1,5 @@
+**2026-11-22T16:22:58Z — Mère suivante session_013QMayjbmQUdDuDs2S3i3XD en poste (R-4960). EN TÂCHE : Vast 61932710 (lentilles ; gardes réarmées ici : minuterie PID 688, échéance ≈ 2026-11-23T05:58Z ; garde de dépense PID 710) ; Hetzner 177170935 (organisme, essai 3, destruction 2026-11-26T10:16:22Z). URGENT inchangé : course du saboteur, voie (A), au plus tard le 25 au matin.**
+
 **2026-11-22T15:44:46Z (Sun Nov 22 15:44:46 UTC 2026) — PASSATION de la mère session_01XJ6Mgr4LgbMsg5zLyRZCpG sur l'ordre de Lazar (plus de crédit) : registres/passations/2026-11-22-1544.md. EN TÂCHE : Vast 61932710 (réajustement des lentilles, session_01XJ6MgqfTmLrdjtfZDdJu8G). URGENT : course du saboteur à budget, voie (A), à lancer au plus tard le 25 au matin.**
 
 **2026-11-22T07:37:03Z (`date -u`) — EN TÂCHE : Vast 61875617 (étalonnage du saboteur, coupure 16 USD ; relevés par l'exécutante session_01XJ6MgqUTEVCed6a2f6rWmC et la mère) ; Vast 61932710 (réajustement des lentilles, GO-2026-11-22-05, session_01XJ6MgqfTmLrdjtfZDdJu8G). Nouvelle mère session_01XJ6Mgr4LgbMsg5zLyRZCpG, autonomie jusqu'à 20:53Z (GO-2026-11-22-29). Hetzner : aucun serveur.**
