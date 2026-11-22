@@ -110,3 +110,14 @@ def test_creation_passe_le_plafond_total_a_la_garde_de_depense():
     assert '"$SESSION3" depense "$PLC"' not in src and '"$DEP" "$PTOT"' in bloc
     # la surveillance lit le plafond total enregistré à la création (champ plafond_creation), qu'elle passe à la garde de dépense
     assert 'PLC=$(champ plafond_creation "$D/lancement.txt")' in src and '"$SESSION3" surveillance "$PLC"' in src
+
+
+def test_plafond_total_ecrit_exact_jamais_arrondi(reg):
+    """Artefact de la contre-lecture : antérieure à décimales nombreuses ; l'écriture du total ne s'arrondit jamais vers le haut."""
+    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "3.123456")
+    assert r.returncode == 0 and r.stdout.strip() == "58.123456", r.stdout
+    assert Decimal(r.stdout.strip()) - Decimal("3.123456") <= Decimal("55")
+    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "0.1234567891")
+    assert r.returncode == 0 and r.stdout.strip() == "55.1234567891"
+    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "60")
+    assert r.returncode == 1 and "≥ plafond de la ligne 60 " in r.stdout

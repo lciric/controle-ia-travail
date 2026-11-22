@@ -106,9 +106,9 @@ def coupure_effective(registre, go_id: str, plafond_config, anterieure, jour: da
         raise GardeSession(f"plafond de la configuration {p} (> 0 exigé) ou dépense antérieure {a} (≥ 0 exigé)")
     limite = Decimal(repr(float(ligne["plafond_usd"])))
     if p > limite:
-        raise GardeSession(f"plafond de la configuration {p} > plafond de la ligne {limite} ({go_id}) : refus")
+        raise GardeSession(f"plafond de la configuration {_d(p)} > plafond de la ligne {_d(limite)} ({go_id}) : refus")
     if a >= limite:
-        raise GardeSession(f"dépense antérieure {a} ≥ plafond de la ligne {limite} ({go_id}) : aucune coupure effective, refus")
+        raise GardeSession(f"dépense antérieure {_d(a)} ≥ plafond de la ligne {_d(limite)} ({go_id}) : aucune coupure effective, refus")
     total = min(limite, p + a)
     machine = total - a
     if machine <= 0:                               # garde redondante (a < limite et p > 0 l'impliquent) : jamais un repli
@@ -171,7 +171,7 @@ def main(argv: list[str]) -> int:
         if argv[0] == "go":
             print(f"{r['go']} conforme (plafond {r['plafond_usd']:g} USD, {r['accorde']} → {r['echeance']}) ; {r['plafond_verifie']}")
         else:
-            print(f"{float(r['plafond_total_usd']):g}")
+            print(_d(r["plafond_total_usd"]))          # exact, jamais arrondi (vérification de la contre-lecture, majeur)
         return 0
     from . import session_v1
 
