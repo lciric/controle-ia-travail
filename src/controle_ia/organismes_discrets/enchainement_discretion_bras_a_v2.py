@@ -1,46 +1,40 @@
-"""Programme d'enchaînement de la lecture de la discrétion, bras A des organismes discrets — version 1.
+"""Programme d'enchaînement de la lecture de la discrétion, bras A des organismes discrets — version 2.
 
 Texte qui fait foi : `prereg/T0.7-organismes-discrets-v-a-v2-brouillon55.md` — 13.2, ligne « programme d'enchaînement
-de la lecture de la discrétion (8.7 ; brouillon 38 ; vérification du brouillon 37) » : « le programme qui joue le
-constat de lancement, les étapes (m) et (n), et qui **committe et pousse lui-même le dossier de course avant de rendre
-quoi que ce soit** ; il est hors du code arrêté, qu'il appelle sans le changer » ; 8.7, garde de procédure
-« versement avant lecture » ; 6.3, étapes (m) et (n) ; 6.9 (arrêt, trace d'appel, panne pendant une lecture, rejeu par
-étape, reprise) ; conventions (constat de lancement, contrôle avant un rejeu, « le constat et la lecture partent dans
-une même exécution, le constat d'abord ») ; 8.4.
+de la lecture de la discrétion (8.7 ; brouillon 38 ; vérification du brouillon 37) » ; 8.7, garde de procédure
+« versement avant lecture » ; 6.3, étapes (m) et (n) ; 6.9 ; 6.10 ; 3.5 (b) (ligne 562 : le programme de l'aire
+conditionnelle « ne rend que les aires (valeur, intervalle, comptes), jamais une ligne du fichier ») ; 6.9 (ligne
+873, même règle) ; conventions (constat de lancement, contrôle avant un rejeu) ; 8.4.
 
-**Ce qu'il fait, dans cet ordre** (une seule exécution) :
-1. **Avant tout** : lit la configuration scellée de la livraison ; nomme le dossier de course (le dossier qui porte
-   les dossiers `livraison-<rang>/`) et son dépôt git ; refuse ce que le texte n'écrit pas (`RegleNonEcrite`) ; lit
-   l'entrée scellée de l'enchaînement (journal de la table A et ses deux réglages, cases de la base, lignes de la
-   table B, comptes des lecteurs pour l'aire conditionnelle) ; si la table A porte une ligne, ou si la case « renvoi
-   de la base » n'est pas vérifiée, ou les effectifs de la base non conformes, l'étape (m) n'est pas jouée et rien ne
-   part ; joue la **garde statique de la version 13** sur `src` et `scripts` (une violation arrête tout).
-2. **Versement d'ouverture** : ce que le dossier de course porte déjà est committé et poussé — c'est « le versement
-   refait avant toute lecture » quand un poussage précédent a échoué (8.7).
-3. **Constat de lancement**, par le programme du constat dont la configuration inscrit l'empreinte, joué par sa
-   commande : en mode de constat s'il n'y a pas encore de constat dans le dossier de la livraison ; **en mode de
-   contrôle** s'il y en a un (une lecture interrompue avant tout résultat se rejoue après un contrôle, conventions) ;
-   pas de constat pour l'étape (n) seule (« l'étape (n), après le fichier scellé de l'étape (m), ne regarde pas ces
-   fichiers »). Constat ou contrôle malsain : rien ne part. Versement.
-4. **Étape (m)** (si la course ne porte encore aucun fichier de l'étape (m)) : règle de discrétion, garde de sortie,
-   lignes de la table C aux doses en B8, fichier de l'étape (m) et ses constats, déclencheur « au moins une dose en
-   C6 ». **Versement : commit et poussage du dossier de course entier ; rien n'est rendu avant que le poussage ait
-   réussi, et s'il échoue, le programme s'arrête sans rien rendre** (`EchecDuVersement`).
-5. **Étape (n)** : reprise de l'étape (n) s'il le faut (acte, versé), lecture du fichier des unités par le
-   programme de l'aire conditionnelle, vingt aires conditionnelles, fichier des grandeurs de l'étape (n). Versement.
-6. Rend le compte rendu pour le manifeste de course : programmes et empreintes, commande, garde statique, constat,
-   pièces du dossier de course et leurs empreintes, commit et heure de chaque versement, issue. **Il ne rend ni le
-   contenu du fichier de l'étape (m), ni celui du fichier des grandeurs** : ils sont lus au vu du commit.
+`enchainement_discretion_bras_a_v1.py` n'est pas modifié (R12). **Ce qui change à la version 2** (décision de la
+session mère, nœud N1, option (a)) : l'étape (n) ne s'arrête plus sur la règle non écrite n° 1 de la version 1 (code
+6). **Le programme de l'aire conditionnelle est reçu par la configuration scellée de l'enchaînement** (son entrée
+scellée : chemin du programme et son empreinte sha256, chemin du fichier des scores par unité) ; l'enchaînement
+**vérifie l'empreinte** (au départ, avant tout constat, puis de nouveau juste avant de le lancer), puis **le lance
+comme une commande à part** (un processus séparé), joué depuis une copie des octets vérifiés. **Il ne nomme ni
+n'ouvre le fichier des scores par unité** : le chemin vient de la configuration et est passé tel quel au programme
+lancé ; l'enchaînement ne garde que ce que le programme rend — les vingt aires conditionnelles (valeur, intervalle,
+comptes), repassées une à une par la garde de sortie de l'analyse, et les vingt clés tirées — et les confronte au
+fichier scellé des grandeurs de l'étape (n), que le programme lancé a écrit. Programme absent, empreinte différente,
+code de sortie inconnu, sortie mal formée ou portant autre chose que les aires, aires qui ne sont pas celles du
+fichier des grandeurs : **arrêt explicite, versé** (garde ordinaire).
 
-**Ce qu'il refuse** : tout arrêt est versé avant d'être rendu ; d'une exception d'arrêt il ne tire que son constat
-(6.9, « Trace d'appel ») et lève hors du bloc qui l'attrape ; une erreur inattendue n'est rendue que par son type.
+**Ce que le programme lancé doit faire** (contrat de la commande, forme de ce programme, non du texte) : arguments
+`--configuration`, `--sortie`, `--fichier-des-unites` et, pour une reprise de l'étape (n), `--sortie-d-origine` ; sur
+l'entrée standard, un objet JSON à quatre clés (`actions_desappariees`, `taches_de_verification`,
+`entropie_de_la_configuration_du_bras`, `autres_grandeurs`) ; il lit le fichier, calcule les vingt aires, écrit et
+scelle le fichier des grandeurs de l'étape (n) ; codes de sortie : 0 et une seule ligne JSON `{"aires": {dose:
+{moniteur: sortie de l'aire}}, "cles": [...]}` ; 3, arrêt de la lecture consigné par l'analyse dans le dossier des
+arrêts, sortie standard vide ; 4, garde ordinaire, sortie standard vide et une seule ligne sur la sortie d'erreur.
+Tout autre code : rien de ses sorties n'est rendu.
 
-**Règle que le texte n'écrit pas : erreur explicite** (`RegleNonEcrite`), listée dans la note
-`docs/notes/relance-organismes-discrets-v1/code-enchainement-discretion-bras-a-v1-note.md`. La première, qui bloque :
-**l'étape (n) demande la lecture du fichier des unités, que la garde statique de la version 13 ne laisse nommer
-qu'au programme de l'aire conditionnelle** ; ce programme-ci, rangé sous `src/`, ne peut pas la nommer. Le lecteur
-est donc reçu en argument (`lecteur_des_unites`) ; la commande ne le donne pas, et l'étape (n) s'arrête alors sur une
-`RegleNonEcrite`, après le versement de l'étape (m). Ce choix n'est pas tranché ici.
+Le reste est celui de la version 1 : **dans cet ordre** (une seule exécution) — configuration scellée de la
+livraison, dossier de course, refus de ce que le texte n'écrit pas, entrée scellée de l'enchaînement, table A et base,
+garde statique de la version 13 sur `src` et `scripts` ; versement d'ouverture ; constat de lancement (ou contrôle)
+par la commande du programme du constat ; étape (m) et **versement avant tout rendu** (`EchecDuVersement`) ; étape
+(n), versée ; compte rendu, qui ne porte ni le contenu du fichier de l'étape (m) ni celui des grandeurs, ni les
+aires. Tout arrêt est versé avant d'être rendu ; d'une exception d'arrêt il ne tire que son constat ; une erreur
+inattendue n'est rendue que par son type.
 
 Sans réseau propre : seul le poussage git sort, vers le dépôt distant nommé par l'appelant. Aucun appel de modèle.
 """
@@ -52,6 +46,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Callable, Mapping
 
@@ -61,9 +56,10 @@ from . import analyse_bras_a_v13 as analyse
 from . import arrets_bras_a_v12 as arrets
 from . import cloisonnement_bras_a_v13 as cloisonnement
 from . import configuration_bras_a_v12 as conf_mod
+from . import graines_bras_a_v12 as graines
 from . import verdicts_bras_a_v13 as verdicts
 
-VERSION = 1
+VERSION = 2
 RACINE_DU_CODE = Path(__file__).resolve().parents[3]
 PAQUET = Path("src") / "controle_ia" / "organismes_discrets"
 # Les modules que 13.2 nomme : analyse, verdicts et garde statique de la version 13 ; six modules de la version 12.
@@ -87,12 +83,23 @@ ISSUE_ERREUR = "erreur inattendue du programme"
 
 MODE_CONSTAT, MODE_CONTROLE = "constat", "contrôle"
 
-# Entrée de l'enchaînement : forme de ce programme (le texte ne la fixe pas), un objet JSON scellé, ces clés et elles seules.
+# Entrée de l'enchaînement (sa configuration scellée) : forme de ce programme (le texte ne la fixe pas), un objet JSON
+# scellé, ces clés et elles seules. Version 2 : deux clés de plus, le programme de l'aire conditionnelle et le fichier.
+CLE_DU_PROGRAMME_DE_L_AIRE = "programme_de_l_aire_conditionnelle"
+CLE_DU_FICHIER = "fichier_des_unites"
 CLES_DE_L_ENTREE = ("journal_de_la_table_a", "revision_refusee", "taches_gardees_lues", "renvoi_de_la_base",
                     "effectifs_de_la_base_conformes", "lignes_de_la_table_b", "etats_de_la_base", "cout_apparie",
-                    "actions_desappariees", "taches_de_verification", "entropie_de_la_configuration_du_bras")
+                    "actions_desappariees", "taches_de_verification", "entropie_de_la_configuration_du_bras",
+                    CLE_DU_PROGRAMME_DE_L_AIRE, CLE_DU_FICHIER)
+CLES_DU_PROGRAMME_DE_L_AIRE = ("chemin", "sha256")
 FORMES_DES_DOSES = tuple(analyse._forme_dose(p) for p in analyse.QUATRE_DOSES)
 FORMES_DU_VERDICT = tuple(analyse._forme_dose(p) for p in analyse.DOSES_VERDICT)
+
+# Contrat de la commande de l'aire conditionnelle.
+CODE_DES_AIRES, CODE_DE_L_ARRET, CODE_DE_LA_GARDE = 0, 3, 4
+CLES_DE_LA_SORTIE_DU_PROGRAMME = ("aires", "cles")
+PAIRES_DE_LA_SORTIE_DE_L_AIRE = ("aires_des_plis", "intervalle")      # deux bornes : listes en JSON, couples en Python
+DELAI_DU_PROGRAMME_DE_L_AIRE = 3600
 
 
 class RegleNonEcrite(Exception):
@@ -124,13 +131,31 @@ def _sous(chemin, dossier: Path) -> bool:
     return p == dossier or dossier in p.parents
 
 
+def _est_une_empreinte(x) -> bool:
+    return isinstance(x, str) and len(x) == 64 and all(c in "0123456789abcdef" for c in x)
+
+
 def programmes_joues(programme_du_constat) -> dict:
     """Chemin et empreinte de chaque programme joué (manifeste de course, 8.7 : « la commande et l'empreinte de chaque
-    programme joué, dont celle du module d'analyse employé, du module des verdicts et de la garde statique »)."""
+    programme joué, dont celle du module d'analyse employé, du module des verdicts et de la garde statique »). Le
+    programme de l'aire conditionnelle s'y ajoute quand son empreinte a été vérifiée."""
     sortie = {nom: [str(PAQUET / f"{nom}.py"), _sha256(RACINE_DU_CODE / PAQUET / f"{nom}.py")] for nom in MODULES_JOUES}
     sortie["programme_du_constat"] = [str(programme_du_constat), _sha256(programme_du_constat)]
     sortie["enchainement"] = [str(PAQUET / Path(__file__).name), _sha256(__file__)]
     return sortie
+
+
+def octets_du_programme_de_l_aire(chemin: Path, sha256_inscrit: str) -> bytes:
+    """Les octets du programme de l'aire conditionnelle, **s'ils répondent à l'empreinte que la configuration scellée
+    inscrit**. Programme absent, illisible, ou d'une autre empreinte : garde ordinaire (il n'est pas lancé)."""
+    try:
+        octets = Path(chemin).read_bytes()
+    except OSError:
+        raise GardeArret(f"programme de l'aire conditionnelle absent ou illisible ({chemin}) : il n'est pas lancé") from None
+    if hashlib.sha256(octets).hexdigest() != sha256_inscrit:
+        raise GardeArret(f"programme de l'aire conditionnelle ({chemin}) : son empreinte n'est pas celle que la "
+                         f"configuration scellée inscrit ({sha256_inscrit[:16]}…) — il n'est pas lancé")
+    return octets
 
 
 # --- git : versement -----------------------------------------------------------------------------------------------------
@@ -192,9 +217,18 @@ def _booleen(x, nom: str) -> bool:
     return x
 
 
+def _chemin_de_l_entree(x, nom: str, dossier: Path) -> Path:
+    """Un chemin écrit dans l'entrée : un texte non vide ; relatif, il se lit depuis le dossier de l'entrée."""
+    if not isinstance(x, str) or not x.strip():
+        raise GardeArret(f"entrée de l'enchaînement : `{nom}` — un chemin (texte non vide) exigé")
+    p = Path(x)
+    return (p if p.is_absolute() else dossier / p).resolve()
+
+
 def lire_l_entree(chemin) -> dict:
     """L'entrée de l'enchaînement, **scellée** (compagnon vérifié), un objet JSON aux clés `CLES_DE_L_ENTREE` et à
-    elles seules. Rend une table prête : doses en nombres, comptes des actions désappariées par (tâche, épisode)."""
+    elles seules. Rend une table prête : doses en nombres, comptes des actions désappariées par (tâche, épisode),
+    programme de l'aire conditionnelle (chemin et empreinte inscrite) et chemin du fichier, **qui n'est pas ouvert**."""
     verifier(chemin)
     try:
         o = json.loads(Path(chemin).read_text(encoding="utf-8"))
@@ -242,13 +276,23 @@ def lire_l_entree(chemin) -> dict:
                                  "seul par épisode")
             comptes[(t[0], t[1])] = t[2]
         par_dose[analyse._dose_de(d)] = comptes
+    dossier = Path(chemin).resolve().parent
+    programme = o[CLE_DU_PROGRAMME_DE_L_AIRE]
+    if not isinstance(programme, dict) or sorted(programme) != sorted(CLES_DU_PROGRAMME_DE_L_AIRE) \
+            or not _est_une_empreinte(programme["sha256"]):
+        raise GardeArret(f"entrée de l'enchaînement : `{CLE_DU_PROGRAMME_DE_L_AIRE}` — exactement `chemin` (un chemin) et "
+                         "`sha256` (une empreinte entière, en minuscules)")
     return {"journal": journal, "revision_refusee": o["revision_refusee"], "gardees_lues": o["taches_gardees_lues"],
             "renvoi_de_la_base": o["renvoi_de_la_base"],
             "effectifs_de_la_base_conformes": o["effectifs_de_la_base_conformes"],
             "lignes_b": {analyse._dose_de(d): x for d, x in b.items()},
             "base": {analyse._dose_de(d): x for d, x in base.items()},
             "cout": {analyse._dose_de(d): x for d, x in cout.items()},
-            "desappariees": par_dose, "taches": taches, "entropie": entropie, "sha256": _sha256(chemin)}
+            "desappariees": par_dose, "desappariees_ecrites": des, "taches": taches, "entropie": entropie,
+            "programme_de_l_aire": (_chemin_de_l_entree(programme["chemin"], f"{CLE_DU_PROGRAMME_DE_L_AIRE}.chemin", dossier),
+                                    programme["sha256"]),
+            "fichier": _chemin_de_l_entree(o[CLE_DU_FICHIER], CLE_DU_FICHIER, dossier),
+            "sha256": _sha256(chemin)}
 
 
 def exiger_etape_m_jouee(entree: Mapping) -> verdicts.ResultatA:
@@ -267,6 +311,10 @@ def exiger_etape_m_jouee(entree: Mapping) -> verdicts.ResultatA:
 
 # --- constat de lancement : par le programme, par sa commande ---------------------------------------------------------
 
+def _environnement() -> dict:
+    return {"PYTHONPATH": str(RACINE_DU_CODE / "src"), "PATH": "/usr/bin:/bin", "LC_ALL": "C.UTF-8"}
+
+
 def jouer_le_constat(programme_du_constat: Path, configuration_scellee: Path, registre_courant, *, commit: str, date_utc: str,
                      registre_fige, ligne_de_go, mode: str) -> dict:
     """Joue le programme du constat **par sa commande** (conventions : « le constat de lancement et le contrôle d'avant un
@@ -281,8 +329,7 @@ def jouer_le_constat(programme_du_constat: Path, configuration_scellee: Path, re
         commande += ["--ligne-de-go", ligne_de_go]
     if mode == MODE_CONTROLE:
         commande.append("--controle")
-    env = {"PYTHONPATH": str(RACINE_DU_CODE / "src"), "PATH": "/usr/bin:/bin", "LC_ALL": "C.UTF-8"}
-    fait = subprocess.run(commande, capture_output=True, text=True, timeout=600, env=env, cwd=str(RACINE_DU_CODE))
+    fait = subprocess.run(commande, capture_output=True, text=True, timeout=600, env=_environnement(), cwd=str(RACINE_DU_CODE))
     if fait.returncode not in (0, 1):
         raise GardeArret(f"programme du constat, mode {mode} : arrêt sans constat (code {fait.returncode}) — "
                          f"{fait.stderr.strip()[-600:]}")
@@ -295,6 +342,131 @@ def jouer_le_constat(programme_du_constat: Path, configuration_scellee: Path, re
         raise GardeArret(f"programme du constat, mode {mode} : sa sortie n'est pas une ligne à huit champs — refusé")
     return {"mode": mode, "commande": commande, "code": fait.returncode, "sain": fait.returncode == 0,
             "constat": constat, "sortie_d_erreur": fait.stderr.strip()}
+
+
+# --- l'aire conditionnelle : par le programme que la configuration inscrit, par sa commande ----------------------------
+
+def _sans_doublon(paires):
+    cles = [k for k, _ in paires]
+    if len(cles) != len(set(cles)):
+        raise GardeArret("programme de l'aire conditionnelle : une clé en double dans sa sortie — refusée")
+    return dict(paires)
+
+
+def _constante_refusee(nom):
+    raise GardeArret(f"programme de l'aire conditionnelle : `{nom}` dans sa sortie — refusé")
+
+
+def aires_rendues(texte: str) -> dict:
+    """La sortie standard du programme de l'aire conditionnelle, **telle qu'elle doit être et rien d'autre** : une
+    seule ligne, un objet JSON à deux clés — `aires` (aux quatre doses, pour les cinq moniteurs, chaque sortie repassée
+    par `exiger_sortie_de_l_aire_conditionnelle` : état, aire, aires des deux plis, intervalle, comptes, motif) et
+    `cles` (les vingt clés de l'aire conditionnelle, chacune une fois). Une ligne de plus, une clé de plus ou en
+    double, un champ d'un autre nom ou d'une autre forme : garde ordinaire. Rend `aires[(moniteur, dose)]`, `cles`."""
+    if not isinstance(texte, str) or texte.count("\n") != 1 or not texte.endswith("\n"):
+        raise GardeArret("programme de l'aire conditionnelle : sa sortie n'est pas une seule ligne — refusée")
+    try:
+        o = json.loads(texte, object_pairs_hook=_sans_doublon, parse_constant=_constante_refusee)
+    except json.JSONDecodeError:
+        raise GardeArret("programme de l'aire conditionnelle : sa sortie n'est pas du JSON — refusée") from None
+    if not isinstance(o, dict) or sorted(o) != sorted(CLES_DE_LA_SORTIE_DU_PROGRAMME):
+        raise GardeArret(f"programme de l'aire conditionnelle : sa sortie porte exactement {CLES_DE_LA_SORTIE_DU_PROGRAMME} "
+                         "— rien d'autre que les aires (3.5 (b) ; 8.4)")
+    par_dose = o["aires"]
+    if not isinstance(par_dose, dict) or sorted(par_dose) != sorted(FORMES_DES_DOSES) \
+            or any(not isinstance(x, dict) or sorted(x) != sorted(analyse.MONITEURS) for x in par_dose.values()):
+        raise GardeArret("programme de l'aire conditionnelle : `aires` — les cinq moniteurs à chacune des quatre doses, "
+                         "ni plus ni moins")
+    aires = {}
+    for d, par_moniteur in par_dose.items():
+        for m, sortie in par_moniteur.items():
+            if not isinstance(sortie, dict):
+                raise GardeArret("programme de l'aire conditionnelle : une aire qui n'est pas une table — refusée")
+            lue = dict(sortie)
+            for champ in PAIRES_DE_LA_SORTIE_DE_L_AIRE:
+                if isinstance(lue.get(champ), list):
+                    lue[champ] = tuple(lue[champ])
+            aires[(m, analyse._dose_de(d))] = analyse.exiger_sortie_de_l_aire_conditionnelle(lue)
+    cles = o["cles"]
+    if not isinstance(cles, list) or any(not isinstance(c, str) for c in cles) \
+            or sorted(cles) != sorted(graines.cles_de_l_aire_conditionnelle()):
+        raise GardeArret("programme de l'aire conditionnelle : `cles` — les vingt clés de l'aire conditionnelle, chacune "
+                         "une fois")
+    return {"aires": aires, "cles": sorted(cles)}
+
+
+def _en_json(objet):
+    return json.loads(json.dumps(objet, ensure_ascii=False, allow_nan=False))
+
+
+def confronter_au_fichier_des_grandeurs(rendu: Mapping, autres: Mapping, sortie: Path, configuration_scellee: Path,
+                                        origine) -> str:
+    """Les aires rendues sont **celles du fichier scellé des grandeurs de l'étape (n)** que le programme a écrit (rejoué
+    sur ses pièces par l'analyse), avec les mêmes clés et les mêmes autres grandeurs ; sinon garde ordinaire. Rend
+    l'empreinte du fichier des grandeurs ; son contenu n'est pas gardé."""
+    contenu, empreinte = analyse.exiger_fichier_des_grandeurs_de_l_etape_n(sortie, configuration_scellee,
+                                                                           sortie_d_origine=origine)
+    grandeurs = contenu["grandeurs"]
+    attendues = _en_json({analyse._forme_dose(d): {m: dict(rendu["aires"][(m, d)]) for m in analyse.MONITEURS}
+                          for d in analyse.QUATRE_DOSES})
+    accord = (grandeurs.get("aire_conditionnelle") == attendues and grandeurs.get("cles_des_tirages") == rendu["cles"]
+              and grandeurs.get("autres_grandeurs") == _en_json(autres))
+    del contenu, grandeurs
+    if not accord:
+        raise GardeArret("programme de l'aire conditionnelle : les aires qu'il rend ne sont pas celles du fichier scellé des "
+                         "grandeurs de l'étape (n) — refusé")
+    return empreinte
+
+
+def jouer_l_aire_conditionnelle(programme: tuple[Path, str], fichier: Path, sortie: Path, configuration_scellee: Path,
+                                origine, entree: Mapping, autres: Mapping) -> dict:
+    """Lance le programme de l'aire conditionnelle **comme une commande à part**, depuis une copie de ses octets
+    vérifiés à l'empreinte inscrite (vérifiée ici une seconde fois). Le chemin du fichier lui est passé tel quel ;
+    l'enchaînement ne l'ouvre pas. Code 0 : les aires, lues par `aires_rendues`, confrontées au fichier des grandeurs ;
+    code 3 : l'arrêt consigné par l'analyse pour cette livraison, à l'étape (n), est relevé de son seul constat ; code
+    4 : la ligne de sa garde ; tout autre code ou toute autre forme : garde ordinaire, rien de ses sorties n'est rendu."""
+    chemin, sha256_inscrit = programme
+    octets = octets_du_programme_de_l_aire(chemin, sha256_inscrit)
+    if analyse.etape_n_aboutie(configuration_scellee):
+        raise GardeArret("étape (n) : le fichier des grandeurs existe déjà — l'étape n'est pas rejouée (6.9 ; 8.4)")
+    donnees = json.dumps({"actions_desappariees": entree["desappariees_ecrites"],
+                          "taches_de_verification": entree["taches"],
+                          "entropie_de_la_configuration_du_bras": entree["entropie"], "autres_grandeurs": autres},
+                         ensure_ascii=False, sort_keys=True)
+    arguments = ["--configuration", str(configuration_scellee), "--sortie", str(sortie), "--fichier-des-unites", str(fichier)]
+    if origine is not None:
+        arguments += ["--sortie-d-origine", str(origine)]
+    with tempfile.TemporaryDirectory(prefix="aire-conditionnelle-") as d:
+        copie = Path(d) / Path(chemin).name
+        copie.write_bytes(octets)
+        try:
+            fait = subprocess.run([sys.executable, str(copie), *arguments], input=donnees, capture_output=True, text=True,
+                                  timeout=DELAI_DU_PROGRAMME_DE_L_AIRE, env=_environnement(), cwd=str(RACINE_DU_CODE))
+        except (OSError, subprocess.TimeoutExpired) as x:
+            raise GardeArret(f"programme de l'aire conditionnelle : non lancé, ou hors délai ({type(x).__name__})") from None
+    compte = {"commande": [sys.executable, str(chemin), *arguments], "sha256": sha256_inscrit, "code": fait.returncode}
+    if fait.returncode == CODE_DES_AIRES:
+        rendu = aires_rendues(fait.stdout)
+        compte["sha256_du_fichier_des_grandeurs"] = confronter_au_fichier_des_grandeurs(
+            rendu, autres, sortie, configuration_scellee, origine)
+        compte["aires_rendues"] = len(rendu["aires"])
+        del rendu
+        return compte
+    if fait.returncode == CODE_DE_L_ARRET and fait.stdout == "":
+        consigne = analyse.arret_de_la_livraison(sortie, configuration_scellee)
+        if consigne is None:
+            raise GardeArret("programme de l'aire conditionnelle : arrêt annoncé (code 3), mais aucun arrêt consigné pour "
+                             "cette livraison — refusé")
+        constat = arrets.exiger_constat(consigne["constat"])
+        if constat["etape"] != ETAPE_N:
+            raise GardeArret("programme de l'aire conditionnelle : l'arrêt consigné n'est pas un arrêt de l'étape (n) — refusé")
+        raise arrets.ArretDeLaLectureDeLaDiscretion(**constat)
+    erreur = fait.stderr
+    if fait.returncode == CODE_DE_LA_GARDE and fait.stdout == "" and erreur.count("\n") == 1 and erreur.endswith("\n") \
+            and erreur.strip():
+        raise GardeArret(f"programme de l'aire conditionnelle, garde ordinaire : {erreur.strip()[-600:]}")
+    raise GardeArret(f"programme de l'aire conditionnelle : arrêt sans aires (code {fait.returncode}), ou sortie hors de sa "
+                     "forme — rien de ses sorties n'est rendu")
 
 
 # --- l'enchaînement --------------------------------------------------------------------------------------------------------
@@ -321,16 +493,14 @@ def _exiger_hors_du_dossier_de_course(course: Path, pieces: Mapping[str, object]
 
 
 def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_courant, commit_du_registre_courant: str,
-              registre_fige, ligne_de_go, entree, fichier_des_unites, sortie_d_origine, programme_du_constat, distant: str,
-              branche: str, horloge: Callable[[], datetime.datetime], racine_du_code,
-              lecteur_des_unites: Callable | None) -> dict:
+              registre_fige, ligne_de_go, entree, sortie_d_origine, programme_du_constat, distant: str,
+              branche: str, horloge: Callable[[], datetime.datetime], racine_du_code) -> dict:
     """Joue la lecture de la discrétion (module en tête). Tous les arguments sont nommés et exigés, sans valeur par
     défaut ; `registre_fige` et `ligne_de_go` valent `None` pour une première livraison ; `sortie_d_origine` n'est
     donnée que pour une reprise de l'étape (n). `horloge` rend l'heure UTC (constat, contrôle). `racine_du_code` : le
-    dépôt dont la garde statique lit `src` et `scripts`. `lecteur_des_unites` : la fonction du programme de l'aire
-    conditionnelle qui lit le fichier des unités, ou `None` — l'étape (n) s'arrête alors sur une `RegleNonEcrite`.
-    Rend le compte rendu ; lève `ArretDeLEnchainement` (après versement), `EchecDuVersement` (rien n'est rendu),
-    `RegleNonEcrite` ou `GardeArret` (avant tout constat : rien n'est lu)."""
+    dépôt dont la garde statique lit `src` et `scripts`. Le programme de l'aire conditionnelle et le chemin du fichier
+    viennent de l'entrée scellée (version 2). Rend le compte rendu ; lève `ArretDeLEnchainement` (après versement),
+    `EchecDuVersement` (rien n'est rendu), `RegleNonEcrite` ou `GardeArret` (avant tout constat : rien n'est lu)."""
     for nom, x in (("distant", distant), ("branche", branche), ("commit_du_registre_courant", commit_du_registre_courant)):
         if not isinstance(x, str) or not x.strip():
             raise GardeArret(f"enchaînement : `{nom}` exigé (un texte non vide), sans valeur par défaut")
@@ -347,10 +517,11 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
                              "d'un dossier des arrêts rangé ailleurs")
     _exiger_hors_du_dossier_de_course(course, {
         "la sortie de la lecture commune": sortie_de_la_lecture_commune, "la sortie d'origine": sortie_d_origine,
-        "le fichier des unités": fichier_des_unites, "l'entrée de l'enchaînement": entree,
-        "le registre courant": registre_courant, "le registre figé": registre_fige})
+        "l'entrée de l'enchaînement": entree, "le registre courant": registre_courant, "le registre figé": registre_fige})
     depot_du_dossier_de_course(course)
     lue = lire_l_entree(entree)
+    _exiger_hors_du_dossier_de_course(course, {"le fichier des scores par unité": lue["fichier"],
+                                               "le programme de l'aire conditionnelle": lue["programme_de_l_aire"][0]})
     resultat_a = exiger_etape_m_jouee(lue)
     racine_du_code = Path(racine_du_code)
     cloisonnement.exiger_garde_statique(racine_du_code, DOSSIERS_DE_LA_GARDE_STATIQUE)
@@ -367,6 +538,10 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
     cr["versements"].append(verser(course, distant, branche, "ouverture de l'enchaînement"))
     issue = motif = arret_constat = None
     try:
+        # le programme de l'aire conditionnelle : son empreinte, avant tout constat et toute lecture
+        chemin_de_l_aire, sha256_de_l_aire = lue["programme_de_l_aire"]
+        octets_du_programme_de_l_aire(chemin_de_l_aire, sha256_de_l_aire)
+        cr["programmes"]["programme_de_l_aire_conditionnelle"] = [str(chemin_de_l_aire), sha256_de_l_aire]
         a_jouer = _a_jouer(configuration)
         cr["a_jouer"] = a_jouer
         if sortie_d_origine is not None and a_jouer != A_JOUER_REPRISE_N:
@@ -374,9 +549,8 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
         _etapes(cr, configuration, configuration_scellee, course, lue, resultat_a, a_jouer,
                 sortie=Path(sortie_de_la_lecture_commune), registre_courant=registre_courant,
                 commit=commit_du_registre_courant, registre_fige=registre_fige, ligne_de_go=ligne_de_go,
-                fichier_des_unites=fichier_des_unites, sortie_d_origine=sortie_d_origine,
-                programme_du_constat=Path(programme_du_constat), distant=distant, branche=branche, horloge=horloge,
-                lecteur_des_unites=lecteur_des_unites)
+                sortie_d_origine=sortie_d_origine, programme_du_constat=Path(programme_du_constat), distant=distant,
+                branche=branche, horloge=horloge)
     except EchecDuVersement:
         raise
     except arrets.ArretDeLaLectureDeLaDiscretion as x:      # 6.9 : de l'exception levée, son constat seul
@@ -414,8 +588,7 @@ def _date(horloge) -> str:
 
 def _etapes(cr: dict, configuration: Mapping, configuration_scellee: Path, course: Path, lue: Mapping,
             resultat_a: verdicts.ResultatA, a_jouer: str, *, sortie: Path, registre_courant, commit: str, registre_fige,
-            ligne_de_go, fichier_des_unites, sortie_d_origine, programme_du_constat: Path, distant: str, branche: str,
-            horloge, lecteur_des_unites) -> None:
+            ligne_de_go, sortie_d_origine, programme_du_constat: Path, distant: str, branche: str, horloge) -> None:
     arrets_dossier = conf_mod.dossier_des_arrets(configuration)
     constat_present = (conf_mod.dossier_de_la_livraison(configuration) / conf_mod.NOM_DU_CONSTAT_DE_LANCEMENT).exists()
     acte_present = (arrets_dossier / analyse.NOM_DES_ACTES_DE_REPRISE.format(_sha256(sortie)[:16])).exists()
@@ -455,22 +628,11 @@ def _etapes(cr: dict, configuration: Mapping, configuration_scellee: Path, cours
         analyse.ouvrir_la_reprise_de_l_etape_n(sortie, configuration_scellee, sortie_d_origine=origine,
                                                go_de_la_reprise=ligne_de_go, registre_fige=registre_fige)
         cr["versements"].append(verser(course, distant, branche, "acte de reprise de l'étape (n)"))
-    if lecteur_des_unites is None:
-        raise RegleNonEcrite(
-            "étape (n) : la lecture du fichier des unités n'est permise, par la garde statique de la version 13, qu'au "
-            "programme de l'aire conditionnelle ; ce programme d'enchaînement, rangé sous `src/`, ne peut pas la nommer, "
-            "et le texte (13.2) lui fait jouer l'étape (n) sans dire comment il l'atteint — non tranché ici")
-    if fichier_des_unites is None:
-        raise GardeArret("étape (n) : le fichier des unités est exigé")
-    unites = lecteur_des_unites(Path(fichier_des_unites), sortie, configuration_scellee, analyse.USAGE_AIRE_CONDITIONNELLE,
-                                sortie_d_origine=origine)
-    aires = analyse.aires_conditionnelles(unites, lue["desappariees"], lue["taches"], lue["entropie"])
+    # étape (n) : le programme de l'aire conditionnelle, lancé à part ; il lit le fichier et écrit le fichier des grandeurs
     autres = {"etat_de_la_base": {analyse._forme_dose(p): verdicts.etat_ecrit_de_la_base(lue["base"][p])
                                   for p in analyse.QUATRE_DOSES}}
-    analyse.ecrire_fichier_des_grandeurs_de_l_etape_n(aires_conditionnelles=aires, autres_grandeurs=autres, rangs=unites,
-                                                      piece_scellee=sortie, configuration_scellee=configuration_scellee,
-                                                      sortie_d_origine=origine)
-    del unites, aires
+    cr["programme_de_l_aire_conditionnelle"] = jouer_l_aire_conditionnelle(
+        lue["programme_de_l_aire"], lue["fichier"], sortie, configuration_scellee, origine, lue, autres)
     cr["versements"].append(verser(course, distant, branche, "étape (n)"))
     cr["etapes_jouees"].append(ETAPE_N)
 
@@ -487,15 +649,15 @@ def _horloge_du_systeme() -> datetime.datetime:
 
 
 def main(argv: list[str]) -> int:
-    lecteur = argparse.ArgumentParser(description="Enchaînement de la lecture de la discrétion, bras A (version 1).")
+    lecteur = argparse.ArgumentParser(description="Enchaînement de la lecture de la discrétion, bras A (version 2).")
     lecteur.add_argument("--configuration", required=True)
     lecteur.add_argument("--sortie", required=True, help="sortie scellée de la lecture commune des cinq moniteurs")
     lecteur.add_argument("--registre-courant", required=True)
     lecteur.add_argument("--commit-du-registre", required=True)
     lecteur.add_argument("--registre-fige", default=None)
     lecteur.add_argument("--ligne-de-go", default=None)
-    lecteur.add_argument("--entree", required=True, help="entrée scellée de l'enchaînement")
-    lecteur.add_argument("--fichier-des-unites", default=None)
+    lecteur.add_argument("--entree", required=True,
+                         help="entrée scellée de l'enchaînement (dont le programme de l'aire conditionnelle et le fichier)")
     lecteur.add_argument("--sortie-d-origine", default=None)
     lecteur.add_argument("--programme-du-constat", required=True)
     lecteur.add_argument("--distant", required=True)
@@ -505,9 +667,9 @@ def main(argv: list[str]) -> int:
         cr = enchainer(configuration_scellee=a.configuration, sortie_de_la_lecture_commune=a.sortie,
                        registre_courant=a.registre_courant, commit_du_registre_courant=a.commit_du_registre,
                        registre_fige=a.registre_fige, ligne_de_go=a.ligne_de_go, entree=a.entree,
-                       fichier_des_unites=a.fichier_des_unites, sortie_d_origine=a.sortie_d_origine,
-                       programme_du_constat=a.programme_du_constat, distant=a.distant, branche=a.branche,
-                       horloge=_horloge_du_systeme, racine_du_code=RACINE_DE_LA_GARDE_STATIQUE, lecteur_des_unites=None)
+                       sortie_d_origine=a.sortie_d_origine, programme_du_constat=a.programme_du_constat,
+                       distant=a.distant, branche=a.branche, horloge=_horloge_du_systeme,
+                       racine_du_code=RACINE_DE_LA_GARDE_STATIQUE)
     except EchecDuVersement as e:
         print(f"VERSEMENT EN ÉCHEC — rien n'est rendu ; le versement est à refaire avant toute lecture : {e}", file=sys.stderr)
         return CODE_ECHEC_DU_VERSEMENT
