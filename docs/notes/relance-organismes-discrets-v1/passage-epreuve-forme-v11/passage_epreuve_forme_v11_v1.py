@@ -213,6 +213,32 @@ def attendu_par_la_table(sortie: dict) -> dict:
     return out
 
 
+def controles_descriptifs(chemin: Path) -> dict:
+    """Deux relevés qui ne sont pas des gardes du programme d'analyse (rapportés, sans verdict) : (1) pleine précision —
+    nombres de la pièce dont l'écriture décimale n'est pas l'écriture la plus courte du nombre qu'elle écrit (demande 13
+    de la case du module, 13.1 ; l'analyse admet une écriture arrondie à moins d'un demi-pas) ; (2) comptes que le motif
+    écrit (`<n>`, `<N>`) contre les comptes de la lecture (l'analyse ne les confronte pas)."""
+    ecritures = []
+    json.loads(chemin.read_text(encoding="utf-8"), parse_float=lambda s: ecritures.append(s) or float(s))
+    pas_les_plus_courtes = [s for s in ecritures if repr(float(s)) != s]
+    sortie = json.loads(chemin.read_text(encoding="utf-8"))
+    desaccords, lus = [], 0
+    for d, par_moniteur in sortie["lectures"].items():
+        for m, e in par_moniteur.items():
+            motif = e.get("motif")
+            if not isinstance(motif, str) or not motif[:1].isdigit():
+                continue
+            lus += 1
+            n, _, reste = motif.partition(" ")
+            total = reste.split(" sur ")[1].split(" ")[0]
+            attendu = (e["permutations_degenerees"], e["n_permutations"]) if "permutations" in motif else \
+                (e["tirages_degeneres"], (e["tirages"] or 0) + (e["tirages_degeneres"] or 0))
+            if (int(n), int(total)) != tuple(attendu):
+                desaccords.append(f"{m} {d}")
+    return {"nombres_ecrits": len(ecritures), "ecritures_qui_ne_sont_pas_les_plus_courtes": pas_les_plus_courtes,
+            "motifs_a_comptes_lus": lus, "motifs_dont_les_comptes_different": desaccords}
+
+
 def statut(x) -> str:
     return "rendu" if isinstance(x, (int, float)) and not isinstance(x, bool) else str(x)
 
@@ -220,13 +246,20 @@ def statut(x) -> str:
 def passer(travail: Path, variante: str, nom: str, entree: Path, rangs: Path | None) -> dict:
     piece, conf = preparer(travail, variante, nom, entree)
     compte_rendu = {"variante": variante, "entree": nom, "sha256_de_la_piece": empreinte(piece),
-                    "sha256_de_la_configuration": empreinte(conf)}
+                    "sha256_de_la_configuration": empreinte(conf), "releves": controles_descriptifs(piece)}
     try:
         r = an.regle_de_discretion(piece, conf, go_de_la_reprise=None, registre_fige=None)
     except ar.ArretDeLaLectureDeLaDiscretion as x:
         consigne = an.arret_de_la_livraison(piece, conf)
         compte_rendu.update(issue="refusée", evenement=str(x), constat=x.constat(),
                             arret_consigne=None if consigne is None else consigne.get("constat"))
+        if nom == ARTEFACT and x.moniteur and x.dose:
+            # quelle garde mord : la règle des comptes (α, β, demi-pas) sur la valeur p haute rendue, jouée seule
+            e = lire_en_fractions(piece)["lectures"][x.dose][x.moniteur]
+            compte_rendu["valeur_p_haut_contre_ses_comptes"] = an.valeur_p_qui_ne_repond_pas_a_ses_comptes(
+                "valeur_p_haut", e["valeur_p_haut"], 1 + e["au_moins_egales"] + e["permutations_degenerees"], e["n_permutations"])
+            compte_rendu["valeur_p_haut_rendue"] = str(e["valeur_p_haut"])
+            compte_rendu["famille_egale_a_la_valeur_p_haut"] = e["valeur_p_pour_la_famille"] == e["valeur_p_haut"]
         return compte_rendu
     except GardeArret as x:
         compte_rendu.update(issue="garde ordinaire (rien n'est lu)", message=str(x))
