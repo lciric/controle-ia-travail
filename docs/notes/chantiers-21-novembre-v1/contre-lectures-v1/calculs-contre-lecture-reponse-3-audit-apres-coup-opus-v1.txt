@@ -1,0 +1,72 @@
+python 3.13.18 ; numpy 2.4.6 ; scipy 1.17.1 ; entropie 20261122
+
+====================================================================================================
+R1 — Formules fermées de la conception (section 1, cas sain ; section 2 ; section 4)
+====================================================================================================
+enjeu moyen s̄ = 1.6000
+sécurité, audit uniforme   : {1.0: 0.8674, 5.0: 0.3324, 25.0: 0.0776}
+sécurité, audit à l'enjeu  : {1.0: 0.7157, 5.0: 0.7249, 25.0: 0.7766}
+même chose, alarme strictement avant θ (exposant ⌈θ/s⌉ − 1) : {1.0: 0.7121, 5.0: 0.7066, 25.0: 0.675}
+plancher 0.01, q = 1.0 : rang n₀,₉₅ = 299 ; P(prise ≤ n) = 0.95046 ; P(prise ≤ n−1) = 0.94996
+plancher 0.01, q = 0.8 : rang n₀,₉₅ = 373 ; P(prise ≤ n) = 0.95001 ; P(prise ≤ n−1) = 0.94961
+règle mixte π_min = 0,005, β = 0,015 : dommage moyen avant prise = {1.0: 69.57, 5.0: 96.39, 25.0: 104.44} ; s̄/β = 106.67 ; surcoût contre 80 = 0.305
+probabilité d'audit du type 25 sous cette règle : 0.2394
+table : K = 300, q = 1, L = 0 : p = 0.0099 ; K·p·q = 2.981 ; (K−L)·p·q = 2.981
+table : K = 30, q = 1, L = 20 : p = 0.2589 ; K·p·q = 7.766 ; (K−L)·p·q = 2.589
+table : K = 30, q = 0.5, L = 20 : p = 0.5177 ; K·p·q = 7.766 ; (K−L)·p·q = 2.589
+table : K = 30, q = 0.5, L = 28 : p = 1.5528 ; K·p·q = 23.292 ; (K−L)·p·q = 1.553
+ln 20 = 2.9957
+
+====================================================================================================
+R2 — Essai statistique du simulateur (section 1) : seuils binomiaux exacts et puissance exacte
+====================================================================================================
+R = 2000 : seuil sous 0,95 = 1869 (sous la vraie 0.95046 : 1870) ; plancher 0.005 → P(prise ≤ 299) = 0.7766, puissance = 1.000 ; plancher 0.009 → P(prise ≤ 299) = 0.9330, puissance = 0.583 ;
+R = 20000 : seuil sous 0,95 = 18903 (sous la vraie 0.95046 : 18913) ; plancher 0.005 → P(prise ≤ 299) = 0.7766, puissance = 1.000 ; plancher 0.009 → P(prise ≤ 299) = 0.9330, puissance = 1.000 ;
+
+====================================================================================================
+R3 — Simulateur à un seul uniforme étiqueté : absence de biais de T̂, variance fermée, strate du plancher
+====================================================================================================
+q·T = 357.6 ; moyenne de T̂ = 356.1 (erreur de Monte-Carlo 2.9)
+variance fermée = 34110.5 ; variance tirée = 34346.8
+couverture à 95 % de Clopper-Pearson sur la strate du plancher (cible q·d̄ = 0.0178) : 0.9905
+
+====================================================================================================
+R4 — « Attaque choisie » : l'artefact « plancher abaissé pour les scores bas » est-il vu ?
+====================================================================================================
+R = 2000 répétitions ; essai binomial de la conception : refus si le compte des prises au plus tard au rang 299 < 1869
+sain, π_min = 0,010, β = 0,015                       : compte ≤ 299, toute source = 2000 (passe) ; source « plancher » seule = 1890 (passe)
+artefact, plancher 0,005 aux scores bas, β = 0,015   : compte ≤ 299, toute source = 2000 (passe) ; source « plancher » seule = 1550 (refus)
+sain, π_min = 0,010, β = 0                           : compte ≤ 299, toute source = 1894 (passe) ; source « plancher » seule = 1894 (passe)
+artefact, plancher 0,005 aux scores bas, β = 0       : compte ≤ 299, toute source = 1572 (refus) ; source « plancher » seule = 1572 (refus)
+π_min = 0, β = 0.0 : probabilité d'audit d'un endommagé = 0.0000 → aucune prise
+π_min = 0, β = 0.015 : probabilité d'audit d'un endommagé = 0.2344 → des prises : l’attente « meurt » ne se voit pas
+
+====================================================================================================
+R5 — Score trompeur (b = 0,05, π_min = 0,01, q = 1) et famille tenue à l'écart simulée
+====================================================================================================
+trompeur, β = 0.0, enjeu des endommagés 25 : rang n₀,₉₅ = 299
+trompeur, β = 0.01, enjeu des endommagés 25 : rang n₀,₉₅ = 17
+uniforme 0,05 : n₀,₉₅ = 59 ; rapport exact = 5.104 (b/π_min = 5)
+tenue à l'écart : rang moyen de prise = 19.71 (uniforme : 20.00) ; gain = 1.015
+
+====================================================================================================
+R6 — Régime d'excès : pari en mélange contre d0, d0 connu ou d0 estimé sur m témoins
+====================================================================================================
+grille de 8 alternatives, la plus basse = 0.1035 (excès 0.0035 < 0.01)
+horizon 400 (épisodes de la strate du plancher) : fausses alarmes, d0 connu = 0.0182 ; d0 estimé sur m = 400 = 0.0520 (niveau 0.05)
+horizon 4000 (épisodes de la strate du plancher) : fausses alarmes, d0 connu = 0.0267 ; d0 estimé sur m = 400 = 0.2487 (niveau 0.05)
+correction (borne haute à α/2 sur la référence, pari à α/2), horizon 4000 : fausses alarmes = 0.0035
+
+====================================================================================================
+R7 — Épreuve 3 (recapture aveugle) : seuil exact dans le monde sans trace ; épreuve et étiquettes de l'étape 1
+====================================================================================================
+monde sans trace, n = 30 : compte des signalés de la suite ~ Bin(n, 0,01) ; refus au-dessus de 3 (quantile 0,999) ; la relecture (≥ 0,68·n = 20) est loin au-dessus
+monde sans trace, n = 100 : compte des signalés de la suite ~ Bin(n, 0,01) ; refus au-dessus de 5 (quantile 0,999) ; la relecture (≥ 0,68·n = 68) est loin au-dessus
+monde sans trace, n = 300 : compte des signalés de la suite ~ Bin(n, 0,01) ; refus au-dessus de 10 (quantile 0,999) ; la relecture (≥ 0,68·n = 204) est loin au-dessus
+écart 0,036 à 2.3 écarts types : n ≈ 1004 en un échantillon (vrai exact), ≈ 2008 si le vrai est lui aussi estimé
+étape 1 : au taux de la table (K = 300, p·q = 0.0099), 300 étiquettes demandent ≈ 30193 épisodes endommagés ; 300 épisodes endommagés n'en livrent que ≈ 2.98
+
+====================================================================================================
+FIN
+====================================================================================================
+contrôles : tous passés
