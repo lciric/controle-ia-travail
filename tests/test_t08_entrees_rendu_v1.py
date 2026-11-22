@@ -234,6 +234,22 @@ def test_amorce_instance_chemin_non_ascii_blob_dedouble(tmp_path):
         en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)
 
 
+def test_amorce_instance_chemin_avec_saut_de_ligne_blob_dedouble(tmp_path):
+    """CA-13 : même artefact, dossier dont le nom porte un saut de ligne : arrêt."""
+    _git(tmp_path, "init", "-q")
+    _fichier(tmp_path, "a/autre.json")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "sain")
+    rel = f"diag/{RUN_7B_FACTICE}/d\nx/resume.json"
+    _fichier(tmp_path, rel)
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "artefact")
+    (tmp_path / rel).unlink()
+    (tmp_path / (rel + ".sha256")).unlink()
+    with pytest.raises(GardeArret, match="objet git diag/20261115-120000-t06-7b/d\nx/resume.json"):
+        en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)
+
+
 def test_amorce_instance_clone_de_l_arbre_aligne(tmp_path):
     """Décision de la session mère (option (a)) : un clone d'une seule branche, profondeur 1, de l'arbre du dépôt, qui
     porte des `resume.json` de runs jouets et de notes (aucun de 7b), est accepté ; le même clone plus un commit qui

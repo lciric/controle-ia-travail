@@ -442,7 +442,9 @@ def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
                             "--name-only", "-z"], capture_output=True)
         if r.returncode != 0:
             raise GardeArret(f"chemins des commits illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
-        for chemin in set(r.stdout.decode("utf-8", "surrogateescape").replace("\n", "\0").split("\0")):
+        # entrées séparées par NUL seulement ; le saut de ligne qui sépare deux commits précède le premier chemin du
+        # commit suivant et est seul retiré (un saut de ligne dans un nom de chemin est gardé, CA-13)
+        for chemin in {c.lstrip("\n") for c in r.stdout.decode("utf-8", "surrogateescape").split("\0")}:
             if chemin and _nom_interdit_instance(chemin, run_7b):
                 raise GardeArret(f"objet git {chemin} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
     return {"fichiers": fichiers, "objets_git": objets, "interdits": 0}
