@@ -14,7 +14,8 @@ Sous-commandes (codes : 0 accepté ; 2 refus, motif sur la sortie d'erreur ; 3 c
   preuve-inventaire RACINE COMMIT RUN_ID SORTIE.json
   verifier-copie INVENTAIRE.json DOSSIER CONSTAT.json [SELECTION.txt]
   selection REGLE INVENTAIRE.json SORTIE.txt [MANIFESTE.json]        (REGLE : couche_15 ou une_sur_dix)
-  corps-volume | corps-serveur TYPE VOLUME_ID CLE_SSH_ID PARE_FEU_ID
+  corps-volume | corps-serveur TYPE VOLUME_ID CLE_SSH_ID PARE_FEU_ID | corps-cle-ssh FICHIER.pub | corps-pare-feu IPV4
+  protection-volume VOLUME_ID | supprimer ssh_keys|firewalls ID | lister servers|volumes|ssh_keys|firewalls
   reduire-liste GENRE BRUT.json SORTIE.json                            (GENRE : hetzner-serveurs, hetzner-volumes, vast)
   detruire-serveur LISTE.json ID
   detruire-vast LISTE.json ID PREUVE.json CONSTAT.json [--repli SELECTION.txt FIN_RELECTURE_UTC MAINTENANT_UTC]
@@ -248,6 +249,24 @@ def corps_serveur(type_serveur: str, volume_id: str, cle_ssh_id: str, pare_feu_i
             "labels": dict(LABELS, piece=NOM_SERVEUR)}
 
 
+def corps_cle_ssh(cle_publique: str) -> dict:
+    """Clé SSH jetable du poste (partie publique seulement), supprimée par son identifiant en fin de séance."""
+    c = cle_publique.strip()
+    if re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]{60,80}( [A-Za-z0-9._@-]{0,64})?", c) is None:
+        raise Refus("clé publique ssh-ed25519 attendue (jamais une clé privée)")
+    return {"name": NOM_SERVEUR, "public_key": c, "labels": dict(LABELS, piece=NOM_SERVEUR)}
+
+
+def corps_pare_feu(ipv4_du_poste: str) -> dict:
+    """Entrée SSH (port 22) admise depuis la seule adresse du poste ; rien d'autre n'entre."""
+    o = str(ipv4_du_poste).split(".")
+    if len(o) != 4 or not all(x.isdigit() and 0 <= int(x) <= 255 and str(int(x)) == x for x in o) \
+            or o[0] in ("0", "10", "127") or ipv4_du_poste == "255.255.255.255":
+        raise Refus("adresse IPv4 publique du poste attendue")
+    return {"name": NOM_SERVEUR, "labels": dict(LABELS, piece=NOM_SERVEUR),
+            "rules": [{"direction": "in", "protocol": "tcp", "port": "22", "source_ips": [f"{ipv4_du_poste}/32"]}]}
+
+
 # --- listes réduites, destructions, absence ---------------------------------------------------------------------------
 
 CHAMPS = {"hetzner-serveurs": ("id", "name", "status", "labels", "server_type", "created"),
@@ -444,6 +463,16 @@ def principal(a: list[str]) -> int:
         print(f"sélection {a[0]} : {len(sel)} fichiers ; sha256 {sha256_octets(chr(10).join(sorted(sel)).encode('utf-8'))}")
     elif s == "corps-volume" and not a:
         print(commande_hetzner("POST", "/volumes", corps_volume()))
+    elif s == "corps-cle-ssh" and len(a) == 1:
+        print(commande_hetzner("POST", "/ssh_keys", corps_cle_ssh(Path(a[0]).read_text(encoding="utf-8"))))
+    elif s == "corps-pare-feu" and len(a) == 1:
+        print(commande_hetzner("POST", "/firewalls", corps_pare_feu(a[0])))
+    elif s == "protection-volume" and len(a) == 1 and a[0].isdigit():
+        print(commande_hetzner("POST", f"/volumes/{a[0]}/actions/change_protection", {"delete": True}))
+    elif s == "supprimer" and len(a) == 2 and a[0] in ("ssh_keys", "firewalls") and a[1].isdigit():
+        print(commande_hetzner("DELETE", f"/{a[0]}/{a[1]}"))
+    elif s == "lister" and len(a) == 1 and a[0] in ("servers", "volumes", "ssh_keys", "firewalls"):
+        print(commande_hetzner("GET", f"/{a[0]}"))
     elif s == "corps-serveur" and len(a) == 4:
         print(commande_hetzner("POST", "/servers", corps_serveur(*a)))
     elif s == "reduire-liste" and len(a) == 3:

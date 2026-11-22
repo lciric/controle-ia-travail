@@ -482,3 +482,73 @@ def test_minuterie_refus(tmp_path, args, env):
     r = _minuterie(tmp_path, args, dict(env))
     assert r.returncode == 2 and "REFUS" in r.stdout
     assert not (tmp_path / "appels").exists()
+
+
+# --- clé SSH jetable, pare-feu, adresse de copie ------------------------------------------------------------------------
+
+CLE = "ssh-ed25519 " + "A" * 68 + " b5f-transfert-v1"
+
+
+def test_corps_cle_ssh():
+    assert ta.corps_cle_ssh(CLE + "\n")["public_key"] == CLE
+    for artefact in ("-----BEGIN OPENSSH PRIVATE KEY-----\nabc", "ssh-rsa " + "A" * 68, ""):
+        with pytest.raises(ta.Refus):
+            ta.corps_cle_ssh(artefact)
+
+
+def test_corps_pare_feu():
+    r = ta.corps_pare_feu("203.0.113.9")["rules"]
+    assert r == [{"direction": "in", "protocol": "tcp", "port": "22", "source_ips": ["203.0.113.9/32"]}]
+    for artefact in ("0.0.0.0", "10.1.2.3", "203.0.113", "203.0.113.09", "a.b.c.d"):
+        with pytest.raises(ta.Refus):
+            ta.corps_pare_feu(artefact)
+
+
+import demande_rsync_vast_v1 as dr  # noqa: E402
+
+
+class FauxClient:
+    def __init__(self, reponse):
+        self.reponse, self.appels = reponse, []
+
+    def put(self, chemin, json_data=None, **k):
+        self.appels.append((chemin, json_data))
+        r = self.reponse
+
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return r
+        return R()
+
+
+def test_demande_rsync_saine(monkeypatch):
+    monkeypatch.delenv("SONDE", raising=False)
+    c = FauxClient({"success": True, "src_addr": "203.0.113.5", "src_port": 41022, "jeton": "SENTINELLE"})
+    sortie = dr.principal(["900", RUN, "/mnt/HC_Volume_123"], client=c)
+    assert "SENTINELLE" not in sortie and "vastai_kaalia@203.0.113.5::C.900//root/b5f-lecture-v1/depot/donnees/" in sortie
+    assert c.appels[0][1]["src_id"] == "C.900" and c.appels[0][1]["dst_id"] == "local"
+    assert c.appels[0][1]["dst_path"].startswith("/mnt/HC_Volume_123/b5f-activations-v1/")
+
+
+def test_demande_rsync_sonde(monkeypatch):
+    monkeypatch.setenv("SONDE", "1")
+    c = FauxClient({"success": True, "src_addr": "h.example", "src_port": "22"})
+    assert "inventaire-activations.json" in dr.principal(["900", RUN, "/mnt/HC_Volume_1"], client=c)
+
+
+@pytest.mark.parametrize("argv,reponse", [
+    (["90x", RUN, "/mnt/HC_Volume_1"], {}),
+    (["900", "x", "/mnt/HC_Volume_1"], {}),
+    (["900", RUN, "/root"], {}),
+    (["900", RUN, "/mnt/HC_Volume_1"], {"success": False, "msg": "SENTINELLE"}),
+    (["900", RUN, "/mnt/HC_Volume_1"], {"success": True, "src_addr": "a b;rm", "src_port": 22}),
+    (["900", RUN, "/mnt/HC_Volume_1"], {"success": True, "src_addr": "h", "src_port": 70000}),
+])
+def test_demande_rsync_artefacts(monkeypatch, argv, reponse):
+    monkeypatch.delenv("SONDE", raising=False)
+    with pytest.raises(dr.Refus) as e:
+        dr.principal(argv, client=FauxClient(reponse))
+    assert "SENTINELLE" not in str(e.value)
