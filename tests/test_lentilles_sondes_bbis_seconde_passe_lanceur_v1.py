@@ -380,6 +380,9 @@ def test_montage_plongements_absents_de_l_index_arret_avant_tout_flux_de_poids(t
 def test_cibles_du_corpus_jamais_celles_de_montage_v1_telles_quelles(nu_monde, monkeypatch):
     """Nœud du développeur : sans fonction branchée ni module de lecture paginée, rien ne part."""
     monkeypatch.setitem(sys.modules, "controle_ia.lentilles_sondes_bbis.corpus_pagine_v1", None)
+    # Correction du 22 novembre 2026 (R-5010) : un lanceur v8 ou v9 importé plus tôt dans le processus pose l'attribut
+    # `corpus_pagine_v1` sur le paquet, que `from . import corpus_pagine_v1` lit avant `sys.modules` ; on le retire aussi.
+    monkeypatch.delattr(sys.modules["controle_ia.lentilles_sondes_bbis"], "corpus_pagine_v1", raising=False)
     with pytest.raises(Arret, match="n'est pas branchée"):
         m2.cibles_du_corpus(nu_monde.tmp, nu_monde.transport)
     assert m2.cibles_du_corpus(nu_monde.tmp, nu_monde.transport, lambda voisin, transport: ["cible jouet"]) == ["cible jouet"]
