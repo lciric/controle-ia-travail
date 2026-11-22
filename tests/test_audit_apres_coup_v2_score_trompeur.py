@@ -2,6 +2,7 @@
 Tailles réduites dans les essais (seuils binomiaux exacts recalculés) ; tailles de la spécification dans
 `simulations_longues`."""
 import math
+import statistics
 
 import pytest
 
@@ -20,17 +21,19 @@ SIG = OracleSimule(1.0, 0.0, 0, "signature")
 def test_trompeur_validite_couverture_et_biais():
     m = monde_trompeur(40, E, 0.5, 0.02)
     r = regle_orientee(g_identite, m.mu0, m.sigma)
-    out = essai_validite(m, r, SIG, R=300)
+    out = essai_validite(m, r, SIG, R=300, budget=0.05)
     assert out["couverture_tient"], out
     assert out["biais_nul"], out
     assert out["prix_orientation"] == pytest.approx(5.0)
-    assert abs(out["budget_realise"] - 0.05) < 0.005  # budget réalisé rapporté (les endommagés ont g = 0)
+    # budget réalisé : E[π] = (1 − P(d))·b + P(d)·π_min (γ calibré sur les sains ; les endommagés ont g = 0), à 4 erreurs types
+    attendu = (1 - 0.01) * 0.05 + 0.01 * 0.01
+    assert abs(out["budget_realise"] - attendu) <= 4 * out["erreur_type_budget"]
 
 
 def test_trompeur_delai_dans_la_borne_du_plancher():
     m = monde_trompeur(41, E, 0.5, 0.02)
     r = regle_orientee(g_identite, m.mu0, m.sigma)
-    out = essai_delai(m, r, SIG, R=400)
+    out = essai_delai(m, r, SIG, R=400, budget=0.05)
     assert out["rang_n95"] == 299 and out["dans_la_borne"], out
 
 
@@ -53,8 +56,9 @@ def test_artefact_estimateur_naif_sur_audit_oriente_refuse():
     """Réglages du bloc B : 0,05 hors signal, 0,50 pour un signalé, rappel vrai 0,20 : le naïf (0,71) est refusé."""
     out = epreuve_4(E, r=0.20, p0=0.05, p1=0.50, N=40_000, strate_sans_score=STRATE_PLANCHER_SEUL)
     assert out["naif"] is None and "naïf" in out["refus_naif"]
-    assert abs(out["strate_sans_score"] - 0.20) < 0.03
-    assert abs(out["pondere"] - 0.20) < 0.02
+    assert abs(out["strate_sans_score"] - 0.20) <= 4 * math.sqrt(0.16 / out["n_plancher"])
+    pond = [epreuve_4(E, 0.20, 0.05, 0.50, 5000, STRATE_PLANCHER_SEUL, tache=t)["pondere"] for t in range(1, 9)]
+    assert abs(sum(pond) / 8 - 0.20) <= 4 * statistics.stdev(pond) / math.sqrt(8)
 
 
 def test_prix_de_l_orientation():

@@ -85,7 +85,14 @@ def test_artefact_compte_naif_sur_audit_oriente_refuse():
         recapture(res.journal, sig, "naif")
     with pytest.raises(GardeArret, match="configuration"):
         recapture(res.journal, sig, "strate_sans_score")  # choix de strate non écrit : refus, aucun défaut
-    assert abs(recapture(res.journal, sig, "strate_sans_score", STRATE_PLANCHER_SEUL) - 0.2) < 0.05
+    n_pl = int(np.sum((res.journal.colonne("source") == 1) & (res.journal.colonne("audite"))))
+    assert abs(recapture(res.journal, sig, "strate_sans_score", STRATE_PLANCHER_SEUL) - 0.2) <= 4 * math.sqrt(0.16 / n_pl)
+    # m-1 : une part de soupçon existe dans la règle (γ petit), même sans prise de soupçon tirée : refus
+    petit = RegleAudit(0.05, 0.0, 1e-9, g_identite, 1.0)
+    res3 = simuler(m, petit, o, 2, 2000, chaine=False)
+    assert not np.any(res3.journal.colonne("source") == 3)
+    with pytest.raises(GardeArret, match="naïf"):
+        recapture(res3.journal, res3.journal.colonne("score") == 1, "naif")
     # cas sain : tirage sans égard au score, le compte naïf est admis et vaut le vrai
     uniforme = RegleAudit(0.2, 0.0, 0.0, g_identite, 1.0)
     res2 = simuler(m, uniforme, o, 1, 20_000, chaine=False)
@@ -99,7 +106,8 @@ def test_budget_realise_en_trois_parts():
     res = simuler(_monde(), r, OracleSimule(1.0, 0.0, 0, "signature"), 0, 20_000, chaine=False)
     b = budget_realise(res.journal)
     assert b["pi_min"] == 0.01
-    assert abs(b["part_enjeu"] - 0.015) < 0.002
+    pe = res.journal.colonne("part_enjeu")
+    assert abs(b["part_enjeu"] - 0.015) <= 4 * pe.std() / math.sqrt(len(pe))
     assert b["reste"] > 0 and b["part_ecretee"] == 0.0
 
 

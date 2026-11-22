@@ -1,5 +1,7 @@
 """Essais des épreuves de la boucle (rang 11, section 5) et du harnais simulé : cas sain qui passe, artefact refusé.
 Ordre : 3, 4, 6, puis 5, 11, 12, 8, 10, 9, 2, et en dernier 1 et 13 (mode « bras de flux » planté)."""
+import math
+
 import numpy as np
 import pytest
 
@@ -7,7 +9,7 @@ from controle_ia.audit_apres_coup_v2 import epreuves_boucle as eb
 from controle_ia.audit_apres_coup_v2 import harnais_simule as hs
 from controle_ia.audit_apres_coup_v2.attaque_choisie import TYPES_ILLUSTRATION
 from controle_ia.audit_apres_coup_v2.estimateurs import STRATE_PLANCHER_ET_ENJEU, STRATE_PLANCHER_SEUL
-from controle_ia.audit_apres_coup_v2.graines import emettre_jeton
+from controle_ia.audit_apres_coup_v2.graines import declarer_verite, emettre_jeton
 from controle_ia.audit_apres_coup_v2.oracle_simule import OracleSimule
 from controle_ia.audit_apres_coup_v2.regle_audit import RegleAudit, g_identite
 from controle_ia.audit_apres_coup_v2.simulateur import Monde, politique_constante, simuler
@@ -23,7 +25,8 @@ def test_harnais_admet_un_monde_plante_et_refuse_le_reste():
     assert mg.X.shape == (3, 16)
     with pytest.raises(GardeArret, match="hors monde planté"):
         h.admettre(np.zeros(16).tobytes(), None)  # poids lus d'un fichier de sonde, sans jeton
-    contenu, jeton = emettre_jeton(E, (40, 3, 10, 16, 0, 0), "monde_gaussien_boucle_v2", "f" * 64)
+    contenu, jeton = emettre_jeton(E, (40, 3, 10, 16, 0, 0), "monde_gaussien_boucle_v2",
+                                   declarer_verite("f" * 64, "essais : vérité jouet"))
     with pytest.raises(GardeArret, match="hors monde planté"):
         h.admettre(bytes(len(contenu)), jeton)  # contenu réel recopié sous un jeton valide
 
@@ -35,7 +38,10 @@ def test_harnais_interdit_entier_par_defaut():
     with pytest.raises(GardeArret, match="interdit entier"):
         h.ouvrir_lignee("v")
     assert h.etiquette == ""
-    assert hs.HarnaisSimule(hs.MODE_BRAS_DE_FLUX).etiquette == hs.ETIQUETTE_NON_EN_VIGUEUR
+    assert hs.HarnaisSimule(hs.MODE_BRAS_DE_FLUX, organismes_tenue_a_l_ecart=(),
+                            organismes_jeu_final=()).etiquette == hs.ETIQUETTE_NON_EN_VIGUEUR
+    with pytest.raises(GardeArret, match="aucune valeur implicite"):
+        hs.HarnaisSimule(hs.MODE_BRAS_DE_FLUX)  # m-11
 
 
 # --- épreuve 3 : recapture aveugle -----------------------------------------------------------------
@@ -52,7 +58,7 @@ def test_epreuve_3_ecart_4_la_suite_suit_les_rappels_des_versions():
 
 
 def test_epreuve_3_artefact_relecture_refusee():
-    with pytest.raises(GardeArret, match="relecture"):
+    with pytest.raises(GardeArret, match="relecture refusée"):
         eb.epreuve_3_relecture(E, 0.0, 30)
     mg = eb.charger_monde_gaussien(hs.HarnaisSimule(), E, 0.0, 30, 400, 4096, 7)
     assert eb.relecture_brute(mg) > 0.95  # l'artefact est réel : 1,00 sur le monde sans trace
@@ -61,23 +67,27 @@ def test_epreuve_3_artefact_relecture_refusee():
 # --- épreuve 4 : audit orienté ---------------------------------------------------------------------
 def test_epreuve_4_cas_sain_tirage_sans_egard_au_score():
     out = eb.epreuve_4(E, 0.20, 0.20, 0.20, 20_000, STRATE_PLANCHER_SEUL)
-    assert out["naif"] is not None and abs(out["naif"] - 0.20) < 0.02
+    assert out["naif"] is not None and abs(out["naif"] - 0.20) <= 4 * math.sqrt(0.16 / out["n_plancher"])
 
 
 def test_epreuve_4_artefact_naif_refuse_strates_justes():
     out = eb.epreuve_4(E, 0.20, 0.05, 0.50, 40_000, STRATE_PLANCHER_SEUL)
     assert out["naif"] is None
-    assert abs(out["strate_sans_score"] - 0.20) < 0.03 and abs(out["pondere"] - 0.20) < 0.02
-    out2 = eb.epreuve_4(E, 0.20, 0.05, 0.50, 40_000, STRATE_PLANCHER_ET_ENJEU)
-    assert out2["choix_strate"] == STRATE_PLANCHER_ET_ENJEU and abs(out2["strate_sans_score"] - 0.20) < 0.03
+    assert abs(out["strate_sans_score"] - 0.20) <= 4 * math.sqrt(0.16 / out["n_plancher"])
+    for choix in (STRATE_PLANCHER_SEUL, STRATE_PLANCHER_ET_ENJEU):
+        v = [eb.epreuve_4(E, 0.20, 0.05, 0.50, 5000, choix, tache=t) for t in range(1, 9)]
+        assert all(o["choix_strate"] == choix for o in v)
+        for cle in ("strate_sans_score", "pondere"):
+            x = [o[cle] for o in v]
+            assert abs(np.mean(x) - 0.20) <= 4 * np.std(x, ddof=1) / math.sqrt(8), (choix, cle)
     with pytest.raises(GardeArret, match="configuration"):
         eb.epreuve_4(E, 0.20, 0.05, 0.50, 1000, None)
 
 
 # --- épreuve 6 : témoins ---------------------------------------------------------------------------
 def test_epreuve_6_temoins_neufs():
-    fa = [eb.epreuve_6(E, 4.0, 300, rep=k)["fausses_alertes_reelles"] for k in range(4)]
-    assert abs(np.mean(fa) - 0.010) < 0.006
+    fa = [eb.epreuve_6(E, 4.0, 300, rep=k)["fausses_alertes_reelles"] for k in range(16)]
+    assert abs(np.mean(fa) - 0.010) <= 4 * np.std(fa, ddof=1) / 4
 
 
 def test_epreuve_6_artefact_temoins_de_la_lecon_refuses():
@@ -183,7 +193,8 @@ def test_epreuve_2_ordre():
 def test_epreuve_1_cinq_refus_nommes():
     out = eb.epreuve_1(E)
     assert out["cas_sain"] == "passe" and out["etiquette"] == hs.ETIQUETTE_NON_EN_VIGUEUR
-    assert sorted(out["refus"]) == [2, 3, 4, 5, 6]
+    assert sorted(out["refus"]) == [2, 3, 4, 5, 6, 7, 8]
+    assert "organisme" in out["refus"][7] and "déjà en lignée" in out["refus"][8]
 
 
 def test_epreuve_1_bras_a_famille_de_porte_refuse_a_la_declaration():
@@ -209,3 +220,35 @@ def test_epreuve_13_versions_closes():
     assert out["compte_servi"] == 1 and out["lectures_comptees"] == ["lot_1"]
     assert sorted(out["refus"]) == ["poids", "reconception", "scores_par_episode", "seuil"]
     assert out["reconception_hors_flux"].startswith("reconception admise")
+
+
+# --- mutations survivantes de la contre-lecture v1 (une par mutation) ------------------------------
+def test_mutation_relecture_dans_la_suite_de_l_epreuve_3(monkeypatch):
+    """Si la version qui note l'épisode i est instruite sur l'épisode i lui-même, la garde branchée sur le calcul doit
+    lever le refus nommé de relecture (et non la seule mort binomiale du monde sans trace)."""
+    monkeypatch.setattr(eb, "lignee_version", lambda i: np.arange(0, i + 1))
+    with pytest.raises(GardeArret, match="relecture refusée"):
+        eb.epreuve_3(E, 4.0, 30, rep=3)
+
+
+def test_mutation_score_consigne_apres_le_verdict():
+    h = eb.harnais_plante(E)
+    v0 = h.sceller_version(b"en place", horloge=2)
+    eb._episode(h, E, 1, "flux", "flux_F", bras="flux_1")
+    h.rendre_verdict(1, 13)
+    with pytest.raises(GardeArret, match="clause 2 \\(i\\)"):
+        h.consigner_score(1, v0, horloge=14)
+
+
+def test_epreuve_1_revérification_au_scellement():
+    """I-2 : un épisode de verdict de la famille d'un épisode d'une lignée encore ouverte est refusé à
+    l'enregistrement ; le scellement revérifie la lignée."""
+    h = eb.harnais_plante(E)
+    v0 = h.sceller_version(b"en place", horloge=2)
+    eb._episode(h, E, 1, "flux", "flux_F", bras="flux_1")
+    h.consigner_score(1, v0, horloge=11)
+    h.rendre_verdict(1, horloge=13)
+    h.ouvrir_lignee("v1")
+    h.ajouter_lignee("v1", 1)
+    with pytest.raises(GardeArret, match="déjà en lignée"):
+        eb._episode(h, E, 2, "verdict", "autre", organisme="org_flux")
