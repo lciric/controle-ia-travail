@@ -1,0 +1,785 @@
+From 5d3f4761d179d1529887e327e665331e38bb0b0c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 13:49:39 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200020,=20tira?=
+ =?UTF-8?q?ge=20des=20jetons=20sur=20l'appareil=20du=20mod=C3=A8le,=20chem?=
+ =?UTF-8?q?in=20neuf=20choisi=20explicitement=20(module=20neuf=20harnais/t?=
+ =?UTF-8?q?irage=5Fcarte=5Fv1=20:=20Gumbel-max=20=C3=A0=20bruit=20compt?=
+ =?UTF-8?q?=C3=A9,=20hachage=20entier=20de=20la=20graine,=20du=20pas=20et?=
+ =?UTF-8?q?=20du=20jeton,=20sans=20copie=20des=20logits=20vers=20le=20proc?=
+ =?UTF-8?q?esseur=20ni=20g=C3=A9n=C3=A9rateur=20ni=20boucle=20par=20ligne?=
+ =?UTF-8?q?=20;=20versions=20sur=20carte=20de=20generer=5Flot,=20generer?=
+ =?UTF-8?q?=5Flot=5Fborne=20et=20des=20suites=20en=20cache=20dupliqu=C3=A9?=
+ =?UTF-8?q?=20;=20iib/modele=5Ftirage=5Fcarte=5Fv1=20:=20l'agent=20et=20le?=
+ =?UTF-8?q?=20jumeau=20sous=20la=20m=C3=AAme=20m=C3=A9thode=20;=20modele?=
+ =?UTF-8?q?=5Fv5=20et=20lanceur=5Fv5=20:=20option=20`tirage`=20et=20`--tir?=
+ =?UTF-8?q?age`,=20d=C3=A9faut=20=C2=AB=20processeur=20=C2=BB=20inchang?=
+ =?UTF-8?q?=C3=A9,=20=C2=AB=20carte=20=C2=BB=20refus=C3=A9=20en=20mode=20j?=
+ =?UTF-8?q?ouet,=20=C3=A9crit=20au=20r=C3=A9sum=C3=A9=20;=20ancien=20chemi?=
+ =?UTF-8?q?n=20intact=20;=20essais=20:=20d=C3=A9terminisme,=20lignes=20ind?=
+ =?UTF-8?q?=C3=A9pendantes=20du=20lot,=20loi=20du=20softmax=20au=20khi-deu?=
+ =?UTF-8?q?x=20et=20son=20artefact,=20=C3=A9galit=C3=A9=20=C3=A0=20l'ancie?=
+ =?UTF-8?q?n=20chemin=20=C3=A0=20temp=C3=A9rature=20nulle,=20gardes,=20ess?=
+ =?UTF-8?q?ai=20marqu=C3=A9=20carte=20;=20liste=20de=20la=20course=20en=20?=
+ =?UTF-8?q?version=202)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_course_v5.sh      |   4 +-
+ scripts/repetition_locale_iib_v5.py           |   2 +-
+ scripts/tests-cibles-iib-course-v5-v2.txt     |  27 +++
+ src/controle_ia/harnais/tirage_carte_v1.py    | 213 ++++++++++++++++++
+ src/controle_ia/iib/lanceur_v5.py             |  30 ++-
+ src/controle_ia/iib/modele_tirage_carte_v1.py |  40 ++++
+ src/controle_ia/iib/modele_v5.py              |  25 +-
+ tests/test_iib_lanceur_v5.py                  |  16 +-
+ tests/test_tirage_carte_v1.py                 | 187 +++++++++++++++
+ 9 files changed, 526 insertions(+), 18 deletions(-)
+ create mode 100644 scripts/tests-cibles-iib-course-v5-v2.txt
+ create mode 100644 src/controle_ia/harnais/tirage_carte_v1.py
+ create mode 100644 src/controle_ia/iib/modele_tirage_carte_v1.py
+ create mode 100644 tests/test_tirage_carte_v1.py
+
+diff --git a/scripts/amorce_instance_iib_course_v5.sh b/scripts/amorce_instance_iib_course_v5.sh
+index 607d472d7..47ae8783a 100644
+--- a/scripts/amorce_instance_iib_course_v5.sh
++++ b/scripts/amorce_instance_iib_course_v5.sh
+@@ -11,6 +11,8 @@
+ #  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
+ #       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
+ #       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
++#       correctif 0020 : liste de la course en version 2 (`tests-cibles-iib-course-v5-v2.txt`), plus l'essai du tirage sur la
++#       carte (`tests/test_tirage_carte_v1.py`, dont un essai marqué « carte » qui ne se joue que là) ; le tirage par défaut ne change pas ;
+ #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
+ # Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` (seule autre valeur permise).
+ # Écrite et éprouvée à blanc en essai local seulement ; jamais lancée par son développeur.
+@@ -417,7 +419,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
+     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
+ fi
+ # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
+-LISTE_TESTS="scripts/tests-cibles-iib-course-v5-v1.txt"; LISTE_SHA256="7c4757fa17c0b059cf5bb071a0b557e0aeba789af396cafb4d0d6776bbbea2bc"; FICHIERS_TESTS=""
++LISTE_TESTS="scripts/tests-cibles-iib-course-v5-v2.txt"; LISTE_SHA256="035c9427f9be8e509b493d28515567d2f99550dd74e0648289bd25c28c2babbf"; FICHIERS_TESTS=""
+ if [ -z "${TESTS_ARGS:-}" ]; then
+     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
+     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index d0ccf451f..6d90203f2 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 294        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; contre-lecture cl1 (0019) 4
++ATTENDUS = 295        # liste figée v6 : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage choisi (0020) 1
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+diff --git a/scripts/tests-cibles-iib-course-v5-v2.txt b/scripts/tests-cibles-iib-course-v5-v2.txt
+new file mode 100644
+index 000000000..f1144d5d7
+--- /dev/null
++++ b/scripts/tests-cibles-iib-course-v5-v2.txt
+@@ -0,0 +1,27 @@
++tests/test_iib_artefacts_centrage_v5.py
++tests/test_iib_bout_en_bout_nul_v5.py
++tests/test_iib_branches_v5.py
++tests/test_iib_configuration_distillation_v5.py
++tests/test_iib_configuration_v5.py
++tests/test_iib_controle_premier_cout_v5.py
++tests/test_iib_couplage_v5.py
++tests/test_iib_designation_v5.py
++tests/test_iib_distillation_bout_en_bout_v5.py
++tests/test_iib_distillation_torch_v5.py
++tests/test_iib_distillation_v5.py
++tests/test_iib_environnement_machine_v5.py
++tests/test_iib_epreuve_centrage_v5.py
++tests/test_iib_epreuves_v5.py
++tests/test_iib_fuite_v5.py
++tests/test_iib_jumeau_v5.py
++tests/test_iib_lanceur_v5.py
++tests/test_iib_lecture_cout_v5.py
++tests/test_iib_oracle_v5.py
++tests/test_iib_rapportes_v5.py
++tests/test_iib_reecriture_v5.py
++tests/test_iib_regenere_v5.py
++tests/test_iib_regle_v5.py
++tests/test_iib_temoin_jumeau_v5.py
++tests/test_iib_tours_v5.py
++tests/test_iib_versement_v5.py
++tests/test_tirage_carte_v1.py
+diff --git a/src/controle_ia/harnais/tirage_carte_v1.py b/src/controle_ia/harnais/tirage_carte_v1.py
+new file mode 100644
+index 000000000..913abab86
+--- /dev/null
++++ b/src/controle_ia/harnais/tirage_carte_v1.py
+@@ -0,0 +1,213 @@
++"""Tirage des jetons sur l'appareil du modèle, v1 (correctif 0020) : chemin NEUF, à côté de l'ancien, jamais à sa place.
++
++Constat (diagnostic de la mère, 22 novembre) : `harnais.episode.generer_lot`, `environnements.noter_rejeu_juges_v2.
++generer_lot_borne` et `iib.modele_v1.ModeleTorch._suites_cache_duplique` copient à chaque pas les logits du dernier jeton vers
++le processeur (un vocabulaire de 128 000 jetons par ligne), puis font softmax et `multinomial` ligne par ligne, avec un
++générateur processeur par ligne. Sur une carte, c'est un aller-retour et une boucle Python par ligne et par jeton.
++
++**Méthode retenue : Gumbel-max à bruit compté** (et non des générateurs par ligne sur la carte).
++- Jeton tiré = argmax(logits / T + G), G de loi de Gumbel i.i.d. par jeton du vocabulaire : c'est un tirage *exact* de
++  softmax(logits / T), sans softmax ni normalisation.
++- G est une fonction pure de (graine de la ligne, numéro du pas, indice du jeton), calculée par un hachage entier vectorisé
++  (`_melange32`, multiplications par une constante < 2³¹ sur des valeurs < 2³², donc sans dépassement des entiers de 64 bits,
++  identique sur processeur et sur carte), deux tirages de 32 bits réunis en un uniforme de 53 bits, puis G = −log(−log(u)) en
++  double précision. Aucune boucle Python par ligne, aucune copie des logits, aucun état de générateur.
++- Pourquoi pas des générateurs par ligne sur la carte : un `torch.Generator` par ligne impose une boucle par ligne (un appel de
++  tirage par générateur) ; et l'état d'un générateur dépend de tout ce qu'il a tiré avant. Le bruit compté, lui, ne dépend que
++  de (graine, pas, jeton) : **une ligne ne dépend pas des autres lignes du lot**, ni de leur nombre, ni de leur ordre ; et la
++  même ligne rejouée seule rend les mêmes jetons (à logits égaux).
++- Ce qui change par rapport à l'ancien chemin : le flux aléatoire. Mêmes graines par ligne, même loi, **pas les mêmes jetons**
++  que `multinomial` sous un générateur processeur. Les deux chemins ne se mélangent donc pas dans une même mesure. À température
++  nulle : argmax sur les logits en simple précision, comme l'ancien.
++- Ce qui ne change pas : interfaces et valeurs rendues, remplissage à gauche, positions explicites, cache, logits du dernier jeton
++  seuls, jetons de fin gardés et lignes finies remplies de `pad_id`, arrêts (fin, budget, bloc clos), `decalage_positions`.
++- Copies vers le processeur qui restent : à chaque pas, un booléen (« reste-t-il une ligne active ? ») et les indices des lignes
++  qui viennent de finir ou de tirer un jeton déclencheur (pour l'arrêt « bloc clos », la fonction `arreter` de l'appelant ne
++  se joue que sur ces lignes-là, en Python, comme dans l'ancien chemin) ; à la fin, les jetons et les longueurs ; et les logits
++  **seulement** si `empreinte_logits` est demandé (diagnostic de rejeu, comme l'ancien).
++- Résolution : uniforme sur 53 bits ; un jeton de probabilité inférieure à environ 2⁻⁵³ n'est jamais tiré (sans effet mesurable).
++
++Gardes (essais `tests/test_tirage_carte_v1.py`) : graine entière dans [0, 2⁶⁴[ (sinon refus) ; logits finis à la ligne tirée
++(un NaN, un +inf ou une ligne entièrement à −inf rendrait un argmax arbitraire : arrêt ; −inf sur une partie du vocabulaire reste permis, comme sous softmax) ; température finie ; lot, contextes et graines comme l'ancien.
++"""
++from __future__ import annotations
++
++import math
++
++import torch
++
++from ..gardes import GardeArret
++
++MASQUE32 = 0xFFFFFFFF
++_MULT = 0x45D9F3B                       # constante du mélange (< 2³¹ : produit < 2⁶³, aucun dépassement)
++_SEL_PAS, _SEL_JETON, _SEL_DEUX = 0x9E3779B1, 0x7F4A7C15, 0x2545F491
++METHODE = "gumbel-max à bruit compté (hachage entier de la graine, du pas et du jeton), v1"
++
++
++def _melange32(x: torch.Tensor) -> torch.Tensor:
++    """Hachage entier de 32 bits (valeurs dans [0, 2³²[), en int64, vectorisé, identique sur tout appareil."""
++    x = x & MASQUE32
++    x = ((x >> 16) ^ x) * _MULT & MASQUE32
++    x = ((x >> 16) ^ x) * _MULT & MASQUE32
++    return (x >> 16) ^ x
++
++
++def moities_des_graines(graines, appareil) -> torch.Tensor:
++    """(B, 2) : moitiés basse et haute de chaque graine ; refus d'une graine hors de [0, 2⁶⁴[ ou non entière."""
++    out = []
++    for g in graines:
++        if isinstance(g, bool) or not isinstance(g, int) or not 0 <= g < 2 ** 64:
++            raise GardeArret(f"graine {g!r} : entier dans [0, 2^64[ exigé (tirage sur l'appareil)")
++        out.append((g & MASQUE32, g >> 32))
++    return torch.tensor(out, dtype=torch.int64, device=appareil)
++
++
++def bruit_de_gumbel(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> torch.Tensor:
++    """(B, V) en double précision : G[b, v] = −log(−log(u(graine_b, pas, v))), fonction pure de ses entrées."""
++    appareil = moities.device
++    base = _melange32(_melange32(moities[:, 0] ^ _SEL_DEUX) ^ moities[:, 1])
++    base = _melange32(base ^ ((int(pas) * _SEL_PAS) & MASQUE32))                             # (B,)
++    v = torch.arange(int(taille_vocabulaire), dtype=torch.int64, device=appareil)
++    hv = _melange32(v ^ _SEL_JETON)                                                           # (V,)
++    a = _melange32(base[:, None] ^ hv[None, :])
++    b = _melange32(a ^ _SEL_DEUX)
++    u = ((a >> 11).double() * 2.0 ** 32 + b.double() + 0.5) / 2.0 ** 53                       # 21 + 32 = 53 bits, u dans ]0, 1[
++    return -torch.log(-torch.log(u))
++
++
++def tirer(logits: torch.Tensor, temperature: float, moities: torch.Tensor, pas: int) -> torch.Tensor:
++    """Un jeton par ligne, sur l'appareil des logits : argmax à température nulle, sinon Gumbel-max. Rend (B,) long."""
++    if not math.isfinite(float(temperature)):
++        raise GardeArret(f"température {temperature!r} non finie (refus)")
++    l = logits.float()
++    if bool(torch.isnan(l).any() | torch.isposinf(l).any() | torch.isneginf(l.amax(dim=-1)).any()):
++        raise GardeArret("logits invalides au tirage (NaN, +inf, ou ligne entièrement à −inf) : arrêt, aucun argmax arbitraire")
++    if temperature <= 0:
++        return torch.argmax(l, dim=-1)
++    return torch.argmax(l.double() / float(temperature) + bruit_de_gumbel(moities, pas, l.shape[-1]), dim=-1)
++
++
++def _verifier_lot(contextes, graines, max_nouveaux) -> None:
++    if max_nouveaux < 1:
++        raise GardeArret("max_nouveaux < 1")
++    if not contextes or len(graines) != len(contextes) or any(len(c) == 0 for c in contextes):
++        raise GardeArret("lot vide, contexte vide ou graines en nombre différent des contextes")
++
++
++def _lot_rempli(contextes, pad_id):
++    B, L = len(contextes), max(len(c) for c in contextes)
++    ids = torch.full((B, L), int(pad_id), dtype=torch.long)
++    masque = torch.zeros((B, L), dtype=torch.long)
++    for r, c in enumerate(contextes):
++        ids[r, L - len(c):] = torch.tensor(c, dtype=torch.long)
++        masque[r, L - len(c):] = 1
++    return B, L, ids, masque, (masque.cumsum(dim=1) - 1).clamp(min=0)
++
++
++def _boucle(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id, decalage_positions=0, empreinte_logits=False,
++            declencheurs=None, arreter=None):
++    """Cœur commun : rend (jetons par ligne, plan, arrêts par ligne)."""
++    import hashlib
++
++    _verifier_lot(contextes, graines, max_nouveaux)
++    B, L, ids, masque, positions = _lot_rempli(contextes, pad_id)
++    appareil = next(modele.parameters()).device
++    moities = moities_des_graines(list(graines), appareil)
++    fins_t = torch.tensor(sorted(int(f) for f in fins), dtype=torch.long, device=appareil)
++    decl_t = torch.tensor(sorted(int(f) for f in (declencheurs or ())), dtype=torch.long, device=appareil)
++    sorties = torch.full((B, int(max_nouveaux)), int(pad_id), dtype=torch.long, device=appareil)
++    longueurs = torch.zeros(B, dtype=torch.long, device=appareil)
++    actives = torch.ones(B, dtype=torch.bool, device=appareil)
++    arrets = ["budget"] * B
++    empreintes = [hashlib.sha256() for _ in range(B)] if empreinte_logits else None
++    masque_a, passes = masque.to(appareil), 0
++    with torch.no_grad():
++        sortie = modele(input_ids=ids.to(appareil), attention_mask=masque_a, position_ids=positions.to(appareil), use_cache=True,
++                        logits_to_keep=1)
++        suivante = (positions[:, -1:] + 1 + int(decalage_positions)).to(appareil)
++        for pas in range(int(max_nouveaux)):
++            logits = sortie.logits[:, -1]
++            if empreintes is not None:                                   # diagnostic de rejeu seulement (comme l'ancien chemin)
++                cpu = logits.to("cpu", torch.float32)
++                act = actives.to("cpu").tolist()
++                for r in range(B):
++                    if act[r]:
++                        empreintes[r].update(cpu[r].contiguous().numpy().tobytes())
++            j = tirer(logits, temperature, moities, pas)
++            j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
++            sorties[:, pas] = j
++            longueurs += actives.long()
++            finit = actives & torch.isin(j, fins_t)
++            if arreter is not None:
++                cand = actives & ~finit & torch.isin(j, decl_t)
++                for r in torch.nonzero(cand).flatten().tolist():          # seules les lignes au jeton déclencheur (rares)
++                    if arreter(sorties[r, :pas + 1].tolist()):
++                        actives[r] = False
++                        arrets[r] = "bloc clos"
++            for r in torch.nonzero(finit).flatten().tolist():
++                arrets[r] = "fin"
++            actives = actives & ~finit
++            if not bool(actives.any()) or pas == int(max_nouveaux) - 1:
++                break
++            masque_a = torch.cat([masque_a, torch.ones((B, 1), dtype=torch.long, device=appareil)], dim=1)
++            sortie = modele(input_ids=j[:, None], attention_mask=masque_a, position_ids=suivante, past_key_values=sortie.past_key_values,
++                            use_cache=True, logits_to_keep=1)
++            suivante = suivante + 1
++            passes += 1
++    lignes, n = sorties.to("cpu").tolist(), longueurs.to("cpu").tolist()
++    nouveaux = [lignes[r][:n[r]] for r in range(B)]
++    plan = {"longueur_remplie": L, "passes_decodage": passes, "remplissage": [L - len(c) for c in contextes], "tirage": METHODE}
++    if empreintes is not None:
++        plan["empreintes_logits"] = [h.hexdigest() for h in empreintes]
++    return nouveaux, plan, arrets
++
++
++def generer_lot_carte(modele, contextes, max_nouveaux: int, temperature: float, graines, fins, pad_id: int,
++                      empreinte_logits: bool = False, decalage_positions: int = 0):
++    """Même interface et mêmes valeurs rendues que `harnais.episode.generer_lot` (plan : plus la clé `tirage`)."""
++    nouveaux, plan, _ = _boucle(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id, decalage_positions, empreinte_logits)
++    return nouveaux, plan
++
++
++def generer_lot_borne_carte(modele, contextes, max_nouveaux: int, temperature: float, graines, fins, pad_id: int, declencheurs,
++                            arreter):
++    """Même interface que `environnements.noter_rejeu_juges_v2.generer_lot_borne` : (jetons, arrêts par ligne)."""
++    nouveaux, _, arrets = _boucle(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id, declencheurs=set(declencheurs),
++                                  arreter=arreter)
++    return nouveaux, arrets
++
++
++def suites_cache_duplique_carte(modele, prefixe, graines, max_jetons: int, temperature: float, fins, pad_id: int):
++    """Même rendu que `iib.modele_v1.ModeleTorch._suites_cache_duplique` : un préremplissage, cache dupliqué K fois, une graine
++    par suite ; tirage sur l'appareil (le bruit d'une suite ne dépend que de sa graine, du pas et du jeton)."""
++    K = len(graines)
++    if not prefixe or K == 0:
++        raise GardeArret("suites du jumeau : préfixe ou graines vides")
++    appareil = next(modele.parameters()).device
++    moities = moities_des_graines(list(graines), appareil)
++    fins_t = torch.tensor(sorted(int(f) for f in fins), dtype=torch.long, device=appareil)
++    sorties = torch.full((K, int(max_jetons)), int(pad_id), dtype=torch.long, device=appareil)
++    longueurs = torch.zeros(K, dtype=torch.long, device=appareil)
++    actives = torch.ones(K, dtype=torch.bool, device=appareil)
++    pos = len(prefixe)
++    with torch.no_grad():
++        sortie = modele(input_ids=torch.tensor([list(prefixe)], device=appareil), use_cache=True, logits_to_keep=1)
++        cache = sortie.past_key_values
++        cache.batch_repeat_interleave(K)
++        logits = sortie.logits[:, -1].repeat(K, 1)
++        for pas in range(int(max_jetons)):
++            j = tirer(logits, temperature, moities, pas)
++            j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
++            sorties[:, pas] = j
++            longueurs += actives.long()
++            actives = actives & ~torch.isin(j, fins_t)
++            if not bool(actives.any()) or pas == int(max_jetons) - 1:
++                break
++            sortie = modele(input_ids=j[:, None], attention_mask=torch.ones((K, pos + 1), dtype=torch.long, device=appareil),
++                            position_ids=torch.full((K, 1), pos, dtype=torch.long, device=appareil), past_key_values=cache,
++                            use_cache=True, logits_to_keep=1)
++            cache = sortie.past_key_values
++            logits = sortie.logits[:, -1]
++            pos += 1
++    lignes, n = sorties.to("cpu").tolist(), longueurs.to("cpu").tolist()
++    return [lignes[r][:n[r]] for r in range(K)]
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index d3016be1d..38f4d7559 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -643,7 +643,7 @@ _RUN_ETALONNAGE = re.compile(r"[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+")
+ 
+ 
+ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
+-             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None) -> dict:
++             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None, tirage: str = "processeur") -> dict:
+     """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
+ 
+     - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
+@@ -670,11 +670,15 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         cf.exiger_config_v5(config, racine, pour_lancer=True)
+         return phase_conditions(config, racine, diag)
+     if phase == "course":
+-        return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte)
++        return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte,
++                                tirage)
+     if etalonnage is not None:
+         raise GardeArret("--etalonnage n'a de sens que pour la phase course (refus)")
+     cf.exiger_config_v5(config, racine, pour_lancer=True)
+     exiger_accord(config, environnement, carte)
++    from .modele_v5 import exiger_tirage
++
++    exiger_tirage(tirage, config["mode"])                                           # correctif 0020 : tirage choisi, défaut inchangé
+     versement = vs.Versement(racine, environnement, config["mode"], progres)       # correctif 0014 : avant le manifeste, avant tout calcul
+     chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+@@ -683,8 +687,8 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+     try:
+         from . import modele_v5
+ 
+-        progres(etape="chargement", mode=config["mode"])
+-        modele = modele if modele is not None else modele_v5.construire_modele(config)
++        progres(etape="chargement", mode=config["mode"], tirage=tirage)
++        modele = modele if modele is not None else modele_v5.construire_modele(config, tirage)
+         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
+         etat["etape"] = "etalonnage"
+         cree = environnement.get("IIB_DEBUT_UTC_S")
+@@ -692,7 +696,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
+-                  "replis_forme_lot_suites": r["replis_forme_lot_suites"],
++                  "replis_forme_lot_suites": r["replis_forme_lot_suites"], "tirage": tirage,
+                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
+         ecrire_resultat(racine, chemin_m, "resume", resume)
+         return resume
+@@ -746,7 +750,7 @@ def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> l
+ 
+ 
+ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
+-                     autoriser_depot_sale: bool, carte) -> dict:
++                     autoriser_depot_sale: bool, carte, tirage: str = "processeur") -> dict:
+     from ..gardes import motif_d_arret
+     from ..manifeste import creer_manifeste, ecrire_resultat
+     from . import distillation_v5 as dv
+@@ -754,6 +758,9 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+     cf.exiger_config_v5(config, racine, pour_lancer=True)
+     exiger_accord(config, environnement, carte)
+     sha_config = exiger_configuration_de_l_etalonnage(config, racine, etalonnage)
++    from .modele_v5 import exiger_tirage
++
++    exiger_tirage(tirage, config["mode"])                                 # correctif 0020
+     dossier = Path("diag") / etalonnage
+     if not (racine / dossier / NOMS["designation"]).is_file():
+         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+@@ -766,7 +773,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+     try:
+         from . import modele_v5
+ 
+-        progres(etape="chargement", mode=config["mode"], phase="course")
++        progres(etape="chargement", mode=config["mode"], phase="course", tirage=tirage)
+         if config["mode"] == "jouet":
+             from .jouet_distillation_v5 import MOTIFS_JOUET, ModeleJouetEleve, MoteurJouet
+ 
+@@ -774,7 +781,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+             section = config.get(cd.SECTION) or {}
+             monde = monde if monde is not None else MondeJouet(len_reserve(config), int(section.get("evaluation", {}).get("taches", 8)))
+         else:
+-            modele = modele if modele is not None else modele_v5.construire_modele(config)
++            modele = modele if modele is not None else modele_v5.construire_modele(config, tirage)
+             monde = monde if monde is not None else MondeReel(config, racine)
+         if distillateur is None:
+             if config["mode"] == "reel":
+@@ -787,7 +794,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
+                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
+                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
+-                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
++                  "identifiants_de_l_etalonnage": len(ids), "tirage": tirage, "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
+                   "duree_s": round(time.perf_counter() - debut, 1),
+                   "aucune_activation": True}
+         ecrire_resultat(racine, chemin_m, "resume", resume)
+@@ -821,13 +828,16 @@ def _main(argv: list[str]) -> int:
+     p.add_argument("--config", required=True)
+     p.add_argument("--run-id", required=True)
+     p.add_argument("--autoriser-depot-sale", action="store_true")
++    p.add_argument("--tirage", default="processeur", choices=("processeur", "carte"),
++                   help="correctif 0020 : « carte » = tirage des jetons sur l'appareil du modèle (chemin neuf) ; défaut inchangé")
+     p.add_argument("--etalonnage", default=None, help="phase course seulement : run de l'étalonnage (dossier diag/<run>/)")
+     args = p.parse_args(argv)
+     signal.signal(signal.SIGTERM, lever_sur_term)
+     try:
+         verifier(args.config)
+         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+-        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage)
++        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage,
++                     tirage=args.tirage)
+     except GardeArret as e:
+         print(f"ARRÊT : {e}", file=sys.stderr)
+         return 1
+diff --git a/src/controle_ia/iib/modele_tirage_carte_v1.py b/src/controle_ia/iib/modele_tirage_carte_v1.py
+new file mode 100644
+index 000000000..ce1ab548b
+--- /dev/null
++++ b/src/controle_ia/iib/modele_tirage_carte_v1.py
+@@ -0,0 +1,40 @@
++"""Modèle de (ii-b) qui tire ses jetons sur l'appareil du modèle, v1 (correctif 0020) : chemin NEUF, choisi explicitement.
++
++`ModeleTorchTirageCarte` est `modele_v1.ModeleTorch` (inchangé, toujours le défaut), dont les trois tirages passent par
++`harnais.tirage_carte_v1` : actions (`generer_lot_carte`), suites du jumeau en « cache_duplique »
++(`suites_cache_duplique_carte`) et en « prerempli_par_suite » (`generer_lot_carte` sur K copies du préfixe). L'agent et le jumeau
++tirent donc sous la **même** méthode (égalité des réglages de tirage, texte scellé, section 13, `jumeau_v5`). Le repli de la
++forme du lot des suites est le même, consigné de même dans `replis`. Choisi par `modele_v5.construire_modele(config,
++tirage="carte")` ou `lanceur_v5 --tirage carte` ; jamais par défaut.
++"""
++from __future__ import annotations
++
++from ..gardes import GardeArret
++from ..harnais.tirage_carte_v1 import METHODE, generer_lot_carte, suites_cache_duplique_carte
++from .modele_v1 import _EXCEPTIONS_DU_CACHE, ModeleTorch
++
++
++class ModeleTorchTirageCarte(ModeleTorch):
++    tirage = METHODE
++
++    def generer_actions(self, contextes, graines, max_nouveaux: int, temperature: float) -> list[list[int]]:
++        nouveaux, _ = generer_lot_carte(self.torch, [list(c) for c in contextes], max_nouveaux, temperature, list(graines), self.fmt.fins, self.pad)
++        return nouveaux
++
++    def _suites_cache_duplique(self, prefixe, graines, max_jetons: int, temperature: float) -> list[list[int]]:
++        return suites_cache_duplique_carte(self.torch, list(prefixe), list(graines), int(max_jetons), temperature, self.fins_suites(), self.pad)
++
++    def suites(self, prefixe, graines, max_jetons: int, temperature: float) -> list[list[int]]:
++        if not prefixe or not graines:
++            raise GardeArret("suites du jumeau : préfixe ou graines vides")
++        if self.forme == "cache_duplique":
++            try:
++                return self._suites_cache_duplique(prefixe, graines, max_jetons, temperature)
++            except GardeArret:
++                raise
++            except _EXCEPTIONS_DU_CACHE as e:
++                self.replis.append({"de": "cache_duplique", "vers": "prerempli_par_suite", "motif": f"{type(e).__name__}: {e}"[:300]})
++                self.forme = "prerempli_par_suite"
++        nouveaux, _ = generer_lot_carte(self.torch, [list(prefixe)] * len(graines), int(max_jetons), temperature, list(graines),
++                                        self.fins_suites(), self.pad)
++        return nouveaux
+diff --git a/src/controle_ia/iib/modele_v5.py b/src/controle_ia/iib/modele_v5.py
+index e59c2bef2..c2239c494 100644
+--- a/src/controle_ia/iib/modele_v5.py
++++ b/src/controle_ia/iib/modele_v5.py
+@@ -17,6 +17,19 @@ from __future__ import annotations
+ from ..gardes import GardeArret
+ from . import configuration_v5 as cf
+ 
++# Correctif 0020 : tirage des jetons. « processeur » (défaut, inchangé) : `modele_v1.ModeleTorch` ; « carte » (chemin neuf,
++# choisi explicitement) : `modele_tirage_carte_v1.ModeleTorchTirageCarte`, Gumbel-max à bruit compté sur l'appareil du modèle.
++TIRAGES = ("processeur", "carte")
++TIRAGE_DEFAUT = "processeur"
++
++
++def exiger_tirage(tirage: str, mode: str) -> str:
++    if tirage not in TIRAGES:
++        raise GardeArret(f"tirage {tirage!r} : {TIRAGES} (refus)")
++    if tirage != TIRAGE_DEFAUT and mode != "reel":
++        raise GardeArret("tirage sur la carte : le modèle jouet ne tire pas par torch ; mode réel seulement (refus)")
++    return tirage
++
+ 
+ def exiger_tirage_a_la_temperature_seule(config: dict) -> None:
+     """Le modèle ne sait tirer qu'à la température : tout autre réglage de tirage non neutre est un refus."""
+@@ -29,13 +42,15 @@ def exiger_tirage_a_la_temperature_seule(config: dict) -> None:
+         raise GardeArret("température du jumeau ≠ température de la génération de l'agent (refus)")
+ 
+ 
+-def charger_modele_reel(config: dict):
++def charger_modele_reel(config: dict, tirage: str = TIRAGE_DEFAUT):
+     """Modèle réel (carte seulement) : jamais appelé par les essais."""
+     from ..harnais.formats import FormatChat
+     from ..harnais.modeles import charger_modele, exiger_modele_autorise, fins_du_modele
+     from ..premier_test_ia.run import controler_format_agent
+     from .modele_v1 import ModeleTorch
++    from .modele_tirage_carte_v1 import ModeleTorchTirageCarte
+ 
++    exiger_tirage(tirage, config["mode"])
+     cf.exiger_modele(config)
+     exiger_tirage_a_la_temperature_seule(config)
+     a, m = config["agent"], config["modele"]
+@@ -43,16 +58,18 @@ def charger_modele_reel(config: dict):
+     torch_m, tok = charger_modele(a["modele"], a["revision"], m["precision"], m["appareil"], m["noyau_attention"])
+     fmt = FormatChat(tok, variables=m["variables_gabarit"])
+     fmt.fins = fins_du_modele(torch_m, tok) | {fmt._pieces(("x", "y"))["cloture"][0]}
+-    modele = ModeleTorch(torch_m, fmt, m["forme_lot_suites"], nom=f"{a['modele']}@{a['revision'][:12]}")
++    classe = ModeleTorch if tirage == TIRAGE_DEFAUT else ModeleTorchTirageCarte
++    modele = classe(torch_m, fmt, m["forme_lot_suites"], nom=f"{a['modele']}@{a['revision'][:12]}")
+     modele.controle_du_format = controler_format_agent(fmt, a, config["mode"])
+     return modele
+ 
+ 
+-def construire_modele(config: dict):
++def construire_modele(config: dict, tirage: str = TIRAGE_DEFAUT):
++    exiger_tirage(tirage, config["mode"])
+     cf.exiger_modele(config)
+     exiger_tirage_a_la_temperature_seule(config)
+     if config["mode"] == "jouet":
+         from .jouet_v5 import ModeleJouetDeLangue
+ 
+         return ModeleJouetDeLangue(config.get("jouet") or {})
+-    return charger_modele_reel(config)
++    return charger_modele_reel(config, tirage)
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 7f545752d..17d1b782f 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -610,9 +610,9 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
+     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
+     assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL"' in vivantes[0]
+     assert 'IIB_CONSIGNER="$R/iib-consigner.sh"' in vivantes[0] and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in c
+-    liste = s / "tests-cibles-iib-course-v5-v1.txt"
++    liste = s / "tests-cibles-iib-course-v5-v2.txt"                     # correctif 0020 : plus l'essai du tirage sur la carte
+     assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
+-                                                              + ["tests/test_iib_distillation_torch_v5.py"])
++                                                              + ["tests/test_iib_distillation_torch_v5.py", "tests/test_tirage_carte_v1.py"])
+     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in c
+     # la phase lue par la surveillance du lanceur de session (même commande que `lancer_iib_v3.sh`, ligne PHASE=) : « course »
+     lue = subprocess.run(["bash", "-c", "grep -v '^[[:space:]]*#' \"$1\" | sed -n 's/.*controle_ia\\.iib\\.lanceur_v5 --phase \\([a-z_]*\\) .*/\\1/p' | sort -u",
+@@ -652,3 +652,15 @@ def test_amorce_de_la_course_engagement_unique_par_etalonnage(tmp_path):
+     assert refs == ["refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"]
+     deux = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
+     assert deux.returncode == 2 and "course déjà engagée sur cet étalonnage" in deux.stdout and "FIN" not in deux.stdout
++
++
++def test_tirage_choisi_explicitement_defaut_inchange(tmp_path):
++    """Correctif 0020 : le tirage sur la carte est un chemin neuf, choisi explicitement (`tirage="carte"`, `--tirage carte`) ; le
++    défaut reste le tirage d'origine et il est écrit au résumé ; « carte » en mode jouet est refusé avant tout manifeste."""
++    config, _ = _depot_jouet(tmp_path)
++    with pytest.raises(GardeArret, match="mode réel seulement"):
++        la.executer("etalonnage", config, tmp_path, "20991231-000040-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False,
++                    tirage="carte")
++    assert not (tmp_path / "runs" / "20991231-000040-iib-jouet").exists()
++    r = la.executer("etalonnage", config, tmp_path, "20991231-000041-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
++    assert r["tirage"] == "processeur"
+diff --git a/tests/test_tirage_carte_v1.py b/tests/test_tirage_carte_v1.py
+new file mode 100644
+index 000000000..25287aebc
+--- /dev/null
++++ b/tests/test_tirage_carte_v1.py
+@@ -0,0 +1,187 @@
++"""Tirage des jetons sur l'appareil du modèle, v1 (correctif 0020) : Gumbel-max à bruit compté.
++
++Se saute sans torch ni transformers (petit Llama à poids aléatoires, aucun téléchargement). Essais : déterminisme ; lignes
++indépendantes du lot ; loi des jetons tirés (khi-deux, et l'artefact d'un tirage faux que le même essai refuse) ; égalité avec
++l'ancien chemin à température nulle (interfaces, arrêts, jetons de fin) ; gardes (cas sain et artefact) ; un essai « carte »
++marqué, qui ne se joue que si une carte est visible."""
++import pytest
++
++torch = pytest.importorskip("torch")
++pytest.importorskip("transformers")
++scipy_stats = pytest.importorskip("scipy.stats")
++
++from controle_ia.environnements.noter_rejeu_juges_v2 import generer_lot_borne  # noqa: E402
++from controle_ia.gardes import GardeArret  # noqa: E402
++from controle_ia.harnais import tirage_carte_v1 as tc  # noqa: E402
++from controle_ia.harnais.episode import generer_lot  # noqa: E402
++from controle_ia.iib import modele_v5 as m5  # noqa: E402
++from controle_ia.iib.modele_tirage_carte_v1 import ModeleTorchTirageCarte  # noqa: E402
++from controle_ia.iib.modele_v1 import ModeleTorch, format_jouet, petit_llama  # noqa: E402
++
++V = 64
++FINS = {5}
++
++
++@pytest.fixture(scope="module")
++def llama():
++    return petit_llama(11, V)
++
++
++def contextes(n, graine=0, longueur=(3, 9)):
++    g = torch.Generator().manual_seed(graine)
++    return [torch.randint(7, V, (int(torch.randint(longueur[0], longueur[1], (1,), generator=g)),), generator=g).tolist() for _ in range(n)]
++
++
++# -- (1) déterminisme --------------------------------------------------------------------------------------------------------
++def test_determinisme_deux_passages_memes_jetons(llama):
++    c, g = contextes(6), [11, 22, 33, 44, 55, 2 ** 40 + 7]
++    a, pa = tc.generer_lot_carte(llama, c, 12, 1.0, g, FINS, 0)
++    b, pb = tc.generer_lot_carte(llama, c, 12, 1.0, g, FINS, 0)
++    assert a == b and pa == pb and pa["tirage"] == tc.METHODE
++    s1 = tc.suites_cache_duplique_carte(llama, c[0], list(range(8)), 16, 0.7, FINS, 0)
++    assert s1 == tc.suites_cache_duplique_carte(llama, c[0], list(range(8)), 16, 0.7, FINS, 0)
++    # des graines différentes donnent d'autres jetons (le hasard sert à quelque chose)
++    assert tc.generer_lot_carte(llama, c, 12, 1.0, [x + 1 for x in g], FINS, 0)[0] != a
++
++
++@pytest.mark.skipif(not torch.cuda.is_available(), reason="carte : se joue sur la machine de la course")
++def test_carte_determinisme_et_bruit_sur_l_appareil(llama):
++    m = petit_llama(11, V).to("cuda")
++    c, g = contextes(8), list(range(100, 108))
++    a = tc.generer_lot_carte(m, c, 16, 1.0, g, FINS, 0)[0]
++    assert a == tc.generer_lot_carte(m, c, 16, 1.0, g, FINS, 0)[0]
++    mo = tc.moities_des_graines(g, "cuda")
++    assert tc.bruit_de_gumbel(mo, 3, V).device.type == "cuda"
++    # le hachage entier est le même sur la carte et sur le processeur, au bit près
++    assert torch.equal(tc._melange32(torch.arange(1000, device="cuda")).cpu(), tc._melange32(torch.arange(1000)))
++
++
++# -- (2) lignes indépendantes du lot ---------------------------------------------------------------------------------------
++def test_une_ligne_ne_depend_pas_des_autres_lignes_du_lot(llama):
++    cible, graine = contextes(1, graine=5, longueur=(9, 10))[0], 987654
++    seule = tc.generer_lot_carte(llama, [cible], 14, 1.0, [graine], FINS, 0)[0][0]
++    for k, autres in enumerate((contextes(3, graine=1, longueur=(3, 9)), contextes(7, graine=2, longueur=(3, 9)))):
++        lot = autres[:1] + [cible] + autres[1:]                    # autres lignes plus courtes : aucun remplissage de la cible
++        g = [1000 + k * 10 + i for i in range(len(autres))]
++        g = g[:1] + [graine] + g[1:]
++        assert tc.generer_lot_carte(llama, lot, 14, 1.0, g, FINS, 0)[0][1] == seule
++    # le bruit lui-même, au bit près, ne dépend que de (graine, pas, jeton)
++    a = tc.bruit_de_gumbel(tc.moities_des_graines([graine, 1, 2], "cpu"), 4, V)
++    b = tc.bruit_de_gumbel(tc.moities_des_graines([7, 8, 9, 10, graine], "cpu"), 4, V)
++    assert torch.equal(a[0], b[4]) and not torch.equal(a[1], b[0])
++
++
++# -- (3) loi des jetons tirés -------------------------------------------------------------------------------------------------
++def _khi_deux(tirages, p):
++    n = len(tirages)
++    obs = torch.bincount(tirages, minlength=len(p)).double()
++    return scipy_stats.chisquare(obs.numpy(), (n * p).numpy()).pvalue
++
++
++@pytest.mark.parametrize("temperature", [1.0, 0.5, 1.7])
++def test_frequences_des_jetons_tires_suivent_le_softmax(temperature):
++    logits = torch.tensor([[2.0, 1.0, 0.0, -1.0, 0.5, -3.0, 1.5, float("-inf")]])
++    p = torch.softmax(logits[0].double() / temperature, dim=-1)
++    n = 40_000
++    tirages = tc.tirer(logits.repeat(n, 1), temperature, tc.moities_des_graines(list(range(n)), "cpu"), 3)
++    assert int(tirages.max()) < 7                                                     # jamais un jeton à −inf
++    assert float(p[7]) == 0.0
++    pv = _khi_deux(tirages, p[:7])                                                    # sept jetons finis, la loi du softmax
++    assert pv > 1e-3, pv
++    # même graine, pas différents : la loi tient aussi le long d'une ligne
++    le_long = torch.stack([tc.tirer(logits, temperature, tc.moities_des_graines([424242], "cpu"), t)[0] for t in range(4000)])
++    assert _khi_deux(le_long, p[:7]) > 1e-3
++
++
++def test_artefact_un_tirage_faux_est_refuse_par_le_meme_essai():
++    """R5 : l'essai de loi voit un tirage faux (bruit uniforme au lieu de Gumbel : la loi n'est plus le softmax)."""
++    logits = torch.tensor([2.0, 1.0, 0.0, -1.0, 0.5, -3.0, 1.5])
++    p = torch.softmax(logits.double(), dim=-1)
++    n = 40_000
++    mo = tc.moities_des_graines(list(range(n)), "cpu")
++    g = tc.bruit_de_gumbel(mo, 3, 7)
++    u = torch.exp(-torch.exp(-g))                                                     # l'uniforme sous-jacent
++    faux = torch.argmax(logits.double()[None, :] + u, dim=-1)
++    assert _khi_deux(faux, p) < 1e-6
++
++
++# -- égalité avec l'ancien chemin à température nulle (interfaces, fins, arrêts) -----------------------------------------------
++def test_temperature_nulle_egal_a_l_ancien_chemin(llama):
++    c, g = contextes(5, graine=3), [1, 2, 3, 4, 5]
++    vieux, pv = generer_lot(llama, c, 10, 0.0, g, FINS, 0)
++    neuf, pn = tc.generer_lot_carte(llama, c, 10, 0.0, g, FINS, 0)
++    assert neuf == vieux and {k: v for k, v in pn.items() if k != "tirage"} == pv
++    e_v = generer_lot(llama, c, 6, 0.0, g, FINS, 0, empreinte_logits=True)[1]["empreintes_logits"]
++    assert tc.generer_lot_carte(llama, c, 6, 0.0, g, FINS, 0, empreinte_logits=True)[1]["empreintes_logits"] == e_v
++    fins = set(range(7, 30))                                                          # beaucoup de fins : des lignes finissent tôt
++    assert tc.generer_lot_carte(llama, c, 10, 0.0, g, fins, 0)[0] == generer_lot(llama, c, 10, 0.0, g, fins, 0)[0]
++    dec, arr = set(range(30, 50)), (lambda jetons: len(jetons) >= 3)
++    assert tc.generer_lot_borne_carte(llama, c, 10, 0.0, g, fins, 0, dec, arr) == generer_lot_borne(llama, c, 10, 0.0, g, fins, 0, dec, arr)
++
++
++def test_fins_gardees_lignes_finies_et_arrets_a_temperature_positive(llama):
++    c, g = contextes(6, graine=4), list(range(6))
++    fins, dec = set(range(7, 25)), set(range(25, 45))
++    jetons, arrets = tc.generer_lot_borne_carte(llama, c, 12, 1.0, g, fins, 0, dec, lambda j: len(j) >= 2)
++    for j, a in zip(jetons, arrets):
++        assert 1 <= len(j) <= 12 and a in ("fin", "bloc clos", "budget")
++        if a == "fin":
++            assert j[-1] in fins and not any(x in fins for x in j[:-1])
++        if a == "bloc clos":
++            assert j[-1] in dec and len(j) >= 2
++        if a == "budget":
++            assert len(j) == 12
++
++
++def test_modele_de_l_organisme_temperature_nulle_egal_et_choix_explicite(llama):
++    fmt = format_jouet()
++    vieux, neuf = ModeleTorch(petit_llama(11, len(fmt.tok)), fmt), ModeleTorchTirageCarte(petit_llama(11, len(fmt.tok)), fmt)
++    c = [fmt.tok.encode("abc def", add_special_tokens=False)] * 2
++    assert neuf.generer_actions(c, [1, 2], 8, 0.0) == vieux.generer_actions(c, [1, 2], 8, 0.0)
++    assert neuf.suites(c[0], list(range(8)), 6, 0.0) == vieux.suites(c[0], list(range(8)), 6, 0.0)
++    neuf.forme = vieux.forme = "prerempli_par_suite"
++    assert neuf.suites(c[0], list(range(8)), 6, 0.0) == vieux.suites(c[0], list(range(8)), 6, 0.0)
++    # choix : défaut inchangé ; « carte » refusé en mode jouet ; valeur inconnue refusée
++    assert m5.TIRAGE_DEFAUT == "processeur" and m5.exiger_tirage("processeur", "jouet") == "processeur" and m5.exiger_tirage("carte", "reel") == "carte"
++    for t, mode in (("carte", "jouet"), ("gpu", "reel"), ("", "reel")):
++        with pytest.raises(GardeArret):
++            m5.exiger_tirage(t, mode)
++
++
++# -- (4) gardes ----------------------------------------------------------------------------------------------------------------
++def test_gardes_graines_logits_temperature_lot(llama):
++    assert tc.moities_des_graines([0, 2 ** 64 - 1], "cpu").tolist() == [[0, 0], [2 ** 32 - 1, 2 ** 32 - 1]]   # cas sain
++    for g in (-1, 2 ** 64, 1.5, True, "3"):
++        with pytest.raises(GardeArret, match="graine"):
++            tc.moities_des_graines([g], "cpu")
++    mo = tc.moities_des_graines([1, 2], "cpu")
++    ok = torch.tensor([[0.0, 1.0, float("-inf")], [1.0, 0.0, 0.0]])
++    assert tc.tirer(ok, 1.0, mo, 0).shape == (2,)                                     # −inf sur une partie : permis
++    for mauvais in ([[0.0, float("nan"), 1.0], [1.0, 0.0, 0.0]], [[0.0, float("inf"), 1.0], [1.0, 0.0, 0.0]],
++                    [[float("-inf")] * 3, [1.0, 0.0, 0.0]]):
++        with pytest.raises(GardeArret, match="logits invalides"):
++            tc.tirer(torch.tensor(mauvais), 1.0, mo, 0)
++    with pytest.raises(GardeArret, match="température"):
++        tc.tirer(ok, float("nan"), mo, 0)
++    with pytest.raises(GardeArret, match="max_nouveaux"):
++        tc.generer_lot_carte(llama, [[7, 8]], 0, 1.0, [1], FINS, 0)
++    with pytest.raises(GardeArret, match="lot vide"):
++        tc.generer_lot_carte(llama, [[7, 8], [9]], 4, 1.0, [1], FINS, 0)
++    with pytest.raises(GardeArret, match="lot vide"):
++        tc.generer_lot_carte(llama, [[]], 4, 1.0, [1], FINS, 0)
++    with pytest.raises(GardeArret, match="préfixe ou graines vides"):
++        tc.suites_cache_duplique_carte(llama, [7], [], 4, 1.0, FINS, 0)
++
++
++def test_aucune_copie_des_logits_ni_boucle_par_ligne_dans_le_tirage():
++    """Garde statique : `tirer` et `bruit_de_gumbel` n'appellent ni `.to("cpu")`, ni `.cpu()`, ni `multinomial`, ni générateur,
++    et ne bouclent pas sur les lignes ; les seules copies vers le processeur du module (six) sont, à la fin, les jetons tirés et
++    les longueurs (deux fonctions, quatre copies), et, sur demande seulement, les logits et l'état des lignes pour l'empreinte de
++    rejeu (deux)."""
++    import inspect
++
++    for f in (tc.tirer, tc.bruit_de_gumbel, tc._melange32):
++        src = inspect.getsource(f)
++        assert not any(x in src for x in ('.to("cpu"', ".cpu()", "multinomial", "Generator", "for ", ".item()")), f.__name__
++    module = inspect.getsource(tc)
++    assert module.count('.to("cpu"') == 6 and "multinomial(" not in module and "torch.Generator(" not in module
+-- 
+2.43.0
+

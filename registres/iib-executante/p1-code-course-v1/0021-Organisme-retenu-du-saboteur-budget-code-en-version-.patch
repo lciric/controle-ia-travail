@@ -1,0 +1,400 @@
+From 6696aca1fc57df7e4d5d3a26b3f25dd05d0d4f58 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 14:36:15 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200021,=20cont?=
+ =?UTF-8?q?re-lecture=20cl1=20du=20tirage=20sur=20la=20carte=20et=20tirage?=
+ =?UTF-8?q?=20pass=C3=A9=20par=20l'ordre=20(m1=20:=20uniforme=20=C3=A0=205?=
+ =?UTF-8?q?3=20bits,=20second=20hachage=20ind=C3=A9pendant=20de=20la=20bas?=
+ =?UTF-8?q?e=20et=20du=20jeton=20;=20m2=20:=20garde=20des=20logits=20sur?=
+ =?UTF-8?q?=20les=20seules=20lignes=20actives=20;=20voie=20(A),=20GO-2026-?=
+ =?UTF-8?q?11-22-73=20:=20`IIB=5FTIRAGE`=20(processeur=20par=20d=C3=A9faut?=
+ =?UTF-8?q?,=20ou=20carte)=20pass=C3=A9=20par=20le=20lanceur=20de=20sessio?=
+ =?UTF-8?q?n=20=C3=A0=20la=20machine=20et=20par=20les=20deux=20amorces=20a?=
+ =?UTF-8?q?u=20lanceur=20(`--tirage`),=20toute=20autre=20valeur=20refus?=
+ =?UTF-8?q?=C3=A9e=20;=20le=20lanceur=20refuse=20une=20course=20qui=20ne?=
+ =?UTF-8?q?=20tire=20pas=20comme=20l'=C3=A9talonnage=20dont=20elle=20part,?=
+ =?UTF-8?q?=20lu=20dans=20son=20r=C3=A9sum=C3=A9=20scell=C3=A9=20;=20essai?=
+ =?UTF-8?q?s=20:=20ind=C3=A9pendance=20des=20deux=20hachages=20et=20son=20?=
+ =?UTF-8?q?artefact,=20NaN=20sur=20ligne=20finie=20et=20sur=20ligne=20acti?=
+ =?UTF-8?q?ve,=20m=C3=AAme=20tirage=20cas=20sain=20et=20artefacts,=20varia?=
+ =?UTF-8?q?ble=20de=20l'ordre=20;=20296=20essais=20attendus=20pour=20la=20?=
+ =?UTF-8?q?liste=20v6,=20312=20pour=20la=20liste=20de=20la=20course=20sur?=
+ =?UTF-8?q?=20carte)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_course_v5.sh   |  7 ++-
+ scripts/amorce_instance_iib_v5.sh          |  9 ++--
+ scripts/lancer_iib_v3.sh                   |  4 +-
+ scripts/repetition_locale_iib_v5.py        |  2 +-
+ src/controle_ia/harnais/tirage_carte_v1.py | 34 +++++++++------
+ src/controle_ia/iib/lanceur_v5.py          | 18 ++++++++
+ tests/test_iib_lanceur_v5.py               | 50 ++++++++++++++++++++--
+ tests/test_tirage_carte_v1.py              | 32 ++++++++++++++
+ 8 files changed, 133 insertions(+), 23 deletions(-)
+
+diff --git a/scripts/amorce_instance_iib_course_v5.sh b/scripts/amorce_instance_iib_course_v5.sh
+index 47ae8783a..82cf86a2a 100644
+--- a/scripts/amorce_instance_iib_course_v5.sh
++++ b/scripts/amorce_instance_iib_course_v5.sh
+@@ -11,6 +11,8 @@
+ #  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
+ #       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
+ #       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
++#  (c7) correctif 0021 : `IIB_TIRAGE` passé au lanceur par `--tirage`, comme à l'étalonnage ; le lanceur refuse une course qui
++#       ne tire pas comme l'étalonnage dont elle part ;
+ #       correctif 0020 : liste de la course en version 2 (`tests-cibles-iib-course-v5-v2.txt`), plus l'essai du tirage sur la
+ #       carte (`tests/test_tirage_carte_v1.py`, dont un essai marqué « carte » qui ne se joue que là) ; le tirage par défaut ne change pas ;
+ #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
+@@ -220,6 +222,7 @@ fi
+ [ "$(date +%s)" -lt "$DEP" ] || detruire "démarrage après l'heure de dépense épuisée (C08) : aucun calcul"
+ for v in COMMIT GH_TOKEN; do [ -n "${!v:-}" ] || refus "$v absent"; done
+ MODE="${MODE:-reel}"
++TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) refus "IIB_TIRAGE=$TIRAGE (processeur ou carte)";; esac    # correctif 0021
+ case "$MODE" in reel|jouet) ;; *) refus "MODE=$MODE (reel ou jouet)";; esac
+ [ "$MODE" = reel ] && { [ -n "${HF_TOKEN:-}" ] || refus "HF_TOKEN absent en mode reel"; }
+ case "$COMMIT" in *[!0-9a-f]*|'') refus "COMMIT illisible";; esac
+@@ -340,7 +343,7 @@ case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consig
+ exit $?
+ CONSIGNER
+ . "$R/iib-consigner.sh" --source
+-journal "début iib v5 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
++journal "début iib v5 : MODE=$MODE TIRAGE=$TIRAGE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
+ SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
+ SESSION_V12="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
+ PLAFOND_LIGNE_GO=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V12" plafond-ligne registres/go.md "$GO_ID" 2>&1) || refus "$GO_ID non conforme dans registres/go.md du commit ($PLAFOND_LIGNE_GO)"
+@@ -445,7 +448,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-course-$MODE"
+ journal "run : $RUN (sans couperet de temps ; lanceur iib v5, course sur l'étalonnage $RUN_ETAL)"
+ : >"$T/run.err"; : >"$T/progres-retenues.txt"
+ SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
+-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL" >"$T/run.json" 2>>"$T/run.err" &
++PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase course --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" --etalonnage "$RUN_ETAL" >"$T/run.json" 2>>"$T/run.err" &
+ PID_RUN=$!
+ # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
+ ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do
+diff --git a/scripts/amorce_instance_iib_v5.sh b/scripts/amorce_instance_iib_v5.sh
+index 2efaab737..a817a5397 100644
+--- a/scripts/amorce_instance_iib_v5.sh
++++ b/scripts/amorce_instance_iib_v5.sh
+@@ -15,7 +15,9 @@
+ #      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1 ;
+ #  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
+ #      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
+-#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6).
++#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6) ;
++#  (h) correctif 0021 : le tirage des jetons vient de l'ordre (`IIB_TIRAGE`, « processeur » par défaut, ou « carte ») et passe au
++#      lanceur par `--tirage` ; toute autre valeur est un refus.
+ # --- en-tête d'origine de la v1 :
+ # Amorce de l'instance de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 5 à 7) : tirée de
+ # `scripts/amorce_instance_t06_v11.sh` (nom neuf, R12 ; la v11 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à
+@@ -202,6 +204,7 @@ fi
+ [ "$(date +%s)" -lt "$DEP" ] || detruire "démarrage après l'heure de dépense épuisée (C08) : aucun calcul"
+ for v in COMMIT GH_TOKEN; do [ -n "${!v:-}" ] || refus "$v absent"; done
+ MODE="${MODE:-reel}"
++TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) refus "IIB_TIRAGE=$TIRAGE (processeur ou carte)";; esac    # correctif 0021
+ case "$MODE" in reel|jouet) ;; *) refus "MODE=$MODE (reel ou jouet)";; esac
+ [ "$MODE" = reel ] && { [ -n "${HF_TOKEN:-}" ] || refus "HF_TOKEN absent en mode reel"; }
+ case "$COMMIT" in *[!0-9a-f]*|'') refus "COMMIT illisible";; esac
+@@ -322,7 +325,7 @@ case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consig
+ exit $?
+ CONSIGNER
+ . "$R/iib-consigner.sh" --source
+-journal "début iib v5 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
++journal "début iib v5 : MODE=$MODE TIRAGE=$TIRAGE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
+ SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
+ SESSION_V12="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
+ PLAFOND_LIGNE_GO=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V12" plafond-ligne registres/go.md "$GO_ID" 2>&1) || refus "$GO_ID non conforme dans registres/go.md du commit ($PLAFOND_LIGNE_GO)"
+@@ -412,7 +415,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-$MODE"
+ journal "run : $RUN (sans couperet de temps ; lanceur iib v5, étalonnage seul)"
+ : >"$T/run.err"; : >"$T/progres-retenues.txt"
+ SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
+-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
++PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" >"$T/run.json" 2>>"$T/run.err" &
+ PID_RUN=$!
+ # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
+ ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do
+diff --git a/scripts/lancer_iib_v3.sh b/scripts/lancer_iib_v3.sh
+index 7d7d9ef6c..6569e3b46 100644
+--- a/scripts/lancer_iib_v3.sh
++++ b/scripts/lancer_iib_v3.sh
+@@ -5,6 +5,7 @@
+ # branche par défaut `essai/iib-explo-v5`. Écrit, jamais lancé par son développeur ; les essais de forme de la version 2 ne
+ # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
+ # Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
++# Correctif 0021 : `IIB_TIRAGE` (processeur, par défaut, ou carte) est passé à la machine (`-e IIB_TIRAGE=…`) ; toute autre valeur est un refus.
+ # --- en-tête d'origine de la version 2 :
+ # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
+ # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
+@@ -79,6 +80,7 @@ QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-crea
+ MOI=scripts/lancer_iib_v3.sh
+ DEPOT="${IIB_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+ A=scripts/amorce_instance_iib_v5.sh
++TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) echo "IIB_TIRAGE=$TIRAGE : processeur ou carte : refus"; exit 2 ;; esac    # correctif 0021
+ case "${IIB_AMORCE:-}" in      # correctif 0017 : l'amorce de la course, seule autre valeur permise ; toute autre : refus, rien ne part
+     ''|"$A") ;; scripts/amorce_instance_iib_course_v5.sh) A="$IIB_AMORCE" ;; *) echo "IIB_AMORCE=$IIB_AMORCE : ni l'amorce de l'étalonnage ni celle de la course : refus"; exit 2 ;; esac
+ BRANCHE="${IIB_BRANCHE:-essai/iib-explo-v5}"
+@@ -317,7 +319,7 @@ creation)
+     B64=$(base64 -w0 < "$D/amorce-creation.sh")
+     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
+     TA="$(champ tests_attendus "$D/lancement.txt")"; [[ "$TA" =~ ^[0-9]*$ ]] || { echo "tests attendus illisibles"; exit 2; }
+-    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
++    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e IIB_TIRAGE=$TIRAGE -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
+     [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
+     case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
+     [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] || { echo "étiquette de la configuration illisible (1 à 60 caractères de [A-Za-z0-9_.-]) : pas de création"; exit 2; }
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index 6d90203f2..4db679c59 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 295        # liste figée v6 : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage choisi (0020) 1
++ATTENDUS = 296        # liste figée v6 : 275 ; poussée (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage (0020) 1 ; même tirage (0021) 1
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+diff --git a/src/controle_ia/harnais/tirage_carte_v1.py b/src/controle_ia/harnais/tirage_carte_v1.py
+index 913abab86..1dad14fdd 100644
+--- a/src/controle_ia/harnais/tirage_carte_v1.py
++++ b/src/controle_ia/harnais/tirage_carte_v1.py
+@@ -25,7 +25,7 @@ générateur processeur par ligne. Sur une carte, c'est un aller-retour et une b
+   qui viennent de finir ou de tirer un jeton déclencheur (pour l'arrêt « bloc clos », la fonction `arreter` de l'appelant ne
+   se joue que sur ces lignes-là, en Python, comme dans l'ancien chemin) ; à la fin, les jetons et les longueurs ; et les logits
+   **seulement** si `empreinte_logits` est demandé (diagnostic de rejeu, comme l'ancien).
+-- Résolution : uniforme sur 53 bits ; un jeton de probabilité inférieure à environ 2⁻⁵³ n'est jamais tiré (sans effet mesurable).
++- Résolution : uniforme sur 53 bits (deux hachages indépendants de 32 et 21 bits, correctif 0021) ; un jeton de probabilité inférieure à environ 2⁻⁵³ n'est jamais tiré (sans effet mesurable).
+ 
+ Gardes (essais `tests/test_tirage_carte_v1.py`) : graine entière dans [0, 2⁶⁴[ (sinon refus) ; logits finis à la ligne tirée
+ (un NaN, un +inf ou une ligne entièrement à −inf rendrait un argmax arbitraire : arrêt ; −inf sur une partie du vocabulaire reste permis, comme sous softmax) ; température finie ; lot, contextes et graines comme l'ancien.
+@@ -41,7 +41,8 @@ from ..gardes import GardeArret
+ MASQUE32 = 0xFFFFFFFF
+ _MULT = 0x45D9F3B                       # constante du mélange (< 2³¹ : produit < 2⁶³, aucun dépassement)
+ _SEL_PAS, _SEL_JETON, _SEL_DEUX = 0x9E3779B1, 0x7F4A7C15, 0x2545F491
+-METHODE = "gumbel-max à bruit compté (hachage entier de la graine, du pas et du jeton), v1"
++_SEL_JETON_2, _SEL_BASE_2 = 0x6C8E9CF5, 0x1B873593          # correctif 0021 (cl1, m1) : second hachage, indépendant du premier
++METHODE = "gumbel-max à bruit compté (hachage entier de la graine, du pas et du jeton), v1, uniforme à 53 bits (correctif 0021)"
+ 
+ 
+ def _melange32(x: torch.Tensor) -> torch.Tensor:
+@@ -62,25 +63,34 @@ def moities_des_graines(graines, appareil) -> torch.Tensor:
+     return torch.tensor(out, dtype=torch.int64, device=appareil)
+ 
+ 
+-def bruit_de_gumbel(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> torch.Tensor:
+-    """(B, V) en double précision : G[b, v] = −log(−log(u(graine_b, pas, v))), fonction pure de ses entrées."""
++def deux_hachages(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> tuple[torch.Tensor, torch.Tensor]:
++    """(a, b), chacun (B, V) dans [0, 2³²[ : deux hachages **indépendants** de (graine, pas, jeton) (correctif 0021, cl1, m1)."""
+     appareil = moities.device
+     base = _melange32(_melange32(moities[:, 0] ^ _SEL_DEUX) ^ moities[:, 1])
+     base = _melange32(base ^ ((int(pas) * _SEL_PAS) & MASQUE32))                             # (B,)
+     v = torch.arange(int(taille_vocabulaire), dtype=torch.int64, device=appareil)
+-    hv = _melange32(v ^ _SEL_JETON)                                                           # (V,)
+-    a = _melange32(base[:, None] ^ hv[None, :])
+-    b = _melange32(a ^ _SEL_DEUX)
++    a = _melange32(base[:, None] ^ _melange32(v ^ _SEL_JETON)[None, :])
++    b = _melange32(_melange32(base ^ _SEL_BASE_2)[:, None] ^ _melange32(v ^ _SEL_JETON_2)[None, :])
++    return a, b
++
++
++def bruit_de_gumbel(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> torch.Tensor:
++    """(B, V) en double précision : G[b, v] = −log(−log(u(graine_b, pas, v))), fonction pure de ses entrées ; u sur 53 bits,
++    21 bits de `a` et 32 bits de `b`."""
++    a, b = deux_hachages(moities, pas, taille_vocabulaire)
+     u = ((a >> 11).double() * 2.0 ** 32 + b.double() + 0.5) / 2.0 ** 53                       # 21 + 32 = 53 bits, u dans ]0, 1[
+     return -torch.log(-torch.log(u))
+ 
+ 
+-def tirer(logits: torch.Tensor, temperature: float, moities: torch.Tensor, pas: int) -> torch.Tensor:
+-    """Un jeton par ligne, sur l'appareil des logits : argmax à température nulle, sinon Gumbel-max. Rend (B,) long."""
++def tirer(logits: torch.Tensor, temperature: float, moities: torch.Tensor, pas: int, actives: torch.Tensor | None = None) -> torch.Tensor:
++    """Un jeton par ligne, sur l'appareil des logits : argmax à température nulle, sinon Gumbel-max. Rend (B,) long.
++    `actives` (correctif 0021, cl1, m2) : la garde des logits ne juge que les lignes actives (une ligne finie n'arrête rien,
++    comme dans l'ancien chemin, qui ne lisait pas ses logits)."""
+     if not math.isfinite(float(temperature)):
+         raise GardeArret(f"température {temperature!r} non finie (refus)")
+     l = logits.float()
+-    if bool(torch.isnan(l).any() | torch.isposinf(l).any() | torch.isneginf(l.amax(dim=-1)).any()):
++    vues = l if actives is None else l[actives]
++    if vues.numel() and bool(torch.isnan(vues).any() | torch.isposinf(vues).any() | torch.isneginf(vues.amax(dim=-1)).any()):
+         raise GardeArret("logits invalides au tirage (NaN, +inf, ou ligne entièrement à −inf) : arrêt, aucun argmax arbitraire")
+     if temperature <= 0:
+         return torch.argmax(l, dim=-1)
+@@ -133,7 +143,7 @@ def _boucle(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id,
+                 for r in range(B):
+                     if act[r]:
+                         empreintes[r].update(cpu[r].contiguous().numpy().tobytes())
+-            j = tirer(logits, temperature, moities, pas)
++            j = tirer(logits, temperature, moities, pas, actives)
+             j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
+             sorties[:, pas] = j
+             longueurs += actives.long()
+@@ -196,7 +206,7 @@ def suites_cache_duplique_carte(modele, prefixe, graines, max_jetons: int, tempe
+         cache.batch_repeat_interleave(K)
+         logits = sortie.logits[:, -1].repeat(K, 1)
+         for pas in range(int(max_jetons)):
+-            j = tirer(logits, temperature, moities, pas)
++            j = tirer(logits, temperature, moities, pas, actives)
+             j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
+             sorties[:, pas] = j
+             longueurs += actives.long()
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index 38f4d7559..afa86c046 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -749,6 +749,23 @@ def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> l
+     return ids
+ 
+ 
++def exiger_meme_tirage(racine, etalonnage: str, tirage: str) -> str:
++    """Correctif 0021 (voie (A), GO-2026-11-22-73) : la course tire comme l'étalonnage dont elle part. Le tirage de l'étalonnage
++    est lu dans son résumé scellé (`resultat.tirage`) ; un résumé écrit avant le correctif 0020 ne porte pas la clé, et ce code-là
++    ne savait tirer que sur le processeur : « processeur ». Résumé absent : « processeur » seulement (le mode réel exige déjà le
++    résumé, `exiger_identifiants_de_l_etalonnage`). Différent : refus avant tout manifeste."""
++    chemin = Path(racine) / "diag" / etalonnage / "resume.json"
++    if chemin.is_file():
++        verifier(chemin)
++        vu = json.loads(chemin.read_text(encoding="utf-8")).get("resultat", {}).get("tirage", "processeur")
++    else:
++        vu = "processeur"
++    if vu != tirage:
++        raise GardeArret(f"course : tirage {tirage!r} ≠ tirage de l'étalonnage {vu!r} (résumé de {etalonnage}) : l'étalonnage et la course "
++                         "tirent de même (refus)")
++    return vu
++
++
+ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
+                      autoriser_depot_sale: bool, carte, tirage: str = "processeur") -> dict:
+     from ..gardes import motif_d_arret
+@@ -761,6 +778,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+     from .modele_v5 import exiger_tirage
+ 
+     exiger_tirage(tirage, config["mode"])                                 # correctif 0020
++    exiger_meme_tirage(racine, etalonnage, tirage)                        # correctif 0021
+     dossier = Path("diag") / etalonnage
+     if not (racine / dossier / NOMS["designation"]).is_file():
+         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 17d1b782f..5204125e8 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -427,12 +427,15 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+         return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+     da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
+     # correctif 0014 : une ligne de plus de chaque côté (le choix de la trace selon le motif « versement … » du lanceur)
+-    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 10
++    # correctif 0021 : une ligne ajoutée de plus (le tirage passé par l'ordre, IIB_TIRAGE)
++    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 11
+     assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
+     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
+-    assert len([l for l in dl if l[0] == "-"]) == 15 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
++    # correctif 0021 : une ligne de plus, la commande de création (`-e IIB_TIRAGE=$TIRAGE` passé à la machine)
++    assert len([l for l in dl if l[0] == "-"]) == 16 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
+-                                                                                     "    else", "    fi")) for l in dl if l[0] == "-")
++                                                                                     "    else", "    fi", "create instance")) for l in dl if l[0] == "-")
++    assert sum("create instance" in l for l in dl if l[0] == "-") == 1 and sum("-e IIB_TIRAGE=$TIRAGE" in l for l in dl if l[0] == "+") == 1
+     # version 3 : l'attestation « aucune intouchable » n'existe plus (vérification de la contre-lecture, n1)
+     assert "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+     assert "attesté par IIB_AUCUNE_INTOUCHABLE=oui\"" not in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+@@ -608,7 +611,7 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
+     assert all(any(m in l for m in ("LISTE_TESTS=", 'RUN="$(date', 'journal "run : $RUN', "lanceur_v5 --phase etalonnage", 'ajouter "runs/$RUN"')) for l in moins)
+     assert sum(l.startswith(("DES=", "{ [ -n \"$DES\" ]", "RUN_ETAL=")) for l in plus) == 3
+     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
+-    assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL"' in vivantes[0]
++    assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" --etalonnage "$RUN_ETAL"' in vivantes[0]
+     assert 'IIB_CONSIGNER="$R/iib-consigner.sh"' in vivantes[0] and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in c
+     liste = s / "tests-cibles-iib-course-v5-v2.txt"                     # correctif 0020 : plus l'essai du tirage sur la carte
+     assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
+@@ -664,3 +667,42 @@ def test_tirage_choisi_explicitement_defaut_inchange(tmp_path):
+     assert not (tmp_path / "runs" / "20991231-000040-iib-jouet").exists()
+     r = la.executer("etalonnage", config, tmp_path, "20991231-000041-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+     assert r["tirage"] == "processeur"
++
++
++def test_meme_tirage_a_l_etalonnage_et_a_la_course_et_variable_de_l_ordre(tmp_path):
++    """Correctif 0021 (voie (A), GO-2026-11-22-73) : la course tire comme l'étalonnage dont elle part ; le tirage est passé par
++    une variable explicite de l'ordre (IIB_TIRAGE), à l'étalonnage comme à la course, et refusé s'il est inconnu."""
++    import os
++    import subprocess
++
++    from controle_ia.scellement import sceller
++
++    run = "20991231-000050-iib-reel"
++    r = tmp_path / "diag" / run / "resume.json"
++    r.parent.mkdir(parents=True)
++    assert la.exiger_meme_tirage(tmp_path, run, "processeur") == "processeur"           # résumé absent : processeur seulement
++    with pytest.raises(GardeArret, match="tirent de même"):
++        la.exiger_meme_tirage(tmp_path, run, "carte")
++    for vu, demande, ok in (("carte", "carte", True), ("processeur", "processeur", True), ("carte", "processeur", False),
++                            ("processeur", "carte", False), (None, "processeur", True), (None, "carte", False)):
++        if r.exists():
++            r.unlink()
++            Path(str(r) + ".sha256").unlink()
++        r.write_text(json.dumps({"resultat": {} if vu is None else {"tirage": vu}}) + "\n", encoding="utf-8")
++        sceller(r)
++        if ok:
++            assert la.exiger_meme_tirage(tmp_path, run, demande) == demande
++        else:
++            with pytest.raises(GardeArret, match="tirent de même"):
++                la.exiger_meme_tirage(tmp_path, run, demande)
++    s = DEPOT / "scripts"
++    for f in ("amorce_instance_iib_v5.sh", "amorce_instance_iib_course_v5.sh"):
++        t = (s / f).read_text(encoding="utf-8")
++        assert 'TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;;' in t, f
++        vivante = [l for l in t.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
++        assert len(vivante) == 1 and '--tirage "$TIRAGE"' in vivante[0], f
++    v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
++    assert "-e IIB_TIRAGE=$TIRAGE " in v3
++    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
++    mauvais = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_TIRAGE": "gpu"}, capture_output=True, text=True, timeout=60)
++    assert mauvais.returncode == 2 and "IIB_TIRAGE=gpu" in mauvais.stdout
+diff --git a/tests/test_tirage_carte_v1.py b/tests/test_tirage_carte_v1.py
+index 25287aebc..5100d6be7 100644
+--- a/tests/test_tirage_carte_v1.py
++++ b/tests/test_tirage_carte_v1.py
+@@ -185,3 +185,35 @@ def test_aucune_copie_des_logits_ni_boucle_par_ligne_dans_le_tirage():
+         assert not any(x in src for x in ('.to("cpu"', ".cpu()", "multinomial", "Generator", "for ", ".item()")), f.__name__
+     module = inspect.getsource(tc)
+     assert module.count('.to("cpu"') == 6 and "multinomial(" not in module and "torch.Generator(" not in module
++
++
++# -- correctif 0021 : contre-lecture cl1 du 0020 (m1, m2) ---------------------------------------------------------------------
++def test_uniforme_a_53_bits_deux_hachages_independants():
++    """m1 : `b` n'est plus une fonction de `a` (avant : b = H(a ^ c), 32 bits d'entropie). Cas sain : sur 64 000 couples, b diffère
++    de l'ancienne fonction de a presque partout, et a et b ne sont pas corrélés ; artefact : l'ancienne construction est vue."""
++    mo = tc.moities_des_graines(list(range(1000)), "cpu")
++    a, b = tc.deux_hachages(mo, 7, 64)
++    ancien = tc._melange32(a ^ tc._SEL_DEUX)
++    assert float((b == ancien).double().mean()) < 1e-3
++    assert abs(float(torch.corrcoef(torch.stack([a.flatten().double(), b.flatten().double()]))[0, 1])) < 0.02
++    assert bool((ancien == tc._melange32(a ^ tc._SEL_DEUX)).all())                     # artefact : l'ancienne b est une fonction de a
++    u = ((a >> 11).double() * 2.0 ** 32 + b.double() + 0.5) / 2.0 ** 53
++    assert 0.0 < float(u.min()) and float(u.max()) < 1.0 and abs(float(u.mean()) - 0.5) < 0.005
++    import inspect
++
++    src = inspect.getsource(tc.deux_hachages)
++    assert not any(x in src for x in ('.to("cpu"', ".cpu()", "multinomial", "Generator", "for ", ".item()"))
++
++
++def test_garde_des_logits_sur_les_seules_lignes_actives():
++    """m2 : un NaN sur une ligne finie n'arrête pas le lot (l'ancien chemin ne lisait pas ses logits) ; un NaN sur une ligne
++    active l'arrête ; un lot dont toutes les lignes sont finies ne juge rien."""
++    mo = tc.moities_des_graines([1, 2, 3], "cpu")
++    l = torch.tensor([[0.0, 1.0, 2.0], [float("nan")] * 3, [1.0, 0.0, 0.0]])
++    j = tc.tirer(l, 1.0, mo, 0, torch.tensor([True, False, True]))
++    assert j.shape == (3,) and 0 <= int(j[0]) < 3
++    with pytest.raises(GardeArret, match="logits invalides"):
++        tc.tirer(l, 1.0, mo, 0, torch.tensor([True, True, True]))
++    with pytest.raises(GardeArret, match="logits invalides"):
++        tc.tirer(l, 1.0, mo, 0)                                                         # sans masque : toutes les lignes jugées
++    tc.tirer(l, 1.0, mo, 0, torch.tensor([False, False, False]))
+-- 
+2.43.0
+
