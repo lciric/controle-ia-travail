@@ -448,7 +448,8 @@ def test_sortie_du_programme_bien_formee_lue():
 
 
 @avec_synthetiques
-@pytest.mark.parametrize("sortie, code, erreur", [
+@pytest.mark.parametrize("sortie, code, erreur", ids=["rang", "deux-lignes", "vide", "code-5", "garde-deux-lignes",
+                                                     "garde-avec-sortie", "arret-avec-sortie"], argvalues=[
     (ligne(aires_fabriquees(_rang_dans_une_aire)), 0, ""),
     (BIEN_FORMEE + BIEN_FORMEE, 0, ""),
     ("", 0, ""),
@@ -467,9 +468,10 @@ def test_programme_qui_rend_autre_chose_arret_verse_apres_m(monde, monkeypatch, 
     with pytest.raises(e.ArretDeLEnchainement) as x:
         monde.jouer(c, monde.sortie("cas-a"))
     cr = x.value.compte_rendu
-    assert x.value.issue == e.ISSUE_GARDE and "programme de l'aire conditionnelle" in cr["motif_de_l_arret"]
+    assert x.value.issue == e.ISSUE_GARDE and "aire conditionnelle" in cr["motif_de_l_arret"]
     assert cr["etapes_jouees"] == ["m"] and cr["versements"][-1]["etape"] == f"arrêt : {e.ISSUE_GARDE}"
-    assert "première ligne" not in cr["motif_de_l_arret"] and "aires_des_plis" not in json.dumps(cr, ensure_ascii=False)
+    assert "première ligne" not in cr["motif_de_l_arret"] and '"aires_des_plis": [' not in json.dumps(cr, ensure_ascii=False)
+    assert "0.25" not in cr["motif_de_l_arret"]
 
 
 @avec_synthetiques
@@ -485,14 +487,16 @@ def test_erreur_du_programme_rien_de_sa_sortie_d_erreur_n_est_rendu(monde):
 
 
 @avec_synthetiques
-def test_garde_du_programme_rendue_par_sa_seule_ligne(monde):
-    """Cas sain de la garde rendue (code 4, une ligne sur la sortie d'erreur, sortie standard vide) : garde ordinaire,
-    le motif porte la ligne. Artefact (deux lignes) : essai paramétré précédent."""
-    monde.programme = remplacant(monde.tmp, sortie="", code=4, erreur="fichier qui ne porte pas son nom\n")
+def test_garde_du_programme_reconnue_par_sa_seule_ligne_son_message_non_rendu(monde):
+    """Cas sain de la garde du programme (code 4, une ligne sur la sortie d'erreur, sortie standard vide) : garde
+    ordinaire reconnue ; **son message n'est pas rendu** (D9 : il pourrait porter un nombre de la livraison).
+    Artefact (deux lignes, ou une sortie standard) : essai paramétré précédent, « sortie hors de sa forme »."""
+    monde.programme = remplacant(monde.tmp, sortie="", code=4, erreur="valeur 0.123456 hors de sa forme\n")
     c = monde.premiere()
     with pytest.raises(e.ArretDeLEnchainement) as x:
         monde.jouer(c, monde.sortie("cas-a"))
-    assert x.value.issue == e.ISSUE_GARDE and x.value.compte_rendu["motif_de_l_arret"].endswith("fichier qui ne porte pas son nom")
+    motif = x.value.compte_rendu["motif_de_l_arret"]
+    assert x.value.issue == e.ISSUE_GARDE and "code 4, une ligne" in motif and "0.123456" not in motif
 
 
 @avec_synthetiques
@@ -509,8 +513,9 @@ def test_arret_annonce_par_le_programme_releve_du_dossier_des_arrets(monde, monk
     """Code 3 : l'arrêt est relevé **du dossier des arrêts** (ce que l'analyse y a consigné), jamais de la sortie du
     programme. Cas sain : un arrêt de l'étape (n) consigné — issue « arrêt », son constat seul. Artefacts : aucun arrêt
     consigné ; un arrêt de l'étape (m) ; un constat à un champ de plus — garde ordinaire."""
-    monde.programme = remplacant(monde.tmp, sortie="", code=3)
-    monkeypatch.setattr(e.analyse, "arret_de_la_livraison", lambda *a, **k: consigne)
+    monde.programme = remplacant(monde.tmp, sortie="", code=3, journal=monde.journal)
+    # l'arrêt n'est « consigné » qu'après le passage du programme (sa trace) : l'étape (m) n'en voit aucun
+    monkeypatch.setattr(e.analyse, "arret_de_la_livraison", lambda *a, **k: consigne if monde.journal.exists() else None)
     c = monde.premiere()
     with pytest.raises(e.ArretDeLEnchainement) as x:
         monde.jouer(c, monde.sortie("cas-a"))
@@ -676,21 +681,56 @@ def test_entree_de_l_enchainement_scellee_et_a_ses_cles(monde):
     assert len(e.CLES_DE_L_ENTREE) == 13
 
 
-def test_regles_non_ecrites_avant_tout_constat(monde):
-    """Règles non écrites 2 et 3 de la version 1, et la 3 étendue : le fichier et le programme de l'aire conditionnelle
-    rangés sous le dossier de course. Rien ne part."""
+def test_pieces_sous_le_dossier_de_course_gardes_ecrites_et_regles_non_ecrites(monde):
+    """D4 (contre-lecture de la version 1) : ce que le texte écrit est une garde ordinaire qui cite son passage — la
+    sortie de la lecture commune et la sortie d'origine (8.7 ; 6.9 ; 8.5), le fichier des scores par unité (8.4 ;
+    13.2) ; ce qu'il n'écrit pas reste une règle non écrite — l'entrée de l'enchaînement, les registres, le programme
+    de l'aire conditionnelle. Rien ne part. Cas sain : tout hors du dossier de course (essais de bout en bout)."""
     c = monde.premiere()
     sortie = h.piece(monde.pieces, h.sortie())
+    dessous = h.ecrire_scelle(monde.course / "s.json", "{}")
+    with pytest.raises(GardeArret, match=r"8\.7"):
+        monde.jouer(c, dessous)
+    with pytest.raises(GardeArret, match=r"8\.7"):
+        e.enchainer(configuration_scellee=c, sortie_de_la_lecture_commune=sortie, registre_courant=monde.registre([]),
+                    commit_du_registre_courant="0123abc", registre_fige=monde.registre([]), ligne_de_go="GO-2099-01-01-01",
+                    entree=monde.entree(), sortie_d_origine=dessous, programme_du_constat=CONSTAT,
+                    distant=str(monde.distant), branche="b", horloge=monde.horloge, racine_du_code=monde.code)
+    with pytest.raises(GardeArret, match=r"8\.4"):
+        monde.jouer(c, sortie, entree=monde.entree(**{e.CLE_DU_FICHIER: str(monde.course / "donnees" / "f.jsonl")}))
     programme_dedans = remplacant(monde.course)
-    for entree in (monde.entree(**{e.CLE_DU_FICHIER: str(monde.course / "donnees" / "f.jsonl")}),
-                   monde.entree(programme=programme_dedans)):
-        with pytest.raises(e.RegleNonEcrite, match="sous le dossier de course"):
-            monde.jouer(c, sortie, entree=entree)
-    for kw in ({"sortie": h.ecrire_scelle(monde.course / "s.json", "{}")},
-               {"entree": h.ecrire_scelle(monde.course / "e.json", "{}")}):
-        with pytest.raises(e.RegleNonEcrite, match="sous le dossier de course"):
-            monde.jouer(c, kw.pop("sortie", sortie), **kw)
+    with pytest.raises(e.RegleNonEcrite, match="sous le dossier de course"):
+        monde.jouer(c, sortie, entree=monde.entree(programme=programme_dedans))
+    with pytest.raises(e.RegleNonEcrite, match="sous le dossier de course"):
+        monde.jouer(c, sortie, entree=h.ecrire_scelle(monde.course / "e.json", "{}"))
+    (monde.course / "reg").mkdir()
+    registre_dessous = h.registre(monde.course / "reg", [], "go.md")
+    for kw in ({"registre_courant": registre_dessous},
+               {"registre_fige": registre_dessous, "ligne_de_go": "GO-2099-01-01-01", "registre_courant": monde.registre([])}):
+        args = dict(configuration_scellee=c, sortie_de_la_lecture_commune=sortie, commit_du_registre_courant="0123abc",
+                    registre_fige=None, ligne_de_go=None, entree=monde.entree(), sortie_d_origine=None,
+                    programme_du_constat=CONSTAT, distant=str(monde.distant), branche="b", horloge=monde.horloge,
+                    racine_du_code=monde.code)
+        args.update(kw)
+        with pytest.raises(e.RegleNonEcrite, match="registre"):
+            e.enchainer(**args)
     assert monde.au_distant() == []
+
+
+def test_dossier_des_arrets_hors_du_dossier_de_course_garde_ecrite(monde):
+    """D4 : le dossier des arrêts hors du dossier de course est refusé par 8.7 — garde ordinaire, plus règle non
+    écrite. Rien ne part. Cas sain : `../arrets` (tous les essais)."""
+    sortie = h.piece(monde.pieces, h.sortie())
+    (monde.travail / "arrets-ailleurs").mkdir()
+    (monde.travail / "course-2" / "livraison-1").mkdir(parents=True)
+    autre = cf.ecrire_la_configuration_scellee(
+        monde.travail / "course-2" / "livraison-1", choix=dict(h.CHOIX), chaines_du_module=chaines(),
+        pieces_attendues={cf.MODULE_DU_COTE_HABILITE: MODULE_V11, cf.RAPPORT_DE_CONTRE_LECTURE: RAPPORT,
+                          cf.REGISTRE_ATTENDU: None, cf.PROGRAMME_DU_CONSTAT: h.empreinte(CONSTAT),
+                          cf.DOSSIER_DES_ARRETS: "../../arrets-ailleurs"})
+    with pytest.raises(GardeArret, match=r"hors du dossier de course.*8\.7") as x:
+        monde.jouer(autre, sortie)
+    assert not isinstance(x.value, e.RegleNonEcrite) and monde.au_distant() == []
 
 
 # --- constat de lancement -------------------------------------------------------------------------------------------------
@@ -812,3 +852,274 @@ def test_deterministe_deux_courses_identiques(tmp_path, monkeypatch):
         cr = m.jouer(c, m.sortie("cas-d"))
         rendus.append((cr["pieces_du_dossier_de_course"], [v["commit"] for v in cr["versements"]]))
     assert rendus[0] == rendus[1]
+
+
+# --- corrections de la contre-lecture de la version 1 (D1 à D8) ------------------------------------------------------------
+
+def test_d1_la_commande_citee_est_le_vrai_module_par_la_commande_reelle(monde):
+    """D1 : sous `python -m`, le compte rendu cite le nom du module, non `__main__`, et l'interpréteur joué. Cas sain :
+    la commande lancée pour de vrai (`python -m …`, constat malsain, code 5 ; la garde statique est celle du dépôt,
+    trois parcours) ; artefact : la v1 citait `__main__` (constante vérifiée)."""
+    c = monde.configuration()                               # non inscrite : constat malsain
+    sortie = h.piece(monde.pieces, h.sortie())
+    argv = ["--configuration", str(c), "--sortie", str(sortie), "--registre-courant", str(monde.registre([])),
+            "--commit-du-registre", "0123abc", "--entree", str(monde.entree()), "--programme-du-constat", str(CONSTAT),
+            "--distant", str(monde.distant), "--branche", "course-discretion"]
+    env = dict(os.environ, PYTHONPATH=str(RACINE / "src"))
+    fait = subprocess.run([e.sys.executable, "-m", e.MODULE, *argv], capture_output=True, text=True, env=env,
+                          cwd=str(monde.tmp), timeout=600)
+    assert fait.returncode == 5, fait.stderr[-500:]
+    cr = json.loads(fait.stdout)
+    assert cr["commande"] == [e.sys.executable, "-m", e.MODULE, *argv] and "__main__" not in cr["commande"]
+    assert e.MODULE == e.__name__
+
+
+@avec_synthetiques
+def test_d2_entree_changee_entre_m_et_n_arret_verse(monde, monkeypatch):
+    """D2 : la liaison de l'entrée (empreinte de ses données et entropie) est scellée au premier passage et versée
+    avec l'ouverture ; une exécution suivante dont l'entrée a changé s'arrête (garde ordinaire, versée), avant tout
+    constat. Artefacts : les états de la base changés ; l'entropie seule changée. Cas sain : la même entrée (le
+    programme de l'aire conditionnelle seul changé est admis : il n'entre pas dans les données)."""
+    relecture_remplacee(monkeypatch, monde)
+    c = monde.premiere()
+    sortie = monde.sortie("cas-a")
+    with pytest.raises(e.ArretDeLEnchainement):                # (m) jouée, (n) en panne : programme qui meurt
+        monde.jouer(c, sortie, programme=remplacant(monde.tmp, sortie="", code=9))
+    assert "course/" + e.NOM_DE_LA_LIAISON.format(1) in monde.au_distant()
+    for change in ({"etats_de_la_base": {d: "detecte" for d in FORMES}}, {"entropie_de_la_configuration_du_bras": 7}):
+        with pytest.raises(e.ArretDeLEnchainement) as x:
+            monde.jouer(c, sortie, entree=monde.entree(**change))
+        cr = x.value.compte_rendu
+        assert x.value.issue == e.ISSUE_GARDE and "changée depuis la liaison" in cr["motif_de_l_arret"]
+        assert cr["constats"] == [] and cr["versements"][-1]["etape"] == f"arrêt : {e.ISSUE_GARDE}"
+    assert not monde.journal.exists()
+    cr = monde.jouer(c, sortie)                                # cas sain : même données, programme sain
+    assert cr["etapes_jouees"] == ["n"] and cr["entree"]["liaison_ecrite"] is False
+
+
+def test_d2_liaison_absente_ou_hors_de_sa_forme(monde):
+    """Gardes de la liaison : absente, d'une autre forme, illisible — garde ordinaire. Cas sain : écrite puis relue."""
+    lue = e.lire_l_entree(monde.entree())
+    with pytest.raises(GardeArret, match="absente"):
+        e.exiger_l_entree_liee(monde.course, 1, lue)
+    assert e.lier_l_entree(monde.course, 1, lue) is True and e.lier_l_entree(monde.course, 1, lue) is False
+    e.exiger_l_entree_liee(monde.course, 1, lue)
+    h.ecrire_scelle(e.chemin_de_la_liaison(monde.course, 2), {"rang": 2, "autre": 1})
+    with pytest.raises(GardeArret, match="forme"):
+        e.exiger_l_entree_liee(monde.course, 2, lue)
+    h.ecrire_scelle(e.chemin_de_la_liaison(monde.course, 3), '{"rang": 3, "rang": 3}')
+    with pytest.raises(GardeArret, match="illisible|double"):
+        e.exiger_l_entree_liee(monde.course, 3, lue)
+
+
+@avec_synthetiques
+def test_d3_la_livraison_refusee_est_versee_dans_le_dossier_de_course(monde):
+    """D3 : sur un arrêt de la lecture, la livraison refusée est copiée octet pour octet, scellée, sous
+    `livraisons-refusees/<seize signes>/`, et versée avec l'arrêt. Cas sain : l'artefact refusé ; artefact : sur une
+    garde ordinaire (pas un refus de la livraison), rien n'est versé sous ce nom."""
+    c = monde.premiere()
+    refusee = monde.sortie(ARTEFACT)
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, refusee)
+    rel = x.value.compte_rendu["livraison_refusee_versee"]
+    assert rel == f"{e.DOSSIER_DES_LIVRAISONS_REFUSEES}/{h.empreinte(refusee)[:16]}/{refusee.name}"
+    assert h.empreinte(monde.course / rel) == h.empreinte(refusee) and "course/" + rel + ".sha256" in monde.au_distant()
+    m2 = Monde(monde.tmp / "autre")
+    c2 = m2.premiere()
+    with pytest.raises(e.ArretDeLEnchainement) as y:
+        m2.jouer(c2, h.piece(m2.pieces, h.sortie()), programme=(m2.tmp / "absent.py", m2.programme[1]))
+    assert "livraison_refusee_versee" not in y.value.compte_rendu
+    assert not (m2.course / e.DOSSIER_DES_LIVRAISONS_REFUSEES).exists()
+
+
+@avec_synthetiques
+def test_d5_declencheur_rendu_aussi_apres_l_etape_n_seule(monde, monkeypatch):
+    """D5 : après un poussage en échec, l'exécution suivante joue l'étape (n) seule ; le déclencheur « au moins une dose
+    en C6 » est relu du fichier scellé de l'étape (m) et rendu (version 1 : absent). Artefact : la v1 ne le rendait que
+    dans la branche (m) ; cas sain : sa valeur est celle de la branche (m)."""
+    relecture_remplacee(monkeypatch, monde)
+    c = monde.premiere()
+    sortie = monde.sortie("cas-a")
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, sortie, programme=remplacant(monde.tmp, sortie="", code=9))
+    avant = x.value.compte_rendu["declencheur_au_moins_une_dose_en_c6"]
+    cr = monde.jouer(c, sortie)
+    assert cr["etapes_jouees"] == ["n"] and cr["declencheur_au_moins_une_dose_en_c6"] is avant
+
+
+def test_d6_cle_en_double_dans_l_entree_refusee(monde):
+    """D6 : une clé écrite deux fois, au premier niveau ou dedans, rend l'entrée illisible. Cas sain : l'entrée de
+    l'essai (sans doublon)."""
+    texte = monde.entree().read_text(encoding="utf-8")
+    for fautif in (texte.replace('"renvoi_de_la_base": "vérifié"', '"renvoi_de_la_base": "non", "renvoi_de_la_base": "vérifié"', 1),
+                   texte.replace('"dose-0.50": "B8"', '"dose-0.50": "B1", "dose-0.50": "B8"', 1)):
+        assert fautif != texte
+        p = h.ecrire_scelle(h.nouveau_dossier(monde.pieces, "double") / "entree.json", fautif)
+        with pytest.raises(GardeArret, match="double"):
+            e.lire_l_entree(p)
+
+
+@pytest.mark.parametrize("change", [
+    {"journal_de_la_table_a": "A1"}, {"revision_refusee": 0}, {"renvoi_de_la_base": 1},
+    {"cout_apparie": []}, {"taches_de_verification": "t"}, {"entropie_de_la_configuration_du_bras": -1},
+    {"entropie_de_la_configuration_du_bras": True}, {"actions_desappariees": []},
+    {"actions_desappariees": {d: "x" for d in FORMES}}, {"lignes_de_la_table_b": []}, {"etats_de_la_base": []},
+], ids=lambda c: next(iter(c)))
+def test_d7_formes_de_l_entree_chacune_refusee(monde, change):
+    """D7 : les gardes de forme de l'entrée que la v1 n'éprouvait pas. Cas sain : l'entrée de l'essai."""
+    with pytest.raises(GardeArret, match="entrée de l'enchaînement"):
+        e.lire_l_entree(monde.entree(**change))
+
+
+def test_d7_entree_illisible_et_dossier_de_course_hors_depot(monde, tmp_path):
+    """D7 : entrée qui n'est pas du JSON ; dossier de course hors de tout dépôt git ; git introuvable (versement en
+    échec, jamais une trace brute). Cas sain : l'entrée de l'essai, le dépôt de l'essai."""
+    p = h.ecrire_scelle(h.nouveau_dossier(monde.pieces, "illisible") / "entree.json", "pas du json")
+    with pytest.raises(GardeArret, match="illisible"):
+        e.lire_l_entree(p)
+    hors = tmp_path / "hors-depot"
+    hors.mkdir()
+    with pytest.raises(GardeArret, match="aucun dépôt git"):
+        e.depot_du_dossier_de_course(hors)
+    assert e.depot_du_dossier_de_course(monde.course)[1] == "course"
+
+
+def test_d7_git_introuvable_versement_en_echec(monde, monkeypatch):
+    def introuvable(*a, **k):
+        raise OSError("git")
+    monkeypatch.setattr(e.subprocess, "run", introuvable)
+    with pytest.raises(e.EchecDuVersement, match="OSError"):
+        e._git(monde.travail, "status")
+
+
+def test_d7_programme_du_constat_a_la_sortie_hors_de_sa_forme(monde, tmp_path):
+    """D7 : un programme du constat qui sort sain (code 0) sans ligne à huit champs — garde ordinaire. Cas sain : le
+    programme réel (essais de bout en bout)."""
+    faux = tmp_path / "constat_faux.py"
+    faux.write_text("print('{\"date_utc\": 1}')\n", encoding="utf-8")
+    with pytest.raises(GardeArret, match="huit champs"):
+        e.jouer_le_constat(faux, monde.configuration(), monde.registre([]), commit="0123abc", date_utc="2099-01-02T00:00:00Z",
+                           registre_fige=None, ligne_de_go=None, mode=e.MODE_CONSTAT)
+
+
+def test_d7_reprise_de_n_sans_sortie_d_origine_refusee_avant_tout_constat(monde, monkeypatch):
+    """D7 : une reprise de l'étape (n) sans sortie d'origine — garde ordinaire, **avant tout constat** (version 2 : la
+    garde est montée avant le constat). Cas sain : sortie d'origine absente hors reprise (bout en bout)."""
+    monkeypatch.setattr(e, "_a_jouer", lambda configuration: e.A_JOUER_REPRISE_N)
+    c = monde.premiere()
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, h.piece(monde.pieces, h.sortie()))
+    assert x.value.issue == e.ISSUE_GARDE and "sortie d'origine est exigée" in x.value.compte_rendu["motif_de_l_arret"]
+    assert x.value.compte_rendu["constats"] == []
+
+
+def test_d7_commit_du_registre_vide_refuse(monde):
+    c = monde.premiere()
+    with pytest.raises(GardeArret, match="commit_du_registre_courant"):
+        e.enchainer(configuration_scellee=c, sortie_de_la_lecture_commune=h.piece(monde.pieces, h.sortie()),
+                    registre_courant=monde.registre([]), commit_du_registre_courant=" ", registre_fige=None,
+                    ligne_de_go=None, entree=monde.entree(), sortie_d_origine=None, programme_du_constat=CONSTAT,
+                    distant=str(monde.distant), branche="b", horloge=monde.horloge, racine_du_code=monde.code)
+
+
+@avec_synthetiques
+def test_d7_controle_malsain_au_rejeu_le_rejeu_ne_part_pas(monde, monkeypatch):
+    """D7 : après une panne, une ligne neuve du registre cite l'empreinte de la configuration — le contrôle est
+    malsain, le rejeu ne part pas (aucun fichier de l'étape (m), aucune trace de rejeu), le contrôle est versé. Cas
+    sain : le rejeu après un contrôle sain (essai du rejeu)."""
+    c = monde.premiere()
+    sortie = monde.sortie("cas-a")
+
+    def panne(**kw):
+        raise Panne()
+    vrai = e.verdicts.ecrire_fichier_de_l_etape_m
+    monkeypatch.setattr(e.verdicts, "ecrire_fichier_de_l_etape_m", panne)
+    with pytest.raises(Panne):
+        monde.jouer(c, sortie)
+    monkeypatch.setattr(e.verdicts, "ecrire_fichier_de_l_etape_m", vrai)
+    monde.lignes_du_registre.append(h.ligne_d_inscription(c, "GO-2099-12-31-99"))
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, sortie)
+    assert x.value.issue == e.ISSUE_CONSTAT_MALSAIN and x.value.compte_rendu["constats"][0]["mode"] == e.MODE_CONTROLE
+    assert not (monde.course / "livraison-1" / an.NOM_DU_FICHIER_DE_L_ETAPE_M).exists()
+    assert [p for p in (monde.course / "livraison-1").iterdir() if p.name.startswith("rejeu-")] == []
+
+
+def test_d7_la_commande_rend_4_et_7(monde, monkeypatch, capsys):
+    """D7 : codes 4 (garde avant tout constat : table A) et 7 (versement en échec : distant injoignable) de la commande.
+    Cas sain : code 0 (essai de la commande)."""
+    monkeypatch.setattr(e, "RACINE_DE_LA_GARDE_STATIQUE", monde.code)
+    c = monde.premiere()
+    base = ["--configuration", str(c), "--sortie", str(h.piece(monde.pieces, h.sortie())),
+            "--registre-courant", str(monde.registre(monde.lignes_du_registre)), "--commit-du-registre", "0123abc",
+            "--programme-du-constat", str(CONSTAT), "--branche", "course-discretion"]
+    assert e.main(base + ["--entree", str(monde.entree(journal_de_la_table_a=["A1"])), "--distant", str(monde.distant)]) == 4
+    assert e.main(base + ["--entree", str(monde.entree()), "--distant", str(monde.tmp / "nulle-part.git")]) == 7
+    assert capsys.readouterr().out == ""
+
+
+def test_d8_sortie_absente_garde_ordinaire_et_erreur_apres_n_rendue_par_son_type(monde, monkeypatch):
+    """D8 : une sortie inexistante est une garde ordinaire (v1 : trace brute) ; une erreur après l'étape (n) (compte des
+    livraisons) est rendue par son type, versée. Cas sain : les essais de bout en bout."""
+    c = monde.premiere()
+    with pytest.raises(GardeArret, match="absente ou illisible"):
+        monde.jouer(c, monde.pieces / "inexistante.json")
+    relecture_remplacee(monkeypatch, monde)
+    m2 = Monde(monde.tmp / "m2")
+    relecture_remplacee(monkeypatch, m2)
+    c2 = configuration_de_l_aide(m2)
+
+    def en_erreur(*a, **k):
+        raise ValueError("valeur secrète 0.123456")
+    monkeypatch.setattr(e.analyse, "compte_des_livraisons", en_erreur)
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        m2.jouer(c2, h.piece(m2.pieces, h.sortie()))
+    cr = x.value.compte_rendu
+    assert x.value.issue == e.ISSUE_ERREUR and cr["motif_de_l_arret"] == "ValueError" and cr["etapes_jouees"] == ["m", "n"]
+    assert "0.123456" not in json.dumps(cr, ensure_ascii=False)
+
+
+def test_d9_garde_de_l_analyse_rendue_sans_son_message(monde, monkeypatch):
+    """D9 : une garde ordinaire levée par l'analyse pendant la lecture est rendue par l'étape et la fonction, sans son
+    message. Artefact : la règle lève une garde qui porte un nombre. Cas sain : un arrêt de la lecture garde son
+    constat (essai de l'artefact)."""
+    def garde_avec_nombre(*a, **k):
+        raise GardeArret("valeur p 0.987654 hors de [0, 1]")
+    monkeypatch.setattr(e.analyse, "regle_de_discretion", garde_avec_nombre)
+    c = configuration_de_l_aide(monde)
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, h.piece(monde.pieces, h.sortie()))
+    motif = x.value.compte_rendu["motif_de_l_arret"]
+    assert x.value.issue == e.ISSUE_GARDE and "garde_avec_nombre" in motif and "0.987654" not in motif
+
+
+def test_d10_ce_qui_n_est_pas_verifie_est_dit(monde):
+    c = monde.configuration()
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, h.piece(monde.pieces, h.sortie()))
+    assert x.value.compte_rendu["non_verifie"] == list(e.NON_VERIFIE) and len(e.NON_VERIFIE) == 4
+
+
+@avec_synthetiques
+def test_sortie_d_origine_hors_d_une_reprise_refusee(monde):
+    """Garde de `sortie_d_origine` (reprise de la v1) : donnée hors d'une reprise de l'étape (n), refusée (garde
+    ordinaire, versée), avant tout constat. Cas sain : absente hors reprise (bout en bout)."""
+    c = monde.premiere()
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, monde.sortie("cas-a"), sortie_d_origine=monde.sortie("cas-a"))
+    assert x.value.issue == e.ISSUE_GARDE and "sortie d'origine" in x.value.compte_rendu["motif_de_l_arret"]
+    assert x.value.compte_rendu["constats"] == []
+
+
+@avec_synthetiques
+def test_code_3_avec_une_sortie_refuse_meme_si_un_arret_est_consigne(monde, monkeypatch):
+    """Code 3 : la sortie standard doit être vide. Artefact : le programme annonce un arrêt mais écrit les aires, alors
+    qu'un arrêt de l'étape (n) est consigné — garde ordinaire, non « arrêt ». Cas sain : sortie vide (essai du code 3)."""
+    consigne = {"constat": {"garde": ar.GARDE_RANGS, "champ": "rang", "nature": None, "cas": ar.AUCUN_CAS, "etape": "n",
+                            "moniteur": None, "dose": None}}
+    monde.programme = remplacant(monde.tmp, sortie=BIEN_FORMEE, code=3, journal=monde.journal)
+    monkeypatch.setattr(e.analyse, "arret_de_la_livraison", lambda *a, **k: consigne if monde.journal.exists() else None)
+    c = monde.premiere()
+    with pytest.raises(e.ArretDeLEnchainement) as x:
+        monde.jouer(c, monde.sortie("cas-a"))
+    assert x.value.issue == e.ISSUE_GARDE and x.value.compte_rendu["constat_de_l_arret"] is None

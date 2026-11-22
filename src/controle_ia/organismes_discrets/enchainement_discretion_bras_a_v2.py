@@ -26,7 +26,22 @@ l'entrée standard, un objet JSON à quatre clés (`actions_desappariees`, `tach
 scelle le fichier des grandeurs de l'étape (n) ; codes de sortie : 0 et une seule ligne JSON `{"aires": {dose:
 {moniteur: sortie de l'aire}}, "cles": [...]}` ; 3, arrêt de la lecture consigné par l'analyse dans le dossier des
 arrêts, sortie standard vide ; 4, garde ordinaire, sortie standard vide et une seule ligne sur la sortie d'erreur.
-Tout autre code : rien de ses sorties n'est rendu.
+Tout autre code : rien de ses sorties n'est rendu. **Aucun programme du dépôt ne remplit encore ce contrat** : le
+programme de l'aire conditionnelle (analyse, version 13) n'a pas de commande, et un point d'entrée qui l'appelle doit
+nommer sa fonction de lecture, ce que la garde statique de la version 13 refuse à tout autre programme sous `src/` et
+`scripts/` (note du code, version 2, réserve 1 : à trancher).
+
+**Corrections de la contre-lecture de la version 1**
+(`docs/notes/relance-organismes-discrets-v1/contre-lecture-enchainement-discretion-v1-v1.md`) : D1, la commande citée
+nomme le module (`MODULE`) et l'interpréteur ; D2, l'entrée est **liée** d'une exécution à l'autre — une pièce scellée
+par rang à la racine du dossier de course (empreinte de ses données, entropie), versée avec l'ouverture, et toute
+exécution suivante dont l'entrée a changé s'arrête (pour une reprise de l'étape (n), aussi contre la liaison du rang
+de l'étape (m)) ; D3, la livraison refusée est versée dans le dossier de course (`livraisons-refusees/`) ; D4, les
+refus que le texte écrit sont des gardes ordinaires qui citent leur passage ; D5, le déclencheur « au moins une dose
+en C6 » est rendu dans toutes les branches ; D6, une clé en double dans l'entrée la rend illisible ; D8, pièce absente
+et erreur après l'étape (n) rendues proprement ; D9, une garde ordinaire de l'analyse pendant la lecture est rendue
+sans son message ; D10, ce qui n'est pas vérifié est dit au compte rendu (`non_verifie`). La reprise de l'étape (n)
+sans sortie d'origine est refusée avant tout constat (elle l'était après lui).
 
 Le reste est celui de la version 1 : **dans cet ordre** (une seule exécution) — configuration scellée de la
 livraison, dossier de course, refus de ce que le texte n'écrit pas, entrée scellée de l'enchaînement, table A et base,
@@ -107,7 +122,7 @@ DELAI_DU_PROGRAMME_DE_L_AIRE = 3600
 
 # D2 : liaison de l'entrée d'une exécution à l'autre — une pièce scellée à la racine du dossier de course, par rang.
 NOM_DE_LA_LIAISON = "liaison-de-l-entree-livraison-{}-bras-a.json"
-CHAMPS_DE_LA_LIAISON = ("rang", "sha256_des_donnees_de_l_entree", "sha256_de_l_entree", "entropie_de_la_configuration_du_bras")
+CHAMPS_DE_LA_LIAISON = ("rang", "sha256_des_donnees_de_l_entree", "entropie_de_la_configuration_du_bras")
 CLES_DES_DONNEES_DE_L_ENTREE = tuple(c for c in CLES_DE_L_ENTREE if c not in (CLE_DU_PROGRAMME_DE_L_AIRE, CLE_DU_FICHIER))
 # D3 : la livraison refusée est versée dans le dossier de course, sous ce dossier, hors du dossier des arrêts.
 DOSSIER_DES_LIVRAISONS_REFUSEES = "livraisons-refusees"
@@ -334,7 +349,7 @@ def lier_l_entree(course: Path, rang: int, lue: Mapping) -> bool:
     chemin = chemin_de_la_liaison(course, rang)
     if chemin.exists():
         return False
-    contenu = {"rang": rang, "sha256_des_donnees_de_l_entree": lue["sha256_des_donnees"], "sha256_de_l_entree": lue["sha256"],
+    contenu = {"rang": rang, "sha256_des_donnees_de_l_entree": lue["sha256_des_donnees"],
                "entropie_de_la_configuration_du_bras": lue["entropie"]}
     depots.ecrire_et_sceller(chemin, json.dumps(contenu, ensure_ascii=False, sort_keys=True, indent=1) + "\n")
     return True
@@ -478,8 +493,8 @@ def confronter_au_fichier_des_grandeurs(rendu: Mapping, autres: Mapping, sortie:
     """Les aires rendues sont **celles du fichier scellé des grandeurs de l'étape (n)** que le programme a écrit (rejoué
     sur ses pièces par l'analyse), avec les mêmes clés et les mêmes autres grandeurs ; sinon garde ordinaire. Rend
     l'empreinte du fichier des grandeurs ; son contenu n'est pas gardé."""
-    contenu, empreinte = analyse.exiger_fichier_des_grandeurs_de_l_etape_n(sortie, configuration_scellee,
-                                                                           sortie_d_origine=origine)
+    contenu, empreinte = _par_l_analyse(ETAPE_N, analyse.exiger_fichier_des_grandeurs_de_l_etape_n, sortie,
+                                        configuration_scellee, sortie_d_origine=origine)
     grandeurs = contenu["grandeurs"]
     attendues = _en_json({analyse._forme_dose(d): {m: dict(rendu["aires"][(m, d)]) for m in analyse.MONITEURS}
                           for d in analyse.QUATRE_DOSES})
@@ -527,7 +542,7 @@ def jouer_l_aire_conditionnelle(programme: tuple[Path, str], fichier: Path, sort
         del rendu
         return compte
     if fait.returncode == CODE_DE_L_ARRET and fait.stdout == "":
-        consigne = analyse.arret_de_la_livraison(sortie, configuration_scellee)
+        consigne = _par_l_analyse(ETAPE_N, analyse.arret_de_la_livraison, sortie, configuration_scellee)
         if consigne is None:
             raise GardeArret("programme de l'aire conditionnelle : arrêt annoncé (code 3), mais aucun arrêt consigné pour "
                              "cette livraison — refusé")
@@ -538,7 +553,8 @@ def jouer_l_aire_conditionnelle(programme: tuple[Path, str], fichier: Path, sort
     erreur = fait.stderr
     if fait.returncode == CODE_DE_LA_GARDE and fait.stdout == "" and erreur.count("\n") == 1 and erreur.endswith("\n") \
             and erreur.strip():
-        raise GardeArret(f"programme de l'aire conditionnelle, garde ordinaire : {erreur.strip()[-600:]}")
+        raise _GardeDeLAnalyse("garde ordinaire du programme de l'aire conditionnelle (code 4, une ligne) — son message "
+                               "n'est pas rendu (6.9 : aucun nombre de la livraison)")
     raise GardeArret(f"programme de l'aire conditionnelle : arrêt sans aires (code {fait.returncode}), ou sortie hors de sa "
                      "forme — rien de ses sorties n'est rendu")
 
@@ -557,13 +573,47 @@ def _a_jouer(configuration: Mapping) -> str:
     return A_JOUER_N if rang_m == configuration["rang"] else A_JOUER_REPRISE_N
 
 
-def _exiger_hors_du_dossier_de_course(course: Path, pieces: Mapping[str, object]) -> None:
+def _exiger_hors_du_dossier_de_course(course: Path, pieces: Mapping[str, object], *, ecrit: str | None) -> None:
+    """Une pièce d'entrée rangée sous le dossier de course : le versement la prendrait. D4 (contre-lecture de la version
+    1) : quand le texte écrit le refus (`ecrit` cite le passage), garde ordinaire ; sinon, règle non écrite."""
     for nom, chemin in pieces.items():
         if chemin is not None and _sous(chemin, course):
+            if ecrit is not None:
+                raise GardeArret(f"{nom} rangé(e) sous le dossier de course ({course}) : refusé ({ecrit})")
             raise RegleNonEcrite(f"{nom} rangé(e) sous le dossier de course ({course}) : le versement de l'enchaînement la "
                                  "prendrait ; le texte n'écrit pas si le dossier de course la porte (8.7 nomme ce qu'il "
                                  "porte : configuration, constat de lancement, ouverture, dossier des arrêts, constats, "
                                  "fichier de l'étape (m))")
+
+
+ECRIT_POUR_LES_PIECES_DE_LA_LIVRAISON = ("8.7 nomme ce que porte le dossier de course, et la livraison n'y entre que "
+                                         "refusée, versée par l'enchaînement sous `livraisons-refusees/` (6.9 ; 8.5)")
+ECRIT_POUR_LE_FICHIER = ("8.4 et 13.2 : le fichier des scores par unité ne se verse pas par son contenu, les outils de "
+                         "version n'en prennent que l'empreinte")
+
+
+def _verser_la_livraison_refusee(course: Path, sortie: Path) -> str:
+    """D3 : la livraison refusée est « versée et scellée sans être relue » (6.9, « Ce qui vaut pour tout arrêt » ; 8.4,
+    « issue d'un arrêt » ; 8.5) : une copie octet pour octet, scellée, sous `livraisons-refusees/<seize signes>/`, dans
+    le dossier de course ; elle part avec le versement de l'arrêt. Rend son chemin relatif au dossier de course."""
+    empreinte = _sha256(sortie)
+    dossier = course / DOSSIER_DES_LIVRAISONS_REFUSEES / empreinte[:16]
+    copie = dossier / Path(sortie).name
+    if not copie.exists():
+        dossier.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(sortie, copie)
+        sceller(copie)
+    if _sha256(copie) != empreinte:
+        raise GardeArret("livraison refusée : la copie versée n'est pas la pièce refusée — refusé")
+    return copie.relative_to(course).as_posix()
+
+
+def _empreinte_d_une_piece(chemin, nom: str) -> str:
+    """D8 : une pièce d'entrée absente ou illisible est une garde ordinaire, jamais une trace brute."""
+    try:
+        return _sha256(chemin)
+    except OSError:
+        raise GardeArret(f"{nom} absente ou illisible ({chemin})") from None
 
 
 def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_courant, commit_du_registre_courant: str,
@@ -585,17 +635,21 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
     configuration = conf_mod.lire_la_configuration_scellee(configuration_scellee)
     course = conf_mod.dossier_de_la_livraison(configuration).parent
     arrets_dossier = conf_mod.dossier_des_arrets(configuration)
-    if not _sous(arrets_dossier, course):
-        raise RegleNonEcrite(f"dossier des arrêts ({arrets_dossier}) hors du dossier de course ({course}) : 8.7 range le "
-                             "dossier des arrêts dans le dossier de course ; le texte n'écrit pas ce que fait l'enchaînement "
-                             "d'un dossier des arrêts rangé ailleurs")
-    _exiger_hors_du_dossier_de_course(course, {
-        "la sortie de la lecture commune": sortie_de_la_lecture_commune, "la sortie d'origine": sortie_d_origine,
-        "l'entrée de l'enchaînement": entree, "le registre courant": registre_courant, "le registre figé": registre_fige})
+    if not _sous(arrets_dossier, course):                  # D4 : écrit en 8.7 — garde ordinaire
+        raise GardeArret(f"dossier des arrêts ({arrets_dossier}) hors du dossier de course ({course}) : refusé (8.7 range "
+                         "« un seul dossier des arrêts » dans le dossier de course, versé entier)")
+    _exiger_hors_du_dossier_de_course(course, {"la sortie de la lecture commune": sortie_de_la_lecture_commune,
+                                               "la sortie d'origine": sortie_d_origine},
+                                      ecrit=ECRIT_POUR_LES_PIECES_DE_LA_LIVRAISON)
+    _exiger_hors_du_dossier_de_course(course, {"l'entrée de l'enchaînement": entree, "le registre courant": registre_courant,
+                                               "le registre figé": registre_fige}, ecrit=None)
     depot_du_dossier_de_course(course)
+    empreinte_de_la_sortie = _empreinte_d_une_piece(sortie_de_la_lecture_commune, "sortie de la lecture commune")
+    _empreinte_d_une_piece(programme_du_constat, "programme du constat")
     lue = lire_l_entree(entree)
-    _exiger_hors_du_dossier_de_course(course, {"le fichier des scores par unité": lue["fichier"],
-                                               "le programme de l'aire conditionnelle": lue["programme_de_l_aire"][0]})
+    _exiger_hors_du_dossier_de_course(course, {"le fichier des scores par unité": lue["fichier"]}, ecrit=ECRIT_POUR_LE_FICHIER)
+    _exiger_hors_du_dossier_de_course(course, {"le programme de l'aire conditionnelle": lue["programme_de_l_aire"][0]},
+                                      ecrit=None)
     resultat_a = exiger_etape_m_jouee(lue)
     racine_du_code = Path(racine_du_code)
     cloisonnement.exiger_garde_statique(racine_du_code, DOSSIERS_DE_LA_GARDE_STATIQUE)
@@ -606,12 +660,17 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
                              "listages_a_relire": cloisonnement.listages_a_relire(racine_du_code, DOSSIERS_DE_LA_GARDE_STATIQUE)},
           "dossier_de_course": str(course), "dossier_des_arrets": str(arrets_dossier),
           "configuration": {"chemin": str(configuration_scellee), "sha256": configuration["sha256"], "rang": configuration["rang"]},
-          "livraison": {"chemin": str(Path(sortie_de_la_lecture_commune).resolve()), "sha256": _sha256(sortie_de_la_lecture_commune)},
-          "entree": {"chemin": str(Path(entree).resolve()), "sha256": lue["sha256"]},
+          "livraison": {"chemin": str(Path(sortie_de_la_lecture_commune).resolve()), "sha256": empreinte_de_la_sortie},
+          "entree": {"chemin": str(Path(entree).resolve()), "sha256": lue["sha256"],
+                     "sha256_des_donnees": lue["sha256_des_donnees"]},
+          "non_verifie": list(NON_VERIFIE),
           "ligne_de_go": ligne_de_go, "constats": [], "versements": [], "etapes_jouees": []}
+    # D2 : la liaison de l'entrée de ce rang, scellée au premier passage, part avec le versement d'ouverture
+    cr["entree"]["liaison_ecrite"] = lier_l_entree(course, configuration["rang"], lue)
     cr["versements"].append(verser(course, distant, branche, "ouverture de l'enchaînement"))
     issue = motif = arret_constat = None
     try:
+        exiger_l_entree_liee(course, configuration["rang"], lue)
         # le programme de l'aire conditionnelle : son empreinte, avant tout constat et toute lecture
         chemin_de_l_aire, sha256_de_l_aire = lue["programme_de_l_aire"]
         octets_du_programme_de_l_aire(chemin_de_l_aire, sha256_de_l_aire)
@@ -620,11 +679,16 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
         cr["a_jouer"] = a_jouer
         if sortie_d_origine is not None and a_jouer != A_JOUER_REPRISE_N:
             raise GardeArret("sortie d'origine donnée hors d'une reprise de l'étape (n) — refusé")
+        if sortie_d_origine is None and a_jouer == A_JOUER_REPRISE_N:          # avant tout constat (version 2)
+            raise GardeArret("reprise de l'étape (n) : la sortie d'origine est exigée (6.9)")
+        if a_jouer == A_JOUER_REPRISE_N:          # D2 : l'entrée est aussi celle de l'étape (m) d'origine
+            exiger_l_entree_liee(course, analyse.exiger_un_seul_fichier_de_l_etape_m(configuration), lue)
         _etapes(cr, configuration, configuration_scellee, course, lue, resultat_a, a_jouer,
                 sortie=Path(sortie_de_la_lecture_commune), registre_courant=registre_courant,
                 commit=commit_du_registre_courant, registre_fige=registre_fige, ligne_de_go=ligne_de_go,
                 sortie_d_origine=sortie_d_origine, programme_du_constat=Path(programme_du_constat), distant=distant,
                 branche=branche, horloge=horloge)
+        compte = analyse.compte_des_livraisons(configuration_scellee)     # D8 : dans le bloc, rendu par son type s'il faut
     except EchecDuVersement:
         raise
     except arrets.ArretDeLaLectureDeLaDiscretion as x:      # 6.9 : de l'exception levée, son constat seul
@@ -640,17 +704,41 @@ def enchainer(*, configuration_scellee, sortie_de_la_lecture_commune, registre_c
     if issue is None:
         cr["issue"] = ISSUE_ABOUTIE
         cr["pieces_du_dossier_de_course"] = _pieces_du_dossier_de_course(course)
-        cr["compte_des_livraisons"] = analyse.compte_des_livraisons(configuration_scellee)
+        cr["compte_des_livraisons"] = compte
         return cr
     # tout arrêt est versé avant d'être rendu ; un versement en échec ne rend rien
+    if issue == ISSUE_ARRET:                                  # D3 : la livraison refusée, versée avec l'arrêt
+        try:
+            cr["livraison_refusee_versee"] = _verser_la_livraison_refusee(course, Path(sortie_de_la_lecture_commune))
+        except Exception as x:                              # noqa: BLE001 — son type seul
+            cr["livraison_refusee_versee"] = f"non versée : {type(x).__name__}"
     cr["versements"].append(verser(course, distant, branche, f"arrêt : {issue}"))
-    cr.update(issue=issue, motif_de_l_arret=motif, constat_de_l_arret=arret_constat,
-              pieces_du_dossier_de_course=_pieces_du_dossier_de_course(course))
+    try:
+        pieces = _pieces_du_dossier_de_course(course)
+    except Exception as x:                                  # noqa: BLE001 — D8 : son type seul
+        pieces = f"non relevées : {type(x).__name__}"
+    cr.update(issue=issue, motif_de_l_arret=motif, constat_de_l_arret=arret_constat, pieces_du_dossier_de_course=pieces)
     raise ArretDeLEnchainement(issue, cr)
 
 
 class _ConstatMalsain(Exception):
     pass
+
+
+class _GardeDeLAnalyse(GardeArret):
+    """D9 : une garde ordinaire levée par l'analyse ou les verdicts pendant une lecture. Son message n'est pas rendu
+    (6.9 : le programme qui refuse ne rend jamais un nombre de la livraison) ; seuls l'étape et la fonction le sont."""
+
+
+def _par_l_analyse(etape: str, fonction, *args, **kwargs):
+    try:
+        return fonction(*args, **kwargs)
+    except arrets.ArretDeLaLectureDeLaDiscretion:
+        raise
+    except GardeArret:
+        nom = fonction.__name__
+    raise _GardeDeLAnalyse(f"garde ordinaire de l'analyse à l'étape ({etape}), dans `{nom}` — son message n'est pas rendu "
+                           "(6.9 : aucun nombre de la livraison) ; la lecture s'arrête")
 
 
 def _date(horloge) -> str:
@@ -676,31 +764,32 @@ def _etapes(cr: dict, configuration: Mapping, configuration_scellee: Path, cours
         if not c["sain"]:
             raise _ConstatMalsain(f"{c['mode']} malsain : la lecture ne part pas — {c['sortie_d_erreur'][-600:]}")
     if a_jouer == A_JOUER_M_PUIS_N:
-        resultat = analyse.regle_de_discretion(sortie, configuration_scellee, go_de_la_reprise=ligne_de_go,
-                                               registre_fige=registre_fige)
-        analyse.exiger_resultat_de_discretion(resultat)
-        lignes_c = {p: verdicts.ligne_table_c(lue["base"][p], lue["cout"][p], resultat, p)
+        resultat = _par_l_analyse(ETAPE_M, analyse.regle_de_discretion, sortie, configuration_scellee,
+                                  go_de_la_reprise=ligne_de_go, registre_fige=registre_fige)
+        _par_l_analyse(ETAPE_M, analyse.exiger_resultat_de_discretion, resultat)
+        lignes_c = {p: _par_l_analyse(ETAPE_M, verdicts.ligne_table_c, lue["base"][p], lue["cout"][p], resultat, p)
                     for p in analyse.DOSES_VERDICT if lue["lignes_b"][p] == "B8"}
-        verdicts.ecrire_fichier_de_l_etape_m(journal=lue["journal"], revision_refusee=lue["revision_refusee"],
-                                             gardees_lues=lue["gardees_lues"], renvoi_de_la_base=lue["renvoi_de_la_base"],
-                                             effectifs_de_la_base_conformes=lue["effectifs_de_la_base_conformes"],
-                                             resultat_de_discretion=resultat, lignes_c=lignes_c)
+        _par_l_analyse(ETAPE_M, verdicts.ecrire_fichier_de_l_etape_m, journal=lue["journal"],
+                       revision_refusee=lue["revision_refusee"], gardees_lues=lue["gardees_lues"],
+                       renvoi_de_la_base=lue["renvoi_de_la_base"],
+                       effectifs_de_la_base_conformes=lue["effectifs_de_la_base_conformes"],
+                       resultat_de_discretion=resultat, lignes_c=lignes_c)
         del resultat, lignes_c                       # rien de l'étape (m) ne reste en mémoire pendant le versement
         # versement avant lecture (8.7) : rien de l'étape (m) n'est rendu avant que ce poussage ait réussi
         cr["versements"].append(verser(course, distant, branche, "étape (m)"))
         cr["etapes_jouees"].append(ETAPE_M)
-        # après le poussage seulement : le déclencheur de 7.6, relu du fichier scellé de l'étape (m) (6.3 (m))
-        contenu, _ = analyse.exiger_fichier_de_l_etape_m(sortie, configuration_scellee)
-        cr["declencheur_au_moins_une_dose_en_c6"] = verdicts.declencheur_dose_en_c6(
-            resultat_a, {analyse._dose_de(d): l for d, l in contenu["lignes_de_la_table_c"].items()})
-        del contenu
+    # après le poussage seulement, **dans toutes les branches** (D5) : le déclencheur de 7.6, relu du fichier scellé de
+    # l'étape (m) (6.3 (m)) — celui de cette livraison, ou celui du rang d'origine pour une reprise de l'étape (n)
+    contenu, _ = _par_l_analyse(ETAPE_N if a_jouer != A_JOUER_M_PUIS_N else ETAPE_M, analyse.exiger_fichier_de_l_etape_m,
+                                sortie, configuration_scellee)
+    cr["declencheur_au_moins_une_dose_en_c6"] = verdicts.declencheur_dose_en_c6(
+        resultat_a, {analyse._dose_de(d): l for d, l in contenu["lignes_de_la_table_c"].items()})
+    del contenu
     origine = None
     if a_jouer == A_JOUER_REPRISE_N:
-        if sortie_d_origine is None:
-            raise GardeArret("reprise de l'étape (n) : la sortie d'origine est exigée (6.9)")
         origine = Path(sortie_d_origine)
-        analyse.ouvrir_la_reprise_de_l_etape_n(sortie, configuration_scellee, sortie_d_origine=origine,
-                                               go_de_la_reprise=ligne_de_go, registre_fige=registre_fige)
+        _par_l_analyse(ETAPE_N, analyse.ouvrir_la_reprise_de_l_etape_n, sortie, configuration_scellee,
+                       sortie_d_origine=origine, go_de_la_reprise=ligne_de_go, registre_fige=registre_fige)
         cr["versements"].append(verser(course, distant, branche, "acte de reprise de l'étape (n)"))
     # étape (n) : le programme de l'aire conditionnelle, lancé à part ; il lit le fichier et écrit le fichier des grandeurs
     autres = {"etat_de_la_base": {analyse._forme_dose(p): verdicts.etat_ecrit_de_la_base(lue["base"][p])
@@ -748,13 +837,13 @@ def main(argv: list[str]) -> int:
         print(f"VERSEMENT EN ÉCHEC — rien n'est rendu ; le versement est à refaire avant toute lecture : {e}", file=sys.stderr)
         return CODE_ECHEC_DU_VERSEMENT
     except ArretDeLEnchainement as e:
-        e.compte_rendu["commande"] = ["python", "-m", __name__, *argv]
+        e.compte_rendu["commande"] = [sys.executable, "-m", MODULE, *argv]
         print(json.dumps(e.compte_rendu, ensure_ascii=False, sort_keys=True))
         return CODES_DE_SORTIE[e.issue]
     except (RegleNonEcrite, GardeArret) as e:
         print(f"ARRÊT AVANT TOUT CONSTAT ({type(e).__name__}) : {e}", file=sys.stderr)
         return CODES_DE_SORTIE[ISSUE_REGLE_NON_ECRITE if isinstance(e, RegleNonEcrite) else ISSUE_GARDE]
-    cr["commande"] = ["python", "-m", __name__, *argv]
+    cr["commande"] = [sys.executable, "-m", MODULE, *argv]
     print(json.dumps(cr, ensure_ascii=False, sort_keys=True))
     return 0
 
