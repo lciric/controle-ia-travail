@@ -5,6 +5,8 @@
   appliquée à Z, avec la statistique studentisée par strate
   T_Δ = Σ_t (moy. Z sous U − moy. Z sous E) / racine(Σ_t (s²_U,t + s²_E,t) / k), s² à k − 1 degrés.
   À dénominateur nul : 0 si le numérateur est nul, numérateur × 10⁶ sinon. Même formule pour l'observé et chaque tirage.
+  Version 2 (contre-lecture, constat 4) : une variance d'échantillon au plus 10⁻¹² · max(1, Σz²/k) est tenue pour
+  nulle, pour que la règle du dénominateur nul s'applique aussi aux grandeurs bornées non binaires.
 - Règle du § 3 : table à cinq lignes, textes repris mot pour mot. Le champ « perception mesurée » (§ 7) est obligatoire.
 - Multiplicité entre modes de sabotage (§ 2) : correction de Holm.
 """
@@ -33,6 +35,7 @@ def stat_studentisee(Z: np.ndarray, L: np.ndarray, k: int) -> np.ndarray:
         s2 = np.einsum("tj,mtj->mt", Z * Z, masque)
         moy = s1 / k
         var = np.maximum(0.0, (s2 - k * moy * moy) / (k - 1))
+        var = np.where(var <= 1e-12 * np.maximum(1.0, s2 / k), 0.0, var)
         num += signe * moy.sum(axis=1)
         den2 += var.sum(axis=1) / k
     den = np.sqrt(den2)

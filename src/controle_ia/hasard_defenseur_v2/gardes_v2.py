@@ -18,7 +18,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .contraste_v2 import holm
-from .erreurs_v2 import RefusConfusion, RefusManquant, RefusOracle, RefusSecondaire
+from .erreurs_v2 import RefusConfusion, RefusGraine, RefusManquant, RefusOracle, RefusSecondaire
 from .permutation_v2 import TOLERANCE_RELATIVE, Tirages, verifier_issues
 from .registre_v2 import CONDITIONS, Plan, tirer_ordre, verifier_entropie
 
@@ -71,6 +71,8 @@ def essai_trois_etiquettes(chaine, sorties: str, enregistrement: dict) -> float:
 
 def controler_ordre(plan: Plan, entropie_revelee) -> None:
     """G4 : l'ordre de passage du registre est-il celui du tirage ? Un ordre fixé à la main (U en dernier) est refusé."""
+    if isinstance(entropie_revelee, bool) or not isinstance(entropie_revelee, int):
+        raise RefusGraine("entropie révélée : un entier seul, pour une écriture unique")
     verifier_entropie(entropie_revelee, "entropie révélée")
     o = np.asarray(plan.ordre)
     n = 3 * plan.k

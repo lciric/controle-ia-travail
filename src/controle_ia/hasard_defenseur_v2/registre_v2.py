@@ -292,7 +292,12 @@ def engager(plan: Plan, dossier, nom: str) -> tuple[Path, Path]:
 
 
 def rejouer(plan_lu: Plan, entropie_revelee) -> None:
-    """Rejoue le tirage à partir de l'entropie révélée : conditions, graines et ordre doivent être identiques."""
+    """Rejoue le tirage à partir de l'entropie révélée : conditions, graines et ordre doivent être identiques.
+
+    L'entropie révélée est un entier seul (contre-lecture, constat 5) : `SeedSequence` traite `[x, 0]` comme `x`, et
+    une liste n'aurait pas d'écriture unique."""
+    if isinstance(entropie_revelee, bool) or not isinstance(entropie_revelee, int):
+        raise RefusGraine("entropie révélée : un entier seul, pour une écriture unique")
     verifier_entropie(entropie_revelee, "entropie révélée")
     rejoue = tirer_plan(entropie_revelee, plan_lu.identifiants, plan_lu.etiquettes, plan_lu.k)
     if not np.array_equal(rejoue.conditions, plan_lu.conditions):
@@ -304,7 +309,9 @@ def rejouer(plan_lu: Plan, entropie_revelee) -> None:
 
 
 def verifier_engagement(chemin_registre, chemin_engagement, entropie_revelee=None, exiger_code_courant: bool = True) -> Plan:
-    """Garde G2. Cas sain : registre conforme à l'empreinte. Artefact : registre modifié après coup, graine absente."""
+    """Garde G2. Cas sain : registre conforme à l'empreinte. Artefact : registre modifié après coup, graine absente.
+
+    Sans `entropie_revelee`, la garde ne vaut que si l'empreinte de l'engagement est comparée à celle publiée (commit du dépôt) avant la course."""
     chemin_registre, chemin_engagement = Path(chemin_registre), Path(chemin_engagement)
     for p in (chemin_registre, chemin_engagement):
         try:
