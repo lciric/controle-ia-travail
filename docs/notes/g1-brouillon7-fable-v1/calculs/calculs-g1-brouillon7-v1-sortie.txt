@@ -1,0 +1,84 @@
+# Sortie de calculs-g1-brouillon7-v1.py
+Python 3.13.18 ; bibliothèque standard seule (math)
+Aucune graine : tous les calculs sont déterministes.
+
+## 1. Contrôle : la variante par défaut du brouillon 6 est retrouvée (même modèle de coût que [calc § 7] du brouillon 5)
+
+Épisodes par tâche (brouillon 6) : 10 jumeaux + 3 modes x 10 x 2 familles + 12 témoin bénin et mention + 150 de calibrage honnête = 232
+Variante par défaut : 400 tâches x 232 = 92 800 épisodes ; central 4 247 h, 4 870 USD (attendu d'après le brouillon 6 : 92 800 épisodes, 4 247 h, 4 870 USD)
+Contrôle : conforme.
+
+## 2. Épisodes du témoin apparié selon l'énoncé retenu (GO-2026-11-18-48 ; brouillon de décision N-074, non pris)
+
+Épisodes d'évaluation du témoin par tâche, communs à tous les énoncés : 3 modes x 10 (organisme sans consigne) + 3 modes x 3 (organisme à consigne) = 39
+Par cellule de la porte (un mode, organisme sans consigne) : 400 x 10 = 4 000 épisodes d'évaluation du témoin (le brouillon de N-074 en demande au moins 300)
+
+| variante | épisodes par tâche | épisodes | heures de carte (bas / central / haut) | USD (bas / central / haut) | central x 1,3 | rapport au plafond accordé (6 331 USD) |
+|---|---|---|---|---|---|---|
+| sans témoin apparié (brouillon 6, rappel) | 232 | 92 800 | 2 586 / 4 247 / 7 409 | 2 792 / 4 870 / 8 989 | 6 331 | 1,00 |
+| garde de spécificité, ou garde avec contraste rapporté à 5 % (énoncés B et C2) | 271 | 108 400 | 3 020 / 4 961 / 8 654 | 3 262 / 5 688 / 10 500 | 7 395 | 1,17 |
+| contraste, calibrage du témoin au minimum du brouillon de N-074 : 300 épisodes par cellule, 6 cellules (énoncés A et C1) | 275,5 | 110 200 | 3 070 / 5 043 / 8 798 | 3 316 / 5 783 / 10 674 | 7 518 | 1,19 |
+| contraste, calibrage du témoin à l'échelle du calibrage honnête, cellules de la porte seules : 2 témoins x 150 par tâche (énoncés A et C1) | 571 | 228 400 | 6 363 / 10 452 / 18 234 | 6 873 / 11 985 / 22 123 | 15 581 | 2,46 |
+| contraste, calibrage du témoin à l'échelle du calibrage honnête, les trois modes de l'organisme sans consigne : 3 témoins x 150 par tâche (énoncés A et C1) | 721 | 288 400 | 8 035 / 13 198 / 23 024 | 8 678 / 15 134 / 27 935 | 19 674 | 3,11 |
+
+Non comptés, en plus de ceux du brouillon 6 : une distillation de plus par témoin d'adaptateur et sa remise à l'intensité du saboteur ; la conception du témoin du mode tenu à l'écart par son concepteur.
+
+## 3. Bruit d'un seuil conforme à 1 % : écart-type du taux réel de fausses alarmes selon le nombre d'épisodes de calibrage (épisodes indépendants ; taux réel ~ Bêta(K + 1 - r, r), r = ceil((K + 1) x 0,99))
+
+  K =    300 : rang    298 ; taux réel moyen 0,997 % ; écart-type 0,572 point
+  K =   1200 : rang   1189 ; taux réel moyen 0,999 % ; écart-type 0,287 point
+  K =   4000 : rang   3961 ; taux réel moyen 1,000 % ; écart-type 0,157 point
+  K =  12000 : rang  11881 ; taux réel moyen 1,000 % ; écart-type 0,091 point
+  K =  18000 : rang  17821 ; taux réel moyen 1,000 % ; écart-type 0,074 point
+  K =  60000 : rang  59401 ; taux réel moyen 1,000 % ; écart-type 0,041 point
+Repères de l'étude de la formulation (d04da790…, texte) : 0,57 point à 300 épisodes ; 0,09 à 12 000 ; 0,07 à 18 000.
+Calibrage d'épreuve du brouillon 6 : 150 épisodes honnêtes par tâche x 400 tâches = 60 000 épisodes (groupés par tâche : l'information réelle est moindre que celle d'épisodes indépendants ; le contrôle par moitiés jumelles le mesure).
+
+## 4. Garde de spécificité par la borne de Clopper-Pearson (lettre du brouillon de N-074, épisodes supposés indépendants) : plus grand nombre d'alertes du témoin qui laisse la borne haute à 95 % strictement sous 5 %
+
+  n =   300 : au plus 8 alertes (2,67 % observé) ; P(passer | taux vrai 1,0 %) = 0,9964 ; P(passer | taux vrai 2,7 %) = 0,5784 ; P(passer | taux vrai 4,0 %) = 0,1497 ; P(passer | taux vrai 5,0 %) = 0,0341
+  n =  1200 : au plus 47 alertes (3,92 % observé) ; P(passer | taux vrai 1,0 %) = 1,0000 ; P(passer | taux vrai 2,7 %) = 0,9945 ; P(passer | taux vrai 4,0 %) = 0,4796 ; P(passer | taux vrai 5,0 %) = 0,0451
+  n =  4000 : au plus 177 alertes (4,42 % observé) ; P(passer | taux vrai 1,0 %) = 1,0000 ; P(passer | taux vrai 2,7 %) = 1,0000 ; P(passer | taux vrai 4,0 %) = 0,9193 ; P(passer | taux vrai 5,0 %) = 0,0493
+Repères du brouillon de N-074 (29b38fc4…, § 4) : 0,95 par cellule à 200 épisodes et 0,996 à 300, au taux vrai de 1 % ; moins de 4 % de passages au taux vrai de 5 %.
+  contrôle à n = 200 : au plus 4 alertes ; P(passer | 1 %) = 0,9483
+
+## 5. Garde de spécificité par un pari borné sur les parts par unité (proposition du brouillon 7 ; valide quand les épisodes d'une même tâche sont dépendants) : unités nécessaires pour atteindre le seuil, ordre de grandeur
+
+| taux d'alerte vrai du témoin | K_w | corrélation intra-unité | croissance par unité (meilleure mise) | unités pour le seuil 20 | pour 40 | pour 160 |
+|---|---|---|---|---|---|---|
+| 1,0 % | 10 | 0,00 | 0,03497 | 126 | 146 | 185 |
+| 1,0 % | 10 | 0,17 | 0,03412 | 129 | 149 | 190 |
+| 1,0 % | 3 | 0,00 | 0,03381 | 130 | 151 | 192 |
+| 1,0 % | 3 | 0,17 | 0,03269 | 135 | 156 | 198 |
+| 2,0 % | 10 | 0,00 | 0,02584 | 170 | 197 | 251 |
+| 2,0 % | 10 | 0,17 | 0,02414 | 182 | 211 | 268 |
+| 2,0 % | 3 | 0,00 | 0,02350 | 187 | 216 | 275 |
+| 2,0 % | 3 | 0,17 | 0,02124 | 207 | 239 | 305 |
+| 2,7 % | 10 | 0,00 | 0,01940 | 226 | 262 | 334 |
+| 2,7 % | 10 | 0,17 | 0,01709 | 257 | 297 | 379 |
+| 2,7 % | 3 | 0,00 | 0,01621 | 271 | 314 | 399 |
+| 2,7 % | 3 | 0,17 | 0,01316 | 333 | 386 | 492 |
+| 3,0 % | 10 | 0,00 | 0,01663 | 264 | 306 | 389 |
+| 3,0 % | 10 | 0,17 | 0,01405 | 312 | 362 | 460 |
+| 3,0 % | 3 | 0,00 | 0,01307 | 336 | 389 | 495 |
+| 3,0 % | 3 | 0,17 | 0,00968 | 453 | 525 | 668 |
+| 4,0 % | 10 | 0,00 | 0,00733 | 598 | 692 | 881 |
+| 4,0 % | 10 | 0,17 | 0,00396 | 1 108 | 1 284 | 1 634 |
+| 4,0 % | 3 | 0,00 | 0,00336 | 1 304 | 1 510 | 1 922 |
+| 4,0 % | 3 | 0,17 | 0,00214 | 2 047 | 2 371 | 3 018 |
+
+Lecture : à 400 unités et K_w = 10, la garde par pari au seuil 160 n'est atteinte que si le taux d'alerte vrai du témoin est nettement sous 5 % (lignes ci-dessus) ; entre ce taux et 5 %, elle se lit « non jugeable par puissance », non « garde perdue ». La borne de Clopper-Pearson (section 4) est plus puissante parce qu'elle tient les épisodes d'une même tâche pour indépendants.
+
+## 6. Seuils du pari inverse (signe contraire) : Bonferroni sur les comparateurs et les modes de la porte
+
+  k = 12 comparateurs, 1 classe(s) négative(s) (honnête), M = 2 modes : seuil = k x classes x M / 0,05 = 480
+  k = 12 comparateurs, 2 classe(s) négative(s) (honnête et témoin), M = 2 modes : seuil = k x classes x M / 0,05 = 960
+  k = 13 comparateurs, 1 classe(s) négative(s) (honnête), M = 2 modes : seuil = k x classes x M / 0,05 = 520
+  k = 13 comparateurs, 2 classe(s) négative(s) (honnête et témoin), M = 2 modes : seuil = k x classes x M / 0,05 = 1040
+Le brouillon 6 écrit 480 (k = 12) et 520 (k = 13) pour la seule classe négative honnête.
+
+## 7. Probabilité de franchir toutes les cellules si elles étaient indépendantes (illustration prudente, comme [calc § 5])
+
+  puissance par condition 0,9 : 1 condition(s) -> 0,900 ; 2 condition(s) -> 0,810 ; 4 condition(s) -> 0,656 ; 6 condition(s) -> 0,531
+  puissance par condition 0,8 : 1 condition(s) -> 0,800 ; 2 condition(s) -> 0,640 ; 4 condition(s) -> 0,410 ; 6 condition(s) -> 0,262
+Deux modes de la porte : 2 conditions sans témoin apparié ; 4 si chaque mode porte en plus une condition de témoin.
