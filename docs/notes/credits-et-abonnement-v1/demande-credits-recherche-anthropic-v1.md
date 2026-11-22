@@ -9,7 +9,7 @@
 
 | page | adresse | ce qu'on y a lu |
 |---|---|---|
-| Programme d'accès des chercheurs externes (aide) | https://support.claude.com/en/articles/9125743-what-is-the-external-researcher-access-program (datée du 16 mars 2026) | programme pour la sûreté et l'alignement ; 1 000 USD de crédits d'interface, davantage « for rare special cases » ; examen le premier lundi du mois ; pas de réponse individuelle aux refus ; adresse pour l'urgent seulement |
+| Programme d'accès des chercheurs externes (aide) | https://support.claude.com/en/articles/9125743-what-is-the-external-researcher-access-program (datée du 16 mars 2026) | programme pour la sûreté et l'alignement ; 1 000 USD de crédits d'interface, davantage « For rare special cases » ; examen le premier lundi du mois ; pas de réponse individuelle aux refus ; adresse pour l'urgent seulement |
 | Formulaire de ce programme | https://forms.gle/pZYC8f6qYqSKvRWn9 (formulaire Google) | les quatorze champs relevés ci-dessous, obligatoires ou non |
 | Programme « AI for Science » (aide) | https://support.claude.com/en/articles/11199177-anthropic-s-ai-for-science-program | jusqu'à 20 000 USD sur six mois selon la page d'aide ; chercheurs « attached to research institutions » |
 | Annonce du 27 août 2026 | https://www.anthropic.com/news/expanding-support-for-scientists | « apply to our AI for Science program for up to $50,000 in credits per project. Any researcher is eligible to apply. » ; ouverture à d'autres champs que la biologie |
@@ -66,7 +66,7 @@ Ordre et libellés exacts du formulaire (relevés le 2026-11-22). (O) = obligato
 > Why credits matter. The program is self-funded. Our internal cost estimate for one reduced ideation campaign with Claude as proposer is 700 to 1,500 USD (300 to 800 USD for its pilot). Our rules require that a failed gate triggers a redesign cycle that is also run and reported, so two to three campaigns are expected over six months. Without credits we must cut replications or fall back to cheaper non-Claude proposers, which weakens the comparison we want to report. Outputs: three papers, a public redacted copy of code and pre-registrations, and a planted-ground-truth benchmark.
 
 **8. Are you requesting more than $1000 API credits? If so, please enter the amount in 'Other' (O)** — choix : No / Other
-> Other : `3000` *(recommandé : deux campagnes réduites au haut du devis ; mettre « No » si tu préfères la voie ordinaire de 1 000 USD, plus souvent accordée d'après la page, qui réserve les montants plus hauts à « rare special cases »)*
+> Other : `3000` *(recommandé : deux campagnes réduites au haut du devis ; mettre « No » si tu préfères la voie ordinaire de 1 000 USD, plus souvent accordée d'après la page, qui réserve les montants plus hauts aux « rare special cases »)*
 
 **9. In order to keep this free program sustainable to run, we prefer to have these accounts set to a 'low quality of service' where possible… Would this be a significant hindrance for your research / use case? (F)** — choix : « I'm fine with receiving a low quality of service » / « My use case will require a standard quality of service »
 > I'm fine with receiving a low quality of service *(recommandé : nos lanceurs journalisent et relancent les appels en erreur ; une erreur coûte du temps, pas la validité, tant que le modèle servi est consigné. Réserve : une course appariée longue peut s'étirer.)*
