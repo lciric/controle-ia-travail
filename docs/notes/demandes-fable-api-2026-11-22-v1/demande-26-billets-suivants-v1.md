@@ -1,0 +1,9 @@
+# Demande 26 — les billets suivants à publier, et faut-il revoir les deux premiers
+
+Demande du directeur, verbatim : « lance un protocole x sur les billets suivants à publier et s'il faut revoir le premier billet contrôle IA et le billet raisons ou regard ». Contexte : état des deux billets au 21 novembre et sa critique (copies sans nom), tes propositions pour un troisième billet, ta réponse 20 (billet « drapeau » sur le sabotage diffus ; ses décisions ne sont pas encore accordées), et la thèse retenue le 22 (loi héritée comme modèle nul, bilan mesuré, complémentarité en second axe ; lemme et théorème retirés comme résultats mais gardés mentionnés). Le billet « Reasons or watching? » relève d'un autre projet du directeur ; tu n'en as que ce qu'en disent les pièces.
+
+Applique d'abord ce prompt du directeur, verbatim :
+
+« Je souhaite une version plus approfondie de cette tâche, pas une version plus longue. Avant de la reformuler : (1) indiquez ce qu'un expert du domaine ferait ici, et que je ne demande pas ; (2) précisez les données brutes qu'il utiliserait au départ, au lieu de celles déjà analysées ; (3) indiquez les méthodes et outils spécifiques qu'il utiliserait ; (4) expliquez ce qui, en dehors de vous ou de moi, permettrait de vérifier la validité du résultat. Ensuite, reformulez ma demande pour qu'elle réponde précisément à cette exigence. »
+
+Puis : (A) la demande reformulée ; (B) ta réponse : quels billets publier ensuite, dans quel ordre, avec quel contenu revendicable aujourd'hui (preuve à l'appui dans les pièces) ; ce qu'il faut revoir dans le premier billet sur le contrôle et dans « Reasons or watching? », phrase par phrase quand une phrase ne tient plus ; ce qui ne doit pas paraître (risque pour les mesures à venir ou phrase à rétracter) ; (C) une question neutre pour le collisionneur, qui passera un test de devinette. La publication reste au directeur seul. Décisions au format habituel. Termine par « FIN DE LA RÉPONSE ».
