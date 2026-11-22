@@ -13,6 +13,7 @@ concepteur.
 from __future__ import annotations
 
 import itertools
+import math
 
 import numpy as np
 
@@ -74,23 +75,64 @@ def libelle_signe(statistique: float, p_bilaterale: float, p_minimale: float, se
     a = seuils["alpha"]
     if p_minimale > a:
         return "non testable à cet effectif"
-    if p_bilaterale < a:
+    if p_bilaterale <= a and statistique != 0:
         return "établie" if statistique > 0 else "contraire"
     return "non établie à cette puissance"
 
 
-def libelle_transport(U: float, p_bilaterale: float, p_minimale: float, seuils: dict) -> str:
-    """[provisoire (E-1)] « fort » si p < α, U > 1/2 et U ≥ `u_fort` ; « faible » si p < α, U > 1/2 et U < `u_fort` ;
-    « contraire » si p < α et U < 1/2 ; « non testable à cet effectif » ; sinon « non établie à cette puissance ». Seuils
-    `alpha` et `u_fort` passés en argument."""
-    a = seuils["alpha"]
-    if p_minimale > a:
-        return "non testable à cet effectif"
-    if p_bilaterale < a:
-        if U > 0.5:
-            return "fort" if U >= seuils["u_fort"] else "faible"
-        return "contraire"
-    return "non établie à cette puissance"
+MENTION_PLANCHER = " — non distinct d'une direction au hasard : écart diffus possible, non la direction apprise"
+
+
+def libelle_transport(U: float, p_bilaterale: float, seuil: float, u_fort: float = 0.9,
+                      plancher_q95: float | None = None) -> str:
+    """Texte des diagnostics préalables (e8dca00b…), Seuil, Q2 : « fort » si p ≤ seuil et U ≥ `u_fort` ; « faible » si
+    p ≤ seuil et 1/2 < U < `u_fort` ; « contraire » si p ≤ seuil et U < 1/2 ; sinon, et si U = 1/2, « non établi à
+    cette puissance ». Mention ajoutée si U ne dépasse pas le quantile 0,95 du plancher apparié."""
+    if p_bilaterale <= seuil and U != 0.5:
+        lb = "fort" if U >= u_fort else ("faible" if U > 0.5 else "contraire")
+    else:
+        lb = "non établi à cette puissance"
+    if plancher_q95 is not None and U <= plancher_q95:
+        lb += MENTION_PLANCHER
+    return lb
+
+
+def familles_testables(paires_par_famille: dict, alpha: float = 0.05) -> list:
+    """Erratum 2, § 5 : on part des familles d'au moins 7 paires et on retire celles dont 2^(2−P) dépasse α divisé par
+    le nombre restant, jusqu'à stabilité."""
+    restantes = sorted(f for f, P in paires_par_famille.items() if P >= 7)
+    while True:
+        m = len(restantes)
+        garde = [f for f in restantes if 2.0 ** (2 - paires_par_famille[f]) <= alpha / m] if m else []
+        if garde == restantes:
+            return restantes
+        restantes = garde
+
+
+def etalon_familles(resultats: dict, alpha: float = 0.05, u_fort: float = 0.9) -> dict:
+    """Libellés de l'étalon par famille : moins de 4 paires « non calculable » ; famille non testable « non testable à
+    cet effectif » (U, ρ et p minimale rapportés) ; familles testables : Holm pas à pas descendant au niveau α, puis
+    libellé selon U. `resultats` : {famille : sortie de `diagnostic_etalon_transport`}."""
+    P = {f: r.get("P", 0) for f, r in resultats.items()}
+    testables = familles_testables({f: n for f, n in P.items() if resultats[f]["etat"] == "calculé"}, alpha)
+    m = len(testables)
+    ordre = sorted(testables, key=lambda f: (resultats[f]["p_bilaterale"], f))
+    seuils, rejet, encore = {}, {}, True
+    for k, f in enumerate(ordre):
+        seuils[f] = alpha / (m - k)
+        rejet[f] = encore and resultats[f]["p_bilaterale"] <= seuils[f]
+        encore = rejet[f]
+    libelles = {}
+    for f, r in resultats.items():
+        if r["etat"] != "calculé":
+            libelles[f] = "non calculable"
+        elif f not in testables:
+            libelles[f] = "non testable à cet effectif"
+        else:
+            q95 = r.get("plancher", {}).get("quantile_95_U")
+            libelles[f] = libelle_transport(r["U"], r["p_bilaterale"] if rejet[f] else 1.0, seuils[f], u_fort, q95)
+    return {"testables": testables, "seuils_holm": seuils, "libelles": libelles,
+            "taux_familial_au_plus": alpha if m else None}
 
 
 def p_minimale_signes(n: int) -> float:
@@ -134,11 +176,11 @@ def _u_direction_fixe(G_w: np.ndarray, iS, iJ) -> float:
 def diagnostic_etalon_transport(moyennes: dict, paires: list[tuple[str, str]], rng_signes: np.random.Generator,
                                 rng_plancher: np.random.Generator | None = None, jetons_jumeaux=None,
                                 moyenne_nu: np.ndarray | None = None, jetons_par_poids: dict | None = None,
-                                seuils: dict | None = None, n_plancher: int = 200) -> dict:
+                                n_plancher: int = 200) -> dict:
     """DIAGNOSTIC (N-026 ; erratum 1, § 2). `moyennes` : {poids : x_W} (vecteurs moyens sur K) ; `paires` :
     [(S_p, J_p)] ; `jetons_jumeaux` : séquences de jetons des jumeaux (covariance du plancher apparié) ; `moyenne_nu` :
-    x_N (contrôle d'intensité) ; `jetons_par_poids` : {poids : [séquences des actions de K]} (variante de production) ;
-    `seuils` : {"alpha", "u_fort"} pour le libellé."""
+    x_N (contrôle d'intensité) ; `jetons_par_poids` : {poids : [séquences des actions de K]} (variante de production).
+    Le libellé se donne par famille avec `etalon_familles` (testabilité, Holm)."""
     P = len(paires)
     if P < 4:
         return {"etat": "non calculable", "motif": f"{P} paires (< 4)"}
@@ -169,10 +211,11 @@ def diagnostic_etalon_transport(moyennes: dict, paires: list[tuple[str, str]], r
         p_haut, p_bas = (1 + haut) / (1 + n_cfg), (1 + bas) / (1 + n_cfg)
         p_min = 2.0 / (1 + n_cfg)
     p_bi = min(1.0, 2.0 * min(p_haut, p_bas))
+    D = X[:P] - X[P:]
+    dep = {paires[k][0]: float(np.delete(D, k, axis=0).mean(axis=0) @ D[k]) for k in range(P)}
     sortie = {"etat": "calculé", "P": P, "U": U, "rho": rho, "p_haut": p_haut, "p_bas": p_bas, "p_bilaterale": p_bi,
-              "p_minimale": p_min, "exact": exact, "echanges": n_cfg}
-    if seuils is not None:
-        sortie["libelle"] = libelle_transport(U, p_bi, p_min, seuils)
+              "p_minimale": p_min, "exact": exact, "echanges": n_cfg,
+              "deplacement_apparie": dep}  # contrôle de la direction, jamais une lecture de « sabotage »
     # plancher apparié
     if jetons_jumeaux is not None:
         if rng_plancher is None:
@@ -257,7 +300,28 @@ def _plis_quatre(taches_uniques, rng) -> list[set]:
     return [set(t[perm[g::4]].tolist()) for g in range(4)]
 
 
-def sonde_identite(jumeaux: dict, rngs: dict, n_tirages: int = 2000, n_nul: int = 200) -> dict:
+SEUILS_IDENTITE = {"forte_mediane": 0.90, "forte_part": 0.8, "faible_mediane": 0.60, "faible_part": 0.2,
+                   "couples_min": 3}
+
+
+def libelle_identite(couples: dict, seuils: dict = SEUILS_IDENTITE) -> str | None:
+    """Texte des diagnostics préalables, Seuil, Q1 : « identité forte » si médiane ≥ 0,90 et au moins ⌈0,8 G⌉ couples
+    dont la borne basse dépasse le quantile 0,95 du nul ; « identité faible » si médiane ≤ 0,60 et au plus ⌊0,2 G⌋
+    couples au-dessus du nul ; sinon « intermédiaire » ; moins de trois couples : aucun libellé (None)."""
+    G = len(couples)
+    if G < seuils["couples_min"]:
+        return None
+    med = float(np.median([c["aire"] for c in couples.values()]))
+    dessus = sum(c["intervalle_95"][0] > c["nul_quantile_95"] for c in couples.values())
+    if med >= seuils["forte_mediane"] and dessus >= math.ceil(seuils["forte_part"] * G - 1e-12):
+        return "identité forte"
+    if med <= seuils["faible_mediane"] and dessus <= math.floor(seuils["faible_part"] * G + 1e-12):
+        return "identité faible"
+    return "intermédiaire"
+
+
+def sonde_identite(jumeaux: dict, rngs: dict, n_tirages: int = 2000, n_nul: int = 200,
+                   seuils_identite: dict = SEUILS_IDENTITE) -> dict:
     """Erratum 1, § 3. `jumeaux` : {nom du jumeau : {clé : (tâche, jetons)}} ; `rngs` : générateurs nommés
     (« couples », « plis », « reechantillonnage », « nul »)."""
     noms = sorted(jumeaux)
@@ -304,6 +368,7 @@ def sonde_identite(jumeaux: dict, rngs: dict, n_tirages: int = 2000, n_nul: int 
         plis = _plis_quatre({jumeaux[a][c][0] for c in cles}, rngs["plis"])
         toutes.append(_identite_couple(jumeaux[a], jumeaux[b], cles, plis)[0])
     return {"couples": resultats, "jumeaux_ecartes": ecartes, "aire_mediane_tous_couples": float(np.median(toutes)),
+            "libelle": libelle_identite(resultats, seuils_identite),
             "predicteurs_triviaux": "à texte égal, longueur, rang du pas et valeur déclarée identiques des deux côtés : "
                                     "non calculés"}
 
@@ -451,9 +516,14 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
         lb = v["brute"].get("libelle")
         if v["controle_chemin"] == "contrôle du chemin absent" and lb in ("établie", "contraire"):
             v["brute"]["libelle"] = "non interprétable : chemin de calcul non mesuré"
+        # libellé final : interaction corrigée si le contrôle du chemin existe, brute sinon ; puis règle des prédicteurs
+        # triviaux (erratum 2, § 2) : une ligne « établie » ou « contraire » devient « non interprétable » si
+        # l'interaction résiduelle est « non établie » ou de signe opposé
+        final = v["corrigee"].get("libelle") if "corrigee" in v else v["brute"].get("libelle")
         lr = v["residuelle"].get("libelle")
-        if lb in ("établie", "contraire") and lr is not None and lr != lb:
-            v["non_interpretable_triviaux"] = True
+        if final in ("établie", "contraire") and lr != final:
+            final = "non interprétable : prédicteurs triviaux"
+        v["libelle"] = final
     return {"doses": sorties, "seuils": seuils, "minimums": minimums}
 
 

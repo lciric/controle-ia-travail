@@ -377,3 +377,26 @@ def test_barreau5_artefacts(tmp_path):
     _run_b5(tmp_path / "r5", series=("nu", "X 01"))
     with pytest.raises(GardeArret, match="liste blanche"):
         mg.series_depuis_barreau5(tmp_path / "r5", tmp_path / "m5", CHEMIN)
+
+
+def test_avant_champ_facultatif(tmp_path):
+    """Erratum 2, § 1 : jeton d'avant le champ et couches 7 et 23 facultatifs, absence déclarée au manifeste."""
+    a = mg.Action("k", "t", "e", 0, 0, 2, 5.0, 3)
+    e = mg.EcrivainSerie(tmp_path / "s", "s", POIDS_NU, "t", {"type": "toutes"}, D, CHEMIN, (15,))
+    with pytest.raises(GardeArret, match="exactement"):
+        e.ajouter(a, np.zeros((3, D)), {c: np.zeros(D) for c in mg.COUCHES_AVANT_CHAMP})
+    e.ajouter(a, np.zeros((3, D)), {15: np.ones(D)})
+    e.clore()
+    s = mg.Serie(tmp_path / "s", True)
+    assert s.manifeste["couches"]["avant_champ"] == [15]
+    np.testing.assert_array_equal(s.avant_champ("k", 15), np.ones(D, np.float32))
+    with pytest.raises(GardeArret, match="non gardé"):
+        s.avant_champ("k", 7)
+    e2 = mg.EcrivainSerie(tmp_path / "s2", "s2", POIDS_NU, "t", {"type": "toutes"}, D, CHEMIN, ())
+    e2.ajouter(a, np.zeros((3, D)))  # champ révélateur sans jeton d'avant : absence déclarée, pas une forme inattendue
+    with pytest.raises(GardeArret, match="absence"):
+        e2.ajouter(mg.Action("k2", "t", "e", 0, 0, 2, 5.0, 3), np.zeros((3, D)), {15: np.ones(D)})
+    e2.clore()
+    assert mg.Serie(tmp_path / "s2").manifeste["couches"]["avant_champ"] == []
+    with pytest.raises(GardeArret, match="sous-ensemble"):
+        mg.EcrivainSerie(tmp_path / "s3", "s3", POIDS_NU, "t", {"type": "toutes"}, D, CHEMIN, (9,))

@@ -28,10 +28,44 @@ def test_regime_et_libelles():
     assert st.libelle_signe(-1.0, 0.01, 0.004, SEUILS) == "contraire"
     assert st.libelle_signe(1.0, 0.2, 0.004, SEUILS) == "non établie à cette puissance"
     assert st.libelle_signe(1.0, 0.0625, 0.0625, SEUILS) == "non testable à cet effectif"
-    assert st.libelle_transport(0.95, 0.01, 0.01, SEUILS) == "fort"
-    assert st.libelle_transport(0.7, 0.01, 0.01, SEUILS) == "faible"
-    assert st.libelle_transport(0.2, 0.01, 0.01, SEUILS) == "contraire"
-    assert st.libelle_transport(0.95, 0.01, 0.1, SEUILS) == "non testable à cet effectif"
+    assert st.libelle_signe(1.0, 0.05, 0.004, SEUILS) == "établie"  # « au plus le seuil »
+    assert st.libelle_transport(0.95, 0.01, 0.05) == "fort"
+    assert st.libelle_transport(0.9, 0.05, 0.05) == "fort"
+    assert st.libelle_transport(0.7, 0.01, 0.05) == "faible"
+    assert st.libelle_transport(0.2, 0.01, 0.05) == "contraire"
+    assert st.libelle_transport(0.5, 0.01, 0.05) == "non établi à cette puissance"
+    assert st.libelle_transport(0.95, 0.2, 0.05) == "non établi à cette puissance"
+    assert st.libelle_transport(0.7, 0.01, 0.05, plancher_q95=0.8).endswith("non la direction apprise")
+
+
+def test_familles_testables_et_holm():
+    assert st.familles_testables({"a": 7}) == ["a"]
+    assert st.familles_testables({"a": 6}) == []
+    assert st.familles_testables({"a": 7, "b": 7}) == []          # 2^-5 > 0,025
+    assert st.familles_testables({"a": 8, "b": 8, "c": 8}) == ["a", "b", "c"]
+    assert st.familles_testables({"a": 8, "b": 8, "c": 8, "d": 8}) == []  # 2^-6 > 0,0125 ; puis 3 restent ? non : tous
+    assert st.familles_testables({"a": 9, "b": 9, "c": 9, "d": 9}) == ["a", "b", "c", "d"]
+    assert st.familles_testables({"a": 9, "b": 7, "c": 4}) == ["a"]   # b retiré à m = 2, puis a seul
+    r = {f: {"etat": "calculé", "P": 9, "U": U, "p_bilaterale": p} for f, U, p in
+         (("a", 0.95, 0.004), ("b", 0.7, 0.03), ("c", 0.95, 0.04), ("d", 0.95, 0.004))}
+    e = st.etalon_familles(r)
+    assert e["seuils_holm"]["a"] == pytest.approx(0.0125) and e["libelles"]["a"] == "fort"
+    assert e["libelles"]["b"] == "non établi à cette puissance"  # 0,03 > 0,05/2 : arrêt de Holm
+    assert e["libelles"]["c"] == "non établi à cette puissance"
+    r2 = {"x": {"etat": "calculé", "P": 5, "U": 1.0, "p_bilaterale": 0.125}, "y": {"etat": "non calculable"}}
+    assert st.etalon_familles(r2)["libelles"] == {"x": "non testable à cet effectif", "y": "non calculable"}
+
+
+def test_libelle_identite():
+    c = lambda a, bas, nul: {"aire": a, "intervalle_95": [bas, 1.0], "nul_quantile_95": nul}
+    forts = {str(i): c(0.95, 0.9, 0.6) for i in range(5)}
+    assert st.libelle_identite(forts) == "identité forte"
+    forts["0"] = c(0.95, 0.5, 0.6)
+    forts["1"] = c(0.95, 0.5, 0.6)
+    assert st.libelle_identite(forts) == "intermédiaire"  # 3 sur 5 au-dessus < ⌈4⌉
+    faibles = {str(i): c(0.55, 0.4, 0.6) for i in range(5)}
+    assert st.libelle_identite(faibles) == "identité faible"
+    assert st.libelle_identite({"a": c(0.95, 0.9, 0.6), "b": c(0.95, 0.9, 0.6)}) is None
     assert st.changement_signe(np.ones(25), np.random.default_rng(0))["tirages"] == 10_000
 
 
@@ -76,11 +110,13 @@ def test_etalon_formule_contre_force_brute():
 
 def test_etalon_trace_forte_et_identite():
     m, paires = _moyennes(8, trace=6.0)
-    r = st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0), seuils=SEUILS)
-    assert r["U"] == 1.0 and r["p_haut"] == pytest.approx(2 / 256) and r["libelle"] == "fort"
+    r = st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0))
+    assert r["U"] == 1.0 and r["p_haut"] == pytest.approx(2 / 256)
+    assert st.etalon_familles({"f": r})["libelles"]["f"] == "fort"
+    assert all(v > 0 for v in r["deplacement_apparie"].values())
     m, paires = _moyennes(8, trace=0.0, graine=3)
-    r = st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0), seuils=SEUILS)
-    assert r["libelle"] in ("non établie à cette puissance", "faible", "contraire")
+    r = st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0))
+    assert st.etalon_familles({"f": r})["libelles"]["f"] in ("non établi à cette puissance", "faible", "contraire")
     m, paires = _moyennes(3)
     assert st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0))["etat"] == "non calculable"
     with pytest.raises(GardeArret):
@@ -100,7 +136,7 @@ def test_etalon_controle_intensite_plancher_variante():
     jumeaux = [rng.standard_normal((3, 16)) + m[j] for _, j in paires]
     jetons = {k: [rng.standard_normal((3, 16)) * 0.01 + v] for k, v in m.items()}
     r = st.diagnostic_etalon_transport(m, paires, np.random.default_rng(0), np.random.default_rng(1), jumeaux, nu,
-                                       jetons, SEUILS, n_plancher=50)
+                                       jetons, n_plancher=50)
     ci = r["controle_intensite"]
     assert r["U"] > 0.9  # l'écart d'intensité fabrique un transport
     assert ci["U_apres_retrait"] < r["U"]  # le contrôle le fait retomber
@@ -184,16 +220,36 @@ def test_rejeu_croise_interaction_et_chemin():
     t, _ = st.charger_table_scores(_table(inter=1.0), CORR)
     r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=200)["doses"]["1"]
     assert r["regime"] == "libellé" and r["brute"]["libelle"] == "établie" and r["corrigee"]["libelle"] == "établie"
+    assert r["libelle"] == "établie"
     assert abs(r["controle_chemin"]["ecart"]) < 0.2
     # décalage de chemin, aucun effet vrai : brute établie, corrigée non établie
     t, _ = st.charger_table_scores(_table(inter=0.0, ecart_chemin=0.5), CORR)
     r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=200)["doses"]["1"]
     assert r["brute"]["libelle"] == "établie" and r["corrigee"]["libelle"] == "non établie à cette puissance"
+    assert r["libelle"] == "non établie à cette puissance"
     # sans relecture des cases d'origine : contrôle absent, brute rendue non interprétable
     t, _ = st.charger_table_scores(_table(inter=0.0, ecart_chemin=0.5, avec_relu=False), CORR)
     r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=200)["doses"]["1"]
     assert r["controle_chemin"] == "contrôle du chemin absent"
-    assert r["brute"]["libelle"] == "non interprétable : chemin de calcul non mesuré"
+    assert r["brute"]["libelle"] == r["libelle"] == "non interprétable : chemin de calcul non mesuré"
+
+
+def test_rejeu_croise_regle_des_triviaux():
+    """L'effet suit entièrement la longueur : l'interaction résiduelle tombe, la ligne devient non interprétable."""
+    l = _table(inter=0.0)
+    for x in l:
+        x["pas"], x["longueur"] = 0, 10
+        if x["source"] == "saboteur":
+            x["longueur"] = 30
+        if (x["poids"], x["source"]) == ("adaptateur", "saboteur"):
+            x["score"] += 1.0
+        if x["poids"] == "adaptateur" and x["source"] == "honnete" and x["cle"].endswith("-0"):
+            x["longueur"] = 30
+            x["score"] += 1.0
+    t, _ = st.charger_table_scores(l, CORR)
+    r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=100)["doses"]["1"]
+    assert r["brute"]["libelle"] == "établie"
+    assert r["libelle"] == "non interprétable : prédicteurs triviaux"
 
 
 def test_rejeu_croise_minimums_et_taches_non_tenues():

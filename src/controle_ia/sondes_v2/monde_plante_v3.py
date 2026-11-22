@@ -1,29 +1,26 @@
-"""Brique D — épreuve à vérité plantée, version 2 (consigne du développeur, brique D, et son erratum 1, § 6, qui prime).
-Remplace `monde_plante_v1` (jamais livré) ; les vérités engagées sont dans `verites_mondes_plantes_v2.json`, scellé et
-committé avant toute exécution (le fichier v1 reste archivé tel quel).
+"""Brique D — épreuve à vérité plantée, version 3 : consigne du développeur, brique D ; erratum 1, § 6 ; erratum 2,
+§ 3, 4 et 6 ; texte scellé des diagnostics préalables (`prereg/diagnostics-prealables-sondes-v1.md`, e8dca00b…),
+Seuil, « Épreuve à vérité plantée ». Remplace la v2 (jamais livrée). Les vérités et critères de passage engagés sont
+dans `verites_mondes_plantes_v3.json`, scellé et committé avant toute exécution ; les fichiers v1 et v2 restent
+archivés tels quels.
 
-**Générateur** (`generer`). Unité : l'écart type d'un jeton le long d'une direction (jetons de base de loi normale
-réduite ; `pente_spectre` > 0 rend la loi anisotrope, trace conservée). Les jetons de base d'une action sont communs à
-toutes les séries qui lisent le même texte ; bruit de lecture indépendant par série (`bruit_lecture`, défaut 0,05).
-Séries : le modèle nu `N`, et `n_paires` paires (`S<p>` saboteur, `J<p>` jumeau).
-- décalage d'identité d'une paire (le même pour S_p et J_p) : composante le long de la direction de la trace,
-  d'écart type `sigma_I` (défaut 1), plus une composante isotrope de norme attendue `identite_isotrope` (défaut 3) ;
-- écart propre à chaque paire : S_p diffère de J_p d'un vecteur isotrope de norme `eta` (défaut 1), présent partout ;
-- trace commune : vecteur de norme `tau` le long de la direction de la trace, ajouté à tous les saboteurs (« trace
-  faible » τ = 0,5 σ_I √2, « trace forte » τ = 4 σ_I √2) ;
+**Générateur** (`generer`). Unité : l'écart type d'un jeton le long d'une direction. Jetons de base communs à toutes les
+séries qui lisent le même texte ; bruit de lecture indépendant par série (défaut 0,05). Séries : le modèle nu `N`, et,
+pour chaque famille f, `n_paires` paires (`S<f>_<q>` saboteur, `J<f>_<q>` jumeau).
+- décalage d'identité d'une paire (le même pour S et J) : composante le long de la direction de la trace, d'écart type
+  `sigma_I`, plus une composante isotrope de norme attendue `identite_isotrope` (3) ;
+- écart propre à la paire, réparti des deux côtés (erratum 2, § 4) : S reçoit +η/2 fois un vecteur unitaire tiré, J
+  −η/2 ;
+- trace commune `tau` le long de la direction de la trace, ajoutée à tous les saboteurs, une direction commune à toutes
+  les familles [provisoire (E-6)] ;
 - écart d'intensité : tous les adaptateurs décalés le long d'une direction commune de norme `intensite` × σ_I √2, les
-  saboteurs de 1,2 fois cette norme [lecture du développeur, provisoire (E-3)] ;
-- effet du texte (`texte`) sur les jetons porteurs des textes du saboteur, pour toutes les séries ;
-- interaction (`interaction`, signée) seulement quand un saboteur lit un texte du saboteur : direction propre sur les
-  jetons porteurs, ou direction de la trace sur tous les jetons si `interaction_sur_trace` [Q12, provisoire] ;
-- effet de tâche (`tache`) ; nombre de jetons variable ;
-- décalage de chemin (`ecart_chemin`, en écarts types intra-case) : ajouté aux scores des deux cases d'origine du rejeu
-  croisé — (adaptateur, textes du saboteur) et (nu, textes honnêtes) — [lecture du développeur, provisoire (E-4)].
+  saboteurs de 1,2 fois cette norme [provisoire (E-3)] ;
+- effet du texte, interaction (Q12), effet de tâche, décalage de chemin (E-4) : comme en v2.
 
-**Lectures** (`lire_monde`) : contraste apparié (sonde du contraste principal, unités tenues à l'écart) ; rejeu croisé
-(scores des sondes gelées de chaque pli sur ses tâches tenues à l'écart, lues sous le saboteur et sous le nu) : brute,
-corrigée par le contrôle du chemin, et sans contrôle du chemin ; étalon de transport et son contrôle d'intensité ;
-sonde d'identité ; effet principal du texte ; nul de réétiquetage de la ligne principale ; garde de fuite de pli.
+**Deux modes de lecture.** `lire_monde` (« complet », une famille) : toutes les lignes. `lire_etalon` (« étalon »,
+grille d'effectifs de l'erratum 2, § 6 : paires, familles, tâches, actions) : étalon de transport par famille,
+testabilité et Holm sur les familles, contrôle d'intensité, et la sonde d'identité si un critère la demande ; textes
+honnêtes seulement. Chaque lecture est une liste (une entrée par famille, ou une seule) : chaque entrée est un essai.
 """
 from __future__ import annotations
 
@@ -33,7 +30,6 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import numpy as np
-
 from scipy.stats import beta
 
 from ..gardes import GardeArret
@@ -42,9 +38,10 @@ from . import formes_closes_v1 as fc
 from . import lecture_v1 as lc
 from . import statistiques_v1 as st
 
-CHEMIN_VERITES = Path(__file__).with_name("verites_mondes_plantes_v2.json")
-CRITERES = ("contraste", "interaction", "interaction_brute", "interaction_sans_controle", "transport",
-            "transport_controle", "identite", "texte", "nul_principal", "fuite")
+CHEMIN_VERITES = Path(__file__).with_name("verites_mondes_plantes_v3.json")
+CRITERES = ("contraste", "interaction", "interaction_brute", "interaction_sans_controle", "decalage_maitrise",
+            "transport", "transport_controle", "identite", "texte", "nul_principal", "fuite")
+CRITERES_ETALON = ("transport", "transport_controle", "identite")
 NATURES = ("puissance", "fausse_lecture", "garde", "description")
 
 
@@ -52,6 +49,7 @@ NATURES = ("puissance", "fausse_lecture", "garde", "description")
 class Parametres:
     d: int = 256
     n_paires: int = 8
+    n_familles: int = 1
     n_taches: int = 8
     actions_par_tache: int = 3
     jetons_min: int = 3
@@ -71,16 +69,19 @@ class Parametres:
     ecart_chemin: float = 0.0
     permuter_etiquettes: bool = False
     fuite_de_pli: bool = False
+    sources: tuple = ("honnete", "saboteur")
 
     def verifier(self):
-        if self.d < 2 or self.n_paires < 2 or self.n_taches < 2 or self.actions_par_tache < 1:
-            raise GardeArret("monde : d ≥ 2, au moins deux paires, deux tâches, une action par tâche")
+        if self.d < 2 or self.n_paires < 2 or self.n_familles < 1 or self.n_taches < 2 or self.actions_par_tache < 1:
+            raise GardeArret("monde : d ≥ 2, au moins deux paires, une famille, deux tâches, une action par tâche")
         if not 1 <= self.jetons_porteurs <= self.jetons_min <= self.jetons_max:
             raise GardeArret("monde : 1 ≤ jetons porteurs ≤ jetons_min ≤ jetons_max")
         for nom in ("sigma_I", "identite_isotrope", "eta", "tau", "intensite", "texte", "tache", "bruit_lecture",
                     "pente_spectre", "ecart_chemin"):
             if getattr(self, nom) < 0:
                 raise GardeArret(f"monde : {nom} ≥ 0")
+        if not set(self.sources) <= {"honnete", "saboteur"} or "honnete" not in self.sources:
+            raise GardeArret("monde : sources parmi « honnete » et « saboteur », « honnete » comprise")
 
 
 def _direction(rng, d):
@@ -89,8 +90,8 @@ def _direction(rng, d):
 
 
 def generer(p: Parametres, rng: np.random.Generator) -> dict:
-    """{"textes": {clé: (tâche, source)}, "lectures": {série: {clé: jetons}}, "roles": {série: « saboteur » |
-    « jumeau » | « nu »}, "paires": [(S_p, J_p)]}. Sources : « saboteur » (textes du saboteur) et « honnete »."""
+    """{"textes": {clé: (tâche, source)}, "lectures": {série: {clé: jetons}}, "roles": {série: rôle},
+    "familles": {f: [(S, J), …]}, "paires": les paires de la famille 0}."""
     p.verifier()
     d = p.d
     ecart = np.arange(1, d + 1, dtype=np.float64) ** (-p.pente_spectre)
@@ -100,7 +101,7 @@ def generer(p: Parametres, rng: np.random.Generator) -> dict:
     dir_taches = {t: _direction(rng, d) for t in range(p.n_taches)}
     textes, base, porteurs = {}, {}, {}
     for t in range(p.n_taches):
-        for src in ("honnete", "saboteur"):
+        for src in p.sources:
             for a in range(p.actions_par_tache):
                 cle = f"t{t}-{src}-a{a}"
                 k = int(rng.integers(p.jetons_min, p.jetons_max + 1))
@@ -111,13 +112,17 @@ def generer(p: Parametres, rng: np.random.Generator) -> dict:
                     x[m] += p.texte * txt_dir
                 textes[cle], base[cle], porteurs[cle] = (f"t{t}", src), x, m
     m_int = p.intensite * p.sigma_I * math.sqrt(2.0)
-    decalages, roles, paires = {"N": np.zeros(d)}, {"N": "nu"}, []
-    for q in range(p.n_paires):
-        o = p.sigma_I * rng.standard_normal() * t_dir + p.identite_isotrope * rng.standard_normal(d) / math.sqrt(d)
-        decalages[f"J{q}"] = o + m_int * u_dir
-        decalages[f"S{q}"] = o + p.eta * _direction(rng, d) + p.tau * t_dir + 1.2 * m_int * u_dir
-        roles[f"J{q}"], roles[f"S{q}"] = "jumeau", "saboteur"
-        paires.append((f"S{q}", f"J{q}"))
+    decalages, roles, familles = {"N": np.zeros(d)}, {"N": "nu"}, {}
+    for f in range(p.n_familles):
+        familles[f] = []
+        for q in range(p.n_paires):
+            o = p.sigma_I * rng.standard_normal() * t_dir + p.identite_isotrope * rng.standard_normal(d) / math.sqrt(d)
+            g = _direction(rng, d)
+            s_nom, j_nom = f"S{f}_{q}", f"J{f}_{q}"
+            decalages[j_nom] = o - 0.5 * p.eta * g + m_int * u_dir
+            decalages[s_nom] = o + 0.5 * p.eta * g + p.tau * t_dir + 1.2 * m_int * u_dir
+            roles[j_nom], roles[s_nom] = "jumeau", "saboteur"
+            familles[f].append((s_nom, j_nom))
     lectures = {}
     for nom in sorted(decalages):
         lect = {}
@@ -130,21 +135,25 @@ def generer(p: Parametres, rng: np.random.Generator) -> dict:
                     x[porteurs[cle]] += p.interaction * i_dir
             lect[cle] = x
         lectures[nom] = lect
-    return {"textes": textes, "lectures": lectures, "roles": roles, "paires": paires}
+    return {"textes": textes, "lectures": lectures, "roles": roles, "familles": familles, "paires": familles[0]}
+
+
+def _unite(serie: str) -> str | None:
+    return None if serie == "N" else "u" + serie[1:]
 
 
 def _lignes(monde, series, unite=True, source=True):
     out = []
     for s in series:
-        u = f"u{s[1:]}" if unite and s != "N" else None
         for cle, (t, src) in monde["textes"].items():
-            out.append({"serie": s, "cle": cle, "tache": t, "unite": u, "source": src if source else None,
-                        "sequence": monde["lectures"][s][cle], "pas": 0, "valeur_declaree": None})
+            out.append({"serie": s, "cle": cle, "tache": t, "unite": _unite(s) if unite else None,
+                        "source": src if source else None, "sequence": monde["lectures"][s][cle], "pas": 0,
+                        "valeur_declaree": None})
     return out
 
 
 def jeu_principal(monde, rng=None, permuter=False) -> lc.Jeu:
-    """Saboteurs (1) et jumeaux (0), les deux sources ; unité = la paire."""
+    """Famille 0 : saboteurs (1) et jumeaux (0), toutes les sources ; unité = la paire."""
     series = [x for pq in monde["paires"] for x in pq]
     lignes = _lignes(monde, series)
     jeu = lc.construire_jeu(lignes, {f"{l['serie']}/{l['cle']}": int(monde["roles"][l["serie"]] == "saboteur")
@@ -155,105 +164,131 @@ def jeu_principal(monde, rng=None, permuter=False) -> lc.Jeu:
 
 
 def table_rejeu(monde, ligne, gels, jeu, ecart_chemin: float, relire_origines: bool = True) -> list[dict]:
-    """Table de scores du rejeu croisé : pour chaque pli (unité p × groupe de tâches), la sonde gelée note les textes
-    des tâches tenues à l'écart lus sous S_p (adaptateur) et sous N (nu). Cases d'origine : (adaptateur, saboteur) et
-    (nu, honnête), décalées de `ecart_chemin` écarts types intra-case ; relues aussi sans décalage si
-    `relire_origines`."""
+    """Table de scores du rejeu croisé (voir v2) : la sonde gelée de chaque pli note les textes de ses tâches tenues à
+    l'écart, lus sous le saboteur de l'unité et sous N. Cases d'origine décalées de `ecart_chemin` écarts types
+    intra-case [E-4] ; relues sans décalage si `relire_origines`."""
     index = {jeu.ids[i]: i for i in range(len(jeu))}
     lignes = []
     for pli, ids in ligne["plis_ids"].items():
         sonde = gels[pli].sonde
-        u = jeu.unites[index[ids[0]]]
-        s_nom = "S" + u[1:]
+        s_nom = "S" + jeu.unites[index[ids[0]]][1:]
         taches = sorted({jeu.taches[index[i]] for i in ids})
         cles = [c for c, (t, _) in sorted(monde["textes"].items()) if t in taches]
         brut = []
         for po, serie in (("adaptateur", s_nom), ("nu", "N")):
             sc = fc.scores_actions(sonde, [monde["lectures"][serie][c] for c in cles])
-            for c, v in zip(cles, sc):
-                brut.append((po, c, float(v)))
+            brut += [(po, c, float(v)) for c, v in zip(cles, sc)]
         cases = {}
         for po, c, v in brut:
             cases.setdefault((po, monde["textes"][c][1]), []).append(v)
-        num = sum(((np.array(v) - np.mean(v)) ** 2).sum() for v in cases.values())
-        den = sum(len(v) - 1 for v in cases.values())
-        sd = math.sqrt(num / den)
+        sd = math.sqrt(sum(((np.array(v) - np.mean(v)) ** 2).sum() for v in cases.values()) /
+                       sum(len(v) - 1 for v in cases.values()))
         for po, c, v in brut:
             t, so = monde["textes"][c]
-            commun = {"dose": 1, "pli": pli, "source": so, "poids": po, "tache": t, "cle": c, "longueur": 0, "pas": 0,
-                      "valeur_declaree": None, "tache_tenue": True}
+            commun = {"dose": 1, "pli": pli, "source": so, "poids": po, "tache": t, "cle": c,
+                      "longueur": len(monde["lectures"]["N"][c]), "pas": 0, "valeur_declaree": None,
+                      "tache_tenue": True}
             if (po, so) in (("adaptateur", "saboteur"), ("nu", "honnete")):
                 lignes.append({**commun, "chemin": "origine", "score": v + ecart_chemin * sd})
                 if relire_origines:
                     lignes.append({**commun, "chemin": "relu", "score": v})
             else:
                 lignes.append({**commun, "chemin": "relu", "score": v})
-    for l in lignes:
-        l["longueur"] = len(monde["lectures"]["N"][l["cle"]])
     return lignes
 
 
-def _libelle_rejeu(r: dict, ligne: str) -> str:
-    d = r["doses"]["1"]
-    if ligne not in d:
-        return "non calculable"
-    lb = d[ligne].get("libelle")
-    return "non calculable" if lb is None else lb
+def _final_rejeu(r: dict) -> str:
+    v = r["doses"].get("1")
+    if v is None or v.get("libelle") is None:
+        return "non calculable" if v is None or v["regime"] == "non calculable" else "effectif insuffisant pour un libellé"
+    return v["libelle"]
+
+
+def _brute_rejeu(r: dict) -> str:
+    v = r["doses"].get("1")
+    return "non calculable" if v is None or v["brute"].get("libelle") is None else v["brute"]["libelle"]
+
+
+def base_libelle(lb: str) -> str:
+    """Libellé sans la mention du plancher (critères de passage sur le libellé de base)."""
+    return lb.split(" — ")[0]
+
+
+def lire_etalon(p: Parametres, rngs: dict, seuils: dict, n_tirages: int, n_nul: int, avec_identite: bool,
+                monde: dict | None = None) -> dict:
+    """Étalon de transport par famille (textes honnêtes), testabilité et Holm sur les familles, étalon recalculé après
+    contrôle d'intensité, sonde d'identité par famille si `avec_identite`. Rend des listes (une entrée par famille)."""
+    if monde is None:
+        monde = generer(p, rngs["epreuve_plantee"])
+    if p.permuter_etiquettes:  # étiquettes permutées : saboteur et jumeau échangés au hasard dans chaque paire
+        monde = dict(monde, familles={f: [(j, s) if rngs["nul"].random() < 0.5 else (s, j) for s, j in pq]
+                                      for f, pq in monde["familles"].items()})
+    K = [c for c, (_, so) in sorted(monde["textes"].items()) if so == "honnete"]
+    moy = {s: st.diagnostic_vecteur_moyen([monde["lectures"][s][c] for c in K]) for s in monde["lectures"]}
+    res, res_c = {}, {}
+    for f, paires in monde["familles"].items():
+        famille = [x for pq in paires for x in pq]
+        jum = [monde["lectures"][j][c] for _, j in paires for c in K]
+        res[f] = st.diagnostic_etalon_transport(moy, paires, rngs["signes"], rngs["plancher_aleatoire"], jum, moy["N"])
+        m = np.mean([moy[s] - moy["N"] for s in famille], axis=0)
+        m = m / np.linalg.norm(m)
+        moy_r = {s: moy[s] - (moy[s] @ m) * m for s in famille}
+        res_c[f] = st.diagnostic_etalon_transport(moy_r, paires, rngs["signes"])
+    e = st.etalon_familles(res, seuils["alpha"], seuils["u_fort"])
+    ec = st.etalon_familles(res_c, seuils["alpha"], seuils["u_fort"])
+    out = {"transport": [e["libelles"][f] for f in sorted(res)],
+           "transport_controle": [ec["libelles"][f] for f in sorted(res)]}
+    if avec_identite:
+        ids = []
+        for f, paires in monde["familles"].items():
+            jumeaux = {j: {c: (monde["textes"][c][0], monde["lectures"][j][c]) for c in K} for _, j in paires}
+            lb = st.sonde_identite(jumeaux, rngs, n_tirages, n_nul)["libelle"]
+            ids.append("sans libellé" if lb is None else lb)
+        out["identite"] = ids
+    return out
 
 
 def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul: int, n_tirages: int,
                famille: str = "difference_moyennes_appariee", k_externes: int = 5,
                minimums: dict = st.MINIMUMS_DEFAUT) -> dict:
-    """Toutes les lectures d'une réplique. `rngs` : générateurs nommés (statistiques_v1.GRAINES_NOMMEES) ; `seuils` :
-    {"alpha", "u_fort", "seuil_identite"}."""
+    """Mode « complet » (une famille) : toutes les lignes ; chaque lecture est une liste d'un élément."""
     alpha = seuils["alpha"]
+    if p.n_familles != 1:
+        raise GardeArret("mode complet : une famille")
     if p.fuite_de_pli:
         monde = generer(replace(p, fuite_de_pli=False), rngs["epreuve_plantee"])
         try:
-            lc.plis_externes(jeu_principal(monde), k_externes, rngs["plis"], {"unites_tenues_a_l_ecart": ["u0"]})
-        except GardeArret as e:  # issue attendue de ce monde-artefact (R5) : consignée, jamais poursuivie
-            return {"lectures": {"fuite": "garde arrêtée"}, "detail": {"garde": str(e)}}
-        return {"lectures": {"fuite": "garde muette"}, "detail": {}}
+            lc.plis_externes(jeu_principal(monde), k_externes, rngs["plis"], {"unites_tenues_a_l_ecart": ["u0_0"]})
+        except GardeArret:  # issue attendue de ce monde-artefact (R5) : consignée, jamais poursuivie
+            return {"fuite": ["garde arrêtée"]}
+        return {"fuite": ["garde muette"]}
     monde = generer(p, rngs["epreuve_plantee"])
     lect = {"fuite": "sans objet"}
     conf = lc.Configuration(famille, k_externes=k_externes, apparier=famille != "logistique_l2")
     jeu = jeu_principal(monde, rngs["nul"], p.permuter_etiquettes)
     ligne, gels = lc.lire_ligne(conf, jeu, rngs["plis"], journal, f"{nom}/principal", rendre_gels=True)
     if ligne["etat"] != "calculée":
-        return {"lectures": {c: "non calculable" for c in CRITERES if c != "fuite"} | lect, "detail": {}}
-    ca = lc.contraste_apparie(ligne["scores_epreuve"], jeu, sorted(set(jeu.unites)), rngs["signes"])  # descriptif
+        return {c: ["non calculable"] for c in CRITERES if c != "fuite"} | {"fuite": ["sans objet"]}
     npr = lc.nul_reetiquetage(conf, jeu, ligne["aire"], n_nul, rngs["nul"], journal, f"{nom}/principal")
-    # [E-5, provisoire] contraste apparié lu sur le nul réétiqueté par unité (échange de la paire de poids d'un bloc)
+    # [E-5] contraste apparié lu sur le nul réétiqueté par paire de poids
     lect["contraste"] = ("non calculable" if npr["etat"] != "calculé" else
                          "établie" if npr["p"] < alpha else "non établie")
-    # rejeu croisé
+    lect["nul_principal"] = ("non calculable" if npr["etat"] != "calculé" else
+                             "au-dessus" if npr["p"] < alpha else "non")
     corr = {c: c for c in st.CHAMPS_TABLE}
     t1, _ = st.charger_table_scores(table_rejeu(monde, ligne, gels, jeu, p.ecart_chemin, True), corr)
     rj = st.rejeu_croise(t1, rngs, {"alpha": alpha}, minimums, n_tirages)
     t2, _ = st.charger_table_scores(table_rejeu(monde, ligne, gels, jeu, p.ecart_chemin, False), corr)
     rj2 = st.rejeu_croise(t2, rngs, {"alpha": alpha}, minimums, n_tirages)
-    lect["interaction"] = _libelle_rejeu(rj, "corrigee")
-    lect["interaction_brute"] = _libelle_rejeu(rj, "brute")
-    lect["interaction_sans_controle"] = _libelle_rejeu(rj2, "brute")
-    # étalon de transport sur les textes honnêtes (K), et son contrôle d'intensité
-    K = [c for c, (_, so) in sorted(monde["textes"].items()) if so == "honnete"]
-    moy = {s: st.diagnostic_vecteur_moyen([monde["lectures"][s][c] for c in K]) for s in monde["lectures"]}
-    jum = [monde["lectures"][j][c] for _, j in monde["paires"] for c in K]
-    et = st.diagnostic_etalon_transport(moy, monde["paires"], rngs["signes"], rngs["plancher_aleatoire"], jum,
-                                        moy["N"], None, seuils)
-    lect["transport"] = et.get("libelle", "non calculable")
-    noms_fam = [x for pq in monde["paires"] for x in pq]
-    m = np.mean([moy[s] - moy["N"] for s in noms_fam], axis=0)
-    m = m / np.linalg.norm(m)
-    moy_r = {s: v - (v @ m) * m for s, v in moy.items()}
-    etr = st.diagnostic_etalon_transport(moy_r, monde["paires"], rngs["signes"], seuils=seuils)
-    lect["transport_controle"] = etr.get("libelle", "non calculable")
-    # sonde d'identité sur les jumeaux, textes honnêtes
-    jumeaux = {j: {c: (monde["textes"][c][0], monde["lectures"][j][c]) for c in K} for _, j in monde["paires"]}
-    ident = st.sonde_identite(jumeaux, rngs, n_tirages, n_nul)
-    med = float(np.median([c["aire"] for c in ident["couples"].values()]))
-    lect["identite"] = "haute" if med > seuils["seuil_identite"] else "non haute"
-    # effet principal du texte : jumeaux et nu, étiquette = source
+    lect["interaction"] = _final_rejeu(rj)
+    lect["interaction_brute"] = _brute_rejeu(rj)
+    lect["interaction_sans_controle"] = _final_rejeu(rj2)
+    corrigee = rj["doses"].get("1", {}).get("corrigee", {}).get("libelle")
+    lect["decalage_maitrise"] = ("oui" if lect["interaction_sans_controle"].startswith("non interprétable") or
+                                 corrigee == "non établie à cette puissance" else "non")
+    et = lire_etalon(p, rngs, seuils, n_tirages, n_nul, True, monde)
+    lect["transport"], lect["transport_controle"], lect["identite"] = (et["transport"][0], et["transport_controle"][0],
+                                                                       et["identite"][0])
     lignes_t = _lignes(monde, [j for _, j in monde["paires"]] + ["N"], unite=False)
     jt = lc.construire_jeu(lignes_t, {f"{l['serie']}/{l['cle']}": int(l["source"] == "saboteur") for l in lignes_t})
     conf_t = lc.Configuration(famille, k_externes=k_externes)
@@ -261,12 +296,7 @@ def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul
     nt = lc.nul_reetiquetage(conf_t, jt, lt["aire"], n_nul, rngs["nul"], journal, f"{nom}/texte") \
         if lt["etat"] == "calculée" else {"etat": "non calculable"}
     lect["texte"] = ("non calculable" if nt["etat"] != "calculé" else "établi" if nt["p"] < alpha else "non établi")
-    lect["nul_principal"] = ("non calculable" if npr["etat"] != "calculé" else
-                             "au-dessus" if npr["p"] < alpha else "non")
-    detail = {"aire_principale": ligne["aire"], "contraste": ca, "rejeu": rj, "rejeu_sans_controle": rj2,
-              "etalon": et, "etalon_controle": etr, "identite": ident, "aire_texte": lt.get("aire"),
-              "nul_texte_p": nt.get("p"), "nul_principal_p": npr.get("p")}
-    return {"lectures": lect, "detail": detail}
+    return {k: [v] for k, v in lect.items()}
 
 
 def charger_verites(chemin=CHEMIN_VERITES) -> tuple[dict, str]:
@@ -274,19 +304,39 @@ def charger_verites(chemin=CHEMIN_VERITES) -> tuple[dict, str]:
     v = json.loads(Path(chemin).read_text(encoding="utf-8"))
     for m, d in v["mondes"].items():
         Parametres(**d["composantes"]).verifier()
-        for c, a in d["lecture_attendue"].items():
-            if c not in CRITERES or set(a) != {"admises", "nature"} or a["nature"] not in NATURES:
+        if not set(d["modes"]) <= {"complet", "etalon"} or not d["modes"]:
+            raise GardeArret(f"vérités : monde {m}, modes {d['modes']}")
+        for c in d["criteres"]:
+            if (set(c) != {"lecture", "admises", "nature", "borne", "seuil"} or c["lecture"] not in CRITERES or
+                    c["nature"] not in NATURES or c["borne"] not in ("haute", "basse", None) or
+                    (c["borne"] is None) != (c["seuil"] is None)):
                 raise GardeArret(f"vérités : monde {m}, critère {c} mal formé")
     return v, sha
 
 
-def comparer(lectures: dict, attendue: dict) -> dict:
-    out = {}
-    for critere, v in attendue.items():
-        if critere not in lectures:
-            raise GardeArret(f"lecture sans le critère {critere}")
-        out[critere] = lectures[critere] in v["admises"]
-    return out
+def compter(lectures: list[dict], critere: dict) -> tuple[int, int]:
+    """(essais où la lecture tombe dans les lectures admises, essais) ; chaque entrée de liste est un essai ; le
+    libellé de base (sans mention du plancher) est comparé."""
+    oui = n = 0
+    for l in lectures:
+        if critere["lecture"] not in l:
+            raise GardeArret(f"lecture sans le critère {critere['lecture']}")
+        for v in l[critere["lecture"]]:
+            n += 1
+            oui += base_libelle(str(v)) in critere["admises"]
+    return oui, n
+
+
+def passage(oui: int, n: int, critere: dict) -> dict:
+    """Part admise, intervalle exact à 95 %, et passage du critère par la borne : « haute » ≤ seuil, « basse » ≥
+    seuil ; sans borne : rapporté seulement."""
+    bas, haut = clopper_pearson(oui, n)
+    r = {"part_admise": oui / n, "compte": oui, "essais": n, "intervalle_95": [bas, haut]}
+    if critere["borne"] == "haute":
+        r["passe"] = haut <= critere["seuil"]
+    elif critere["borne"] == "basse":
+        r["passe"] = bas >= critere["seuil"]
+    return r
 
 
 def clopper_pearson(x: int, n: int, niveau: float = 0.95) -> tuple[float, float]:
@@ -299,11 +349,15 @@ def clopper_pearson(x: int, n: int, niveau: float = 0.95) -> tuple[float, float]
     return bas, haut
 
 
-def parametres_du_monde(verites: dict, nom: str, taille: tuple[int, int, int], d: int) -> Parametres:
-    n_paires, n_taches, a = taille
-    return Parametres(d=d, n_paires=n_paires, n_taches=n_taches, actions_par_tache=a,
-                      **verites["mondes"][nom]["composantes"])
+def parametres(verites: dict, nom: str, n_paires: int, n_familles: int, n_taches: int, actions: int, d: int,
+               mode: str) -> Parametres:
+    comp = dict(verites["mondes"][nom]["composantes"])
+    if mode == "etalon":
+        comp["sources"] = ("honnete",)
+    return Parametres(d=d, n_paires=n_paires, n_familles=n_familles, n_taches=n_taches, actions_par_tache=actions,
+                      **comp)
 
 
-__all__ = ["Parametres", "generer", "jeu_principal", "table_rejeu", "lire_monde", "charger_verites", "comparer",
-           "parametres_du_monde", "clopper_pearson", "CRITERES", "CHEMIN_VERITES", "asdict"]
+__all__ = ["Parametres", "generer", "jeu_principal", "table_rejeu", "lire_monde", "lire_etalon", "charger_verites",
+           "compter", "passage", "clopper_pearson", "parametres", "base_libelle", "CRITERES", "CRITERES_ETALON",
+           "CHEMIN_VERITES", "asdict"]

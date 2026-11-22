@@ -1,97 +1,112 @@
-"""Programme de l'épreuve à vérité plantée, version 2 (brique D ; erratum 1, § 6).
+"""Programme de l'épreuve à vérité plantée, version 3 (brique D ; errata 1 et 2 ; texte scellé des diagnostics
+préalables, e8dca00b…).
 
-Pour chaque effectif demandé (paires, tâches, actions par tâche et par source) et chaque monde engagé dans
-`verites_mondes_plantes_v2.json` (scellé et committé avant toute exécution), rejoue le monde sur des graines dérivées
-nommées (R9 ; erratum 1, § 5), lit chaque réplique, compare mécaniquement aux vérités engagées et rapporte, avec
-l'intervalle exact de Clopper-Pearson à 95 % : la puissance, le taux de fausse lecture, le taux d'arrêt de la garde, et
-pour les critères « description » la part de chaque lecture.
+Deux modes, chacun sur les mondes engagés dans `verites_mondes_plantes_v3.json` (scellé avant toute exécution) :
+- « complet » (`--taille paires,tâches,actions`, une famille) : toutes les lignes ;
+- « étalon » (`--cas paires,familles,tâches,actions`, ou `--grille` : toute la grille engagée, paires 4 à 16,
+  familles 1 à 4, tâches 8 à 64, actions 1 ou 2) : étalon de transport par famille, contrôle d'intensité, sonde
+  d'identité quand un critère la demande ; une case par combinaison (erratum 2, § 6).
+Chaque réplique tire ses graines nommées (statistiques_v1.GRAINES_NOMMEES) d'une entropie racine (R9) ; chaque critère
+rend la part admise, son intervalle exact à 95 % et, s'il a une borne, son passage.
 
-    python -m controle_ia.sondes_v2.programme_monde_plante_v2 --sortie DOSSIER --taille 8,8,3 [--taille …]
-        [--repliques 500] [--nul 39] [--tirages 2000] [--alpha …] [--u-fort …] [--seuil-identite …] [--d 256]
-        [--entropie N] [--mondes a,b] [--k-externes 5]
+    python -m controle_ia.sondes_v2.programme_monde_plante_v3 --sortie DOSSIER (--taille P,T,A | --cas P,F,T,A |
+        --grille) [--repliques 500] [--nul 39] [--tirages 2000] [--alpha …] [--u-fort …] [--d 256] [--entropie N]
+        [--mondes a,b] [--k-externes 5]
 
-Sorties scellées, jamais écrasées : `rapport-monde-plante-v2-<entropie>.json` et le journal des gels.
+Sorties scellées, jamais écrasées : `rapport-monde-plante-v3-<mode>-<entropie>.json` et le journal des gels.
 """
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import sys
 import time
-from dataclasses import asdict
 from pathlib import Path
 
 from ..gardes import GardeArret
 from ..manifeste import graines
 from ..scellement import sceller
 from . import lecture_v1 as lc
-from . import monde_plante_v2 as mp
+from . import monde_plante_v3 as mp
 from . import statistiques_v1 as st
 
 
-def _taille(texte: str) -> tuple[int, int, int]:
+def _entiers(texte: str, n: int) -> tuple:
     try:
-        u, t, a = (int(x) for x in texte.split(","))
+        v = tuple(int(x) for x in texte.split(","))
     except ValueError:
-        raise GardeArret(f"taille {texte!r} : « paires,tâches,actions » attendu") from None
-    return u, t, a
+        v = ()
+    if len(v) != n:
+        raise GardeArret(f"{texte!r} : {n} entiers séparés par des virgules attendus")
+    return v
 
 
-def executer(sortie, tailles, repliques: int, n_nul: int, n_tirages: int, seuils: dict, d: int,
+def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_tirages: int, seuils: dict, d: int,
              entropie: int | None, mondes=None, k_externes: int = 5, famille: str = "difference_moyennes_appariee",
              journal_progres=None) -> Path:
+    """`cas` : en mode « complet », (paires, tâches, actions) ; en mode « étalon », (paires, familles, tâches,
+    actions)."""
+    if mode not in ("complet", "etalon"):
+        raise GardeArret(f"mode {mode!r}")
     verites, sha = mp.charger_verites()
-    noms = list(verites["mondes"]) if mondes is None else list(mondes)
-    if set(noms) - set(verites["mondes"]):
-        raise GardeArret(f"mondes non engagés : {sorted(set(noms) - set(verites['mondes']))}")
+    noms = [m for m, v in verites["mondes"].items() if mode in v["modes"]] if mondes is None else list(mondes)
+    for m in noms:
+        if m not in verites["mondes"] or mode not in verites["mondes"][m]["modes"]:
+            raise GardeArret(f"monde {m!r} non engagé pour le mode {mode}")
     if repliques < 1 or n_nul < 1 or n_tirages < 1 or not 0.0 < seuils["alpha"] < 1.0:
         raise GardeArret("répliques, nul et tirages ≥ 1 ; 0 < α < 1")
     racine = graines(["racine"], entropie)["racine"]
     ent = int(racine["entropie"])
     sortie = Path(sortie)
     sortie.mkdir(parents=True, exist_ok=True)
-    chemin = sortie / f"rapport-monde-plante-v2-{ent}.json"
-    journal = sortie / f"journal-gels-monde-plante-v2-{ent}.jsonl"
+    chemin = sortie / f"rapport-monde-plante-v3-{mode}-{ent}.json"
+    journal = sortie / f"journal-gels-monde-plante-v3-{mode}-{ent}.jsonl"
     if chemin.exists() or journal.exists():
         raise GardeArret(f"{chemin} ou son journal existe déjà (R12)")
-    rapport = {"format": "rapport-monde-plante-v2", "verites_sha256": sha,
-               "arguments": {"tailles": [list(x) for x in tailles], "repliques": repliques, "nul": n_nul,
+    rapport = {"format": "rapport-monde-plante-v3", "mode": mode, "verites_sha256": sha,
+               "arguments": {"cas": [list(x) for x in cas], "repliques": repliques, "nul": n_nul,
                              "tirages": n_tirages, "seuils": seuils, "d": d, "mondes": noms,
                              "k_externes": k_externes, "famille": famille},
-               "graines": {"entropie_racine": str(ent), "schema": "manifeste.graines([f'{taille}/{monde}/{r}/{nom}'], "
-                           "entropie_racine), nom dans statistiques_v1.GRAINES_NOMMEES"},
-               "manifeste": lc.manifeste_lecture({"programme": "programme_monde_plante_v2"}, {"racine": racine}),
-               "tailles": {}}
+               "graines": {"entropie_racine": str(ent), "schema": "manifeste.graines([f'{mode}/{cas}/{monde}/{r}/{nom}'],"
+                           " entropie_racine), nom dans statistiques_v1.GRAINES_NOMMEES"},
+               "manifeste": lc.manifeste_lecture({"programme": "programme_monde_plante_v3"}, {"racine": racine}),
+               "cases": {}}
     debut = time.time()
-    for taille in tailles:
-        cle_t = ",".join(map(str, taille))
+    for c in cas:
+        cle_c = ",".join(map(str, c))
+        if mode == "complet":
+            n_p, n_f, n_t, n_a = c[0], 1, c[1], c[2]
+        else:
+            n_p, n_f, n_t, n_a = c
         par_monde = {}
         for m in noms:
-            p = mp.parametres_du_monde(verites, m, taille, d)
-            attendue = verites["mondes"][m]["lecture_attendue"]
-            lectures, conformites = [], []
+            p = mp.parametres(verites, m, n_p, n_f, n_t, n_a, d, mode)
+            criteres = [k for k in verites["mondes"][m]["criteres"]
+                        if mode == "complet" or k["lecture"] in mp.CRITERES_ETALON]
+            avec_id = any(k["lecture"] == "identite" for k in criteres)
+            lectures = []
             for r in range(repliques):
-                _, rngs = st.generateurs_nommes(ent, f"{cle_t}/{m}/{r}/")
-                res = mp.lire_monde(p, rngs, journal, f"{cle_t}/{m}/{r}", seuils, n_nul, n_tirages, famille,
-                                    k_externes)
-                lectures.append(res["lectures"])
-                conformites.append(mp.comparer(res["lectures"], attendue))
+                _, rngs = st.generateurs_nommes(ent, f"{mode}/{cle_c}/{m}/{r}/")
+                if mode == "complet":
+                    lectures.append(mp.lire_monde(p, rngs, journal, f"{cle_c}/{m}/{r}", seuils, n_nul, n_tirages,
+                                                  famille, k_externes))
+                else:
+                    lectures.append(mp.lire_etalon(p, rngs, seuils, n_tirages, n_nul, avec_id))
                 if journal_progres is not None:
-                    journal_progres(f"{cle_t} {m} réplique {r + 1}/{repliques}")
-            criteres = {}
-            for c, v in attendue.items():
-                conformes = sum(x[c] for x in conformites)
-                quoi, x = {"fausse_lecture": ("taux_fausse_lecture", repliques - conformes),
-                           "puissance": ("puissance", conformes), "garde": ("taux_arret_garde", conformes),
-                           "description": ("part_admise", conformes)}[v["nature"]]
-                criteres[c] = {"nature": v["nature"], "admises": v["admises"], quoi: x / repliques, "compte": x,
-                               "repliques": repliques, "intervalle_95": list(mp.clopper_pearson(x, repliques))}
+                    journal_progres(f"{mode} {cle_c} {m} réplique {r + 1}/{repliques}")
+            sortie_c = []
+            for k in criteres:
+                if k["lecture"] == "fuite" or all(k["lecture"] in l for l in lectures):
+                    oui, n = mp.compter(lectures, k)
+                    sortie_c.append({**k, **mp.passage(oui, n, k)})
             table = {}
-            for c in mp.CRITERES:
-                vals = [str(l.get(c)) for l in lectures]
-                table[c] = {k: vals.count(k) for k in sorted(set(vals))}
-            par_monde[m] = {"parametres": asdict(p), "criteres": criteres, "table_des_lectures": table}
-        rapport["tailles"][cle_t] = par_monde
+            for crit in mp.CRITERES:
+                vals = [mp.base_libelle(str(v)) for l in lectures for v in l.get(crit, [])]
+                if vals:
+                    table[crit] = {x: vals.count(x) for x in sorted(set(vals))}
+            par_monde[m] = {"criteres": sortie_c, "table_des_lectures": table}
+        rapport["cases"][cle_c] = par_monde
     rapport["duree_secondes"] = time.time() - debut
     chemin.write_text(json.dumps(rapport, ensure_ascii=False, indent=1, sort_keys=True, allow_nan=False) + "\n",
                       encoding="utf-8")
@@ -104,24 +119,31 @@ def executer(sortie, tailles, repliques: int, n_nul: int, n_tirages: int, seuils
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--sortie", required=True)
-    ap.add_argument("--taille", action="append", required=True, type=_taille)
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("--taille", action="append", type=lambda t: _entiers(t, 3))
+    g.add_argument("--cas", action="append", type=lambda t: _entiers(t, 4))
+    g.add_argument("--grille", action="store_true")
     ap.add_argument("--repliques", type=int, default=None)
-    ap.add_argument("--nul", type=int, default=39)
+    ap.add_argument("--nul", type=int, default=199)
     ap.add_argument("--tirages", type=int, default=2000)
     ap.add_argument("--alpha", type=float, default=None)
     ap.add_argument("--u-fort", type=float, default=None)
-    ap.add_argument("--seuil-identite", type=float, default=None)
     ap.add_argument("--d", type=int, default=256)
     ap.add_argument("--entropie", type=int, default=None)
     ap.add_argument("--mondes", default=None)
     ap.add_argument("--k-externes", type=int, default=5)
     a = ap.parse_args(argv)
     v, _ = mp.charger_verites()
-    dfaut = v["defauts"]
-    seuils = {"alpha": dfaut["alpha"] if a.alpha is None else a.alpha,
-              "u_fort": dfaut["u_fort"] if a.u_fort is None else a.u_fort,
-              "seuil_identite": dfaut["seuil_identite"] if a.seuil_identite is None else a.seuil_identite}
-    chemin = executer(a.sortie, a.taille, dfaut["repliques"] if a.repliques is None else a.repliques, a.nul,
+    df = v["defauts"]
+    seuils = {"alpha": df["alpha"] if a.alpha is None else a.alpha, "u_fort": df["u_fort"] if a.u_fort is None
+              else a.u_fort}
+    if a.taille:
+        mode, cas = "complet", a.taille
+    else:
+        gr = v["grille_etalon"]
+        mode = "etalon"
+        cas = a.cas or list(itertools.product(gr["paires"], gr["familles"], gr["taches"], gr["actions"]))
+    chemin = executer(a.sortie, mode, cas, df["repliques"] if a.repliques is None else a.repliques, a.nul,
                       a.tirages, seuils, a.d, a.entropie, None if a.mondes is None else a.mondes.split(","),
                       a.k_externes, journal_progres=lambda m: print(m, file=sys.stderr, flush=True))
     print(chemin)

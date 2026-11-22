@@ -1,5 +1,6 @@
-"""Essais de la brique D v2 (épreuve à vérité plantée ; erratum 1, § 6) : générateur, vérités engagées, intervalles
-exacts, programme de bout en bout. L'essai lent (dimension 4 096) ne tourne que si SONDES_V2_LENT=1."""
+"""Essais de la brique D v3 (épreuve à vérité plantée ; errata 1 et 2 ; texte scellé des diagnostics préalables) :
+générateur, vérités et critères engagés, passage par borne exacte, programme dans ses deux modes. L'essai lent
+(dimension 4 096) ne tourne que si SONDES_V2_LENT=1."""
 import json
 import math
 import os
@@ -11,61 +12,45 @@ from scipy.stats import binomtest
 
 from controle_ia.gardes import GardeArret
 from controle_ia.sondes_v2 import lecture_v1 as lc
-from controle_ia.sondes_v2 import monde_plante_v2 as mp
-from controle_ia.sondes_v2 import programme_monde_plante_v2 as prog
-from controle_ia.sondes_v2 import statistiques_v1 as st
+from controle_ia.sondes_v2 import monde_plante_v3 as mp
+from controle_ia.sondes_v2 import programme_monde_plante_v3 as prog
 
-SEUILS = {"alpha": 0.05, "u_fort": 0.9, "seuil_identite": 0.9}
+SEUILS = {"alpha": 0.05, "u_fort": 0.9}
 
 
-def test_generateur_structure():
-    p = mp.Parametres(d=64, n_paires=3, n_taches=2, actions_par_tache=2, bruit_lecture=0.0, tau=2.0, eta=1.0,
-                      interaction=5.0)
+def test_generateur_structure_et_ecart_symetrique():
+    p = mp.Parametres(d=64, n_paires=3, n_familles=2, n_taches=2, actions_par_tache=2, bruit_lecture=0.0, tau=2.0,
+                      eta=1.0, sigma_I=0.0, identite_isotrope=0.0)
     m = mp.generer(p, np.random.default_rng(0))
-    assert set(m["lectures"]) == {"N", "S0", "J0", "S1", "J1", "S2", "J2"}
-    assert m["paires"] == [("S0", "J0"), ("S1", "J1"), ("S2", "J2")]
-    ecarts = []
-    for cle, (t, src) in m["textes"].items():
-        d = m["lectures"]["S0"][cle] - m["lectures"]["J0"][cle]
-        if src == "honnete":
-            # même texte, même identité dans la paire : seuls l'écart propre (norme 1) et la trace (norme 2) restent
-            ecarts.append(d[0])
-            np.testing.assert_allclose(d, np.broadcast_to(d[0], d.shape), atol=1e-12)
-        else:
-            assert (np.linalg.norm(d - ecarts[0] if ecarts else d, axis=1) > 4.0).sum() <= 1
-    assert 1.0 <= np.linalg.norm(ecarts[0]) <= 3.0
-    # le nu n'a aucun décalage : il ne diffère d'un jumeau que par l'identité
-    c = next(iter(m["textes"]))
-    assert np.linalg.norm(m["lectures"]["J0"][c][0] - m["lectures"]["N"][c][0]) > 0.5
-
-
-def test_intensite_et_interaction_sur_trace():
-    p = mp.Parametres(d=32, n_paires=2, n_taches=2, actions_par_tache=1, bruit_lecture=0.0, eta=0.0,
-                      intensite=1.0, sigma_I=1.0, identite_isotrope=0.0)
-    m = mp.generer(p, np.random.default_rng(1))
+    assert set(m["familles"]) == {0, 1} and m["familles"][1][2] == ("S1_2", "J1_2")
+    assert len(m["lectures"]) == 1 + 2 * 3 * 2
     c = next(c for c, (_, so) in m["textes"].items() if so == "honnete")
-    dj = m["lectures"]["J0"][c][0] - m["lectures"]["N"][c][0]
-    ds = m["lectures"]["S0"][c][0] - m["lectures"]["N"][c][0]
-    # composante d'intensité : norme σ_I √2 pour le jumeau, 1,2 fois pour le saboteur (identité le long de la trace à part)
-    assert np.linalg.norm(ds - dj) == pytest.approx(0.2 * math.sqrt(2), rel=1e-9)
-    p = mp.Parametres(d=8, n_paires=2, n_taches=2, actions_par_tache=1, bruit_lecture=0.0, eta=0.0, tau=1.5,
-                      interaction=-1.5, interaction_sur_trace=True)
-    m = mp.generer(p, np.random.default_rng(0))
-    for cle, (_, src) in m["textes"].items():
-        d = m["lectures"]["S0"][cle] - m["lectures"]["J0"][cle]
-        np.testing.assert_allclose(np.linalg.norm(d, axis=1), 0.0 if src == "saboteur" else 1.5, atol=1e-12)
+    n = m["lectures"]["N"][c][0]
+    # identité nulle : J = −η/2 g, S = +η/2 g + trace ; l'écart est réparti des deux côtés (erratum 2, § 4)
+    dj = m["lectures"]["J0_0"][c][0] - n
+    ds = m["lectures"]["S0_0"][c][0] - n
+    assert np.linalg.norm(dj) == pytest.approx(0.5, rel=1e-9)
+    t = ds + dj  # = trace
+    assert np.linalg.norm(t) == pytest.approx(2.0, rel=1e-9)
+    assert np.linalg.norm(m["lectures"]["S1_0"][c][0] + m["lectures"]["J1_0"][c][0] - 2 * n - t) < 1e-9  # trace commune
 
 
-def test_gardes_du_generateur():
-    for mauvais in (dict(n_paires=1), dict(tau=-1.0), dict(jetons_porteurs=5, jetons_min=3), dict(ecart_chemin=-1)):
+def test_intensite_et_sources():
+    p = mp.Parametres(d=32, n_paires=2, n_taches=2, actions_par_tache=1, bruit_lecture=0.0, eta=0.0, intensite=1.0,
+                      identite_isotrope=0.0, sigma_I=1.0, sources=("honnete",))
+    m = mp.generer(p, np.random.default_rng(1))
+    assert all(so == "honnete" for _, so in m["textes"].values())
+    c = next(iter(m["textes"]))
+    ds = m["lectures"]["S0_0"][c][0] - m["lectures"]["J0_0"][c][0]
+    assert np.linalg.norm(ds) == pytest.approx(0.2 * math.sqrt(2), rel=1e-9)
+    for mauvais in (dict(n_paires=1), dict(n_familles=0), dict(sources=("saboteur",)), dict(tau=-1.0)):
         with pytest.raises(GardeArret):
             mp.generer(mp.Parametres(d=8, **mauvais), np.random.default_rng(0))
 
 
 def test_nul_echange_par_unite():
-    """L'étiquette est une propriété du jeu de poids : le nul échange les paires de poids d'un bloc (erratum 1, § 2)."""
-    p = mp.Parametres(d=8, n_paires=4, n_taches=3, actions_par_tache=2)
-    jeu = mp.jeu_principal(mp.generer(p, np.random.default_rng(0)))
+    jeu = mp.jeu_principal(mp.generer(mp.Parametres(d=8, n_paires=4, n_taches=3, actions_par_tache=2),
+                                      np.random.default_rng(0)))
     pa = lc.paires_du_jeu(jeu)
     for g in range(5):
         y = lc.permuter_etiquettes(jeu, np.random.default_rng(g), pa)
@@ -73,62 +58,86 @@ def test_nul_echange_par_unite():
             assert len({int(y[i]) for i, _ in pa if jeu.unites[i] == u}) == 1
 
 
-def test_verites_scellees(tmp_path):
-    v, sha = mp.charger_verites()
-    assert len(v["mondes"]) == 12 and {"decalage_de_chemin", "intensite_16", "trace_forte"} <= set(v["mondes"])
-    assert v["mondes"]["trace_forte"]["composantes"]["tau"] == pytest.approx(4 * math.sqrt(2))
+def test_verites_v3_scellees(tmp_path):
+    v, _ = mp.charger_verites()
+    assert len(v["mondes"]) == 12 and v["grille_etalon"]["paires"] == list(range(4, 17))
+    crit = {(m, c["lecture"]): c for m, d in v["mondes"].items() for c in d["criteres"]}
+    assert crit[("identite_seule", "identite")]["borne"] == "basse" and crit[("identite_seule", "identite")]["seuil"] == 0.8
+    assert crit[("decalage_de_chemin", "decalage_maitrise")]["seuil"] == 0.9
     copie = tmp_path / mp.CHEMIN_VERITES.name
     shutil.copy(mp.CHEMIN_VERITES, copie)
     shutil.copy(str(mp.CHEMIN_VERITES) + ".sha256", str(copie) + ".sha256")
     mp.charger_verites(copie)
-    copie.write_text(copie.read_text().replace('"texte": 4.0', '"texte": 9.0'))
+    copie.write_text(copie.read_text().replace('"seuil": 0.8', '"seuil": 0.5'))
     with pytest.raises(GardeArret, match="empreinte"):
         mp.charger_verites(copie)
 
 
-@pytest.mark.parametrize("x,n", [(0, 10), (10, 10), (3, 20), (1, 1)])
+@pytest.mark.parametrize("x,n", [(0, 10), (10, 10), (3, 20), (1, 1), (480, 500)])
 def test_clopper_pearson(x, n):
     ref = binomtest(x, n).proportion_ci(confidence_level=0.95, method="exact")
     assert mp.clopper_pearson(x, n) == pytest.approx((ref.low, ref.high), abs=1e-12)
+
+
+def test_compter_et_passage():
+    k = {"lecture": "transport", "admises": ["fort", "faible"], "nature": "fausse_lecture", "borne": "haute",
+         "seuil": 0.10}
+    lect = [{"transport": ["fort" + " — non distinct d'une direction au hasard", "non établi à cette puissance"]},
+            {"transport": ["non testable à cet effectif"]}]
+    assert mp.compter(lect, k) == (1, 3)
+    assert mp.passage(10, 500, k)["passe"] is True
+    assert mp.passage(60, 500, k)["passe"] is False
+    kb = dict(k, borne="basse", seuil=0.8, nature="puissance")
+    assert mp.passage(430, 500, kb)["passe"] is True and mp.passage(400, 500, kb)["passe"] is False
+    assert "passe" not in mp.passage(1, 2, dict(k, borne=None, seuil=None))
     with pytest.raises(GardeArret):
-        mp.clopper_pearson(3, 2)
+        mp.compter([{}], k)
 
 
-def test_programme_de_bout_en_bout(tmp_path):
-    """Une réplique de quelques mondes : lecture, comparaison mécanique aux vérités engagées, rapport scellé ;
-    même graine, mêmes lectures ; jamais d'écrasement."""
-    kw = dict(tailles=[(8, 8, 3)], repliques=1, n_nul=39, n_tirages=200, seuils=SEUILS, d=32, entropie=20261122,
-              mondes=["trace_forte", "interaction_contraire", "decalage_de_chemin", "fuite_de_pli"], k_externes=3)
+def test_programme_complet(tmp_path):
+    kw = dict(mode="complet", cas=[(8, 8, 3)], repliques=1, n_nul=39, n_tirages=200, seuils=SEUILS, d=32,
+              entropie=20261122, mondes=["trace_forte", "interaction_contraire", "decalage_de_chemin", "fuite_de_pli"],
+              k_externes=3)
     c1 = prog.executer(tmp_path / "a", **kw)
-    r = json.loads(c1.read_text())
-    assert (tmp_path / "a" / (c1.name + ".sha256")).is_file()
-    t = r["tailles"]["8,8,3"]
-    assert t["fuite_de_pli"]["criteres"]["fuite"]["taux_arret_garde"] == 1.0
-    assert t["trace_forte"]["criteres"]["transport"]["puissance"] == 1.0
-    assert t["interaction_contraire"]["criteres"]["interaction"]["puissance"] == 1.0
-    dc = t["decalage_de_chemin"]["criteres"]
-    assert dc["interaction_brute"]["puissance"] == 1.0 and dc["interaction"]["taux_fausse_lecture"] == 0.0
+    r = json.loads(c1.read_text())["cases"]["8,8,3"]
+    crit = {(m, k["lecture"]): k for m, v in r.items() for k in v["criteres"]}
+    assert crit[("fuite_de_pli", "fuite")]["part_admise"] == 1.0
+    assert crit[("trace_forte", "transport")]["part_admise"] == 1.0
+    assert crit[("interaction_contraire", "interaction")]["part_admise"] == 1.0
+    assert crit[("decalage_de_chemin", "interaction_brute")]["part_admise"] == 1.0
+    assert crit[("decalage_de_chemin", "decalage_maitrise")]["part_admise"] == 1.0
+    assert crit[("decalage_de_chemin", "decalage_maitrise")]["passe"] is False  # une réplique : borne basse trop basse
     c2 = prog.executer(tmp_path / "b", **kw)
-    assert json.dumps(r["tailles"], sort_keys=True) == json.dumps(json.loads(c2.read_text())["tailles"], sort_keys=True)
+    assert json.loads(c1.read_text())["cases"] == json.loads(c2.read_text())["cases"]
     with pytest.raises(GardeArret, match="R12"):
         prog.executer(tmp_path / "a", **kw)
-    with pytest.raises(GardeArret, match="non engagés"):
-        prog.executer(tmp_path / "c", **{**kw, "mondes": ["monde_inventé"]})
+    with pytest.raises(GardeArret, match="non engagé"):
+        prog.executer(tmp_path / "c", **{**kw, "mondes": ["intensite_4"]})  # monde du seul mode « étalon »
+
+
+def test_programme_etalon_grille(tmp_path):
+    c = prog.executer(tmp_path, "etalon", [(7, 1, 8, 2), (4, 2, 8, 1)], 2, 9, 100, SEUILS, 16, 5,
+                      mondes=["trace_forte", "identite_seule", "etiquettes_permutees"])
+    r = json.loads(c.read_text())["cases"]
+    tf = {k["lecture"]: k for k in r["7,1,8,2"]["trace_forte"]["criteres"]}
+    assert tf["transport"]["part_admise"] == 1.0 and tf["transport"]["essais"] == 2
+    tf4 = r["4,2,8,1"]["trace_forte"]["table_des_lectures"]["transport"]
+    assert tf4 == {"non testable à cet effectif": 4}  # quatre paires : jamais testable
+    assert {k["lecture"] for k in r["7,1,8,2"]["identite_seule"]["criteres"]} == {"transport", "identite"}
 
 
 def test_ligne_de_commande(tmp_path, capsys):
-    assert prog.main(["--sortie", str(tmp_path), "--taille", "8,8,3", "--repliques", "1", "--nul", "9",
-                      "--tirages", "50", "--d", "16", "--entropie", "3", "--k-externes", "2",
-                      "--mondes", "fuite_de_pli,etiquettes_permutees"]) == 0
+    assert prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--repliques", "1", "--nul", "5",
+                      "--tirages", "20", "--d", "16", "--entropie", "3", "--mondes", "trace_faible"]) == 0
     assert capsys.readouterr().out.strip().endswith(".json")
     with pytest.raises(GardeArret):
-        prog._taille("5,5")
+        prog._entiers("5,5", 3)
 
 
 @pytest.mark.skipif(os.environ.get("SONDES_V2_LENT") != "1", reason="essai lent : SONDES_V2_LENT=1")
 def test_lent_dimension_4096(tmp_path):
-    c = prog.executer(tmp_path, tailles=[(8, 8, 3)], repliques=1, n_nul=19, n_tirages=200, seuils=SEUILS, d=4096,
-                      entropie=4096, mondes=["trace_forte", "identite_seule"], k_externes=3)
-    t = json.loads(c.read_text())["tailles"]["8,8,3"]
-    assert t["identite_seule"]["criteres"]["identite"]["puissance"] == 1.0
-    assert t["trace_forte"]["criteres"]["transport"]["puissance"] == 1.0
+    c = prog.executer(tmp_path, "etalon", [(8, 1, 8, 3)], 1, 19, 200, SEUILS, 4096, 4096,
+                      mondes=["trace_forte", "identite_seule"])
+    r = json.loads(c.read_text())["cases"]["8,1,8,3"]
+    assert {k["lecture"]: k["part_admise"] for k in r["identite_seule"]["criteres"]}["identite"] == 1.0
+    assert {k["lecture"]: k["part_admise"] for k in r["trace_forte"]["criteres"]}["transport"] == 1.0

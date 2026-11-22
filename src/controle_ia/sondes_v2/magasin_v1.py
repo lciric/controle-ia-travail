@@ -149,6 +149,13 @@ def _verifier_regle(regle: dict) -> dict:
 MODES_CHEMIN = ("origine", "relu à texte imposé")
 
 
+def _verifier_couches_ac(couches) -> tuple:
+    c = tuple(sorted(int(x) for x in couches))
+    if len(set(c)) != len(c) or not set(c) <= set(COUCHES_AVANT_CHAMP):
+        raise GardeArret(f"couches d'avant le champ {couches!r} : sous-ensemble de {COUCHES_AVANT_CHAMP}")
+    return c
+
+
 def verifier_chemin(chemin: dict) -> dict:
     """Chemin de calcul (erratum 1, § 1) : {"programme": identifiant et version du programme de lecture,
     "precision": texte, "mode": « origine » ou « relu à texte imposé », "gabarit": gabarit de conversation}."""
@@ -185,8 +192,11 @@ class EcrivainSerie:
     puis scelle le manifeste ; une série non close n'a pas de manifeste et ne se lit pas."""
 
     def __init__(self, dossier, identifiant_serie: str, poids: dict, source_textes: str, regle: dict, largeur: int,
-                 chemin_de_calcul: dict):
+                 chemin_de_calcul: dict, couches_avant_champ=COUCHES_AVANT_CHAMP):
+        """`couches_avant_champ` : sous-ensemble de (7, 15, 23), éventuellement vide (erratum 2, § 1 : jeton d'avant le
+        champ et couches 7 et 23 facultatifs, leur absence déclarée au manifeste)."""
         self.chemin_de_calcul = verifier_chemin(chemin_de_calcul)
+        self.couches_ac = _verifier_couches_ac(couches_avant_champ)
         self.dossier = Path(dossier)
         if self.dossier.exists():
             raise GardeArret(f"{self.dossier} existe déjà : R12 interdit d'écraser une série")
@@ -204,7 +214,7 @@ class EcrivainSerie:
         self.clos = False
         self.dossier.mkdir(parents=True)
         (self.dossier / f"c{COUCHE_DECISIVE}").mkdir()
-        for c in COUCHES_AVANT_CHAMP:
+        for c in self.couches_ac:
             (self.dossier / "avant_champ" / f"c{c}").mkdir(parents=True)
 
     def _ecrire(self, rel: str, a: np.ndarray) -> None:
@@ -223,17 +233,19 @@ class EcrivainSerie:
             raise GardeArret(f"clé en double : {action.cle}")
         j = _en_demi(jetons, (action.n_jetons, self.largeur), f"action {action.cle}, jetons de la couche "
                                                                f"{COUCHE_DECISIVE}")
-        if action.a_un_champ:
-            if not isinstance(avant_champ, dict) or set(avant_champ) != set(COUCHES_AVANT_CHAMP):
+        garde_ac = action.a_un_champ and bool(self.couches_ac)
+        if garde_ac:
+            if not isinstance(avant_champ, dict) or set(avant_champ) != set(self.couches_ac):
                 raise GardeArret(f"action {action.cle} : jeton d'avant le champ attendu aux couches "
-                                 f"{COUCHES_AVANT_CHAMP} exactement")
+                                 f"{self.couches_ac} exactement")
             vecteurs = {c: _en_demi(avant_champ[c], (self.largeur,), f"action {action.cle}, avant le champ, "
-                                                                     f"couche {c}") for c in COUCHES_AVANT_CHAMP}
+                                                                     f"couche {c}") for c in self.couches_ac}
         elif avant_champ is not None:
-            raise GardeArret(f"action {action.cle} : jeton d'avant le champ donné sans champ révélateur")
+            raise GardeArret(f"action {action.cle} : jeton d'avant le champ donné sans champ révélateur, ou absence "
+                             "déclarée au manifeste")
         self._ecrire(_chemin_jetons(action.cle), j)
-        if action.a_un_champ:
-            for c in COUCHES_AVANT_CHAMP:
+        if garde_ac:
+            for c in self.couches_ac:
                 self._ecrire(_chemin_avant_champ(action.cle, c), vecteurs[c])
         self.actions.append(action)
         self._cles.add(action.cle)
@@ -256,7 +268,7 @@ class EcrivainSerie:
             "poids": self.poids,
             "source_textes": self.source,
             "chemin_de_calcul": self.chemin_de_calcul,
-            "couches": {"decisive": COUCHE_DECISIVE, "avant_champ": list(COUCHES_AVANT_CHAMP)},
+            "couches": {"decisive": COUCHE_DECISIVE, "avant_champ": list(self.couches_ac)},
             "precision_disque": "float16",
             "largeur": self.largeur,
             "regle": self.regle,
@@ -286,8 +298,9 @@ class Serie:
         m = json.loads(chemin.read_text(encoding="utf-8"))
         if m.get("format") != FORMAT:
             raise GardeArret(f"{chemin} : format {m.get('format')!r} au lieu de {FORMAT!r}")
-        if m["couches"] != {"decisive": COUCHE_DECISIVE, "avant_champ": list(COUCHES_AVANT_CHAMP)}:
+        if set(m["couches"]) != {"decisive", "avant_champ"} or m["couches"]["decisive"] != COUCHE_DECISIVE:
             raise GardeArret(f"{chemin} : couches {m['couches']} inattendues")
+        self.couches_ac = _verifier_couches_ac(m["couches"]["avant_champ"])
         self.manifeste = m
         self.largeur = int(m["largeur"])
         self.regle = _verifier_regle(m["regle"])
@@ -314,7 +327,7 @@ class Serie:
         for a in self.actions.values():
             attendus.add(_chemin_jetons(a.cle))
             if a.a_un_champ:
-                attendus.update(_chemin_avant_champ(a.cle, c) for c in COUCHES_AVANT_CHAMP)
+                attendus.update(_chemin_avant_champ(a.cle, c) for c in self.couches_ac)
         declares = set(m["fichiers"])
         if attendus != declares:
             raise GardeArret(f"manifeste : fichiers déclarés ≠ fichiers attendus par actions.jsonl "
@@ -367,8 +380,9 @@ class Serie:
     def avant_champ(self, cle: str, couche: int) -> np.ndarray:
         """Jeton d'avant le champ révélateur à la couche donnée (7, 15 ou 23), (largeur,), simple précision."""
         a = self._action(cle)
-        if int(couche) not in COUCHES_AVANT_CHAMP:
-            raise GardeArret(f"couche {couche} : avant le champ, seulement {COUCHES_AVANT_CHAMP}")
+        if int(couche) not in self.couches_ac:
+            raise GardeArret(f"couche {couche} : jeton d'avant le champ non gardé dans cette série (couches déclarées "
+                             f"au manifeste : {self.couches_ac})")
         if not a.a_un_champ:
             raise GardeArret(f"action {cle} : pas de champ révélateur")
         return self._charger(_chemin_avant_champ(cle, couche), (self.largeur,))
@@ -417,7 +431,8 @@ def _intersection(*series: Serie) -> tuple[list[str], dict]:
 
 
 def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sortie, identifiant_serie: str,
-                                  poids: dict, source_textes: str, regle: dict, chemin_de_calcul: dict) -> Path:
+                                  poids: dict, source_textes: str, regle: dict, chemin_de_calcul: dict,
+                                  couches_avant_champ=COUCHES_AVANT_CHAMP) -> Path:
     """Range dans une série neuve un dossier écrit par `ActivationsDemi` (`<dossier_demi>/c<couche>/<clé>.npy`,
     demi-précision, (jetons, largeur)).
 
@@ -443,6 +458,7 @@ def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sort
         sources[f"c{couche}/{cle}.npy"] = empreinte(chemin)
         return a
 
+    couches_ac = _verifier_couches_ac(couches_avant_champ)
     vus: set[str] = set()
     preparees = []
     for l in lignes:
@@ -464,9 +480,9 @@ def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sort
         if a.a_un_champ != (i is not None):
             raise GardeArret(f"action {a.cle} : indice d'avant le champ et champ révélateur vont ensemble")
         avant = None
-        if i is not None:
+        if i is not None and couches_ac:
             avant = {}
-            for c in COUCHES_AVANT_CHAMP:
+            for c in couches_ac:
                 seg = j if c == COUCHE_DECISIVE else lire(c, a.cle)
                 if seg.shape[1] != largeur:
                     raise GardeArret(f"action {a.cle}, couche {c} : largeur {seg.shape[1]} au lieu de {largeur}")
@@ -477,7 +493,8 @@ def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sort
         preparees.append((a, j, avant))
     if not preparees:
         raise GardeArret("aucune ligne")
-    ecrivain = EcrivainSerie(dossier_sortie, identifiant_serie, poids, source_textes, regle, largeur, chemin_de_calcul)
+    ecrivain = EcrivainSerie(dossier_sortie, identifiant_serie, poids, source_textes, regle, largeur, chemin_de_calcul,
+                             couches_ac)
     for a, j, avant in preparees:
         ecrivain.ajouter(a, j, avant)
     return ecrivain.clore({"adaptateur": "ActivationsDemi", "dossier_source": str(dossier_demi),
@@ -556,7 +573,7 @@ def series_depuis_barreau5(dossier_run, dossier_sortie, chemin_de_calcul: dict, 
                 raise GardeArret(f"{chemin} : largeur {a.shape[1]} au lieu de {largeur}")
             tableaux.append((Action(cle, tache, tache, pas, None, None, None, int(a.shape[0])), a))
         e = EcrivainSerie(Path(dossier_sortie) / serie, serie, poids, source,
-                          {"type": "part", "part": "une_sur_dix", "cles": cles}, largeur, chemin_de_calcul)
+                          {"type": "part", "part": "une_sur_dix", "cles": cles}, largeur, chemin_de_calcul, ())
         for act, a in tableaux:
             e.ajouter(act, a)
         sortie[serie] = e.clore({"adaptateur": "barreau5-une_sur_dix", "dossier_source": str(dossier_run),
