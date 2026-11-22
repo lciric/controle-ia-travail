@@ -245,6 +245,69 @@ def intervalle_aire(scores, y, rng: np.random.Generator, tirages: int = 2000, ni
     return float(np.quantile(vals, a)), float(np.quantile(vals, 1 - a))
 
 
+def lecture_plantee_par_pli(scores, y, groupes, rng: np.random.Generator, seuil: float = 0.9, tirages: int = 2000,
+                            niveau: float = 0.95, ecart_signal: float = 0.05) -> dict:
+    """Garde de la vérité plantée, lecture (c) de la réponse 39 de Fable (docs/notes/demandes-fable-api-2026-11-22-v1/
+    reponse-39/relecture-fable-api.md, § 1) : pour chaque pli k, A_k = aire au taux 0 sur les questions du pli, B_k =
+    percentile bas de A_k sur `tirages` tirages avec remise dans le pli (tirage à une seule classe refait et compté).
+    ARRÊT (champ « arret », liste de motifs ; vide = la garde passe) : plus petit B_k sous `seuil`, pli à une seule
+    classe, score non fini. RAPPORTÉ sans arrêter : A_k, B_k, leur moyenne et sa borne basse, aire commune brute et
+    recalée (rang moyen dans le pli ÷ effectif du pli), médianes des scores par classe et par pli, drapeau « écart
+    d'échelle entre plis » si moyenne des A_k − aire commune brute > `ecart_signal` (seuil de signalement)."""
+    s, y, g = np.asarray(scores, dtype=float), np.asarray(y), np.asarray(groupes)
+    if not (s.shape == y.shape == g.shape) or s.ndim != 1:
+        raise GardeArret("lecture plantée : scores, issues et plis de même longueur attendus")
+    arret = []
+    if not np.isfinite(s).all():
+        return {"arret": ["score non fini"], "plis": []}
+    ks = [int(k) for k in np.unique(g)]
+    idx = {k: np.flatnonzero(g == k) for k in ks}
+    plis, a_k = [], {}
+    for k in ks:
+        yk = y[idx[k]]
+        n1, n0 = int(yk.sum()), int(len(yk) - yk.sum())
+        if n1 == 0 or n0 == 0:
+            arret.append(f"pli {k} à une seule classe ({n1} issues 1, {n0} issues 0)")
+            continue
+        a_k[k] = aire_sous_courbe(s[idx[k]], yk)
+    if arret:
+        return {"arret": arret, "plis": [{"pli": k, "aire": a_k.get(k)} for k in ks]}
+    a = (1 - niveau) / 2
+    vals, refaits = {k: [] for k in ks}, {k: 0 for k in ks}
+    moyennes = []
+    for _ in range(int(tirages)):
+        cur = {}
+        for k in ks:
+            while True:
+                i = rng.choice(idx[k], len(idx[k]), replace=True)
+                if y[i].min() != y[i].max():
+                    break
+                refaits[k] += 1
+                if refaits[k] > 10 * int(tirages):
+                    raise GardeArret(f"lecture plantée : pli {k}, tirages à une seule classe sans fin")
+            cur[k] = aire_sous_courbe(s[i], y[i])
+            vals[k].append(cur[k])
+        moyennes.append(float(np.mean([cur[k] for k in ks])))
+    rang = np.empty(len(s))
+    for k in ks:
+        rang[idx[k]] = rankdata(s[idx[k]]) / len(idx[k])
+    for k in ks:
+        sk, yk = s[idx[k]], y[idx[k]]
+        plis.append({"pli": k, "questions": int(len(idx[k])), "aire": a_k[k],
+                     "borne_basse": float(np.quantile(vals[k], a)), "tirages_refaits": refaits[k],
+                     "mediane_issue_1": float(np.median(sk[yk == 1])), "mediane_issue_0": float(np.median(sk[yk == 0]))})
+    pire = min(p["borne_basse"] for p in plis)
+    if pire < seuil:
+        arret.append(f"pire pli : borne basse {pire:.3f} < {seuil}")
+    moy = float(np.mean([a_k[k] for k in ks]))
+    commun_brut = aire_sous_courbe(s, y)
+    return {"arret": arret, "seuil": float(seuil), "niveau": float(niveau), "tirages": int(tirages), "plis": plis,
+            "pire_borne_basse": float(pire), "aire_moyenne_des_plis": moy,
+            "borne_basse_moyenne_des_plis": float(np.quantile(moyennes, a)),
+            "aire_commune_brute": commun_brut, "aire_commune_recalee": aire_sous_courbe(rang, y),
+            "ecart_d_echelle_entre_plis": bool(moy - commun_brut > ecart_signal), "ecart_signal": float(ecart_signal)}
+
+
 def exiger_terme_final(gamma: float = RECETTE_TABLEAU_7["gamma"]) -> None:
     """Garde : la sonde nulle a une perte strictement positive dès qu'une issue vaut 1 (le terme final r − V(s_T) est
     compté, une fois par réponse). Sans ce terme, la sonde nulle aurait une perte nulle."""

@@ -37,7 +37,7 @@ VERSION_VLLM=0.11.0
 # blanc de pip du 21 novembre 2026, 157 paquets, transformers 5.24.0), d'une génération postérieure à vLLM 0.11.0
 VERSION_TRANSFORMERS_VLLM=4.57.1
 MODELE=meta-llama/Llama-3.1-8B-Instruct
-MIN_ESSAIS=127
+MIN_ESSAIS=130
 TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1

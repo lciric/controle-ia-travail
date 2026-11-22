@@ -225,7 +225,8 @@ def test_verite_plantee_lue_par_la_chaine_et_garde_d_arret(depot):
     chemin_m, m = course_v1.ouvrir_ou_reprendre(depot, RUN1, cfg, entropie=5, autoriser_depot_sale=True)
     d = course_v1.dossier_course(depot, RUN1)
     p = course_v1.controle_plante(cfg, m, chemin_m, depot, seqs, r, d, "cpu")
-    assert p["intervalle_95"][0] >= 0.9, p["intervalle_95"]
+    assert p["garde"]["arret"] == [] and p["garde"]["pire_borne_basse"] >= 0.9, p["garde"]
+    assert p["lecture_de_la_garde"].startswith("pire pli")
     cfg0 = _config1(recette_sonde=dict(sonde_v1.RECETTE_TABLEAU_7, epoques=5, cachee=8), borne_basse_plantee=0.9,
                     decoupage={"mode": "plis", "plis": 2}, taux=(0.0,), force_verite_plantee=0.0)
     run0 = RUN1.replace("120000", "120001")

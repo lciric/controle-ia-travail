@@ -426,7 +426,8 @@ def bloc_validation_emboitee(config, manifeste, seqs, r, dossier, appareil) -> d
 
 
 def controle_plante(config, manifeste, chemin_m, racine, seqs, r, d, appareil) -> dict:
-    """Vérité plantée (couche des contrôles, tous les plis) ; borne basse de l'aire au taux 0 sous le seuil : arrêt."""
+    """Vérité plantée (couche des contrôles, tous les plis). Garde : lecture par pli (réponse 39 de Fable, option c) —
+    arrêt si la borne basse du pire pli est sous le seuil ; l'aire mise en commun (brute, recalée) est rapportée à côté."""
     sonde_v1.exiger_terme_final(config["recette_sonde"]["gamma"])
     rng = generateur(manifeste["graines"]["controles"])
     cc = config["couche_controles"]
@@ -442,13 +443,17 @@ def controle_plante(config, manifeste, chemin_m, racine, seqs, r, d, appareil) -
     vus = groupes >= 0
     ic = sonde_v1.intervalle_aire(scores[vus], r_plant[vus], generateur(manifeste["graines"]["controles"]),
                                   groupes=groupes[vus])
+    lecture = sonde_v1.lecture_plantee_par_pli(
+        scores[vus], r_plant[vus], groupes[vus],
+        np.random.default_rng(graine_derivee(manifeste["graines"]["controles"], "garde-plantee-par-pli")),
+        seuil=config["borne_basse_plantee"])
     plantee = {"couche": cc, "force": config["force_verite_plantee"], "issues_plantees": int(r_plant.sum()),
+               "lecture_de_la_garde": "pire pli (réponse 39 de Fable, option c)", "garde": lecture,
                "aire_taux_0": sonde_v1.aire_sous_courbe(scores[vus], r_plant[vus]), "intervalle_95": list(ic),
                "grilles": g_plant}
-    if ic[0] < config["borne_basse_plantee"]:
+    if lecture["arret"]:
         _diag(racine, chemin_m, "etape1-noyau-arret-exploratoire", {"verite_plantee": plantee})
-        raise GardeArret(f"vérité plantée : borne basse {ic[0]:.3f} < {config['borne_basse_plantee']} — la chaîne est "
-                         "fausse : arrêt du noyau")
+        raise GardeArret("vérité plantée : " + " ; ".join(lecture["arret"]) + " — la chaîne est fausse : arrêt du noyau")
     return plantee
 
 

@@ -173,3 +173,48 @@ def test_controles_permutation_et_verite_plantee():
     assert abs(s.aire_sous_courbe(x0 @ u0, lab0) - 0.5) < 0.1
     with pytest.raises(GardeArret):
         s.verite_plantee(np.ones((10, 3)), 3.0, rng)
+
+
+# --- garde de la vérité plantée, lecture par pli (réponse 39 de Fable, option c) ---------------------------------
+
+def _plis_a_niveaux(aires_voulues, n=100, graine=3):
+    """Scores de cinq plis : chaque pli a son propre niveau (décalé), et un ordre interne qui donne l'aire voulue
+    (1,0 : séparation parfaite ; sinon mélange d'une part des issues)."""
+    rng = np.random.default_rng(graine)
+    sc, y, g = [], [], []
+    for k, aire in enumerate(aires_voulues):
+        yk = np.array([0, 1] * (n // 2))
+        base = 0.36 + 0.03 * k                                   # niveau propre au pli, comme sur la carte
+        sk = base + 0.001 * yk + 1e-5 * rng.random(n)
+        if aire < 1.0:                                          # brouiller : une part des issues 1 sous les issues 0
+            m = int(round((1 - aire) * (n // 2)))              # m issues 1 sous toutes les issues 0 : aire = 1 − m/(n/2)
+            un = np.flatnonzero(yk == 1)[:m]
+            sk[un] = base - 0.001 + 1e-5 * rng.random(m)
+        sc.append(sk); y.append(yk); g.append(np.full(n, k))
+    return np.concatenate(sc), np.concatenate(y), np.concatenate(g)
+
+
+def test_garde_plantee_cinq_plis_parfaits_a_niveaux_decales_passe_et_signale_l_ecart():
+    sc, y, g = _plis_a_niveaux([1.0] * 5)
+    lec = s.lecture_plantee_par_pli(sc, y, g, np.random.default_rng(0), tirages=300)
+    assert lec["arret"] == []
+    assert all(p["aire"] == 1.0 for p in lec["plis"]) and lec["pire_borne_basse"] == 1.0
+    assert lec["aire_commune_brute"] < 0.9                       # l'ancienne lecture aurait arrêté
+    assert lec["aire_commune_recalee"] == 1.0 and lec["ecart_d_echelle_entre_plis"] is True
+
+
+def test_garde_plantee_quatre_plis_parfaits_et_un_a_0_65_arrete():
+    sc, y, g = _plis_a_niveaux([1.0, 1.0, 1.0, 1.0, 0.65])
+    lec = s.lecture_plantee_par_pli(sc, y, g, np.random.default_rng(0), tirages=300)
+    faible = [p for p in lec["plis"] if p["pli"] == 4][0]
+    assert abs(faible["aire"] - 0.65) < 0.03
+    assert lec["aire_moyenne_des_plis"] > 0.9                    # la moyenne aurait laissé passer
+    assert lec["arret"] and "pire pli" in lec["arret"][0]
+
+
+def test_garde_plantee_arrete_sur_pli_a_une_classe_et_score_non_fini():
+    sc, y, g = _plis_a_niveaux([1.0] * 5)
+    y1 = y.copy(); y1[g == 2] = 1
+    assert "une seule classe" in s.lecture_plantee_par_pli(sc, y1, g, np.random.default_rng(0), tirages=50)["arret"][0]
+    s2 = sc.copy(); s2[7] = np.nan
+    assert s.lecture_plantee_par_pli(s2, y, g, np.random.default_rng(0), tirages=50)["arret"] == ["score non fini"]
