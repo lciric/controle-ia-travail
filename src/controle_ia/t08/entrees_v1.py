@@ -422,11 +422,13 @@ def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
                 raise GardeArret(f"{Path(dossier, n).relative_to(racine)} présent sur l'instance : arrêt et nœud (DT-4)")
     objets = None
     if (racine / ".git").exists():
-        r = subprocess.run(["git", "-C", str(racine), "rev-list", "--all", "--objects"], capture_output=True, text=True)
+        # chemins lus en octets et décodés sans perte (CA-11) ; `core.quotePath=false` : aucun guillemet ni échappement
+        r = subprocess.run(["git", "-c", "core.quotePath=false", "-C", str(racine), "rev-list", "--all", "--objects"],
+                           capture_output=True)
         if r.returncode != 0:
-            raise GardeArret(f"objets git illisibles : {r.stderr.strip()}")
+            raise GardeArret(f"objets git illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
         objets = 0
-        for l in r.stdout.splitlines():
+        for l in r.stdout.decode("utf-8", "surrogateescape").splitlines():
             parts = l.split(" ", 1)
             objets += 1
             if len(parts) == 2 and _nom_interdit_instance(parts[1], run_7b):
@@ -434,11 +436,13 @@ def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
         # `rev-list --objects` ne nomme un blob qu'une fois, par le premier chemin rencontré : un `resume.json` de 7b aux
         # mêmes octets qu'un autre fichier y serait nommé par l'autre chemin. Tous les chemins de chaque commit (racines
         # et bords d'un clone peu profond compris) sont donc aussi lus.
+        # `-z` : chemins séparés par NUL, jamais entourés de guillemets ni échappés en octal (CA-10 : un chemin non ASCII
+        # cité entre guillemets échappait à la garde)
         r = subprocess.run(["git", "-C", str(racine), "log", "--all", "--root", "--no-renames", "-m", "--format=",
-                            "--name-only"], capture_output=True, text=True)
+                            "--name-only", "-z"], capture_output=True)
         if r.returncode != 0:
-            raise GardeArret(f"chemins des commits illisibles : {r.stderr.strip()}")
-        for chemin in set(r.stdout.splitlines()):
+            raise GardeArret(f"chemins des commits illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
+        for chemin in set(r.stdout.decode("utf-8", "surrogateescape").replace("\n", "\0").split("\0")):
             if chemin and _nom_interdit_instance(chemin, run_7b):
                 raise GardeArret(f"objet git {chemin} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
     return {"fichiers": fichiers, "objets_git": objets, "interdits": 0}
