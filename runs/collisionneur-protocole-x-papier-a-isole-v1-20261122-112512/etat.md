@@ -9,8 +9,13 @@
 | E3-T2-critique-croisee-B | OK | 1 | claude-opus-5-5 | 18966 | oui | 0.55 |
 | E3-T2-critique-croisee-C | OK | 1 | gemini-4-argon | 46959 | oui | 0.67 |
 | E3-T2-critique-croisee-D | OK | 1 | gpt-6.2-astra | 14910 | oui | 0.52 |
-| E3-T2-critique-croisee-E | INTERROMPU | 1 | gemini-4-carbon | 0 | non | 2.41 |
+| E3-T2-critique-croisee-E | OK | 2 | gemini-4-carbon | 34470 | oui | 3.41 |
+| E3-T3-reponse-A | OK | 1 | claude-fable-5-2 | 19816 | oui | 1.87 |
+| E3-T3-reponse-B | OK | 1 | claude-opus-5-5 | 21694 | oui | 0.67 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-argon | 35889 | oui | 0.54 |
+| E3-T3-reponse-D | OK | 1 | gpt-6.2-astra | 16957 | oui | 0.62 |
+| E3-T3-reponse-E | OK | 1 | gemini-4-carbon | 28838 | oui | 0.83 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 45.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 8.76 USD.
-Dépense totale : 8.76 USD. Mis à jour 2026-11-22T12:13:24Z.
+Ligne : 45.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 14.29 USD.
+Dépense totale : 14.29 USD. Mis à jour 2026-11-22T12:43:10Z.
