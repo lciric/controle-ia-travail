@@ -1,0 +1,88 @@
+{
+ "axiomes": [
+  "pour tout j dans MONITEURS, alpha(j) >= 0",
+  "pour tout j dans MONITEURS, alpha(j) <= 1",
+  "pour tout j dans MONITEURS, beta(j) >= 0",
+  "pour tout j dans MONITEURS, beta(j) <= 1",
+  "pour tout s dans SEUILS, mfa(s) <= pfa(s)",
+  "pour tout s dans SEUILS, prap(s) <= mrap(s)",
+  "pour tout s dans SEUILS, pfa_t(s, 0) = 0",
+  "pour tout s dans SEUILS, prap_t(s, 0) = 0"
+ ],
+ "borne_N": 10,
+ "constantes": {
+  "ET": "2",
+  "M": "2",
+  "MAJ": "2",
+  "N": "10",
+  "OU": "1"
+ },
+ "domaines": {
+  "MONITEURS": [
+   1,
+   2
+  ],
+  "SEUILS": [
+   1,
+   2
+  ]
+ },
+ "famille": "F2",
+ "fonctions": {
+  "alpha": {
+   "arite": 1,
+   "definition": "alpha(j) : taux de fausses alertes (marge) du moniteur j sous la référence"
+  },
+  "beta": {
+   "arite": 1,
+   "definition": "beta(j) : taux de détection (marge) du moniteur j sous attaque"
+  },
+  "fa_ind": {
+   "arite": 1,
+   "definition": "fa_ind(s) : fausses alertes de la règle « au moins s » si les moniteurs sont indépendants"
+  },
+  "mfa": {
+   "arite": 1,
+   "definition": "mfa(s) : meilleur taux de fausses alertes de la règle « au moins s », minimum sur les couplages"
+  },
+  "mrap": {
+   "arite": 1,
+   "definition": "mrap(s) : meilleur rappel de la règle « au moins s », maximum sur les couplages"
+  },
+  "pfa": {
+   "arite": 1,
+   "definition": "pfa(s) : pire taux de fausses alertes de la règle « au moins s », maximum sur les couplages"
+  },
+  "pfa_t": {
+   "arite": 2,
+   "definition": "pfa_t(s, t) = 1 - (1 - pfa(s))^t : au moins une fausse alerte en t tours indépendants"
+  },
+  "prap": {
+   "arite": 1,
+   "definition": "prap(s) : pire rappel de la règle « au moins s », minimum sur les couplages des marges beta"
+  },
+  "prap_t": {
+   "arite": 2,
+   "definition": "prap_t(s, t) = 1 - (1 - prap(s))^t : au moins une détection en t tours indépendants"
+  },
+  "rap_ind": {
+   "arite": 1,
+   "definition": "rap_ind(s) : rappel de la règle « au moins s » si les moniteurs sont indépendants"
+  }
+ },
+ "identifiant_monde": "monde-0748a533d5573543",
+ "parametres": {
+  "M": 2,
+  "alpha": [
+   "(1/10)",
+   "(1/10)"
+  ],
+  "beta": [
+   "(9/10)",
+   "(11/20)"
+  ]
+ },
+ "statut_parametres": "gelé par le préenregistrement, brouillon 3 (e33d7bec…), sauf les clés listées dans « provisoire »",
+ "verite_bornee": "un énoncé est vivant s'il n'est pas tué ; il est vrai-borné s'il est vrai sur toutes les instances de son préfixe universel de tête dont les variables NAT valent au plus N",
+ "version": "oracles_plantes_v6"
+}

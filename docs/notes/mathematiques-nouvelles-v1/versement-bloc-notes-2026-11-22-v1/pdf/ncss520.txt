@@ -1,0 +1,750 @@
+NCSS Statistical Software                                                                                     NCSS.com
+
+
+
+
+Chapter 520
+
+Two Correlated Proportions (McNemar
+Test)
+
+Introduction
+This procedure computes confidence intervals and hypothesis tests for the comparison of the marginal
+frequencies of two factors (each with two levels) based on a 2-by-2 table of n pairs. Confidence limits can be
+obtained for the marginal probability difference, ratio, or odds ratio. Inequality tests are available for the
+marginal probability difference and ratio.
+
+
+
+Experimental Design
+A typical design for this scenario involves N pairs of individuals where a dichotomous measurement of one
+factor is measured on one of the individuals of the pair (case), and a second dichotomous measurement
+based on a second factor is measured on the second individual of the pair (control). Or similarly N
+individuals are measured twice, once for each of two dichotomous factors.
+
+
+
+Comparing Two Correlated Proportions
+Suppose you have two dichotomous measurements 𝑌𝑌1 and 𝑌𝑌2 on each of N subjects (where in many cases
+the ‘subject’ may be a pair of matched individuals). The proportions 𝑃𝑃1 and 𝑃𝑃2 represent the success
+probabilities. That is,
+
+                                                     𝑃𝑃1 = Pr(𝑌𝑌1 = 1)
+
+                                                     𝑃𝑃2 = Pr(𝑌𝑌2 = 1)
+
+The data from this design can be summarized in the following 2-by-2 table:
+
+                            𝑌𝑌2 = 1 (Yes, Present)       𝑌𝑌2 = 0 (No, Absent)   Total
+𝑌𝑌1 = 1 (Yes, Present)                 A                            B           A+B
+𝑌𝑌1 = 0 (No, Absent)                   C                            D           C+D
+Total                              A+C                          B+D                N
+
+The marginal proportions 𝑃𝑃1 and 𝑃𝑃2 are estimated from these data using the formulae
+
+                                                   𝐴𝐴 + 𝐵𝐵           𝐴𝐴 + 𝐶𝐶
+                                           𝑝𝑝1 =           and 𝑝𝑝2 =
+                                                      𝑁𝑁                𝑁𝑁
+
+
+                                                          520-1
+                                                                                        © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                 NCSS.com
+
+                                        Two Correlated Proportions (McNemar Test)
+
+
+Three quantities which allow these proportions to be compared are
+
+Quantity               Notation
+Difference             𝛥𝛥 = 𝑃𝑃1 − 𝑃𝑃2
+Risk Ratio             𝜙𝜙 = 𝑃𝑃1 ∕ 𝑃𝑃2
+                            𝑂𝑂
+Odds Ratio             𝜓𝜓 = 𝑂𝑂1
+                              2
+
+
+Although these three parameters are (non-linear) functions of each other, the choice of which is to be used
+should not be taken lightly. The associated tests and confidence intervals of each of these parameters can
+vary widely in power and coverage probability.
+
+
+Difference
+The proportion (risk) difference 𝛿𝛿 = 𝑃𝑃1 − 𝑃𝑃2 is perhaps the most direct method of comparison between the
+two event probabilities. This parameter is easy to interpret and communicate. It gives the absolute impact of
+the treatment. However, there are subtle difficulties that can arise with its interpretation.
+One interpretation difficulty occurs when the event of interest is rare. If a difference of 0.001 were reported
+for an event with a baseline probability of 0.40, we would probably dismiss this as being of little importance.
+That is, there usually is little interest in a treatment that decreases the probability from 0.400 to 0.399.
+However, if the baseline probably of a disease was 0.002 and 0.001 was the decrease in the disease
+probability, this would represent a reduction of 50%. Thus, we see that interpretation depends on the
+baseline probability of the event.
+A similar situation occurs when the amount of possible difference is considered. Consider two events, one
+with a baseline event rate of 0.40 and the other with a rate of 0.02. What is the maximum decrease that can
+occur? Obviously, the first event rate can be decreased by an absolute amount of 0.40 while the second can
+only be decreased by a maximum of 0.02.
+So, although creating the simple difference is a useful method of comparison, care must be taken that it fits
+the situation.
+
+
+Ratio
+The proportion (risk) ratio 𝜙𝜙 = 𝑝𝑝1 ∕ 𝑝𝑝2 gives the relative change in risk in a treatment group (group 1)
+compared to a control group (group 2). This parameter is also direct and easy to interpret. To compare this
+with the difference, consider a treatment that reduces the risk of disease from 0.1437 to 0.0793. Which
+single number is most enlightening, the fact that the absolute risk of disease has been decreased by 0.0644,
+or the fact that risk of disease in the treatment group is only 55.18% of that in the control group? In many
+cases, the percentage (100 x risk ratio) communicates the impact of the treatment better than the absolute
+change.
+Perhaps the biggest drawback of this parameter is that it cannot be calculated in one of the most common
+experimental designs: the case-control study. Another drawback, when compared to the odds ratio, is that
+the odds ratio occurs naturally in the likelihood equations and as a parameter in logistic regression, while
+the proportion ratio does not.
+
+
+
+
+                                                         520-2
+                                                                                    © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                   NCSS.com
+
+                                    Two Correlated Proportions (McNemar Test)
+
+
+Odds Ratio
+Chances are usually communicated as long-term proportions or probabilities. In betting, chances are often
+given as odds. For example, the odds of a horse winning a race might be set at 10-to-1 or 3-to-2. How do you
+translate from odds to probability? An odds of 3-to-2 means that the event will occur three out of five times.
+That is, an odds of 3-to-2 (1.5) translates to a probability of winning of 0.60.
+The odds of an event are calculated by dividing the event risk by the non-event risk. Thus, in our case of two
+populations, the odds are
+
+                                                   𝑃𝑃1               𝑃𝑃2
+                                         𝑂𝑂1 =           and 𝑂𝑂2 =
+                                                 1 − 𝑃𝑃1           1 − 𝑃𝑃2
+
+For example, if 𝑃𝑃1 is 0.60, the odds are 0.60/0.40 = 1.5. In some cases, rather than representing the odds as
+a decimal amount, it is re-scaled into whole numbers. Thus, instead of saying the odds are 1.5-to-1, we may
+equivalently say they are 3-to-2.
+In this context, the comparison of proportions may be done by comparing the odds through the ratio of the
+odds. The odds ratio of two events is
+                                                            𝑂𝑂1
+                                                     𝜓𝜓 =
+                                                            𝑂𝑂2
+
+                                                            𝑃𝑃1
+                                                          1 − 𝑃𝑃1
+                                                        =
+                                                            𝑃𝑃2
+                                                          1 − 𝑃𝑃2
+
+In the case of two correlated proportions, the odds ratio is calculated as
+
+                                                              𝐵𝐵
+                                                       𝜓𝜓 =
+                                                              𝐶𝐶
+
+Until one is accustomed to working with odds, the odds ratio is usually more difficult to interpret than the
+proportion (risk) ratio, but it is still the parameter of choice for many researchers. Reasons for this include
+the fact that the odds ratio can be accurately estimated from case-control studies, while the risk ratio
+cannot. Also, the odds ratio is the basis of logistic regression (used to study the influence of risk factors).
+Furthermore, the odds ratio is the natural parameter in the conditional likelihood of the two-group,
+binomial-response design. Finally, when the baseline event-rates are rare, the odds ratio provides a close
+approximation to the risk ratio since, in this case, 1 − 𝑃𝑃1 ≈ 1 − 𝑃𝑃2 , so that
+
+                                                    𝑃𝑃1
+                                                  1 − 𝑃𝑃1 𝑃𝑃1
+                                             𝜓𝜓 =         ≈     = 𝜙𝜙
+                                                    𝑃𝑃2     𝑃𝑃2
+                                                  1 − 𝑃𝑃2
+
+One benefit of the log of the odds ratio is its desirable statistical properties, such as its continuous range
+from negative infinity to positive infinity.
+
+
+
+
+                                                       520-3
+                                                                                      © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                     NCSS.com
+
+                                           Two Correlated Proportions (McNemar Test)
+
+
+
+Confidence Intervals
+Several methods for computing confidence intervals for proportion difference, proportion ratio, and odds
+ratio have been proposed. We now show the methods that are available in NCSS.
+
+
+Difference
+Four methods are available for computing a confidence interval of the difference between the two
+proportions 𝛥𝛥 = 𝑃𝑃1 − 𝑃𝑃2 . The lower (L) and upper (U) limits of these intervals are computed as follows. Note
+that 𝑧𝑧 = �𝑧𝑧𝛼𝛼⁄2 � is the appropriate percentile from the standard normal distribution.
+
+Newcombe (1998) conducted a comparative evaluation of ten confidence interval methods. He
+recommended that the modified Wilson score method be used instead of the Pearson Chi-square or the
+Yate’s Corrected Chi-square.
+
+
+Nam’s Score
+For details, see Nam (1997) or Tango (1998). The lower limit is the solution of
+
+                                                                    𝛥𝛥̂ − 𝛥𝛥0
+                                                  𝐿𝐿 = inf �𝛥𝛥0 :              < 𝑧𝑧�
+                                                                        𝜎𝜎�𝛥𝛥0
+
+and the upper limit is the solution of
+
+                                                                    𝛥𝛥̂ − 𝛥𝛥0
+                                                 𝑈𝑈 = sup �𝛥𝛥0 :               > −𝑧𝑧�
+                                                                        𝜎𝜎�𝛥𝛥0
+
+where 𝜎𝜎�𝛥𝛥0 is given by
+
+                   𝑝𝑝�21 + 𝑝𝑝�12 − 𝛥𝛥2
+         𝜎𝜎�𝛥𝛥 =
+                            𝑛𝑛
+
+with
+
+                     −𝑒𝑒 + �𝑒𝑒 2 − 8𝑓𝑓
+         𝑝𝑝�21 = �                     �
+                            4
+
+
+         𝑝𝑝�12 = 𝑝𝑝�21 − 𝛥𝛥
+
+         𝑒𝑒 = −𝛥𝛥̂(1 − 𝛥𝛥) − 2(𝑝𝑝̂21 + 𝛥𝛥)
+
+         𝑓𝑓 = 𝛥𝛥(1 + 𝛥𝛥)𝑝𝑝̂21
+
+
+
+
+                                                             520-4
+                                                                                        © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                      NCSS.com
+
+                                             Two Correlated Proportions (McNemar Test)
+
+
+Wilson’s Score as modified by Newcombe
+For further details, see Newcombe (1998c), page 2639. This is Newcombe’s method 10.
+
+                                                            𝐿𝐿 = 𝛥𝛥̂ − 𝛿𝛿
+
+                                                            𝑈𝑈 = 𝛥𝛥̂ + 𝜀𝜀
+
+where
+
+
+         𝛿𝛿 = �𝑓𝑓22 − 2𝜙𝜙�𝑓𝑓2 𝑔𝑔3 + 𝑔𝑔32
+
+
+
+         𝜀𝜀 = �𝑔𝑔22 − 2𝜙𝜙�𝑔𝑔2 𝑓𝑓3 + 𝑓𝑓32
+
+
+                 (𝐴𝐴 + 𝐵𝐵)
+         𝑓𝑓2 =             − 𝑙𝑙2
+                     𝑁𝑁
+
+                       (𝐴𝐴 + 𝐵𝐵)
+         𝑔𝑔2 = 𝑢𝑢2 −
+                           𝑁𝑁
+
+                 (𝐴𝐴 + 𝐶𝐶)
+         𝑓𝑓3 =             − 𝑙𝑙3
+                     𝑁𝑁
+
+                       (𝐴𝐴 + 𝐶𝐶)
+         𝑔𝑔3 = 𝑢𝑢3 −
+                           𝑁𝑁
+
+and 𝑙𝑙2 and 𝑢𝑢2 are the roots of
+
+
+                 𝐴𝐴 + 𝐵𝐵        𝑥𝑥(1 − 𝑥𝑥)
+         �𝑥𝑥 −           � = 𝑧𝑧�
+                    𝑁𝑁              𝑁𝑁
+
+and 𝑙𝑙3 and 𝑢𝑢3 are the roots of
+
+
+                 𝐴𝐴 + 𝐶𝐶        𝑥𝑥(1 − 𝑥𝑥)
+         �𝑥𝑥 −           � = 𝑧𝑧�
+                    𝑁𝑁              𝑁𝑁
+
+
+                      max (𝐴𝐴𝐴𝐴 − 𝐵𝐵𝐵𝐵 − 𝑁𝑁/2,0)
+                 ⎧                                      if 𝐴𝐴𝐴𝐴 > 𝐵𝐵𝐵𝐵
+                 ⎪�(𝐴𝐴 + 𝐵𝐵)(𝐶𝐶 + 𝐷𝐷)(𝐴𝐴 + 𝐶𝐶)(𝐵𝐵 + 𝐷𝐷)
+         𝜙𝜙� =
+                 ⎨             𝐴𝐴𝐴𝐴 − 𝐵𝐵𝐵𝐵
+                 ⎪                                      otherwise
+                 ⎩�(𝐴𝐴 + 𝐵𝐵)(𝐶𝐶 + 𝐷𝐷)(𝐴𝐴 + 𝐶𝐶)(𝐵𝐵 + 𝐷𝐷)
+
+Note that if the denominator of 𝜙𝜙� is zero, 𝜙𝜙� is set to zero.
+
+
+
+                                                               520-5
+                                                                                         © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                   NCSS.com
+
+                                          Two Correlated Proportions (McNemar Test)
+
+
+Wald Z Method
+For further details, see Newcombe (1998c), page 2638
+
+                                                        𝐿𝐿 = 𝛥𝛥̂ − 𝑧𝑧𝑧𝑧𝑊𝑊
+
+                                                       𝑈𝑈 = 𝛥𝛥̂ + 𝑧𝑧𝑧𝑧𝑊𝑊
+
+where
+
+         𝛥𝛥̂ = 𝑝𝑝1 − 𝑝𝑝2 = (𝐵𝐵 − 𝐶𝐶)/𝑁𝑁
+
+
+           2
+                  (𝐴𝐴 + 𝐷𝐷)(𝐵𝐵 + 𝐶𝐶) + 4𝐵𝐵𝐵𝐵
+         𝑠𝑠𝑊𝑊 =
+                             𝑁𝑁 3
+
+
+Wald Z Method with Continuity Correction
+For details, see Newcombe (1998c), page 2638.
+
+                                                                            1
+                                                     𝐿𝐿 = 𝛥𝛥̂ − 𝑧𝑧𝑧𝑧𝑊𝑊 −
+                                                                            𝑁𝑁
+                                                                            1
+                                                     𝑈𝑈 = 𝛥𝛥̂ + 𝑧𝑧𝑧𝑧𝑊𝑊 +
+                                                                            𝑁𝑁
+
+
+
+Ratio
+Two methods are available for computing a confidence interval of the risk ratio 𝜙𝜙 = 𝑃𝑃1 ∕ 𝑃𝑃2 . Note that
+𝑧𝑧 = �𝑧𝑧𝛼𝛼⁄2 � is the appropriate percentile from the standard normal distribution.
+Nam and Blackwelder (2002) present two methods for computing confidence intervals for the risk ratio.
+These are presented here. Note that the score method is recommended.
+
+
+Score (Nam and Blackwelder)
+For details, see Nam and Blackwelder (2002), page 691. The lower limit is the solution of
+
+                                                       𝑧𝑧(𝜙𝜙) = �𝑧𝑧𝛼𝛼⁄2 �
+
+and the upper limit is the solution of
+
+                                                      𝑧𝑧(𝜙𝜙) = −�𝑧𝑧𝛼𝛼⁄2 �
+
+where
+
+                    √𝑁𝑁(𝑝𝑝1 − 𝜙𝜙𝑝𝑝2 )
+         𝑧𝑧(𝜙𝜙) =
+                    �𝜙𝜙(𝑝𝑝�12 + 𝑝𝑝�21 )
+
+
+                                                            520-6
+                                                                                      © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                       NCSS.com
+
+                                              Two Correlated Proportions (McNemar Test)
+
+
+and
+
+                   −𝑝𝑝1 + 𝜙𝜙 2 (𝑝𝑝2 + 2𝑝𝑝12 ) + �(𝑝𝑝1 − 𝜙𝜙𝑝𝑝2 )2 + 4𝜙𝜙 2 𝑝𝑝12 𝑝𝑝12
+         𝑝𝑝�12 =
+                                            2𝜙𝜙(𝜙𝜙 + 1)
+
+         𝑝𝑝�21 = 𝜙𝜙𝑝𝑝�12 − (𝜙𝜙 − 1)(1 − 𝑝𝑝22 )
+
+
+Wald Z (Nam and Blackwelder)
+For details, see Nam and Blackwelder (2002), page 692. The lower limit is the solution of
+
+                                                          𝑧𝑧𝑊𝑊 (𝜙𝜙) = �𝑧𝑧𝛼𝛼⁄2 �
+
+and the upper limit is the solution of
+
+                                                         𝑧𝑧𝑊𝑊 (𝜙𝜙) = −�𝑧𝑧𝛼𝛼⁄2 �
+
+where
+
+                       √𝑁𝑁(𝑝𝑝̂1 − 𝜙𝜙𝑝𝑝̂ 2 )
+         𝑧𝑧𝑊𝑊 (𝜙𝜙) =
+                       �𝜙𝜙(𝑝𝑝̂12 + 𝑝𝑝̂21 )
+
+
+
+Odds Ratio
+Sahai and Khurshid (1995) present two methods for computing confidence intervals of the odds ratio
+𝜓𝜓 = 𝑂𝑂1 ∕ 𝑂𝑂2 . Note that the maximum likelihood estimate of this is given by
+
+                                                                𝜓𝜓� = 𝐵𝐵⁄𝐶𝐶
+
+
+Exact Binomial
+The lower limit is
+
+                                                                        𝐵𝐵
+                                                     𝜓𝜓𝐿𝐿 =
+                                                              (𝐶𝐶 + 1)𝐹𝐹𝛼𝛼/2,2𝐶𝐶+2,2𝐵𝐵
+
+and the upper limit
+
+                                                                       𝐵𝐵 + 1
+                                                        𝜓𝜓𝑈𝑈 =
+                                                                  𝐶𝐶𝐹𝐹𝛼𝛼/2,2𝐵𝐵+2,2𝐶𝐶
+
+where F is the ordinate of the F distribution.
+
+
+
+
+                                                                  520-7
+                                                                                          © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                       NCSS.com
+
+                                         Two Correlated Proportions (McNemar Test)
+
+
+Maximum Likelihood
+The lower limit is
+
+                                                 𝜓𝜓𝐿𝐿 = exp�ln�𝜓𝜓�� − 𝑧𝑧𝛼𝛼⁄2 𝑠𝑠𝜓𝜓� �
+
+and the upper limit
+
+                                                𝜓𝜓𝑈𝑈 = exp�ln�𝜓𝜓�� + 𝑧𝑧𝛼𝛼⁄2 𝑠𝑠𝜓𝜓� �
+
+where
+
+
+                  1 1
+         𝑠𝑠𝜓𝜓� = � +
+                  𝐵𝐵 𝐶𝐶
+
+
+
+
+Hypothesis Tests
+
+Difference
+This module tests three statistical hypotheses about the difference in the two proportions:
+    1. 𝐻𝐻0 : 𝑃𝑃1 − 𝑃𝑃2 = Δ versus 𝐻𝐻1 : 𝑃𝑃1 − 𝑃𝑃2 ≠ 𝛥𝛥; this is a two-tailed test.
+    2. 𝐻𝐻0𝐿𝐿 : 𝑃𝑃1 − 𝑃𝑃2 ≥ 𝛥𝛥 versus 𝐻𝐻1𝐿𝐿 : 𝑃𝑃1 − 𝑃𝑃2 < 𝛥𝛥; this is a one-tailed test.
+    3. 𝐻𝐻0𝑈𝑈 : 𝑃𝑃1 − 𝑃𝑃2 ≤ 𝛥𝛥 versus 𝐻𝐻1𝑈𝑈 : 𝑃𝑃1 − 𝑃𝑃2 > 𝛥𝛥; this is a one-tailed test.
+
+
+McNemar Test
+Fleiss (1981) presents a test that is attributed to McNemar for testing the two-tailed null hypothesis. This is
+calculated as
+
+                                                                 (𝐵𝐵 − 𝐶𝐶)2
+                                                        𝜒𝜒12 =
+                                                                   𝐵𝐵 + 𝐶𝐶
+
+For this test, Δ must be equal to 0.
+
+
+McNemar Test with Continuity Correction
+Fleiss (1981) also presents a continuity-corrected version of McNemar test. This is calculated as
+
+                                                              (|𝐵𝐵 − 𝐶𝐶| − 1)2
+                                                     𝜒𝜒12 =
+                                                                   𝐵𝐵 + 𝐶𝐶
+
+For this test, Δ must be equal to 0.
+
+
+
+
+                                                               520-8
+                                                                                          © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                            NCSS.com
+
+                                           Two Correlated Proportions (McNemar Test)
+
+
+McNemar Test (Exact Binomial)
+This test uses the asymptotic McNemar Test statistic and enumerates all possible outcomes using the
+binomial distribution to provide a p-value. For this test, Δ must be equal to 0.
+
+
+Nam Score Test
+Liu et al. (2002) recommend a likelihood score test which was originally proposed by Nam (1997). The tests
+are calculated as
+
+                                                             𝛥𝛥̂ + 𝛥𝛥             𝛥𝛥̂ − 𝛥𝛥
+                                                    𝑧𝑧𝐿𝐿 =             and 𝑧𝑧𝑈𝑈 =
+                                                                 𝜎𝜎�𝐿𝐿               𝜎𝜎�𝑈𝑈
+
+where
+
+         𝜎𝜎�𝐿𝐿 = 𝜎𝜎−𝛥𝛥
+
+         𝜎𝜎�𝑈𝑈 = 𝜎𝜎𝛥𝛥
+
+and
+
+                   𝑝𝑝�21 + 𝑝𝑝�12 − 𝐷𝐷 2
+         𝜎𝜎𝐷𝐷 =
+                            𝑁𝑁
+
+                     −𝑒𝑒 + �𝑒𝑒 2 − 8𝑓𝑓
+         𝑝𝑝�21 = �                     �
+                            4
+
+
+         𝑝𝑝�12 = 𝑝𝑝�21 − 𝐷𝐷
+
+         𝑒𝑒 = −𝛥𝛥̂(1 − 𝐷𝐷) − 2(𝑝𝑝21 + 𝐷𝐷)
+
+         𝑓𝑓 = 𝐷𝐷(1 + 𝐷𝐷)𝑝𝑝21
+
+
+Wald Z Test
+Liu et al. (2002) present a pair of large-sample, Wald-type z tests for testing the two one-tailed hypothesis
+about the difference 𝑝𝑝1 − 𝑝𝑝2 = 𝛥𝛥. These are calculated as
+
+                                                    𝛥𝛥̂ + 𝛥𝛥 − 2𝑁𝑁
+                                                                1
+                                                                              𝛥𝛥̂ − 𝛥𝛥 + 2𝑁𝑁
+                                                                                          1
+                                           𝑧𝑧𝐿𝐿 =                  and 𝑧𝑧𝑈𝑈 =
+                                                           𝜎𝜎�                       𝜎𝜎�
+
+where
+
+                   𝑝𝑝21 + 𝑝𝑝12 − 𝛥𝛥̂2
+         𝜎𝜎� 2 =
+                           𝑁𝑁
+
+         𝛥𝛥̂ = 𝑝𝑝1 − 𝑝𝑝2
+
+                                                                    520-9
+                                                                                               © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                     NCSS.com
+
+                                           Two Correlated Proportions (McNemar Test)
+
+
+Ratio
+This module tests three statistical hypotheses about the difference in the two proportions:
+    1. 𝐻𝐻0 : 𝑃𝑃1 ⁄𝑃𝑃2 = 𝜙𝜙 versus 𝐻𝐻1 : 𝑃𝑃1 ⁄𝑃𝑃2 ≠ 𝜙𝜙; this is a two-tailed test.
+    2. 𝐻𝐻0𝐿𝐿 : 𝑃𝑃1 ⁄𝑃𝑃2 ≥ 𝜙𝜙 versus 𝐻𝐻1𝐿𝐿 : 𝑃𝑃1 ⁄𝑃𝑃2 > 𝜙𝜙; this is a one-tailed test.
+    3. 𝐻𝐻0𝑈𝑈 : 𝑃𝑃1 ⁄𝑃𝑃2 ≥ 𝜙𝜙 versus 𝐻𝐻1𝑈𝑈 : 𝑃𝑃1 ⁄𝑃𝑃2 < 𝜙𝜙; this is a one-tailed test.
+
+
+Nam Test
+For details, see Nam and Blackwelder (2002), page 691. The test statistic for testing a specific value of 𝜙𝜙 is
+
+                                                                 √𝑁𝑁(𝑝𝑝1 − 𝜙𝜙𝑝𝑝2 )
+                                                      𝑧𝑧(𝜙𝜙) =
+                                                                 �𝜙𝜙(𝑝𝑝�12 + 𝑝𝑝�21 )
+
+where
+
+                   −𝑝𝑝1 + 𝜙𝜙 2 (𝑝𝑝2 + 2𝑝𝑝12 ) + �(𝑝𝑝1 − 𝜙𝜙𝑝𝑝2 )2 + 4𝜙𝜙 2 𝑝𝑝12 𝑝𝑝12
+         𝑝𝑝�12 =
+                                            2𝜙𝜙(𝜙𝜙 + 1)
+
+         𝑝𝑝�21 = 𝜙𝜙𝑝𝑝�12 − (𝜙𝜙 − 1)(1 − 𝑝𝑝22 )
+
+
+
+
+Data Structure
+This procedure can summarize data from a database or summarized count values can be entered directly
+into the procedure panel.
+
+
+
+
+                                                                 520-10
+                                                                                        © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           NCSS.com
+
+                                                                                                                                                                                                                                                                                 Two Correlated Proportions (McNemar Test)
+
+
+
+Example 1 – Analysis of Two Correlated Proportions
+This section presents an example of how to run an analysis on hypothetical data. In this example, two
+dichotomous variables were measured on each of fifty subjects; 30 subjects scored ‘yes’ on both variables, 9
+subjects scored ‘no’ on both variables, 6 scored a ‘yes’ and then a ‘no’, and 5 scored a ‘no and then a ‘yes’.
+
+
+Setup
+To run this example, complete the following steps:
+
+1   Specify the Two Correlated Proportions (McNemar Test) procedure options
+    •   Find and open the Two Correlated Proportions (McNemar Test) procedure using the menus or the
+        Procedure Navigator.
+    •   The settings for this example are listed below and are stored in the Example 1 settings file. To load
+        these settings to the procedure window, click Open Example Settings File in the Help Center or File
+        menu.
+
+        Data Tab
+        _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+
+        Type of Data Input ........................................... Enter Table of Counts
+        Variable 1 Heading .......................................... Var1
+        Variable 1 Label of 1st Value ........................... Yes
+        Variable 1 Label of 2nd Value .......................... No
+        Variable 2 Heading .......................................... Var2
+        Variable 2 Label of 1st Value ........................... Yes
+        Variable 2 Label of 2nd Value .......................... No
+        N11 .................................................................. 30
+        N12 .................................................................. 6
+        N21 .................................................................. 5
+        N22 .................................................................. 9
+
+        Summary Reports Tab
+        _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+
+        Counts and Proportions ................................... Checked
+        Proportions Analysis ........................................ Checked
+
+        Difference Reports Tab
+        _________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+
+        Nam RMLE Score ............................................ Checked
+        Wilson Score.................................................... Checked
+        Test Direction................................................... Two-Sided (H0: P1 - P2 = D0 vs. H1: P1 - P2 ≠ D0)
+        H0 Difference (D0) ........................................... 0.0
+        McNemar Test ................................................. Checked
+
+
+
+2   Run the procedure
+    •   Click the Run button to perform the calculations and generate the output.
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                 520-11
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                                       NCSS.com
+
+                                            Two Correlated Proportions (McNemar Test)
+
+
+Counts and Proportions
+
+   Counts and Proportions
+   ────────────────────────────────────────────────────────────────────────
+              Var2
+           ────────
+   Var1    Yes     No     Total
+   ──────────────────────────────────────
+   Yes         30        6         36
+   No           5        9         14
+   Total       35       15         50
+   ──────────────────────────────────────
+
+
+   Proportions
+   ──────────────────────
+   p1 = (36/50) = 0.72
+   p2 = (35/50) = 0.7
+   ──────────────────────
+   ────────────────────────────────────────────────────────────────────────
+
+
+   Proportions Analysis
+   ────────────────────────────────────────────────────────────────────────
+   Statistic                Value
+   ────────────────────────────────────────────────────────
+   Variable 1 Event Rate (p1)                   0.72
+   Variable 2 Event Rate (p2)                   0.7
+
+   Proportion Matching                          0.78
+   Proportion Not Matching                      0.22
+
+   Absolute Risk Difference |p1 - p2|   0.02
+   Number Needed to Treat 1/|p1 - p2|   50
+   Relative Risk Reduction |p1 - p2|/p2 0.0286
+   Relative Risk p1/p2                  1.0286
+   Odds Ratio o1/o2                     1.2
+   ────────────────────────────────────────────────────────────────────────
+
+
+These reports document the values that were input and give various statistics of these values.
+
+
+Confidence Intervals for the Difference (P1 - P2)
+
+   Confidence Intervals for the Difference (P1 - P2)
+   ────────────────────────────────────────────────────────────────────────
+                                                      95% Confidence Interval
+                         Proportions      Difference     Limits for P1 - P2   Confidence
+   Confidence           ─────────         ───────    ─────────────────           Interval
+   Interval Type          p1       p2       p1 - p2      Lower       Upper         Width
+   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   Nam RMLE Score* 0.72 0.7     0.02     -0.1197 0.1606       0.2802
+   Wilson Score    0.72 0.7     0.02     -0.1145 0.1537       0.2683
+   ────────────────────────────────────────────────────────────────────────
+   * It is recommended that N be at least 25 when using the Nam RMLE Score method.
+   * It is recommended that N be at least 25 when using the Nam RMLE Score method.
+
+
+This report provides large sample confidence intervals for the difference.
+
+
+
+
+                                                                 520-12
+                                                                                                          © NCSS, LLC. All Rights Reserved.
+NCSS Statistical Software                                                                                                       NCSS.com
+
+                                            Two Correlated Proportions (McNemar Test)
+
+
+McNemar Inequality Test
+
+   Two-Sided Hypothesis Tests of the Difference (P1 - P2)
+   ────────────────────────────────────────────────────────────────────────
+   H0: P1 - P2 = 0 vs. H1: P1 - P2 ≠ 0
+   ────────────────────────────────────────────────────────────────────────
+                  Proportions    Difference
+                 ─────────       ───────          Test            Reject H0
+   Test Type       p1      p2     p1 - p2     Statistic   P-Value at α = α = 0.05?
+   ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+   McNemar  0.72  0.7     0.02     0.091   0.7630 No
+   ────────────────────────────────────────────────────────────────────────
+
+
+This report provides the McNemar test.
+
+
+Plots
+
+   Plots
+   ────────────────────────────────────────────────────────────────────────
+
+
+
+
+These reports show the marginal totals and proportions of the two variables.
+
+
+
+
+                                                                 520-13
+                                                                                                          © NCSS, LLC. All Rights Reserved.
+

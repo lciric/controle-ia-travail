@@ -1,0 +1,16 @@
+# Contre-lecture de la synthèse du protocole X sur les puits étroits, par un Opus 5.5 neuf (agent, sans interface) — v1
+
+Pièce relue : `synthese-protocole-x-puits-etroits-v1.md` (497d1b47…). Sources lues par le contre-lecteur : la demande 40, la réponse de Fable, les réponses d'Argon, Carbon (v2) et Neon, la question servie v3, la devinette. Rapport versé tel quel par la session fille (classe C), heure de versement par `date -u` au commit.
+
+Bilan : 2 défauts forts, 6 moyens, 9 faibles. Calculs justes ; décisions suivies de leurs sources.
+
+- Fort 1 : le minorant fabriqué n'est pas de Fable seul ; Neon (portefeuille hybride, 2.2.3 et section 4) et Carbon (régime relâché, bascule sur l'énumération) le proposent ; Fable seul le nomme et cite Hesterberg.
+- Fort 2 : « C et N disent inapplicable » : c'est Argon le plus net, Neon aussi ; Carbon donne une autre raison (vérificateur à un bit, pas de gradient) ; le désaccord avec Fable sur la composante mécanique est en partie fictif.
+- Moyen 3 : la garantie disjonctive est des trois modèles de Google, non de Fable ; l'énumération est une seconde garantie sans condition ; idem pour le vote (Fable et Argon n'en parlent pas).
+- Moyen 4 : guider par le juge — pour A et N le vérificateur est exact et ne s'use pas ; pour F, usure par adaptation d'un juge statistique : objets différents ; Carbon propose aussi un pilote.
+- Moyen 5 : oublis — Argon : décroissance exponentielle de la fréquence avec la profondeur de dérivation (Booth et Thompson), filtre exact compilé si la propriété se décompose sur l'arbre (Courcelle) ; tirage sans remise domine (Carbon, Joag-Dev et Proschan ; Neon, hypergéométrique) ; répétition du vérificateur bruité (Neon, Wald) ; Carbon et Neon proposent aussi de compter d'abord la grammaire.
+- Moyen 6 : « retenu dès que n·r·Δ… » : vrai en espérance seulement ; r a deux sens (rapport des coûts et grandeur de la réponse 28) ; définir n, r, Δ.
+- Moyen 7 : verdict en « oui » exagéré : le minorant vaut ε/M, M exponentiel en la longueur ; c'est la force brute diluée par ε ; on force la proposition, pas la reconnaissance. Correction proposée : « On ne force que la proposition, et seulement au prix de la force brute sur la grammaire publique, que l'on fabrique soi-même. »
+- Moyen 8 : l'accord est en partie induit par la question (orientée 0,55 ; « dont on ne peut qu'obtenir des tirages » pousse vers « rien à changer »).
+- Faibles : Rice (A, N ; C cite Cook) ; constante 4(e − 2) chez A et C seulement ; filtre calibré : retirer A ; aiguille : ajouter A ; D3 « presque aucun appel au juge » faux pour l'audit du juge ; « cinq modèles sur six » non sourcé dans les pièces lues ; « la mère a retenu la v3 » à sourcer ; « cette structure manque » est une hypothèse de Fable ; en-tête de la v3 (0,40) et devinette (0,45) discordants.
+- Remarques : Halmos moins forcé que dit (à taille fixe, seuls les polynômes en p ont un estimateur sans biais ; c'est le passage à la garantie de succès qui est forcé) ; Dorfman en environ 2√p tests par individu et prénom David pour Gillman, de mémoire, non vérifiés ; l'inégalité de Chung et Erdős de Neon est exacte (dérivée) ; Hesterberg nomme la construction, la garantie est une identité d'une ligne.

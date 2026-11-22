@@ -1,0 +1,105 @@
+{
+ "axiomes": [
+  "pour tout A dans PARTIES, PA(A) >= 0",
+  "pour tout A dans PARTIES, PA(A) <= 1",
+  "pour tout A dans PARTIES, QA(A) >= 0",
+  "pour tout A dans PARTIES, QA(A) <= 1",
+  "pour tout i dans ISSUES, P(i) >= 0",
+  "pour tout i dans ISSUES, Q(i) >= 0",
+  "somme_sur(i, ISSUES, P(i)) = 1",
+  "somme_sur(i, ISSUES, Q(i)) = 1",
+  "PA(PLEIN) = 1",
+  "pour tout A dans PARTIES, PA(A) + PA(comp(A)) = 1",
+  "vt(0) = 0",
+  "pour tout t dans NAT, vt(t) >= 0",
+  "pour tout t dans NAT, vt(t) <= 1",
+  "pour tout A dans PARTIES, pour tout t dans NAT, fa(A, t, 0) = 1",
+  "pour tout A dans PARTIES, pour tout t dans NAT, puissance(A, t, 0) = 1"
+ ],
+ "borne_N": 4,
+ "constantes": {
+  "K": "8",
+  "N": "4",
+  "PLEIN": "255"
+ },
+ "domaines": {
+  "ISSUES": [
+   0,
+   7
+  ],
+  "PARTIES": [
+   0,
+   255
+  ]
+ },
+ "famille": "F1",
+ "fonctions": {
+  "P": {
+   "arite": 1,
+   "definition": "P(i) : probabilité de l'issue i sous P (loi de référence, sans attaque)"
+  },
+  "PA": {
+   "arite": 1,
+   "definition": "PA(A) : somme des P(i) pour i dans A (A codé par ses bits)"
+  },
+  "Q": {
+   "arite": 1,
+   "definition": "Q(i) : probabilité de l'issue i sous Q (loi sous attaque)"
+  },
+  "QA": {
+   "arite": 1,
+   "definition": "QA(A) : somme des Q(i) pour i dans A"
+  },
+  "bit": {
+   "arite": 2,
+   "definition": "bit(A, i) : 1 si l'issue i est dans A, 0 sinon"
+  },
+  "card": {
+   "arite": 1,
+   "definition": "card(A) : nombre d'issues dans A"
+  },
+  "comp": {
+   "arite": 1,
+   "definition": "comp(A) = PLEIN - A : complémentaire de A"
+  },
+  "fa": {
+   "arite": 3,
+   "definition": "fa(A, t, s) : probabilité sous P⊗t que l'issue tombe dans A au moins s fois en t pas"
+  },
+  "puissance": {
+   "arite": 3,
+   "definition": "puissance(A, t, s) : la même probabilité sous Q⊗t"
+  },
+  "vt": {
+   "arite": 1,
+   "definition": "vt(t) : distance en variation totale entre P⊗t et Q⊗t (t pas indépendants), 1/2 somme des |écarts|"
+  }
+ },
+ "identifiant_monde": "monde-0fc0cd70cb3c065f",
+ "parametres": {
+  "K": 8,
+  "P": [
+   "(1/6)",
+   "(1/12)",
+   "(1/6)",
+   "(1/6)",
+   "(1/12)",
+   "(1/12)",
+   "(1/6)",
+   "(1/12)"
+  ],
+  "Q": [
+   "(1/12)",
+   "(1/12)",
+   "(1/12)",
+   "(1/4)",
+   "(1/12)",
+   "(1/4)",
+   "(1/12)",
+   "(1/12)"
+  ]
+ },
+ "statut_parametres": "provisoire, à fixer par le préenregistrement",
+ "verite_bornee": "un énoncé est vivant s'il n'est pas tué ; il est vrai-borné s'il est vrai sur toutes les instances de son préfixe universel de tête dont les variables NAT valent au plus N",
+ "version": "oracles_plantes_v2"
+}
