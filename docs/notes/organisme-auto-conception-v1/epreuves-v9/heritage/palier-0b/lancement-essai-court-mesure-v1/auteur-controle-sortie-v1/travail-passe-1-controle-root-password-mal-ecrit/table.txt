@@ -1,0 +1,32 @@
+données saines : 0 (code du fabricant v8) ; taille en lecture stricte (chaîne JSON échappée en ASCII, jeton de 100 signes) : 32653 octets ; limite 32768 ; marge 115
+artefact amorce-un-octet : octets différents du sain : 1 ; taille 32541 (sain 32541)
+artefact charge-alteree : octets différents du sain : 1 ; taille 32541 (sain 32541)
+artefact deux-e-script : octets différents du sain : 31832 ; taille 32615 (sain 32541)
+artefact e-script-plus : octets différents du sain : 31840 ; taille 32553 (sain 32541)
+artefact non-ascii : octets différents du sain : 31822 ; taille 32542 (sain 32541)
+artefact trop-grand : 33741 octets (1 200 signes de base64 ajoutés à la charge)
+corps attendu (voie indépendante, sain) : corps attendu : 32809 octets, sha256 f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795
+C1-sain-a-blanc : attendu 0 ; rendu 0 ; TENU ; corps de création : 32809 octets, sha256 f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 (jamais écrit ni affiché)
+C2-amorce-un-octet : attendu 12 ; rendu 12 ; TENU ; REFUS (12) : amorce d'empreinte d78a080f5bc238872d3d9d24ded9ee4e4138b8cffc336b0a277a65edf269f721, attendue 524cfc4a78a2b77c3cb5ad0c915628217e932c7cd58dbfebc80c4643f5d9d751 ; rien n'est envoy
+C2-charge-alteree : attendu 14 ; rendu 14 ; TENU ; REFUS (14) : charge illisible : ReadError ; rien n'est envoyé
+C2-deux-e-script : attendu 11 ; rendu 11 ; TENU ; REFUS (11) : lignes commençant par E_SCRIPT : 2 (numéros 4,5), attendue une seule, la ligne 4, E_SCRIPT=061f7993… ; rien n'est envoyé
+C2-e-script-plus : attendu 11 ; rendu 11 ; TENU ; REFUS (11) : lignes commençant par E_SCRIPT : 2 (numéros 4,5), attendue une seule, la ligne 4, E_SCRIPT=061f7993… ; rien n'est envoyé
+C2-trop-grand : attendu 13 ; rendu 13 ; TENU ; REFUS (13) : user_data de 33797 octets en JSON échappé en ASCII, plus que 32768 ; rien n'est envoyé
+C2-non-ascii : attendu 10 ; rendu 10 ; TENU ; REFUS (10) : octets non ASCII ou de contrôle ; rien n'est envoyé
+C3-adresse-hors-banc : attendu 2 ; rendu 2 ; TENU ; refus : option de banc --adresse sans CONTROLE_BANC=oui
+C4-nom-jeton-hors-banc : attendu 2 ; rendu 2 ; TENU ; refus : option de banc --nom-jeton sans CONTROLE_BANC=oui
+C5-adresse-autre-au-banc : attendu 2 ; rendu 2 ; TENU ; refus : adresse non permise (hors banc : https://api.hetzner.cloud/v1/servers seulement ; au banc : http://127.0.0.1:PORT/…)
+C6-hcloud-token-au-banc : attendu 2 ; rendu 2 ; TENU ; refus : au banc, le jeton de l'interface est lu sous un autre nom (--nom-jeton) ; HCLOUD_TOKEN n'est pas lu
+requêtes reçues par le serveur après C3 à C6 (attendu 0) : 0
+C7-sain-envoi-banc : attendu 0 ; rendu 0 ; TENU ; corps de création : 32809 octets, sha256 f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 (jamais écrit ni affiché)
+C7 : serveur : POST /v1/servers ; corps 32809 octets, sha256 f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; jeton sha256 d286adaf16d43b717729efa4718d9ffb23afaf406e95545e00c27d1e1d16fecf ; type ap
+C7 : corps reçu f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; calculé par l'outil (C1) f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; attendu par la voie indépendante f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; ÉGAUX
+C7 : jeton reçu par le serveur = jeton factice de l'interface : oui
+C7 : relevé : root_password présent : 1 ; user_data présent : 0
+C8-change-apres-lecture : code 0 ; fichier sur disque à l'envoi = données « autre » : oui ; corps reçu f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; corps des octets lus f85df2a4cabff90ed54056763a0eacc7b621ded9fe090e8dbda66a7f75ceb795 ; corps des octets nouveaux 160aec7e3e672ac213afca4eb75769a1a5db20406e3dff4344c331467ff0818b ; TENU (les octets lus sont envoyés, non les nouveaux)
+C8 : empreinte des données lues écrite au relevé = sain : 1
+requêtes reçues par le serveur au total (attendu 2 : C7 et C8) : 2
+--- fichiers portant un jeton factice (hors données, jetons du banc et relevé de ps) :
+(fin de liste)
+--- sorties de l'outil portant un jeton factice : 0
+--- ps : relevés : 59 ; lignes portant le jeton : 0
