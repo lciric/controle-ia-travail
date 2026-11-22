@@ -49,8 +49,9 @@ ARRETS_PAR_MOTIF = [
     r"\bkill\b[^;&|]*`\s*pgrep\b",
     r"\bpgrep\b[^;&]*\|\s*xargs\s+(-\S+\s+)*kill\b",
 ]
-GO_ID = re.compile(r"\bGO-\d{4}-\d{2}-\d{2}-\d{2}\b")
-LIGNE_GO = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2})\s*\|")
+# rang de deux ou trois chiffres (R-5013) : un rang de quatre chiffres ou plus ne correspond pas (\b et \s*\| bornent)
+GO_ID = re.compile(r"\bGO-\d{4}-\d{2}-\d{2}-\d{2,3}\b")
+LIGNE_GO = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|")
 
 # --- 3. garde d'empreinte du lanceur v3 (M2, R-1984) ; GO-2026-11-08-13, décision R-1978 -------------------------------
 NOM_LANCEUR_V3 = "lancer_course_ideation_pilier_attaque_v2_v3"
