@@ -304,6 +304,9 @@ COMMIT_LOCAL="import sys; sys.path.insert(0, 'src'); from controle_ia.lancement_
 PR_ATT="$PREREG"; [ "${PREREG_ABSENT:-0}" = 1 ] && PR_ATT=-
 ( cd "$R/amorce-depot" && python3 -I -B -c "$COMMIT_LOCAL" attendus "$CONFIG" "$PR_ATT" ) > "$R/t08-liste-attendue.txt" 2>&1 || refus "liste attendue du commit local : $(tail -n 1 "$R/t08-liste-attendue.txt")"
 CL=$( cd "$R/amorce-depot" && python3 -I -B -c "$COMMIT_LOCAL" branche . "$ENTREE_COMMIT" "$R/t08-liste-attendue.txt" 2>&1 ) || refus "$CL"
+# les entrées restent extraites : leurs chemins exacts rejoignent les motifs (sinon la création de la branche de sortie les retire du
+# disque, l'extraction partielle étant réappliquée : essai du 22 novembre)
+SP_MSG=$(sed 's#^#/#' "$R/t08-liste-attendue.txt" | git -C "$R/amorce-depot" sparse-checkout add --stdin 2>&1) || refus "extraction partielle des entrées impossible : $(printf '%s' "$SP_MSG" | head -c 300 | tr '\n' ' ')"
 git -C "$R/amorce-depot" add --sparse -f -- "${ENTREES[@]}" || refus "ajout local des entrées"
 DATE_E=$(git -C "$R/amorce-depot" log -1 --format=%cI "$ENTREE_COMMIT")
 GIT_AUTHOR_DATE="$DATE_E" GIT_COMMITTER_DATE="$DATE_E" git -C "$R/amorce-depot" commit -q -m "T0.8 : entrées de la course, commit local de l'instance (branche d'entrée $BRANCHE_ENTREE au commit $ENTREE_COMMIT ; parent $COMMIT)" || refus "commit local des entrées"
