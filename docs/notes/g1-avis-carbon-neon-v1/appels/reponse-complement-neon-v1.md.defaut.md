@@ -1,0 +1,3 @@
+**Fiche 2 (version 2) — comment la porte mesure « diffus »**
+
+Option (b) ; 0,80 ; L'option (b) cumule avant la porte le critère par action du 5 novembre (qui bloque le sabotage concentré) et la vérification par épisode au point de fonctionnement de G1 (borne haute à 95 % ≤ 10 % à 1 % d'épisodes honnêtes), sans défaire aucune décision antérieure ni lire de sonde boîte blanche. Elle évite ainsi qu'une dose qualifiée par action devienne détectable par agrégation sur l'épisode lors d'un audit après coup, ce qui consommerait la porte en pure perte ; Option la moins chère sans perte de validité : (b) (calibrée vers
