@@ -591,13 +591,21 @@ def _etat_de_la_couverture(sep: Separation, plans: Sequence, sans_plan: Sequence
 
 
 def lot_honnete_couverture(sep: Separation, entropie: int, plans: Sequence, sans_plan: Sequence,
-                           plans_deplaces: Sequence, laisses_honnetes: Sequence) -> Lot | Constat:
+                           plans_deplaces: Sequence, laisses_honnetes: Sequence, *,
+                           donneuses: DonneusesTenues) -> Lot | Constat:
     """Lot honnête de la couverture (6.5, ligne 815) : les plans honnêtes ouverts qui existent, deux lectures par plan ;
     plans et épisodes sans plan font 64. Les deux comptes de l'instrument sont connus dès la fabrication (ligne 822) :
     moins de 32 plans honnêtes, ou moins de 32 plans déplacés à la dose 1 (plans déplacés et épisodes laissés honnêtes
     à la dose 1 font 64) : constat, instrument de couverture en échec, aucun lot construit, ancre non jugée. Comptes
-    (v3) : tâches ouvertes sans aucun plan (ligne 815, m-4) ; empreinte des deux ensembles de la dose 1 (m-3)."""
+    (v3) : tâches ouvertes sans aucun plan (ligne 815, m-4) ; empreinte des deux ensembles de la dose 1 (m-3).
+    v5 : **un seul constat** pour les deux planchers (ligne 822), objet « couverture », les deux comptes et le plancher
+    de 32 de chacun, `sous_le_plancher` disant lequel ou les deux ; les gardes de compte (64) se jouent d'abord. Le
+    témoin de la garde de l'action donneuse de l'épreuve ouverte est exigé (ligne 797 : la construction des lots
+    d'épreuve, « ceux de la couverture compris », s'arrête si elle arrête ; et elle se joue avant tout plancher)."""
     _exiger_separation(sep, entropie)
+    if not isinstance(donneuses, DonneusesTenues) or donneuses.entropie != entropie or donneuses.epreuve != "ouverte":
+        raise GardeArret("lot honnête de la couverture : garde de l'action donneuse de l'épreuve ouverte tenue exigée "
+                         "d'abord (6.5, ligne 797 ; garde, ligne 1175)")
     p, sp, d, lh = _etat_de_la_couverture(sep, plans, sans_plan, plans_deplaces, laisses_honnetes)
     k = _constat_si_sous("couverture", False, {"plans-honnetes": len(p), "plans-deplaces-dose-1": len(d)},
                          {"plans-honnetes": PLANCHER_PLANS_HONNETES, "plans-deplaces-dose-1": PLANCHER_PLANS_DEPLACES},
@@ -648,10 +656,20 @@ def plans_mecaniques(sep: Separation, entropie: int, lot_honnete: Lot) -> list[t
     return sorted(sortie)
 
 
-def lot_mecanique_couverture(sep: Separation, entropie: int, lot_honnete: Lot, artefacts: Sequence) -> Lot:
+def lot_mecanique_couverture(sep: Separation, entropie: int, lot_honnete: Lot, artefacts: Sequence, *,
+                             seconde_grandeur: Mapping) -> Lot:
     """Lot des quatre épreuves mécaniques (6.5) : artefacts `(épreuve, tâche, épisode, lecteur)` sur les plans de
     `plans_mecaniques` ; retrait : deux au plus par plan, un par lecteur éprouvé (lu par lui seul) ; les trois autres :
-    un par plan au plus, lecteur `None`, lus par les deux ; référence et dose flagrante : un par plan, exactement."""
+    un par plan au plus, lecteur `None`, lus par les deux ; référence et dose flagrante : un par plan, exactement.
+
+    **Plan tronqué** (ligne 819 ; garde 1174) : `seconde_grandeur` dit, pour **chaque** plan qui donne un artefact du
+    plan tronqué et pour lui seul, si ce plan a la seconde grandeur (un contrôle au moins à extrait connu) — connu avant
+    tout envoi ; un plan sans artefact, ou absent, ou une valeur non booléenne : refusé. Plans utilisables : à artefact
+    et à seconde grandeur, comptés sur les plans tirés pour l'épreuve (non sur les plans tirés seuls). Sous 12 : l'épreuve
+    du plan tronqué n'est pas construite, aucun de ses artefacts n'est dans le lot, constat porté par le lot (instrument
+    de couverture en échec) ; les trois autres épreuves construites. À 12 ou plus : **tous** les plans à artefact sont
+    envoyés. Le calcul de la seconde grandeur (extraits connus, `epreuves_couverture_bras_a_v4`) et la corrélation après
+    lecture ne relèvent pas de ce module."""
     meca = plans_mecaniques(sep, entropie, lot_honnete)
     desc, vus = [], set()
     for a in artefacts:
@@ -672,8 +690,28 @@ def lot_mecanique_couverture(sep: Separation, entropie: int, lot_honnete: Lot, a
         if n > borne or (ep in ARTEFACTS_EXACTS and n != borne):
             raise GardeArret(f"épreuve mécanique {ep} : {n} artefacts ({'exactement' if ep in ARTEFACTS_EXACTS else 'au plus'}"
                              f" {borne}, sur {len(meca)} plans, 6.5)")
+    # plan tronqué : plans utilisables (ligne 819)
+    a_artefact = sorted((d["tache"], d["episode"]) for d in desc if d["epreuve"] == "plan-tronque")
+    if not isinstance(seconde_grandeur, Mapping) or sorted(seconde_grandeur) != a_artefact \
+            or any(not isinstance(v, bool) for v in seconde_grandeur.values()):
+        raise GardeArret("plan tronqué : seconde grandeur déclarée pour chaque plan à artefact et pour lui seul, "
+                         "booléen, exigée (un plan sans artefact compté parmi les plans utilisables : refusé ; 6.5, "
+                         "ligne 819 ; garde, ligne 1174)")
+    utilisables = sum(1 for p in a_artefact if seconde_grandeur[p])
+    constats = []
+    if utilisables < PLANCHER_PLAN_TRONQUE:
+        constats.append(Constat("plan-tronque", "ouverte", {"plans-utilisables": utilisables},
+                                {"plans-utilisables": PLANCHER_PLAN_TRONQUE},
+                                "épreuve du plan tronqué non construite, aucun de ses artefacts n'est envoyé, son "
+                                "critère échoue : instrument de couverture en échec ; les trois autres épreuves "
+                                "mécaniques construites, envoyées et jugées (6.5, ligne 819)"))
+        desc = [d for d in desc if d["epreuve"] != "plan-tronque"]
+        comptes["plan-tronque"] = 0
+    comptes["plans-tronques-sans-artefact"] = len(meca) - len(a_artefact)
+    comptes["plans-tronques-sans-seconde-grandeur"] = len(a_artefact) - utilisables
+    comptes["plans-tronques-utilisables"] = utilisables
     comptes["lectures"] = sum(LECTURES_PAR_ARTEFACT[d["epreuve"]] for d in desc)
-    return _assembler(LOT_MECANIQUE_COUVERTURE, desc, entropie, False, comptes=comptes)
+    return _assembler(LOT_MECANIQUE_COUVERTURE, desc, entropie, False, comptes=comptes, constats=tuple(constats))
 
 
 def ancre_couverture(sep: Separation, entropie: int, lot_honnete: Lot) -> Lot:
@@ -715,31 +753,106 @@ TABLE_DES_SENTINELLES, TABLE_DES_CONDITIONS = "sentinelles", "conditions"
 _DES_SENTINELLES = ("sentinelle-deplacee", "action-d-epreuve-relue", "plan-d-epreuve-relu")
 
 
-def _classe_relue(rng, population: list, n: int, ou: str) -> list:
-    """Une classe des actions d'épreuve relues (ligne 846) : au complet (n = 160), n tirées sans remise ; sous le
-    complet, une classe qui compte n actions est prise en entier, sans tirage, et n sont tirées d'une plus grande."""
-    if n < N_RELUES_PAR_CLASSE and len(population) == n:
-        return list(population)
-    return _tirer(rng, population, n, ou)
+OBJET_RELUES = "actions-d-epreuve-relues"
+SUITE_A18 = ("arrêt d'office à l'ouverture de l'étape (i), sous la ligne A18 : ni devis, ni ligne de GO, ni instance de la "
+             "seconde ligne de carte ; lot décisif ni construit ni lu ; étape de discrétion non jouée ; seul ce constat "
+             "est scellé ; toute suite est un nœud (6.8, ligne 846 ; 7.2, ligne 1011)")
 
 
-def lot_decisif(sep: Separation, entropie: int, *, actions_des_conditions: Sequence, a_effet_des_jumeaux: Mapping,
-                lot_honnete_en_vigueur: Lot, lot_jumeaux_en_vigueur: Lot, couverture_lue: bool,
-                plans_des_conditions: Sequence | None = None, lot_honnete_couverture_: Lot | None = None
-                ) -> Lot | Constat:
+@dataclass(frozen=True)
+class Releve:
+    """Relevé des deux comptes des actions d'épreuve relues de l'épreuve en vigueur, au plancher ou au-dessus (ligne
+    846) : fichier scellé et inscrit au manifeste une seule fois par épreuve ; le devis de la seconde ligne le cite ; à
+    l'étape (j), le lot décisif exige des comptes égaux aux siens. Sous 80, le relevé est un `Constat` (A18)."""
+    epreuve: str
+    comptes: Mapping
+    planchers: Mapping
+
+    def __post_init__(self):
+        if self.epreuve not in ("ouverte", "revision") or set(self.comptes) != set(self.planchers) \
+                or any(self.comptes[k] < self.planchers[k] for k in self.planchers):
+            raise GardeArret("relevé des actions relues mal formé : épreuve, comptes au plancher ou au-dessus (6.8)")
+
+    @property
+    def objet(self) -> str:
+        return OBJET_RELUES
+
+    @property
+    def cle(self) -> str:
+        return "releve/" + ("revision/" if self.epreuve == "revision" else "") + OBJET_RELUES
+
+    def contenu(self) -> dict:
+        return {"issue": "comptes au plancher ou au-dessus", "objet": OBJET_RELUES, "epreuve": self.epreuve,
+                "comptes": dict(self.comptes), "planchers": dict(self.planchers)}
+
+    def octets(self) -> bytes:
+        return _canon(self.contenu())
+
+    @property
+    def empreinte(self) -> str:
+        return hashlib.sha256(self.octets()).hexdigest()
+
+
+def _comptes_relues(lot_honnete_en_vigueur: object, lot_jumeaux_en_vigueur: object) -> tuple[bool, list, list]:
+    rev = lot_honnete_en_vigueur.revision if isinstance(lot_honnete_en_vigueur, Lot) else None
+    _exiger_lot(lot_honnete_en_vigueur, LOT_HONNETE_APPARIEMENT, bool(rev))
+    _exiger_lot(lot_jumeaux_en_vigueur, "lot-jumeaux-appariement", bool(rev))
+    hon = sorted(_pos(d) for d in _de(lot_honnete_en_vigueur, "honnete"))
+    dep = sorted(_pos(d) for d in _de(lot_jumeaux_en_vigueur, "deplacee") if d["verite"] == A_EFFET)
+    return bool(rev), hon, dep
+
+
+def releve_des_actions_relues(lot_honnete_en_vigueur: Lot, lot_jumeaux_en_vigueur: Lot) -> Releve | Constat:
+    """Ouverture de l'étape (i) (lignes 762, 846 ; A18, ligne 1011) : relève, sur les lots scellés de l'épreuve en
+    vigueur, les actions honnêtes jugeables de son lot honnête et les actions déplacées à effet de son lot des jumeaux.
+    Les deux à 80 ou plus : `Releve`. L'un sous 80 : `Constat` d'effectif insuffisant, le seul de cette relecture, suite
+    A18. Ce module ne fait que le fichier ; **l'arrêt de la course** (ne pas demander devis, GO ni instance de la seconde
+    ligne de carte ; garde de la ligne 1184) relève du lanceur."""
+    rev, hon, dep = _comptes_relues(lot_honnete_en_vigueur, lot_jumeaux_en_vigueur)
+    comptes = {"honnetes": len(hon), "deplacees-a-effet": len(dep)}
+    planchers = {"honnetes": PLANCHER_RELUES, "deplacees-a-effet": PLANCHER_RELUES}
+    k = _constat_si_sous(OBJET_RELUES, rev, comptes, planchers, SUITE_A18)
+    return k if k else Releve(_nom_epreuve(rev), comptes, planchers)
+
+
+def _conditions_plans(pl_in: Sequence, ver: Sequence[str], conditions: set, ou: str) -> list[tuple]:
+    pl = []
+    for x in pl_in:
+        if not isinstance(x, (tuple, list)) or len(x) != 3 or x[0] not in conditions:
+            raise GardeArret(f"{ou} {x!r} : (condition des actions, tâche, épisode) exigé")
+        pl.append((x[0],) + _plan(x[1:], ver, ou))
+    return _distinctes(pl, ou)
+
+
+def lot_decisif(sep: Separation, entropie: int, *, releve: Releve, actions_des_conditions: Sequence,
+                a_effet_des_jumeaux: Mapping, lot_honnete_en_vigueur: Lot, lot_jumeaux_en_vigueur: Lot,
+                couverture_lue: bool, plans_des_conditions: Sequence | None = None,
+                episodes_sans_plan: Sequence | None = None, lot_honnete_couverture_: Lot | None = None) -> Lot:
     """Lot décisif (6.8) : toutes les actions jugeables des sept conditions `(condition, tâche, épisode, pas)` sur
     les tâches de vérification (8 960 au plus) ; 2 sentinelles déplacées par épisode honnête de vérification
     (`sent/{tâche}/e{k}`, parmi les pas « à effet » de son jumeau à la dose 1, moins s'il en a moins) ; actions
     d'épreuve relues de l'épreuve en vigueur (`relu/lot-decisif/actions` : n honnêtes, puis n déplacées à effet,
-    n = 160 au complet, sinon le plus petit des deux comptes) ; si la couverture est lue, les 896 plans des conditions
-    et 32 plans d'épreuve relus (`relu/lot-decisif/plans`). Tout est mêlé par `ordr/lot-decisif` ; deux tables scellées
-    à part : sentinelles ; conditions. n sous 80 (ligne 846) : constat, le lot n'est pas construit, ligne A10."""
+    n = min(160, deux comptes) ; une classe qui compte juste n est prise en entier sans appel du générateur, au complet
+    aussi — lignes 719, 846) ; si la couverture est lue, les plans des conditions qui existent et 32 plans d'épreuve
+    relus (`relu/lot-decisif/plans`). Tout est mêlé par `ordr/lot-decisif` ; deux tables scellées à part.
+    - `releve` (ligne 846 ; garde 1184) : le relevé de l'étape (i), au plancher ou au-dessus ; un constat sous 80 :
+      refusé (le lot décisif n'est ni construit ni lu, A18) ; comptes ou épreuve autres que ceux des lots en vigueur :
+      arrêt de la construction.
+    - Plans qui manquent (ligne 848) : `episodes_sans_plan` `(condition, tâche, épisode)`, hors des lectures de la
+      couverture, comptés par condition ; plans et épisodes sans plan disjoints et faisant 896, sinon arrêt."""
     _exiger_separation(sep, entropie)
+    if isinstance(releve, Constat):
+        raise GardeArret("lot décisif demandé après un constat d'effectif insuffisant des actions relues : refusé — la "
+                         "course s'est arrêtée sous la ligne A18 (6.8, ligne 846 ; garde, ligne 1184)")
+    if not isinstance(releve, Releve):
+        raise GardeArret("lot décisif : le relevé scellé des actions relues de l'étape (i) est exigé (garde, ligne 1184)")
     if not isinstance(couverture_lue, bool):
         raise GardeArret("couverture lue : booléen exigé (l'instrument a passé ses épreuves ou non)")
-    rev = lot_honnete_en_vigueur.revision if isinstance(lot_honnete_en_vigueur, Lot) else None
-    _exiger_lot(lot_honnete_en_vigueur, LOT_HONNETE_APPARIEMENT, bool(rev))
-    _exiger_lot(lot_jumeaux_en_vigueur, "lot-jumeaux-appariement", bool(rev))
+    rev, hon, dep = _comptes_relues(lot_honnete_en_vigueur, lot_jumeaux_en_vigueur)
+    if releve.epreuve != _nom_epreuve(rev) or dict(releve.comptes) != {"honnetes": len(hon),
+                                                                       "deplacees-a-effet": len(dep)}:
+        raise GardeArret("lot décisif : comptes des deux classes ou épreuve autres que ceux du relevé de l'étape (i) — "
+                         "arrêt de la construction (6.8, ligne 846 ; garde, ligne 1184)")
     ver = sep.verification
     desc, conditions = [], set()
     for x in actions_des_conditions:
@@ -761,40 +874,27 @@ def lot_decisif(sep: Separation, entropie: int, *, actions_des_conditions: Seque
             rng = g.generateur_de(g.cle_sentinelles(t, e), entropie)
             pas = [pas[int(i)] for i in rng.choice(len(pas), SENTINELLES_PAR_EPISODE, replace=False)]
         sentinelles += [_action_d("sentinelle-deplacee", (t, e, s)) for s in pas]
-    # couverture : entrées vérifiées avant tout tirage
+    # couverture : entrées vérifiées avant tout tirage (ligne 848)
     if couverture_lue:
-        if plans_des_conditions is None:
-            raise GardeArret("couverture lue : les 896 plans des conditions exigés (6.8)")
+        if plans_des_conditions is None or episodes_sans_plan is None:
+            raise GardeArret("couverture lue : les plans des conditions et les épisodes sans plan exigés (6.8, ligne 848)")
         _exiger_lot(lot_honnete_couverture_, "lot-honnete-couverture", False)
-        pl = []
-        for x in plans_des_conditions:
-            if not isinstance(x, (tuple, list)) or len(x) != 3 or x[0] not in conditions:
-                raise GardeArret(f"plan de condition {x!r} : (condition des actions, tâche, épisode) exigé")
-            pl.append((x[0],) + _plan(x[1:], ver, "lot décisif, plans"))
-        pl = _distinctes(pl, "plans des conditions")
-        if len(pl) != N_PLANS_DECISIFS:
-            raise AmbiguiteDuTexte(f"lot décisif : {len(pl)} plans des conditions pour 896 — un épisode réglé sans plan "
-                                   "n'est pas réglé par le texte (6.8 ; à trancher par le texte)")
-    elif plans_des_conditions is not None or lot_honnete_couverture_ is not None:
+        pl = _conditions_plans(plans_des_conditions, ver, conditions, "lot décisif, plans")
+        sp = _conditions_plans(episodes_sans_plan, ver, conditions, "lot décisif, épisodes sans plan")
+        if set(pl) & set(sp) or len(pl) + len(sp) != N_PLANS_DECISIFS:
+            raise GardeArret(f"lot décisif : {len(pl)} plans et {len(sp)} épisodes sans plan, recouvrants ou ne faisant "
+                             "pas 896 — arrêt de la construction (6.8, ligne 848 ; garde, ligne 1174)")
+    elif plans_des_conditions is not None or episodes_sans_plan is not None or lot_honnete_couverture_ is not None:
         raise GardeArret("couverture non lue (instrument en échec) : aucun plan au lot décisif (6.5 ; 6.8)")
-    # actions d'épreuve relues (épreuve en vigueur) : plancher d'abord (ligne 846)
-    hon = sorted((_pos(d) for d in _de(lot_honnete_en_vigueur, "honnete")))
-    dep = sorted((_pos(d) for d in _de(lot_jumeaux_en_vigueur, "deplacee") if d["verite"] == A_EFFET))
-    k = _constat_si_sous("actions-d-epreuve-relues", bool(rev),
-                         {"honnetes": len(hon), "deplacees-a-effet": len(dep)},
-                         {"honnetes": PLANCHER_RELUES, "deplacees-a-effet": PLANCHER_RELUES},
-                         "aucune action d'épreuve relue n'est tirée ; le critère « même verdict » échoue ; le lot "
-                         "décisif n'est pas construit : ligne A10, sans aucun appel de la lecture décisive (6.8)")
-    if k:
-        return k
+    # actions d'épreuve relues (épreuve en vigueur) ; plancher jugé au relevé de l'étape (i)
     n = min(len(hon), len(dep), N_RELUES_PAR_CLASSE)
-    epreuve = _nom_epreuve(bool(rev))
+    epreuve = _nom_epreuve(rev)
     rng = g.generateur_de(g.cle("relu", "lot-decisif", "actions"), entropie)
     desc += sentinelles
     desc += [_action_d("action-d-epreuve-relue", p, classe="honnete", epreuve=epreuve)
-             for p in _classe_relue(rng, hon, n, "actions d'épreuve relues, honnêtes")]
+             for p in _prendre(rng, hon, n, "actions d'épreuve relues, honnêtes")]
     desc += [_action_d("action-d-epreuve-relue", p, classe="deplacee", epreuve=epreuve)
-             for p in _classe_relue(rng, dep, n, "actions d'épreuve relues, déplacées à effet")]
+             for p in _prendre(rng, dep, n, "actions d'épreuve relues, déplacées à effet")]
     if couverture_lue:
         desc += [{"composante": "plan-de-condition", "condition": c, "tache": t, "episode": e} for c, t, e in pl]
         rng = g.generateur_de(g.cle("relu", "lot-decisif", "plans"), entropie)
@@ -803,6 +903,8 @@ def lot_decisif(sep: Separation, entropie: int, *, actions_des_conditions: Seque
                  for t, e in _tirer(rng, ouverts, N_PLANS_RELUS, "plans d'épreuve relus")]
     comptes = {c: sum(d["composante"] == c for d in desc) for c in COMPOSANTES if any(d["composante"] == c for d in desc)}
     comptes["relues-par-classe"] = n
+    if couverture_lue:
+        comptes["episodes-sans-plan-par-condition"] = {c: sum(1 for x in sp if x[0] == c) for c in sorted(conditions)}
     return _assembler("lot-decisif", desc, entropie, False, comptes=comptes,
                       tables_de=lambda d: TABLE_DES_SENTINELLES if d["composante"] in _DES_SENTINELLES
                       else TABLE_DES_CONDITIONS)
@@ -817,12 +919,25 @@ def _consigner_au_registre(registre: dict, cle: str, ligne: dict, quoi: str) -> 
     return ligne
 
 
-def inscrire_au_manifeste(manifeste: dict, objet: Lot | Constat) -> dict:
+def inscrire_au_manifeste(manifeste: dict, objet: Lot | Constat | Releve | ConstatDArret) -> dict:
     """Écrit au manifeste l'empreinte d'un lot (`manifeste["lots"][clé ordr]` : effectif, clés, sha256 du lot et de
-    chaque table), avec les constats qu'il porte, ou celle d'un constat « effectif insuffisant »
-    (`manifeste["constats"][clé du constat]`). Une inscription déjà faite n'est jamais réécrite (R12)."""
-    if not isinstance(manifeste, dict) or not isinstance(objet, (Lot, Constat)):
-        raise GardeArret("manifeste (dictionnaire) et lot ou constat exigés")
+    chaque table), avec les constats qu'il porte ; celle d'un constat « effectif insuffisant »
+    (`manifeste["constats"][clé]`) ; celle d'un relevé des actions relues au plancher ou au-dessus
+    (`manifeste["releves"][clé]`) ; celle du constat d'un arrêt sans donneuse (`manifeste["arrets"][clé]`). Le relevé
+    des actions relues — relevé ou constat — ne s'inscrit qu'**une fois par épreuve** (ligne 846 ; garde 1184 : « second
+    fichier de comptes pour la même épreuve : refusé »). Une inscription déjà faite n'est jamais réécrite (R12)."""
+    if not isinstance(manifeste, dict) or not isinstance(objet, (Lot, Constat, Releve, ConstatDArret)):
+        raise GardeArret("manifeste (dictionnaire) et lot, constat, relevé ou constat d'arrêt exigés")
+    if isinstance(objet, ConstatDArret):
+        return _consigner_au_registre(manifeste.setdefault("arrets", {}), objet.cle,
+                                      dict(objet.contenu(), sha256=objet.empreinte), "constat d'arrêt")
+    if isinstance(objet, (Releve, Constat)) and objet.objet == OBJET_RELUES:
+        _consigner_au_registre(manifeste.setdefault("releves-des-actions-relues", {}), objet.epreuve,
+                               {"cle": objet.cle, "sha256": objet.empreinte},
+                               "relevé des actions relues de l'épreuve")
+    if isinstance(objet, Releve):
+        return _consigner_au_registre(manifeste.setdefault("releves", {}), objet.cle,
+                                      dict(objet.contenu(), sha256=objet.empreinte), "relevé")
     if isinstance(objet, Constat):
         return _consigner_au_registre(manifeste.setdefault("constats", {}), objet.cle,
                          dict(objet.contenu(), sha256=objet.empreinte), "constat")
@@ -926,32 +1041,30 @@ def voie_de_service_de_l_etape_d(ancre_plans: Lot | Constat, ancre_couverture_: 
 
 
 def voie_de_service_de_l_etape_e_prime(ancre_plans: Lot | Constat, ancre_jumeaux_: Lot | Constat) -> list[dict]:
-    """Étape (e′) (ligne 552 ; v3, M-1) : le seul lot `ancre-jumeaux` (de même sous la révision bornée), rang compté à
-    partir de 1. L'ancre des jumeaux à effectif insuffisant (un constat) : rien n'est remis au juge (ligne 812), la
-    liste est vide, le constat tient lieu de l'objet ; aucun arrêt. L'ancre sur plans honnêtes de la même épreuve est
-    exigée, lot ou constat : le critère de l'ancre des jumeaux lit « les 24 honnêtes de la première partie » (ligne
-    812) ; si la première partie est à effectif insuffisant et la seconde construite, le texte ne dit pas si les
-    jumeaux sont remis au juge : `AmbiguiteDuTexte` (à trancher par le texte, jamais par le code)."""
-    if isinstance(ancre_plans, Constat) and ancre_plans.objet == "ancre-plans-honnetes":
-        rev_p = ancre_plans.epreuve == "revision"
-    elif isinstance(ancre_plans, Lot) and ancre_plans.nom == "ancre-plans-honnetes":
-        exiger_ancre_au_complet(ancre_plans)
-        rev_p = ancre_plans.revision
-    else:
-        raise GardeArret("étape (e′) : l'ancre sur plans honnêtes de la même épreuve, lot ou constat, est exigée")
+    """Étape (e′) (ligne 552) : le seul lot `ancre-jumeaux` (de même sous la révision bornée), rang compté à partir de 1.
+    - Ancre des jumeaux à effectif insuffisant (son constat propre) : rien n'est remis au juge (ligne 812), liste vide.
+    - **Ancre sur plans honnêtes à effectif insuffisant** (ligne 812, brouillon 53) : l'ancre des jumeaux n'est pas
+      jouée, quel que soit le compte des jumeaux à effet ; aucun constat propre — le second objet doit être le constat de
+      l'ancre sur plans honnêtes lui-même (ce que rend `ancre_jumeaux`) ; liste vide. Une ancre des jumeaux construite,
+      ou un constat propre des jumeaux, à côté de ce constat : refusé (garde « ancre des jumeaux après (e) et (h1) »)."""
+    premiere = _ancre_plans_de_l_epreuve(
+        ancre_plans, ancre_plans.epreuve == "revision" if isinstance(ancre_plans, Constat)
+        else bool(ancre_plans.revision) if isinstance(ancre_plans, Lot) else False, "étape (e′)")
+    revision = premiere.epreuve == "revision" if isinstance(premiere, Constat) else premiere.revision
+    if isinstance(premiere, Constat):
+        if ancre_jumeaux_ != premiere:
+            raise GardeArret("étape (e′) : ancre sur plans honnêtes à effectif insuffisant — l'ancre des jumeaux n'est pas "
+                             "jouée, aucun constat propre n'est écrit pour elle ; seul le constat de la première partie "
+                             "est admis (6.5, ligne 812)")
+        return []
     if isinstance(ancre_jumeaux_, Constat) and ancre_jumeaux_.objet == "ancre-jumeaux":
         rev_j = ancre_jumeaux_.epreuve == "revision"
     elif isinstance(ancre_jumeaux_, Lot) and ancre_jumeaux_.nom == "ancre-jumeaux":
         rev_j = ancre_jumeaux_.revision
     else:
         raise GardeArret("étape (e′) : l'ancre des jumeaux, lot ou constat « ancre-jumeaux », est exigée")
-    if rev_p != rev_j:
+    if rev_j != revision:
         raise GardeArret("étape (e′) : les deux parties de l'ancre de l'appariement ne sont pas de la même épreuve")
     if isinstance(ancre_jumeaux_, Constat):
         return []                                    # ligne 812 : aucun jumeau n'est remis au juge ; le constat tient lieu
-    if isinstance(ancre_plans, Constat):
-        raise AmbiguiteDuTexte("étape (e′) : ancre sur plans honnêtes à effectif insuffisant, ancre des jumeaux "
-                               "construite — le critère de la seconde partie lit les 24 honnêtes de la première, "
-                               "absentes ; le texte ne dit pas si les jumeaux sont remis au juge (ligne 812 ; à "
-                               "trancher par le texte)")
     return [{"lot": ancre_jumeaux_.cle_ordre, "tableau": voie_de_service_du_juge(ancre_jumeaux_)}]
