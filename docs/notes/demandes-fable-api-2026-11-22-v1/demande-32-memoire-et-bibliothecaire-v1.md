@@ -1,0 +1,17 @@
+# Demande 32 — une note de mémoire de la conception et une session « bibliothécaire » qui la tient et y répond
+
+Demande du directeur, verbatim : « fais une note complète bien rédigée de manière claire sans a priori sans présupposé de connaissance particulière sur tout ce qui a été fait hier et comment ça interagit avec notre programme, s'intègre, attaque, contredit etc. Une note de mémoire qui doit servir de phare au moment de naviguer dans les eaux troubles de l'exploration, de concevoir des thèses, revendications, programme de recherche, aussi utile quand on bute sur des blocages, résultats négatifs etc. Ça doit être un mémo vers lequel on revient pour consulter, et il faudrait idéalement que ce mémo soit tenu par une session bibliothécaire à laquelle on peut poser directement les questions et qui y répond à partir de la somme de tout ce qui a été fait sur la conception notamment hier et qui sera encore fait aujourd'hui, avec la note de mémo en appui principal et l'accès à tout le dépôt pour chercher les détails. Ce bibliothécaire devra être une session fille de la session mère ; la note de mémo doit lui permettre de focaliser son attention sur le travail de conception d'hier et d'aujourd'hui et donc de retrouver des concepts paraphrasés de manière approximative de manière fiable et rapide. Mais je dois pouvoir l'interroger directement aussi au besoin. »
+
+Faits : le dépôt compte des milliers de notes ; la conception des 21 et 22 novembre est répartie entre des décisions, des réponses de modèles, des notes et des transcriptions ; un inventaire de quarante concepts (seconds regards, invariants, noyaux) est joint ; certaines pièces sont cloisonnées et ne doivent jamais être lues par certains rôles.
+
+Avant de reformuler, applique ce prompt du directeur, verbatim :
+
+« Je souhaite une version plus approfondie de cette tâche, pas une version plus longue. Avant de la reformuler : (1) indiquez ce qu'un expert du domaine ferait ici, et que je ne demande pas ; (2) précisez les données brutes qu'il utiliserait au départ, au lieu de celles déjà analysées ; (3) indiquez les méthodes et outils spécifiques qu'il utiliserait ; (4) expliquez ce qui, en dehors de vous ou de moi, permettrait de vérifier la validité du résultat. Ensuite, reformulez ma demande pour qu'elle réponde précisément à cette exigence. »
+
+Puis réponds à la demande reformulée. Réponds au moins à ceci :
+1. La structure de la note de mémoire : sections, forme de chaque entrée (concept, définition en clair, source et empreinte, liens avec les hypothèses, ce qui l'attaque ou le contredit, état : retenu, retiré, ouvert), index des paraphrases et des synonymes pour retrouver un concept mal nommé.
+2. La façon de la tenir à jour sans dérive : qui écrit, à quel rythme, comment une entrée change, comment on date et on scelle.
+3. Le mandat de la session bibliothécaire : ce qu'elle lit d'abord, comment elle cherche dans le dépôt, comment elle répond (citation de la source, degré de certitude, « non trouvé » dit comme tel), ce qu'elle ne lit jamais (cloisonnement), et comment elle ne devient pas une seconde mère.
+4. Une épreuve de sa fiabilité : un jeu de questions à paraphrase approximative, avec réponses connues, et le seuil qui la rend utilisable.
+5. Ce qui pourrait en faire un piège (mémoire qui fige des erreurs, autorité indue) et la parade.
+Décisions pour le directeur au format habituel. Termine par « FIN DE LA RÉPONSE ».
