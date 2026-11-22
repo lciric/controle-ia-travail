@@ -60,7 +60,8 @@ def go_du_jour(jour: date) -> str:
     return GO_ORIGINE if jour <= date(2026, 11, 30) else GO_PROLONGATION
 
 
-def construire(dossier: Path, horodatage: str, entropie: int, interdit_code=False, interdit_entree=False) -> dict:
+def construire(dossier: Path, horodatage: str, entropie: int, interdit_code=False, interdit_entree=False,
+               plus_dans_entree=(), moins_dans_entree=()) -> dict:
     from controle_ia.scellement import sceller
     from controle_ia.t08 import essai_jouet_v1 as ej
 
@@ -70,9 +71,9 @@ def construire(dossier: Path, horodatage: str, entropie: int, interdit_code=Fals
     w.mkdir()
     a = subprocess.run(["git", "-C", str(RACINE), "archive", "HEAD", *CHEMINS_CODE], capture_output=True, check=True).stdout
     subprocess.run(["tar", "-x", "-C", str(w)], input=a, check=True)
-    if interdit_code:
-        (w / "diag" / "20261004-104156-harnais-factice").mkdir(parents=True)
-        (w / "diag" / "20261004-104156-harnais-factice" / "resume.json").write_text("{}\n")
+    if interdit_code:              # un resume.json de 7b (run factice de l'essai) dans l'arbre du code, hors des motifs extraits
+        (w / "diag" / f"{horodatage}-t06-7b-jouet").mkdir(parents=True)
+        (w / "diag" / f"{horodatage}-t06-7b-jouet" / "resume.json").write_text("{}\n")
     git(w, "init", "-q", "-b", BRANCHE_CODE)
     git(w, "add", "-A", "-f")
     git(w, "commit", "-qm", "code de l'essai (arbre restreint)", env=ID)
@@ -95,6 +96,16 @@ def construire(dossier: Path, horodatage: str, entropie: int, interdit_code=Fals
         for x in (ch, ch + ".sha256"):
             (en / x).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(e["racine"] / x, en / x)
+    from controle_ia.lancement_t08.commit_local_v1 import GUIDE     # invite dérivée et guide : comme la branche d'entrée réelle
+    for ch in (course["entrees"]["invite"]["chemin"], *GUIDE):
+        for x in (ch, ch + ".sha256"):
+            (en / x).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(RACINE / x, en / x)
+    for ch in plus_dans_entree:
+        (en / ch).parent.mkdir(parents=True, exist_ok=True)
+        (en / ch).write_text("fichier de plus (artefact)\n", encoding="utf-8")
+    for ch in moins_dans_entree:
+        (en / ch).unlink()
     (en / CONFIG_JOUET).parent.mkdir(parents=True, exist_ok=True)
     (en / CONFIG_JOUET).write_text(json.dumps(course, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     sceller(en / CONFIG_JOUET)

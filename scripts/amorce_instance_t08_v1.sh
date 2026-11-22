@@ -4,8 +4,9 @@
 # déclarée dans le rapport de la chaîne. Changent : (1) les noms (`t08` : fichiers de travail `$R/t08-…`, lignes « AMORCE T08 ») ;
 # (2) le clonage : le code au commit `COMMIT` (celui de `COMMIT_CODE_T08`), une seule branche (`BRANCHE_CODE`, sans étiquettes),
 # extraction limitée à ce que la course et ses essais importent (12 motifs, `CHEMINS_CLONAGE`), puis la branche d'entrée seule
-# (`BRANCHE_ENTREE` au commit `ENTREE_COMMIT`, refspec explicite), dont les fichiers sont recopiés à l'octet à leurs chemins et tenus
-# hors de l'index par `.git/info/exclude` (arbre propre, tête = `COMMIT`) ; jamais la branche de sortie de 7b ; (3) avant tout
+# (`BRANCHE_ENTREE` au commit `ENTREE_COMMIT`, refspec explicite), dont les fichiers sont recopiés à l'octet à leurs chemins et
+# portés par le commit local de la course (consigne v3, § 3.5 : seul parent `COMMIT`, liste attendue écrite avant, rien de gelé,
+# auteur et date fixés ; la branche de sortie part de lui) ; jamais la branche de sortie de 7b ; (3) avant tout
 # calcul : aucun `lecture-sondes-t06*` ni `resume.json` sur le disque (dès le clonage), puis, l'environnement installé,
 # `entrees_v1.exiger_instance_sans_interdits`, tête égale à `COMMIT` et à `COMMIT_CODE_T08` de la configuration, texte scellé
 # intact et portant les marqueurs de la configuration ; l'environnement Python est hors du dépôt (`$R/venv-t08`), que la garde
@@ -284,21 +285,30 @@ SP_MSG=$(printf '%s\n' "$CHEMINS_CLONAGE" | git -C "$R/amorce-depot" sparse-chec
 [ -z "$SP_MSG" ] || echo "AMORCE $(date -u +%FT%TZ) : sparse-checkout : $(printf '%s' "$SP_MSG" | head -c 200 | tr '\n' ' ')"
 timeout -k 10 900 git -C "$R/amorce-depot" checkout -q "$COMMIT" || refus "commit $COMMIT introuvable sur la branche $BRANCHE_CODE"
 # T08 : branche d'entrée seule (refspec explicite, au commit consigné par les contrôles), fichiers recopiés à l'octet à leurs chemins,
-# tenus hors de l'index (.git/info/exclude) : l'arbre reste propre et la tête reste COMMIT (le manifeste de la course porte ce commit)
+# puis commit local de la course (consigne v3, § 3.5) : seul parent COMMIT, n'ajoute que la liste attendue (écrite avant, depuis la
+# configuration), rien sous un chemin gelé ; auteur, date et message fixés ; la branche de sortie part de lui
 timeout -k 10 900 git -C "$R/amorce-depot" fetch -q --no-tags --depth 1 origin "refs/heads/$BRANCHE_ENTREE:refs/remotes/origin/$BRANCHE_ENTREE" || refus "branche d'entrée $BRANCHE_ENTREE introuvable"
 [ "$(git -C "$R/amorce-depot" rev-parse "refs/remotes/origin/$BRANCHE_ENTREE")" = "$ENTREE_COMMIT" ] || refus "branche d'entrée $BRANCHE_ENTREE ≠ commit des contrôles $ENTREE_COMMIT"
 [ "$(git -C "$R/amorce-depot" rev-list --count "$ENTREE_COMMIT")" = 1 ] || refus "branche d'entrée non orpheline (plus d'un commit)"
-NB_ENTREE=0
+NB_ENTREE=0; ENTREES=()
 while IFS= read -r -d '' f; do
     case "$f" in /*|*..*) refus "chemin de la branche d'entrée illisible : $f";; esac
     SUIVI=$(git -C "$R/amorce-depot" ls-tree --name-only "$COMMIT" -- "$f" 2>/dev/null)      # suivi au commit du code (tâches, consignes, invites) : même contenu exigé
     if [ -e "$R/amorce-depot/$f" ] && [ -z "$SUIVI" ]; then refus "fichier d'entrée $f déjà présent sur le disque"; fi
     mkdir -p "$R/amorce-depot/$(dirname "$f")" && git -C "$R/amorce-depot" show "$ENTREE_COMMIT:$f" > "$R/amorce-depot/$f" || refus "copie de $f"
-    if [ -n "$SUIVI" ]; then [ "$(git -C "$R/amorce-depot" rev-parse "$COMMIT:$f")" = "$(git -C "$R/amorce-depot" rev-parse "$ENTREE_COMMIT:$f")" ] || refus "fichier d'entrée $f ≠ celui du commit du code"
-    else printf '/%s\n' "$f" >> "$R/amorce-depot/.git/info/exclude"; fi
-    NB_ENTREE=$((NB_ENTREE + 1))
+    if [ -n "$SUIVI" ]; then [ "$(git -C "$R/amorce-depot" rev-parse "$COMMIT:$f")" = "$(git -C "$R/amorce-depot" rev-parse "$ENTREE_COMMIT:$f")" ] || refus "fichier d'entrée $f ≠ celui du commit du code"; fi
+    ENTREES+=("$f"); NB_ENTREE=$((NB_ENTREE + 1))
 done < <(git -C "$R/amorce-depot" ls-tree -r -z --name-only "$ENTREE_COMMIT")
 [ "$NB_ENTREE" -gt 0 ] || refus "branche d'entrée vide"
+COMMIT_LOCAL="import sys; sys.path.insert(0, 'src'); from controle_ia.lancement_t08 import commit_local_v1 as c; sys.exit(c.main(sys.argv[1:]))"
+PR_ATT="$PREREG"; [ "${PREREG_ABSENT:-0}" = 1 ] && PR_ATT=-
+( cd "$R/amorce-depot" && python3 -I -B -c "$COMMIT_LOCAL" attendus "$CONFIG" "$PR_ATT" ) > "$R/t08-liste-attendue.txt" 2>&1 || refus "liste attendue du commit local : $(tail -n 1 "$R/t08-liste-attendue.txt")"
+CL=$( cd "$R/amorce-depot" && python3 -I -B -c "$COMMIT_LOCAL" branche . "$ENTREE_COMMIT" "$R/t08-liste-attendue.txt" 2>&1 ) || refus "$CL"
+git -C "$R/amorce-depot" add --sparse -f -- "${ENTREES[@]}" || refus "ajout local des entrées"
+DATE_E=$(git -C "$R/amorce-depot" log -1 --format=%cI "$ENTREE_COMMIT")
+GIT_AUTHOR_DATE="$DATE_E" GIT_COMMITTER_DATE="$DATE_E" git -C "$R/amorce-depot" commit -q -m "T0.8 : entrées de la course, commit local de l'instance (branche d'entrée $BRANCHE_ENTREE au commit $ENTREE_COMMIT ; parent $COMMIT)" || refus "commit local des entrées"
+CL=$( cd "$R/amorce-depot" && python3 -I -B -c "$COMMIT_LOCAL" verifier . "$COMMIT" "$R/t08-liste-attendue.txt" 2>&1 ) || refus "$CL"
+echo "AMORCE $(date -u +%FT%TZ) : $CL"
 # T08 : garde précoce (outils de l'image seuls, aucun paquet) : aucun lecture-sondes-t06* ni resume.json sur le disque extrait ;
 # la garde du code (entrees_v1.exiger_instance_sans_interdits, objets git compris) est rejouée avant tout calcul, l'environnement installé
 INTERDIT=$(cd "$R/amorce-depot" && find . -path ./.git -prune -o -type f \( -name 'lecture-sondes-t06*' -o -name 'resume.json' \) -print | head -n 3)
@@ -404,7 +414,7 @@ git checkout -q -b "$BRANCHE"
 timeout -k 5 300 git push -q origin "$BRANCHE" 2>"$T/poussee-initiale.err" || refus "poussée initiale de la branche $BRANCHE refusée (droit d'écriture du jeton ?)"
 journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"
 traces() { local d; mkdir -p traces; d=$(mktemp -d "traces/t08-$(date -u +%Y%m%d-%H%M%S)-XXXX")
-    for f in "$JOURNAL" "$T/tests.txt" "$T/tests.err" "$T"/run.json "$T"/run.err "$T"/nvidia-smi.txt "$T"/pip-freeze.txt "$R/t08-minuterie.log" "$R/t08-fichiers-trop-gros.txt" "$T/progres-retenues.txt"; do [ -f "$f" ] && cp "$f" "$d/"; done
+    for f in "$JOURNAL" "$T/tests.txt" "$T/tests.err" "$T"/run.json "$T"/run.err "$T"/nvidia-smi.txt "$T"/pip-freeze.txt "$R/t08-minuterie.log" "$R/t08-fichiers-trop-gros.txt" "$T/progres-retenues.txt" "$R/t08-liste-attendue.txt"; do [ -f "$f" ] && cp "$f" "$d/"; done
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true
     ajouter "$d" || return 1; etape_commit "T0.8 : traces de l'instance ($1)" "" "traces : aucun fichier neuf à committer"; }
 # T08 : bras B de l'audit de fuite (annexe de la course de confirmation) retiré : aucun bras annexe sur la machine de T0.8
@@ -439,30 +449,34 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # T08 : gardes avant tout calcul (« Liste d'arrêt », troisième puce ; consigne § 3.5) : aucun lecture-sondes-t06* ni resume.json sur
-# l'instance, ni comme fichier ni comme objet git (garde du code) ; tête du dépôt = COMMIT = COMMIT_CODE_T08 de la configuration ;
+# l'instance, ni comme fichier ni comme objet git (garde du code, run de 7b lu dans la configuration) ; tête du dépôt = commit local,
+# seul parent COMMIT = COMMIT_CODE_T08 de la configuration ;
 # texte scellé intact et portant les marqueurs de la configuration (mode réel)
-GARDES=$(PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src timeout -k 10 900 python - "$COMMIT" "$CONFIG" "$PREREG" "$PREREG_ABSENT" <<'FIN_GARDES' 2>&1
+GARDES=$(PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src timeout -k 10 900 python - "$COMMIT" "$CONFIG" "$PREREG" "$PREREG_ABSENT" "$R/t08-liste-attendue.txt" <<'FIN_GARDES' 2>&1
 import json, subprocess, sys
 from controle_ia.gardes import GardeArret
+from pathlib import Path
+from controle_ia.lancement_t08 import commit_local_v1 as cl
 from controle_ia.t08 import configuration_v1 as cf, entrees_v1 as en
-commit, config, prereg, absent = sys.argv[1:5]
+commit, config, prereg, absent, liste = sys.argv[1:6]
 try:
-    inst = en.exiger_instance_sans_interdits(".")
-    tete = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
-    if tete != commit:
-        raise GardeArret(f"tête du dépôt {tete[:12]} ≠ COMMIT {commit[:12]}")
     c = json.load(open(config, encoding="utf-8"))
+    run_7b = Path(c["entrees"]["manifeste_7b"]["chemin"]).parent.name
+    inst = en.exiger_instance_sans_interdits(".", run_7b)
+    cl.verifier(".", commit, Path(liste).read_text(encoding="utf-8").split())
     if c.get("mode") == "reel":
         m = cf.exiger_marqueurs(c.get("marqueurs"))
+        if m["RUN_7B"]["run_id"] != run_7b:
+            raise GardeArret(f"run de 7b des entrées {run_7b} ≠ RUN_7B de la configuration")
         if m["COMMIT_CODE_T08"] != commit:
             raise GardeArret(f"COMMIT_CODE_T08 de la configuration ≠ COMMIT {commit[:12]}")
         if absent == "1":
             raise GardeArret("configuration réelle sans préenregistrement")
         t = cf.exiger_marqueurs_au_texte(prereg, m)
-        print(f"gardes conformes : {inst['fichiers']} fichiers, {inst['objets_git']} objets git, aucun interdit ; tête = COMMIT = COMMIT_CODE_T08 ; texte {t['sha256'][:12]} intact, {t['valeurs_verifiees']} valeurs de marqueurs")
+        print(f"gardes conformes : {inst['fichiers']} fichiers, {inst['objets_git']} objets git, aucun interdit (run de 7b {run_7b}) ; tête = commit local, parent COMMIT = COMMIT_CODE_T08 ; texte {t['sha256'][:12]} intact, {t['valeurs_verifiees']} valeurs de marqueurs")
     else:
-        print(f"gardes conformes (jouet) : {inst['fichiers']} fichiers, {inst['objets_git']} objets git, aucun interdit ; tête = COMMIT")
-except (GardeArret, OSError, ValueError, KeyError, subprocess.CalledProcessError) as e:
+        print(f"gardes conformes (jouet) : {inst['fichiers']} fichiers, {inst['objets_git']} objets git, aucun interdit (run de 7b {run_7b}) ; tête = commit local, parent COMMIT")
+except (GardeArret, cl.Ecart, OSError, ValueError, KeyError, subprocess.CalledProcessError) as e:
     print(f"ARRÊT : {e}")
     sys.exit(1)
 FIN_GARDES
