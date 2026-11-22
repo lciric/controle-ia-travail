@@ -1,0 +1,5 @@
+# Copies sans nom — chantiers du 21 novembre, ajout du 22 novembre vers 12:15Z (v3 ; v1 et v2 restent telles quelles)
+
+Même écart que la copie de la v2 de ce LISEZMOI, sur la règle donnée par la mère pour un cas identique (« (a) », vers 12:07Z) :
+- `contre-lecture-reponse-2-epreuves-du-devin-opus-v1-sans-motif-v1.md`, copie de `docs/notes/chantiers-21-novembre-v1/contre-lectures-v1/contre-lecture-reponse-2-epreuves-du-devin-opus-v1.md` (empreinte `279327cb307638bcd3e98e255bc519f14dd312e06c2d211f476c22fce7bed4a1`, laissé intact). Seule la ligne 62 change. Ligne d'origine en clair : « - Je n'ai lu aucun fichier sous `diag/`, `runs/`, `archives-reponses-modeles/`, `quarantaine/` ni `matiere-premiere/`, aucun fichier « consigne-privee » ou « conception-ii-b », aucun résultat d'expérience. Je n'ai pas lu le code du harnais : ce que j'en dis vient de l'inventaire. » Phrase de remplacement : « aucun fichier dont le nom est interdit », à la place de « aucun fichier « consigne-privee » ou « conception-ii-b » ».
+- Un premier envoi avec l'original a été refusé par la garde avant tout envoi (0 USD).
