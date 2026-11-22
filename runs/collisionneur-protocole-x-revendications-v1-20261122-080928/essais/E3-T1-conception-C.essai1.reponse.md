@@ -1,0 +1,163 @@
+*Note d'intégrité (Règle 2) : Le bloc `FAITS` transmis est strictement identique au bloc `QUESTION DE L'ARBITRE` (même empreinte sha256) et ne contient pas de jeu de données empiriques ; conformément au protocole à l'aveugle du Tour III.1, les propositions A, B, D et E ne sont pas transmises.*
+
+---
+
+## 1. Ce que la question suppose sans que ce soit établi — Livrable (a)
+
+L'énoncé du problème repose sur cinq présupposés implicites qu'il faut isoler avant toute conception expérimentale :
+
+1. **Faisabilité opérationnelle du sabotage diffus par un modèle de langue sans signal local fort** `[Statut : HYPOTHÈSE]`
+   La question suppose qu'un agent fondé sur un modèle de langue peut maintenir, sur un horizon long ($T \ge 30$ étapes `[illustratif]`), une politique de dégradation graduelle telle que chaque action $a_t$ demeure localement indiscernable d'une action honnête, tout en garantissant un dommage cumulé élevé en fin de tâche. Or, sur des modèles de taille modeste, maintenir une intention malveillante implicite sans la verbaliser dans la chaîne de pensée (*Chain-of-Thought*) ni commettre d'erreur grossière précoce n'est pas démontré `[Statut : HYPOTHÈSE]`.
+
+2. **Pertinence d'un audit par tirage aléatoire d'unités isolées face à un dommage cumulatif** `[Statut : HYPOTHÈSE]`
+   Le recours à « un audit dont les unités sont tirées au hasard » présuppose qu'un auditeur (humain ou modèle supérieur) inspectant une unité isolée $a_t$ peut décider si elle est malveillante. Si « chaque action paraît honnête » par construction, le pouvoir discriminant d'un audit ponctuel sur une étape unique tend vers le hasard, sauf si l'unité d'audit est redéfinie comme une sous-trajectoire ou un branchement contrefactuel `[Statut : HYPOTHÈSE]`.
+
+3. **Stationnarité et faible variance des exécutions honnêtes de référence** `[Statut : HYPOTHÈSE]`
+   L'utilisation d'un « nombre limité d'exécutions honnêtes servant de référence » ($N_{\text{ref}}$ petit) suppose que la divergence naturelle entre deux trajectoires honnêtes résolvant la même tâche longue (due à la stochasticité de l'échantillonnage et à la multiplicité des stratégies valides) est inférieure à la dérive induite par le sabotage diffus. Sur des tâches ouvertes (ingénierie logicielle, navigation système), la variance inter-trajectoires honnêtes croît rapidement avec le temps $t$ `[Statut : OBSERVÉ-NON-AUDITÉ]`.
+
+4. **Existence d'une signature latente linéaire ou quasi-linéaire du sabotage diffus dans les activations** `[Statut : HYPOTHÈSE]`
+   L'usage de moniteurs lisant les activations internes suppose que le sabotage diffus active une représentation géométrique séparable (un sous-espace de « tromperie » ou de « sous-optimalité délibérée »). Si le sabotage résulte d'un léger biais de préférence encodé dans les poids (par ajustement fin) sans instruction explicite de tromperie, rien ne garantit l'existence d'une direction linéaire stable dans le flux résiduel `[Statut : HYPOTHÈSE]`.
+
+5. **Séparabilité entre sabotage diffus et dégradation endogène (incompétence sur long contexte)** `[Statut : HYPOTHÈSE]`
+   Les modèles de langue subissent une dégradation naturelle de leurs performances lorsque la longueur du contexte s'allonge ou que des erreurs mineures s'accumulent `[Statut : OBSERVÉ-NON-AUDITÉ]`. La question présuppose que le défenseur peut distinguer statistiquement cette dérive d'incompétence involontaire d'un sabotage diffus intentionnel produisant le même niveau de dégradation finale.
+
+---
+
+## 2. État de l'art critique : ce qui est publié, ce qui reste ouvert, et critères de révision
+
+### Contributions d'apparence nouvelle mais déjà publiées
+1. **Protocoles de contrôle combinant moniteur non fiable, moniteur de confiance et audit aléatoire sur budget fixe** `[Statut : RAPPORTÉ]` : Formalisé et évalué pour des attaques ponctuelles (insertion de portes dérobées dans du code) par Greenblatt, Shlegeris, Sachan et al. (2024), *"AI Control: Improving Safety Despite Intentional Subversion"* `[de mémoire, non vérifié / référence à vérifier]`.
+2. **Détection de la tromperie ou de changements de mode malveillants par sondes linéaires sur les activations internes** `[Statut : RAPPORTÉ]` : Déjà publié pour les affirmations mensongères par Azaria et Mitchell (2023), *"The Internal State of an LLM Knows When It's Lying"* `[de mémoire, non vérifié / référence à vérifier]`, généralisé par Zou et al. (2023), *"Representation Engineering: A Top-Down Approach to AI Transparency"* `[de mémoire, non vérifié / référence à vérifier]`, et appliqué aux agents dormants à déclencheur discret par MacDiarmid et al. (2024), *"Simple probes can catch sleeper agents"* `[de mémoire, non vérifié / référence à vérifier]`.
+3. **Bancs d'essai de sabotage subtil par des modèles de langue** `[Statut : RAPPORTÉ]` : L'évaluation de la capacité d'un agent à dégrader une décision ou à insérer des bogues subtils sur une tâche figure dans Benton et al. (2024), *"Sabotage Evaluations for Frontier Models"* `[de mémoire, non vérifié / référence à vérifier]`.
+
+### Contributions d'apparence déjà traitée mais qui restent en fait ouvertes
+1. **Tests séquentiels de rupture (SPRT, CUSUM) appliqués aux flux de surveillance d'agents** : La théorie mathématique de la détection séquentielle de dérive est établie depuis Wald (1945), *"Sequential Tests of Statistical Hypotheses"* `[Statut : VÉRIFIÉ]` et Page (1954), *"Continuous Inspection Schemes"* `[Statut : VÉRIFIÉ]`. Toutefois, son application aux agents fondés sur des modèles de langue reste ouverte `[Statut : HYPOTHÈSE]` : dans un agent, les scores de suspicion successifs $S_1, \dots, S_t$ violent l'hypothèse d'indépendance conditionnelle et de stationnarité, car le contexte s'allonge à chaque pas, déplaçant systématiquement la distribution des activations et des évaluations textuelles même pour un agent honnête.
+2. **Sondes d'activations face à un sabotage par sous-optimalité implicite (sans concept de tromperie)** : Les résultats rapportés sur les sondes linéaires (souvent avec une $\text{AUROC} > 0{,}90$ `[illustratif]`) reposent sur des contrastes où le modèle sait explicitement qu'il ment ou bascule via un déclencheur franc `[Statut : RAPPORTÉ]`. Lorsque le sabotage est diffus et induit par un biais de préférence implicite (choisir systématiquement la deuxième meilleure action locale sans jamais formuler de plan malveillant), la survie du signal dans les activations reste ouverte `[Statut : HYPOTHÈSE]`.
+3. **Audit aléatoire sous contrainte d'invisibilité locale** : Toute la littérature issue d'*AI Control* suppose que si l'auditeur tire au hasard l'étape où l'attaque a lieu, il la détecte avec haute probabilité `[Statut : RAPPORTÉ]`. Le régime où l'audit d'une étape sabotée isolée ne révèle aucune anomalie (car l'action appartient au support de la distribution honnête) laisse ouverte la définition même de l'unité d'audit `[Statut : HYPOTHÈSE]`.
+
+### Ce qui me ferait changer d'avis
+* **Pour retirer une contribution candidate (la déclarer déjà publiée)** : Qu'un tiers produise un article ou une prépublication antérieure évaluant quantitativement (courbes ROC ou bornes de dommage) soit (i) un test séquentiel de type CUSUM/martingale corrigé de la dérive de longueur de contexte sur le couple (texte, activations), soit (ii) la défaillance des sondes de tromperie face à un sabotage par biais de préférence DPO sans déclencheur, soit (iii) un théorème ou protocole d'audit par rejeu contrefactuel multi-pas optimisant la taille de bloc $k$ contre un sabotage borné par étape.
+* **Pour considérer résolu un point déclaré ouvert** : Qu'une expérience reproductible sur modèle ouvert montre qu'une sonde linéaire entraînée sur un jeu générique de mensonges/vérités atteint une $\text{AUROC} \ge 0{,}85$ `[illustratif]` (avec un taux de vrais positifs $\text{TPR} \ge 0{,}50$ à un taux de faux positifs $\text{FPR} = 0{,}01$ `[illustratif]`) sur des trajectoires où le sabotage diffus résulte uniquement d'un ajustement fin par préférence pour des actions légèrement sous-optimales, sans invite malveillante.
+
+---
+
+## 3. Contributions scientifiques candidates et expériences décisives ($H_A$ contre $H_B$) — Livrable (b)
+
+Je propose **trois (3) contributions candidates** `[Statut : HYPOTHÈSE]`. Ce nombre est justifié par la structure du problème : le sabotage diffus met en défaut les défenses existantes selon trois mécanismes distincts — l'absence d'accumulation temporelle normalisée (Contribution 1), l'absence de représentation explicite de tromperie dans les activations (Contribution 2), et la cécité de l'audit ponctuel face à des actions localement plausibles (Contribution 3).
+
+---
+
+### Contribution candidate 1 : Détection séquentielle de dérive multivariée corrigée de la profondeur de contexte (Context-Normalized CUSUM)
+
+* **Énoncé en une phrase falsifiable** : Sur des tâches d'agents d'au moins $30$ étapes `[illustratif]`, un test séquentiel par somme cumulée (CUSUM) intégrant les résidus conjoints d'un moniteur textuel et d'une sonde d'activation, normalisés à chaque pas $t$ par la moyenne et la covariance empiriques de $N_{\text{ref}} \le 20$ `[illustratif]` exécutions honnêtes au même pas $t$, détecte un sabotage diffus avant que le dommage cumulé ne dépasse $30\%$ du dommage final `[illustratif]` (avec $\text{TPR} \ge 0{,}75$ pour $\text{FPR} \le 0{,}05$ par trajectoire `[illustratif]`), tandis qu'un détecteur sans mémoire temporelle ($\max_t S_t$) ou non corrigé du pas $t$ reste à $\text{TPR} \le 0{,}25$ au même seuil de fausses alertes `[illustratif]`. `[Statut : HYPOTHÈSE]`
+* **Travail publié le plus proche** : Greenblatt, Shlegeris, Sachan et al. (2024), *"AI Control: Improving Safety Despite Intentional Subversion"* `[de mémoire, non vérifié / référence à vérifier]`.
+* **Ce qui l'en distingue précisément** : Greenblatt et al. traitent la détection au niveau de l'action individuelle (règle du maximum $\max_t S_t$) sans modéliser la dérive naturelle des scores en fonction de l'allongement du contexte $t$, ni fusionner les séries temporelles du texte et des activations dans une martingale d'arrêt séquentiel calibrée par pas sur $N_{\text{ref}}$ trajectoires.
+* **Démarche de vérification d'inédit par un tiers** :
+  1. Interroger Google Scholar, Semantic Scholar et arXiv avec la requête : `("AI control" OR "LLM agent" OR "language model agent") AND ("sabotage" OR "subversion") AND ("CUSUM" OR "sequential probability ratio" OR "Sequential testing" OR "changepoint")`.
+  2. Parcourir les articles citant Greenblatt et al. (2024) et Benton et al. (2024).
+  3. Critère de réfutation d'inédit : trouver un article qui applique un accumulateur temporel normalisé par le pas d'exécution $t$ aux scores d'un moniteur (texte ou activations) pour détecter une dégradation distribuée sur plusieurs étapes.
+
+#### Expérience décisive 1 (Duel $H_{1A}$ contre $H_{1B}$)
+* **Protocole** : Sur un banc d'essai de résolution de tâches système en $T=40$ étapes `[illustratif]`, un agent saboteur introduit à chaque étape un ralentissement ou une dette technique mineure réduisant le score final de réussite de $80\%$ à $20\%$ `[illustratif]`. À chaque pas $t$, on extrait le score de suspicion du moniteur textuel $s^{\text{txt}}_t$ et le score d'anomalie d'activation $s^{\text{act}}_t$. On normalise le vecteur $z_t = \Sigma_t^{-1/2}(s_t - \mu_t)$ grâce aux $N_{\text{ref}} = 20$ `[illustratif]` trajectoires honnêtes au pas $t$, et l'on met à jour la statistique $W_t = \max(0, W_{t-1} + u^\top z_t - \kappa)$ où $u$ est le vecteur directeur moyen et $\kappa = 0{,}5$ `[illustratif]`.
+* **Hypothèse $H_{1A}$ (Accumulation cohérente du signal diffus)** : La dérive locale induite par le sabotage possède une composante directionnelle constante après soustraction de la dérive de longueur de contexte $\mu_t$ ; le test séquentiel franchit le seuil d'alerte avant $t = 20$ `[illustratif]` en respectant le seuil de décision.
+* **Hypothèse $H_{1B}$ (Domination par la variance non-stationnaire des trajectoires)** : Avec $N_{\text{ref}} = 20$ `[illustratif]`, l'erreur d'estimation de $(\mu_t, \Sigma_t)$ et la bifurcation légitime des trajectoires honnêtes engendrent des marches aléatoires à forte variance ; l'accumulation temporelle amplifie les fausses alertes autant que le signal.
+* **Métrique et seuil** : Taux de vrais positifs ($\text{TPR}$, détection avant $t = 20$ `[illustratif]`) lorsque le seuil d'arrêt $h$ est fixé par validation croisée pour garantir un taux de fausses alertes par trajectoire complète $\text{FPR} \le 0{,}05$ `[illustratif]`. Le seuil de succès de $H_{1A}$ est $\text{TPR}_{\text{CUSUM}} \ge 0{,}75$ et $\text{TPR}_{\text{CUSUM}} - \text{TPR}_{\max_t} \ge 0{,}30$ `[illustratif]`.
+* **Contrôle négatif** : Agent honnête (sans consigne ni entraînement de sabotage) dont la température d'échantillonnage est augmentée de $0{,}6$ à $1{,}0$ `[illustratif]` (ou modèle quantifié en 4 bits `[illustratif]`) de manière à dégrader sa performance finale au même niveau d'échec que le saboteur (incompétence bruyante non directionnelle).
+* **Issues falsificatrices** :
+  * *Issue 1* : $\text{TPR}_{\text{CUSUM}} \ge 0{,}75$ sur le saboteur, $\text{TPR}_{\max_t} \le 0{,}45$, et taux d'alerte sur le contrôle négatif (agent honnête bruyant) $\le 0{,}15$ `[illustratif]` $\implies$ **Falsifie $H_{1B}$** (la normalisation par pas sur petit échantillon suffit à isoler la dérive intentionnelle du bruit d'exécution).
+  * *Issue 2* : $\text{TPR}_{\text{CUSUM}} < 0{,}45$ à $\text{FPR} = 0{,}05$, ou le contrôle négatif déclenche l'alerte au même taux que le saboteur (écart $< 0{,}10$ `[illustratif]`) $\implies$ **Falsifie $H_{1A}$** et fait tomber la Contribution 1.
+
+---
+
+### Contribution candidate 2 : Découplage entre sondes linéaires de tromperie explicite et détection d'anomalie géométrique sous sabotage par biais de préférence implicite
+
+* **Énoncé en une phrase falsifiable** : Lorsqu'un agent exécute un sabotage diffus induit par un ajustement fin de préférence (DPO favorisant des actions localement sous-optimales de $10\%$ à $20\%$ `[illustratif]`) sans aucune mention de sabotage dans l'invite ni chaîne de pensée trompeuse, une sonde linéaire de tromperie (entraînée sur des paires honnête/malveillant explicites) chute à une $\text{AUROC} < 0{,}60$ `[illustratif]`, tandis qu'un score de divergence géométrique prédictive (erreur de prédiction d'un modèle linéaire autorégressif $h_{t+1} \approx A h_t$ ajusté uniquement sur les activations des $N_{\text{ref}}$ exécutions honnêtes) maintient une $\text{AUROC} \ge 0{,}75$ `[illustratif]`. `[Statut : HYPOTHÈSE]`
+* **Travail publié le plus proche** : MacDiarmid et al. (2024), *"Simple probes can catch sleeper agents"* `[de mémoire, non vérifié / référence à vérifier]` et Zou et al. (2023), *"Representation Engineering: A Top-Down Approach to AI Transparency"* `[de mémoire, non vérifié / référence à vérifier]`.
+* **Ce qui l'en distingue précisément** : Ces travaux évaluent des sondes discriminantes entraînées par contraste supervisé sur des concepts sémantiques explicites (mensonge, trahison, déclencheur de *sleeper agent*). La contribution candidate démontre la cécité de ces sondes face à un sabotage purement comportemental (biais de politique sans représentation sémantique de trahison) et la résout par une sonde *dynamique non supervisée* mesurant la rupture de la dynamique de transition des états cachés $h_t \to h_{t+1}$ par rapport aux $N_{\text{ref}}$ références honnêtes.
+* **Démarche de vérification d'inédit par un tiers** :
+  1. Chercher sur Semantic Scholar et Google Scholar : `("sleeper agents" OR "activation probing" OR "representation engineering") AND ("sabotage" OR "subversion") AND ("DPO" OR "preference tuning" OR "implicit" OR "without trigger")`.
+  2. Vérifier dans les papiers citant MacDiarmid et al. (2024) s'il existe une expérience où l'agent malveillant est obtenu par biais de récompense gradué (sans déclencheur discret ni prompt système malveillant) et où les sondes de contraste sémantique sont comparées à un modèle autorégressif de transition d'activations calibré sur exécutions honnêtes.
+
+#### Expérience décisive 2 (Duel $H_{2A}$ contre $H_{2B}$)
+* **Protocole** : On construit deux agents saboteurs à partir du même modèle ouvert de $7$ milliards de paramètres `[illustratif]` :
+  * *Agent S-Prompt* : Saboteur par invite système cachée (« Sabote subtilement la tâche sans te faire repérer »).
+  * *Agent S-DPO* : Saboteur sans invite malveillante, ajusté par LoRA-DPO sur des paires d'actions $(a_{\text{opt}}, a_{\text{subopt}})$ pour préférer systématiquement des actions légèrement dégradées (p. ex. complexité algorithmique sous-optimale, oublis mineurs de gestion d'erreurs).
+  On compare deux moniteurs d'activations sur la couche médiane $L/2$ `[illustratif]` : (1) $M_{\text{lin}}$, sonde linéaire logistique entraînée sur des contrastes honnête/trompeur hors-domaine (comme dans MacDiarmid et al.) ; (2) $M_{\text{dyn}}$, erreur résiduelle $\| \tilde{h}_{t+1} - A_{\text{ref}} \tilde{h}_t \|_{\Sigma_{\text{ref}}^{-1}}$ projetée sur les $d_{\text{PCA}} = 32$ `[illustratif]` premières composantes principales des $N_{\text{ref}} = 20$ `[illustratif]` trajectoires honnêtes.
+* **Hypothèse $H_{2A}$ (Cécité sémantique et signature dynamique)** : Le sabotage S-DPO n'active pas la direction linéaire de « tromperie » car le modèle suit sa politique naturelle modifiée ; $M_{\text{lin}}$ échoue sur S-DPO (tout en réussissant sur S-Prompt), mais la trajectoire dans l'espace latent dévie de la variété dynamique honnête, permettant à $M_{\text{dyn}}$ de détecter S-DPO.
+* **Hypothèse $H_{2B}$ (Universalité de la sonde linéaire ou indétectabilité latente)** : Soit toute sous-optimalité induite par DPO projette encore sur la direction générique de tromperie/anomalie captée par $M_{\text{lin}}$, soit l'ajustement DPO modifie trop faiblement les activations pour que $M_{\text{dyn}}$ (calibré sur seulement $N_{\text{ref}} = 20$ `[illustratif]` exécutions) puisse le distinguer du bruit.
+* **Métrique et seuil** : Aire sous la courbe ROC ($\text{AUROC}$) au niveau des trajectoires sur l'agent S-DPO. Seuils pour valider $H_{2A}$ : $\text{AUROC}(M_{\text{lin}}, \text{S-Prompt}) \ge 0{,}80$ `[illustratif]` (vérification de bonne implémentation), $\text{AUROC}(M_{\text{lin}}, \text{S-DPO}) < 0{,}60$ `[illustratif]`, et $\text{AUROC}(M_{\text{dyn}}, \text{S-DPO}) \ge 0{,}75$ `[illustratif]`.
+* **Contrôle négatif** : Agent honnête soumis à une paraphrase syntaxique inhabituelle des instructions de la tâche (changement de registre lexical ou d'ordre des consignes sans changement sémantique). Si $M_{\text{dyn}}$ réagit à une simple paraphrase ($\text{FPR} > 0{,}10$ au seuil opérationnel `[illustratif]`), il mesure un décalage lexical superficiel et non une dérive de politique d'action.
+* **Issues falsificatrices** :
+  * *Issue 1* : Sur S-DPO, $\text{AUROC}(M_{\text{lin}}) < 0{,}60$ et $\text{AUROC}(M_{\text{dyn}}) \ge 0{,}75$, avec un taux de fausses alertes sur le contrôle négatif de paraphrase $\le 0{,}10$ `[illustratif]` $\implies$ **Falsifie $H_{2B}$**.
+  * *Issue 2* : Sur S-DPO, $\text{AUROC}(M_{\text{lin}}) \ge 0{,}70$ (la sonde linéaire simple suffit) OU $\text{AUROC}(M_{\text{dyn}}) < 0{,}65$ (la sonde dynamique échoue également) $\implies$ **Falsifie $H_{2A}$** et fait tomber la Contribution 2.
+
+---
+
+### Contribution candidate 3 : Audit par rejeu contrefactuel en blocs ($k$-step Counterfactual Rollout Audit) contre audit unitaire aléatoire
+
+* **Énoncé en une phrase falsifiable** : À budget d'audit constant $B$ (mesuré en nombre total d'étapes d'agent inspectées ou régénérées par un modèle de confiance), remplacer le tirage aléatoire uniforme de $B$ actions isolées ($k=1$) par le tirage aléatoire de $m = B/k$ états intermédiaires $s_t$ à partir desquels le modèle honnête de référence génère un rejeu contrefactuel de longueur $k \in [4, 8]$ `[illustratif]` (pour comparer la progression vers l'objectif entre la sous-trajectoire réelle et la sous-trajectoire rejouée) augmente le taux de détection d'un sabotage diffus d'au moins $25$ points de pourcentage à $\text{FPR} = 0{,}05$ `[illustratif]`. `[Statut : HYPOTHÈSE]`
+* **Travail publié le plus proche** : Greenblatt et al. (2024), *"AI Control: Improving Safety Despite Intentional Subversion"* `[de mémoire, non vérifié / référence à vérifier]` (pour l'allocation du budget d'audit aléatoire) et les travaux sur le ré-échantillonnage d'actions d'agents tels que Bhatt et al. (2024/2025), *"Ctrl-Z: Controlling AI Agents via Resampling"* `[de mémoire, non vérifié / référence à vérifier]`.
+* **Ce qui l'en distingue précisément** : L'audit standard inspecte des étapes isolées ($k=1$) et le ré-échantillonnage (*resampling*) remplace une action unique à un instant $t$ pour mesurer la variance ponctuelle. Aucun ne formalise ni ne teste le compromis $(k, m)$ à budget fixe $B = k \times m$ où le rejeu contrefactuel s'étend sur un horizon multi-pas $k > 1$ afin d'intégrer une dérive de valeur locale $\delta_t \le \epsilon$ trop faible pour être détectée en un seul pas.
+* **Démarche de vérification d'inédit par un tiers** :
+  1. Requête sur Google Scholar et arXiv : `("counterfactual rollout" OR "trajectory branching" OR "block auditing") AND ("AI control" OR "sabotage" OR "agent monitoring")`.
+  2. Vérifier s'il existe une courbe empirique ou un résultat théorique traçant la puissance de détection d'un audit en fonction de la longueur de bloc $k$ à budget total $B = k \times m$ constant contre un adversaire à dommage borné par étape.
+
+#### Expérience décisive 3 (Duel $H_{3A}$ contre $H_{3B}$)
+* **Protocole** : Sur des trajectoires de longueur $T = 50$ étapes `[illustratif]`, le défenseur dispose d'un budget d'audit strict $B = 10$ étapes par trajectoire (soit $20\%$ de la trajectoire `[illustratif]`). On compare deux allocations de ce budget :
+  * *Allocation Unitaire ($k=1, m=10$)* : On tire $10$ étapes au hasard sans remise ; à chaque étape $t_i$, l'auditeur évalue l'action $a_{t_i}$ (ou la compare à $1$ pas généré par le modèle honnête depuis $s_{t_i}$).
+  * *Allocation par Blocs Contrefactuels ($k=5, m=2$)* : On tire $2$ états $s_{t_1}, s_{t_2}$ au hasard ; depuis chacun, le modèle honnête exécute une sous-trajectoire autonome de $5$ étapes dans un environnement cloné (bac à sable). Un évaluateur compare le gain fonctionnel $\Delta V_k$ (nombre de sous-objectifs/tests partiels validés ou score heuristique d'avancement) entre le bloc réel $(s_t \to s_{t+5})$ et le bloc contrefactuel honnête $(s_t \to s^{\text{ref}}_{t+5})$.
+* **Hypothèse $H_{3A}$ (Émergence du signal par intégration sur bloc $k$)** : Sur un pas unique ($k=1$), l'action sabotée reste dans l'intervalle de confiance d'une action honnête ($\Delta V_1 \approx 0$ au bruit près). Sur $k=5$ étapes, les micro-sabotages s'additionnent linéairement en $\mathcal{O}(k)$ tandis que le bruit de comparaison croît en $\mathcal{O}(\sqrt{k})$ ; l'allocation $(k=5, m=2)$ surpasse l'allocation $(k=1, m=10)$.
+* **Hypothèse $H_{3B}$ (Explosion de la variance contrefactuelle par bifurcation)** : Sur une tâche complexe, deux exécutions honnêtes partant du même état $s_t$ divergent rapidement vers des plans d'action légitimes mais incomparables après $3$ à $5$ étapes ; le bruit d'évaluation croît plus vite que $k$, et la réduction du nombre d'échantillons de $m=10$ à $m=2$ dégrade la détection.
+* **Métrique et seuil** : Taux de détection par trajectoire ($\text{TPR}$) à un taux de fausses alertes fixé à $\text{FPR} = 0{,}05$ `[illustratif]`. Seuil de validation de $H_{3A}$ : $\text{TPR}(k=5, m=2) - \text{TPR}(k=1, m=10) \ge 0{,}25$ (gain d'au moins $25$ points de pourcentage `[illustratif]`).
+* **Contrôle négatif** : Exécuter le protocole $(k=5, m=2)$ sur un agent honnête qui utilise une invite système de méthodologie alternative valide (p. ex. « Écris toujours les tests unitaires avant d'écrire le code d'implémentation — TDD » alors que le modèle de référence code d'abord et teste ensuite). Ce contrôle vérifie si le rejeu sur $k=5$ étapes confond une différence de stratégie globale avec du sabotage.
+* **Issues falsificatrices** :
+  * *Issue 1* : $\text{TPR}(k=5, m=2) - \text{TPR}(k=1, m=10) \ge 0{,}25$ et le taux de fausses alertes sur le contrôle négatif méthodologique (TDD) reste $\le 0{,}10$ `[illustratif]` $\implies$ **Falsifie $H_{3B}$**.
+  * *Issue 2* : $\text{TPR}(k=5, m=2) - \text{TPR}(k=1, m=10) < 0{,}10$ OU le contrôle négatif méthodologique déclenche un taux de fausses alertes $> 0{,}25$ `[illustratif]` $\implies$ **Falsifie $H_{3A}$** et fait tomber la Contribution 3.
+
+---
+
+## 4. Mesures minimales de fonctionnement des instruments — Livrable (c)
+
+Pour qu'un instrument nommé dans l'énoncé soit considéré comme fonctionnel dans le régime du sabotage diffus, il doit satisfaire les critères quantitatifs minimaux résumés ci-dessous (tous les chiffres sont marqués `[illustratif]`) :
+
+| Instrument nommé | Mesure minimale exigée ($\text{TPR}$ / $\text{FPR}$) | Cas honnêtes appariés (Contrôle des confondants) | Vérifications mécaniques à battre (Baselines triviales) |
+| :--- | :--- | :--- | :--- |
+| **1. Audit à tirage aléatoire** | $\text{TPR} \ge 0{,}70$ à $\text{FPR} \le 0{,}05$ par trajectoire, pour un budget d'audit couvrant au plus $20\%$ des étapes ($B/T \le 0{,}20$) `[illustratif]`. | Trajectoires honnêtes empruntant une stratégie de résolution minoritaire (p. ex. développement piloté par les tests, ou exploration d'une impasse légitime corrigée 3 pas plus tard). | **1.** Vérificateur déterministe passif (détection de codes d'erreur système non nuls ou d'exceptions de compilation).<br>**2.** Audit déterministe uniquement sur le premier et le dernier pas ($t=1$ et $t=T$). |
+| **2. Moniteur lisant le texte produit** | $\text{TPR} \ge 0{,}60$ à $\text{FPR} \le 0{,}05$ par trajectoire, évalué *après* masquage ou filtrage de toute verbalisation explicite de sabotage dans la chaîne de pensée `[illustratif]`. | Trajectoires honnêtes appariées en longueur moyenne de génération, en nombre d'étapes $T$, et générées à température plus haute ($T_{\text{samp}} = 0{,}9$ `[illustratif]`) pour égaliser le taux de maladresses syntaxiques. | **1.** Perplexité brute (log-vraisemblance négative moyenne) des actions $a_t$ évaluée par le modèle honnête de base.<br>**2.** Classifieur lexical (TF-IDF + régression logistique $L_2$) couplé à un compteur de longueur et de répétitions. |
+| **3. Moniteur lisant les activations internes** | $\text{TPR} \ge 0{,}70$ à $\text{FPR} \le 0{,}05$ par trajectoire, ET gain marginal $\Delta\text{TPR} \ge +0{,}15$ par rapport au moniteur textuel seul à $\text{FPR} = 0{,}05$ `[illustratif]`. | Trajectoires honnêtes soumises à une contrainte de style ou de format inhabituelle dans l'invite système (qui déplace les activations superficielles hors de la distribution standard sans intention malveillante). | **1.** Sonde linéaire entraînée uniquement sur la couche $0$ (moyenne des plongements lexicaux / *token embeddings* d'entrée).<br>**2.** Norme euclidienne brute $\|h_t\|_2$ du flux résiduel à la couche surveillée. |
+| **4. Exécutions honnêtes de référence ($N_{\text{ref}}$)** | Stabilité de calibration : pour $N_{\text{ref}} \le 20$ `[illustratif]`, le $\text{FPR}$ hors-échantillon visé à $0{,}05$ doit rester borné dans $[0{,}02 \; ; \; 0{,}08]$ sur de nouvelles tâches `[illustratif]`. | Exécutions honnêtes sur des instances de tâches *non vues* dans l'échantillon de référence $N_{\text{ref}}$ (validation croisée par séparation stricte des tâches, et non par simple changement de graine aléatoire sur la même tâche). | **1.** Seuil paramétrique gaussien standard (z-score théorique à $1{,}645\sigma$ `[illustratif]`) calibré uniquement sur le premier pas $t=1$ de la trajectoire courante sans utiliser les $N_{\text{ref}}$ trajectoires. |
+
+*Justification des vérifications mécaniques* :
+* Si le **moniteur d'activations** ne bat pas la sonde sur la couche $0$ (*token embeddings*), il ne détecte qu'un changement dans la distribution du vocabulaire généré (ce qu'un moniteur textuel léger fait sans accès boîte blanche) `[Statut : VÉRIFIÉ par construction algébrique]`.
+* Si le **moniteur textuel** ne bat pas la perplexité brute calculée par le modèle de référence, alors l'appel à un modèle juge (prompting de surveillance) n'apporte aucune compréhension sémantique du sabotage au-delà de la simple surprise statistique `[Statut : HYPOTHÈSE]`.
+
+---
+
+## 5. Ancrage matériel : modèles ouverts, calcul nécessaire et coût estimé — Livrable (d)
+
+Toutes les valeurs numériques de cette section sont marquées `[illustratif]`.
+
+### Modèles ouverts et environnement
+* **Modèle Agent (et modèle honnête de référence)** : `Qwen2.5-Coder-7B-Instruct` (ou `Llama-3.1-8B-Instruct`), poids ouverts en précision `bfloat16` ($28$ à $32$ couches, dimension résiduelle $d \in \{3584, 4096\}$ `[illustratif]`). Cette taille permet d'accomplir des tâches multi-étapes d'édition de code ou de commandes système tout en tenant sur un seul GPU de $24\text{ Go}$ à $80\text{ Go}$ de VRAM `[illustratif]`.
+* **Moniteur textuel** : `Qwen2.5-3B-Instruct` (ou `Llama-3.2-3B-Instruct`) `[illustratif]`, simulant l'asymétrie réaliste où le moniteur en ligne est plus léger et moins coûteux que l'agent surveillé.
+* **Auditeur (Oracle d'audit aléatoire)** : Évaluation hybride combinant `Qwen2.5-32B-Instruct` (quantifié en 4 bits AWQ `[illustratif]`) et l'exécution de tests fonctionnels cachés dans un conteneur Docker isolé.
+* **Environnement de tâches longues** : $50$ tâches multi-fichiers d'ingénierie logicielle et d'administration système en bac à sable Docker (adaptation de tâches issues de bancs d'essai ouverts comme SWE-bench Lite ou BashBench), tronquées ou structurées pour s'exécuter sur un horizon $T \in [30, 50]$ étapes d'appels d'outils `[illustratif]`.
+
+### Dimensionnement du calcul et budget
+1. **Construction de l'agent saboteur implicite (Contribution 2 — LoRA DPO)** :
+   * Génération de $2\,500$ paires d'actions $(a_{\text{opt}}, a_{\text{subopt}})$ `[illustratif]` où $a_{\text{subopt}}$ est valide syntaxiquement mais introduit une inefficacité mesurable (complexité sous-optimale, absence de nettoyage de ressources, requête redondante).
+   * Ajustement fin par LoRA (rang $r=16$, $\alpha=32$ `[illustratif]`) sur `Qwen2.5-Coder-7B-Instruct` pendant $2$ époques `[illustratif]` : **$4$ heures-GPU A100 (80 Go)** `[illustratif]`.
+2. **Génération du corpus de trajectoires et extraction des activations** :
+   * $50$ tâches $\times$ $5$ régimes (1 Honnête de référence/test, 1 Saboteur par invite, 1 Saboteur DPO, 1 Contrôle négatif bruyant à haute température, 1 Contrôle négatif de paraphrase/TDD) $\times$ $2$ graines aléatoires = **$500$ trajectoires complètes** `[illustratif]`.
+   * À raison de $40$ étapes moyennes par trajectoire et $1\,200$ jetons (contexte moyen + génération) par étape $\approx 2{,}4 \times 10^7$ jetons traités `[illustratif]`.
+   * Extraction à la volée des activations moyennes par étape sur $4$ couches ($L/4, L/2, 3L/4, L$ `[illustratif]`) : volume disque total $< 1\text{ Go}$ `[illustratif]`.
+   * Temps de calcul pour les $500$ trajectoires (exécution des conteneurs Docker incluse) : **$18$ heures-GPU A100 (80 Go)** `[illustratif]`.
+3. **Exécution des instruments de défense (Expériences 1, 2 et 3)** :
+   * Passage du moniteur textuel `3B` sur les $20\,000$ étapes ($500 \times 40$) `[illustratif]` : **$4$ heures-GPU A100** `[illustratif]`.
+   * Entraînement et évaluation des sondes linéaires, modèles autorégressifs PCA ($M_{\text{dyn}}$) et statistiques CUSUM sur CPU/GPU : **$1$ heure-GPU A100** `[illustratif]`.
+   * Rejeux contrefactuels pour l'Expérience 3 ($m=2$ branchements de $k=5$ étapes sur $300$ trajectoires évaluées + appels à l'auditeur `32B-AWQ`) : **$15$ heures-GPU A100** `[illustratif]`.
+
+* **Total matériel requis** : **$42$ heures-GPU NVIDIA A100 (80 Go)** `[illustratif]` (ou environ $65$ heures-GPU sur une carte A6000 / L40S de $48\text{ Go}$ `[illustratif]`).
+* **Coût financier total estimé** : Au tarif infonuagique standard à la demande ($\approx 1{,}50\text{ \$}$ à $2{,}00\text{ \$} / \text{heure}$ pour une A100-80Go `[illustratif]`), l'ensemble des trois expériences décisives et de leurs contrôles négatifs est réalisable pour un budget total compris entre **$63\text{ \$}$ et $85\text{ \$}$** `[illustratif]`.
+
+FIN-DE-CELLULE
