@@ -19,7 +19,7 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 **Travaux trouvés**
 - Tailor, « Audit the Whisper », 2510.04303v2, octobre 2025 : collusion stéganographique entre agents, information mutuelle d'une course à l'autre. Théorème 3 (p. 12) : sur K courses indépendantes, l'erreur de tout test est bornée par la divergence totale K·d (Pinsker et Le Cam). C'est une borne sur la divergence totale, en boîte noire. Elle ne porte pas sur la puissance d'une accumulation de scores et ne dit rien d'une répartition inégale.
 - Ghanem, 2608.02698v1, août 2026 : collusion couverte dans des populations d'agents. La puissance de tout test y est bornée par la divergence totale, sous décomposition additive (p. 5, lecture du niveau 2 déjà au dépôt). C'est une borne supérieure, en boîte noire, et les résultats sont annoncés comme provisoires.
-- Khilar, « The Limits of Query Monitoring against Distributed Model Extraction », 2610.13083v1, 9 octobre 2026 : proposition 3 (p. 5), le délai du meilleur test séquentiel vaut environ ln(1/α)/D ; martingales de test conformes. L'objet est l'extraction de modèle par des comptes, pas le sabotage d'agents.
+- Khilar, « The Limits of Query Monitoring against Distributed Model Extraction », 2610.13083v1, 9 octobre 2026 : proposition 3 (p. 5), le délai du meilleur test séquentiel vaut environ ln(1/α)/D ; martingales de test conformes. Objet : extraction par des comptes, non sabotage.
 - Li et al., 2607.13003v1 (p. 1) : pour le filigrane, le total de l'information paie l'attribution, sa répartition la localisation.
 - Wen et al., 2411.17693v1 : « menace distribuée » et crédence mise à jour (p. 1) ; tâches corrélées laissées ouvertes (p. 10) ; aucune invariance.
 - Makins et al., 2607.07368v2, juillet 2026 : quand on répartit l'attaque entre plus d'agents, le maximum du soupçon baisse (effet de fragmentation, p. 1). Ils ne testent pas la somme.
@@ -28,15 +28,12 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 
 **Verdict.** Voisin à citer, avec une différence nette : l'invariance exacte de la puissance de la somme des scores à la répartition dans le temps et entre agents, à budget et variance honnête fixés, n'a pas été trouvée pour des moniteurs d'agents de langue après la recherche décrite. Les bornes en divergence totale (2510.04303, 2608.02698) en occupent l'esprit en boîte noire. La comptabilité des matières (Avenhaus et Jaech 1981) n'est citée dans aucun travail de contrôle trouvé ; seuls les jeux d'inspection le sont.
 
-**Ce qui en ferait une contribution reconnue.** L'énoncé est élémentaire : un relecteur dira « somme de décalages ». Il ne vaut que par trois choses.
-1. Un énoncé adapté aux scores de sondes : décalage additif, variance honnête estimée, dépendance entre agents.
-2. Une vérification sur de vrais agents que le sabotage agit comme un décalage additif du score, et que la variance honnête est stable entre agents. Une corrélation entre agents gonfle la variance de la somme.
-3. Une mesure qui confronte la somme au maximum dans le montage de fragmentation de 2607.07368 : le lemme prédit une somme plate là où le maximum baisse.
+**Pour une contribution reconnue.** L'énoncé est élémentaire (« somme de décalages ») ; il ne vaut que par : (1) un énoncé sur scores de sondes, variance honnête estimée, dépendance entre agents ; (2) la vérification sur de vrais agents que le sabotage décale le score de façon additive et que la variance honnête tient entre agents (une corrélation la gonfle) ; (3) une mesure de la somme contre le maximum dans le montage de fragmentation de 2607.07368 : somme plate prédite là où le maximum baisse.
 
 ## 3. Objet B — loi de la racine carrée et régime n/√m
 
 **Travaux trouvés**
-- Khilar, 2610.13083v1 : proposition 4 (p. 5). La campagne la plus difficile à voir est une inclinaison exponentielle du trafic honnête. Sa capacité « obéit à une loi de la racine carrée (Ker, 2007 ; Bash et al., 2013) », chiffrée sur des données réelles. Une rampe lente empoisonne l'étalonnage de tous les détecteurs (p. 1, 9-10). Il faut « protéger la référence » (p. 10). Le travail transpose donc la loi au suivi des usages des modèles de langue. Il touche à la référence estimée de façon empirique, sans régime n/√m.
+- Khilar, 2610.13083v1 : proposition 4 (p. 5). La campagne la plus difficile à voir est une inclinaison exponentielle du trafic honnête. Sa capacité « obéit à une loi de la racine carrée (Ker, 2007 ; Bash et al., 2013) », chiffrée sur des données réelles. Une rampe lente empoisonne l'étalonnage de tous les détecteurs (p. 1, 9-10). Il faut « protéger la référence » (p. 10). La loi est donc transposée au suivi des usages ; la référence estimée y est touchée empiriquement, sans régime n/√m.
 - Tailor, 2510.04303v2 (p. 12) : adversaire constructif à taux ρ = c√d, qui atteint la borne K·d. C'est la structure de la racine carrée, sans citer Ker.
 - Li et al., 2607.13003v1 (p. 24) : situe la loi de la racine carrée (Ker 2008, Bash 2012) par rapport aux filigranes des modèles génératifs et la distingue du régime linéaire.
 - Pandey et al., 2610.25032v1 (p. 1) : messages entre agents ; nombre de messages nécessaire au moniteur, à une constante près ; cite Ker 2008.
@@ -48,10 +45,7 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 - Pour le sabotage d'agents, la sous-performance stratégique et la faible probabilité de détection d'agents : **non trouvé après la recherche décrite**.
 - Pour le régime n/√m avec référence estimée (Ker 2010) : **non trouvé** en contrôle de l'IA. 2610.13083 en montre le symptôme, la rampe qui empoisonne, sans la loi.
 
-**Ce qui en ferait une contribution reconnue.**
-1. Un énoncé où l'agent répartit son sabotage sous une divergence par action, et où m, la taille de la référence honnête, entre explicitement.
-2. Une vérification que la référence honnête est indépendante de l'agent jugé : il ne doit pas pouvoir la nourrir (Wen, p. 18).
-3. Une mesure de la frontière : dommage indétectable en fonction de n, à m fixé, puis de m, sur de vrais agents. La pente ½ doit être estimée, pas supposée.
+**Pour une contribution reconnue** : (1) un énoncé où l'agent répartit son sabotage sous une divergence par action et où m, taille de la référence honnête, entre explicitement ; (2) la vérification que l'agent jugé ne nourrit pas la référence (Wen, p. 18) ; (3) la frontière mesurée sur de vrais agents, dommage indétectable selon n puis m, pente ½ estimée et non supposée.
 
 ## 4. Objet C — théorème négatif et statistiques de dépendance
 
@@ -69,10 +63,7 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 - Les statistiques de dépendance entre agents sur activations sont un **voisin à citer, avec une différence nette** : 2604.01151 et 2607.06807 les emploient de façon empirique, sans énoncé d'aveuglement des marginales ni attaque qui préserve la marginale.
 - **Non trouvé après la recherche décrite** : l'unification temps et agents par groupes de permutations ; un agent réel qui préserve lui-même la marginale de ses scores de sonde ; un énoncé en boîte blanche.
 
-**Ce qui en ferait une contribution reconnue.**
-1. Un énoncé sur les scores de sondes, avec ses classes d'attaquant : permutation ou copule.
-2. Une preuve, sur de vrais agents entraînés ou incités, que la préservation de la marginale est atteignable. C'est la réserve que 2606.10456 pose lui-même (p. 8).
-3. Une mesure qui compare la co-élévation sur activations aux bases de 2604.01151 et de 2610.13083, sous la même attaque.
+**Pour une contribution reconnue** : (1) un énoncé sur scores de sondes, classes d'attaquant permutation ou copule ; (2) la preuve, sur de vrais agents, que la marginale préservée est atteignable (réserve de 2606.10456, p. 8) ; (3) la co-élévation sur activations comparée aux bases de 2604.01151 et 2610.13083 sous la même attaque.
 
 ## 5. Ce que le programme peut écrire
 
