@@ -6,7 +6,7 @@ Pour chaque bloc de `diff -u` (modèle → copie), chaque ligne retirée (« −
 la raison du bloc (`RAISONS`, écrites par le développeur de la chaîne ; elles renvoient aux points de la consigne, § 3.4 et
 § 3.5). Une ligne d'un bloc sans raison arrête le programme : aucune ligne changée n'est laissée sans raison.
 
-    python3 -B scripts/differentiel_annote_t08_v1.py > docs/notes/t08-chaine-de-lancement-v1/differentiel-annote-v1.md
+    python3 -B scripts/differentiel_annote_t08_v1.py > docs/notes/t08-chaine-de-lancement-v1/differentiel-annote-v2.md
 """
 from __future__ import annotations
 
@@ -58,9 +58,11 @@ RAISONS = {
         6: f"{L35} « les noms » ; « montants de T0.8 » (message de l'heure d'épuisement) ; variables de la branche d'entrée, "
            "du code et du GO exigées ; texte scellé et branche de sortie de T0.8 par défaut ; bloc des épreuves à blanc "
            "retiré (refus explicite) ; « le clonage » : code au commit cité, une seule branche, sans étiquettes, extraction "
-           "limitée (11 motifs relevés en jouant la liste d'essais figée sur un clone réduit), branche d'entrée seule, "
-           "fichiers recopiés à l'octet et tenus hors de l'index, garde précoce sur le disque (aucun lecture-sondes-t06* ni "
-           "resume.json), arbre propre exigé ; « les noms » (script de consignation) ; données légères : les sorties de la "
+           "limitée (12 motifs relevés en jouant la liste d'essais figée sur un clone réduit, `.gitignore` compris), branche "
+           "d'entrée seule, fichiers recopiés à l'octet ; commit local de la course (consigne v3, § 3.5 : liste attendue "
+           "écrite avant depuis la configuration, branche d'entrée égale à elle, chemins ajoutés aux motifs d'extraction, "
+           "auteur et date fixés, seul parent COMMIT, rien de gelé) ; garde précoce sur le disque (aucun lecture-sondes-t06* "
+           "ni resume.json), arbre propre exigé ; ajouts par `git add --sparse` (sorties hors des motifs) ; « les noms » (script de consignation) ; données légères : les sorties de la "
            "course de T0.8 seulement (jamais les entrées de 7b) ; morceaux d'activations retirés (bras propre à la course de "
            "confirmation).",
         7: f"{L35} « les noms » (messages de commit T0.8, verrou) ; GO lu au registre du commit par le module de T0.8 "
@@ -70,10 +72,12 @@ RAISONS = {
         8: f"{L35} « les noms » (traces, verrou, fin anormale) ; « les bras propres à la course de confirmation (audit de "
            "fuite, sondes) sont retirés » : bras B retiré ; environnement Python hors du dépôt ($R/venv-t08) : la garde de "
            "l'instance parcourt tout le dépôt.",
-        9: f"{L35} « avant tout calcul : exiger_instance_sans_interdits, le commit du code égal à celui du texte scellé, le "
-           "texte scellé intact » ; « la liste d'essais ciblée et figée de T0.8, dans un fichier à part, avec le nombre "
+        9: f"{L35} « avant tout calcul : exiger_instance_sans_interdits (garde resserrée du code aligné, run de 7b lu dans "
+           "la configuration), le commit du code égal à celui du texte scellé (commit local : seul parent COMMIT = "
+           "COMMIT_CODE_T08), le texte scellé intact » ; « la liste d'essais ciblée et figée de T0.8, dans un fichier à part, avec le nombre "
            "attendu » (empreinte et nombre écrits en dur).",
-        10: f"{L35} « les modèles … chargés l'un après l'autre » (préchargés au cache local, la course les charge hors ligne) ; "
+        10: f"{L35} : suite figée jouée sans l'essai du code aligné qui clone l'arbre entier du dépôt (désélection, comptée "
+            "« 1 deselected ») ; « les modèles … chargés l'un après l'autre » (préchargés au cache local, la course les charge hors ligne) ; "
             "« la commande jouée : python -m controle_ia.t08.course_v1 --config … --run-id … --prereg …, une fois ».",
         11: f"{L35} : fin du run reconnue sur le résultat de la course de T0.8 (course-t08.json) et son arrêt de garde "
             "(« ARRÊT : … ») au lieu de resume.json et arret.json de T0.6.",
@@ -106,7 +110,7 @@ def blocs(modele: str, copie: str) -> list[dict]:
 
 
 def main() -> int:
-    print("# Différentiel annoté de la chaîne de lancement de T0.8 — v1\n")
+    print("# Différentiel annoté de la chaîne de lancement de T0.8 — v2\n")
     print("Engendré par `scripts/differentiel_annote_t08_v1.py`. Chaque ligne retirée (−, numéro dans le modèle) ou ajoutée "
           "(+, numéro dans la copie) porte la raison de son bloc. Lignes tronquées à 200 caractères ; le fichier entier fait foi.\n")
     for modele, copie in PAIRES:
