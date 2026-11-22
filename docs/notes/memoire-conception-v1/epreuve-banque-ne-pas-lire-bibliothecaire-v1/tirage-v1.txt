@@ -1,0 +1,9 @@
+Tirage des moitiés du jeu d'épreuve de la bibliothécaire (v1), graine fixée au § 2 de epreuve-bibliothecaire-v1.md.
+Environnement : . .venv/bin/activate (numpy de l'environnement du dépôt).
+Commande exacte (Python) :
+  import numpy
+  ids = sorted(id for id in concordants)   # id des questions où concorde == true, triés
+  rng = numpy.random.default_rng(numpy.random.SeedSequence(2026112201))
+  perm = rng.permutation(ids)
+  n_mise = len(ids) // 2                   # première moitié, arrondie au-dessous
+  mise_au_point = perm[:n_mise] ; reserve = perm[n_mise:]
