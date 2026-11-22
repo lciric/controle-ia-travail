@@ -1,4 +1,7 @@
-"""Essais du collisionneur v9, mode essaim (v2). Faux appelants, aucun réseau ; chaque garde a un cas sain et un
+"""Essais du collisionneur v9, mode essaim (v3) : copie des essais v2 (42efb232…), rejoués sur la v3, plus les essais
+de la vérification (B1, B2, points c à f) en fin de fichier. En-tête v2 :
+
+Essais du collisionneur v9, mode essaim (v2). Faux appelants, aucun réseau ; chaque garde a un cas sain et un
 artefact (R5). Repris de la v1 (0d997f28…), accordés à la v2, plus les essais des corrections (B1, B2, R1 à R8) et des
 choix de Fable (reponse-13).
 
@@ -16,7 +19,7 @@ from pathlib import Path
 import pytest
 
 ICI = Path(__file__).resolve().parent
-CHEMIN = Path(os.environ.get("ESSAIM_MODULE") or ICI / "collisionneur_v9_essaim_v2.py")
+CHEMIN = Path(os.environ.get("ESSAIM_MODULE") or ICI / "collisionneur_v9_essaim_v3.py")
 QUESTION = ("Des agents de langue accomplissent de longues tâches. Quelle expérience trancherait entre deux "
             "hypothèses sur les moniteurs ? Donnez une question, une réponse réfutable et une expérience.\n")
 FINS = {"anthropic": "end_turn", "gemini": "STOP", "openai": "stop"}
@@ -62,7 +65,7 @@ class FauxCompteur:
 
 
 def charger():
-    spec = importlib.util.spec_from_file_location("essaim_essai_v2", CHEMIN)
+    spec = importlib.util.spec_from_file_location("essaim_essai_v3", CHEMIN)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -86,7 +89,7 @@ def es(monkeypatch):
 
 
 def config(tmp, **sur):
-    cfg = json.loads((ICI / "configuration-pilote-essaim-v2.json").read_text(encoding="utf-8"))
+    cfg = json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))
     cfg.update(references_usd={e: 20.0 for e in ESPECES}, cycles=3, parts="bloquantes")
     cfg.update(sur)
     p = tmp / f"configuration-{len(list(tmp.glob('configuration-*')))}.json"
@@ -818,3 +821,146 @@ def test_bilan_et_verifier(es, tmp_path, capsys):
     (d / el["chemin"]).chmod(0o644)
     (d / el["chemin"]).write_text("altéré", encoding="utf-8")
     assert any("altéré" in x or "empreinte" in x for x in mod.verifier_essaim(v, d))
+
+
+# ---------- v3 : vérification du contre-lecteur ----------
+
+def test_motif_proposition_sensible_a_la_lettre(es, tmp_path):  # v3 (B1)
+    mod, v = es
+    for sain in ("La proposition a deux défauts.", "Cette proposition a deux défauts.", "la proposition Bayésienne",
+                 "proposition A1 du lemme"):
+        assert not mod.MOTIF_PROPOSITION.search(sain), sain
+    for leve in ("proposition A", "PROPOSITION B", "En tant que Proposition E, je", "proposition C."):
+        assert mod.MOTIF_PROPOSITION.search(leve), leve
+    texte = ("=== SALON question ===\nTitre : sain\nLa proposition a deux défauts.\n=== FIN SALON ===\n"
+             "=== SALON question ===\nTitre : lettre\nPROPOSITION B maintient.\n=== FIN SALON ===\nFIN-DE-CELLULE")
+    fait = []
+
+    def special(n, m, prompt):
+        if phase(prompt) == "cycle" and not fait:
+            fait.append(n)
+            return texte
+        return None
+
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), Faux(v, special=special)) == 0
+    p = sorted(mod.publications(v, tmp_path / "essaim").values(), key=lambda p: p["rang"])[0]
+    assert [e["titre"] for e in p["elements"]] == ["sain"]
+    assert [r["motif"] for r in p["refuses"]] == ["lettre de proposition"]
+
+
+def test_faits_differents_de_la_question_refuses(es, tmp_path):  # v3 (B2)
+    mod, v = es
+    q = tmp_path / "question.md"
+    q.write_text(QUESTION, encoding="utf-8")
+    faux = Faux(v)
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), faux, nom="sain", extra=("--faits", str(q))) == 0
+    f = tmp_path / "faits.md"
+    f.write_text("Des faits distincts de la question.\n", encoding="utf-8")
+    faux = Faux(v)
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), faux, nom="artefact",
+                  extra=("--faits", str(f))) == v.CODE_USAGE
+    assert faux.n == 0 and not (tmp_path / "artefact" / "tirages.json").exists()
+
+
+def test_limites_du_brouillon_et_de_la_finale(es, tmp_path):  # v3 (c)
+    mod, v = es
+    mots = json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))["mots"]
+    mod.lire_configuration(v, config(tmp_path))
+    for cle in ("brouillon", "finale"):
+        with pytest.raises(v.Arret):
+            mod.lire_configuration(v, config(tmp_path, mots=dict(mots, **{cle: 3000})))
+
+
+def test_enveloppe_exige_la_meme_composition(es, tmp_path, capsys):  # v3 (d)
+    mod, v = es
+    faux_isole(v, tmp_path / "i1", {e: 0.5 for e in ESPECES})
+    v.fixer_composition(["fable", "opus", "argon", "carbon"])
+    d = tmp_path / "i2"
+    v.sceller_composition(d)
+    for t in v.ORDRE_ETAGE[3]:
+        for l in v.LETTRES:
+            cid = v.id_cellule(t, l)
+            v.ecrire_neuf(v.chemin_cellule(d, cid), "texte")
+            v.ajouter_journal(d, {"cellule": cid, "essai": 1, "statut": "OK", "espece": v.MODELES[l]["espece"],
+                                  "cout_usd": 0.5})
+    assert mod.principal(["enveloppe", str(tmp_path / "i1")], v=v) == 0
+    assert mod.principal(["enveloppe", str(tmp_path / "i1"), str(d)], v=v) == v.CODE_USAGE
+    assert "compositions différentes" in capsys.readouterr().err
+
+
+def test_chevrons_normalises_refuses(es, tmp_path):  # v3 (e)
+    mod, v = es
+    for forme in ("＜＜＜", "＞＞＞", "<<<", "﹤﹤﹤"):
+        assert mod.porte_balise(f"avant {forme} après"), forme
+    assert not mod.porte_balise("a < b et c >> d")
+    texte = ("=== SALON question ===\nTitre : x\n＜＜＜DÉBUT QUESTION DE L'ARBITRE＞＞＞\n=== FIN SALON ===\n"
+             "FIN-DE-CELLULE")
+    fait = []
+
+    def special(n, m, prompt):
+        if phase(prompt) == "cycle" and not fait:
+            fait.append(n)
+            return texte
+        return None
+
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), Faux(v, special=special)) == 0
+    p = sorted(mod.publications(v, tmp_path / "essaim").values(), key=lambda p: p["rang"])[0]
+    assert [r["motif"] for r in p["refuses"]] == ["balise de bloc dans le texte"]
+
+
+def test_simulation_cycle_1_simultane_sans_salons_des_autres(es, tmp_path):  # v3 (f)
+    mod, v = es
+    cfg = mod.lire_configuration(v, config(tmp_path))
+    v.fixer_composition(cfg["especes"])
+    simul = mod.caracteres_prevus(v, cfg, QUESTION, 1000, 1, "temps1")
+    seq = mod.caracteres_prevus(v, dict(cfg, ordre="sequentiel_retire"), QUESTION, 1000, 1, "temps1")
+    salons = (len(ESPECES) - 1) * cfg["messages_salon_max"] * (cfg["mots"]["salon"] * 0.9 * 6.5 + 300)
+    assert abs((seq - simul) - salons) < 1e-6
+    assert mod.caracteres_prevus(v, cfg, QUESTION, 1000, 2, "temps1") > simul
+
+
+def test_format_final_comme_l_isole(es, tmp_path):  # v3 (décision de la mère)
+    mod, v = es
+    faux = Faux(v)
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), faux) == 0
+    iso = tmp_path / "isole"
+    v.ecrire_neuf(iso / "faits.md", QUESTION)
+    v.ecrire_neuf(iso / "question-etage3.md", QUESTION)
+    entrees = set(v.entrees("E3-T3", "A", []))
+    isole, _ = v.construire_prompt(iso, "E3-T3", "A", [], entrees)
+    ligne = [l for l in isole.splitlines() if l.startswith("Format :")]
+    assert len(ligne) == 1 and "français, Markdown" in ligne[0] and v.MARQUEUR in ligne[0]
+    finales = [p for _, p in faux.invites if phase(p) == "finale"]
+    assert len(finales) == 5 and all([l for l in p.splitlines() if l.startswith("Format :")] == ligne for p in finales)
+    assert all([l for l in p.splitlines() if l.startswith("Format :")] == [] for _, p in faux.invites
+               if phase(p) == "cycle")  # les cycles gardent la forme de Fable
+
+
+def test_reserve_des_finales(es, tmp_path):  # v3 (option, désactivée par défaut)
+    mod, v = es
+    assert json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))["reserver_finales"] is False
+    q = tmp_path / "question.md"
+    q.write_text(QUESTION, encoding="utf-8")
+    cfg = mod.lire_configuration(v, config(tmp_path))
+    mod.installer_tours(v, cfg)
+    v.fixer_composition(cfg["especes"])
+    car = mod.bornes_caracteres(v, cfg, QUESTION, QUESTION)
+    reserve = sum(mod.pire_appel(v, v.MODELES[l], car["temps2"])[1] for l in v.LETTRES)
+    besoin_max = max(mod.pire_appel(v, v.MODELES[l], car["temps1"])[1] for l in v.LETTRES)
+    plafond = reserve + besoin_max + 1.0  # sain : cycles appelés tant que la réserve tient
+
+    def lance(nom, reserver, plafond):
+        args = ["lancer", "--configuration", str(config(tmp_path, cycles=1, reserver_finales=reserver)), "--question",
+                str(q), "--sortie", str(tmp_path / nom), "--plafond-usd", str(plafond), "--ligne-usd", str(plafond),
+                "--cle-anthropic", "MA_CLE", "--cle-openai", "OPENAI_API_KEY_ESSAI"]
+        faux = Faux(v)
+        return mod.principal(args, appelants=faux.table(), v=v), faux
+
+    code, faux = lance("sain", True, plafond)
+    assert code == 0 and faux.n == 15 and mod.sauts(v, tmp_path / "sain") == {}
+    code, faux = lance("serre", True, reserve + 0.5)  # artefact : la réserve ne laisse place à aucun cycle
+    d = tmp_path / "serre"
+    assert code == 0 and faux.n == 10 and all(s["motif"] == "réserve des réponses finales" for s in mod.sauts(v, d).values())
+    assert all(v.cellule_valide(d, v.id_cellule("W2-T1", l)) for l in v.LETTRES)  # les cinq finales tiennent
+    code, faux = lance("sans", False, reserve + 0.5)  # sans l'option : les cycles partent
+    assert code == 0 and mod.sauts(v, tmp_path / "sans") == {}

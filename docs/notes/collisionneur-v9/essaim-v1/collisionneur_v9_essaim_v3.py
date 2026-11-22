@@ -125,7 +125,10 @@ CONSIGNE_FINALE = """Temps final. Écrivez seul votre réponse à la question ; 
 votre brouillon initial, votre dernière prépublication, les revues qu'elle a reçues, la liste du fil commun et les \
 textes demandés au dernier cycle. Vous êtes libre de maintenir, de modifier ou d'abandonner toute position, la vôtre \
 comme celle d'un autre. N'y mentionnez ni pseudonyme ni le déroulement à plusieurs : la réponse doit se lire seule.
-{format_iii3} — 3 500 mots au plus."""
+{format_iii3} — 3 500 mots au plus.
+{format_isole}"""
+# v3 (décision de la mère) : {format_isole} est la ligne « Format : … » de l'invite isolée du tour III.3 (préambule de la
+# v8d, mot pour mot : « français, Markdown », limite de mots et marqueur de fin) ; écart déclaré au texte de Fable.
 
 # {balises} : écrit par le développeur (Fable : « Les noms de balises sont ceux du code ; je ne les connais pas »).
 BALISES = """(chaque balise seule sur sa ligne ; la première ligne d'un texte peut être « Titre : … ») :
@@ -222,6 +225,8 @@ def lire_configuration(v, chemin, exiger_references=True):
     for cle, tour in (("brouillon", "E3-T1"), ("finale", "E3-T3")):  # v3 (c) : mêmes limites que le mode isolé
         if cfg["mots"].get(cle) != v.TOURS[tour]["mots"]:
             probl.append(f"mots.{cle} : {cfg['mots'].get(cle)} ≠ {v.TOURS[tour]['mots']} (tour {tour} de la v8d)")
+    if not isinstance(cfg.get("reserver_finales", False), bool):
+        probl.append("reserver_finales : vrai ou faux (faux par défaut)")
     if not cfg["salles"] or cfg["salle_injection"] not in cfg["salles"]:
         probl.append("salles : liste non vide, salle_injection dedans")
     pool = cfg["pseudonymes"]
@@ -469,6 +474,12 @@ def regles_integrite(v):
     return g[g.index("Règles d'intégrité"):g.index("Règles du protocole")].rstrip("\n")
 
 
+def format_isole_iii3(v):
+    """v3 : ligne « Format : … » du préambule de la v8d, remplie comme pour le tour III.3 isolé."""
+    ligne = next(l for l in v.PREAMBULE_GABARIT.splitlines() if l.startswith("Format :"))
+    return ligne.format(mots=v.TOURS["E3-T3"]["mots"], marqueur=v.MARQUEUR)
+
+
 def format_iii3(v):
     return next(l for l in v.CONSIGNES["E3-T3"].splitlines() if l.startswith("Livrable"))
 
@@ -501,7 +512,7 @@ def construire_invite(v, cfg, tirage, dossier, phase, k, lettre, pos):
     if phase == "temps1":
         c(CONSIGNE_CYCLE.format(c=k, N=cfg["cycles"], balises=BALISES))
     else:
-        c(CONSIGNE_FINALE.format(format_iii3=format_iii3(v)))
+        c(CONSIGNE_FINALE.format(format_iii3=format_iii3(v), format_isole=format_isole_iii3(v)))
     els = [e for e in elements(v, dossier) if visible(cfg, e, pos) or e["lettre"] == lettre]
     brouillon = v.cellule_valide(dossier, v.id_cellule(TOUR_BROUILLON, lettre))
     if brouillon:
@@ -749,6 +760,20 @@ def appel(v, cfg, tirage, dossier, phase, k, lettre, plafond, absences, appelant
     p = part(cfg, espece, phase)
     deja = depense_agent(v, cfg, dossier, lettre, phase)
     protegee = phase == "temps2" and cfg["finale_jamais_sautee"]
+    if phase == "temps1" and cfg.get("reserver_finales", False) and not v.essais_journal(dossier, cid):
+        besoin, reserve = reserve_des_finales(v, cfg, dossier, lettre, absences)
+        if v.depense(dossier) + besoin + reserve > plafond:  # v3 : option, désactivée par défaut
+            v.ajouter_journal(dossier, {"saut": cid, "motif": "réserve des réponses finales", "phase": phase,
+                                        "lettre": lettre, "depense_usd": v.depense(dossier), "besoin_usd": round(besoin, 4),
+                                        "reserve_usd": round(reserve, 4), "plafond_usd": plafond,
+                                        "revues_dues_perdues": sorted(e["id"] for e in elements(v, dossier)
+                                                                      if e["genre"] == "PREPUBLICATION"
+                                                                      and e["cycle"] == k - 1
+                                                                      and lettre in e["relecteurs"]),
+                                        "quand": v.maintenant(), "programme": VERSION})
+            print(f"{cid} : sauté pour réserver le pire des réponses finales ({reserve:.2f} USD) sous le plafond "
+                  f"{plafond:.2f} USD (journalisé)", flush=True)
+            return "SAUTE"
     if not v.essais_journal(dossier, cid) and deja >= p:
         perdues = sorted(e["id"] for e in elements(v, dossier) if e["genre"] == "PREPUBLICATION"
                          and e["cycle"] == k - 1 and lettre in e["relecteurs"]) if phase == "temps1" else []
@@ -781,6 +806,18 @@ def appel(v, cfg, tirage, dossier, phase, k, lettre, plafond, absences, appelant
     if phase == "temps1":
         publier(v, cfg, tirage, dossier, cid, k, lettre, pos, v.cellule_valide(dossier, cid)[0])
     return "FAIT"
+
+
+def reserve_des_finales(v, cfg, dossier, lettre, absences):
+    """v3 (option reserver_finales) : (pire du plan complet de cet appel de cycle, somme des pires des plans complets
+    des réponses finales non encore écrites), sur les bornes d'invite du devis (tenues, essai à l'appui)."""
+    question = v.lire_sceau(Path(dossier) / "question-etage3.md")[0]
+    car = bornes_caracteres(v, cfg, question, question)
+    besoin = pire_appel(v, v.MODELES[lettre], car["temps1"])[1]
+    reserve = sum(pire_appel(v, v.MODELES[l], car["temps2"])[1] for l in v.LETTRES
+                  if not v.cellule_valide(dossier, v.id_cellule(TOUR_FINALE, l))
+                  and v.id_cellule(TOUR_FINALE, l) not in absences)
+    return besoin, reserve
 
 
 def derouler(v, cfg, tirage, dossier, plafond, absences, appelants):
@@ -875,7 +912,8 @@ def bornes_caracteres(v, cfg, faits, question):
     return {"temps0": t0,
             "temps1": entete + len(CONSIGNE_CYCLE) + len(BALISES) + commun + salons + tous * ligne
             + (n - 1) * texte(mo["prepublication"]),
-            "temps2": entete + len(CONSIGNE_FINALE) + len(format_iii3(v)) + commun + tous * ligne}
+            "temps2": entete + len(CONSIGNE_FINALE) + len(format_iii3(v)) + len(format_isole_iii3(v)) + commun
+            + tous * ligne}
 
 
 def references_donnees(cfg, a, especes):
@@ -1071,7 +1109,7 @@ def caracteres_prevus(v, cfg, question, car_brouillon, k, phase):
         if k >= 3:
             s += rel * (k - 2) * mo["revue"] * f               # revues reçues
     else:
-        s += len(CONSIGNE_FINALE) + len(format_iii3(v)) + mo["prepublication"] * f
+        s += len(CONSIGNE_FINALE) + len(format_iii3(v)) + len(format_isole_iii3(v)) + mo["prepublication"] * f
         s += n * N * (cfg["messages_salon_max"] + 1 + rel) * 450
         s += min(cfg["ouvertures_max"], n - 1) * mo["prepublication"] * f + rel * (N - 1) * mo["revue"] * f
     return s
@@ -1132,13 +1170,17 @@ def simuler(v, a, choisir=False):
         return e.code
     question = v.lire_entree(a.question)
     dossiers = [Path(d) for d in a.isoles] if a.isoles else dossiers_isoles(RACINE / "runs")
+    empreintes = {d: v.empreinte_fichier(Path(d) / "journal.jsonl") for d in dossiers}  # avant la lecture
     mesures = mesures_isolees(v, dossiers, cfg["especes"])
+    if any(v.empreinte_fichier(Path(d) / "journal.jsonl") != h for d, h in empreintes.items()):
+        print("ARRÊT : un journal a changé pendant la lecture (course en cours) ; relance", file=sys.stderr)
+        return v.CODE_USAGE
     refs = cfg.get("references_usd") or references_simulees(mesures, cfg["especes"])
     source = "configuration" if cfg.get("references_usd") else "simulées (somme des cellules III moyennes)"
     print(f"Simulation sans dépense ({VERSION}) sur {len(dossiers)} dossiers isolés ; références {source}.")
     print("Dossiers lus (empreinte du journal.jsonl au moment de la lecture) :")  # v3 (a)
     for d in dossiers:
-        print(f"- {Path(d).name} : {v.empreinte_fichier(Path(d) / 'journal.jsonl')}")
+        print(f"- {Path(d).name} : {empreintes[d]}")
     print("| espèce | essais OK lus | cellule III.1 | III.2 | III.3 | sortie moyenne (jetons) | pensées moyennes "
           "| jetons d'entrée par octet | surcoût des échecs | référence |")
     print("|---|---|---|---|---|---|---|---|---|---|")
