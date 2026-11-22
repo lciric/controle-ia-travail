@@ -1,0 +1,140 @@
+{"copies": ["orchestrator/pole/configuration_course_na_v1.py", "orchestrator/pole/course_na_v3.py", "orchestrator/pole/simulation_na_v1.py", "orchestrator/demonstrations/lancer_orchestrateur_na_v3.py", "orchestrator/demonstrations/ecrire_configuration_course_essai_na_v1.py", "orchestrator/essais/configuration_essai_na_lot6_v1.py", "orchestrator/essais/aides_na_lot6_v3.py", "orchestrator/essais/test_na_lot6_v3_course.py", "orchestrator/essais/test_na_lot6_v3_arrets.py", "orchestrator/essais/test_na_lot6_v3_cablage.py", "orchestrator/essais/mutations_na_lot6_v3.py"]}
+........................................................................ [  9%]
+....................................................EEE................. [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 46%]
+........................................................................ [ 56%]
+.......................................................................................................................................... [ 74%]
+........................................................................ [ 83%]
+........................................................................ [ 92%]
+........................................................   [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of TestListeReelleV4.test_aucun_b_contre_une_espace_apres_normalisation _
+
+cls = <class 'essais.test_na_v5_garde_motifs.TestListeReelleV4'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.lignes = LR.lire_liste_reelle()  # v5 : lue sur la branche principale ; échoue si elle manque : jamais un saut
+                     ^^^^^^^^^^^^^^^^^^^^^^
+
+essais/test_na_v5_garde_motifs.py:697: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+essais/liste_reelle_na_v5.py:58: in lire_liste_reelle
+    lignes = [l.strip() for l in octets_liste_reelle(fichier, depot, ref).decode("utf-8").split("\n")]
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fichier = None, depot = '/home/user/controle-ia-travail-organisme'
+ref = 'origin/main'
+
+    def octets_liste_reelle(fichier=None, depot=None, ref=None):
+        """Rend les octets de la liste réelle, à leur empreinte vérifiée ; sinon lève `ListeReelleIndisponible`."""
+        fichier = fichier or os.environ.get("NA_LISTE_REELLE_FICHIER")
+        if fichier:
+            try:
+                with open(fichier, "rb") as f:
+                    octets = f.read()
+            except OSError as e:
+                raise ListeReelleIndisponible(f"liste réelle illisible sur disque ({type(e).__name__})") from None
+            source = "fichier"
+        else:
+            depot = depot or os.environ.get("NA_LISTE_REELLE_DEPOT") or DEPOT_PAR_DEFAUT
+            ref = ref or os.environ.get("NA_LISTE_REELLE_REF") or REF_PAR_DEFAUT
+            try:
+                r = subprocess.run(["git", "-C", depot, "show", f"{ref}:{CHEMIN_DEPOT}"], capture_output=True, check=False)
+            except OSError as e:
+                raise ListeReelleIndisponible(f"git indisponible ({type(e).__name__})") from None
+            if r.returncode != 0:
+>               raise ListeReelleIndisponible(f"liste réelle absente du dépôt {depot} à {ref} (code {r.returncode})")
+E               liste_reelle_na_v5.ListeReelleIndisponible: liste réelle absente du dépôt /home/user/controle-ia-travail-organisme à origin/main (code 128)
+
+essais/liste_reelle_na_v5.py:47: ListeReelleIndisponible
+_ ERROR at setup of TestListeReelleV4.test_chaque_nom_mordu_dans_ses_formes_reelles _
+
+cls = <class 'essais.test_na_v5_garde_motifs.TestListeReelleV4'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.lignes = LR.lire_liste_reelle()  # v5 : lue sur la branche principale ; échoue si elle manque : jamais un saut
+                     ^^^^^^^^^^^^^^^^^^^^^^
+
+essais/test_na_v5_garde_motifs.py:697: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+essais/liste_reelle_na_v5.py:58: in lire_liste_reelle
+    lignes = [l.strip() for l in octets_liste_reelle(fichier, depot, ref).decode("utf-8").split("\n")]
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fichier = None, depot = '/home/user/controle-ia-travail-organisme'
+ref = 'origin/main'
+
+    def octets_liste_reelle(fichier=None, depot=None, ref=None):
+        """Rend les octets de la liste réelle, à leur empreinte vérifiée ; sinon lève `ListeReelleIndisponible`."""
+        fichier = fichier or os.environ.get("NA_LISTE_REELLE_FICHIER")
+        if fichier:
+            try:
+                with open(fichier, "rb") as f:
+                    octets = f.read()
+            except OSError as e:
+                raise ListeReelleIndisponible(f"liste réelle illisible sur disque ({type(e).__name__})") from None
+            source = "fichier"
+        else:
+            depot = depot or os.environ.get("NA_LISTE_REELLE_DEPOT") or DEPOT_PAR_DEFAUT
+            ref = ref or os.environ.get("NA_LISTE_REELLE_REF") or REF_PAR_DEFAUT
+            try:
+                r = subprocess.run(["git", "-C", depot, "show", f"{ref}:{CHEMIN_DEPOT}"], capture_output=True, check=False)
+            except OSError as e:
+                raise ListeReelleIndisponible(f"git indisponible ({type(e).__name__})") from None
+            if r.returncode != 0:
+>               raise ListeReelleIndisponible(f"liste réelle absente du dépôt {depot} à {ref} (code {r.returncode})")
+E               liste_reelle_na_v5.ListeReelleIndisponible: liste réelle absente du dépôt /home/user/controle-ia-travail-organisme à origin/main (code 128)
+
+essais/liste_reelle_na_v5.py:47: ListeReelleIndisponible
+_ ERROR at setup of TestListeReelleV4.test_trente_quatre_lignes_de_la_forme_b_nom_b _
+
+cls = <class 'essais.test_na_v5_garde_motifs.TestListeReelleV4'>
+
+    @classmethod
+    def setUpClass(cls):
+>       cls.lignes = LR.lire_liste_reelle()  # v5 : lue sur la branche principale ; échoue si elle manque : jamais un saut
+                     ^^^^^^^^^^^^^^^^^^^^^^
+
+essais/test_na_v5_garde_motifs.py:697: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+essais/liste_reelle_na_v5.py:58: in lire_liste_reelle
+    lignes = [l.strip() for l in octets_liste_reelle(fichier, depot, ref).decode("utf-8").split("\n")]
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fichier = None, depot = '/home/user/controle-ia-travail-organisme'
+ref = 'origin/main'
+
+    def octets_liste_reelle(fichier=None, depot=None, ref=None):
+        """Rend les octets de la liste réelle, à leur empreinte vérifiée ; sinon lève `ListeReelleIndisponible`."""
+        fichier = fichier or os.environ.get("NA_LISTE_REELLE_FICHIER")
+        if fichier:
+            try:
+                with open(fichier, "rb") as f:
+                    octets = f.read()
+            except OSError as e:
+                raise ListeReelleIndisponible(f"liste réelle illisible sur disque ({type(e).__name__})") from None
+            source = "fichier"
+        else:
+            depot = depot or os.environ.get("NA_LISTE_REELLE_DEPOT") or DEPOT_PAR_DEFAUT
+            ref = ref or os.environ.get("NA_LISTE_REELLE_REF") or REF_PAR_DEFAUT
+            try:
+                r = subprocess.run(["git", "-C", depot, "show", f"{ref}:{CHEMIN_DEPOT}"], capture_output=True, check=False)
+            except OSError as e:
+                raise ListeReelleIndisponible(f"git indisponible ({type(e).__name__})") from None
+            if r.returncode != 0:
+>               raise ListeReelleIndisponible(f"liste réelle absente du dépôt {depot} à {ref} (code {r.returncode})")
+E               liste_reelle_na_v5.ListeReelleIndisponible: liste réelle absente du dépôt /home/user/controle-ia-travail-organisme à origin/main (code 128)
+
+essais/liste_reelle_na_v5.py:47: ListeReelleIndisponible
+=========================== short test summary info ============================
+ERROR essais/test_na_v5_garde_motifs.py::TestListeReelleV4::test_aucun_b_contre_une_espace_apres_normalisation
+ERROR essais/test_na_v5_garde_motifs.py::TestListeReelleV4::test_chaque_nom_mordu_dans_ses_formes_reelles
+ERROR essais/test_na_v5_garde_motifs.py::TestListeReelleV4::test_trente_quatre_lignes_de_la_forme_b_nom_b
+767 passed, 3 errors, 92 subtests passed in 231.18s (0:03:51)

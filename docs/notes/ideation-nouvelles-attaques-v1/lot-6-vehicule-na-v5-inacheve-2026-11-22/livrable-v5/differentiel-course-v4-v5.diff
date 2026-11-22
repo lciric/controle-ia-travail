@@ -1,0 +1,1382 @@
+--- /home/user/controle-ia-travail/docs/notes/ideation-nouvelles-attaques-v1/lot-6-vehicule-na-v4/paquet/orchestrator/pole/course_na_v4.py	2026-11-22 10:50:15.266077383 +0000
++++ /tmp/claude-0/-home-user-controle-ia-travail/e2c3ce0b-40f3-55d3-a6bf-333c05f6ccd1/scratchpad/vehicule-na-lot-6-v5/paquet/orchestrator/pole/course_na_v5.py	2026-11-22 11:23:58.833968940 +0000
+@@ -1,688 +1,729 @@
+-"""Véhicule NA-1, lot 6 v4 — la course alimente le registre des tentatives (filiation, espèce, case, repli) et rend les
+-comptes de M6, de M3, de M4 et des replis ; garde du coffre (arrêt n° 5) sur les fiches rendues, servies par repli
+-comprises ; contrôle d'empreinte du code chargé (C-1 à C-4) (`course_na_v4`).
+-
+-Lettre : interface commune des lots 5 v2, 6 v4 et 7 v1 (`interface-lots-5-6-7-repli-v1.md`) ; V9 (`864f39a7…`), l. 92 à
+-101 (classes d'issue), l. 148 à 161 (M3, M4, M6), l. 372 (n° 1), l. 376 (n° 5) ; projet d'additif v2 du véhicule, § 3 (C-1
+-à C-4, arrêt n° 33), § 5 (P1, P4, P7 à P10, P12, P16, P17 ; définitions de « tentative », « servie », « chaîne ») et § 10
+-(n° 31, n° 34) ; nœuds ouverts v2, § 3 (N3) et § 5.2, point 6 (lot 6 v4) ; conception v5, § 2.6, § 2.8, § 2.13.
+-
+-**Ce module ne change rien au v3** (`course_na_v3.py`, `7c154a89…`) : il s'ajoute à côté, sans importer le v3 ni aucun
+-module des lots 1 à 5, du lot 10 a ou de la v68, que ce développement n'a pas le droit de lire. Il code contre l'interface :
+-le registre est reçu (toute classe qui offre `ajouter(champs)` et `lignes()`), la chaîne d'un appel est lue par
+-`tentatives_de_l_appel` sur la forme écrite plus bas (lot 4 v2 : « le repli comme des tentatives successives de
+-`rang_repli` 0, 1, 2 rendues par l'appel »). Le branchement dans `GenerationNA` (proposition, aiguillage, ligne de la
+-génération, l. 774 du v3) est décrit au rapport, non fait ici.
+-
+-**Une chaîne** compte une à trois tentatives (modèle du rôle, premier repli, second repli). Une tentative est **servie** si
+-la raison d'arrêt lue n'est pas « refusal » ; **refusée** si elle l'est ; **en erreur** si aucune réponse n'est rendue
+-(raison absente). Seule une tentative refusée est suivie d'une autre (A6). Le registre reçoit **une ligne par tentative**
+-(`classe` nulle) et **une ligne par fiche rendue** (`classe` du portier), qui porte les champs de la tentative servie qui
+-l'a rendue, coût mis à zéro pour qu'une somme naïve ne compte pas deux fois (le coût vit à la ligne de la tentative).
+-
+-**Classe d'issue écrite** (`classe_issue`) :
+-- tentative de rang 0 : la classe **de la chaîne à l'espèce demandée** (P12) : la classe de la V9 si elle est servie au
+-  rang 0 ; « refus par classifieur, servi par repli » si une tentative de repli est servie ; « réponse illisible » si la
+-  chaîne finit en erreur (sous-compte « cause non établie, en repli » si l'erreur suit un refus) ;
+-- tentative de rang 1 ou 2 servie : la classe de la V9 de sa réponse (rubrique « servies par repli ») ;
+-- tentative refusée suivie d'une servie : « refus par classifieur, servi par repli » ;
+-- **deux valeurs hors de la liste fermée de l'interface, déclarées au rapport** (l'interface ne dit rien pour ces cas) :
+-  `CLASSE_ARRET_1` pour une chaîne qui finit sur un refus (trois refus : n° 1 ; aucune classe de M6, P12), et
+-  `CLASSE_HORS_M6` pour une tentative servie d'un rôle qui n'est pas un proposeur (portier, juges, aiguilleur).
+-
+-**Comptes** (lus sur les lignes du registre, jamais sur un état en mémoire) : M6 par génération, par rôle, par espèce
+-demandée, par case, et par (case, espèce), sur les **seules tentatives de rang 0** des proposeurs ; replis par espèce
+-demandée et par modèle servi (nombre, coût), et par modèle demandé ; servies par repli, à part, au nom du modèle servi ; M3
+-en lecture scellée (fiches de repli comprises) et en lecture « espèces seules » ; M4 : la première tentative seule à
+-l'espèce, une ligne « replis » ; garde du coffre sur les fiches rendues de la génération, servies par repli comprises.
+-
+-**Contrôle du code chargé** (C-1) : l'empreinte du fichier source de chaque module chargé qui vit sous la racine du paquet,
+-ou dont le nom est dans un espace protégé, est comparée à la table d'empreintes du paquet ; hors table ou autre empreinte :
+-arrêt n° 33. Réserve déclarée (C-3) : une modification en mémoire (classe vidée, `__code__` échangé) n'est pas vue.
++"""Véhicule NA-1, lot 6 v5 — la génération et la course du régime, **branchées** sur le lot 4 v3 (repli) et le registre
++v4 (`course_na_v5`).
+ 
+-Aucun message d'erreur ne recopie un énoncé, une idée, un nom de fiche ni un identifiant de modèle servi. Bibliothèque
+-standard seule.
++Ce que la v5 change au v3 (`course_na_v3.py`, `7c154a89…`, gardé sans modification ; il reste la base des pièces reprises
++ici par import : refus de câblage, contexte de génération, assemblage des requêtes, garde de motifs) :
++
++- **Mélange du lot 4 v3** : `GenerationNAV5(appel_garde_na_v3.AppelGardeNA, GenerationV68)`. Le contexte d'appel reçoit
++  `modeles_par_role`, `modeles_repli` et `pires_repli`, lus dans la configuration (`replis`, champ distinct de
++  `a11_modeles`, qui reste vide) ; `lire_etat_relais` est retiré (lot 4 v2, § 5).
++- **Les deux issues neuves** du lot 4 v3 sont lues : « refus par classifieur, servi par repli » (texte au portier, marqué
++  `par_repli`) et « arrêt n° 1, consigné après trois refus ».
++- **Registre des tentatives v4** (`registre_na_v4`, dans ce dossier : le v3 du lot 5 plus `id_tentative`, erratum 3) :
++  chaque chaîne d'un proposeur (une à trois tentatives) y est écrite par `ajouter_chaine`, avec `type_ligne`, `par_repli`
++  (au registre servi, par le v3), les classes de l'erratum 2 et un `id_tentative` par ligne. Les tentatives d'une chaîne
++  sont lues dans `na_replis` (lot 4 v3), au rang près (`rang_repli` = rang de la tentative du lot 4 moins un).
++- **Portier v3** (`portier_na_v3.PortierNAV3`) : la fonction `appeler` rend le dictionnaire du lot 4 v3, qui porte
++  `par_repli` ; le passeport est marqué.
++- **`juger`** : l'arrêt d'A2 sur la version servie d'un juge n'est pas levé quand `par_repli` est vrai ; la clé est
++  (juge, modèle demandé) ; le n° 31 du lot 4 v3 reste la garde de chaque tentative.
++- **Comptes de la ligne de la génération** : en plus du v3, les comptes du registre v4 (M6 par rôle, par espèce, par case,
++  par (case, espèce), à la première tentative ; replis par espèce demandée et par modèle servi, nombre et coût ; M3 en
++  lecture scellée et « espèces seules » ; M4 à la première tentative plus une ligne « replis »), la mesure « replis » du lot
++  4 v3 (`comptes_replis_na`), et la garde du coffre sur les seules lignes `fiche` (servies par repli comprises).
++- **Contrôle du code chargé** (additif v2, C-1 à C-4 ; arrêt n° 33, proposé) : au départ et à chaque génération, si la
++  course le reçoit (`controle_code_charge`) ; son absence est **dite** au journal des arrêts (« non demandé »), jamais tue.
++- Sorties en v5 (R12) : `journal-arrets-et-generations-na-v5.jsonl`, `bilan-course-na-v5.json`,
++  `registre-tentatives-g<g>-na-v4.jsonl`.
++
++**Ce qui n'est pas écrit au registre** (déclaré au rapport) : les chaînes du portier et des juges (l'interface ne fixe pas
++leur classe ; elles sont dans `na_replis` et dans la mesure « replis ») ; une chaîne coupée par un arrêt qui arrête la
++course (n° 12, 13, 16, 31, « requête journalisée ») ; un appel non lancé au rang 0 (ce n'est pas un appel).
++
++Aucun message ne recopie un octet d'une réponse ou d'une fiche. Bibliothèque standard, orchestrateur `a41b7b50…`, v68, lots
++2 à 5 et 10 a, lot 6 v3.
+ """
+ 
+ import dataclasses
+-import decimal
+-import hashlib
+-import json
+ import os
+-import re
+-import sys
+-
+-VERSION = "course-na-v4"
+-NOM_COMPTES = "comptes-tentatives-et-replis-na-v4.json"
+-
+-ESPECES_PROPOSEUSES = ("espece-1", "espece-2", "espece-3", "espece-4", "espece-5")
+-ESPECES = ESPECES_PROPOSEUSES + ("aiguilleur", "portier", "juge-1", "juge-2", "passe-x")
+-ESPECE_SANS_CASE = "passe-x"
+-
+-FICHES_RENDUES = "fiches rendues"
+-VIDE_MOTIVEE = "réponse vide motivée"
+-REFUS_DU_MODELE = "refus du modèle"
+-ILLISIBLE = "réponse illisible"
+-CLASSES_V9 = (FICHES_RENDUES, VIDE_MOTIVEE, REFUS_DU_MODELE, ILLISIBLE)
+-SERVI_PAR_REPLI = "refus par classifieur, servi par repli"
+-CLASSES_INTERFACE = CLASSES_V9 + (SERVI_PAR_REPLI,)
+-CLASSES_M6 = (VIDE_MOTIVEE, REFUS_DU_MODELE, ILLISIBLE, SERVI_PAR_REPLI)
+-# Hors de la liste fermée de l'interface : déclarées au rapport, à trancher par la coordination.
+-CLASSE_ARRET_1 = "arrêt n° 1, consigné, non relancé"
+-CLASSE_HORS_M6 = "servie, rôle sans classe d'issue d'appel"
+-CLASSES_ECRITES = CLASSES_INTERFACE + (CLASSE_ARRET_1, CLASSE_HORS_M6)
+-SOUS_COMPTE_EN_REPLI = "cause non établie, en repli"
+-
+-PASSEE, AU_COFFRE, HORS_CASE = "passée", "au coffre", "hors case"
+-CLASSES_FICHE = (PASSEE, AU_COFFRE, HORS_CASE)
+-
+-RAISON_REFUS = "refusal"
+-SANS_REPONSE = "sans réponse"  # modèle servi d'une tentative en erreur (aucune réponse) : déclaré au rapport
+-RANGS = (0, 1, 2)
+-
+-CHAMPS_LOT_5_V1 = ("identifiant", "generation", "case", "classe", "nom", "enonce")
+-CHAMPS_INTERFACE = ("generation", "filiation", "espece", "case", "rang_repli", "modele_demande", "modele_servi",
+-                    "raison_arret", "categorie_refus", "cout_compte_usd", "classe_issue")
+-
+-NUMERO_ARRET_COFFRE = 5
+-NUMERO_ARRET_MODELE_SERVI = 31
+-NUMERO_ARRET_PIRE = 34
+-NUMERO_ARRET_CODE_CHARGE = 33
+-
+-_IDENTIFIANT_ROLE = re.compile(r"^[a-z][a-z0-9-]{1,62}$")
+-_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+-
+-
+-# --- erreurs et arrêts ---------------------------------------------------------------------------------------------------
+-
+-class DefautLot6V4(RuntimeError):
+-    """Une entrée qui ne tient pas sa forme : rien n'est écrit, rien n'est réparé ; le message ne recopie aucun contenu."""
+-
+-
+-class ArretNommeV4(RuntimeError):
+-    numero = None
+-    nom = None
+-
+-
+-class ArretModeleServiNA(ArretNommeV4):
+-    """N° 31 : modèle servi absent, ou autre que celui que la tentative demande."""
+-
+-    numero = NUMERO_ARRET_MODELE_SERVI
+-    nom = "modèle servi absent ou différent du modèle demandé de la tentative"
+-
+-    def __init__(self, espece, rang, cause):
+-        super().__init__(f"arrêt n° {self.numero}, {self.nom} : espèce « {espece} », rang {rang} ; {cause}")
+-        self.espece, self.rang, self.cause = espece, rang, cause
+ 
+-
+-class ArretRepliNonPermisNA(ArretNommeV4):
+-    """A6 : une tentative de plus après une tentative qui n'est pas refusée, ou un repli sur une espèce sans repli."""
+-
+-    numero = None
+-    nom = "repli hors de la liste fermée"
+-
+-    def __init__(self, espece, rang, cause):
+-        super().__init__(f"{self.nom} : espèce « {espece} », rang {rang} ; {cause}")
+-        self.espece, self.rang, self.cause = espece, rang, cause
+-
+-
+-class ArretPireManquantNA(ArretNommeV4):
+-    """N° 34 : un (rôle, modèle) sans pire écrit ; départ refusé."""
+-
+-    numero = NUMERO_ARRET_PIRE
+-    nom = "pire manquant pour un (rôle, modèle)"
+-
+-    def __init__(self, espece, modele):
+-        super().__init__(f"arrêt n° {self.numero}, {self.nom} : espèce « {espece} », modèle « {modele} »")
+-
+-
+-class ArretGardeCoffreV4(ArretNommeV4):
+-    """N° 5 : strictement plus d'un quart des fiches rendues d'une génération au coffre, servies par repli comprises."""
+-
+-    numero = NUMERO_ARRET_COFFRE
+-    nom = "garde du coffre"
+-
+-    def __init__(self, generation, au_coffre, rendues, dont_repli):
+-        super().__init__(f"arrêt n° {self.numero}, {self.nom} : génération {generation}, {au_coffre} au coffre sur "
+-                         f"{rendues} fiches rendues (dont {dont_repli} servies par repli) ; la génération suivante ne part pas")
+-        self.generation, self.au_coffre, self.rendues, self.dont_repli = generation, au_coffre, rendues, dont_repli
+-
+-
+-class ArretCodeChargeNA(ArretNommeV4):
+-    """N° 33 : module chargé hors table, ou d'une autre empreinte, ou sans source lisible ; départ ou génération refusé."""
+-
+-    numero = NUMERO_ARRET_CODE_CHARGE
+-    nom = "code chargé hors table ou d'une autre empreinte"
+-
+-    def __init__(self, moment, module, cause):
+-        super().__init__(f"arrêt n° {self.numero}, {self.nom} ({moment}) : module « {module} » ; {cause}")
+-        self.moment, self.module, self.cause = moment, module, cause
+-
+-
+-# --- montants ------------------------------------------------------------------------------------------------------------
+-
+-def montant(x):
+-    """Un coût en dollars, décimal exact, positif ou nul ; refuse booléen, NaN, infini, négatif, texte non décimal."""
+-    if isinstance(x, bool) or x is None:
+-        raise DefautLot6V4("coût : un nombre positif ou nul")
+-    try:
+-        d = x if isinstance(x, decimal.Decimal) else decimal.Decimal(str(x))
+-    except (decimal.InvalidOperation, ValueError, TypeError):
+-        raise DefautLot6V4("coût : un nombre décimal") from None
+-    if not d.is_finite() or d < 0:
+-        raise DefautLot6V4("coût : un nombre fini, positif ou nul")
++from pole import appel_garde_na_v3 as ag
++from pole import code_charge_na_v1 as cc
++from pole import configuration_course_na_v1 as cfn
++from pole import course_na_v3 as cn
++from pole import identifiants_na_v1 as ident
++from pole import journal_na_v3 as jn
++from pole import portier_na_v1 as pt
++from pole import portier_na_v3 as pt3
++from pole import registre_na_v3 as rg3
++from pole import registre_na_v4 as rg4
++from pole import requete_na_v3 as rq
++from pole import routage_na_v1 as rt
++from pole import tirage_na_v4 as tn
++from pole import verifier_registre_servi_na_v3 as vr3
++from pole.budget_course_v68 import GardeBudgetCourseV68
++from pole.budget_v53 import NON_MESUREE
++from pole.course2_v68 import GenerationV68
++from pole.juges_croises_v53 import lire_verdict
++from pole.noyau_v54 import NoeudArret
++from pole.noyau_v56 import ArretParSignal, ArretSurSignal, motif_arret
++from pole.outils import ecrire_json_scelle
++
++VERSION = "course-na-v5"
++NOM_JOURNAL_ARRETS = "journal-arrets-et-generations-na-v5.jsonl"
++NOM_BILAN = "bilan-course-na-v5.json"
++ROLE_KIT_PROPOSEUR, ROLE_KIT_JUGE = cn.ROLE_KIT_PROPOSEUR, cn.ROLE_KIT_JUGE
++LOT_JUGES = cn.LOT_JUGES
++CODE_CHARGE_NON_DEMANDE = "contrôle du code chargé non demandé à la course (dit, non tu)"
++
++# Issues d'un appel de proposeur (lot 6), v5 : celles du v3, et les deux neuves du lot 4 v3.
++ISSUE_SERVI_PAR_REPLI = "texte rendu par repli, au portier"
++ISSUE_ARRET_1_APRES_REPLI = "arrêt n° 1, consigné après trois refus"
++ISSUE_ARRET_1_SANS_REPLI = cn.ISSUE_ARRET_1
++# Raisons d'arrêt écrites au registre quand l'adaptateur ne les rend pas (déclarées au rapport).
++RAISON_HORS_DIRECT_SERVIE = "non rendue par l'adaptateur (réponse servie, hors adaptateur direct)"
++RAISON_REFUS_SANS_REPLI = "refus de classifieur, sans repli (commande externe ou protocole)"
++CATEGORIE_NON_LUE = "catégorie non lue"
++
++
++class DefautLot6V5(cn.DefautLot6):
++    """Un défaut de programme du lot 6 v5 : arrêt, motif dit."""
++
++
++class ArretCodeChargeCourseNA(cn.ArretCourseNA):
++    """N° 33 (proposé) : module chargé hors table ou d'une autre empreinte (C-1), au départ ou à une génération."""
++
++    numero = cc.NUMERO_ARRET
++
++    def __init__(self, moment, cause):
++        super().__init__(f"arrêt n° {self.numero} (proposé), code chargé : {moment} ; {cause}")
++        self.moment, self.cause = moment, cause
++
++
++ARRETS_CONNUS_V5 = (
++    (ArretCodeChargeCourseNA, cc.NUMERO_ARRET, "code chargé hors table ou d'une autre empreinte (proposé)"),
++    (cc.ArretCodeChargeNA, cc.NUMERO_ARRET, "code chargé hors table ou d'une autre empreinte (proposé)"),
++    (vr3.RegistreServiNonConformeV3, None, "registre servi non conforme (n° 8, 9 ou 19)"),
++    (rg4.RegistreRefuse, None, "registre des tentatives : ligne ou chaîne refusée"),
++    (ag.ArretMotifNA, 16, "motif interdit dans un texte à servir"),
++    (ag.ArretCreditNA, 13, "refus pour crédit"),
++    (ag.ArretClassifieurNA, 1, "refus d'un classifieur de sûreté"),
++    (ag.ArretA2NA, ag.NUMERO_ARRET_A2, "n° 31 (proposé) : modèle servi absent ou différent du modèle demandé"),
++    (ag.PireManquantNA, ag.NUMERO_ARRET_PIRE, "n° 34 (proposé) : pire manquant pour un (rôle, modèle)"),
++    (ag.ArretRequeteJournaliseeNA, None, "requête journalisée"),
++    (pt3.PortierRefuse, None, "portier : issue d'appel sans la marque `par_repli`"),
++) + tuple(e for e in cn.ARRETS_CONNUS if e[0] not in (cn.ag.ArretMotifNA, cn.ag.ArretCreditNA, cn.ag.ArretClassifieurNA,
++                                                       cn.ag.ArretA2NA, cn.ag.ArretRequeteJournaliseeNA))
++
++
++def decrire_arret(e):
++    for classe, numero, nom in ARRETS_CONNUS_V5:
++        if isinstance(e, classe):
++            break
++    else:
++        numero, nom = None, "arrêt non nommé (défaut ou exception de base)"
++    d = cn.decrire_arret(e)
++    d.update(numero=numero, nom=nom)
+     return d
+ 
+ 
+-def texte_montant(d):
+-    return format(montant(d), "f")
++class JournalArretsGenerationsNAV5(cn.JournalArretsGenerationsNA):
++    VERSION = "journal-arrets-et-generations-na-v5"
+ 
+ 
+-# --- configuration des replis (champ distinct de `a11_modeles`, P16) ---------------------------------------------------
++# --- les replis, lus dans la configuration ----------------------------------------------------------------------------
+ 
+ @dataclasses.dataclass(frozen=True)
+-class ConfigurationReplisNA:
+-    """Ce que la course lit de la configuration pour les replis : le modèle de chaque espèce (identifiant par rôle), les
+-    deux modèles de repli (premier, second), les espèces sur clé Claude (seules à avoir un repli), l'identifiant lu dans la
+-    réponse attendu pour chaque identifiant par rôle, le pire de chaque (espèce, modèle) et l'étiquette de rôle de chaque
+-    espèce proposeuse. `a11_modeles` reste vide et n'est pas lu ici."""
+-
+-    modele_du_role: dict
+-    modeles_de_repli: tuple
+-    especes_avec_repli: frozenset
+-    modele_reel: dict
+-    pires: dict
+-    role_de_l_espece: dict
+-
+-    def __post_init__(self):
+-        if not isinstance(self.modele_du_role, dict) or set(self.modele_du_role) != set(ESPECES):
+-            raise DefautLot6V4("modèle du rôle : une entrée par espèce de la liste fermée")
+-        if not isinstance(self.modeles_de_repli, tuple) or len(self.modeles_de_repli) != 2 \
+-                or self.modeles_de_repli[0] == self.modeles_de_repli[1]:
+-            raise DefautLot6V4("modèles de repli : deux, distincts (premier, second)")
+-        ids = set(self.modele_du_role.values()) | set(self.modeles_de_repli)
+-        for m in ids:
+-            if type(m) is not str or not _IDENTIFIANT_ROLE.match(m):
+-                raise DefautLot6V4("identifiant par rôle : minuscules, chiffres et traits")
+-        if set(self.modeles_de_repli) & set(self.modele_du_role.values()):
+-            raise DefautLot6V4("un modèle de repli n'est le modèle d'aucune espèce")
+-        if not isinstance(self.especes_avec_repli, frozenset) or not self.especes_avec_repli <= set(ESPECES):
+-            raise DefautLot6V4("espèces avec repli : une partie de la liste fermée")
+-        if not isinstance(self.modele_reel, dict) or set(self.modele_reel) != ids \
+-                or any(type(v) is not str or not v for v in self.modele_reel.values()):
+-            raise DefautLot6V4("identifiant attendu dans la réponse : un par identifiant par rôle")
+-        if not isinstance(self.role_de_l_espece, dict) or set(self.role_de_l_espece) != set(ESPECES_PROPOSEUSES) \
+-                or len(set(self.role_de_l_espece.values())) != len(ESPECES_PROPOSEUSES):
+-            raise DefautLot6V4("étiquette de rôle : une, distincte, par espèce proposeuse")
+-        if not isinstance(self.pires, dict):
+-            raise DefautLot6V4("pires : un dictionnaire (espèce, modèle) -> dollars")
+-
+-    def suite(self, espece):
+-        """La suite fermée des modèles demandés d'une chaîne de l'espèce."""
+-        if espece in self.especes_avec_repli:
+-            return (self.modele_du_role[espece],) + self.modeles_de_repli
+-        return (self.modele_du_role[espece],)
+-
+-    def verifier_pires(self):
+-        """N° 34 : chaque (espèce, modèle) de chaque suite a son pire ; rend le nombre de couples vérifiés."""
+-        n = 0
+-        for e in ESPECES:
+-            for m in self.suite(e):
+-                if (e, m) not in self.pires:
+-                    raise ArretPireManquantNA(e, m)
+-                montant(self.pires[(e, m)])
+-                n += 1
+-        return n
+-
+-
+-# --- une tentative, une chaîne -------------------------------------------------------------------------------------------
+-
+-@dataclasses.dataclass(frozen=True)
+-class TentativeNA:
+-    rang_repli: int
+-    modele_demande: str
+-    modele_servi: str  # lu dans la réponse ; `SANS_REPONSE` pour une tentative en erreur
+-    raison_arret: object  # chaîne, ou None si aucune réponse
+-    categorie_refus: object  # chaîne ou None, jamais devinée
+-    cout_compte_usd: decimal.Decimal
+-
+-    @property
+-    def refusee(self):
+-        return self.raison_arret == RAISON_REFUS
+-
+-    @property
+-    def en_erreur(self):
+-        return self.raison_arret is None
+-
+-    @property
+-    def servie(self):
+-        return not self.refusee and not self.en_erreur
+-
+-
+-def tentatives_de_l_appel(a, espece, config):
+-    """Lit et vérifie la chaîne qu'un appel rend (`a["tentatives_na"]`, une liste de dictionnaires : `rang_repli`,
+-    `modele_demande`, `modele_servi`, `raison_arret`, `categorie_refus`, `cout_compte_usd`, `usage_manquant`). Forme
+-    attendue du lot 4 v2, déclarée au rapport. Rien n'est réparé : une chaîne hors forme est refusée, jamais lue à moitié."""
+-    if espece not in ESPECES:
+-        raise DefautLot6V4("espèce hors de la liste fermée")
+-    if not isinstance(a, dict) or "tentatives_na" not in a:
+-        raise DefautLot6V4("l'appel ne rend pas ses tentatives (`tentatives_na`) : aucune lecture sans elles")
+-    brutes = a["tentatives_na"]
+-    if not isinstance(brutes, list) or not 1 <= len(brutes) <= len(RANGS):
+-        raise DefautLot6V4("une chaîne compte une à trois tentatives")
+-    suite = config.suite(espece)
+-    if len(brutes) > len(suite):
+-        raise ArretRepliNonPermisNA(espece, len(brutes) - 1, "repli sur une espèce sans repli (clé hors Claude)")
++class ReplisNA:
++    modeles_par_role: dict
++    modeles_repli: tuple
++    pires_repli: dict
++
++
++def lire_replis(config, table):
++    """Le champ `replis` de la configuration (champ distinct de `a11_modeles`, P16) : `modeles_repli` (deux, dans l'ordre
++    de GO-35), `pires_repli_usd` ({rôle d'une clé Claude : {modèle de repli : USD}}). Le modèle de chaque rôle d'une clé
++    Claude est lu dans la configuration du noyau (proposeurs, aiguilleur, juges). Rien n'a de défaut."""
++    r = config.objet.get("replis")
++    if not isinstance(r, dict) or sorted(r) != ["modeles_repli", "pires_repli_usd"]:
++        raise cfn.ConfigurationCourseRefusee("replis : exactement `modeles_repli` et `pires_repli_usd` (aucun défaut)")
++    if config.gardes.get("a11_modeles") != []:
++        raise cfn.ConfigurationCourseRefusee("A11 reste vide : les modèles de repli vivent dans `replis`")
++    noyau = config.noyau
++    modele_de = {p["etiquette"]: p["modele"] for p in noyau["proposeurs"]}
++    modele_de.update({j["etiquette"]: j["modele"] for j in noyau["juges"]})
++    modele_de[noyau["aiguilleur"]["etiquette"]] = noyau["aiguilleur"]["modele"]
++    claude = [ro for ro, e in table.roles.items() if e.cle != rt.CLE_HORS_COURSE and table.cles[e.cle].type == ag.TYPE_CLE_CLAUDE]
++    if any(ro not in modele_de for ro in claude):
++        raise cfn.ConfigurationCourseRefusee("replis : un rôle d'une clé Claude sans modèle dans la configuration du noyau")
++    return ReplisNA({ro: modele_de[ro] for ro in claude}, tuple(r["modeles_repli"]),
++                    {ro: dict(v) for ro, v in r["pires_repli_usd"].items()})
++
++
++def modeles_demandes(replis, config):
++    """La liste fermée des modèles demandés d'une génération (registre v4) : ceux de la configuration et les deux de repli."""
++    noyau = config.noyau
++    ms = [p["modele"] for p in noyau["proposeurs"]] + [j["modele"] for j in noyau["juges"]] + [noyau["aiguilleur"]["modele"]]
++    vus = []
++    for m in ms + list(replis.modeles_repli):
++        if m not in vus:
++            vus.append(m)
++    return tuple(vus)
++
++
++# --- d'une suite de tentatives du lot 4 v3 à une chaîne du registre ----------------------------------------------------
++
++def espece_de(table, role):
++    e = table.entree(role)
++    if e is None or type(e.espece) is not int or e.sorte != "proposeur":
++        raise DefautLot6V5("une chaîne au registre est celle d'un proposeur de la table")
++    return f"espece-{e.espece}"
++
++
++def chaine_au_registre(tents, *, espece, case, classe_servie=None):
++    """Les tentatives (lignes de `na_replis`, avec `raison_arret` relevée par `_consigner_tentative_na`) en dictionnaires
++    du registre v3/v4. Rend None si rien n'est un appel (non lancé au rang 0). Les classes suivent l'erratum 2 :
++    servie : refus précédents « servi par repli », la dernière la classe de sa réponse ; sans réponse : toutes « réponse
++    illisible » ; trois refus : toutes « refus du modèle »."""
++    if not tents:
++        return None
+     rendu = []
+-    for i, t in enumerate(brutes):
+-        if not isinstance(t, dict) or t.get("rang_repli") != i or type(t.get("rang_repli")) is not int:
+-            raise DefautLot6V4("rangs de repli : 0, 1, 2, dans l'ordre")
+-        demande = t.get("modele_demande")
+-        if demande != suite[i]:
+-            raise ArretRepliNonPermisNA(espece, i, "modèle demandé hors de la suite fermée de l'espèce")
+-        raison = t.get("raison_arret")
+-        if raison is not None and (type(raison) is not str or not raison):
+-            raise DefautLot6V4("raison d'arrêt : une chaîne lue, ou absente si aucune réponse")
+-        categorie = t.get("categorie_refus")
+-        if categorie is not None and (type(categorie) is not str or not categorie):
+-            raise DefautLot6V4("catégorie : une chaîne lue, ou nulle")
+-        if categorie is not None and raison != RAISON_REFUS:
+-            raise DefautLot6V4("une catégorie n'accompagne qu'un refus par classifieur")
+-        servi = t.get("modele_servi")
+-        if raison is None:
+-            if servi is not None:
+-                raise DefautLot6V4("une tentative sans réponse n'a pas de modèle servi")
+-            servi = SANS_REPONSE
++    for t in tents:
++        issue = t["issue"]
++        if issue == "non lancé" and t["rang_tentative"] == 1:
++            return None
++        sans_reponse = issue in ("non lancé", ag.ISSUE_ERREUR) or (issue == ag.ISSUE_ILLISIBLE and t.get("raison_arret") is None)
++        if sans_reponse:
++            raison, servi = rg3.RAISON_SANS_REPONSE, None
++        elif issue == "refus de classifieur":
++            raison, servi = rg3.RAISON_REFUS, t["modele_servi"]
++        elif issue == ag.ISSUE_ARRET_1:
++            raison, servi = RAISON_REFUS_SANS_REPLI, t["modele_servi"] or None
++        else:
++            raison, servi = t.get("raison_arret") or RAISON_HORS_DIRECT_SERVIE, t["modele_servi"]
++        cat = t.get("categorie")
++        cat = None if cat in (None, CATEGORIE_NON_LUE) or raison != rg3.RAISON_REFUS else cat
++        rendu.append({"espece": espece, "case": case, "rang_repli": t["rang_tentative"] - 1,
++                      "modele_demande": t["modele_demande"], "modele_servi": servi, "raison_arret": raison,
++                      "categorie_refus": cat, "cout_compte_usd": t["cout_micro"] / 1_000_000, "classe_issue": None})
++    der = rendu[-1]
++    if der["raison_arret"] == rg3.RAISON_REFUS:
++        for t in rendu:
++            t["classe_issue"] = rg3.CLASSE_TROIS_REFUS
++    elif der["raison_arret"] == rg3.RAISON_SANS_REPONSE:
++        for t in rendu:
++            t["classe_issue"] = rg3.CLASSE_SANS_REPONSE
++    else:
++        for t in rendu[:-1]:
++            t["classe_issue"] = rg3.REFUS_SERVI_PAR_REPLI
++        if der["raison_arret"] == RAISON_REFUS_SANS_REPLI:
++            der["classe_issue"] = rg3.CLASSE_TROIS_REFUS
+         else:
+-            if type(servi) is not str or not servi:
+-                raise ArretModeleServiNA(espece, i, "modèle servi absent")
+-            if servi != config.modele_reel[demande]:
+-                raise ArretModeleServiNA(espece, i, "modèle servi différent du modèle demandé de la tentative")
+-        if "cout_compte_usd" not in t or type(t.get("usage_manquant")) is not bool:
+-            raise DefautLot6V4("coût compté et drapeau d'usage manquant : dits")
+-        cout = montant(t["cout_compte_usd"])
+-        if t["usage_manquant"]:
+-            if (espece, demande) not in config.pires:
+-                raise ArretPireManquantNA(espece, demande)
+-            if cout != montant(config.pires[(espece, demande)]):
+-                raise DefautLot6V4("usage manquant : le coût compté est le pire de la tentative, jamais moins")
+-        rendu.append(TentativeNA(i, demande, servi, raison, categorie, cout))
+-    for t in rendu[:-1]:
+-        if not t.refusee:
+-            raise ArretRepliNonPermisNA(espece, t.rang_repli + 1, "repli après une tentative qui n'est pas refusée")
+-    return tuple(rendu)
+-
+-
+-def classe_de_la_chaine(tentatives, classe_servie, proposeur):
+-    """La classe de la chaîne à l'espèce demandée (P12), et son sous-compte de M6 ou None."""
+-    der = tentatives[-1]
+-    if der.servie:
+-        if der.rang_repli > 0:
+-            return SERVI_PAR_REPLI, None
+-        return (classe_servie if proposeur else CLASSE_HORS_M6), None
+-    if der.en_erreur:
+-        return ILLISIBLE, (SOUS_COMPTE_EN_REPLI if der.rang_repli > 0 else None)
+-    return CLASSE_ARRET_1, None
+-
+-
+-def classe_de_la_tentative(tentatives, i, classe_servie, proposeur):
+-    """La classe écrite à la ligne de la tentative de rang `i` (voir l'en-tête)."""
+-    if i == 0:
+-        return classe_de_la_chaine(tentatives, classe_servie, proposeur)[0]
+-    t, der = tentatives[i], tentatives[-1]
+-    if t.servie:
+-        return classe_servie if proposeur else CLASSE_HORS_M6
+-    if t.en_erreur:
+-        return ILLISIBLE
+-    if der.servie:
+-        return SERVI_PAR_REPLI
+-    if der.en_erreur:
+-        return ILLISIBLE
+-    return CLASSE_ARRET_1
+-
+-
+-# --- l'alimentation du registre ------------------------------------------------------------------------------------------
+-
+-def _filiation(f):
+-    v = f.get("filiation")
+-    if v is None or v == "aucune":
++            if classe_servie not in pt.CLASSES_APPEL:
++                raise DefautLot6V5("chaîne servie : la classe de sa réponse (portier, ou programme) est dite")
++            der["classe_issue"] = classe_servie
++    return rendu
++
++
++@dataclasses.dataclass
++class ReponseGardeeV5:
++    texte: str
++    case: rq.CaseServie
++    role: str
++    identifiant: str
++    jetons_fiche: dict
++    tentatives: list
++    par_repli: bool
++
++
++# --- la génération -------------------------------------------------------------------------------------------------------
++
++class GenerationNAV5(ag.AppelGardeNA, GenerationV68):
++    """La génération du régime : le mélange du lot 4 v3 devant `GenerationV68`."""
++
++    fournisseurs_requis = staticmethod(cn.GenerationNA.fournisseurs_requis)
++
++    def __init__(self, conf, sortie, adaptateurs, *, contexte_na, course_na, numero, modeles_demandes, **kw):
++        if not isinstance(course_na, cn.ContexteGenerationNA):
++            raise DefautLot6V5("la génération du véhicule exige le contexte de la course (`ContexteGenerationNA`)")
++        if kw.get("heritage_selection") is not None or kw.get("heritage_texte") is not None:
++            raise DefautLot6V5("aucun héritage de la v68 : le registre est servi par la proposition neuve")
++        kw["heritage_selection"] = None
++        cn.refuser_cablage(course_na.etat_colonne, getattr(contexte_na, "journal", None),
++                           f"construction de la génération {numero}")
++        self.course_na = course_na
++        super().__init__(conf, sortie, adaptateurs, contexte_na=contexte_na, numero=numero, **kw)
++        if self.na.numero_generation != numero:
++            raise DefautLot6V5("le contexte d'appel n'est pas celui de cette génération")
++        self.portier = pt3.PortierNAV3(consigne=course_na.consigne_portier, declaration=course_na.declaration,
++                                       bornes=course_na.bornes, appeler=self._appeler_portier, dossier_sortie=sortie,
++                                       nom_journal=f"journal-portier-g{numero}.jsonl", generation=numero)
++        self.registre_na = rg4.RegistreTentativesV4(sortie, f"registre-tentatives-g{numero}-na-v4.jsonl", generation=numero,
++                                                    cases_servies=[c.identifiant for c in course_na.cases],
++                                                    modeles_demandes=modeles_demandes)
++        self.modeles_demandes_na = tuple(modeles_demandes)
++        self.reponses_na, self.issues_reponses_na, self.passees_na = [], [], []
++        self.jetons_noyau_na = {}
++        self._etat_aiguillage = None
++        self._appels_portier = 0
++        self.comptes_lot6 = {
++            "appels_proposeur": {}, "issues_proposeur": {}, "cases_non_jouees": {}, "refus_ecrits_proposeur": {},
++            "verdicts_absents": {}, "appels_juge": {}, "fiches_jugees": 0, "registre_servi_recu_par": 0,
++            "chaines_au_registre": 0, "verdicts_juges_par_repli": {},
++        }
++
++    # --- le lot 4 v3 : la raison d'arrêt de chaque tentative est relevée (crochet du mélange) ------------------------
++
++    def _consigner_tentative_na(self, tentatives, *, r=None, **kw):
++        ligne = super()._consigner_tentative_na(tentatives, r=r, **kw)
++        t = getattr(r, "tentative", None) if r is not None else None
++        ligne["raison_arret"] = t.get("raison_arret") if isinstance(t, dict) else None
++        return ligne
++
++    etape_passe_tableau = cn.GenerationNA.etape_passe_tableau
++    etape_fusions = cn.GenerationNA.etape_fusions
++    _espece = cn.GenerationNA._espece
++    _jeton_fiche = cn.GenerationNA._jeton_fiche
++    _identifiant_fiche = cn.GenerationNA._identifiant_fiche
++    identifiant_servi_juge = cn.GenerationNA.identifiant_servi_juge
++    etape_juges = cn.GenerationNA.etape_juges
++    lot_mesure = cn.GenerationNA.lot_mesure
++    sceller_na = cn.GenerationNA.sceller_na
++
++    # --- la proposition ---------------------------------------------------------------------------------------------
++
++    def _proposer(self, etat, passe, supplement_par_case=None):
++        if passe != 1 or supplement_par_case is not None:
++            raise cn.EtapeNeutraliseeJouee("arrêt « étape neutralisée jouée » : seule la proposition (passe 1) est jouée")
++        for case in self.course_na.cases:
++            for p in self.conf["proposeurs"]:
++                role = p["etiquette"]
++                requete = self.course_na.requetes[(case.identifiant, role)]
++                if requete.registre == rq.REGISTRE_SERVI:
++                    self.comptes_lot6["registre_servi_recu_par"] += 1
++                cn._plus(self.comptes_lot6["appels_proposeur"], role)
++                debut = len(self.na_replis)
++                a = self.appel(etat, role=role, role_kit=ROLE_KIT_PROPOSEUR, fournisseur=p["fournisseur"], modele=p["modele"],
++                               consigne=requete, plafond_role="proposeur", session=("proposition", case.identifiant, role),
++                               lire=cn._lire_texte)
++                self._classer_retour_proposeur(a, case, role, [dict(t) for t in self.na_replis[debut:]])
++        return []
++
++    def _issue(self, role, issue):
++        cn._plus(self.comptes_lot6["issues_proposeur"].setdefault(role, {}), issue)
++
++    def _ecrire_chaine(self, tents, case, role, classe_servie=None, fiches=()):
++        ch = chaine_au_registre(tents, espece=espece_de(self.course_na.table, role), case=case.identifiant,
++                                classe_servie=classe_servie)
++        if ch is None:
++            return None
++        self.registre_na.ajouter_chaine(ch, fiches)
++        self.comptes_lot6["chaines_au_registre"] += 1
++        return ch
++
++    def _classer_retour_proposeur(self, a, case, role, tents):
++        if a is None:
++            self._issue(role, cn.ISSUE_NON_LANCE)
++            return self._ecrire_chaine(tents, case, role)
++        if "refus_ecrit" in a:
++            self._issue(role, cn.ISSUE_REFUS_ECRIT)
++            cn._plus(self.comptes_lot6["cases_non_jouees"], str(self._espece(role)))
++            cn._plus(self.comptes_lot6["refus_ecrits_proposeur"], role)
++            n = self.comptes_lot6["refus_ecrits_proposeur"][role]
++            if n >= self.course_na.seuil_refus_ecrits:
++                raise cn.ArretRemplacementRefusEcritsNA(role, n, self.numero)
++            return None
++        issue = a.get("issue_na")
++        if issue == ag.ISSUE_ARRET_1_APRES_REPLI:
++            self._issue(role, ISSUE_ARRET_1_APRES_REPLI)
++            return self._ecrire_chaine(tents, case, role)
++        if issue == ag.ISSUE_ARRET_1:
++            self._issue(role, ISSUE_ARRET_1_SANS_REPLI)
++            return self._ecrire_chaine(tents, case, role)
++        if issue == ag.ISSUE_ILLISIBLE:
++            self._issue(role, cn.ISSUE_ILLISIBLE_CAUSE)
++            return self._ecrire_chaine(tents, case, role, classe_servie=pt.ILLISIBLE)
++        if issue == ag.ISSUE_ERREUR:
++            self._issue(role, cn.ISSUE_ILLISIBLE_ERREUR)
++            return self._ecrire_chaine(tents, case, role, classe_servie=pt.ILLISIBLE)
++        if issue not in (ag.ISSUE_OK, ag.ISSUE_SERVI_PAR_REPLI):
++            raise DefautLot6V5("issue d'appel inconnue du mélange du lot 4 v3")
++        par_repli = a.get("par_repli")
++        if type(par_repli) is not bool or par_repli != (issue == ag.ISSUE_SERVI_PAR_REPLI):
++            raise DefautLot6V5("issue servie sans la marque `par_repli` cohérente")
++        texte = a.get("lu")
++        if texte is None:  # servie, non lue (coupée, ou délai d'A3) : « réponse illisible » par programme
++            self._issue(role, cn.ISSUE_ILLISIBLE_NON_LUE)
++            return self._ecrire_chaine(tents, case, role, classe_servie=pt.ILLISIBLE)
++        if type(texte) is not str:
++            raise DefautLot6V5("la lecture d'un proposeur rend le texte tel quel")
++        self._issue(role, ISSUE_SERVI_PAR_REPLI if par_repli else cn.ISSUE_TEXTE_RENDU)
++        jeton_rep = "r" + self.graines.jeton_opaque(self.tache("ident-reponse", 1, case.identifiant, role), 6)
++        self.reponses_na.append(ReponseGardeeV5(texte, case, role, ident.reencoder_jeton_noyau(jeton_rep, "r", 6), {},
++                                                tents, par_repli))
+         return None
+-    if type(v) is not str or not v:
+-        raise DefautLot6V4("filiation : un identifiant de fiche, « aucune » ou nulle")
+-    return v
+-
+-
+-class AlimentationRegistreNA:
+-    """Écrit au registre des tentatives, par l'interface `ajouter(champs)`, une ligne par tentative et une ligne par fiche
+-    rendue. `champs_fermes` : les trois champs fermés du contrat de fiche (lot 5), lus dans la configuration."""
+-
+-    def __init__(self, registre, config, champs_fermes):
+-        if not callable(getattr(registre, "ajouter", None)):
+-            raise DefautLot6V4("le registre offre `ajouter(champs)` (interface du lot 5 v2)")
+-        if not isinstance(config, ConfigurationReplisNA):
+-            raise DefautLot6V4("la configuration des replis est une `ConfigurationReplisNA`")
+-        if not isinstance(champs_fermes, tuple) or len(champs_fermes) != 3:
+-            raise DefautLot6V4("trois champs fermés")
+-        self.registre, self.config, self.champs_fermes = registre, config, champs_fermes
+-        self.chaines = 0
+-
+-    def consigner_chaine(self, *, identifiant_chaine, generation, espece, case, a, classe_servie=None, fiches=()):
+-        """Une chaîne d'appel, une fois sa classe connue (le portier a classé la réponse servie d'un proposeur). Rend les
+-        tentatives lues. Toutes les vérifications ont lieu avant la première écriture."""
+-        if type(generation) is not int or generation < 1:
+-            raise DefautLot6V4("génération : un entier, 1, 2, 3…")
+-        if type(identifiant_chaine) is not str or not identifiant_chaine:
+-            raise DefautLot6V4("identifiant de chaîne : une chaîne")
+-        tentatives = tentatives_de_l_appel(a, espece, self.config)
+-        if espece == ESPECE_SANS_CASE:
+-            if case is not None:
+-                raise DefautLot6V4("la passe X n'a pas de case")
+-        elif type(case) is not str or not case:
+-            raise DefautLot6V4("une requête de l'espèce a sa case servie")
+-        proposeur = espece in ESPECES_PROPOSEUSES
+-        servie = tentatives[-1].servie
+-        if proposeur and servie:
+-            if classe_servie not in CLASSES_V9:
+-                raise DefautLot6V4("classe de la réponse servie : une des quatre de la V9, rendue par le portier")
+-        elif classe_servie is not None:
+-            raise DefautLot6V4("classe servie dite pour une chaîne sans réponse servie, ou pour un rôle non proposeur")
+-        fiches = list(fiches)
+-        if (classe_servie == FICHES_RENDUES) != bool(fiches):
+-            raise DefautLot6V4("des fiches si et seulement si la classe est « fiches rendues »")
+-        lignes_fiche = []
+-        t_servie = tentatives[-1]
+-        for f in fiches:
+-            if not isinstance(f, dict) or f.get("classe") not in CLASSES_FICHE or type(f.get("identifiant")) is not str:
+-                raise DefautLot6V4("fiche : identifiant et classe du portier")
+-            ligne = self._champs_tentative(generation, espece, case, t_servie, FICHES_RENDUES, cout_zero=True)
+-            ligne.update(identifiant=f["identifiant"], classe=f["classe"], filiation=_filiation(f))
+-            if f["classe"] == PASSEE:
+-                fermes = f.get("fermes")
+-                if not isinstance(fermes, dict) or set(fermes) != set(self.champs_fermes) \
+-                        or any(type(v) is not str for v in fermes.values()) or type(f.get("idee")) is not str:
+-                    raise DefautLot6V4("fiche passée : trois champs fermés et une idée")
+-                ligne.update(fermes)
+-                ligne.update(nom=f["identifiant"], enonce=" ".join(f["idee"].split()))
+-            lignes_fiche.append(ligne)
+-        lignes = []
+-        for i, t in enumerate(tentatives):
+-            ligne = self._champs_tentative(generation, espece, case, t,
+-                                           classe_de_la_tentative(tentatives, i, classe_servie, proposeur))
+-            ligne.update(identifiant=f"{identifiant_chaine}.t{i}", classe=None, filiation=None)
+-            lignes.append(ligne)
+-        for ligne in lignes + lignes_fiche:
+-            self.registre.ajouter(ligne)
+-        self.chaines += 1
+-        return tentatives
+-
+-    @staticmethod
+-    def _champs_tentative(generation, espece, case, t, classe_issue, cout_zero=False):
+-        return {"generation": generation, "espece": espece, "case": case, "rang_repli": t.rang_repli,
+-                "modele_demande": t.modele_demande, "modele_servi": t.modele_servi, "raison_arret": t.raison_arret,
+-                "categorie_refus": t.categorie_refus,
+-                "cout_compte_usd": "0" if cout_zero else texte_montant(t.cout_compte_usd), "classe_issue": classe_issue}
+-
+-
+-# --- lecture des lignes --------------------------------------------------------------------------------------------------
+-
+-def _verifier_ligne(l):
+-    if not isinstance(l, dict):
+-        raise DefautLot6V4("ligne du registre : un dictionnaire")
+-    for k in CHAMPS_INTERFACE:
+-        if k not in l:
+-            raise DefautLot6V4("ligne du registre sans un champ de l'interface")
+-    if l["espece"] not in ESPECES or l["rang_repli"] not in RANGS or type(l["rang_repli"]) is not int:
+-        raise DefautLot6V4("espèce ou rang hors de la liste fermée")
+-    if l["classe_issue"] not in CLASSES_ECRITES:
+-        raise DefautLot6V4("classe d'issue hors de la liste")
+-    if l.get("classe") is not None and l["classe"] not in CLASSES_FICHE:
+-        raise DefautLot6V4("classe de fiche hors de la liste")
+-    montant(l["cout_compte_usd"])
+ 
++    # --- l'aiguillage : le portier v3 -------------------------------------------------------------------------------
+ 
+-def lignes_tentatives(lignes):
+-    return [l for l in lignes if l.get("classe") is None]
++    _appeler_portier = cn.GenerationNA._appeler_portier
+ 
++    def etape_aiguillage(self, etat):
++        self._etat_aiguillage = etat
++        try:
++            for rep in self.reponses_na:
++                issue = self.portier.traiter_reponse(rep.texte, case=rep.case, identifiant_reponse=rep.identifiant,
++                                                     identifiant_fiche=self._identifiant_fiche(rep))
++                self.issues_reponses_na.append((rep.role, issue))
++                self._ecrire_chaine(rep.tentatives, rep.case, rep.role, classe_servie=issue.classe_appel,
++                                    fiches=issue.fiches)
++                for f in issue.fiches:
++                    if f.classe == pt.PASSEE:
++                        self.passees_na.append(f)
++                        fournisseur = next(p["fournisseur"] for p in self.conf["proposeurs"] if p["etiquette"] == rep.role)
++                        self.fiches[f.identifiant] = {"ident": f.identifiant, "contenu": f.contenu, "empreinte": f.empreinte,
++                                                      "meta": {"case": f.identifiant_case, "proposeur": rep.role,
++                                                               "fournisseur": fournisseur, "origine": "proposition",
++                                                               "passe": 1, "par_repli": rep.par_repli}}
++                        self.ordre.append(f.identifiant)
++        finally:
++            self._etat_aiguillage = None
++
++    # --- `juger` : A2 non levé sur un verdict servi par repli --------------------------------------------------------
++
++    def juger(self, fiche, lot, etat):
++        if not isinstance(fiche, pt.IssueFiche):
++            raise pt.ArretSansPasseportNA("une fiche présentée à un juge sans passer par le portier neuf")
++        self.portier.exiger_passeport(fiche.identifiant, fiche.contenu)
++        self.lots_juges.add(lot)
++        verdicts, presents = {}, {}
++        self.comptes_lot6["fiches_jugees"] += 1
++        for j in self.conf["juges"]:
++            nom = j["etiquette"]
++            ident_servi, _ = self.identifiant_servi_juge(nom, fiche)
++            requete = rq.assembler_juge(self.course_na.consigne_juges, fiche.contenu, ident_servi, fiche.identifiant_case,
++                                        self.numero)
++            cn._plus(self.comptes_lot6["appels_juge"], nom)
++            a = self.appel(etat, role=nom, role_kit=ROLE_KIT_JUGE, fournisseur=j["fournisseur"], modele=j["modele"],
++                           consigne=requete, plafond_role="juge",
++                           session=("juges", fiche.identifiant_case, nom, fiche.identifiant),
++                           lire=lambda t: lire_verdict(t, self.conf["items_juge"]))
++            v = None
++            if a is None:
++                cn._plus(self.comptes_lot6["verdicts_absents"].setdefault(nom, {}), "non lancé")
++            elif "refus_ecrit" in a:
++                cn._plus(self.comptes_lot6["verdicts_absents"].setdefault(nom, {}), "refus écrit")
++            else:
++                r = a["r"]
++                servi = getattr(r, "modele_servi", None)
++                if a.get("par_repli") is True:
++                    cn._plus(self.comptes_lot6["verdicts_juges_par_repli"], nom)
++                elif getattr(r, "statut", None) == "ok" and servi:
++                    vu = self.modele_servi_juges.setdefault(f"{nom} ; {j['modele']}", servi)
++                    if vu != servi:
++                        raise ag.ArretA2NA(nom, "version servie d'un juge changée entre deux fiches, sans repli")
++                v = a.get("lu")
++                if v is None:
++                    cn._plus(self.comptes_lot6["verdicts_absents"].setdefault(nom, {}), "verdict illisible")
++            if v is None:
++                self.absents_juges[nom] = self.absents_juges.get(nom, 0) + 1
++            verdicts[nom] = v
++            presents[nom] = v is not None
++            self.cles_anonymisation.setdefault(nom, {})[ident_servi] = fiche.identifiant
++        self.coffre.deposer(f"verdicts-{lot}-{fiche.identifiant}", {"ident": fiche.identifiant, "empreinte": fiche.empreinte,
++                                                                     "verdicts": verdicts})
++        self.verdicts_presents[fiche.identifiant] = presents
++        return True
++
++    def lignes_registre(self, exiger_sceau=False):
++        return rg4.lire_registre_tentatives_v4(self.registre_na.chemin, generation=self.numero,
++                                               cases_servies=[c.identifiant for c in self.course_na.cases],
++                                               modeles_demandes=self.modeles_demandes_na, exiger_sceau=exiger_sceau)
++
++    def verifier_aucune_fiche_sans_classe(self):
++        fiches = [l for l in self.lignes_registre() if l["type_ligne"] == rg3.TYPE_FICHE]
++        if len(fiches) != self.portier.comptes()["fiches_rendues"] or any(l["classe"] not in pt.CLASSES_FICHE for l in fiches):
++            raise DefautLot6V5("une fiche rendue sans classe, ou absente du registre, à la fin de la génération")
++        return len(fiches)
+ 
+-def lignes_fiches(lignes):
+-    return [l for l in lignes if l.get("classe") is not None]
+ 
++# --- comptes du registre v4 -----------------------------------------------------------------------------------------------
+ 
+ def _plus(d, k, n=1):
+     d[k] = d.get(k, 0) + n
+ 
+ 
+-def _ajouter_cout(d, k, c):
+-    d[k] = d.get(k, decimal.Decimal(0)) + c
+-
++CLASSES_M6 = (pt.VIDE_MOTIVEE, pt.REFUS_DU_MODELE, pt.ILLISIBLE, rg3.REFUS_SERVI_PAR_REPLI)
+ 
+-# --- comptes -------------------------------------------------------------------------------------------------------------
+ 
+-def comptes_m6(lignes, config):
+-    """M6 par génération : par rôle, par espèce demandée, par case, par (case, espèce) ; sous-compte « cause non établie,
+-    en repli » ; sur les seules tentatives de rang 0 des espèces proposeuses (une chaîne, un appel, à l'espèce demandée)."""
+-    rendu = {}
+-    for l in lignes_tentatives(lignes):
+-        _verifier_ligne(l)
+-        if l["rang_repli"] != 0 or l["espece"] not in ESPECES_PROPOSEUSES or l["classe_issue"] not in CLASSES_M6:
++def comptes_registre_v4(lignes, role_de_l_espece):
++    """M6 (première tentative de chaque chaîne : sa classe à l'espèce demandée — « servi par repli » si une tentative de
++    repli est servie, P12 ; trois refus : hors de M6, arrêt n° 1), replis (rangs 1 et 2 : par espèce demandée et modèle
++    servi, nombre et coût ; servies par repli au nom du modèle servi), M3 (scellée ; « espèces seules »), M4 (rang 0 à
++    l'espèce ; ligne « replis »)."""
++    tents = [l for l in lignes if l["type_ligne"] == rg3.TYPE_TENTATIVE]
++    fiches = [l for l in lignes if l["type_ligne"] == rg3.TYPE_FICHE]
++    chaines = {}
++    for l in tents:
++        chaines.setdefault(l[rg4.CHAMP_ID][:8], []).append(l)
++    m6 = {"par_role": {}, "par_espece": {}, "par_case": {}, "par_case_et_espece": {}, "trois_refus_arret_1": {}}
++    for ch in chaines.values():
++        t0, der = ch[0], ch[-1]
++        servie = der["raison_arret"] not in (rg3.RAISON_REFUS, rg3.RAISON_SANS_REPONSE)
++        if der["raison_arret"] == rg3.RAISON_REFUS or der["raison_arret"] == RAISON_REFUS_SANS_REPLI:
++            _plus(m6["trois_refus_arret_1"], t0["espece"])
+             continue
+-        g = rendu.setdefault(str(l["generation"]), {"par_role": {}, "par_espece": {}, "par_case": {},
+-                                                     "par_case_et_espece": {}, "sous_comptes": {}})
+-        k = l["classe_issue"]
+-        _plus(g["par_role"].setdefault(config.role_de_l_espece[l["espece"]], {}), k)
+-        _plus(g["par_espece"].setdefault(l["espece"], {}), k)
+-        _plus(g["par_case"].setdefault(l["case"], {}), k)
+-        _plus(g["par_case_et_espece"].setdefault(l["case"], {}).setdefault(l["espece"], {}), k)
+-    # sous-compte : chaîne refusée au rang 0 puis en erreur
+-    for l in lignes_tentatives(lignes):
+-        if l["rang_repli"] > 0 and l["raison_arret"] is None and l["espece"] in ESPECES_PROPOSEUSES:
+-            g = rendu.setdefault(str(l["generation"]), {"par_role": {}, "par_espece": {}, "par_case": {},
+-                                                         "par_case_et_espece": {}, "sous_comptes": {}})
+-            _plus(g["sous_comptes"].setdefault(l["espece"], {}), SOUS_COMPTE_EN_REPLI)
+-    return rendu
+-
+-
+-def comptes_replis(lignes):
+-    """Replis (tentatives de rang 1 et 2, refusées, servies ou en erreur) : par génération, par espèce demandée et par
+-    modèle servi (nombre, coût), et par modèle demandé ; servies par repli, à part, au nom du modèle servi."""
+-    rendu = {}
+-    for l in lignes_tentatives(lignes):
+-        _verifier_ligne(l)
++        k = rg3.REFUS_SERVI_PAR_REPLI if servie and der["rang_repli"] > 0 else der["classe_issue"]
++        if k not in CLASSES_M6:
++            continue
++        _plus(m6["par_role"].setdefault(role_de_l_espece.get(t0["espece"], t0["espece"]), {}), k)
++        _plus(m6["par_espece"].setdefault(t0["espece"], {}), k)
++        _plus(m6["par_case"].setdefault(t0["case"], {}), k)
++        _plus(m6["par_case_et_espece"].setdefault(t0["case"], {}).setdefault(t0["espece"], {}), k)
++    replis = {"par_espece_et_modele_servi": {}, "servies_par_repli": {}}
++    for l in tents:
+         if l["rang_repli"] == 0:
+             continue
+-        g = rendu.setdefault(str(l["generation"]), {"par_espece_et_modele_servi": {}, "par_modele_demande": {},
+-                                                     "servies_par_repli": {}})
+-        c = montant(l["cout_compte_usd"])
+-        e = g["par_espece_et_modele_servi"].setdefault(l["espece"], {}).setdefault(
+-            l["modele_servi"], {"nombre": 0, "cout_usd": decimal.Decimal(0)})
++        servi = l["modele_servi"] or "aucun (sans réponse)"
++        e = replis["par_espece_et_modele_servi"].setdefault(l["espece"], {}).setdefault(servi, {"nombre": 0, "cout_usd": 0.0})
+         e["nombre"] += 1
+-        e["cout_usd"] += c
+-        d = g["par_modele_demande"].setdefault(l["modele_demande"], {"nombre": 0, "cout_usd": decimal.Decimal(0)})
+-        d["nombre"] += 1
+-        d["cout_usd"] += c
+-        if l["raison_arret"] is not None and l["raison_arret"] != RAISON_REFUS:
+-            s = g["servies_par_repli"].setdefault(l["modele_servi"], {"tentatives": {}, "fiches": {}})
++        e["cout_usd"] = round(e["cout_usd"] + l["cout_compte_usd"], 6)
++        if l["raison_arret"] not in (rg3.RAISON_REFUS, rg3.RAISON_SANS_REPONSE):
++            s = replis["servies_par_repli"].setdefault(l["modele_servi"], {"tentatives": {}, "fiches": {}})
+             _plus(s["tentatives"], l["classe_issue"])
+-    for l in lignes_fiches(lignes):
+-        _verifier_ligne(l)
+-        if l["rang_repli"] == 0:
+-            continue
+-        g = rendu.setdefault(str(l["generation"]), {"par_espece_et_modele_servi": {}, "par_modele_demande": {},
+-                                                     "servies_par_repli": {}})
+-        s = g["servies_par_repli"].setdefault(l["modele_servi"], {"tentatives": {}, "fiches": {}})
+-        _plus(s["fiches"], l["classe"])
+-    return rendu
+-
+-
+-def comptes_m3(lignes):
+-    """M3 par génération et par case : au coffre, hors case, rendues ; lecture scellée (fiches de repli comprises) et
+-    lecture « espèces seules » (sans elles) ; les fiches servies par repli à part, par modèle servi."""
+-    rendu = {}
+-    for l in lignes_fiches(lignes):
+-        _verifier_ligne(l)
+-        g = rendu.setdefault(str(l["generation"]), {"scellee": {}, "especes_seules": {}, "servies_par_repli": {}})
+-        lectures = ["scellee"] + (["especes_seules"] if l["rang_repli"] == 0 else [])
+-        for lec in lectures:
+-            c = g[lec].setdefault(l["case"], {"rendues": 0, AU_COFFRE: 0, HORS_CASE: 0})
++    for l in fiches:
++        if l["rang_repli"] > 0:
++            s = replis["servies_par_repli"].setdefault(l["modele_servi"], {"tentatives": {}, "fiches": {}})
++            _plus(s["fiches"], l["classe"])
++    m3 = {"scellee": {}, "especes_seules": {}}
++    for l in fiches:
++        for lec in ["scellee"] + (["especes_seules"] if l["rang_repli"] == 0 else []):
++            c = m3[lec].setdefault(l["case"], {"rendues": 0, pt.AU_COFFRE: 0, pt.HORS_CASE: 0})
+             c["rendues"] += 1
+-            if l["classe"] in (AU_COFFRE, HORS_CASE):
++            if l["classe"] in (pt.AU_COFFRE, pt.HORS_CASE):
+                 c[l["classe"]] += 1
+-        if l["rang_repli"] > 0:
+-            _plus(g["servies_par_repli"].setdefault(l["modele_servi"], {}), l["classe"])
+-    return rendu
+-
+-
+-def comptes_m4(lignes):
+-    """M4 par génération : coût et fiches passées par espèce, **première tentative seule** ; une ligne « replis » (coût des
+-    tentatives de rang 1 et 2, fiches passées servies par repli), par modèle demandé ; jamais rendue à l'espèce."""
+-    rendu = {}
+-    for l in lignes:
+-        _verifier_ligne(l)
+-        g = rendu.setdefault(str(l["generation"]), {"par_espece": {}, "replis": {"cout_usd": decimal.Decimal(0),
+-                                                                                  "par_modele_demande": {},
+-                                                                                  "fiches_passees": 0}})
+-        c = montant(l["cout_compte_usd"])
+-        passee = 1 if l.get("classe") == PASSEE else 0
++    m4 = {"par_espece": {}, "replis": {"cout_usd": 0.0, "par_modele_demande": {}, "fiches_passees": 0}}
++    for l in tents:
+         if l["rang_repli"] == 0:
+-            e = g["par_espece"].setdefault(l["espece"], {"cout_usd": decimal.Decimal(0), "fiches_passees": 0})
+-            e["cout_usd"] += c
+-            e["fiches_passees"] += passee
++            e = m4["par_espece"].setdefault(l["espece"], {"cout_usd": 0.0, "fiches_passees": 0})
++            e["cout_usd"] = round(e["cout_usd"] + l["cout_compte_usd"], 6)
+         else:
+-            g["replis"]["cout_usd"] += c
+-            _ajouter_cout(g["replis"]["par_modele_demande"], l["modele_demande"], c)
+-            g["replis"]["fiches_passees"] += passee
+-    return rendu
+-
+-
+-# --- garde du coffre (arrêt n° 5) ----------------------------------------------------------------------------------------
+-
+-@dataclasses.dataclass(frozen=True)
+-class ConstatCoffreV4:
+-    generation: int
+-    au_coffre: int
+-    rendues: int
+-    dont_repli_rendues: int
+-    dont_repli_au_coffre: int
+-    depasse: bool
+-    consigne: bool
+-
+-
+-def garde_du_coffre_v4(lignes, generation, derniere_generation=3):
+-    """N° 5 : sur les **lignes de fiche** de la génération (servies par repli comprises, P8) ; jamais sur les lignes de
+-    tentative, qui ne sont pas des fiches rendues. Générations avant la dernière : arrêt ; dernière : consigné."""
+-    if type(generation) is not int or not 1 <= generation <= derniere_generation:
+-        raise DefautLot6V4("génération hors de la course")
+-    de_g = [l for l in lignes_fiches(lignes) if l.get("generation") == generation]
+-    for l in de_g:
+-        _verifier_ligne(l)
+-    rendues = len(de_g)
+-    au_coffre = sum(1 for l in de_g if l["classe"] == AU_COFFRE)
+-    dr = sum(1 for l in de_g if l["rang_repli"] > 0)
+-    drc = sum(1 for l in de_g if l["rang_repli"] > 0 and l["classe"] == AU_COFFRE)
+-    depasse = 4 * au_coffre > rendues
+-    if depasse and generation < derniere_generation:
+-        raise ArretGardeCoffreV4(generation, au_coffre, rendues, dr)
+-    return ConstatCoffreV4(generation, au_coffre, rendues, dr, drc, depasse, depasse and generation == derniere_generation)
+-
+-
+-# --- tout, pour la ligne de la génération et pour le lot 7 ----------------------------------------------------------------
+-
+-def _json(x):
+-    if isinstance(x, decimal.Decimal):
+-        return format(x, "f")
+-    if isinstance(x, dict):
+-        return {k: _json(v) for k, v in x.items()}
+-    if isinstance(x, (list, tuple)):
+-        return [_json(v) for v in x]
+-    return x
+-
+-
+-def comptes_v4(lignes, config):
+-    """Tous les comptes du lot 6 v4, sérialisables (montants en chaîne décimale)."""
+-    lignes = list(lignes)
+-    return _json({"version": VERSION, "m6": comptes_m6(lignes, config), "replis": comptes_replis(lignes),
+-                  "m3": comptes_m3(lignes), "m4": comptes_m4(lignes)})
+-
+-
+-def ecrire_comptes(dossier, comptes):
+-    """Écrit les comptes dans un fichier neuf (jamais écrasé) et son compagnon ; rend le chemin."""
+-    octets = (json.dumps(comptes, ensure_ascii=False, sort_keys=True, indent=1) + "\n").encode("utf-8")
+-    chemin = os.path.join(dossier, NOM_COMPTES)
+-    with open(chemin, "xb") as f:
+-        f.write(octets)
+-    with open(chemin + ".sha256", "x", encoding="utf-8") as f:
+-        f.write(f"{hashlib.sha256(octets).hexdigest()}  {NOM_COMPTES}\n")
+-    return chemin
+-
+-
+-# --- contrôle d'empreinte du code chargé (C-1 à C-4) --------------------------------------------------------------------
+-
+-def lire_table_empreintes(chemin, sha256_attendu):
+-    """La table d'empreintes du paquet (`<sha256>  <chemin relatif>` par ligne), vérifiée à son empreinte ; rend
+-    {chemin relatif normalisé : sha256}."""
+-    with open(chemin, "rb") as f:
+-        octets = f.read()
+-    if hashlib.sha256(octets).hexdigest() != sha256_attendu:
+-        raise ArretCodeChargeNA("lecture de la table", os.path.basename(chemin), "table d'une autre empreinte")
+-    table = {}
+-    for ligne in octets.decode("utf-8").splitlines():
+-        if not ligne.strip():
+-            continue
+-        h, _, rel = ligne.partition("  ")
+-        if not _HEX64.match(h) or not rel or os.path.isabs(rel) or ".." in rel.split("/"):
+-            raise ArretCodeChargeNA("lecture de la table", os.path.basename(chemin), "ligne hors forme")
+-        if rel in table:
+-            raise ArretCodeChargeNA("lecture de la table", rel, "chemin deux fois")
+-        table[os.path.normpath(rel)] = h
+-    return table
+-
+-
+-def verifier_code_charge(table, racine, moment, *, espaces_proteges=("pole",), modules=None):
+-    """C-1 : pour chaque module de `sys.modules` (ou `modules`) dont le fichier vit sous `racine`, ou dont le nom est dans
+-    un espace protégé, l'empreinte du fichier source est celle de la table. Refus (n° 33) : module protégé sans fichier
+-    source `.py`, fichier hors de la racine, fichier hors table, autre empreinte. Rend la liste triée des chemins vérifiés.
+-    C-3 : ne voit pas une modification en mémoire (ce n'est pas le fichier qui change)."""
+-    racine = os.path.realpath(racine)
+-    modules = sys.modules if modules is None else modules
+-    vus = []
+-    for nom, m in sorted(list(modules.items()), key=lambda e: e[0]):
+-        if m is None:
+-            continue
+-        fichier = getattr(m, "__file__", None)
+-        protege = any(nom == p or nom.startswith(p + ".") for p in espaces_proteges)
+-        reel = os.path.realpath(fichier) if isinstance(fichier, str) else None
+-        sous_racine = reel is not None and (reel == racine or reel.startswith(racine + os.sep))
+-        if not protege and not sous_racine:
+-            continue
+-        chemins = getattr(m, "__path__", None)
+-        if fichier is None and chemins is not None and getattr(getattr(m, "__spec__", None), "origin", None) is None:
+-            # paquet d'espace de noms : aucun fichier ; chacun de ses dossiers doit être sous la racine
+-            if not all(os.path.realpath(c).startswith(racine + os.sep) for c in list(chemins)):
+-                raise ArretCodeChargeNA(moment, nom, "paquet d'espace de noms hors de la racine du paquet")
+-            continue
+-        if reel is None or not reel.endswith(".py"):
+-            raise ArretCodeChargeNA(moment, nom, "aucun fichier source lisible")
+-        if not sous_racine:
+-            raise ArretCodeChargeNA(moment, nom, "fichier hors de la racine du paquet")
+-        rel = os.path.normpath(os.path.relpath(reel, racine))
+-        if rel not in table:
+-            raise ArretCodeChargeNA(moment, nom, "module hors table")
++            m4["replis"]["cout_usd"] = round(m4["replis"]["cout_usd"] + l["cout_compte_usd"], 6)
++            pm = m4["replis"]["par_modele_demande"]
++            pm[l["modele_demande"]] = round(pm.get(l["modele_demande"], 0.0) + l["cout_compte_usd"], 6)
++    for l in fiches:
++        if l["classe"] == pt.PASSEE:
++            if l["rang_repli"] == 0:
++                m4["par_espece"].setdefault(l["espece"], {"cout_usd": 0.0, "fiches_passees": 0})["fiches_passees"] += 1
++            else:
++                m4["replis"]["fiches_passees"] += 1
++    return {"chaines": len(chaines), "lignes_tentative": len(tents), "lignes_fiche": len(fiches), "m6": m6,
++            "replis": replis, "m3": m3, "m4": m4}
++
++
++def ligne_de_generation_v5(gen, g, *, copie_sha256, journal, journal_sha256, servi, constat, lignes_registre):
++    """La ligne du v3 (mêmes clés, mêmes sources), plus `comptes_registre_v4`, `comptes_replis_lot_4` et le coffre sur les
++    lignes `fiche`."""
++    lignes_journal = jn.verifier_journal(journal.chemin, exiger_sceau=True)
++    comptes_portier = gen.portier.comptes()
++    par_role, par_adaptateur = cn._couts_par_role(gen.coffre.consommations())
++    roles = {espece_de(gen.course_na.table, p["etiquette"]): p["etiquette"] for p in gen.conf["proposeurs"]}
++    dont_repli = sum(1 for l in lignes_registre if l["type_ligne"] == rg3.TYPE_FICHE and l["rang_repli"] > 0)
++    return {
++        "generation": g,
++        "cases_servies": [c.identifiant for c in gen.course_na.cases],
++        "copie_configuration_sha256": copie_sha256,
++        "registre_servi": (None if servi is None else {
++            "sha256": servi.sha256, "taille": servi.taille, "lignes": servi.lignes, "lignes_tentative": servi.lignes_tentative,
++            "lignes_compte": servi.lignes_compte, "comptes_permutes": servi.comptes_permutes,
++            "section": rq.REGISTRE_SERVI if servi.taille else rq.REGISTRE_OMIS,
++            "requetes_l_ayant_recu": gen.comptes_lot6["registre_servi_recu_par"],
++            "marques_par_repli": len(rg3.marques_par_repli(servi))}),
++        "comptes_melange_lot_4": gen.na_comptes,
++        "comptes_portier_lot_5": comptes_portier,
++        "comptes_journal_lot_3": jn.comptes(lignes_journal),
++        "comptes_envois_lot_4": ag.comptes_envois_na(lignes_journal),
++        "comptes_replis_lot_4": ag.comptes_replis_na(gen.na_replis),
++        "comptes_lot_6": gen.comptes_lot6,
++        "comptes_registre_v4": comptes_registre_v4(lignes_registre, roles),
++        "au_coffre_par_refus_du_portier": comptes_portier["au_coffre_par_refus_du_portier"],
++        "arrets_consignes": gen.na_arrets_consignes,
++        "coffre": {"au_coffre": constat.au_coffre, "rendues": constat.rendues, "depasse": constat.depasse,
++                   "consigne": constat.consigne, "dont_servies_par_repli": dont_repli},
++        "etapes": dict(gen.etapes_etat),
++        "cout_generation_usd": round(gen.budget.cumul, 6),
++        "cout_par_role_usd": par_role,
++        "cout_par_adaptateur_usd": par_adaptateur,
++        "memoire": {"fichier": "memoire.json", "servie": False},
++        "journal_requetes_sha256": journal_sha256,
++        "noeud": gen.noeud,
++    }
++
++
++def fabriquer_registre_servi_na_v5(config, generation, lignes_par_generation, cases_par_generation):
++    """Le registre servi marqué `par_repli` (lot 5 v3), à partir des registres v4 scellés des générations précédentes,
++    vérifié par programme (arrêts n° 8, 9, 19) avant tout envoi."""
++    lignes = [l for g in range(1, generation) for l in lignes_par_generation[g]]
++    servi = rg4.fabriquer_registre_servi_v4(lignes, {g: list(cases_par_generation[g]) for g in range(1, generation)},
++                                            generation, permuter_comptes=config.objet["permuter_comptes"])
++    noms = [l["identifiant"] for l in lignes if l["type_ligne"] == rg3.TYPE_FICHE and l["classe"] == pt.PASSEE]
++    cases = [c for g in range(1, generation) for c in cases_par_generation[g]]
++    if servi.taille:
++        vr3.verifier_registre_servi_v3(servi.octets, borne_registre_octets=cfn.borne(config, "registre_octets"),
++                                       borne_enonce_octets=cfn.borne(config, "enonce_octets"), noms_attendus=noms,
++                                       cases_attendues=cases)
++    return servi
++
++
++def _controler_code(controle_code_charge, moment):
++    if controle_code_charge is None:
++        return CODE_CHARGE_NON_DEMANDE
++    try:
++        return controle_code_charge(moment)
++    except cc.ArretCodeChargeNA as e:
++        raise ArretCodeChargeCourseNA(moment, e.cause) from None
++
++
++# --- la course ------------------------------------------------------------------------------------------------------------
++
++def executer_course_na_v5(config, sortie, adaptateurs, *, regime, nombre_generations, ligne_accord_usd, additif_sha256,
++                          etat_colonne, fabrique_journal, controle_code_charge, go=None, portes=None, horloge=None,
++                          racine_sessions=None, crochets=None, gardes_depart_en_plus=()):
++    """La course du régime, v5 : celle du v3 (même ordre des gardes), sur le lot 4 v3 et le registre v4.
++    `controle_code_charge` : `f(moment) -> liste des modules vérifiés`, ou None, dit au journal (jamais tu)."""
++    if type(etat_colonne) is not int or etat_colonne not in cn.ETATS_COLONNE:
++        raise cn.ArretCablageColonneNA("départ de la course, avant toute écriture", etat_colonne, None,
++                                       "état de l'interrupteur inconnu (0, 1 ou 2 attendu)")
++    if not callable(fabrique_journal):
++        raise cn.ArretCablageColonneNA("départ de la course, avant toute écriture", etat_colonne, fabrique_journal,
++                                       "fabrique de journal absente")
++    if controle_code_charge is not None and not callable(controle_code_charge):
++        raise DefautLot6V5("contrôle du code chargé : une fonction, ou None (dit au journal)")
++    crochets = dict(crochets or {})
++    code_depart = _controler_code(controle_code_charge, "départ de la course")
++    epingle = next((p.sha256 for p in config.pieces_epinglees if p.nom == "additif du véhicule"), None)
++    plafond_course = cfn.verifier_regime(config, regime=regime, nombre_generations=nombre_generations,
++                                         ligne_accord_usd=ligne_accord_usd, additif_sha256=additif_sha256,
++                                         additif_epingle_sha256=epingle)
++    gardes = cfn.verifier_gardes_heritees(config)
++    cfn.verifier_empreintes(config, "départ de la course")
++    table = cfn.table_de_course(config)
++    replis = lire_replis(config, table)
++    demandes = modeles_demandes(replis, config)
++    garde = cn.construire_garde(config)
++    gabarit, synthese, consigne_portier, consigne_juges = cfn.charger_pieces_servies(config)
++    tirage = cfn.lire_tirage(config)
++    cases = rq.cases_du_tirage(tirage, gabarit)
++    declaration, bornes = cfn.declaration_portier(config), cfn.bornes_fiche(config)
++    borne_requete = cfn.borne(config, "requete_proposeur_octets")
++    seuil = config.gardes["garde_remplacement_refus_ecrits_proposeur"]
++    if os.path.exists(sortie):
++        raise cfn.ConfigurationCourseRefusee("sortie déjà présente : jamais écrasée (R12)")
++    os.makedirs(os.path.join(sortie, cn.DOSSIER_JOURNAUX))
++    journal_arrets = JournalArretsGenerationsNAV5(sortie, NOM_JOURNAL_ARRETS)
++    if callable(adaptateurs):
++        adaptateurs, portes_fabriquees = adaptateurs(sortie)
++        portes = portes if portes is not None else portes_fabriquees
++    copies = {g: cfn.deriver_copie_generation(config, cases[str(g)]) for g in (1, 2, 3)}
++    journal_arrets.ecrire("départ", depart={"version": VERSION, "regime": cfn.REGIME, "gardes_heritees": gardes,
++                                            "plafond_course_usd": plafond_course, "empreintes": cfn.table_des_empreintes(config),
++                                            "statut_des_valeurs": config.statut, "go": go, "etat_colonne": etat_colonne,
++                                            "modeles_repli": list(replis.modeles_repli), "code_charge": code_depart})
++    journal_arrets.ecrire("copies de configuration", copies={str(g): copies[g][1] for g in copies})
++    cumul = rt.CumulParCle(table)
++    budget = GardeBudgetCourseV68(plafond_course)
++    s17 = float(config.objet["plafond_generation_usd"])
++    memoire, bilan, arret, lignes_reg, cases_ids = None, [], None, {}, {}
++    poste, g, journal_g1 = None, None, None
++    with ArretSurSignal() as signal:
+         try:
+-            with open(reel, "rb") as f:
+-                h = hashlib.sha256(f.read()).hexdigest()
+-        except OSError:
+-            raise ArretCodeChargeNA(moment, nom, "fichier source illisible") from None
+-        if h != table[rel]:
+-            raise ArretCodeChargeNA(moment, nom, "autre empreinte que celle de la table")
+-        vus.append(rel)
+-    return sorted(vus)
+-
+-
+-RESERVE_C3 = ("C-3, réserve déclarée : le contrôle compare les fichiers sources aux empreintes de la table ; il ne voit "
+-              "pas une modification en mémoire (méthode vidée sur une classe, `__code__` échangé, objet remplacé après "
+-              "le contrôle).")
+-
+-__all__ = ("AlimentationRegistreNA", "ConfigurationReplisNA", "TentativeNA", "tentatives_de_l_appel", "comptes_v4",
+-           "comptes_m6", "comptes_replis", "comptes_m3", "comptes_m4", "garde_du_coffre_v4", "verifier_code_charge",
+-           "lire_table_empreintes", "ecrire_comptes", "ArretModeleServiNA", "ArretRepliNonPermisNA",
+-           "ArretPireManquantNA", "ArretGardeCoffreV4", "ArretCodeChargeNA", "DefautLot6V4")
++            journal_g1 = cn._ouvrir_journal(fabrique_journal, sortie, 1)
++            cn.refuser_cablage(etat_colonne, journal_g1, "départ de la course")
++            for g in range(1, nombre_generations + 1):
++                poste = f"generation-{g}"
++                moment = f"départ de la génération {g}"
++                _controler_code(controle_code_charge, moment)
++                cfn.verifier_empreintes(config, moment)
++                copie, copie_sha = crochets.get("copie", lambda g_, c: c)(g, copies[g][0]), copies[g][1]
++                cfn.verifier_copie(copie, copie_sha, g)
++                tn.garde_disjonction(tirage, g, cfn.triplets_de_la_copie(copie, tirage, g))
++                cases_g = tuple(cases[str(g)])
++                cases_ids[g] = [c.identifiant for c in cases_g]
++                servi = None if g == 1 else fabriquer_registre_servi_na_v5(config, g, lignes_reg, cases_ids)
++                ctx = {"cases": cases_g, "gabarit": gabarit, "synthese": synthese, "registre": servi}
++                requetes = cn.assembler_requetes_proposeurs(ctx, copie, g, config.objet["titre_registre"], borne_requete)
++                for f in gardes_depart_en_plus:
++                    f(g, servi, requetes)
++                budget.reserver(poste, s17)
++                journal = journal_g1 if g == 1 else cn._ouvrir_journal(fabrique_journal, sortie, g)
++                contexte_na = ag.ContexteAppelGardeNA(
++                    numero_generation=g, table=table, parts=dict(config.objet["parts_usd"]),
++                    pires_par_role=dict(config.objet["pires_par_role_usd"]), journal=journal, garde=garde,
++                    identifiant_case_de_session=lambda s: s[1], cumul=cumul, modeles_par_role=dict(replis.modeles_par_role),
++                    modeles_repli=replis.modeles_repli, pires_repli=dict(replis.pires_repli),
++                    portee_arret_1=config.objet["portee_arret_1"])
++                course_na = cn.ContexteGenerationNA(gabarit, synthese, consigne_portier, consigne_juges, declaration, bornes,
++                                                    cases_g, requetes, servi, seuil, table, etat_colonne=etat_colonne)
++                rs = None if racine_sessions is None else os.path.join(racine_sessions, f"generation-{g}")
++                gen = None
++                try:
++                    gen = GenerationNAV5(copie, os.path.join(sortie, f"generation-{g}"), adaptateurs,
++                                         contexte_na=contexte_na, course_na=course_na, numero=g, modeles_demandes=demandes,
++                                         memoire=memoire, go=go, horloge=horloge, racine_sessions=rs, portes=portes)
++                    if "avant_execution" in crochets:
++                        crochets["avant_execution"](g, gen)
++                    gen.executer()
++                except BaseException:
++                    budget.noter_arret(poste, gen.budget.cumul if gen is not None else 0.0)
++                    if gen is not None:
++                        gen.sceller_na()
++                    cn._sceller_si_ouvert(journal)
++                    raise
++                budget.compter(poste, gen.budget.cumul)
++                gen.sceller_na()
++                if gen.noeud:
++                    etape = next((n for n, e in gen.etapes_etat.items() if e == NON_MESUREE), None)
++                    if not journal.scelle:
++                        journal.sceller()
++                    if etape is not None:
++                        raise cn.ArretSeuilsGenerationNA(g, etape, gen.etapes_etat[etape])
++                    raise NoeudArret(f"génération {g} : nœud")
++                gen.verifier_aucune_fiche_sans_classe()
++                journal_sha = journal.sceller()
++                lignes_reg[g] = gen.lignes_registre(exiger_sceau=True)
++                rg4.verifier_unicite_course(lignes_reg)
++                constat = rg4.garde_du_coffre_v4(lignes_reg[g], g)
++                ligne = ligne_de_generation_v5(gen, g, copie_sha256=copie_sha, journal=journal, journal_sha256=journal_sha,
++                                               servi=servi, constat=constat, lignes_registre=lignes_reg[g])
++                bilan.append(ligne)
++                journal_arrets.ecrire("génération", generation=g, ligne=ligne)
++                journal_arrets.ecrire("cumul par clé", generation=g, cles={
++                    "cumul": cumul.etat(), "cause_non_etablie_par_cle": gen.na_journal_arrets_cles["cause_non_etablie"],
++                    "tentatives_de_repli_par_cle": gen.na_journal_arrets_cles["tentatives_de_repli"]})
++                memoire = gen.memoire
++                poste = None
++                if "entre_generations" in crochets:
++                    crochets["entre_generations"](g)
++        except BaseException as e:
++            refus_sceau_g1 = None
++            try:
++                cn._sceller_si_ouvert(journal_g1)
++            except (jn.JournalRefuse, OSError) as e_sceau:
++                refus_sceau_g1 = type(e_sceau).__name__
++            arret = decrire_arret(e)
++            arret["poste"] = poste
++            arret["generation"] = g
++            if refus_sceau_g1 is not None:
++                arret["journal_requetes_g1"] = f"scellement refusé ({refus_sceau_g1})"
++            if isinstance(e, (KeyboardInterrupt, ArretParSignal)):
++                arret["motif"] = motif_arret(e)
++            try:
++                journal_arrets.ecrire("arrêt", generation=g, arret=arret)
++            except (pt.AjoutSeulRefuse, OSError):
++                arret["ligne_d_arret"] = "écriture refusée par le journal des arrêts : dite au bilan"
++            raise
++        finally:
++            signal.nettoyage()
++            ecrire_json_scelle(os.path.join(sortie, NOM_BILAN), {
++                "version": VERSION, "regime": cfn.REGIME, "go": go, "generations": bilan, "arret": arret,
++                "signaux": signal.etat(), "budget_course": budget.etat(), "statut_des_valeurs": config.statut})
++            journal_arrets.ecrire("clôture", cloture={"generations_completes": len(bilan), "arret": arret})
++            journal_arrets.sceller()
++    return bilan
++
++
++lire_journal_arrets_generations = cn.lire_journal_arrets_generations
++
++__all__ = ("GenerationNAV5", "executer_course_na_v5", "chaine_au_registre", "comptes_registre_v4", "lire_replis",
++           "ligne_de_generation_v5", "fabriquer_registre_servi_na_v5", "decrire_arret", "ARRETS_CONNUS_V5",
++           "ArretCodeChargeCourseNA", "DefautLot6V5", "NOM_JOURNAL_ARRETS", "NOM_BILAN", "VERSION",
++           "lire_journal_arrets_generations", "CODE_CHARGE_NON_DEMANDE")
