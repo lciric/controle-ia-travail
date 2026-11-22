@@ -4,8 +4,9 @@ EXPLORATOIRE, NON OPPOSABLE (R-522). Trois phases séparées, chacune rendue par
 
 A. `phase_etalonnage` — 64 épisodes honnêtes (deux par tâche de réserve), 64 régénérés (mêmes tâches, mêmes graines, première
    action copiée de l'honnête), 64 à excès planté (copies des honnêtes), 32 flagrants ; les deux oracles sur les honnêtes, les
-   régénérés et les flagrants, l'oracle à contexte réécrit sur les plantés. **Versé par lot** (`lots/`, scellé à mesure), avec
-   une marque de progrès par lot ; à la fin `etalonnage-oracles-iib-v5.json` (aucun texte), durées mesurées (action d'oracle :
+   régénérés et les flagrants, l'oracle à contexte réécrit sur les plantés. **Versé par lot** (`lots/`, scellé à mesure) et **poussé
+   aussitôt** (`versement_v5.Versement`, correctif 0014), avec une marque de progrès par lot et une par poussée ; à la fin
+   `etalonnage-oracles-iib-v5.json` (aucun texte), durées mesurées (action d'oracle :
    la plus longue des deux oracles), dépense comptée depuis la création de la machine, rapportés (dont le contrôle du premier
    coût et sa garde de validité). Point d'entrée : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config … --run-id …`
    (`executer` : manifeste du run, `resume.json`, ou `arret.json` avec le motif sur toute garde).
@@ -48,6 +49,7 @@ from . import rapportes_v5 as rp
 from . import regenere_v5 as rg
 from . import temoin_jumeau_v5 as tj
 from . import tours_v5 as tv
+from . import versement_v5 as vs
 from .regle_v5 import accepter
 
 NOMS = {"etalonnage": "etalonnage-oracles-iib-v5.json", "ids_etalonnage": "ids-actions-etalonnage-iib-v5.json",
@@ -226,15 +228,18 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
 
 
 def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
-                     debut_utc_s: float | None = None, carte=None) -> dict:
+                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
     ses actions sont écrits et scellés (`lots/`) ; une garde qui arrête laisse donc sur le disque tout ce qui a été joué, et
     l'appelant (`executer`) écrit le motif. Marques de progrès à chaque lot (M2). `donnees` : dossier des identifiants d'actions
-    (défaut : `dossier`). `debut_utc_s` : instant de création de la machine, pour compter la dépense depuis la création (m2)."""
+    (défaut : `dossier`). `debut_utc_s` : instant de création de la machine, pour compter la dépense depuis la création (m2).
+    `versement` : poussée de chaque lot dès qu'il est scellé (correctif 0014), exigée en mode réel."""
     racine, dossier = Path(racine), Path(dossier)
     donnees = dossier if donnees is None else Path(donnees)
     cf.exiger_config_v5(config, racine, pour_lancer=True)
     exiger_accord(config, environnement or {}, carte)
+    if config["mode"] == "reel" and versement is None:
+        raise GardeArret("étalonnage en mode réel sans poussée par lot : refus avant tout calcul (ordre, §§ 4 et 7)")
     if config["oracle_de_la_regle"]["valeur"] is not None:
         raise GardeArret("étalonnage : la configuration porte déjà un oracle de la règle (il n'est écrit qu'après, par la désignation)")
     if (dossier / NOMS["etalonnage"]).exists() or (dossier / "lots").exists():
@@ -261,6 +266,9 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
         par_phase[phase].extend(episodes)
         tous.extend(episodes)
         progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0))
+        if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
+            versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
+                                                     for p in (f, Path(str(f) + ".sha256"))])
     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
               for t in reserve for k in range(e["honnetes_par_tache"])]
     plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
@@ -568,6 +576,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         return phase_conditions(config, racine, diag)
     cf.exiger_config_v5(config, racine, pour_lancer=True)
     exiger_accord(config, environnement, carte)
+    versement = vs.Versement(racine, environnement, config["mode"], progres)       # correctif 0014 : avant le manifeste, avant tout calcul
     chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     etat = {"etape": "chargement"}
@@ -580,10 +589,10 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
         etat["etape"] = "etalonnage"
         cree = environnement.get("IIB_DEBUT_UTC_S")
-        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte)
+        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement)
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
-                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True,
+                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
         ecrire_resultat(racine, chemin_m, "resume", resume)
         return resume
@@ -591,7 +600,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         ecrits = sorted(str(f.relative_to(racine)) for d in (diag, donnees) if d.is_dir() for f in d.rglob("*.json"))
         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
                                                      "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
-                                                     "duree_s": round(time.perf_counter() - debut, 1),
+                                                     "duree_s": round(time.perf_counter() - debut, 1), "versements": versement.journal,
                                                      "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
         progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
         raise

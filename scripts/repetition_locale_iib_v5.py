@@ -32,7 +32,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 275        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v5.txt`, correctif 0011 : 271 et les 4 de l'environnement de la machine simulée)
+ATTENDUS = 283        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`, correctif 0014 : 275 et les 8 de la poussée par lot)
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
@@ -191,7 +191,12 @@ def main(argv: list[str]) -> int:
     lots = [f for f in fichiers if f.startswith(f"diag/{run}/lots/lot-") and f.endswith(".json")]
     ids = [f for f in fichiers if f.startswith(f"donnees/{run}/lots/ids-lot-") and f.endswith(".json")]
     assert len(lots) == 28 and len(ids) == 28 and f"diag/{run}/resume.json" in fichiers and f"diag/{run}/{la.NOMS['etalonnage']}" in fichiers
-    dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents")
+    # correctif 0014 : chaque lot est parti sur la branche dès qu'il a été scellé (un commit « versement lot … » par lot, poussé)
+    par_lot = [s for s in git(m["origine"], "log", "--format=%s", branche).splitlines() if "(versement lot " in s]
+    poussees = [l for l in progres if "etape=versement" in l]
+    assert len(par_lot) == 28 and len(poussees) == 28 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])
+    dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents ; "
+         f"{len(par_lot)} poussées par lot, toutes vérifiées par le lanceur")
     # 3. lanceur de session : après-création, surveillance, destruction (faux outil)
     reponse = d / "creation-brute-essai1.json"
     reponse.write_text(json.dumps({"success": True, "new_contract": int(ID)}), encoding="utf-8")

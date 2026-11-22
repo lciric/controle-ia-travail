@@ -243,11 +243,25 @@ def test_aucune_sortie_supprimee_avant_versement_scelle(tmp_path):
 
 
 def test_aucune_suppression_ailleurs_dans_le_code_v5():
-    """Garde statique : aucun module v5 du saboteur ne supprime de fichier, hors `supprimer_apres_versement`."""
+    """Garde statique : aucun module v5 du saboteur ne supprime de fichier, hors `supprimer_apres_versement`. Correctif 0014 :
+    seul `versement_v5.py` lance des sous-processus, et seulement `git` en lecture (`ls-files`, `status`, `rev-parse`) et le
+    script de consignation de l'amorce par `bash` ; la garde le vérifie sur son texte (cas sain et artefacts du détecteur)."""
+    import re
+
+    appel = re.compile(r"subprocess\.(run|Popen|call|check_call|check_output)\(\s*(\[[^\]]*\])")
+    permis = {'["bash", str(self.script), f"versement {motif}"]', '["git", "-C", str(self.racine), *args]'}
+    for artefact in ('subprocess.run(["rm", "-rf", x])', 'subprocess.Popen(["git", "clean", "-fdx"])'):
+        assert appel.search(artefact) and appel.search(artefact).group(2) not in permis, artefact
     for f in sorted((DEPOT / "src/controle_ia/iib").glob("*_v5.py")):
         source = f.read_text(encoding="utf-8")
-        for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(", "subprocess"):
+        for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(") + (() if f.name == "versement_v5.py" else ("subprocess",)):
             assert interdit not in source, (f.name, interdit)
+        if f.name == "versement_v5.py":
+            vus = [m.group(2) for m in appel.finditer(source)]
+            assert set(vus) == permis and source.count("subprocess.") - len(vus) == source.count("subprocess.DEVNULL") + source.count(
+                "subprocess.PIPE") + source.count("subprocess.TimeoutExpired"), vus
+            sous = set(re.findall(r'self\._git\("([a-z-]+)"', source))
+            assert sous == {"ls-files", "status", "rev-parse"}, sous            # git en lecture seule
         assert source.count(".unlink(") == (1 if f.name == "lanceur_v5.py" else 0), f.name
 
 
@@ -393,7 +407,7 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
-    liste = s / "tests-cibles-iib-v5-v5.txt"                     # version 5 de la liste : environnement de la machine simulée (correctif 0011)
+    liste = s / "tests-cibles-iib-v5-v6.txt"                     # version 6 de la liste : poussée par lot (correctif 0014)
     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
     fichiers = liste.read_text(encoding="utf-8").split()
     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
@@ -401,9 +415,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     # attendus de l'amorce, et le nombre doit être le même sur le poste et sur la machine)
     hors = ("tokeniseur_reel", "distillation_torch")
     assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if not any(h in f.name for h in hors))
-    assert len(fichiers) == 24 and not any(h in f for f in fichiers for h in hors)
+    assert len(fichiers) == 25 and not any(h in f for f in fichiers for h in hors)
     assert {"tests/test_iib_configuration_distillation_v5.py", "tests/test_iib_distillation_v5.py",
-            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py"} <= set(fichiers)
+            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py", "tests/test_iib_versement_v5.py"} <= set(fichiers)
     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
 
@@ -411,7 +425,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
         d = list(difflib.unified_diff((s / a).read_text(encoding="utf-8").splitlines(), (s / b).read_text(encoding="utf-8").splitlines(), n=0, lineterm=""))
         return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
     da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
-    assert len([l for l in da if l[0] == "-"]) == 10 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 9
+    # correctif 0014 : une ligne de plus de chaque côté (le choix de la trace selon le motif « versement … » du lanceur)
+    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 10
+    assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
     assert len([l for l in dl if l[0] == "-"]) == 15 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",

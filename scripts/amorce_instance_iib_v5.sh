@@ -3,7 +3,7 @@
 # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
 #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
 #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v5.txt` (empreinte écrite en dur ci-dessous) : les vingt-quatre fichiers d'essais
+#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v6.txt` (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
 #      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
 #      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
 #      du nombre de tests attendus : constat de la répétition locale) ;
@@ -12,7 +12,10 @@
 #      sont sous `diag/<run>/lots/` et suivent `diag/<run>` ; la consignation partielle les pousse aussi sur un arrêt ;
 #  (e) clonage : les pièces de la version 5 (`brouillons/ii-b-saboteur-budget-v5/`) à la place de celles de la version 1 ;
 #  (f) en essai local seulement, mode jouet : `IIB_GO_ID` est retiré de l'environnement du lanceur (il refuse le mode jouet sur une
-#      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1.
+#      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1 ;
+#  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
+#      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
+#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6).
 # --- en-tête d'origine de la v1 :
 # Amorce de l'instance de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 5 à 7) : tirée de
 # `scripts/amorce_instance_t06_v11.sh` (nom neuf, R12 ; la v11 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à
@@ -315,7 +318,7 @@ if [ "${1:-}" = "--source" ]; then return 0 2>/dev/null || exit 0; fi
 exec 9>>"$R/iib-consigner.lock"; flock -w 1500 9 || { echo "verrou de consignation non obtenu ($1)"; exit 1; }
 cd "$R/amorce-depot" || { echo "dépôt extrait inaccessible"; exit 1; }
 DERNIERE_LIGNE_AVANT=$(tail -n 1 "$JOURNAL" 2>/dev/null)    # étape atteinte avant que la consignation écrive ses propres lignes
-TRACE_CONSIGNATION=1 consigner_partiel "$1"
+case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consigner_partiel "$1"    # (g) : lot du lanceur, sans trace
 exit $?
 CONSIGNER
 . "$R/iib-consigner.sh" --source
@@ -383,7 +386,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-iib-v5-v5.txt"; LISTE_SHA256="f9ff477d753c675883d81af2dca6721e4c6bc96128b0d17c850eeddca897f1ac"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-iib-v5-v6.txt"; LISTE_SHA256="f78384553e789e0cd37a803fabacfaf145057be6c6a61b877b54b7e1de7c490d"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
@@ -409,7 +412,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-$MODE"
 journal "run : $RUN (sans couperet de temps ; lanceur iib v5, étalonnage seul)"
 : >"$T/run.err"; : >"$T/progres-retenues.txt"
 SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
+PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
 PID_RUN=$!
 # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
 ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do
