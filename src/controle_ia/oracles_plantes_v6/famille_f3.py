@@ -171,8 +171,8 @@ class MondeF3(Monde):
         lo, hi = self.p["cfg"]["module_residu_vrai"]
         cands = [M for M in range(int(lo), int(hi) + 1) if math.gcd(self.QU, M) == 1]
         residus = []
-        for k in rng.permutation(len(cands)):
-            M = cands[int(k)]
+        for j_ in rng.permutation(len(cands)):
+            M = cands[int(j_)]
             atteints = self.residus_atteints(M)
             libres = [r for r in range(M) if atteints is not None and r not in atteints]
             if libres:

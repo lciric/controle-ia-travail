@@ -154,7 +154,13 @@ def planter(monde, racine: int, params: dict) -> list:
                 c = certifier(monde, cle, texte)
                 if c is None:
                     continue
-                if cle in ("verites", "pieges"):
+                if cle in ("faux_tot", "pieges"):
+                    # v6 (P10) : un faux tôt ou un piège de forme seuil n'a pas de borne naturelle (un littéral tiré qui
+                    # tomberait sur 0 ou 1 changerait P10) ; le candidat est refusé, le suivant essayé
+                    from .forme_seule import borne_naturelle
+                    if borne_naturelle(monde.analyser(texte)):
+                        continue
+                if cle == "verites":  # v6 : le brouillon 3 ne pose aucune condition de redite aux pièges
                     # une vivante plantée ne doit pas être la redite d'une vivante plantée avant elle (T5)
                     f = normaliser(monde.analyser(texte), monde, monde.ev)
                     # v6 (brouillon 3) : étages 1 et 2 seulement entre énoncés plantés (l'étage 3 n'y apporte que des
@@ -192,11 +198,34 @@ def verifier_formes(monde, plantes, compte):
         if len(seuil[e]) != n:
             raise GardeArret(f"{monde.famille}, monde {monde.indice} : {len(seuil[e])} énoncés {e} de forme seuil au "
                              f"lieu de {n} (brouillon 2) : à renvoyer au concepteur")
-    if nat < int(compte["verites_seuil_naturelles_min"]):
+    attendu_nat = int(compte.get("verites_seuil_naturelles", compte["verites_seuil_naturelles_min"]))
+    if nat != attendu_nat:  # v6 : exactement 2 (P10 : fausses morts 1/4 par construction)
         raise GardeArret(f"{monde.famille}, monde {monde.indice} : {nat} vérités seuil à borne naturelle au lieu "
-                         f"d'au moins {compte['verites_seuil_naturelles_min']} : à renvoyer au concepteur")
+                         f"de {attendu_nat} (P10) : à renvoyer au concepteur")
 
 
 def construire_banque(racine: int, params: dict):
     mondes = construire_mondes(racine, params)
     return [(m, planter(m, racine, params)) for m in mondes]
+
+
+def construire_banque_avec_retirage(racines: list, params: dict):
+    """Règle de retirage du brouillon 3 (§ Plan d'analyse) : les racines tirées sont essayées dans l'ordre, au plus
+    `retirage.tirages_max` ; la première qui plante est retenue. Rend (racine, banque, journal) où le journal porte
+    chaque racine essayée et le motif de chaque refus. Au-delà, arrêt et retour au concepteur."""
+    tmax = int(params.get("retirage", {}).get("tirages_max", 1))
+    if not racines:
+        raise GardeArret("aucune racine fournie")
+    if len(racines) > tmax:
+        raise GardeArret(f"{len(racines)} racines fournies, au plus {tmax} tirages")
+    journal = []
+    for r in racines:
+        try:
+            b = construire_banque(r, params)
+        except GardeArret as e:
+            journal.append({"racine": str(r), "refus": str(e)})
+            continue
+        journal.append({"racine": str(r), "refus": None})
+        return r, b, journal
+    raise GardeArret(f"plantation refusée pour les {len(racines)} racines tirées : retour au concepteur ; "
+                     + " | ".join(j["refus"] for j in journal))

@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import sys
+from fractions import Fraction
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -26,7 +27,8 @@ from .banque import construire_banque
 from .base_aleatoire import tirer_base
 from .cles import (charger_cle, ecrire_monde, fragments_de_cle, instances_de_cle, octets_json,
                    verifier_absence_fuite, verifier_absence_instances)
-from .banque import ETIQUETTES
+from .banque import ETIQUETTES, construire_banque_avec_retirage
+from .normalisation import normaliser
 from .graines import description, generateur
 from .lignee import Registre
 from .parametres import charger
@@ -45,12 +47,19 @@ def rejouer_batterie_banque(mondes: list, cles: list[dict], registre=None) -> di
     ecarts, par_monde, t6 = [], [], {"verifies": 0, "non_verifies": 0}
     redites = {"analysables": 0, "temoins": 0}
     collisions = []  # v4 : textes de même famille de lignée qu'un texte de statut contraire (remarque 16)
+    redites_etage3_seul = {"declarees": 0, "levees_car_retrouvees": 0}  # v6 : sensibilité (brouillon 3)
     for m, cle in zip(mondes, cles):
         anterieures = []
         compte = {k: 0 for k in total}
+        verites = [normaliser(m.analyser(p["texte"]), m, m.ev) for p in cle["plantes"]
+                   if p["etiquette"] == "VERITE_PLANTEE"]
         for p in cle["plantes"]:
             et = p["etiquette"]
-            r = appliquer_batterie(sortie_de_texte(p["texte"]), m, anterieures=anterieures, registre=registre)
+            r = appliquer_batterie(sortie_de_texte(p["texte"]), m, anterieures=anterieures, registre=registre,
+                                   verites=verites)
+            if r.redite_etage == 3:
+                redites_etage3_seul["declarees"] += 1
+                redites_etage3_seul["levees_car_retrouvees"] += int(r.redite_levee_retrouvee)
             tue = r.statut == "morte"
             if r.collision:
                 collisions.append(f"{cle['identifiant_monde']} / {p['gabarit']}")
@@ -58,8 +67,11 @@ def rejouer_batterie_banque(mondes: list, cles: list[dict], registre=None) -> di
             total[et]["tues"] += int(tue)
             compte[et] += int(tue)
             if r.statut == "vivante":
-                redites["temoins" if et.startswith("TEMOIN") else "analysables"] += int(r.redite)
-                if r.redite and not et.startswith("TEMOIN"):
+                redites["temoins" if et.startswith("TEMOIN") else "analysables"] += int(
+                    r.redite and (et.startswith("TEMOIN") or r.redite_etage in (1, 2)))
+                if r.redite and not et.startswith("TEMOIN") and r.redite_etage in (1, 2):
+                    # v6 (brouillon 3) : l'étage 3 n'est pas appliqué entre énoncés plantés ; ses redites sont comptées
+                    # en sensibilité (« redites_par_l_etage_3_seul »), pas en écart
                     ecarts.append(f"redite parmi les énoncés analysables plantés ({cle['identifiant_monde']} / {p['gabarit']})")
                 anterieures.append(r.forme)
             ident = f"{cle['identifiant_monde']} / {p['gabarit']}"
@@ -85,7 +97,7 @@ def rejouer_batterie_banque(mondes: list, cles: list[dict], registre=None) -> di
         par_monde.append({"identifiant_monde": cle["identifiant_monde"], "famille": cle["famille"], "tues": compte})
     pct = {k: (f"{v['tues']}/{v['plantes']}") for k, v in total.items()}
     return {"total": total, "tues_sur_plantes": pct, "par_monde": par_monde, "autocontrole_t6_instances_de_cle": t6,
-            "redites_parmi_plantes_vivantes": redites, "collisions_de_lignee": {"nombre": len(collisions),
+            "redites_parmi_plantes_vivantes": redites, "redites_par_l_etage_3_seul": redites_etage3_seul, "collisions_de_lignee": {"nombre": len(collisions),
                                                                                 "enonces": collisions},
             "ecarts": ecarts}
 
@@ -101,13 +113,15 @@ def _ecrire(chemin: Path, obj) -> str:
     return sceller(chemin)
 
 
-def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
+def executer(racines, sortie: str | Path) -> tuple[int, dict]:
+    """`racines` : un entier, ou la liste des racines tirées (au plus trois, règle de retirage du brouillon 3)."""
     params, sha_params = charger()
     sortie = Path(sortie)
     if sortie.exists() and any(sortie.iterdir()):
         raise GardeArret(f"{sortie} n'est pas vide : R12 interdit d'écraser")
+    racines = [racines] if isinstance(racines, int) else list(racines)
+    racine, banque, journal_racines = construire_banque_avec_retirage(racines, params)
     sortie.mkdir(parents=True, exist_ok=True)
-    banque = construire_banque(racine, params)
     ids = identifiants_opaques(generateur(racine, 3, 0), len(banque), "monde-")
     chemins_cles, empreintes = [], {}
     for (m, plantes), ident in zip(banque, ids):
@@ -123,10 +137,11 @@ def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
     rapport["plantes_total"] = sum(len(c["plantes"]) for c in cles)
     rapport["mondes"] = len(cles)
     # base « forme seule » (v5, brouillon 2, P9) : règle fixe et classifieur de style, plis par l'enfant [10]
-    from .forme_seule import ecarts_p9, mesurer
+    from .forme_seule import ecarts_p9, ecarts_p10, mesurer
     fs = params["forme_seule"]
-    rapport["base_forme_seule"] = mesurer(banque, generateur(racine, 10), int(fs["plis"]), fs["lissage"])
-    rapport["ecarts"] += ecarts_p9(rapport["base_forme_seule"])
+    rapport["base_forme_seule"] = mesurer(banque, generateur(racine, 10, 0), int(fs["plis"]), fs["lissage"],
+                                          Fraction(fs["seuil_d_emploi_aire"]))
+    rapport["ecarts"] += ecarts_p9(rapport["base_forme_seule"]) + ecarts_p10(rapport["base_forme_seule"])
     viol = violations_a1(rapport)
     rapport["A1_violee"] = bool(viol)
     rapport["temoins_conformes"] = not any(e.startswith("témoin") for e in rapport["ecarts"])
@@ -156,6 +171,7 @@ def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
     rapport["base_grammaire_aleatoire"] = resume_base
     rapport["version"] = VERSION
     rapport["racine"] = str(racine)
+    rapport["racines_tirees"] = journal_racines
     rapport["nature"] = "rejeu d'essai sur racine d'essai ; non décisif ; paramètres provisoires"
     empreintes["rapport-p8-v6.json"] = _ecrire(sortie / "rapport-p8-v6.json", rapport)
     # registre de lignée du rejeu : scellé, sa tête consignée au manifeste (v3, remarque 4)
@@ -179,10 +195,12 @@ def executer(racine: int, sortie: str | Path) -> tuple[int, dict]:
     manifeste = {
         "nature": "rejeu d'essai du lot B1 (racine d'essai ; aucune banque réelle)", "version": VERSION,
         "cree_le": datetime.now(timezone.utc).isoformat(timespec="seconds"), "commit": commit, "reserves": reserves,
-        "graines": description(racine), "parametres": params, "parametres_sha256": sha_params,
+        "graines": description(racine), "racines_tirees": journal_racines,
+        "parametres": params, "parametres_sha256": sha_params,
         "config_sha256": hashlib.sha256(config_canonique(params)).hexdigest(), "code_sha256": code,
         "versions": versions(), "sorties_sha256": empreintes, "tete_registre_lignee": rapport_tete,
-        "commande": f"python -m controle_ia.oracles_plantes_v6.rejeu --racine {racine} --sortie {sortie}",
+        "commande": f"python -m controle_ia.oracles_plantes_v6.rejeu --racine {','.join(str(x) for x in racines)} "
+                    f"--sortie {sortie}",
     }
     _ecrire(sortie / "manifeste-rejeu-v6.json", manifeste)
     code_sortie = 3 if viol else (4 if rapport["ecarts"] else 0)
@@ -205,16 +223,21 @@ def verifier_tete_manifeste(sortie: str | Path) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m controle_ia.oracles_plantes_v6.rejeu")
-    ap.add_argument("--racine", type=int, required=True)
+    ap.add_argument("--racine", required=True,
+                    help="racine, ou racines tirées séparées par des virgules (au plus trois : règle de retirage)")
     ap.add_argument("--sortie", required=True)
     a = ap.parse_args(argv)
     try:
-        code, rapport = executer(a.racine, a.sortie)
+        try:
+            racines = [int(x) for x in a.racine.split(",")]
+        except ValueError:
+            raise GardeArret(f"racines illisibles {a.racine!r}") from None
+        code, rapport = executer(racines, a.sortie)
     except GardeArret as e:
         print(f"ARRÊT : {e}", file=sys.stderr)
         return 1
     print(json.dumps({
-        "racine": a.racine, "mondes": rapport["mondes"], "plantes": rapport["plantes_total"],
+        "racine": rapport["racine"], "racines_tirees": rapport["racines_tirees"], "mondes": rapport["mondes"], "plantes": rapport["plantes_total"],
         "faux_tot_tues": rapport["tues_sur_plantes"]["FAUX_TOT"],
         "verites_tuees": rapport["tues_sur_plantes"]["VERITE_PLANTEE"],
         "pieges_tues_sous_N": rapport["tues_sur_plantes"]["PIEGE"],
@@ -227,7 +250,10 @@ def main(argv=None) -> int:
         "base_grammaire_aleatoire": rapport["base_grammaire_aleatoire"],
         "forme_seule_regle": {k: v["taux"] for k, v in rapport["base_forme_seule"]["regle_fixe"].items()},
         "forme_seule_aires": {k: v for k, v in rapport["base_forme_seule"]["classifieur_de_style"].items()
-                              if k.startswith("aire")},
+                              if k.startswith("aire") or k in ("hors_textes_vus", "au_dessus_du_seuil")},
+        "borne_non_naturelle": {k: v["taux"] for k, v in rapport["base_forme_seule"]["borne_non_naturelle"].items()},
+        "textes_identiques_entre_mondes": rapport["base_forme_seule"]["textes_identiques_entre_mondes"],
+        "redites_par_l_etage_3_seul": rapport["redites_par_l_etage_3_seul"],
         "code_de_sortie": code,
     }, ensure_ascii=False, indent=1))
     return code

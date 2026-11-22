@@ -20,7 +20,7 @@ ENFANTS = {
     4: "ordre des mondes et des configurations", 5: "rééchantillonnage", 6: "dix énoncés servis deux fois",
     7: "strates et tirage des connus", 8: "tirage de l'audit humain",
     9: "base « grammaire aléatoire » (adopté au brouillon 2)",
-    10: "validation croisée du classifieur de style de la base « forme seule » (réservé au brouillon 2)",
+    10: "scindé (brouillon 3) : (10, 0) plis du classifieur de style, (10, 1) audit de symétrie",
 }
 
 
