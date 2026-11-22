@@ -394,12 +394,17 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
             if not den or not num > 0:
                 raise GardeArret(f"rejeu croisé : dose {dose}, pli {pli} : écart type intra-case nul ou incalculable")
             sd[pli] = float(np.sqrt(num / den))
-        z = {(r["poids"], r["source"], r["cle"]): (r["score"] / sd[r["pli"]], r) for r in brut}
+        z = {}
+        for r in brut:
+            k = (r["pli"], r["poids"], r["source"], r["cle"])
+            if k in z:
+                raise GardeArret(f"rejeu croisé : action en double {k}")
+            z[k] = (r["score"] / sd[r["pli"]], r)
         disp, actions = {}, []
-        for (po, so, cle), (za, r) in z.items():
-            if po != "adaptateur" or ("nu", so, cle) not in z:
+        for (pli, po, so, cle), (za, r) in z.items():  # adaptateur et nu appariés dans le même pli, sur la même clé
+            if po != "adaptateur" or (pli, "nu", so, cle) not in z:
                 continue
-            d = za - z[("nu", so, cle)][0]
+            d = za - z[(pli, "nu", so, cle)][0]
             disp.setdefault(r["tache"], {}).setdefault(so, []).append(d)
             actions.append((r, d))
         par_tache, ecartees = _interaction_par_tache(disp)
@@ -409,13 +414,13 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
                "brute": _test_libelle(par_tache, rngs, seuils, regime, n_tirages)}
         # contrôle du chemin
         ecarts = {}
+        relus = {(x["pli"], x["poids"], x["source"], x["cle"]): x for x in L if x["chemin"] == "relu"}
         for r in L:
             if r["chemin"] != "origine":
                 continue
-            autre = [x for x in L if x["chemin"] == "relu" and x["poids"] == r["poids"] and
-                     x["source"] == r["source"] and x["cle"] == r["cle"]]
-            if autre:
-                ecarts.setdefault(r["tache"], []).append((r["score"] - autre[0]["score"]) / sd.get(r["pli"], np.nan))
+            autre = relus.get((r["pli"], r["poids"], r["source"], r["cle"]))
+            if autre is not None:
+                ecarts.setdefault(r["tache"], []).append((r["score"] - autre["score"]) / sd.get(r["pli"], np.nan))
         if ecarts:
             ecart = float(np.mean([np.mean(v) for v in ecarts.values()]))
             corrige = {t: v - 2.0 * ecart for t, v in par_tache.items()}

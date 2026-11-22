@@ -609,13 +609,23 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
 
 def permuter_etiquettes(jeu: Jeu, rng: np.random.Generator, paires=None) -> np.ndarray:
     """Réétiquetage du nul [provisoire (Q8)], selon l'unité échangeable :
-    - des paires couvrent le jeu (même texte lu sous deux poids d'étiquettes opposées) : échange dans chaque paire avec
-      probabilité 1/2 ;
+    - des paires couvrent le jeu et l'étiquette est une propriété du jeu de poids, avec des unités : échange des
+      étiquettes de toute l'unité (la paire de poids) d'un bloc, avec probabilité 1/2 ;
+    - des paires couvrent le jeu sans cette structure : échange dans chaque paire d'actions avec probabilité 1/2 ;
     - sinon, si l'étiquette est une propriété du texte (constante sur toutes les lignes d'une même clé) : permutation
       des étiquettes **entre clés** à l'intérieur de chaque tâche, toutes les lectures d'une clé gardant la même ;
     - sinon : permutation des lignes à l'intérieur de chaque tâche."""
     y = jeu.y.copy()
     if paires is not None:
+        if jeu.unites is not None and _etiquette_de_serie(jeu):
+            # l'étiquette est une propriété du jeu de poids : l'unité échangeable est la paire de poids (l'unité),
+            # échangée d'un bloc (erratum 1, § 2 : « échange des deux étiquettes à l'intérieur de chaque paire »)
+            for u in sorted(np.unique(jeu.unites)):
+                if rng.random() < 0.5:
+                    for i, j in paires:
+                        if jeu.unites[i] == u:
+                            y[i], y[j] = y[j], y[i]
+            return y
         for i, j in paires:
             if rng.random() < 0.5:
                 y[i], y[j] = y[j], y[i]
@@ -638,6 +648,11 @@ def permuter_etiquettes(jeu: Jeu, rng: np.random.Generator, paires=None) -> np.n
         idx = np.flatnonzero(jeu.taches == t)
         y[idx] = y[idx[rng.permutation(idx.size)]]
     return y
+
+
+def _etiquette_de_serie(jeu: Jeu) -> bool:
+    """Vrai si l'étiquette est constante sur toutes les lignes de chaque série (propriété du jeu de poids)."""
+    return all(len(set(jeu.y[jeu.series == s].tolist())) == 1 for s in np.unique(jeu.series))
 
 
 def nul_reetiquetage(conf: Configuration, jeu: Jeu, aire_observee: float, n_repliques: int,
@@ -682,7 +697,10 @@ def etiquettes_identite(jeu: Jeu, serie_positive: str, serie_negative: str) -> t
 
 def contraste_apparie(scores: dict, jeu: Jeu, unites, rng: np.random.Generator | None = None) -> dict:
     """[provisoire (Q13)] Pour chaque unité : aire des scores d'épreuve entre ses lignes positives (poids saboteurs) et
-    négatives (ses poids honnêtes), moins 0,5 ; puis changement de signe sur les unités."""
+    négatives (ses poids honnêtes), moins 0,5 ; puis changement de signe sur les unités. RÉSERVE (E-5) : les plis qui
+    laissent une unité de côté partagent leurs données d'apprentissage, les valeurs par unité ne sont donc pas
+    indépendantes et ce test peut être trop libéral ; le test valide est le nul de réétiquetage par unité
+    (`nul_reetiquetage`, qui rejoue toute la sélection). Rapporter ce test comme descriptif."""
     if jeu.unites is None:
         raise GardeArret("contraste apparié : jeu sans unités")
     valeurs, par_unite = [], {}
