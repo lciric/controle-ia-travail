@@ -1,0 +1,115 @@
+[
+ {
+  "attaque": "A1 plan doublé et plafond 1e6 acceptés par courir",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": true,
+  "code": 0,
+  "commentaire": "courir ne vérifie ni plan == plan_pstd() ni plafond <= borne(plan_pstd, prix Kimi)",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 348.288,
+  "depense_vue_par_la_garde": 348.288,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A2 deux invocations successives (relance de course après arrêt ou fin)",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": true,
+  "code": [
+   0,
+   0
+  ],
+  "commentaire": "aucun registre de dépense persistant entre invocations : la borne vaut par appel de courir, pas par pilote",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 352.896,
+  "depense_vue_par_la_garde": 352.896,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A3 relances internes cachées dans le client (2 par appel)",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": true,
+  "code": 0,
+  "commentaire": "H1 violée sans signal : la garde ne compte que les relances qu'elle voit",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 529.344,
+  "depense_vue_par_la_garde": 176.448,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A4 réflexion (8 000 jetons) facturée hors de usage.sortie",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": true,
+  "code": 0,
+  "commentaire": "H2 contrôlée seulement si l'adaptateur range la réflexion dans « sortie » : invérifiable par la garde",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 235.968,
+  "depense_vue_par_la_garde": 176.448,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A5 erreur inattendue après facturation (code 17)",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 17,
+  "commentaire": "l'appel en cours n'est pas compté à sa réserve au code 17 : dépense journalisée sous-estimée d'un appel",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 6.5568,
+  "depense_vue_par_la_garde": 6.2704,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A6 prix (0, 0) acceptés",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 0,
+  "commentaire": "prix non vérifiés contre tarifs() à l'empreinte",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 176.448,
+  "depense_vue_par_la_garde": 0.0,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A7 usage à sortie négative",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 16,
+  "commentaire": "arrêt 16 correct mais l'appel anormal n'est pas compté à sa réserve",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 0.6656,
+  "depense_vue_par_la_garde": 0.8592,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A8 dernier appel rendu à 256 000 jetons d'entrée (fenêtre), cumul près du plafond (176,6)",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 11,
+  "commentaire": "garde après coup : un appel hors H3 franchit le plafond de la course avant l'arrêt ; son excès n'est borné que par la fenêtre de contexte",
+  "depense_au_dela_du_plafond_de_la_course": true,
+  "depense_reelle_du_faux_fournisseur": 176.6272,
+  "depense_vue_par_la_garde": 176.6272,
+  "plafond_de_la_course": 176.6
+ },
+ {
+  "attaque": "A9 relance d'un message déguisé en proposeur (24 000 jetons, 60 000 octets)",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 0,
+  "commentaire": "la relance ne compare que l'identifiant, pas l'entrée du plan : plafonds du mauvais rôle acceptés",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 0.0,
+  "depense_vue_par_la_garde": 0.0206,
+  "plafond_de_la_course": null
+ },
+ {
+  "attaque": "A10 tous les appels échouent, relancer=False",
+  "borne_annoncee": 203.9438,
+  "borne_franchie": false,
+  "code": 14,
+  "commentaire": "échecs abandonnés hors du compte des relances ; arrêt seulement par la dépense ; relances=0",
+  "depense_au_dela_du_plafond_de_la_course": false,
+  "depense_reelle_du_faux_fournisseur": 0.0,
+  "depense_vue_par_la_garde": 203.8411,
+  "plafond_de_la_course": null
+ }
+]
