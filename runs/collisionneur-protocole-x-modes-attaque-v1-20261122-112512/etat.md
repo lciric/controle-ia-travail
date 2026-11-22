@@ -16,8 +16,9 @@
 | E3-T3-reponse-B | OK | 1 | claude-opus-5-5 | 19710 | oui | 0.85 |
 | E3-T3-reponse-C | OK | 1 | gemini-4-argon | 44819 | oui | 0.64 |
 | E3-T3-reponse-D | OK | 1 | gpt-6.2-astra | 19661 | oui | 0.76 |
-| E3-T3-reponse-E | INTERROMPU | 1 | gemini-4-carbon | 0 | non | 2.51 |
+| E3-T3-reponse-E | OK | 2 | gemini-4-carbon | 31675 | oui | 3.39 |
+| E3-T3-reponse-F | OK | 1 | gemini-4-neon | 30782 | oui | 0.62 |
 
 Absences acceptées par l'arbitre : E3-T1-conception-A.
-Ligne : 100.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 14.78 USD.
-Dépense totale : 14.78 USD. Mis à jour 2026-11-22T12:37:30Z.
+Ligne : 100.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 16.27 USD.
+Dépense totale : 16.27 USD. Mis à jour 2026-11-22T12:48:21Z.
