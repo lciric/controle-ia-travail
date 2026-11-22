@@ -1,3 +1,5 @@
+**2026-11-22T15:44:46Z (Sun Nov 22 15:44:46 UTC 2026) — PASSATION de la mère session_01XJ6Mgr4LgbMsg5zLyRZCpG sur l'ordre de Lazar (plus de crédit) : registres/passations/2026-11-22-1544.md. EN TÂCHE : Vast 61932710 (réajustement des lentilles, session_01XJ6MgqfTmLrdjtfZDdJu8G). URGENT : course du saboteur à budget, voie (A), à lancer au plus tard le 25 au matin.**
+
 **2026-11-22T07:37:03Z (`date -u`) — EN TÂCHE : Vast 61875617 (étalonnage du saboteur, coupure 16 USD ; relevés par l'exécutante session_01XJ6MgqUTEVCed6a2f6rWmC et la mère) ; Vast 61932710 (réajustement des lentilles, GO-2026-11-22-05, session_01XJ6MgqfTmLrdjtfZDdJu8G). Nouvelle mère session_01XJ6Mgr4LgbMsg5zLyRZCpG, autonomie jusqu'à 20:53Z (GO-2026-11-22-29). Hetzner : aucun serveur.**
 
 **2026-11-22T06:28:56Z (`date -u`) — PASSATION vers une nouvelle mère sur un nouveau compte (GO-2026-11-22-25) : `registres/passations/2026-11-22-0630.md` et son brief `2026-11-22-0630-brief-lancement-mere-nouveau-compte.md`. EN TÂCHE : Vast 61875617, étalonnage du saboteur (coupure 16 USD, exécutante). Collisionneurs : protocoles X en mode isolé en file. Hetzner : aucun serveur.**
