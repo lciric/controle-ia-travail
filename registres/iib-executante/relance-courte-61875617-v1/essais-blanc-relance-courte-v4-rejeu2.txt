@@ -1,0 +1,39 @@
+script de06ed550c3d1fcae2b83c81c21faac27b75b5535dffac682a66e26e58c2ad69
+== tri du journal
+base     -> ATTENDRE : démarrage de rang 2 ou plus non vu
+j-dem    -> DEMARRAGE : vu, issue non encore écrite
+j-pf     -> ARRETER : poussée faite
+j-t1     -> DEMARRAGE : vu, issue non encore écrite
+j-t1-pf  -> ARRETER : poussée faite
+j-pi     -> ARRETER : poussée impossible
+j-ref    -> ARRETER : refus de l'amorce vu sans ligne de poussée
+j-calc   -> ARRETER : calcul inattendu après le démarrage
+j-autre  -> DEMARRAGE : vu, issue non encore écrite
+== jouer
+A-sain                             ARRET CONFIRME (ARRETER : poussée faite) code 0 | start=1 stop=1 logs=2 execute=0 destroy=0 avant-stop=logs 61875617
+A-second-jouer                     code 2 ; appels neufs : 0
+B-tentative1-puis-poussee          ARRET CONFIRME (ARRETER : poussée faite) code 0 | start=1 stop=1 logs=2 execute=0 destroy=0 avant-stop=logs 61875617
+C-logs-illisibles                  ARRET CONFIRME (ARRETER : journal du loueur illisible 3 fois de suite) code 0 | start=1 stop=1 logs=4 execute=0 destroy=0 avant-stop=show instances
+F-poussee-impossible-non-confirme  ARRET NON CONFIRME (ARRETER : poussée impossible) : aucune autre commande ; mot de la mè code 1 | start=1 stop=2 logs=1 execute=0 destroy=0 avant-stop=logs 61875617
+j2-running-avant                   REFUS : état avant le start : n=2 etat=present etiquette=iib-explo-v5 statut=running autr code 2 | start=0 stop=0 logs=0 execute=0 destroy=0 avant-stop=
+j3-intouchable                     REFUS : ID=58936096 ≠ 61875617 code 2 | start=0 stop=0 logs=0 execute=0 destroy=0 avant-stop=
+j4-heure                           REFUS : après 2026-11-23T19:40:00Z (dépense épuisée lue sur le disque à 20:42:05Z) code 2 | start=0 stop=0 logs=0 execute=0 destroy=0 avant-stop=
+j5-scheduling                      ARRET CONFIRME (ARRETER : pas en marche après 0 s) code 0 | start=1 stop=1 logs=1 execute=0 destroy=0 avant-stop=show instances
+j8-running-sans-demarrage          ARRET CONFIRME (ARRETER : en marche depuis 0 s sans ligne de démarrage 2) code 0 | start=1 stop=1 logs=1 execute=0 destroy=0 avant-stop=show instances
+E-branche-v5                       ARRET CONFIRME (ARRETER : borne totale de 1 s) code 0 | start=1 stop=1 logs=3 execute=0 destroy=0 avant-stop=show instances
+== lister
+L1-sain-arretee-avant-apres        LISTE FAITE, machine toujours arrêtée code 0 | start=0 stop=0 logs=0 execute=3 destroy=0 avant-stop=
+L1-artefact-en-marche-apres        ARRET CONFIRME (ARRETER : machine en marche après la liste) code 1 | start=0 stop=1 logs=0 execute=3 destroy=0 avant-stop=show instances
+L2-un-echec-puis-reussite          LISTE FAITE, machine toujours arrêtée code 0 | start=0 stop=0 logs=0 execute=4 destroy=0 avant-stop=
+L0-en-marche-avant                 REFUS : machine non arrêtée (n=2 etat=present etiquette=iib-explo-v5 statut=running autr code 2 | start=0 stop=0 logs=0 execute=0 destroy=0 avant-stop=
+== archiver (morceaux de 1000 octets)
+ARCHIVE CONFORME : 318 morceau(x), 303 entrées, archive 4d80f4791624b8b310b516e294658f602cb6676c859ef8d55a0b019fbf4f1103
+A1 sain, 300 fichiers (301 entrées) : code 0
+mkdir: cannot create directory '../sortie': File exists
+REFUS : ../sortie existe déjà (R12)
+second archiver même dossier : code 2
+ÉCHEC : tar ou split (codes 2 0)
+artefact chemin absent : code 1
+artefact source changée : écarts retenus par le filtre de la comparaison = 1
+artefact morceau altéré, morceaux.sha256 : code 1 (attendu non nul)
+g1 0 code 0 ; g2 1 code 1
