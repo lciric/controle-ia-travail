@@ -9,10 +9,12 @@ déterminisme. Le dépôt distant est un dépôt nu local : aucun réseau. **Les
 fichier des unités** (les essais ne sont pas un dossier gardé : limite (d) de la garde statique) et la donnent au
 programme, que la garde statique empêche de la nommer (règle non écrite n° 1 de la note).
 
-Les sorties synthétiques sont lues dans `ENCHAINEMENT_SORTIES_SYNTHETIQUES` (variable d'environnement), sinon dans le
-bloc-notes de la session ; sans elles, les essais qui en dépendent sont sautés, et le disent."""
+Les sorties synthétiques sont lues dans `ENCHAINEMENT_SORTIES_SYNTHETIQUES` (variable d'environnement), sinon extraites
+du commit `82cfd8ba` (branche `relance-bras-a/epreuve-forme-v11-sorties-synthetiques`), leur seul dossier ; sans elles,
+les essais qui en dépendent sont sautés, et le disent."""
 from __future__ import annotations
 
+import atexit
 import datetime
 import hashlib
 import itertools
@@ -20,6 +22,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -35,9 +38,25 @@ from controle_ia.scellement import sceller
 
 RACINE = Path(__file__).resolve().parents[1]
 CONSTAT = RACINE / "scripts" / "constat_de_lancement_discretion_bras_a_v5.py"
-_PAR_DEFAUT = Path("/tmp/claude-0/-home-user-controle-ia-travail/445c1b8c-c9f5-52f6-966f-fc165ad0e0c8/scratchpad/forme-v11/"
-                   "docs/notes/bras-a-sans-interne-v1/epreuve-de-forme-v11-sorties-synthetiques-v1")
-SYNTHETIQUES = Path(os.environ.get("ENCHAINEMENT_SORTIES_SYNTHETIQUES", str(_PAR_DEFAUT)))
+# Les sorties synthétiques de l'épreuve de forme v11 : sur la branche distante qui les porte, commit 82cfd8ba ; seul
+# leur dossier est extrait (rien d'autre de `docs/notes/bras-a-sans-interne-v1/` n'est ouvert).
+REF_DES_SORTIES = "82cfd8baee8d0b1610781fa6b218571181f8b416"
+CHEMIN_DES_SORTIES = "docs/notes/bras-a-sans-interne-v1/epreuve-de-forme-v11-sorties-synthetiques-v1"
+
+
+def _sorties_synthetiques() -> Path:
+    if os.environ.get("ENCHAINEMENT_SORTIES_SYNTHETIQUES"):
+        return Path(os.environ["ENCHAINEMENT_SORTIES_SYNTHETIQUES"])
+    cible = Path(tempfile.mkdtemp(prefix="sorties-forme-v11-"))
+    atexit.register(shutil.rmtree, cible, True)
+    archive = subprocess.run(["git", "-C", str(RACINE), "archive", REF_DES_SORTIES, CHEMIN_DES_SORTIES], capture_output=True)
+    if archive.returncode != 0:
+        return cible / "absentes"
+    subprocess.run(["tar", "-x", "-C", str(cible)], input=archive.stdout, check=True)
+    return cible / CHEMIN_DES_SORTIES
+
+
+SYNTHETIQUES = _sorties_synthetiques()
 NOM_DE_LA_SORTIE = "lecture-commune-moniteurs-bras-a.json"
 CAS = ("cas-a", "cas-b", "cas-c", "cas-d", "cas-e")
 ARTEFACT = "artefact-cas-a-valeur-p-arrondie"
