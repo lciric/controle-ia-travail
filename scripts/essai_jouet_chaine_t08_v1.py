@@ -32,7 +32,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RACINE / "src"))
 
-CHEMINS_CODE = ("src", "tests", "scripts", "pyproject.toml", "requirements-cpu.txt", "requirements-gpu.txt", ".claude",
+CHEMINS_CODE = (".gitignore", "src", "tests", "scripts", "pyproject.toml", "requirements-cpu.txt", "requirements-gpu.txt", ".claude",
                 "registres/go.md", "registres/scellements-v1.md", "registres/code-mots-et-cout-t06",
                 "docs/sources/invites-2606.08892-v1", "prereg/T0.8-base-A-mots-et-cout-v1.md",
                 "prereg/T0.8-base-A-mots-et-cout-v1.md.sha256")

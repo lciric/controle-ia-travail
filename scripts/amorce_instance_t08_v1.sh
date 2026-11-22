@@ -3,7 +3,7 @@
 # neuf (R12 : la v11 reste telle quelle), dont rien ne change hors ce que la consigne nomme ; chaque ligne changée porte « T08 » ou est
 # déclarée dans le rapport de la chaîne. Changent : (1) les noms (`t08` : fichiers de travail `$R/t08-…`, lignes « AMORCE T08 ») ;
 # (2) le clonage : le code au commit `COMMIT` (celui de `COMMIT_CODE_T08`), une seule branche (`BRANCHE_CODE`, sans étiquettes),
-# extraction limitée à ce que la course et ses essais importent (11 motifs, `CHEMINS_CLONAGE`), puis la branche d'entrée seule
+# extraction limitée à ce que la course et ses essais importent (12 motifs, `CHEMINS_CLONAGE`), puis la branche d'entrée seule
 # (`BRANCHE_ENTREE` au commit `ENTREE_COMMIT`, refspec explicite), dont les fichiers sont recopiés à l'octet à leurs chemins et tenus
 # hors de l'index par `.git/info/exclude` (arbre propre, tête = `COMMIT`) ; jamais la branche de sortie de 7b ; (3) avant tout
 # calcul : aucun `lecture-sondes-t06*` ni `resume.json` sur le disque (dès le clonage), puis, l'environnement installé,
@@ -254,13 +254,16 @@ PREREG_ABSENT="${PREREG_ABSENT:-0}"
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 # T08 : clonage réduit au code de la course et de ses essais (mode sans cône ; motifs relevés en jouant la liste d'essais figée sur
-# un clone réduit : 190 essais passés, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
+# un clone réduit : 231 essais passés, aucun fichier manquant), d'une seule branche, sans étiquettes ; puis la branche d'entrée seule.
+#  - /.gitignore (caches Python, `donnees/`) : sans lui, les caches écrits par les essais salissent l'arbre et la course refuse
+#    de partir (essai de bout en bout du 22 novembre) ;
 #  - code et essais : /src/ /tests/ /scripts/ /.claude/ /pyproject.toml /requirements-*.txt ;
 #  - registre des GO lu par l'amorce (/registres/go.md) ; fichiers lus par les essais de T0.8 : /registres/scellements-v1.md,
 #    /registres/code-mots-et-cout-t06/, /docs/sources/invites-2606.08892-v1/, /prereg/T0.8-base-A-mots-et-cout-v1.md et son sceau ;
 #  - jamais : /diag/ /runs/ /donnees/ du code, /docs/notes/, /brouillons/, ni aucune autre branche (la branche de sortie de 7b
 #    n'est jamais demandée : la branche d'entrée porte les seuls fichiers de la liste blanche).
-CHEMINS_CLONAGE='/.claude/
+CHEMINS_CLONAGE='/.gitignore
+/.claude/
 /src/
 /tests/
 /scripts/
@@ -322,10 +325,10 @@ journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
 pousser() { local essai; for essai in 1 2 3; do timeout -k 10 600 git push -q origin "$BRANCHE" 2>"$T/poussee.err" && return 0; journal "poussée : tentative $essai refusée"; [ "$essai" -lt 3 ] && sleep $((POUSSEE_ATTENTE_S * essai * essai)); done; return 1; }
 refuser_gros() {  # C11 : aucun fichier de plus de MORCEAU_MAX octets ne part dans un commit (le dépôt distant le refuserait)
     local f t; while IFS= read -r f; do [ -f "$f" ] || continue; t=$(stat -c %s -- "$f" 2>/dev/null || echo 0)
-        if [ "$t" -gt "$MORCEAU_MAX" ]; then git rm -q --cached -- "$f" >/dev/null 2>&1; journal "ERREUR DE CHAÎNE (C11) : $f fait $t octets > $MORCEAU_MAX : retiré du commit, resté sur l'instance"; echo "$f $t" >> "$R/t08-fichiers-trop-gros.txt"; fi
+        if [ "$t" -gt "$MORCEAU_MAX" ]; then git rm -q --sparse --cached -- "$f" >/dev/null 2>&1; journal "ERREUR DE CHAÎNE (C11) : $f fait $t octets > $MORCEAU_MAX : retiré du commit, resté sur l'instance"; echo "$f $t" >> "$R/t08-fichiers-trop-gros.txt"; fi
     done < <(git diff --cached --name-only --diff-filter=AM); return 0; }
 ajouter() {  # C-V4-1 : un `git add` en échec (index.lock) n'est jamais lu comme « rien à committer » ; code 1 et journal
-    git add "$@" 2>"$T/add.err" && return 0
+    git add --sparse "$@" 2>"$T/add.err" && return 0   # T08 : --sparse, les sorties (runs, diag, donnees, traces) sont hors des motifs d'extraction
     journal "ERREUR DE CHAÎNE (C-V4-1) : git add en échec ($*) : $(tr '\n' ' ' < "$T/add.err" | cut -c1-200)"; echo "$(date -u +%FT%TZ) git add en échec : $*" >> "$R/t08-erreurs-chaine.txt"; return 1; }
 ajouter_legeres() { local f rc=0; for f in donnees/*-t08-*/*-t08.npz donnees/*-t08-*/*-t08.npz.sha256 donnees/*-t08-*/*-t08.jsonl \
         donnees/*-t08-*/*-t08.jsonl.sha256; do if [ -f "$f" ]; then ajouter -f "$f" || rc=1; fi; done; return $rc; }   # T08 : sorties de la course de T0.8 seulement (jamais les entrées de 7b, sous donnees/<run de 7b>/)
