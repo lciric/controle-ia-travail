@@ -3,7 +3,7 @@
 # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
 #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
 #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v6.txt` (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
+#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v7.txt` depuis le correctif 0022, voir (i) (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
 #      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
 #      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
 #      du nombre de tests attendus : constat de la répétition locale) ;

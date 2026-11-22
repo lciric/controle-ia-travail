@@ -243,22 +243,43 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
 VITESSE = "vitesse-premier-lot-iib-v5.json"
 
 
-def vitesse_du_premier_lot(chrono: dict, modele) -> dict:
+def vitesse_du_premier_lot(chrono: dict, modele, tirage: str | None = None) -> dict:
     """Correctif 0022 : durées mesurées sur le premier lot (honnêtes : génération, puis les deux oracles), en secondes, par
     épisode généré et par action d'oracle de chaque oracle ; méthode de tirage du modèle. Aucun texte, aucun jeton, aucune sortie
-    d'oracle : seulement des durées et des comptes. Une durée non mesurée est un refus (jamais un zéro inventé)."""
-    def par(s, n):
-        if not chrono.get(n):
-            raise GardeArret(f"vitesse du premier lot : {n} nul ou absent (aucune durée inventée)")
-        return round(float(chrono[s]) / float(chrono[n]), 4)
-    return {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0)), "generation_s_par_episode": par("generation_s", "episodes_generes"),
-            "oracle_P_actions": int(chrono.get("oracle_P_actions", 0)), "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions"),
-            "oracle_N_actions": int(chrono.get("oracle_N_actions", 0)), "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions"),
-            "tirage": getattr(modele, "tirage", None) or "processeur (multinomial ligne par ligne, générateur processeur)"}
+    d'oracle : seulement des durées et des comptes.
+    Correctif 0025 (contre-lecture du 0022, majeur) : c'est un diagnostic ; il n'arrête jamais un étalonnage payant. Une durée non
+    mesurée (compte nul ou absent, durée absente ou non positive) est écrite `null` et nommée dans `non_mesurees` : jamais un zéro
+    inventé, jamais un arrêt. Aucun arrondi qui écrirait zéro (mineur 1). Le tirage est celui que l'appelant a passé au modèle,
+    sinon l'attribut du modèle, sinon « non lu » : jamais deviné (mineur 2)."""
+    non_mesurees = []
 
+    def par(s, n, nom):
+        try:
+            num, den = float(chrono[s]), float(chrono[n])
+        except (KeyError, TypeError, ValueError):
+            num = den = 0.0
+        if not (den > 0 and num > 0):
+            non_mesurees.append(nom)
+            return None
+        return float(num / den)
+
+    v = {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0) or 0),
+         "generation_s_par_episode": par("generation_s", "episodes_generes", "generation_s_par_episode"),
+         "oracle_P_actions": int(chrono.get("oracle_P_actions", 0) or 0),
+         "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions", "oracle_P_s_par_action"),
+         "oracle_N_actions": int(chrono.get("oracle_N_actions", 0) or 0),
+         "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions", "oracle_N_s_par_action"),
+         "tirage": tirage or getattr(modele, "tirage", None) or "non lu"}
+    v["non_mesurees"] = non_mesurees
+    return v
+
+
+def marque_de_vitesse(v: dict) -> dict:
+    """Champs de la marque de progrès de la vitesse : une durée non mesurée s'écrit « non_mesuree » (jamais zéro)."""
+    return {k: (f"{v[k]:.6g}" if v[k] is not None else "non_mesuree") for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")}
 
 def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
-                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
+                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None, tirage: str | None = None) -> dict:
     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
     ses actions sont écrits et scellés (`lots/`) ; une garde qui arrête laisse donc sur le disque tout ce qui a été joué, et
     l'appelant (`executer`) écrit le motif. Marques de progrès à chaque lot (M2). `donnees` : dossier des identifiants d'actions
@@ -301,9 +322,9 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
                                                      for p in (f, Path(str(f) + ".sha256"))])
         if n_lot[0] == 1:                                    # correctif 0022 : vitesse mesurée en marche, dès le premier lot
-            v = vitesse_du_premier_lot(chrono, modele)
+            v = vitesse_du_premier_lot(chrono, modele, tirage)
             sorties[VITESSE] = _ecrire(dossier, VITESSE, v)
-            progres(etape="vitesse", lot=1, **{k: v[k] for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")})
+            progres(etape="vitesse", lot=1, **marque_de_vitesse(v))
             if versement is not None:
                 versement("vitesse du premier lot", _fichiers_scelles(dossier / VITESSE))
     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
@@ -715,7 +736,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
         etat["etape"] = "etalonnage"
         cree = environnement.get("IIB_DEBUT_UTC_S")
-        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement)
+        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement, tirage)
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,

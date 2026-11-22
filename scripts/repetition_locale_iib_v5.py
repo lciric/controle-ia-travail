@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 297        # fichiers de la liste v6 : 296 et la vitesse du premier lot (0022) ; la liste v7 de l’amorce y ajoute l’essai du tirage (14 sur une machine à carte ; sans torch, 1 fichier sauté : `--liste-figee` ne passe que sur la machine)
+ATTENDUS = 311        # liste v7 de l’amorce sur une machine à carte (correctif 0025, mineur 3 de la contre-lecture du 0022 : 297 + 14 essais du tirage) ; sans carte, `--liste-figee` ne passe pas (essai « carte » sauté) : la suite courte, elle, passe
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac

@@ -722,12 +722,19 @@ def test_vitesse_du_premier_lot_scellee_sans_texte(course, capfd):
     v = json.loads(f.read_text(encoding="utf-8"))
     assert verifier(f) and v["lot"] == 1 and v["episodes_generes"] == 8 and v["oracle_P_actions"] > 0 and v["oracle_N_actions"] > 0
     assert set(v) == {"avertissement", "lot", "episodes_generes", "generation_s_par_episode", "oracle_P_actions", "oracle_P_s_par_action",
-                      "oracle_N_actions", "oracle_N_s_par_action", "tirage"}
+                      "oracle_N_actions", "oracle_N_s_par_action", "tirage", "non_mesurees"}
+    assert v["non_mesurees"] == [] and v["tirage"] == "non lu"             # correctif 0025 : appel direct sans tirage : « non lu », jamais deviné
     assert all(isinstance(v[k], float) and v[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))
     brut = f.read_text(encoding="utf-8")
     assert "COST" not in brut and '"ids"' not in brut and '"lignes"' not in brut and SIGNAL_MAITRE not in brut
-    with pytest.raises(GardeArret, match="aucune durée inventée"):
-        la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
+    # correctif 0025 : une durée non mesurée est écrite null et nommée, jamais zéro, jamais un arrêt (diagnostic)
+    nm = la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
+    assert nm["oracle_P_s_par_action"] is None and nm["oracle_N_s_par_action"] is None and nm["generation_s_par_episode"] == 0.125
+    assert nm["non_mesurees"] == ["oracle_P_s_par_action", "oracle_N_s_par_action"] and nm["tirage"] == "non lu"
+    assert la.marque_de_vitesse(nm)["oracle_N_s_par_action"] == "non_mesuree"
+    petit = la.vitesse_du_premier_lot({"generation_s": 1e-6, "episodes_generes": 8, "oracle_P_s": 1e-7, "oracle_P_actions": 80,
+                                       "oracle_N_s": 1e-7, "oracle_N_actions": 80}, None)
+    assert all(petit[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))   # jamais un zéro d'arrondi
     m = la.vitesse_du_premier_lot({"generation_s": 4.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 80, "oracle_N_s": 3.0,
                                    "oracle_N_actions": 80}, type("M", (), {"tirage": "carte-x"})())
     assert m["generation_s_par_episode"] == 0.5 and m["oracle_P_s_par_action"] == 0.025 and m["tirage"] == "carte-x"
