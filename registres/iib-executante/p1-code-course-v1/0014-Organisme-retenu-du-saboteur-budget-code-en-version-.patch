@@ -1,0 +1,653 @@
+From 3b19a2fc8c338995d6910bee0b6d2375fcfd417f Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 11:44:07 +0000
+Subject: [PATCH 14/17] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20?=
+ =?UTF-8?q?=C3=A0=20budget,=20code=20en=20version=205=20:=20correctif=2000?=
+ =?UTF-8?q?14,=20pouss=C3=A9e=20de=20chaque=20lot=20d=C3=A8s=20qu'il=20est?=
+ =?UTF-8?q?=20scell=C3=A9=20(constat=20de=20l'=C3=A9talonnage=20:=20la=20b?=
+ =?UTF-8?q?ranche=20d'essai=20restait=20au=20commit=20de=20lancement,=20l'?=
+ =?UTF-8?q?amorce=20ne=20poussant=20qu'en=20fin=20de=20run,=20sur=20un=20a?=
+ =?UTF-8?q?rr=C3=AAt,=20=C3=A0=20la=20minuterie=20ou=20=C3=A0=20un=20secon?=
+ =?UTF-8?q?d=20d=C3=A9marrage=20;=20module=20neuf=20versement=5Fv5=20:=20l?=
+ =?UTF-8?q?e=20lanceur=20appelle=20le=20script=20de=20consignation=20de=20?=
+ =?UTF-8?q?l'amorce=20apr=C3=A8s=20chaque=20lot,=20motif=20=C2=AB=20versem?=
+ =?UTF-8?q?ent=20=E2=80=A6=20=C2=BB,=20puis=20v=C3=A9rifie=20lui-m=C3=AAme?=
+ =?UTF-8?q?=20que=20les=20fichiers=20du=20lot=20sont=20suivis,=20propres?=
+ =?UTF-8?q?=20et=20que=20la=20t=C3=AAte=20est=20celle=20de=20la=20branche?=
+ =?UTF-8?q?=20distante=20;=20chaque=20issue=20est=20une=20marque=20de=20pr?=
+ =?UTF-8?q?ogr=C3=A8s=20;=20trois=20refus=20de=20suite=20:=20arr=C3=AAt,?=
+ =?UTF-8?q?=20lots=20scell=C3=A9s=20sur=20le=20disque=20;=20mode=20r=C3=A9?=
+ =?UTF-8?q?el=20sans=20script=20:=20refus=20avant=20tout=20calcul=20;=20am?=
+ =?UTF-8?q?orce=20:=20IIB=5FCONSIGNER=20pass=C3=A9=20au=20lanceur,=20pas?=
+ =?UTF-8?q?=20de=20trace=20par=20lot=20;=20garde=20statique=20des=20sous-p?=
+ =?UTF-8?q?rocessus=20resserr=C3=A9e=20=C3=A0=20versement=5Fv5,=20git=20en?=
+ =?UTF-8?q?=20lecture=20seule=20;=20liste=20fig=C3=A9e=20v6,=2025=20fichie?=
+ =?UTF-8?q?rs,=20283=20essais=20;=20r=C3=A9p=C3=A9tition=20locale=20:=2028?=
+ =?UTF-8?q?=20pouss=C3=A9es=20par=20lot=20v=C3=A9rifi=C3=A9es)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_v5.sh   |  13 +-
+ scripts/repetition_locale_iib_v5.py |   9 +-
+ scripts/tests-cibles-iib-v5-v6.txt  |  25 ++++
+ src/controle_ia/iib/lanceur_v5.py   |  23 ++-
+ src/controle_ia/iib/versement_v5.py | 117 +++++++++++++++
+ tests/test_iib_lanceur_v5.py        |  28 +++-
+ tests/test_iib_versement_v5.py      | 217 ++++++++++++++++++++++++++++
+ 7 files changed, 412 insertions(+), 20 deletions(-)
+ create mode 100644 scripts/tests-cibles-iib-v5-v6.txt
+ create mode 100644 src/controle_ia/iib/versement_v5.py
+ create mode 100644 tests/test_iib_versement_v5.py
+
+diff --git a/scripts/amorce_instance_iib_v5.sh b/scripts/amorce_instance_iib_v5.sh
+index 8f4d7015d..2efaab737 100644
+--- a/scripts/amorce_instance_iib_v5.sh
++++ b/scripts/amorce_instance_iib_v5.sh
+@@ -3,7 +3,7 @@
+ # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
+ #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
+ #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
+-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v5.txt` (empreinte écrite en dur ci-dessous) : les vingt-quatre fichiers d'essais
++#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v6.txt` (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
+ #      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
+ #      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
+ #      du nombre de tests attendus : constat de la répétition locale) ;
+@@ -12,7 +12,10 @@
+ #      sont sous `diag/<run>/lots/` et suivent `diag/<run>` ; la consignation partielle les pousse aussi sur un arrêt ;
+ #  (e) clonage : les pièces de la version 5 (`brouillons/ii-b-saboteur-budget-v5/`) à la place de celles de la version 1 ;
+ #  (f) en essai local seulement, mode jouet : `IIB_GO_ID` est retiré de l'environnement du lanceur (il refuse le mode jouet sur une
+-#      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1.
++#      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1 ;
++#  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
++#      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
++#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6).
+ # --- en-tête d'origine de la v1 :
+ # Amorce de l'instance de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 5 à 7) : tirée de
+ # `scripts/amorce_instance_t06_v11.sh` (nom neuf, R12 ; la v11 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à
+@@ -315,7 +318,7 @@ if [ "${1:-}" = "--source" ]; then return 0 2>/dev/null || exit 0; fi
+ exec 9>>"$R/iib-consigner.lock"; flock -w 1500 9 || { echo "verrou de consignation non obtenu ($1)"; exit 1; }
+ cd "$R/amorce-depot" || { echo "dépôt extrait inaccessible"; exit 1; }
+ DERNIERE_LIGNE_AVANT=$(tail -n 1 "$JOURNAL" 2>/dev/null)    # étape atteinte avant que la consignation écrive ses propres lignes
+-TRACE_CONSIGNATION=1 consigner_partiel "$1"
++case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consigner_partiel "$1"    # (g) : lot du lanceur, sans trace
+ exit $?
+ CONSIGNER
+ . "$R/iib-consigner.sh" --source
+@@ -383,7 +386,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
+     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
+ fi
+ # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
+-LISTE_TESTS="scripts/tests-cibles-iib-v5-v5.txt"; LISTE_SHA256="f9ff477d753c675883d81af2dca6721e4c6bc96128b0d17c850eeddca897f1ac"; FICHIERS_TESTS=""
++LISTE_TESTS="scripts/tests-cibles-iib-v5-v6.txt"; LISTE_SHA256="f78384553e789e0cd37a803fabacfaf145057be6c6a61b877b54b7e1de7c490d"; FICHIERS_TESTS=""
+ if [ -z "${TESTS_ARGS:-}" ]; then
+     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
+     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
+@@ -409,7 +412,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-$MODE"
+ journal "run : $RUN (sans couperet de temps ; lanceur iib v5, étalonnage seul)"
+ : >"$T/run.err"; : >"$T/progres-retenues.txt"
+ SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
+-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
++PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
+ PID_RUN=$!
+ # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
+ ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index ea5d76c8a..77492670d 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -32,7 +32,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 275        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v5.txt`, correctif 0011 : 271 et les 4 de l'environnement de la machine simulée)
++ATTENDUS = 283        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`, correctif 0014 : 275 et les 8 de la poussée par lot)
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+@@ -191,7 +191,12 @@ def main(argv: list[str]) -> int:
+     lots = [f for f in fichiers if f.startswith(f"diag/{run}/lots/lot-") and f.endswith(".json")]
+     ids = [f for f in fichiers if f.startswith(f"donnees/{run}/lots/ids-lot-") and f.endswith(".json")]
+     assert len(lots) == 28 and len(ids) == 28 and f"diag/{run}/resume.json" in fichiers and f"diag/{run}/{la.NOMS['etalonnage']}" in fichiers
+-    dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents")
++    # correctif 0014 : chaque lot est parti sur la branche dès qu'il a été scellé (un commit « versement lot … » par lot, poussé)
++    par_lot = [s for s in git(m["origine"], "log", "--format=%s", branche).splitlines() if "(versement lot " in s]
++    poussees = [l for l in progres if "etape=versement" in l]
++    assert len(par_lot) == 28 and len(poussees) == 28 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])
++    dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents ; "
++         f"{len(par_lot)} poussées par lot, toutes vérifiées par le lanceur")
+     # 3. lanceur de session : après-création, surveillance, destruction (faux outil)
+     reponse = d / "creation-brute-essai1.json"
+     reponse.write_text(json.dumps({"success": True, "new_contract": int(ID)}), encoding="utf-8")
+diff --git a/scripts/tests-cibles-iib-v5-v6.txt b/scripts/tests-cibles-iib-v5-v6.txt
+new file mode 100644
+index 000000000..a03115145
+--- /dev/null
++++ b/scripts/tests-cibles-iib-v5-v6.txt
+@@ -0,0 +1,25 @@
++tests/test_iib_artefacts_centrage_v5.py
++tests/test_iib_bout_en_bout_nul_v5.py
++tests/test_iib_branches_v5.py
++tests/test_iib_configuration_distillation_v5.py
++tests/test_iib_configuration_v5.py
++tests/test_iib_controle_premier_cout_v5.py
++tests/test_iib_couplage_v5.py
++tests/test_iib_designation_v5.py
++tests/test_iib_distillation_bout_en_bout_v5.py
++tests/test_iib_distillation_v5.py
++tests/test_iib_environnement_machine_v5.py
++tests/test_iib_epreuve_centrage_v5.py
++tests/test_iib_epreuves_v5.py
++tests/test_iib_fuite_v5.py
++tests/test_iib_jumeau_v5.py
++tests/test_iib_lanceur_v5.py
++tests/test_iib_lecture_cout_v5.py
++tests/test_iib_oracle_v5.py
++tests/test_iib_rapportes_v5.py
++tests/test_iib_reecriture_v5.py
++tests/test_iib_regenere_v5.py
++tests/test_iib_regle_v5.py
++tests/test_iib_temoin_jumeau_v5.py
++tests/test_iib_tours_v5.py
++tests/test_iib_versement_v5.py
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index e4d88c988..2328c3f4e 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -4,8 +4,9 @@ EXPLORATOIRE, NON OPPOSABLE (R-522). Trois phases séparées, chacune rendue par
+ 
+ A. `phase_etalonnage` — 64 épisodes honnêtes (deux par tâche de réserve), 64 régénérés (mêmes tâches, mêmes graines, première
+    action copiée de l'honnête), 64 à excès planté (copies des honnêtes), 32 flagrants ; les deux oracles sur les honnêtes, les
+-   régénérés et les flagrants, l'oracle à contexte réécrit sur les plantés. **Versé par lot** (`lots/`, scellé à mesure), avec
+-   une marque de progrès par lot ; à la fin `etalonnage-oracles-iib-v5.json` (aucun texte), durées mesurées (action d'oracle :
++   régénérés et les flagrants, l'oracle à contexte réécrit sur les plantés. **Versé par lot** (`lots/`, scellé à mesure) et **poussé
++   aussitôt** (`versement_v5.Versement`, correctif 0014), avec une marque de progrès par lot et une par poussée ; à la fin
++   `etalonnage-oracles-iib-v5.json` (aucun texte), durées mesurées (action d'oracle :
+    la plus longue des deux oracles), dépense comptée depuis la création de la machine, rapportés (dont le contrôle du premier
+    coût et sa garde de validité). Point d'entrée : `python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config … --run-id …`
+    (`executer` : manifeste du run, `resume.json`, ou `arret.json` avec le motif sur toute garde).
+@@ -48,6 +49,7 @@ from . import rapportes_v5 as rp
+ from . import regenere_v5 as rg
+ from . import temoin_jumeau_v5 as tj
+ from . import tours_v5 as tv
++from . import versement_v5 as vs
+ from .regle_v5 import accepter
+ 
+ NOMS = {"etalonnage": "etalonnage-oracles-iib-v5.json", "ids_etalonnage": "ids-actions-etalonnage-iib-v5.json",
+@@ -226,15 +228,18 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
+ 
+ 
+ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
+-                     debut_utc_s: float | None = None, carte=None) -> dict:
++                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
+     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
+     ses actions sont écrits et scellés (`lots/`) ; une garde qui arrête laisse donc sur le disque tout ce qui a été joué, et
+     l'appelant (`executer`) écrit le motif. Marques de progrès à chaque lot (M2). `donnees` : dossier des identifiants d'actions
+-    (défaut : `dossier`). `debut_utc_s` : instant de création de la machine, pour compter la dépense depuis la création (m2)."""
++    (défaut : `dossier`). `debut_utc_s` : instant de création de la machine, pour compter la dépense depuis la création (m2).
++    `versement` : poussée de chaque lot dès qu'il est scellé (correctif 0014), exigée en mode réel."""
+     racine, dossier = Path(racine), Path(dossier)
+     donnees = dossier if donnees is None else Path(donnees)
+     cf.exiger_config_v5(config, racine, pour_lancer=True)
+     exiger_accord(config, environnement or {}, carte)
++    if config["mode"] == "reel" and versement is None:
++        raise GardeArret("étalonnage en mode réel sans poussée par lot : refus avant tout calcul (ordre, §§ 4 et 7)")
+     if config["oracle_de_la_regle"]["valeur"] is not None:
+         raise GardeArret("étalonnage : la configuration porte déjà un oracle de la règle (il n'est écrit qu'après, par la désignation)")
+     if (dossier / NOMS["etalonnage"]).exists() or (dossier / "lots").exists():
+@@ -261,6 +266,9 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+         par_phase[phase].extend(episodes)
+         tous.extend(episodes)
+         progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0))
++        if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
++            versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
++                                                     for p in (f, Path(str(f) + ".sha256"))])
+     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
+               for t in reserve for k in range(e["honnetes_par_tache"])]
+     plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
+@@ -568,6 +576,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         return phase_conditions(config, racine, diag)
+     cf.exiger_config_v5(config, racine, pour_lancer=True)
+     exiger_accord(config, environnement, carte)
++    versement = vs.Versement(racine, environnement, config["mode"], progres)       # correctif 0014 : avant le manifeste, avant tout calcul
+     chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+     etat = {"etape": "chargement"}
+@@ -580,10 +589,10 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
+         etat["etape"] = "etalonnage"
+         cree = environnement.get("IIB_DEBUT_UTC_S")
+-        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte)
++        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement)
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+-                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True,
++                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
+                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
+         ecrire_resultat(racine, chemin_m, "resume", resume)
+         return resume
+@@ -591,7 +600,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         ecrits = sorted(str(f.relative_to(racine)) for d in (diag, donnees) if d.is_dir() for f in d.rglob("*.json"))
+         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
+                                                      "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+-                                                     "duree_s": round(time.perf_counter() - debut, 1),
++                                                     "duree_s": round(time.perf_counter() - debut, 1), "versements": versement.journal,
+                                                      "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
+         progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
+         raise
+diff --git a/src/controle_ia/iib/versement_v5.py b/src/controle_ia/iib/versement_v5.py
+new file mode 100644
+index 000000000..66a88750f
+--- /dev/null
++++ b/src/controle_ia/iib/versement_v5.py
+@@ -0,0 +1,117 @@
++"""Poussée de chaque lot dès qu'il est scellé, organisme retenu du saboteur à budget, v5 (correctif 0014).
++
++EXPLORATOIRE, NON OPPOSABLE (R-522). L'ordre de l'étalonnage (§§ 4 et 7) exige qu'après chaque lot les sorties d'oracle
++(`diag/<run>/lots/lot-*.json`) et les identifiants (`donnees/<run>/lots/ids-lot-*.json`) soient scellés **et poussés**. Avant ce
++correctif, le lanceur scellait sur le disque et l'amorce ne poussait qu'à la fin du run, sur un arrêt, à la minuterie ou à un
++second démarrage : la branche d'essai restait au commit de lancement pendant tout l'étalonnage.
++
++Seul module v5 qui lance un sous-processus (garde statique de `tests/test_iib_lanceur_v5.py`) : `git` en lecture seule
++(`ls-files`, `status`, `rev-parse`) et le script de consignation de l'amorce (`bash IIB_CONSIGNER "versement …"`), rien d'autre ;
++aucune suppression, aucun arrêt de machine (c'est l'amorce qui arrête, par l'identifiant). Un délai dépassé arrête le groupe du
++script par son identifiant de groupe (R10).
++"""
++from __future__ import annotations
++
++import time
++from pathlib import Path
++
++from ..gardes import GardeArret
++
++CONSIGNER = "IIB_CONSIGNER"          # chemin du script de consignation écrit par l'amorce (`$R/iib-consigner.sh`)
++REFUS_CONSECUTIFS_MAX = 3            # trois poussées refusées de suite : arrêt (lots scellés sur le disque, machine arrêtée par l'amorce)
++DELAI_CONSIGNATION_S = 3000          # verrou (1 500 s au plus) et trois poussées (600 s au plus chacune) du script de l'amorce
++
++
++class Versement:
++    """Après chaque lot écrit et scellé, le script de consignation de l'amorce (`IIB_CONSIGNER`, motif « versement … ») committe
++    et pousse ; puis le lanceur **vérifie lui-même** que les fichiers du lot sont suivis, propres, et que la tête locale est
++    celle de la branche distante (une poussée dite faite sans l'être est vue). Chaque issue est une marque de progrès
++    (`etape=versement`, `poussee=faite` ou `poussee=refusee`, motif court) : jamais avalée. Trois refus de suite : `GardeArret`
++    (le lanceur écrit `arret.json`, l'amorce consigne une dernière fois et arrête la machine par son identifiant, disque gardé),
++    parce qu'au-delà, chaque lot de plus est une perte possible et non versée. Un refus isolé ne coûte rien : le lot reste scellé
++    sur le disque, et la consignation suivante pousse tout ce qui n'est pas encore sur la branche.
++    Mode réel : le script est exigé (refus avant tout calcul) ; mode jouet sans script : rien n'est poussé, et c'est écrit."""
++
++    def __init__(self, racine, environnement: dict, mode: str, progres=None):
++        script = (environnement or {}).get(CONSIGNER) or None
++        if mode == "reel" and not script:
++            raise GardeArret(f"mode réel sans {CONSIGNER} : aucun lot ne serait poussé au fil du run (ordre, §§ 4 et 7) : refus avant tout calcul")
++        if script is not None and not Path(script).is_file():
++            raise GardeArret(f"{CONSIGNER}={script} : script de consignation absent du disque (refus)")
++        self.racine, self.script = Path(racine), None if script is None else Path(script)
++        self.refus_consecutifs, self.journal = 0, []
++        self._progres = progres if progres is not None else marque
++
++    def _git(self, *args) -> tuple[int, str]:
++        import subprocess
++
++        r = subprocess.run(["git", "-C", str(self.racine), *args], capture_output=True, text=True, timeout=120)
++        return r.returncode, (r.stdout + r.stderr).strip()
++
++    def verifier_sur_la_branche(self, fichiers: list) -> str | None:
++        """None si chaque fichier est suivi et propre et si la tête locale est celle de la branche distante ; sinon le motif."""
++        import os
++
++        rel = [os.path.relpath(Path(f), self.racine) for f in fichiers]
++        code, sortie = self._git("ls-files", "--error-unmatch", "--", *rel)
++        if code != 0:
++            return "fichier_non_suivi"
++        code, sortie = self._git("status", "--porcelain", "--ignored", "--", *rel)
++        if code != 0 or sortie:
++            return "fichier_non_consigne"
++        code, branche = self._git("rev-parse", "--abbrev-ref", "HEAD")
++        if code != 0 or not branche or branche == "HEAD":
++            return "branche_illisible"
++        c1, tete = self._git("rev-parse", "HEAD")
++        c2, distante = self._git("rev-parse", "--verify", "-q", f"refs/remotes/origin/{branche}")
++        if c1 != 0 or c2 != 0 or tete != distante:
++            return "tete_non_poussee"
++        return None
++
++    def __call__(self, motif: str, fichiers: list) -> dict:
++        import os
++        import signal
++        import subprocess
++
++        n = len(self.journal) + 1
++        if self.script is None:
++            e = {"versement": n, "motif": motif, "poussee": "sans_script"}
++            self.journal.append(e)
++            self._progres(etape="versement", numero=n, poussee="sans_script")
++            return e
++        t0 = time.time()
++        proc = subprocess.Popen(["bash", str(self.script), f"versement {motif}"], cwd=self.racine, stdin=subprocess.DEVNULL,
++                                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, start_new_session=True)
++        try:
++            _, err = proc.communicate(timeout=DELAI_CONSIGNATION_S)
++            code = proc.returncode
++        except subprocess.TimeoutExpired:
++            os.killpg(proc.pid, signal.SIGKILL)              # groupe du script, par son identifiant (R10), jamais par motif
++            _, err = proc.communicate()
++            code = "delai"
++        cause = f"script_code_{code}" if code != 0 else self.verifier_sur_la_branche(fichiers)
++        e = {"versement": n, "motif": motif, "fichiers": len(fichiers), "code": code, "duree_s": round(time.time() - t0, 1),
++             "poussee": "faite" if cause is None else "refusee", "cause": cause}
++        self.journal.append(e)
++        if cause is None:
++            self.refus_consecutifs = 0
++            self._progres(etape="versement", numero=n, poussee="faite", duree_s=e["duree_s"])
++            return e
++        self.refus_consecutifs += 1
++        self._progres(etape="versement", numero=n, poussee="refusee", cause=cause, refus_de_suite=self.refus_consecutifs)
++        import sys
++
++        print(f"VERSEMENT REFUSÉ ({motif}) : {cause} ; {(err or '').strip()[-300:]}", file=sys.stderr, flush=True)
++        if self.refus_consecutifs >= REFUS_CONSECUTIFS_MAX:
++            raise GardeArret(f"poussée par lot refusée {self.refus_consecutifs} fois de suite (dernière : {motif}, {cause}) : arrêt ; "
++                             "les lots restent scellés sur le disque de la machine")
++        return e
++
++
++def marque(**champs) -> None:
++    """Marque de progrès, même forme que `lanceur_v5.progres` (utilisée si l'appelant n'en passe aucune)."""
++    import sys
++    from datetime import datetime, timezone
++
++    instant = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
++    print("PROGRES " + instant + " " + " ".join(f"{k}={str(v).replace(' ', '_')}" for k, v in champs.items()), file=sys.stderr, flush=True)
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 320819f17..b94ac620e 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -243,11 +243,25 @@ def test_aucune_sortie_supprimee_avant_versement_scelle(tmp_path):
+ 
+ 
+ def test_aucune_suppression_ailleurs_dans_le_code_v5():
+-    """Garde statique : aucun module v5 du saboteur ne supprime de fichier, hors `supprimer_apres_versement`."""
++    """Garde statique : aucun module v5 du saboteur ne supprime de fichier, hors `supprimer_apres_versement`. Correctif 0014 :
++    seul `versement_v5.py` lance des sous-processus, et seulement `git` en lecture (`ls-files`, `status`, `rev-parse`) et le
++    script de consignation de l'amorce par `bash` ; la garde le vérifie sur son texte (cas sain et artefacts du détecteur)."""
++    import re
++
++    appel = re.compile(r"subprocess\.(run|Popen|call|check_call|check_output)\(\s*(\[[^\]]*\])")
++    permis = {'["bash", str(self.script), f"versement {motif}"]', '["git", "-C", str(self.racine), *args]'}
++    for artefact in ('subprocess.run(["rm", "-rf", x])', 'subprocess.Popen(["git", "clean", "-fdx"])'):
++        assert appel.search(artefact) and appel.search(artefact).group(2) not in permis, artefact
+     for f in sorted((DEPOT / "src/controle_ia/iib").glob("*_v5.py")):
+         source = f.read_text(encoding="utf-8")
+-        for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(", "subprocess"):
++        for interdit in ("shutil.rmtree", "os.remove", "os.unlink", ".rmdir(") + (() if f.name == "versement_v5.py" else ("subprocess",)):
+             assert interdit not in source, (f.name, interdit)
++        if f.name == "versement_v5.py":
++            vus = [m.group(2) for m in appel.finditer(source)]
++            assert set(vus) == permis and source.count("subprocess.") - len(vus) == source.count("subprocess.DEVNULL") + source.count(
++                "subprocess.PIPE") + source.count("subprocess.TimeoutExpired"), vus
++            sous = set(re.findall(r'self\._git\("([a-z-]+)"', source))
++            assert sous == {"ls-files", "status", "rev-parse"}, sous            # git en lecture seule
+         assert source.count(".unlink(") == (1 if f.name == "lanceur_v5.py" else 0), f.name
+ 
+ 
+@@ -393,7 +407,7 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+     for f in ("amorce_instance_iib_v5.sh", "lancer_iib_v3.sh"):
+         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
+     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
+-    liste = s / "tests-cibles-iib-v5-v5.txt"                     # version 5 de la liste : environnement de la machine simulée (correctif 0011)
++    liste = s / "tests-cibles-iib-v5-v6.txt"                     # version 6 de la liste : poussée par lot (correctif 0014)
+     assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
+     fichiers = liste.read_text(encoding="utf-8").split()
+     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
+@@ -401,9 +415,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+     # attendus de l'amorce, et le nombre doit être le même sur le poste et sur la machine)
+     hors = ("tokeniseur_reel", "distillation_torch")
+     assert fichiers == sorted(str(f.relative_to(DEPOT)) for f in (DEPOT / "tests").glob("test_iib_*_v5.py") if not any(h in f.name for h in hors))
+-    assert len(fichiers) == 24 and not any(h in f for f in fichiers for h in hors)
++    assert len(fichiers) == 25 and not any(h in f for f in fichiers for h in hors)
+     assert {"tests/test_iib_configuration_distillation_v5.py", "tests/test_iib_distillation_v5.py",
+-            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py"} <= set(fichiers)
++            "tests/test_iib_distillation_bout_en_bout_v5.py", "tests/test_iib_environnement_machine_v5.py", "tests/test_iib_versement_v5.py"} <= set(fichiers)
+     assert amorce.count("controle_ia.iib.lanceur_v5 --phase etalonnage --config") == 1 and "controle_ia.iib.lanceur_v1 --config" not in amorce
+     assert 'IIB_DEBUT_UTC_S="$(date +%s)"' in amorce and "donnees/*/lots/ids-lot-*.json" in amorce
+ 
+@@ -411,7 +425,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+         d = list(difflib.unified_diff((s / a).read_text(encoding="utf-8").splitlines(), (s / b).read_text(encoding="utf-8").splitlines(), n=0, lineterm=""))
+         return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+     da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
+-    assert len([l for l in da if l[0] == "-"]) == 10 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 9
++    # correctif 0014 : une ligne de plus de chaque côté (le choix de la trace selon le motif « versement … » du lanceur)
++    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 10
++    assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
+     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
+     assert len([l for l in dl if l[0] == "-"]) == 15 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
+diff --git a/tests/test_iib_versement_v5.py b/tests/test_iib_versement_v5.py
+new file mode 100644
+index 000000000..cf2c24279
+--- /dev/null
++++ b/tests/test_iib_versement_v5.py
+@@ -0,0 +1,217 @@
++"""Poussée de chaque lot dès qu'il est scellé, organisme retenu v5 (correctif 0014 ; ordre de l'étalonnage, §§ 4 et 7).
++
++Constat de l'étalonnage : la branche d'essai restait au commit de lancement après dix-huit lots, l'amorce ne poussant qu'à la
++fin du run, sur un arrêt, à la minuterie ou à un second démarrage. Ici : le **vrai** script de consignation de l'amorce (tiré
++du texte de `scripts/amorce_instance_iib_v5.sh`), une origine nue locale, et le lanceur qui l'appelle après chaque lot puis
++vérifie lui-même la branche distante. Cas sain, artefacts (origine qui refuse, script qui dit 0 sans pousser, délai), reprise
++après un refus isolé, arrêt après trois refus de suite (R5 : aucun échec avalé)."""
++import json
++import os
++import re
++import subprocess
++from pathlib import Path
++
++import pytest
++
++from controle_ia.gardes import GardeArret
++from controle_ia.iib import lanceur_v5 as la
++from controle_ia.iib import versement_v5 as vs
++from controle_ia.iib.jouet_v5 import ModeleJouetDeLangue
++from controle_ia.scellement import verifier
++
++DEPOT = Path(__file__).resolve().parents[1]
++AMORCE = DEPOT / "scripts" / "amorce_instance_iib_v5.sh"
++BRANCHE = "essai/iib-explo-v99"
++RUN = "20991231-000010-iib-jouet"
++
++
++def git(d, *a, check=True):
++    return subprocess.run(["git", "-C", str(d), *a], capture_output=True, text=True, check=check).stdout.strip()
++
++
++def script_de_consignation(r: Path, t: Path) -> Path:
++    """Le script `iib-consigner.sh` tel que l'amorce l'écrit : son en-tête (variables) puis le corps cité, à la lettre."""
++    texte = AMORCE.read_text(encoding="utf-8")
++    m = re.search(r"cat >> \"\$R/iib-consigner\.sh\" <<'CONSIGNER'\n(.*?)\nCONSIGNER\n", texte, re.S)
++    assert m, "corps du script de consignation introuvable dans l'amorce"
++    tete = (f"#!/usr/bin/env bash\nR='{r}'; BRANCHE='{BRANCHE}'; T='{t}'; JOURNAL='{t}/journal.txt'; MORCEAU_MAX='90000000'; "
++            "POUSSEE_ATTENTE_S='0'\n")
++    chemin = r / "iib-consigner.sh"
++    chemin.write_text(tete + m.group(1) + "\n", encoding="utf-8")
++    return chemin
++
++
++def poste(tmp: Path, refuse: bool = False) -> dict:
++    """Origine nue (qui refuse toute poussée si `refuse`), dépôt extrait sous `R/amorce-depot` sur la branche d'essai, poussée
++    initiale faite (comme l'amorce), monde jouet du lanceur."""
++    from test_iib_lanceur_v5 import _monde
++
++    origine, r = tmp / "origine.git", tmp / "R"
++    subprocess.run(["git", "init", "-q", "--bare", str(origine)], check=True)
++    d = r / "amorce-depot"
++    subprocess.run(["git", "clone", "-q", str(origine), str(d)], check=True, capture_output=True)
++    for k, v in (("user.name", "essai"), ("user.email", "essai@invalid"), ("commit.gpgsign", "false")):
++        git(d, "config", k, v)
++    (d / ".gitignore").write_text("donnees/\n", encoding="utf-8")
++    git(d, "checkout", "-q", "-b", BRANCHE)
++    config = _monde(d)
++    (d / "runs" / RUN).mkdir(parents=True)                   # le manifeste du run existe avant le premier lot (`executer`)
++    (d / "runs" / RUN / "manifeste.json").write_text("{}\n", encoding="utf-8")
++    git(d, "add", "-A")
++    git(d, "commit", "-qm", "commit de lancement")
++    git(d, "push", "-q", "origin", BRANCHE)
++    if refuse:
++        crochet = origine / "hooks" / "pre-receive"
++        crochet.write_text("#!/bin/sh\necho 'refus planté (artefact)' >&2\nexit 1\n", encoding="utf-8")
++        crochet.chmod(0o755)
++    t = r / "iib"
++    t.mkdir(parents=True)
++    return {"origine": origine, "r": r, "d": d, "t": t, "config": config, "script": script_de_consignation(r, t)}
++
++
++def sur_l_origine(p: dict) -> set:
++    return set(git(p["origine"], "ls-tree", "-r", "--name-only", BRANCHE).splitlines())
++
++
++def etalonner(p: dict, versement) -> dict:
++    d = p["d"]
++    return la.phase_etalonnage(p["config"], d, d / "diag" / RUN, ModeleJouetDeLangue(), la.MondeJouet(), {}, d / "donnees" / RUN,
++                               carte=False, versement=versement)
++
++
++@pytest.fixture(scope="module")
++def sain(tmp_path_factory):
++    p = poste(tmp_path_factory.mktemp("versement-sain"))
++    v = vs.Versement(p["d"], {vs.CONSIGNER: str(p["script"])}, "jouet")
++    res = etalonner(p, v)
++    return {**p, "v": v, "res": res}
++
++
++def test_cas_sain_chaque_lot_scelle_est_sur_la_branche_distante_aussitot(sain):
++    v, res = sain["v"], sain["res"]
++    assert res["lots"] == 28 and len(v.journal) == 28
++    assert all(e["poussee"] == "faite" and e["code"] == 0 and e["cause"] is None for e in v.journal)
++    distant = sur_l_origine(sain)
++    for k in range(1, 29):
++        lot = [n for n in distant if re.fullmatch(rf"diag/{RUN}/lots/lot-{k:03d}-etalonnage-[a-z]+\.json", n)]
++        ids = [n for n in distant if re.fullmatch(rf"donnees/{RUN}/lots/ids-lot-{k:03d}-etalonnage-[a-z]+\.json", n)]
++        assert len(lot) == 1 and len(ids) == 1 and lot[0] + ".sha256" in distant and ids[0] + ".sha256" in distant, k
++    # un commit par lot, à la suite du commit de lancement (aucun lot n'a attendu le suivant)
++    messages = git(sain["origine"], "log", "--format=%s", BRANCHE).splitlines()
++    assert sum(m.startswith("(ii-b) : résultats et données légères (versement lot ") for m in messages) == 28
++    # le motif « versement » ne laisse aucune trace de journal par lot (les consignations d'arrêt, elles, en laissent)
++    assert not any(n.startswith("traces/") for n in distant)
++    # les empreintes poussées sont celles des sorties scellées
++    f = sain["d"] / "diag" / RUN / "lots" / "lot-001-etalonnage-honnete.json"
++    assert git(sain["origine"], "show", f"{BRANCHE}:diag/{RUN}/lots/lot-001-etalonnage-honnete.json") + "\n" == f.read_text(encoding="utf-8")
++    assert verifier(f)
++
++
++def test_marques_de_progres_de_chaque_poussee_relayables_par_l_amorce(tmp_path, capfd):
++    p = poste(tmp_path)
++    v = vs.Versement(p["d"], {vs.CONSIGNER: str(p["script"])}, "jouet")
++    f = p["d"] / "diag" / RUN / "lots" / "lot-001-essai.json"
++    f.parent.mkdir(parents=True)
++    f.write_text("{}\n", encoding="utf-8")
++    assert v("lot 001 essai", [f])["poussee"] == "faite"
++    lignes = [l for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ")]
++    motif = r"PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+"          # MOTIF_PROGRES de l'amorce
++    interdit = re.compile(r"au-dessus|interpr|échec|echec|aire=|bas=|haut=|ligne_|table_|plancher", re.I)  # MOTIF_INTERDIT de l'amorce
++    assert lignes and all(re.fullmatch(motif, l) and not interdit.search(l) for l in lignes)
++    assert "etape=versement" in lignes[-1] and "poussee=faite" in lignes[-1]
++
++
++def test_artefact_origine_qui_refuse_trois_fois_de_suite_arret_lots_scelles_sur_le_disque(tmp_path, capfd):
++    p = poste(tmp_path, refuse=True)
++    v = vs.Versement(p["d"], {vs.CONSIGNER: str(p["script"])}, "jouet")
++    with pytest.raises(GardeArret, match="refusée 3 fois de suite"):
++        etalonner(p, v)
++    assert [e["poussee"] for e in v.journal] == ["refusee"] * 3 and all(e["cause"] == "script_code_1" for e in v.journal)
++    err = capfd.readouterr().err
++    refus = [l for l in err.splitlines() if l.startswith("PROGRES ") and "etape=versement" in l]
++    assert len(refus) == 3 and all("poussee=refusee" in l for l in refus) and "refus_de_suite=3" in refus[-1]
++    assert err.count("VERSEMENT REFUSÉ") == 3                                    # visible hors des marques de progrès aussi
++    lots = sorted((p["d"] / "diag" / RUN / "lots").glob("lot-*.json"))
++    assert len(lots) == 3 and all(verifier(f) for f in lots)                     # rien de perdu : scellés sur le disque
++    assert not any(n.startswith("diag/") for n in sur_l_origine(p))              # rien n'est passé, et c'est dit
++    journal = (p["t"] / "journal.txt").read_text(encoding="utf-8")
++    assert journal.count("poussée : tentative 3 refusée") == 3 and "poussée impossible (versement lot 001" in journal
++
++
++def test_artefact_script_qui_rend_0_sans_pousser_vu_par_la_verification(tmp_path):
++    p = poste(tmp_path)
++    faux = tmp_path / "faux-consigner.sh"
++    faux.write_text("#!/usr/bin/env bash\ngit add -A diag && git commit -qm faux >/dev/null\nexit 0\n", encoding="utf-8")
++    v = vs.Versement(p["d"], {vs.CONSIGNER: str(faux)}, "jouet")
++    f = p["d"] / "diag" / RUN / "lots" / "lot-001-essai.json"
++    f.parent.mkdir(parents=True)
++    f.write_text("{}\n", encoding="utf-8")
++    e = v("lot 001 essai", [f])
++    assert e["code"] == 0 and e["poussee"] == "refusee" and e["cause"] == "tete_non_poussee"
++    nu = tmp_path / "rien.sh"
++    nu.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
++    g = p["d"] / "diag" / RUN / "lots" / "lot-002-essai.json"
++    g.write_text("{}\n", encoding="utf-8")
++    assert vs.Versement(p["d"], {vs.CONSIGNER: str(nu)}, "jouet")("lot 002", [g])["cause"] == "fichier_non_suivi"
++
++
++def test_un_refus_isole_ne_coute_rien_la_poussee_suivante_porte_le_lot_refuse(tmp_path):
++    p = poste(tmp_path)
++    v = vs.Versement(p["d"], {vs.CONSIGNER: str(p["script"])}, "jouet")
++    crochet = p["origine"] / "hooks" / "pre-receive"
++    crochet.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
++    crochet.chmod(0o755)
++    d = p["d"] / "diag" / RUN / "lots"
++    d.mkdir(parents=True)
++    (d / "lot-001-essai.json").write_text("{}\n", encoding="utf-8")
++    assert v("lot 001", [d / "lot-001-essai.json"])["poussee"] == "refusee" and v.refus_consecutifs == 1
++    crochet.unlink()
++    (d / "lot-002-essai.json").write_text("{}\n", encoding="utf-8")
++    assert v("lot 002", [d / "lot-002-essai.json"])["poussee"] == "faite" and v.refus_consecutifs == 0
++    assert {f"diag/{RUN}/lots/lot-001-essai.json", f"diag/{RUN}/lots/lot-002-essai.json"} <= sur_l_origine(p)
++
++
++def test_delai_depasse_le_groupe_du_script_est_arrete_par_son_identifiant(tmp_path, monkeypatch):
++    p = poste(tmp_path)
++    lent = tmp_path / "lent.sh"
++    temoin = tmp_path / "fils.pid"
++    lent.write_text(f"#!/usr/bin/env bash\nsleep 300 &\necho $! > {temoin}\nwait\n", encoding="utf-8")
++    monkeypatch.setattr(vs, "DELAI_CONSIGNATION_S", 2)
++    f = p["d"] / "x.json"
++    f.write_text("{}\n", encoding="utf-8")
++    e = vs.Versement(p["d"], {vs.CONSIGNER: str(lent)}, "jouet")("lot lent", [f])
++    assert e["code"] == "delai" and e["poussee"] == "refusee" and e["cause"] == "script_code_delai"
++    fils = int(temoin.read_text().strip())
++    try:
++        os.kill(fils, 0)
++        vivant = Path(f"/proc/{fils}/stat").read_text().split()[2] != "Z"
++    except ProcessLookupError:
++        vivant = False
++    assert not vivant, "le fils du script (même groupe) devait être arrêté"
++
++
++def test_mode_reel_exige_le_script_mode_jouet_sans_script_le_dit(tmp_path, capfd, monkeypatch):
++    with pytest.raises(GardeArret, match="mode réel sans IIB_CONSIGNER"):
++        vs.Versement(tmp_path, {}, "reel")
++    with pytest.raises(GardeArret, match="absent du disque"):
++        vs.Versement(tmp_path, {vs.CONSIGNER: str(tmp_path / "absent.sh")}, "reel")
++    v = vs.Versement(tmp_path, {}, "jouet")                                      # cas sain : jouet, rien à pousser, et c'est écrit
++    assert v("lot 001", [])["poussee"] == "sans_script" and "poussee=sans_script" in capfd.readouterr().err
++    # la phase d'étalonnage en mode réel refuse de partir sans poussée par lot (avant tout calcul)
++    from test_iib_lanceur_v5 import _monde
++
++    config = _monde(tmp_path / "m")
++    config["mode"] = "reel"
++    monkeypatch.setattr(la.cf, "exiger_config_v5", lambda *a, **k: True)        # la seule garde visée : la poussée par lot
++    monkeypatch.setattr(la, "exiger_accord", lambda *a, **k: "GO-2099-01-01-01")
++    with pytest.raises(GardeArret, match="sans poussée par lot"):
++        la.phase_etalonnage(config, tmp_path / "m", tmp_path / "m" / "d", None, None, carte=False)
++    assert not (tmp_path / "m" / "d").exists()
++
++
++def test_amorce_passe_le_script_au_lanceur_et_le_motif_versement_sans_trace():
++    texte = AMORCE.read_text(encoding="utf-8")
++    ligne = [l for l in texte.splitlines() if "controle_ia.iib.lanceur_v5 --phase etalonnage" in l and not l.lstrip().startswith("#")]
++    assert len(ligne) == 1 and 'IIB_CONSIGNER="$R/iib-consigner.sh"' in ligne[0]
++    assert 'case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consigner_partiel "$1"' in texte
++    assert json.dumps(vs.CONSIGNER) == '"IIB_CONSIGNER"' and vs.REFUS_CONSECUTIFS_MAX == 3
+-- 
+2.43.0
+
