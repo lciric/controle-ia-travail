@@ -69,6 +69,9 @@ Tout appel à Carbon (gemini-4-carbon), par tout script ou toute course, reçoit
 ## Notes des collisionneurs (mot de Lazar du 22 novembre, GO-2026-11-22-74)
 Un collisionneur ne vaut que par ses propositions. À la fin de chaque dossier, une note en Markdown et en PDF, lisible, pédagogique et rigoureusement équilibrée, sur ses sorties : ce que chaque modèle propose, accords et désaccords, ce qui est neuf ou fragile, références à vérifier, propositions retenues et pourquoi. Elle est transmise à Lazar avec le compte rendu de fin de dossier ; jamais « dossier fini » sans ses propositions.
 
+## Veille de cap (mot de Lazar du 22 novembre)
+Une session fille permanente de veille de cap boucle régulièrement le présent sur le passé (une semaine, deux semaines, un mois, deux mois) : dérive, réemploi des idées, tests promis, cap. Elle tient le registre des idées (aucune bonne idée oubliée, non testée ou abandonnée sans décision nommée), commit et pousse à chaque cycle, et répond à la mère. Mandat : `docs/notes/veille-de-cap-v1/mandat-veille-de-cap-v1.md`. Toute mère neuve la relance si elle ne tourne plus.
+
 ## Qui conçoit (mot de Lazar du 19 novembre, R-3735)
 La conception du saboteur et de tout ce qui est délicat est faite par Claude Fable 5.2 : conceptions d'organismes, d'oracles et d'épreuves, préenregistrements, textes de lecture, ordres de course, critères de décision. La contre-lecture est faite par un autre modèle (Opus 5.5), puis la vérification des corrections par le même contre-lecteur. La mère, quel que soit son modèle, orchestre, consigne et scelle ; elle ne rédige pas ces pièces.
 
