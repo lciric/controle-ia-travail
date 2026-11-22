@@ -6,7 +6,7 @@ Pour chaque bloc de `diff -u` (modèle → copie), chaque ligne retirée (« −
 la raison du bloc (`RAISONS`, écrites par le développeur de la chaîne ; elles renvoient aux points de la consigne, § 3.4 et
 § 3.5). Une ligne d'un bloc sans raison arrête le programme : aucune ligne changée n'est laissée sans raison.
 
-    python3 -B scripts/differentiel_annote_t08_v1.py > docs/notes/t08-chaine-de-lancement-v1/differentiel-annote-v2.md
+    python3 -B scripts/differentiel_annote_t08_v1.py > docs/notes/t08-chaine-de-lancement-v1/differentiel-annote-v3.md
 """
 from __future__ import annotations
 
@@ -37,13 +37,13 @@ RAISONS = {
            "ni proposée) ; branche des épreuves retirée ; GO de l'environnement égal à celui des contrôles ; plafond 120 lu "
            "dans la configuration ; calendrier lu au registre ; simulation d'épuisement refusée ; GO revérifié au jour de la "
            "création ; bornes lues dans la vue de l'offre ; commande de création portant les variables de la branche "
-           "d'entrée, du code et du GO, et le nom du lanceur de T0.8.",
-        4: f"{L34} « les noms » : le lanceur cité dans les messages d'après la création est celui de T0.8.",
+           "d'entrée, du code et du GO, et le nom du lanceur de T0.8. Contre-lecture M-5 : échéance de la machine = heure du plafond restant par défaut, une échéance donnée ne peut que l'avancer (la v13 prenait la fin du GO).",
+        4: f"{L34} « les noms » : le lanceur cité dans les messages d'après la création est celui de T0.8. Contre-lecture M-2 : l'étiquette du chemin « offre refusée » est lue dans la vue de l'offre.",
         5: f"{L34} : plafond de la surveillance lu dans lancement.txt, 120 exigé, sans valeur par défaut (la v13 prenait 200) ; "
            "seuil du compte rendu (40 USD) relu.",
         6: f"{L34} « les noms » : ligne d'en-tête de la surveillance ; alerte unique du compte rendu déclarée.",
         7: f"{L34} « compte rendu à 40 USD » : la décision vient du module de session de T0.8 (celle de la v3 plus l'alerte "
-           "du compte rendu) ; deux heures sans progression : alerte sans arrêt, inchangé.",
+           "du compte rendu) ; deux heures sans progression : alerte sans arrêt, inchangé. Contre-lecture M-3 : la ligne « FIN » imprime la destruction par l'identifiant, non plus l'arrêt qui garde le disque.",
         8: f"{L34} « compte rendu à 40 USD » : l'alerte n'est écrite qu'une fois (fichier compte-rendu-alerte.txt) ; "
            "`--verifier-go-seulement` : vérifie la ligne GO_ID contre la configuration (prolongation, plafond), plus la ligne "
            "d'épreuve de T0.6 (premier argument : la configuration, non un plafond d'épreuve).",
@@ -52,9 +52,9 @@ RAISONS = {
         1: f"{L35} : en-tête T0.8 ajouté (changements déclarés) ; le texte de la v11 est conservé en dessous.",
         2: f"{L35} « les noms » ; GO de la course reçu du lanceur (GO_ID_T08), jamais en dur.",
         3: f"{L35} « les noms » (fichiers de travail t08) ; minuterie : « montants de T0.8 » (120 USD) dans sa ligne de "
-           "journal ; mécanisme inchangé.",
+           "journal ; mécanisme inchangé. Contre-lecture M-3 : à l'heure du plafond restant, consignation puis destruction (plus de `PUT stopped`).",
         4: f"{L35} « les noms » (fichiers de travail, lignes « AMORCE T08 »).",
-        5: f"{L35} « les noms » (fichiers de travail).",
+        5: f"{L35} « les noms » (fichiers de travail). Contre-lecture M-3 : fonction `versement_prouve` (tête distante = tête locale).",
         6: f"{L35} « les noms » ; « montants de T0.8 » (message de l'heure d'épuisement) ; variables de la branche d'entrée, "
            "du code et du GO exigées ; texte scellé et branche de sortie de T0.8 par défaut ; bloc des épreuves à blanc "
            "retiré (refus explicite) ; « le clonage » : code au commit cité, une seule branche, sans étiquettes, extraction "
@@ -64,11 +64,11 @@ RAISONS = {
            "auteur et date fixés, seul parent COMMIT, rien de gelé) ; garde précoce sur le disque (aucun lecture-sondes-t06* "
            "ni resume.json), arbre propre exigé ; ajouts par `git add --sparse` (sorties hors des motifs) ; « les noms » (script de consignation) ; données légères : les sorties de la "
            "course de T0.8 seulement (jamais les entrées de 7b) ; morceaux d'activations retirés (bras propre à la course de "
-           "confirmation).",
+           "confirmation). Contre-lecture M-5 : échéance ramenée à l'heure du plafond restant, plus à la fin du GO ; M-3 : second démarrage après une fin normale, destruction si le versement est prouvé.",
         7: f"{L35} « les noms » (messages de commit T0.8, verrou) ; GO lu au registre du commit par le module de T0.8 "
            "(prolongation comprise) au lieu des modules de T0.6 ; citations : la configuration et le texte scellé passés par "
            "le lanceur (le texte de T0.8 ne porte pas les citations de T0.6) ; calendrier lu au registre ; « le nombre "
-           "attendu » d'essais ne vient plus du texte mais de l'amorce (bloc 9).",
+           "attendu » d'essais ne vient plus du texte mais de l'amorce (bloc 9). Contre-lecture M-5 : le refus « échéance après la fin du GO » est retiré.",
         8: f"{L35} « les noms » (traces, verrou, fin anormale) ; « les bras propres à la course de confirmation (audit de "
            "fuite, sondes) sont retirés » : bras B retiré ; environnement Python hors du dépôt ($R/venv-t08) : la garde de "
            "l'instance parcourt tout le dépôt.",
@@ -82,7 +82,7 @@ RAISONS = {
         11: f"{L35} : fin du run reconnue sur le résultat de la course de T0.8 (course-t08.json) et son arrêt de garde "
             "(« ARRÊT : … ») au lieu de resume.json et arret.json de T0.6.",
         12: f"{L35} « la fin » : message de commit T0.8 ; morceaux d'activations retirés ; « les noms ».",
-        13: f"{L35} « la fin » : « les noms » ; bras B retiré de la fin normale.",
+        13: f"{L35} « la fin » : « les noms » ; bras B retiré de la fin normale. Contre-lecture M-3 : fin normale, destruction après le versement prouvé, sinon arrêt (disque gardé).",
     },
 }
 
@@ -110,7 +110,7 @@ def blocs(modele: str, copie: str) -> list[dict]:
 
 
 def main() -> int:
-    print("# Différentiel annoté de la chaîne de lancement de T0.8 — v2\n")
+    print("# Différentiel annoté de la chaîne de lancement de T0.8 — v3\n")
     print("Engendré par `scripts/differentiel_annote_t08_v1.py`. Chaque ligne retirée (−, numéro dans le modèle) ou ajoutée "
           "(+, numéro dans la copie) porte la raison de son bloc. Lignes tronquées à 200 caractères ; le fichier entier fait foi.\n")
     for modele, copie in PAIRES:
