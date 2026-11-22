@@ -591,3 +591,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 | 2026-11-22 | bras A, relecture de l'avenant 3 par Fable par l'API | 1,70 USD | GO-2026-11-22-07 | journal de la relance |
 | 2026-11-22 | collisionneur modes et attaques, épreuve de Carbon avec Argon (session cloisonnée session_013QMaymJkGn2eGFDmjZHBN9), GEMINI_API_KEY ; arrêt code 4 PLAFOND ; inventaire e23eb0c9… (runs/cloisonnee-modes-attaques-questions-v4, dad106fa4) | 1,79 USD | GO-2026-11-22-95 | compte rendu de la cloisonnée, 2026-11-22T17:03:24Z |
 | 2026-11-22 | raisons et regard, second essai d'Argon (GO-2026-11-22-92), interrompu avec l'ancien conteneur, réponses perdues ; coût réel inconnu, inscrit au pire | 13,05 USD (pire cas, à corriger par la console Google) | GO-2026-11-22-92 | R-4973 |
+| 2026-11-22 | raisons et regard, troisième essai d'Argon (GO-2026-11-22-101), 39 tentées, non admis | 2,21 USD | GO-2026-11-22-101 | R-4977 |
