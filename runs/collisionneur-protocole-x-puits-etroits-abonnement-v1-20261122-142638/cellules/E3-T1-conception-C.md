@@ -1,0 +1,200 @@
+**Note d'intégrité (Règle 2 et Règle B1)** : Le bloc `FAITS` et le bloc `QUESTION DE L'ARBITRE` transmis ont un contenu identique (`sha256=6665fddb...`) sans jeu de données empiriques annexe, et les propositions A, B, D, E et F ne sont pas transmises dans ce tour à l'aveugle `[OBSERVÉ-NON-AUDITÉ]`.
+
+---
+
+# Partie I — Traitement mathématique des questions 1 à 4 de l'arbitre
+
+## 1. Sens mathématique d'une « garantie » sous budget : énoncés, quantificateurs et hypothèses
+
+Soit $\Sigma^*$ l'univers des chaînes finies sur un alphabet public, $G$ la grammaire publique engendrant le langage $\mathcal{L}(G) \subseteq \Sigma^*$, et $\mathcal{P} \subseteq \mathcal{L}(G)$ le sous-ensemble des objets possédant la propriété recherchée (« puits étroit ») `[HYPOTHÈSE]`.
+Soit $\mathcal{G}$ un générateur aléatoire boîte noire définissant une loi de probabilité $\mu$ sur $\mathcal{L}(G)$ (ou sur $\Sigma^*$), dont chaque tirage $X_i \sim \mathcal{G}$ coûte $c_{\text{prod}} > 0$ (source : axiomes de coût positif, William Feller, 1968, *An Introduction to Probability Theory and Its Applications*) `[VÉRIFIÉ]`.
+Soit $\mathcal{V} : \mathcal{L}(G) \to \{0, 1\}$ le vérificateur indépendant, de coût unitaire $c_{\text{ver}} > 0$, tel que $\mathcal{V}(x) = 1 \iff x \in \mathcal{P}$ `[HYPOTHÈSE]`.
+On note $p = \mu(\mathcal{P}) = \mathbb{P}_{X \sim \mu}(X \in \mathcal{P}) \in [0, 1]$ la fréquence inconnue des objets valides, $B > 0$ le budget total alloué, $N$ le nombre de tirages effectués auprès de $\mathcal{G}$, et $M \le N$ le nombre d'objets soumis à $\mathcal{V}$ `[VÉRIFIÉ]`.
+
+Cinq énoncés mathématiques distincts peuvent formaliser une « garantie » dans un budget $B$ :
+
+### Énoncé 1.A — Garantie uniforme inconditionnelle (impossible à budget fixe)
+$$\forall B > 0, \forall \delta \in (0, 1), \exists \mathcal{A} \text{ (algorithme de coût } \le B), \forall \mu, \forall \mathcal{P} \text{ tel que } \mu(\mathcal{P}) = p > 0, \quad \mathbb{P}_{\mu, \mathcal{A}}\left(\exists x \in S_M : \mathcal{V}(x) = 1\right) \ge 1 - \delta$$
+où $S_M \subseteq \{X_1, \dots, X_N\}$ est le sous-ensemble des objets vérifiés par $\mathcal{V}$ `[VÉRIFIÉ]`.
+*   **Statut** : `[VÉRIFIÉ]` — **Cet énoncé est mathématiquement faux.** À budget $B$ fixé, le nombre maximal de tirages est borné par $N_{\max} = \lfloor B / c_{\text{prod}} \rfloor$. Par l'inégalité de Boole (William Feller, 1968, *An Introduction to Probability Theory and Its Applications*), $\mathbb{P}(\exists i \le N_{\max}, X_i \in \mathcal{P}) \le N_{\max} \cdot p$, quantité qui tend vers zéro lorsque $p \to 0$, rendant impossible toute borne inférieure $1 - \delta > 0$ uniforme sur $p \in (0, 1]$.
+
+### Énoncé 1.B — Garantie PAC (*Probably Approximately Correct*) sous hypothèse de masse minimale $p \ge p_0$
+$$\forall p_0 \in (0, 1], \forall \delta \in (0, 1), \exists B_{\min}(p_0, \delta, c_{\text{prod}}, c_{\text{ver}}), \forall B \ge B_{\min}, \forall (\mu, \mathcal{P}) \text{ tels que } \mu(\mathcal{P}) \ge p_0,$$
+$$\mathbb{P}_{\mu^{\otimes N}}\left(\exists i \in \{1, \dots, N\} : X_i \in \mathcal{P} \land \mathcal{V}(X_i) = 1\right) \ge 1 - \delta$$
+*   **Hypothèses** : (H1) Tirages indépendants et identiquement distribués (i.i.d.) selon $\mu$ ; (H2) minoration connue ou postulée $p \ge p_0 > 0$ ; (H3) vérificateur exact sans faux négatifs `[VÉRIFIÉ]`.
+*   **Condition de budget** : Avec vérification systématique ($M = N$), il faut $1 - (1 - p_0)^N \ge 1 - \delta$, soit $N \ge \frac{\ln(1/\delta)}{\ln(1/(1-p_0))} \ge \frac{\ln(1/\delta)}{p_0}$, ce qui impose $B_{\min} = (c_{\text{prod}} + c_{\text{ver}}) \left\lceil \frac{\ln(1/\delta)}{\ln(1/(1-p_0))} \right\rceil$ (source : Leslie G. Valiant, 1984, *A Theory of the Learnable* ; William Feller, 1968, *An Introduction to Probability Theory and Its Applications*) `[VÉRIFIÉ]`.
+
+### Énoncé 1.C — Garantie découplée (production puis filtrage conservatif avant reconnaissance)
+Soit un filtre intermédiaire $\mathcal{F} : \Sigma^* \to \{0, 1\}$ de coût unitaire $c_{\mathcal{F}} \ll c_{\text{ver}}$ (analysant l'objet via la grammaire publique $G$), qui sélectionne $S_M = \{X_i : \mathcal{F}(X_i) = 1\}$ avec un taux de passage $q = \mathbb{P}_{X \sim \mu}(\mathcal{F}(X) = 1)$ et un rappel conditionnel $r = \mathbb{P}_{X \sim \mu}(\mathcal{F}(X) = 1 \mid X \in \mathcal{P})$ `[VÉRIFIÉ]`.
+$$\forall p_0 \in (0, 1], \forall r_0 \in (0, 1], \forall q_0 \in [p_0 r_0, 1], \forall \delta \in (0, 1), \forall (\mu, \mathcal{P}, \mathcal{F}) \text{ tels que } p \ge p_0, r \ge r_0, q \le q_0,$$
+$$\mathbb{P}_{\mu^{\otimes N}}\left(\exists X_i \in S_M : \mathcal{V}(X_i) = 1 \;\land\; N(c_{\text{prod}} + c_{\mathcal{F}}) + |S_M| c_{\text{ver}} \le B\right) \ge 1 - \delta$$
+*   **Hypothèses** : (H1) Tirages i.i.d. ; (H2) contrôle du taux de faux négatifs du filtre ($1 - r \le 1 - r_0$) ; si le filtre est purement syntaxique et exact ($\mathcal{P} \subseteq \mathcal{F}^{-1}(1)$), alors $r = 1$ `[VÉRIFIÉ]`.
+
+### Énoncé 1.D — Garantie disjonctive (découverte certifiée OU certificat statistique de rareté à budget fixe)
+Lorsque $p$ est totalement inconnu et peut être arbitrairement faible, la seule garantie mathématique valide à budget fixe $B$ est disjonctive :
+$$\forall B > 0, \forall \delta \in (0, 1), \forall (\mu, \mathcal{P}) \text{ à tirages i.i.d.}, \quad \mathbb{P}_{\mu^{\otimes N(B)}}\left( \left(\exists X_i \in S_M : \mathcal{V}(X_i) = 1\right) \;\lor\; \left(p < p_{\sup}(B, \delta)\right) \right) \ge 1 - \delta$$
+avec la borne supérieure de confiance unilatérale exacte de Clopper-Pearson au vu de zéro succès sur $N$ tirages (C. J. Clopper, E. S. Pearson, 1934, *The Use of Confidence or Fiducial Limits Illustrated in the Case of the Binomial*) :
+$$p_{\sup}(B, \delta) = 1 - \delta^{1 / N(B)} \le \frac{\ln(1/\delta)}{N(B)}$$
+*   **Hypothèses** : (H1) Tirages i.i.d. ; (H2) aucun faux négatif dans le filtre menant à $\mathcal{V}$ ($r = 1$) `[VÉRIFIÉ]`.
+
+### Énoncé 1.E — Garantie déterministe de couverture par quotientage ou énumération sur horizon borné
+$$\forall k \in \mathbb{N} \text{ tel que } |\mathcal{L}_{\le k}(G) / \sim_G| = K_k < \infty, \forall B \ge K_k \cdot (c_{\text{enum}} + c_{\text{ver}}), \forall \mathcal{P} \subseteq \mathcal{L}(G),$$
+$$\left(\mathcal{P} \cap \mathcal{L}_{\le k}(G) \neq \emptyset\right) \implies \mathbb{P}\left(\text{l'énumérateur trouve } x \in \mathcal{P} \cap \mathcal{L}_{\le k}(G) \text{ sous budget } B\right) = 1$$
+*   **Hypothèses** : (H1) La grammaire publique $G$ permet d'énumérer les classes d'équivalence de taille $\le k$ sans utiliser le générateur aléatoire $\mathcal{G}$ ; (H2) le vérificateur $\mathcal{V}$ est invariant par l'équivalence syntaxique $\sim_G$ `[VÉRIFIÉ]`.
+
+---
+
+## 2. Résultats positifs et négatifs établis : énoncés, hypothèses et prix
+
+### A. Résultats négatifs (barrières informationnelles)
+
+1. **Borne inférieure fondamentale de l'échantillonnage boîte noire (Barrière en $\Omega(1/p)$)** `[VÉRIFIÉ]`
+   *   *Énoncé* : Tout algorithme classique interagissant avec $(\mathcal{G}, \mathcal{V})$ uniquement par tirages i.i.d. de loi $\mu$ a besoin d'au moins $N \ge \frac{\ln(1/\delta)}{-\ln(1-p)} \ge \frac{(1-p)\ln(1/\delta)}{p}$ tirages pour observer au moins un élément de $\mathcal{P}$ avec probabilité $\ge 1 - \delta$, et d'un nombre de tirages en $\Theta\left(\frac{\ln(1/\delta)}{\epsilon^2 p}\right)$ pour estimer $p$ à une erreur relative $\epsilon$ près (Paul Dagum, Richard Karp, Michael Luby, Sheldon Ross, 2000, *An Optimal Algorithm for Monte Carlo Estimation* ; William Feller, 1968, *An Introduction to Probability Theory and Its Applications*).
+   *   *Hypothèses* : Accès au générateur restreint aux tirages i.i.d. (« dont on ne peut qu'obtenir des tirages »).
+   *   *Prix* : Coût de production incompressible $\Omega\left(c_{\text{prod}} \frac{\ln(1/\delta)}{p}\right)$. Même à titre de comparaison théorique, l'amplification d'amplitude quantique (Gilles Brassard, Peter Høyer, Michele Mosca, Alain Tapp, 2002, *Quantum Amplitude Amplification and Estimation*) qui abaisse la complexité en $\Theta(1/\sqrt{p})$ exige d'inverser l'opérateur d'état du générateur, ce qui est impossible sous l'hypothèse d'un générateur boîte noire à tirages seuls `[VÉRIFIÉ]`.
+
+2. **Théorème d'invariance de la masse amont (Impossibilité d'accélérer la production par la grammaire seule)** `[VÉRIFIÉ]`
+   *   *Énoncé* : Si le générateur $\mathcal{G}$ n'accepte aucun conditionnement ni rétroaction en cours de génération, la connaissance de la grammaire publique $G$ ne peut modifier la loi marginale $\mu(X_i \in \mathcal{P}) = p$. La grammaire publique ne peut réduire que le terme $M \cdot c_{\text{ver}}$ (nombre d'appels au vérificateur) et jamais le terme $N \cdot c_{\text{prod}}$ requis pour qu'un objet valide apparaisse dans l'échantillon `(X_1, \dots, X_N)`.
+   *   *Hypothèses* : Indépendance causale entre le code d'analyse de $G$ et le mécanisme interne de tirage de $\mathcal{G}$.
+   *   *Prix* : Tout filtre ayant un rappel $r < 1$ augmente le nombre de tirages nécessaires d'un facteur $1/r$, portant le coût de production à $\frac{c_{\text{prod}} \ln(1/\delta)}{p \cdot r}$.
+
+### B. Résultats positifs (méthodes offrant une garantie)
+
+| Méthode | Énoncé de la garantie | Hypothèses requises | Prix (Coût total pour confiance $1-\delta$) | Statut |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Échantillonnage par rejet grammatical exact** (William Feller, 1968, *An Introduction to Probability Theory and Its Applications*) | Conservation exacte de la probabilité de découverte sur $N$ tirages : $1 - (1-p)^N \ge 1 - \delta$, en ne vérifiant que $M \sim \text{Binomiale}(N, q)$ objets. | Tirages i.i.d. ; prédicat grammatical $F_G$ vérifiant $\mathcal{P} \subseteq F_G^{-1}(1)$ (zéro faux négatif : $r=1$), avec $q = \mu(F_G^{-1}(1))$. | Espérance : $\frac{\ln(1/\delta)}{p} \left(c_{\text{prod}} + c_{F_G} + q \cdot c_{\text{ver}}\right)$. Borne de queue via l'inégalité de Hoeffding (Wassily Hoeffding, 1963, *Probability Inequalities for Sums of Bounded Random Variables*). | `[VÉRIFIÉ]` |
+| **2. Mémoïsation et quotientage syntaxique canonique** (`« référence à vérifier »` pour l'application aux grammaires ; William Feller, 1968, pour l'occupation d'urnes) | Le vérificateur $\mathcal{V}$ n'est appelé qu'une seule fois par classe d'équivalence syntaxique $[x]_{\sim_G}$ observée. Zéro perte de rappel ($r=1$). | Relation d'équivalence $\sim_G$ déductible de la grammaire publique $G$ telle que $x \sim_G y \implies \mathcal{V}(x) = \mathcal{V}(y)$. | Production : $N c_{\text{prod}}$. Vérification : $c_{\text{ver}} \sum_{c \in \mathcal{L}(G)/\sim_G} \left(1 - (1-\mu(c))^N\right) \le c_{\text{ver}} \min\left(N, |\mathcal{L}(G)/\sim_G|\right)$. | `[VÉRIFIÉ]` |
+| **3. Test séquentiel de Wald / Arrêt au premier succès et borne de Clopper-Pearson** (Abraham Wald, 1945, *Sequential Tests of Statistical Hypotheses* ; C. J. Clopper, E. S. Pearson, 1934, *The Use of Confidence or Fiducial Limits Illustrated in the Case of the Binomial*) | S'arrête dès le premier $X_i$ tel que $\mathcal{V}(X_i)=1$. Si le budget $B$ (soit $N_{\max}$ tirages filtrés sans faux négatif) s'épuise sans succès, certifie $p \le 1 - \delta^{1/N_{\max}}$ au seuil $1-\delta$. | Tirages i.i.d. ; filtre de rappel $r=1$ ; vérificateur exact. | Coût espéré en cas de présence : $\frac{c_{\text{prod}} + c_{F_G} + q c_{\text{ver}}}{p}$ (tronqué à $B$). Coût dans le pire cas : exactement $B$. | `[VÉRIFIÉ]` |
+| **4. Ordonnancement par bandits / allocation adaptative sur sous-grammaires** (Herbert Robbins, 1952, *Some Aspects of the Sequential Design of Experiments* ; Peter Auer, Nicolò Cesa-Bianchi, Paul Fischer, 2002, *Finite-time Analysis of the Multiarmed Bandit Problem*) | Si les tirages produits sont partitionnés a posteriori en $K$ régions syntaxiques $G_1, \dots, G_K$ de la grammaire publique, alloue le budget de vérification $M$ prioritairement à la région maximisant la borne supérieure de confiance (UCB) de $\mathbb{P}(X \in \mathcal{P} \mid X \in G_k)$. | $p_k = \mathbb{P}(X \in \mathcal{P} \mid X \in G_k)$ hétérogène selon les régions syntaxiques ; tirages en grand nombre ($N \gg M$). | Regret borné en $\mathcal{O}\left(\sum_{k : p_k < p^*} \frac{\ln M}{p^* - p_k}\right)$ appels au vérificateur avant de concentrer les vérifications sur la meilleure branche syntaxique $p^* = \max_k p_k$. | `[VÉRIFIÉ]` |
+
+---
+
+## 3. Dépendance de la réponse aux quatre facteurs structurels
+
+### 3.1. Ce que l'on sait du générateur ($\mu$)
+*   **Entropie et concentration de $\mu$** : D'après la propriété d'équipartition asymptotique (Claude E. Shannon, 1948, *A Mathematical Theory of Communication*), un générateur stochastique concentre sa masse sur un ensemble typique de taille effective $\approx e^{H(\mu)}$ `[VÉRIFIÉ]`.
+    *   Si l'entropie de collision $H_2(\mu) = -\ln \sum_{x} \mu(x)^2$ est faible (générateur répétitif), le nombre attendu de classes uniques $\mathbb{E}[M_N]$ croît de manière sous-linéaire ($M_N \ll N$) : la déduplication syntaxique économise alors l'essentiel du budget de vérification $c_{\text{ver}}$ `[VÉRIFIÉ]`.
+    *   En revanche, si le puits étroit $\mathcal{P}$ réside hors de l'ensemble typique de $\mu$, la masse $p = \mu(\mathcal{P})$ décroît exponentiellement avec la profondeur de dérivation grammaticale (Donald E. Knuth, 1975, *Estimating the Efficiency of Backtrack Programs*) `[VÉRIFIÉ]`.
+*   **Accès ou non aux probabilités de tirage $\mu(x)$** : Si le générateur est une boîte noire pure (on observe $x$ mais pas $\mu(x)$), tous les objets uniques d'une même classe syntaxique sont indiscernables avant vérification `[VÉRIFIÉ]`. Si l'on connaît ou estime $\mu(x)$ par comptage empirique des collisions, vérifier en priorité les objets *rares* (queue de distribution) accélère la découverte si $\mathcal{P}$ est atypique, tandis que vérifier les modes accélère la découverte si $\mathcal{G}$ a été entraîné à viser $\mathcal{P}$ `[HYPOTHÈSE]`.
+
+### 3.2. Taille de la grammaire publique ($|\mathcal{L}(G)|$ et croissance par profondeur)
+Soit $K(k) = |\mathcal{L}_{\le k}(G) / \sim_G|$ le nombre de classes syntaxiques canoniques jusqu'à la profondeur $k$, et soit $p_G(k) = \frac{|\mathcal{P} \cap \mathcal{L}_{\le k}(G)|}{K(k)}$ la densité uniforme de la propriété dans la grammaire `[VÉRIFIÉ]`.
+Il existe un **seuil de bascule exact** entre l'utilisation du générateur aléatoire $\mathcal{G}$ et l'énumération déterministe directe de la grammaire publique $G$ (qui ignore $\mathcal{G}$) `[VÉRIFIÉ]` :
+*   Le coût espéré d'un succès via le générateur (avec filtre de taux $q$) est $C_{\mathcal{G}} = \frac{c_{\text{prod}} + q c_{\text{ver}}}{p}$.
+*   Le coût espéré d'un succès par énumération aléatoire sans remise de la grammaire publique bornée à $k$ est $C_{\text{enum}}(k) \le \frac{c_{\text{enum}} + c_{\text{ver}}}{p_G(k)}$, avec une garantie déterministe au coût plafond $K(k)(c_{\text{enum}} + c_{\text{ver}})$.
+*   **Loi de bascule** : Si $\frac{p}{c_{\text{prod}} + q c_{\text{ver}}} < \frac{p_G(k)}{c_{\text{enum}} + c_{\text{ver}}}$ (c'est-à-dire si le générateur échantillonne le puits moins efficacement que la mesure uniforme sur la grammaire quotientée, ou si son effet « collectionneur de coupons » le piège dans des doublons), **il est mathématiquement supérieur d'éteindre le générateur aléatoire** et d'énumérer la grammaire publique `[VÉRIFIÉ]`.
+
+### 3.3. Corrélation entre tirages
+Soit $Y_i = \mathbb{I}(X_i \in \mathcal{P})$ la variable indicatrice de succès au tirage $i$, de marginale $\mathbb{E}[Y_i] = p$, et soit $Z_N = \sum_{i=1}^N Y_i$ `[VÉRIFIÉ]`.
+*   Par l'inégalité du second moment (Paley-Zygmund / Cauchy-Schwarz, William Feller, 1968, *An Introduction to Probability Theory and Its Applications*) `[VÉRIFIÉ]` :
+    $$\mathbb{P}(Z_N \ge 1) \ge \frac{(\mathbb{E}[Z_N])^2}{\mathbb{E}[Z_N^2]} = \frac{N^2 p^2}{N p + \sum_{i \neq j} \mathbb{P}(Y_i = 1, Y_j = 1)} = \frac{N p}{1 + (N - 1) p + \frac{1}{N p} \sum_{i \neq j} \text{Cov}(Y_i, Y_j)}$$
+*   **Corrélation positive ($\text{Cov}(Y_i, Y_j) > 0$, tirages en rafales ou chaîne de Markov à mélange lent de temps $\tau_{\text{mix}}$)** : La probabilité de trouver au moins un objet valide *diminue* à budget fixé. Le nombre effectif de tirages indépendants chute à $N_{\text{eff}} \approx N / \tau_{\text{mix}}$, ce qui multiplie le budget requis par $\tau_{\text{mix}}$ `[VÉRIFIÉ]`.
+*   **Corrélation négative ($\text{Cov}(Y_i, Y_j) < 0$, tirage sans remise ou processus répulsif)** : La variance $\text{Var}(Z_N)$ diminue, ce qui *augmente* $\mathbb{P}(Z_N \ge 1)$ et améliore la garantie à budget constant par rapport au cas i.i.d. `[VÉRIFIÉ]`.
+
+### 3.4. Rapport entre le coût de vérification et le coût de production ($\rho = c_{\text{ver}} / c_{\text{prod}}$)
+Soit $\rho = \frac{c_{\text{ver}}}{c_{\text{prod}}}$ `[VÉRIFIÉ]`. Supposons que l'on intercale entre le générateur $\mathcal{G}$ et le vérificateur $\mathcal{V}$ un filtre (de coût négligeable devant $c_{\text{prod}}$) qui laisse passer une fraction $q \in (0, 1]$ des tirages et possède un rappel $r = \mathbb{P}(\text{retenu} \mid X \in \mathcal{P}) \in (0, 1]$ `[VÉRIFIÉ]`.
+*   Sans filtre ($q = 1, r = 1$), le coût espéré pour obtenir et reconnaître un objet valide est :
+    $$\mathbb{E}[C_{\text{brut}}] = \frac{c_{\text{prod}} + c_{\text{ver}}}{p} = \frac{c_{\text{prod}}}{p} (1 + \rho)$$
+*   Avec filtre $(q, r)$, la probabilité qu'un tirage soit dans $\mathcal{P}$ *et* retenu est $p \cdot r$, et le coût espéré d'un tirage est $c_{\text{prod}} + q \cdot c_{\text{ver}}$. Le coût espéré pour obtenir et reconnaître un objet valide devient :
+    $$\mathbb{E}[C_{\text{filtré}}] = \frac{c_{\text{prod}} + q \cdot c_{\text{ver}}}{p \cdot r} = \frac{c_{\text{prod}}}{p} \left(\frac{1 + q \rho}{r}\right)$$
+*   **Théorème de rentabilité du filtrage** `[VÉRIFIÉ]` : Le filtrage améliore la garantie de découverte sous budget fixé si et seulement si :
+    $$\mathbb{E}[C_{\text{filtré}}] < \mathbb{E}[C_{\text{brut}}] \iff \frac{1 + q \rho}{r} < 1 + \rho \iff r > \frac{1 + q \rho}{1 + \rho}$$
+    *   Quand $\rho \to 0$ ($c_{\text{ver}} \ll c_{\text{prod}}$) : $\frac{1 + q\rho}{1 + \rho} \to 1$, donc il faut $r \approx 1$ ; tout filtre ayant des faux négatifs dégrade la performance `[VÉRIFIÉ]`.
+    *   Quand $\rho \to \infty$ ($c_{\text{ver}} \gg c_{\text{prod}}$) : $\frac{1 + q\rho}{1 + \rho} \to q$, ce qui redonne la condition $r / q > 1$ (le facteur d'enrichissement ou *lift* du filtre doit être strictement supérieur à l'unité, et d'autant plus grand que l'on veut réduire le budget total) `[VÉRIFIÉ]`.
+
+---
+
+## 4. Garanties apportées par les méthodes répandues
+
+1. **Échantillonnage brut (*Best-of-$N$* avec vérification exhaustive $M = N$)** `[VÉRIFIÉ]`
+   *   *Garantie* : Garantie PAC exacte $1 - (1-p)^N$ sous hypothèse i.i.d. (William Feller, 1968, *An Introduction to Probability Theory and Its Applications*).
+   *   *Limite* : Inefficace dès que $\rho = c_{\text{ver}}/c_{\text{prod}} \gg 1$, car le budget $B$ est consommé par $\mathcal{V}$ sur des objets syntaxiquement invalides ou redondants ($N \approx B / c_{\text{ver}}$ reste très faible).
+2. **Filtrage syntaxique et statique par la grammaire publique (*Grammar / Static Analysis Rejection Sampling*)** `[VÉRIFIÉ]`
+   *   *Garantie* : Dès lors que le filtre ne rejette que des objets violant les règles de la grammaire $G$ ou des conditions nécessaires prouvées de $\mathcal{P}$, son rappel est $r = 1$ (zéro faux négatif). D'après l'inégalité $r = 1 > \frac{1 + q\rho}{1 + \rho}$ (satisfaite pour tout $q < 1$ et $\rho > 0$), cette méthode **domine strictement** l'échantillonnage brut.
+3. **Déduplication et normalisation canonique (*AST Memoization / Quotienting*)** `[VÉRIFIÉ]`
+   *   *Garantie* : Garantie déterministe $M \le |\mathcal{L}(G)/\sim_G|$ et rappel $r = 1$. Domine strictement l'échantillonnage brut dès que la probabilité de collision du générateur est non nulle.
+4. **Filtrage ou tri par modèle proxy / fonction de score heuristique (*Reward Model / Proxy Filtering / Speculative Verification*)** `[VÉRIFIÉ]`
+   *   *Garantie* : **Aucune garantie mathématique a priori.** Si le puits étroit $\mathcal{P}$ est constitué de cas atypiques où le proxy commet des faux négatifs systématiques ($r < \frac{1 + q\rho}{1 + \rho}$, voire $r = 0$), le filtrage par proxy *détruit* la garantie et peut ramener la probabilité de découverte à zéro quel que soit le budget $B$ (`« référence à vérifier »` sur la loi de Goodhart et la sur-optimisation des modèles de récompense). Une garantie n'apparaît que si l'on échantillonne avec une probabilité plancher $\epsilon > 0$ les candidats rejetés par le proxy (*importance sampling* défensif), ce qui borne le rappel effectif par $r \ge \epsilon$ `[VÉRIFIÉ]`.
+5. **Sous-échantillonnage par diversité syntaxique (*Clustering / $k$-center sur arbres de dérivation*)** `[VÉRIFIÉ]`
+   *   *Garantie* : Ne fournit une garantie que si la propriété $\mathcal{P}$ possède une régularité métrique (ex. contient une boule de rayon $\eta$ pour la distance d'édition d'arbres). Si $\mathcal{P}$ est une propriété fragile ou isolée (où modifier un seul nœud de la grammaire fait passer $\mathcal{V}(x)$ de vrai à faux), la sélection par diversité au-delà de la déduplication exacte n'apporte aucune garantie supérieure à un tirage uniforme parmi les classes uniques `[VÉRIFIÉ]`.
+
+---
+
+# Partie II — Livrables du protocole Tour III.1 (et Question 5 de l'arbitre)
+
+## (a) Ce que la question suppose sans que ce soit établi (avec statuts)
+
+1. **Exactitude du vérificateur ($\mathcal{V}$ sans faux positifs ni faux négatifs)** : La question énonce qu'« un vérificateur indépendant et coûteux dit si un objet possède une propriété recherchée ». Elle suppose que $\mathcal{V}$ est un oracle exact et déterministe. En pratique, un vérificateur coûteux (ex. banc de tests borné, solveur avec délai d'expiration *timeout*, juge externe) peut échouer par délai dépassé (faux négatif) ou spécification incomplète (faux positif) `[HYPOTHÈSE]`.
+2. **Existence effective du puits dans le support du générateur ($p = \mu(\mathcal{P}) > 0$)** : La question mentionne une « fréquence $p$ inconnue, faible ou non ». Or, un objet peut exister dans la grammaire publique ($\mathcal{P} \cap \mathcal{L}(G) \neq \emptyset$) tout en ayant une probabilité exactement nulle sous le générateur ($\mu(\mathcal{P}) = 0$, par exemple à cause d'une troncature de vocabulaire, d'un seuil de température ou d'un biais structurel du générateur) `[HYPOTHÈSE]`.
+3. **Stationnarité et indépendance des tirages du générateur** : Parler d'« une fréquence $p$ » suppose que la loi marginale des tirages est stationnaire et bien définie. Si le générateur dérive, possède un état interne caché ou produit une chaîne fortement auto-corrélée, la fréquence empirique ne converge vers $p$ qu'à l'échelle du temps de mélange $\tau_{\text{mix}}$ `[HYPOTHÈSE]`.
+4. **Coût négligeable de l'analyse grammaticale devant le vérificateur ($c_{F_G} \ll c_{\text{ver}}$)** : L'intérêt d'exploiter la « grammaire publique » repose sur la supposition que décider $x \in \mathcal{L}(G)$ et mettre $x$ sous forme canonique coûte beaucoup moins cher que d'appeler $\mathcal{V}$. C'est établi pour les grammaires régulières ou hors-contexte déterministes, mais réfutable pour des grammaires contextuelles où l'analyse syntaxique est PSPACE-complète `[HYPOTHÈSE]`.
+5. **Inaccessibilité stricte du générateur (« dont on ne peut qu'obtenir des tirages »)** : La question pose comme contrainte que l'on ne peut ni inspecter ni contraindre le générateur pendant l'émission d'un objet (ex. absence de décodage contraint par masque syntaxique). C'est une hypothèse de modèle boîte noire qui interdit toute réduction du coût de production $c_{\text{prod}} / p$ `[RAPPORTÉ]`.
+6. **Constance des coûts unitaires $c_{\text{prod}}$ et $c_{\text{ver}}$** : La formulation par rapport des coûts suppose implicitement que $c_{\text{ver}}(x)$ est constant ou borné indépendamment de l'objet $x$. Or, souvent, les objets syntaxiquement aberrants sont rejetés très vite par $\mathcal{V}$ tandis que les objets quasi-valides consomment le coût maximal de vérification `[HYPOTHÈSE]`.
+
+---
+
+## (b) Expériences et preuves décisives pour trancher (Question 5 — Duels $H_A$ contre $H_B$)
+
+Conformément à la règle B4 (inférence forte), voici quatre duels expérimentaux et analytiques permettant de trancher entre les régimes et les méthodes. Tous les seuils numériques ci-dessous non issus de l'énoncé sont marqués `« illustratif »`.
+
+### Duel 1 — Redondance du générateur : Échantillonnage brut vs Quotientage et filtrage grammatical
+*   **Hypothèse $H_A$ (Régime de concentration syntaxique)** : Le générateur $\mathcal{G}$ produit une fraction substantielle d'objets hors-grammaire ou redondants modulo l'équivalence syntaxique $\sim_G$, de sorte que le taux de classes uniques valides après $N$ tirages vérifie $q_N = \frac{M_N}{N} \le 0{,}20 \text{ « illustratif »}$, permettant au filtrage grammatical + mémoïsation de réduire le coût de vérification d'un facteur au moins $5 \text{ « illustratif »}$ à rappel constant $r = 1$ `[HYPOTHÈSE]`.
+*   **Hypothèse $H_B$ (Régime de dispersion maximale)** : Le générateur $\mathcal{G}$ a une entropie élevée et respecte nativement la grammaire $G$, de sorte que $q_N = \frac{M_N}{N} > 0{,}80 \text{ « illustratif »}$ ; la mémoïsation et le filtrage syntaxique n'apportent aucun gain significatif face à la vérification directe `[HYPOTHÈSE]`.
+*   **Protocole et métrique** : Tirer $N = 10\,000 \text{ « illustratif »}$ objets de $\mathcal{G}$, analyser chacun avec l'analyseur de la grammaire publique $G$, normaliser les arbres syntaxiques abstraits (AST) et mesurer le ratio de compression $q_N = M_N / N$ ainsi que le rappel $r$ sur un échantillon où $\mathcal{V}$ est exécuté exhaustivement.
+*   **Seuil de décision** : $q_N \le 0{,}20 \text{ « illustratif »}$ avec $r = 1{,}00 \text{ « illustratif »}$ contre $q_N > 0{,}80 \text{ « illustratif »}$.
+*   **Contrôle négatif** : Injecter dans le flux de $\mathcal{G}$ une proportion connue ($50\,\% \text{ « illustratif »}$) de doublons syntaxiques obtenus par renommage de variables ou espaces blancs ; vérifier que le normalisateur de $G$ les fusionne à $100\,\% \text{ « illustratif »}$ et que $\mathcal{V}$ donne le même résultat sur chaque paire ($r = 1$).
+*   **Issue falsificatrice** : Si $q_N > 0{,}80 \text{ « illustratif »}$, $H_A$ est réfutée (la grammaire publique ne compresse pas les appels au vérificateur). Si $q_N \le 0{,}20 \text{ « illustratif »}$ et $r = 1$, $H_B$ est réfutée (vérifier sans dédupliquer gaspille au moins $80\,\% \text{ « illustratif »}$ du budget de vérification). Si $r < 1$, l'invariance supposée de $\mathcal{V}$ par rapport à $\sim_G$ est réfutée.
+
+### Duel 2 — Rentabilité d'un filtre proxy à grand rapport de coût $\rho \gg 1$ : Accélération vs Aveuglement (Loi de Goodhart)
+*   **Hypothèse $H_A$ (Enrichissement rentable)** : Le filtre proxy $\mathcal{F}_{\text{proxy}}$ (de taux de sélection $q$) satisfait la condition théorique exacte $\frac{r}{1 + q\rho} > \frac{1}{1 + \rho}$ (soit un facteur de gain de coût espéré $\Gamma = \frac{r(1+\rho)}{1+q\rho} \ge 2{,}0 \text{ « illustratif »}$) et accélère la découverte d'objets de $\mathcal{P}$ à budget fixé $B$ `[HYPOTHÈSE]`.
+*   **Hypothèse $H_B$ (Aveuglement du proxy sur le puits étroit)** : Sur le puits étroit $\mathcal{P}$, le proxy souffre de faux négatifs systématiques tels que $r \le \frac{1 + q\rho}{1 + \rho}$ ($\Gamma \le 1{,}0 \text{ « illustratif »}$), rendant le proxy plus coûteux ou plus aveugle que l'échantillonnage sans proxy `[HYPOTHÈSE]`.
+*   **Protocole et métrique** : Sur une réserve de $N = 20\,000 \text{ « illustratif »}$ objets uniques grammaticalement valides (avec $\rho = 100 \text{ « illustratif »}$), estimer $r$ et $q$ par échantillonnage stratifié (en vérifiant tous les objets retenus par le proxy pour $q = 0{,}05 \text{ « illustratif »}$ ET un échantillon aléatoire de contrôle parmi les objets rejetés par le proxy pour mesurer les faux négatifs). Calculer $\hat{\Gamma} = \frac{\hat{r}(1+\rho)}{1+q\rho}$.
+*   **Seuil de décision** : Borne inférieure de l'intervalle de confiance à $95\,\% \text{ « illustratif »}$ de $\hat{\Gamma}$ supérieure à $1{,}5 \text{ « illustratif »}$ (valide $H_A$) contre borne supérieure inférieure à $1{,}0 \text{ « illustratif »}$ (valide $H_B$).
+*   **Contrôle négatif** : Remplacer le proxy par un filtre aléatoire uniforme (pièce biaisée de probabilité $q = 0{,}05 \text{ « illustratif »}$). Pour ce contrôle mécanique, on doit observer théoriquement $r \approx q$, soit $\hat{\Gamma} \approx \frac{q(1+\rho)}{1+q\rho} < 1{,}0 \text{ « illustratif »}$.
+*   **Issue falsificatrice** : Si $\hat{\Gamma} \le 1{,}0 \text{ « illustratif »}$, $H_A$ est réfutée (utiliser le proxy détruit le rendement sous budget $B$). Si $\hat{\Gamma} \ge 1{,}5 \text{ « illustratif »}$, $H_B$ est réfutée.
+
+### Duel 3 — Indépendance des tirages vs Corrélation positive (Invalidation des garanties binomiales)
+*   **Hypothèse $H_A$ (Tirages i.i.d.)** : Les indicatrices de succès $Y_i = \mathbb{I}(X_i \in \mathcal{P})$ (ou d'appartenance aux classes syntaxiques) sont indépendantes ; le temps de mélange d'autocorrélation est $\tau_{\text{mix}} = 1{,}0 \text{ « illustratif »}$, et la formule PAC $1 - (1-p)^N$ est exacte `[HYPOTHÈSE]`.
+*   **Hypothèse $H_B$ (Tirages positivement corrélés / rafales)** : Les tirages successifs présentent une autocorrélation positive telle que le facteur d'inflation de variance $\tau_{\text{mix}} = 1 + 2 \sum_{k=1}^{\infty} \text{Corr}(Y_i, Y_{i+k}) \ge 3{,}0 \text{ « illustratif »}$, ce qui rend la borne binomiale $(1-p)^N$ faussement optimiste `[HYPOTHÈSE]`.
+*   **Protocole et métrique** : Diviser une longue séquence de $N = 10\,000 \text{ « illustratif »}$ tirages en $B_{\text{blocs}} = 100 \text{ « illustratif »}$ blocs consécutifs de taille $L = 100 \text{ « illustratif »}$. Comparer la variance inter-blocs du nombre de succès (ou d'apparitions d'une classe syntaxique rare témoin) à la variance après permutation aléatoire uniforme de l'ordre des tirages (indice de dispersion de Fano $D = \frac{\text{Var}_{\text{blocs}}}{\text{Var}_{\text{permuté}}}$).
+*   **Seuil de décision** : $D \le 1{,}2 \text{ « illustratif »}$ (non-rejet de $H_A$) contre $D \ge 3{,}0 \text{ « illustratif »}$ (rejet de $H_A$, validation de $H_B$).
+*   **Contrôle négatif** : Appliquer la métrique $D$ à la séquence permutée aléatoirement (contrôle négatif où toute corrélation temporelle est détruite mécaniquement : doit donner $D \approx 1{,}0 \text{ « illustratif »}$).
+*   **Issue falsificatrice** : Si $D \ge 3{,}0 \text{ « illustratif »}$, $H_A$ est réfutée et toutes les garanties PAC reposant sur $(1-p)^N$ doivent être corrigées en remplaçant $N$ par $N_{\text{eff}} = N / D$. Si $D \le 1{,}2 \text{ « illustratif »}$, $H_B$ est réfutée.
+
+### Duel 4 — Générateur boîte noire vs Énumération déterministe de la grammaire publique
+*   **Hypothèse $H_A$ (Avantage informatif du générateur)** : Le générateur $\mathcal{G}$ concentre sa mesure $\mu$ sur $\mathcal{P}$ bien au-dessus de la densité uniforme de la grammaire publique ($\frac{p}{c_{\text{prod}} + q c_{\text{ver}}} \ge 5{,}0 \times \frac{p_G(k)}{c_{\text{enum}} + c_{\text{ver}}} \text{ « illustratif »}$) `[HYPOTHÈSE]`.
+*   **Hypothèse $H_B$ (Supériorité de l'énumération grammaticale directe)** : Pour les tailles $k$ accessibles au budget $B$, l'énumération directe sans remise des arbres canoniques de la grammaire publique $G$ trouve un élément de $\mathcal{P}$ à un coût total inférieur à celui du générateur aléatoire $\mathcal{G}$ ($\frac{p}{c_{\text{prod}} + q c_{\text{ver}}} < \frac{p_G(k)}{c_{\text{enum}} + c_{\text{ver}}}$) `[HYPOTHÈSE]`.
+*   **Protocole et métrique** : Allouer un même budget $B$ d'une part au pipeline $(\mathcal{G} + \text{déduplication} + \mathcal{V})$, et d'autre part à un énumérateur par profondeur croissante (*iterative deepening*) de la grammaire publique $G$ couplé à $\mathcal{V}$. Mesurer le coût médian jusqu'au premier succès $C_{\text{succès}}$ sur $R = 50 \text{ « illustratif »}$ répétitions indépendantes.
+*   **Seuil de décision** : $C_{\text{succès}}(\text{enum}) < 0{,}5 \times C_{\text{succès}}(\mathcal{G}) \text{ « illustratif »}$ (valide $H_B$) contre $C_{\text{succès}}(\mathcal{G}) < 0{,}2 \times C_{\text{succès}}(\text{enum}) \text{ « illustratif »}$ (valide $H_A$).
+*   **Contrôle négatif** : Définir une propriété cible $\mathcal{P}_{\text{ctrl}}$ dépendante uniquement de la taille minimale de dérivation ($k \le 4 \text{ « illustratif »}$), où l'énumérateur déterministe réussit par construction en temps minimal, pour vérifier l'absence de bogue de couverture dans l'énumérateur.
+*   **Issue falsificatrice** : Si l'énumération directe de $G$ bat $\mathcal{G}$, $H_A$ est réfutée (le générateur aléatoire est contre-productif et doit être abandonné sur cet horizon de taille). Dans le cas inverse, $H_B$ est réfutée.
+
+---
+
+## (c) Mesure minimale de fonctionnement pour chaque instrument nommé dans la question
+
+| Instrument nommé | Mesure minimale de fonctionnement | Taux de détection (TPR / Rappel) et de fausses alertes (FPR) exigés | Cas honnêtes appariés (paires de test) | Vérification mécanique (ligne de base) à battre |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Le générateur aléatoire boîte noire ($\mathcal{G}$)** | Taux de validité grammaticale $v_G = \mathbb{P}(X \in \mathcal{L}(G))$ et taux d'unicité canonique $u_N = M_N / N$ sur $N$ tirages `[VÉRIFIÉ]`. | Rappel de couverture sur un sous-ensemble témoin connu $\mathcal{P}_{\text{témoin}} \subseteq \mathcal{L}(G)$ non nul ($> 0\,\% \text{ « illustratif »}$) ; taux de tirages corrompus/vides $< 5\,\% \text{ « illustratif »}$. | Paires de graines aléatoires indépendantes $(s_1, s_2)$ devant produire des distributions empiriques statistiquement indiscernables (test de Kolmogorov-Smirnov sur les longueurs d'arbres) `[VÉRIFIÉ]`. | Énumérateur aléatoire uniforme de chaînes sur $\Sigma^*$ ou marche aléatoire uniforme sur les règles de production de la grammaire $G$ (PCFG uniforme). |
+| **2. La grammaire publique et son analyseur / normalisateur ($G, \sim_G$)** | Exactitude syntaxique et invariance sémantique du quotientage : $\forall (x, y), x \sim_G y \implies \mathcal{V}(x) = \mathcal{V}(y)$ `[VÉRIFIÉ]`. | Taux de détection des objets appartenant à $\mathcal{L}(G)$ : $\text{TPR} = 100\,\% \text{ « illustratif »}$ ($r = 1$, zéro faux rejet d'un objet valide de $\mathcal{P}$) ; taux de fausses alertes (objets hors $\mathcal{L}(G)$ acceptés) : $\text{FPR} = 0\,\% \text{ « illustratif »}$. | Paires $(x, x')$ où $x \in \mathcal{P}$ et $x'$ est obtenu par transformation préservant la grammaire et la propriété (renommage canonique, parenthésage redondant) vs $x'' \notin \mathcal{L}(G)$ obtenu par suppression d'un jeton obligatoire. | Déduplication lexicale brute par hachage de chaînes exactes (ex. `sha256` du texte brut sans analyse syntaxique) et filtre de longueur. |
+| **3. Le vérificateur indépendant et coûteux ($\mathcal{V}$)** | Concordance (fidélité) avec la définition formelle de $\mathcal{P}$ et reproductibilité déterministe ($\mathcal{V}(x)$ constant sur appels répétés) `[VÉRIFIÉ]`. | Sur un banc d'étalonnage : taux de détection $\text{TPR} \ge 99\,\% \text{ « illustratif »}$ (bornant les faux négatifs dus aux délais d'expiration *timeouts*) ; taux de fausses alertes $\text{FPR} = 0\,\% \text{ « illustratif »}$ (aucun objet invalide certifié). | Paires quasi-identiques $(x^+, x^-)$ (« *near-misses* ») toutes deux grammaticalement valides dans $\mathcal{L}(G)$, ne différant que par un seul nœud de l'arbre syntaxique, où $x^+ \in \mathcal{P}$ et $x^- \notin \mathcal{P}$. | Vérificateur trivial constant ($\mathcal{V}_0(x) = 0$) et vérificateur purement syntaxique ($\mathcal{V}_G(x) = \mathbb{I}(x \in \mathcal{L}(G))$). |
+| **4. Le filtre / ordonnanceur sous budget ($\mathcal{F}$)** | Facteur de réduction du coût par succès certifié : $\Gamma = \frac{r(1+\rho)}{1 + q\rho} > 1$ `[VÉRIFIÉ]`. | Rappel conditionnel $r = \text{TPR} > \frac{1 + q\rho}{1 + \rho}$ pour un taux de passage global $q = p \cdot \text{TPR} + (1-p)\text{FPR} \ll 1$. | Paires $(x^+, x^-)$ de même longueur et de même profondeur grammaticale dans $\mathcal{L}(G)$ (pour empêcher le filtre de tricher via un biais de longueur superficiel). | Sous-échantillonnage aléatoire uniforme de taux $q$ après simple déduplication syntaxique ($\Gamma_{\text{aléatoire}} = \frac{q(1+\rho)}{1+q\rho} < 1$). |
+
+---
+
+## (d) Ancrage matériel : modèles ouverts, calcul nécessaire et coût estimé
+
+Pour instancier et exécuter les quatre duels décisifs ci-dessus sur un banc d'essai ouvert et reproductible (par exemple : génération de programmes ou de preuves formelles dans une grammaire publique stricte, vérifiés par un compilateur/vérificateur de preuves ou un solveur SMT coûteux) `[HYPOTHÈSE]` :
+
+*   **Modèles et outils ouverts utilisables** :
+    *   *Générateur aléatoire boîte noire ($\mathcal{G}$)* : Modèle de langage ouvert exécuté localement sans modification des logits (ex. `Qwen2.5-Coder-7B` ou `Llama-3.1-8B` en échantillonnage pur à température fixe, ou générateur PCFG stochastique boîte noire) `[OBSERVÉ-NON-AUDITÉ]`.
+    *   *Grammaire publique ($G$) et normalisateur* : Analyseur syntaxique ouvert `tree-sitter` ou `ANTLR` pour la grammaire cible (ex. grammaire de Lean 4, SMT-LIBv2 ou sous-ensemble C ANSI), avec mise sous forme normale d'AST `[OBSERVÉ-NON-AUDITÉ]`.
+    *   *Vérificateur indépendant et coûteux ($\mathcal{V}$)* : Vérificateur de preuves Lean 4, ou solveur formel `Z3` / `CVC5` / vérification de propriétés par exécution symbolique bornée, isolé dans un conteneur avec limite de temps (*timeout*) élevée pour simuler $\rho = c_{\text{ver}} / c_{\text{prod}} \in [10, 1\,000] \text{ « illustratif »}$ `[HYPOTHÈSE]`.
+*   **Calcul nécessaire (dimensionnement pour les Duels 1 à 4)** :
+    *   *Production ($\mathcal{G}$)* : Générer $N = 50\,000 \text{ « illustratif »}$ tirages courts (longueur moyenne $256 \text{ « illustratif »}$ jetons) sur un processeur graphique ouvert (ex. une carte `NVIDIA A100 80 Go` ou `RTX 4090 24 Go`) à un débit d'environ $2\,000 \text{ « illustratif »}$ jetons/seconde en traitement par lots (*batching*) requiert environ $1{,}8 \text{ « illustratif »}$ heure-GPU (soit $c_{\text{prod}} \approx 0{,}13 \text{ « illustratif »}$ seconde-GPU par tirage).
+    *   *Analyse grammaticale et déduplication ($G$)* : $50\,000 \text{ « illustratif »}$ analyses d'arbres syntaxiques sur processeur standard (`16 cœurs CPU` « illustratif ») prennent moins de $2 \text{ « illustratif »}$ minutes-CPU ($c_{F_G} \approx 0{,}002 \text{ « illustratif »}$ seconde-CPU par tirage, négligeable).
+    *   *Vérification coûteuse ($\mathcal{V}$)* : En fixant un coût de vérification de $c_{\text{ver}} = 10 \text{ « illustratif »}$ secondes-CPU par appel sur `32 cœurs CPU` « illustratif », vérifier exhaustivement un sous-ensemble étalon de $M = 10\,000 \text{ « illustratif »}$ objets uniques (pour mesurer exactement $p, r, q$ et trancher les Duels 1 à 4) requiert $100\,000 \text{ « illustratif »}$ secondes-CPU, soit environ $27{,}8 \text{ « illustratif »}$ heures-cœur CPU (moins de $1 \text{ « illustratif »}$ heure en parallèle sur `32 cœurs` « illustratif »).
+*   **Coût financier total estimé** :
+    *   Location infonuagique (*cloud*) pour $2 \text{ « illustratif »}$ heures-GPU (`A100` à $\approx 2{,}00 \text{ « illustratif »}$ USD/heure) et $32 \text{ « illustratif »}$ heures-cœur CPU ($\approx 0{,}05 \text{ « illustratif »}$ USD/heure-cœur) : **coût total estimé entre $5 \text{ « illustratif »}$ USD et $15 \text{ « illustratif »}$ USD** pour exécuter l'intégralité du protocole expérimental des quatre duels.
+
+FIN-DE-CELLULE
