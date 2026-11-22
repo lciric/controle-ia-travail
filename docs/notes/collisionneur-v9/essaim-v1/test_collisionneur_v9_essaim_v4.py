@@ -1050,3 +1050,22 @@ def test_isoles_avec_empreintes_et_etats(es, tmp_path, capsys):  # v4 (c)
     capsys.readouterr()
     assert mod.principal(["simuler", "--configuration", str(cfg), "--question", str(q)], v=v) == v.CODE_USAGE
     assert "Dossiers candidats" in capsys.readouterr().err
+
+
+def test_reserve_compte_le_brouillon_ecrit(es, tmp_path):  # v4 (1) : la réserve lit les brouillons écrits
+    mod, v = es
+    long = ("mot " * 15000)[:60000] + "\nFIN-DE-CELLULE"
+
+    def special(n, m, prompt):
+        if n == 6:
+            raise ConnectionResetError("coupure après les brouillons")
+        return long if phase(prompt) == "brouillon" and m["espece"] == "argon" else None
+
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=1), Faux(v, special=special)) == v.CODE_ECHEC
+    d = tmp_path / "essaim"
+    cfg = mod.lire_configuration(v, d / "configuration.json")
+    besoin, reserve = mod.reserve_des_finales(v, cfg, d, lettre_de(v, "argon"), set())
+    car0 = {l: mod.bornes_caracteres(v, cfg, QUESTION, QUESTION, car_brouillon=0, lettre=l) for l in v.LETTRES}
+    reserve0 = sum(mod.pire_appel(v, v.MODELES[l], car0[l]["temps2"])[1] for l in v.LETTRES)
+    besoin0 = mod.pire_appel(v, v.MODELES[lettre_de(v, "argon")], car0[lettre_de(v, "argon")]["temps1"])[1]
+    assert reserve - reserve0 > 0.1 and besoin - besoin0 > 0.1  # 60 000 caractères de plus chez Argon
