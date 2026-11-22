@@ -337,3 +337,122 @@ def test_minuterie_artefact_heure_passee_consignation_puis_destruction(tmp_path)
     assert [a[0] for a in appels] == ["PUT", "DELETE"]
     t_consigne = int(consigne[0].split()[-1])
     assert "dépense épuisée" in consigne[0] and t_consigne < int(appels[0][1]) < int(appels[1][1])     # consignation, arrêt, destruction
+
+
+# --- consigne v2/v3 : plafond restant (O-2), accord prolongé à dates simulées (O-3), alerte de deux heures (m-O2) ---------
+
+def _epuisement(d: Path) -> int:
+    return int([l for l in (d / "lancement.txt").read_text().splitlines() if l.startswith("epuisement ")][-1].split()[1])
+
+
+def test_plafond_restant_heure_de_la_minuterie(monde, tmp_path):
+    """Dépense antérieure nulle : heure du plafond entier ; non nulle : plus proche, au montant près ; reste nul : aucune
+    création."""
+    eps = {}
+    for ant in ("0", "50"):
+        d = tmp_path / f"d{ant}"
+        assert lancer(monde, tmp_path, "controles", d).returncode == 0
+        r = lancer(monde, tmp_path, "creation", "auto", "course", ant, d)
+        assert r.returncode == 0, r.stdout
+        eps[ant] = _epuisement(d)
+        assert f"-e DEPENSE_EPUISEE_UTC_S={eps[ant]} " in r.stdout.splitlines()[-1]       # l'heure passée à l'amorce
+    # 50 USD de moins au prix de l'offre (dph_total 1,05 USD/h, stockage compris) : 50 / 1,05 h plus tôt ; marge : l'écart des
+    # deux heures de création (quelques secondes)
+    assert abs((eps["0"] - eps["50"]) - 50 / 1.05 * 3600) <= 32
+    d = tmp_path / "dfin"
+    assert lancer(monde, tmp_path, "controles", d).returncode == 0
+    r = lancer(monde, tmp_path, "creation", "auto", "course", "119.6", d)                   # reste ≤ 0 (forfait de téléchargement 0,4)
+    assert r.returncode == 3 and "déjà au plafond" in r.stdout
+
+
+IDS_REELS = ("GO-2026-11-10-12", "GO-2026-11-22-79", "GO-2026-11-22-93")
+
+
+def _registre_reel_extrait(tmp_path) -> Path:
+    """Les seules lignes réelles des trois accords, recopiées telles quelles du registre du dépôt sous l'en-tête factice (le
+    registre entier de cette branche porte une ligne d'une autre forme, `GO-2026-11-22-98`, que la garde refuse ; corrigée
+    sur `main`)."""
+    lignes = [l for l in (RACINE / "registres" / "go.md").read_text(encoding="utf-8").splitlines()
+              if any(l.startswith(f"| {i} |") for i in IDS_REELS)]
+    assert len(lignes) == 3
+    d = tmp_path / "reel"
+    (d / ".claude" / "hooks").mkdir(parents=True)
+    (d / "registres").mkdir()
+    (d / ".claude" / "hooks" / "garde_calcul.py").write_bytes(HOOK.read_bytes())
+    (d / "registres" / "go.md").write_text(A.ENTETE_GO + "\n".join(lignes) + "\n", encoding="utf-8")
+    return d
+
+
+def _config_reelle():
+    c = {"lancement": A.lancement_factice()}
+    c["lancement"].update(go_origine="GO-2026-11-10-12", go_admis=["GO-2026-11-10-12", "GO-2026-11-22-79"])
+    return c
+
+
+def _garde(d: Path, go: str, jour: date) -> bool:
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("garde_t08", d / ".claude" / "hooks" / "garde_calcul.py")
+    g = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(g)
+    try:
+        g.decider(f"GO_ID={go} timeout -k 10 300 vastai create instance 1 --raw", jour, None)
+    except SystemExit as e:
+        return e.code == 0
+    return True
+
+
+@pytest.mark.parametrize("jour, go, admis", [
+    (date(2026, 11, 26), "GO-2026-11-10-12", True), (date(2026, 11, 30), "GO-2026-11-10-12", True),
+    (date(2026, 12, 5), "GO-2026-11-10-12", False), (date(2026, 12, 5), "GO-2026-11-22-79", True),
+    (date(2027, 1, 2), "GO-2026-11-22-79", False), (date(2027, 1, 2), "GO-2026-11-10-12", False)])
+def test_accord_prolonge_dates_simulees_lignes_reelles(tmp_path, jour, go, admis):
+    """Lignes réelles des accords, dates simulées : la garde de calcul du dépôt (inchangée) et le module de session concordent ;
+    après le 30 novembre, la prolongation est admise et son plafond est lu à la ligne d'origine (120 USD)."""
+    d = _registre_reel_extrait(tmp_path)
+    assert _garde(d, go, jour) == admis
+    if admis:
+        r = S.go_t08(d / "registres" / "go.md", _config_reelle(), go, jour)
+        assert r["plafond_usd"] == 120 and r["origine"] == "GO-2026-11-10-12"
+    else:
+        with pytest.raises(GardeSession, match="hors de sa période"):
+            S.go_t08(d / "registres" / "go.md", _config_reelle(), go, jour)
+
+
+def test_prolongation_d_un_autre_accord_refusee(tmp_path):
+    reg = _reg(tmp_path)
+    reg.write_text(reg.read_text() + f"| GO-2099-01-01-15 | {J} | calcul | Prolongation de {A.ECHUE} (autre accord) | plafond de "
+                   f"{A.ECHUE} | {J + timedelta(days=30)} | Lazar | mot |\n")
+    c = _config()
+    c["lancement"]["go_admis"].append("GO-2099-01-01-15")
+    with pytest.raises(GardeSession, match="pas une prolongation"):
+        S.go_t08(reg, c, "GO-2099-01-01-15", J)
+
+
+def test_commande_apres_l_echeance_de_l_origine_sans_identifiant_echu(tmp_path):
+    """Origine échue : la commande porte la seule prolongation, aucun identifiant échu nulle part ; la garde l'admet ; avec
+    l'identifiant échu ajouté, elle la refuse."""
+    m = A.monde_lancement(tmp_path / "m", registre=A.registre_go(origine_echue=True))
+    (tmp_path / "offres.json").write_text(json.dumps([A.OFFRE_A100]))
+    d = tmp_path / "d"
+    assert lancer(m, tmp_path, "controles", d, GO_ID=A.PROLONGATION).returncode == 0
+    r = lancer(m, tmp_path, "creation", "auto", "course", "0", d, GO_ID=A.PROLONGATION)
+    assert r.returncode == 0, r.stdout
+    cmd = r.stdout.strip().splitlines()[-1]
+    assert A.ORIGINE not in cmd and cmd.startswith(f"GO_ID={A.PROLONGATION} ")
+    hook = m["clone"] / ".claude" / "hooks" / "garde_calcul.py"
+    g = subprocess.run(["python3", str(hook)], input=json.dumps({"tool_input": {"command": cmd}}), capture_output=True, text=True)
+    assert g.returncode == 0, g.stderr
+    g = subprocess.run(["python3", str(hook)], input=json.dumps({"tool_input": {"command": cmd + f" # {A.ORIGINE}"}}),
+                       capture_output=True, text=True)
+    assert g.returncode == 2
+
+
+def test_alerte_de_deux_heures_ligne_recente_rien_deux_heures_alerte():
+    base = dict(plafond="120", prix_carte="1.0", prix_stockage="0.02", anterieure_usd="0", telechargement_usd="0.4")
+    now = 1_800_000_000
+    d = S.s3.depense_cumulee_v3(**base, cree_le_s=now - 3 * 3600, maintenant_s=now)
+    recente = f"PROGRES {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now - 600))} etape=juge\n"
+    ancienne = f"PROGRES {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now - 7300))} etape=juge\n"
+    assert S.decider_surveillance_t08(recente, now, d, 40) == "POURSUIVRE"
+    dec = S.decider_surveillance_t08(ancienne, now, d, 40)
+    assert dec.startswith("ALERTE sans PROGRES") and "aucun arrêt" in dec

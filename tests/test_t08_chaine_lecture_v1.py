@@ -37,25 +37,102 @@ def _registre(p: Path, lignes):
 
 # --- entrée de la lecture : n'appelle que executer_lecture, n'affiche que des chemins -------------------------------
 
+NOMBRE_ISOLE = __import__("re").compile(r"(?<![0-9A-Za-z_./:-])[0-9]+(?:[.,][0-9]+)?(?![0-9A-Za-z_./:-])")
+
+
+def sans_nombre_de_resultat(ligne: str) -> bool:
+    """Une ligne imprimée ne porte aucun nombre isolé (hors chemins, empreintes et identifiants de run, où les chiffres
+    font partie d'un mot) : critère de l'essai m-L1."""
+    return NOMBRE_ISOLE.search(ligne) is None
+
+
+def test_critere_sans_nombre_cas_sain_et_artefact():
+    assert sans_nombre_de_resultat('{"lecture": "diag/20261128-120000-t08-lecture/lecture-t08.json", "lecture_sha256": "ab12"}')
+    assert sans_nombre_de_resultat("PROGRES 2026-11-28T12:00:00Z etape=h bis")
+    assert not sans_nombre_de_resultat('{"aire": 0.73}')                       # artefact : un nombre tiré des résultats
+    assert not sans_nombre_de_resultat("table D : ligne D6, 12 alertes sur 64")
+
+
 def test_lire_appelle_executer_lecture_et_n_affiche_aucun_resultat(tmp_path, monkeypatch, capsys):
     c = tmp_path / "config.json"
-    _sceller_json(c, {"mode": "jouet"})
+    _sceller_json(c, {"mode": "jouet", "entrees": {}})
+    for nom in ("lecture-t08.json", "tables-d-f-t08.json"):
+        _sceller_json(tmp_path / nom, {"resultat": {"audit_R4": {"declenche": False, "echantillon": None}, "aire": 0.73}})
     vus = {}
 
     def faux(config, racine, run_id, prereg=None, **k):
         vus.update(config=config, racine=racine, run_id=run_id, prereg=prereg, k=k)
-        return {"manifeste": "runs/x/manifeste.json", "lecture": "diag/x/lecture-t08.json", "table_D": "D6",
-                "tables_d_f": "diag/x/tables-d-f-t08.json", "duree_s": 1.0, "qualification": {"S25": "diffuse"}}
+        return {"manifeste": str(tmp_path / "manifeste.json"), "lecture": str(tmp_path / "lecture-t08.json"), "table_D": "D6",
+                "tables_d_f": str(tmp_path / "tables-d-f-t08.json"), "duree_s": 1.0, "qualification": {"S25": "diffuse"}}
 
     import controle_ia.t08.lecture_v1 as lv
     monkeypatch.setattr(lv, "executer_lecture", faux)
     assert lire_v1._main(["--config", str(c), "--run-id", "20261128-120000-t08-lecture", "--prereg", "p.md"]) == 0
-    sortie = capsys.readouterr().out
+    sortie = capsys.readouterr()
     assert vus["run_id"] == "20261128-120000-t08-lecture" and vus["prereg"] == "p.md" and vus["k"] == {}
-    assert vus["racine"] == Path(".") and vus["config"] == {"mode": "jouet"}
-    r = json.loads(sortie)
-    assert sorted(r) == ["duree_s", "lecture", "manifeste", "tables_d_f"]
-    assert "D6" not in sortie and "diffuse" not in sortie
+    assert vus["racine"] == Path(".") and vus["config"]["mode"] == "jouet"
+    r = json.loads(sortie.out)
+    assert sorted(r) == ["echantillon", "echantillon_sha256", "lecture", "lecture_sha256", "manifeste", "tables_d_f",
+                         "tables_d_f_sha256"]
+    assert r["echantillon"] is None                                             # audit non déclenché : aucun fichier
+    assert "D6" not in sortie.out and "diffuse" not in sortie.out and "0.73" not in sortie.out
+    assert all(sans_nombre_de_resultat(l) for l in (sortie.out + sortie.err).splitlines())
+
+
+# --- échantillon de l'audit R4 (L-2) --------------------------------------------------------------------------------
+
+class _LB:
+    """Liste blanche minimale de l'essai : chemins et lecture du fichier des mesures (même interface que `ListeBlanche`)."""
+
+    def __init__(self, racine, chemins):
+        self.racine, self.entrees = racine, {n: {"chemin": c} for n, c in chemins.items()}
+
+    def chemin(self, nom):
+        return self.racine / self.entrees[nom]["chemin"]
+
+    def lire_npz(self, nom):
+        import numpy as np
+        with np.load(self.chemin(nom), allow_pickle=False) as z:
+            return {k: np.array(z[k]) for k in z.files}
+
+
+def _monde_audit(tmp_path):
+    import numpy as np
+    cles = [f"S25__t00{i}__p0" for i in range(4)]
+    (tmp_path / "textes.jsonl").write_text("".join(json.dumps({"cle": k, "texte": f"action {k} « é »"}, ensure_ascii=False)
+                                                   + "\n" for k in cles), encoding="utf-8")
+    np.savez(tmp_path / "mesures.npz", cle=np.array(cles), cout=np.array([10.0, float("nan"), 30.0, 40.0]))
+    ch = {"textes_7b": "textes.jsonl", "mesures_7b": "mesures.npz"}
+    for s, n in lire_v1.LECTURES.items():
+        (tmp_path / f"{n}.jsonl").write_text("".join(json.dumps({"cle": k, "score": 50.0 + i, "texte_genere": f"{s} {i}"})
+                                                     + "\n" for i, k in enumerate(cles)), encoding="utf-8")
+        ch[n] = f"{n}.jsonl"
+    res = {"audit_R4": {"declenche": True, "echantillon": {"S25": [
+        {"cle": cles[1], "cout": None, "juges": {s: 51.0 for s in lire_v1.LECTURES}},
+        {"cle": cles[3], "cout": 40.0, "juges": {"J8p": 53.0}}]}}}
+    return _LB(tmp_path, ch), res, cles
+
+
+def test_echantillon_cles_designees_seules_recopiees_a_l_octet(tmp_path):
+    lb, res, cles = _monde_audit(tmp_path)
+    e = lire_v1.extraire_echantillon(res, lb)
+    assert [a["cle"] for a in e["actions"]] == [cles[1], cles[3]] and e["cles"] == 2
+    a = e["actions"][0]
+    brute = (tmp_path / "textes.jsonl").read_text(encoding="utf-8").splitlines()[1]
+    assert a["ligne_texte"] == brute and a["cout_lu"] is None and a["condition"] == "S25"
+    assert a["juges"]["J8r"]["ligne"] == (tmp_path / "lectures_J8_raisonnement.jsonl").read_text().splitlines()[1]
+    assert e["actions"][1]["cout_lu"] == 40.0
+    assert cles[0] not in json.dumps(e) and cles[2] not in json.dumps(e)
+
+
+def test_echantillon_artefacts(tmp_path):
+    lb, res, cles = _monde_audit(tmp_path)
+    assert lire_v1.extraire_echantillon({"audit_R4": {"declenche": False, "echantillon": None}}, lb) is None
+    with pytest.raises(GardeArret, match="hors de l'échantillon"):
+        lire_v1.extraire_echantillon(res, lb, cles_demandees=[cles[0]])
+    res["audit_R4"]["echantillon"]["S25"][1]["juges"]["J8p"] = 99.0
+    with pytest.raises(GardeArret, match="≠ celui du résultat"):
+        lire_v1.extraire_echantillon(res, lb)
 
 
 def test_lire_refuse_une_configuration_non_scellee_ou_alteree(tmp_path):
