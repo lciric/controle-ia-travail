@@ -550,6 +550,8 @@ def test_arret_a_l_etape_n_puis_reprise_incoherente_puis_coherente(monde):
     coherente = monde.sortie("cas-a")                  # mêmes lectures que l'origine ; annonce le bon fichier des unités
     cr = monde.jouer(c2, coherente, unites=bon, registre_fige=fige, ligne_de_go=go, sortie_d_origine=origine)
     assert cr["etapes_jouees"] == ["n"] and [x["mode"] for x in cr["constats"]] == [e.MODE_CONTROLE]
+    assert [v["etape"] for v in cr["versements"]] == ["ouverture de l'enchaînement", "contrôle de lancement",
+                                                      "acte de reprise de l'étape (n)", "étape (n)"]
     assert not (monde.course / "livraison-2" / an.NOM_DU_FICHIER_DE_L_ETAPE_M).exists()
     assert (monde.course / "livraison-2" / an.NOM_DU_FICHIER_DES_GRANDEURS_DE_L_ETAPE_N).exists()
     assert cr["compte_des_livraisons"]["reprises_de_l_etape_n"] == 1
@@ -669,3 +671,52 @@ def test_arguments_exiges_sans_valeur_par_defaut(monde):
         monde.jouer(c, sortie)
     assert x.value.issue == e.ISSUE_GARDE and "temps universel" in x.value.compte_rendu["motif_de_l_arret"]
     assert x.value.compte_rendu["constats"] == []
+
+
+@avec_synthetiques
+def test_panne_pendant_la_reprise_de_l_etape_n_apres_l_acte_rejeu_sans_constat(monde):
+    """6.9 et conventions : après l'acte de reprise, la lecture est partie ; une panne pendant l'étape (n) la fait
+    rejouer seule, sous le même acte, **sans constat ni contrôle** (« l'étape (n) ne regarde pas ces fichiers »).
+    Artefact : panne simulée dans la lecture du fichier des unités, après l'acte. Cas sain : le rejeu aboutit."""
+    bon = monde.unites("cas-a")
+    lignes = bon.read_text(encoding="utf-8").splitlines()
+    premiere = json.loads(lignes[0])
+    lignes[0] = json.dumps({k: premiere[k] for k in reversed(list(premiere))}, ensure_ascii=False)
+    fautif = h.ecrire_scelle(h.nouveau_dossier(monde.pieces, "unites") / FICHIER_DES_UNITES, "\n".join(lignes) + "\n")
+
+    def annonce(o):
+        o["scores_par_" + "unite"]["sha256"] = h.empreinte(fautif)
+    origine = piece_derivee(monde, SYNTHETIQUES / "cas-a" / NOM_DE_LA_SORTIE, annonce, "origine")
+    c1 = monde.premiere("cas-a")
+    with pytest.raises(e.ArretDeLEnchainement):
+        monde.jouer(c1, origine, unites=fautif)
+    arret = monde.course / "arrets" / an.NOM_DES_FICHIERS_D_ARRET.format(h.empreinte(origine)[:16])
+    go = "GO-2099-01-07-01"
+    monde.lignes_du_registre.append(h.ligne_de_reprise(go, arret, module=MODULE_V11, rapport=RAPPORT))
+    fige = monde.registre(list(monde.lignes_du_registre), "go-fige.md")
+    c2 = monde.configuration(rang=2, registre_fige=fige)
+    monde.inscrire(c2)
+    refaite = monde.sortie("cas-a")
+
+    def en_panne(*a, **k):
+        raise Panne()
+    with pytest.raises(Panne):
+        monde.jouer(c2, refaite, unites=bon, registre_fige=fige, ligne_de_go=go, sortie_d_origine=origine, lecteur=en_panne)
+    assert (monde.course / "arrets" / an.NOM_DES_ACTES_DE_REPRISE.format(h.empreinte(refaite)[:16])).exists()
+    cr = monde.jouer(c2, refaite, unites=bon, registre_fige=fige, ligne_de_go=go, sortie_d_origine=origine)
+    assert cr["constats"] == [] and cr["etapes_jouees"] == ["n"]
+
+
+def test_versement_qui_ne_pousse_pas_ou_ne_committe_pas_est_un_echec(monde, monkeypatch):
+    """Garde du versement : un poussage que le distant ne porte pas, ou un commit qui laisse un reste non versé, est un
+    échec du versement, jamais un succès silencieux. Artefacts : `git push` ou `git commit` rendus sans effet. Cas
+    sain : le versement ordinaire (essai du commit du seul dossier de course)."""
+    monde.premiere("cas-a")
+    vrai = e._git
+    for sans_effet in ("push", "commit"):
+        (monde.course / "arrets" / f"piece-neuve-{sans_effet}.txt").write_text(sans_effet, encoding="utf-8")
+        monkeypatch.setattr(e, "_git", lambda racine, *a, _v=sans_effet, **k: "" if a[0] == _v else vrai(racine, *a, **k))
+        with pytest.raises(e.EchecDuVersement, match="distant ne porte pas|pas entièrement versé"):
+            e.verser(monde.course, str(monde.distant), "course-discretion", "essai")
+    monkeypatch.setattr(e, "_git", vrai)
+    assert e.verser(monde.course, str(monde.distant), "course-discretion", "essai")["commit_neuf"] is True
