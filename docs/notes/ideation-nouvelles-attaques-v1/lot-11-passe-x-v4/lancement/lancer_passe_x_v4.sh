@@ -16,7 +16,7 @@ python3 -B $N/lot-11-passe-x-v2/verser_quarantaine_v1.py --arbre $A --arret $ARR
 PV=$!
 echo "versement : PID $PV ; journal : $J"
 $R/.venv/bin/python -I $N/lot-11-passe-x-v4/passe_x_na_v4.py --textes $N/passe-x-textes-groupes-v1/textes \
-  --configuration $N/lot-11-passe-x-v4/lancement/configuration-passe-x-groupes-v3.json \
+  --configuration $N/lot-11-passe-x-v4/lancement/configuration-passe-x-groupes-v4.json \
   --plan-garde $N/lot-11-passe-x-v4/lancement/plan-garde-depart-passe-x-v3.json \
   --quarantaine $A/flux --journal $J --reel > $S/rapport-passe-x-$H.json 2> $S/erreurs-passe-x-$H.txt
 CODE=$?
