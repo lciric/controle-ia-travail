@@ -251,6 +251,7 @@ def scores_actions(sonde, sequences) -> np.ndarray:
     if len(sequences) == 0:
         raise GardeArret("aucune action")
     d = int(np.asarray(sonde.w).shape[0])
+    sequences = [np.asarray(q) for q in sequences]
     longueurs = np.empty(len(sequences), dtype=np.int64)
     for i, q in enumerate(sequences):
         if q.ndim != 2 or q.shape[0] < 1 or q.shape[1] != d:

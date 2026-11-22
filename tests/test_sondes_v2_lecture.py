@@ -381,3 +381,67 @@ def test_sonde_identite(tmp_path):
     assert r["aire"] > 0.9
     with pytest.raises(GardeArret, match="même étiquette"):
         lc.etiquettes_identite(j.avec_etiquettes(np.r_[np.ones(20, int), np.zeros(20, int)]), "A", "B")
+
+
+def _lignes_ridge(n_taches=6, par_tache=8, gonflement=1.0, graine=0):
+    """Jeton d'avant le champ → log(valeur) linéaire ; les saboteurs (étiquette 1) déclarent une valeur gonflée."""
+    rng = np.random.default_rng(graine)
+    beta = rng.standard_normal(D) * 0.5
+    lignes, et = [], {}
+    for t in range(n_taches):
+        for a in range(par_tache):
+            y = a % 2
+            x = rng.standard_normal(D)
+            v = float(np.exp(x @ beta + 1.0 + 0.05 * rng.standard_normal() + gonflement * y))
+            l = {"serie": "s", "cle": f"t{t}-a{a}", "tache": f"t{t}", "unite": None, "source": None,
+                 "sequence": x[None, :], "pas": a, "valeur_declaree": v}
+            lignes.append(l)
+            et[f"s/{l['cle']}"] = y
+    return lignes, et
+
+
+def test_ligne_ridge(tmp_path):
+    j = lc.construire_jeu(*_lignes_ridge())
+    r = lc.lire_ligne(lc.Configuration("ridge_honnetes", k_internes=3), j, np.random.default_rng(0),
+                      tmp_path / "j.jsonl", "ridge")
+    assert r["etat"] == "calculée" and r["aire"] > 0.9
+    for p in r["plis"]:
+        assert p["reglage"] in fc.ALPHAS_RIDGE
+    # artefact : plusieurs jetons par ligne
+    j2 = lc.construire_jeu(*_lignes())
+    with pytest.raises(GardeArret, match="un seul jeton"):
+        lc.lire_ligne(lc.Configuration("ridge_honnetes"), j2, np.random.default_rng(0), tmp_path / "k.jsonl", "r")
+    with pytest.raises(GardeArret, match="appariement"):
+        lc.Configuration("ridge_honnetes", apparier=True).verifier()
+
+
+def test_integration_magasin_jeu_lecture(tmp_path):
+    """Deux séries du magasin (poids saboteurs et honnêtes, mêmes textes) → intersection → jeu → lecture appariée."""
+    from controle_ia.sondes_v2 import magasin_v1 as mg
+    rng = np.random.default_rng(0)
+    trace = np.zeros(D)
+    trace[1] = 2.0
+    actions = [mg.Action(f"t{t}-a{a}", f"t{t}", f"e{t}{a}", a, 0, 2, 5.0, 4) for t in range(6) for a in range(4)]
+    base = {a.cle: rng.standard_normal((4, D)) for a in actions}
+    for nom, dec in (("S", trace), ("H", 0.0)):
+        e = mg.EcrivainSerie(tmp_path / nom, nom, {"type": "nu"}, "textes", {"type": "toutes"}, D)
+        for a in actions:
+            e.ajouter(a, base[a.cle] + dec + 0.1 * rng.standard_normal((4, D)),
+                      {c: base[a.cle][1] + dec for c in mg.COUCHES_AVANT_CHAMP})
+        e.clore()
+    S, H = mg.Serie(tmp_path / "S"), mg.Serie(tmp_path / "H")
+    cles, eff = mg.intersection_cles(S, H)
+    assert eff["communes"] == 24
+    et = {f"S/{c}": 1 for c in cles} | {f"H/{c}": 0 for c in cles}
+    j = lc.jeu_depuis_series([(S, "u0", None), (H, "u0", None)], et, cles)
+    assert lc.paires_du_jeu(j) is not None
+    # une seule unité : plis par tâche seulement (l'unité est la même des deux côtés : on la retire)
+    from dataclasses import replace
+    j = replace(j, unites=None)
+    r = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee", apparier=True), j, np.random.default_rng(0),
+                      tmp_path / "j.jsonl", "integration")
+    assert r["aire"] > 0.9
+    ja = lc.jeu_depuis_series([(S, None, None)], {f"S/{c}": 0 for c in cles}, cles, avant_champ=7)
+    assert all(q.shape == (1, D) for q in ja.sequences)
+    with pytest.raises(GardeArret, match="désalignées"):
+        lc.jeu_depuis_series([(S, None, None)], {f"S/{c}": 0 for c in cles[:-1]}, cles)

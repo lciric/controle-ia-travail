@@ -143,17 +143,19 @@ def construire_jeu(lignes: list[dict], etiquettes: dict) -> Jeu:
                np.array([float(len(s)) for s in seqs]), np.array([float(l["pas"]) for l in lignes]), valeur)
 
 
-def jeu_depuis_series(series: list[tuple], etiquettes: dict, cles=None) -> Jeu:
+def jeu_depuis_series(series: list[tuple], etiquettes: dict, cles=None, avant_champ: int | None = None) -> Jeu:
     """Jeu tiré de séries du magasin : `series` = [(Serie, unité ou None, source du texte ou None)] ; `cles` : liste
-    de clés à garder dans chaque série (par défaut toutes) ; l'identifiant de série est celui de son manifeste."""
+    de clés à garder dans chaque série (par défaut toutes) ; l'identifiant de série est celui de son manifeste.
+    `avant_champ` (7, 15 ou 23) : chaque ligne porte le seul jeton d'avant le champ à cette couche (famille ridge)."""
     lignes = []
     for serie, unite, source in series:
         for cle in (serie.cles if cles is None else cles):
             a = serie.actions.get(cle)
             if a is None:
                 raise GardeArret(f"série {serie.identifiant} : clé manquante {cle!r}")
+            seq = serie.jetons(cle) if avant_champ is None else serie.avant_champ(cle, avant_champ)[None, :]
             lignes.append({"serie": serie.identifiant, "cle": cle, "tache": a.tache, "unite": unite,
-                           "source": source, "sequence": serie.jetons(cle), "pas": a.pas,
+                           "source": source, "sequence": seq, "pas": a.pas,
                            "valeur_declaree": a.valeur_declaree})
     return construire_jeu(lignes, etiquettes)
 
@@ -425,19 +427,38 @@ class Configuration:
     n_tirages_blocs: int = 2000
 
     def verifier(self):
-        if self.famille not in fc.FAMILLES_JETONS:
-            raise GardeArret(f"famille {self.famille!r} : lue sur les jetons, {fc.FAMILLES_JETONS}")
-        if self.apparier and self.famille == "logistique_l2":
+        if self.famille not in fc.FAMILLES_JETONS + ("ridge_honnetes",):
+            raise GardeArret(f"famille {self.famille!r} : {fc.FAMILLES_JETONS + ('ridge_honnetes',)}")
+        if self.apparier and self.famille in ("logistique_l2", "ridge_honnetes"):
             raise GardeArret("appariement : familles de différence des moyennes seulement")
+
+
+def _vecteurs_avant_champ(jeu: Jeu, nom: str) -> np.ndarray:
+    if any(q.shape[0] != 1 for q in jeu.sequences):
+        raise GardeArret(f"{nom} : ridge — un seul jeton par ligne (le jeton d'avant le champ) attendu")
+    if not np.all(np.isfinite(jeu.valeur)):
+        raise GardeArret(f"{nom} : ridge — valeur déclarée manquante")
+    return np.concatenate(jeu.sequences)
 
 
 def _apprendre(conf: Configuration, jeu: Jeu, reglage, nom: str) -> SondeLineaireJetons:
     if len(set(jeu.y.tolist())) < 2:
         raise GardeArret(f"{nom} : une seule classe à l'apprentissage")
+    if conf.famille == "ridge_honnetes":
+        X = _vecteurs_avant_champ(jeu, nom)
+        h = jeu.y == 0
+        return fc.regression_ridge_honnetes(nom, X[h], jeu.valeur[h], reglage, conf.couche)
     paires = paires_du_jeu(jeu) if conf.apparier else None
     if conf.apparier and paires is None:
         raise GardeArret(f"{nom} : appariement demandé, aucune paire")
     return fc.apprendre(conf.famille, nom, conf.couche, list(jeu.sequences), jeu.y, reglage, paires)
+
+
+def _scores(conf: Configuration, sonde: SondeLineaireJetons, jeu: Jeu, nom: str) -> np.ndarray:
+    """Statistique lue par ligne : maximum sur les jetons ; pour la ridge, résidu « déclaré moins attendu »."""
+    if conf.famille == "ridge_honnetes":
+        return fc.residu_ridge(sonde, _vecteurs_avant_champ(jeu, nom), jeu.valeur)
+    return fc.scores_actions(sonde, jeu.sequences)
 
 
 def _aire_ou_none(scores, y):
@@ -463,7 +484,7 @@ def choisir_reglage(conf: Configuration, jeu_app: Jeu, rng: np.random.Generator,
                 ecartes += 1
                 continue
             s = _apprendre(conf, ja, reglage, f"{nom}/interne-{i}")
-            aires.append(aire_sous_courbe(fc.scores_actions(s, je.sequences), je.y))
+            aires.append(aire_sous_courbe(_scores(conf, s, je, nom), je.y))
         if not aires:
             raise GardeArret(f"{nom} : aucun pli interne utilisable (réglage {reglage!r})")
         table.append({"reglage": reglage, "aire_interne": float(np.mean(aires)), "aires_plis": aires,
@@ -513,9 +534,9 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
         sonde = _apprendre(conf, ja, choix["reglage"], f"{nom}/{p['nom']}")
         gel = geler(sonde, f"{nom}/{p['nom']}", journal)
         gels[p["nom"]] = gel
-        aire_app = aire_sous_courbe(fc.scores_actions(gel.sonde, ja.sequences), ja.y)
+        aire_app = aire_sous_courbe(_scores(conf, gel.sonde, ja, nom), ja.y)
         je = epreuve.ouvrir(gel)
-        s = fc.scores_actions(gel.sonde, je.sequences)
+        s = _scores(conf, gel.sonde, je, nom)
         a = _aire_ou_none(s, je.y)
         tr = _triviaux(je)
         if a is not None:
