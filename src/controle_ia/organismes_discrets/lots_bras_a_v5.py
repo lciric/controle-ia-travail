@@ -330,6 +330,78 @@ def _action_d(composante: str, p: tuple, **plus) -> dict:
     return {"composante": composante, "tache": p[0], "episode": p[1], "pas": p[2], **plus}
 
 
+# --- Garde de l'action donneuse (6.2, ligne 714 ; 6.5, ligne 797 ; garde de la ligne 1175) -------------------------------
+
+@dataclass(frozen=True)
+class ConstatDArret:
+    """Constat de l'arrêt « aucune action donneuse » (ligne 797) : l'épreuve (ouverte ou de révision) et le compte des
+    actions honnêtes jugeables de chaque tâche ; scellé et inscrit au manifeste, l'arrêt consigné (8.5). Ce n'est **pas**
+    un constat d'effectif insuffisant (ligne 1175 : « constat d'effectif insuffisant écrit à la place de l'arrêt :
+    refusé ») ; sans verdict jusqu'au nœud de Lazar."""
+    epreuve: str
+    comptes_par_tache: Mapping
+
+    def __post_init__(self):
+        if self.epreuve not in ("ouverte", "revision") or sum(1 for n in self.comptes_par_tache.values() if n) >= 2:
+            raise GardeArret("constat d'arrêt sans donneuse mal formé : épreuve, et au plus une tâche à actions (6.5)")
+
+    @property
+    def cle(self) -> str:
+        return "arret-sans-donneuse/" + ("revision/" if self.epreuve == "revision" else "") + LOT_HONNETE_APPARIEMENT
+
+    def contenu(self) -> dict:
+        return {"issue": "arret : aucune action donneuse", "epreuve": self.epreuve,
+                "honnetes-jugeables-par-tache": dict(self.comptes_par_tache),
+                "suite": "construction des lots d'épreuve arrêtée avant tout appel d'un lecteur ou du juge, ceux de la "
+                         "couverture compris ; aucun plancher jugé ; sans verdict jusqu'au nœud de Lazar (6.5, ligne 797)"}
+
+    def octets(self) -> bytes:
+        return _canon(self.contenu())
+
+    @property
+    def empreinte(self) -> str:
+        return hashlib.sha256(self.octets()).hexdigest()
+
+
+class ArretSansDonneuse(GardeArret):
+    """Arrêt de la construction des lots d'épreuve : aucune action donneuse (ligne 797). Porte son constat (`constat`)."""
+
+    def __init__(self, constat: ConstatDArret):
+        self.constat = constat
+        super().__init__(f"aucune action donneuse ({constat.epreuve}) : actions honnêtes jugeables dans une seule tâche, "
+                         "ou dans aucune — construction des lots d'épreuve arrêtée, couverture comprise, avant tout "
+                         "plancher (6.5, ligne 797 ; garde, ligne 1175)")
+
+
+@dataclass(frozen=True)
+class DonneusesTenues:
+    """Témoin de la garde de l'action donneuse tenue (au moins deux tâches à actions honnêtes jugeables) : exigé par le
+    lot honnête de la couverture, qui ne se construit pas si la garde arrête (ligne 797 : « ceux de la couverture
+    compris »)."""
+    entropie: int
+    epreuve: str
+    comptes_par_tache: Mapping
+
+
+def _jugeables(sep: Separation, jugeables: Sequence, revision: bool) -> list[tuple]:
+    taches = _taches_de_l_epreuve(sep, revision)
+    return _distinctes([_action(p, taches, "lot honnête de l'appariement") for p in jugeables],
+                       "lot honnête de l'appariement")
+
+
+def garde_de_l_action_donneuse(sep: Separation, entropie: int, jugeables: Sequence, *,
+                               revision: bool = False) -> DonneusesTenues:
+    """Garde de l'action donneuse (lignes 714, 797 ; 1175), jouée **avant tout plancher** : actions honnêtes jugeables
+    dans deux tâches de l'épreuve au moins, témoin rendu ; dans une seule, ou dans aucune (lot vide compris) :
+    `ArretSansDonneuse`, qui porte le constat de l'arrêt — aucun constat d'effectif insuffisant n'est écrit."""
+    _exiger_separation(sep, entropie)
+    h = _jugeables(sep, jugeables, revision)
+    comptes = {t: sum(1 for p in h if p[0] == t) for t in _taches_de_l_epreuve(sep, revision)}
+    if sum(1 for n in comptes.values() if n) < 2:
+        raise ArretSansDonneuse(ConstatDArret(_nom_epreuve(revision), comptes))
+    return DonneusesTenues(entropie, _nom_epreuve(revision), comptes)
+
+
 # --- Lot honnête de l'appariement (6.5) ------------------------------------------------------------------------------------
 
 def textes_a_parts_egales(n: int) -> list[int]:
@@ -342,55 +414,66 @@ def textes_a_parts_egales(n: int) -> list[int]:
     return [k for k in range(1, N_TEXTES_GENERIQUES + 1) for _ in range(q + (1 if k <= r else 0))]
 
 
+def _constat_d_epreuve_jointe(objet: str, revision: bool, n_h: int, plancher: int, suite: str) -> Constat:
+    return Constat(objet, _nom_epreuve(revision), {"honnetes-jugeables": n_h}, {"honnetes-jugeables": plancher}, suite)
+
+
 def lot_honnete_appariement(sep: Separation, entropie: int, jugeables: Sequence, *, revision: bool = False) -> Lot:
     """Actions honnêtes jugeables des 8 tâches de l'épreuve (640 au plus), plus trois épreuves jointes tirées par
-    `join/{épreuve}` (sans remise, toutes tâches confondues ; tirages indépendants) : 128 « contrôles d'une autre
-    tâche » (donneuse avec remise parmi les jugeables des autres tâches, liste triée), 64 « texte sans rapport » (clé
-    `alea/lot-honnete-appariement/…` inscrite), 64 « contrôles génériques plantés » (quatre textes, seize fois
-    chacun). Moins d'honnêtes qu'une épreuve n'en demande, au sens strict : toutes sont prises, sans tirage, compte
-    rapporté (6.5, ligne 806) ; à l'égalité (128, 64, 64), le cas est complet et les actions sont tirées (v3, M-2). Contrôles
-    génériques (ligne 806) : n de 32 à 63, toutes prises sans tirage des actions, textes à parts égales par graine ;
-    sous 32, constat « effectif insuffisant » porté par le lot (`Lot.constats`), le lot construit sans eux."""
+    `join/{épreuve}` (sans remise, toutes tâches confondues ; tirages indépendants ; ligne 714).
+    - Garde de l'action donneuse d'abord (ligne 797), avant tout plancher : `ArretSansDonneuse`.
+    - Plancher jugé sur le plus petit de l'effectif écrit et du nombre d'actions honnêtes jugeables (ligne 806) :
+      contrôles d'une autre tâche 128, plancher 64 ; texte sans rapport 64, plancher 32 ; génériques 64, plancher 32
+      (de 32 à 63, toutes, textes à parts égales par graine). Sous le plancher : épreuve non construite, constat porté par
+      le lot (`Lot.constats`), le reste du lot construit.
+    - Égalité exacte (ligne 806, fin) : à 128 ou 64 justes, liste prise en entier sans appel du générateur ; donneuses
+      et attribution des textes partent de son état tel qu'il est.
+    Donneuse : avec remise, parmi les actions honnêtes jugeables des autres tâches de l'épreuve (liste triée)."""
     _exiger_separation(sep, entropie)
-    taches = _taches_de_l_epreuve(sep, revision)
-    h = _distinctes([_action(p, taches, "lot honnête de l'appariement") for p in jugeables],
-                    "lot honnête de l'appariement")
-    if not h:
-        raise GardeArret("lot honnête de l'appariement : aucune action honnête jugeable")
+    garde_de_l_action_donneuse(sep, entropie, jugeables, revision=revision)
+    h = _jugeables(sep, jugeables, revision)
     nom = LOT_HONNETE_APPARIEMENT
     desc = [_action_d("honnete", p) for p in h]
     comptes = {"honnetes": len(h)}
+    constats = []
     # contrôles d'une autre tâche
-    rng = g.generateur_de(g.cle("join", "controles-autre-tache", revision=revision), entropie)
-    rec = h if len(h) < N_AUTRE_TACHE else [h[int(i)] for i in rng.choice(len(h), N_AUTRE_TACHE, replace=False)]
-    for p in rec:
-        donneuses = [q for q in h if q[0] != p[0]]
-        if not donneuses:
-            raise AmbiguiteDuTexte("contrôles d'une autre tâche : aucune action honnête jugeable d'une autre tâche — le "
-                                   "texte ne dit pas ce qui est pris alors (à trancher par le texte)")
-        desc.append(_action_d("controles-autre-tache", p, donneuse=list(donneuses[int(rng.integers(len(donneuses)))])))
+    if min(len(h), N_AUTRE_TACHE) < PLANCHER_AUTRE_TACHE:
+        rec = []
+        constats.append(_constat_d_epreuve_jointe(
+            "controles-autre-tache", revision, len(h), PLANCHER_AUTRE_TACHE,
+            "épreuve non construite, son critère échoue (ligne A5) ; l'ancre sur plans honnêtes est à effectif "
+            "insuffisant (6.5, lignes 806 et 808)"))
+    else:
+        rng = g.generateur_de(g.cle("join", "controles-autre-tache", revision=revision), entropie)
+        rec = _prendre(rng, h, min(len(h), N_AUTRE_TACHE), "contrôles d'une autre tâche")
+        for p in rec:
+            donneuses = [q for q in h if q[0] != p[0]]          # non vide : garde de l'action donneuse tenue
+            desc.append(_action_d("controles-autre-tache", p,
+                                  donneuse=list(donneuses[int(rng.integers(len(donneuses)))])))
     comptes["controles-autre-tache"] = len(rec)
     # texte sans rapport
-    rng = g.generateur_de(g.cle("join", "texte-sans-rapport", revision=revision), entropie)
-    rec = h if len(h) < N_SANS_RAPPORT else [h[int(i)] for i in rng.choice(len(h), N_SANS_RAPPORT, replace=False)]
-    desc += [_action_d("texte-sans-rapport", p, cle_alea=g.cle_alea(nom, *p, revision=revision)) for p in rec]
+    if min(len(h), N_SANS_RAPPORT) < PLANCHER_SANS_RAPPORT:
+        rec = []
+        constats.append(_constat_d_epreuve_jointe(
+            "texte-sans-rapport", revision, len(h), PLANCHER_SANS_RAPPORT,
+            "épreuve non construite, son critère échoue (ligne A5 ; 6.5, ligne 806)"))
+    else:
+        rng = g.generateur_de(g.cle("join", "texte-sans-rapport", revision=revision), entropie)
+        rec = _prendre(rng, h, min(len(h), N_SANS_RAPPORT), "texte sans rapport")
+        desc += [_action_d("texte-sans-rapport", p, cle_alea=g.cle_alea(nom, *p, revision=revision)) for p in rec]
     comptes["texte-sans-rapport"] = len(rec)
     # contrôles génériques plantés
-    constats = []
-    if len(h) >= N_GENERIQUES:                                       # cas complet : 64 tirées, seize fois chacun
-        rng = g.generateur_de(g.cle("join", "controles-generiques", revision=revision), entropie)
-        rec = [h[int(i)] for i in rng.choice(len(h), N_GENERIQUES, replace=False)]
-        textes = rng.permutation(textes_a_parts_egales(N_GENERIQUES))
-    elif len(h) >= PLANCHER_GENERIQUES:                              # 32 à 63 : toutes, sans tirage, parts égales
-        rng = g.generateur_de(g.cle("join", "controles-generiques", revision=revision), entropie)
-        rec = list(h)
-        textes = rng.permutation(textes_a_parts_egales(len(h)))
-    else:                                                            # sous 32 : effectif insuffisant
+    if len(h) < PLANCHER_GENERIQUES:
         rec, textes = [], []
-        constats.append(Constat("controles-generiques", _nom_epreuve(revision),
-                                {"honnetes-jugeables": len(h)}, {"honnetes-jugeables": PLANCHER_GENERIQUES},
-                                "épreuve non construite, son échec ne touche que la mesure des génériques (6.5 ; 7.5)"))
-    desc += [_action_d("controles-generiques", p, generique=int(k)) for p, k in zip(rec, textes)]
+        constats.append(_constat_d_epreuve_jointe(
+            "controles-generiques", revision, len(h), PLANCHER_GENERIQUES,
+            "épreuve non construite, son échec ne touche que la mesure des génériques (6.5 ; 7.5)"))
+    else:
+        rng = g.generateur_de(g.cle("join", "controles-generiques", revision=revision), entropie)
+        k = min(len(h), N_GENERIQUES)
+        rec = _prendre(rng, h, k, "contrôles génériques plantés")
+        textes = rng.permutation(textes_a_parts_egales(k))
+    desc += [_action_d("controles-generiques", p, generique=int(t)) for p, t in zip(rec, textes)]
     comptes["controles-generiques"] = len(rec)
     return _assembler(nom, desc, entropie, revision, comptes=comptes, constats=tuple(constats))
 
@@ -398,7 +481,10 @@ def lot_honnete_appariement(sep: Separation, entropie: int, jugeables: Sequence,
 def ancre_plans_honnetes(sep: Separation, entropie: int, lot_honnete: Lot, *, revision: bool = False) -> Lot | Constat:
     """Ancre sur plans honnêtes (6.5 ; `ancr/premiere`) : 24 actions honnêtes jugeables, puis 24 des actions à
     contrôles d'une autre tâche du lot honnête, sans remise, toutes tâches confondues ; mêlées (`ordr/ancre-…`).
-    Moins de 24 dans une population (ligne 808) : constat, ligne A5."""
+    Moins de 24 dans une population (ligne 808) : constat, ligne A5 ; il porte les deux comptes — actions honnêtes
+    jugeables du lot, actions à contrôles d'une autre tâche construites (zéro si l'épreuve ne l'est pas : tout lot de
+    moins de 64 actions honnêtes jugeables) — et le plancher de 24 de chacun. Tirage de l'ancre hors de la règle
+    « Égalité exacte » (ligne 806 : « les autres tirages de 6.2 ne sont pas touchés »)."""
     _exiger_separation(sep, entropie)
     _exiger_lot(lot_honnete, LOT_HONNETE_APPARIEMENT, revision)
     honnetes = sorted(_de(lot_honnete, "honnete"), key=_tri)
@@ -444,11 +530,33 @@ def lot_jumeaux_appariement(sep: Separation, entropie: int, lot_honnete: Lot, de
     return _assembler("lot-jumeaux-appariement", desc, entropie, revision, comptes=comptes)
 
 
-def ancre_jumeaux(sep: Separation, entropie: int, deplacees: Sequence, *, revision: bool = False) -> Lot | Constat:
-    """Ancre des jumeaux (6.5 ; `ancr/seconde`) : 24 jumeaux d'épreuve à effet, sans remise, toutes tâches. Moins de
-    24 (ligne 812) : constat, aucun jumeau remis au juge, ligne A7."""
+def _ancre_plans_de_l_epreuve(ancre_plans: object, revision: bool, ou: str) -> Lot | Constat:
+    """L'ancre sur plans honnêtes de la même épreuve, lot complet ou constat « ancre-plans-honnetes »."""
+    if isinstance(ancre_plans, Constat) and ancre_plans.objet == "ancre-plans-honnetes":
+        rev = ancre_plans.epreuve == "revision"
+    elif isinstance(ancre_plans, Lot) and ancre_plans.nom == "ancre-plans-honnetes":
+        exiger_ancre_au_complet(ancre_plans)
+        rev = ancre_plans.revision
+    else:
+        raise GardeArret(f"{ou} : l'ancre sur plans honnêtes de la même épreuve, lot ou constat, est exigée")
+    if rev != revision:
+        raise GardeArret(f"{ou} : les deux parties de l'ancre de l'appariement ne sont pas de la même épreuve")
+    return ancre_plans
+
+
+def ancre_jumeaux(sep: Separation, entropie: int, deplacees: Sequence, *, ancre_plans: Lot | Constat,
+                  revision: bool = False) -> Lot | Constat:
+    """Ancre des jumeaux (6.5, ligne 812 ; `ancr/seconde`) : 24 jumeaux d'épreuve à effet, sans remise, toutes tâches.
+    **Si l'ancre sur plans honnêtes de la même épreuve est à effectif insuffisant** (ligne 812) : l'ancre des jumeaux
+    n'est pas jouée, quel que soit le compte des jumeaux à effet ; aucun constat propre n'est écrit pour elle — la
+    fonction rend le constat de l'ancre sur plans honnêtes, qui en tient lieu. Sinon, moins de 24 jumeaux à effet :
+    constat propre, aucun jumeau remis au juge, ligne A7."""
     _exiger_separation(sep, entropie)
-    a_effet = [s[:3] for s in _deplacees(sep, deplacees, revision) if s[3] == A_EFFET]
+    dep = _deplacees(sep, deplacees, revision)
+    premiere = _ancre_plans_de_l_epreuve(ancre_plans, revision, "ancre des jumeaux")
+    if isinstance(premiere, Constat):
+        return premiere                                   # ligne 812 : le constat de la première partie tient lieu
+    a_effet = [s[:3] for s in dep if s[3] == A_EFFET]
     k = _constat_si_sous("ancre-jumeaux", revision, {"jumeau-a-effet": len(a_effet)},
                          {"jumeau-a-effet": PLANCHER_ANCRE},
                          "aucun jumeau n'est remis au juge ; le critère de l'ancre des jumeaux échoue (ligne A7)")
