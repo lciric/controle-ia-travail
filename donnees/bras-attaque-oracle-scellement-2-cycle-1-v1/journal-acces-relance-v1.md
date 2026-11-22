@@ -45,6 +45,13 @@ de la famille et ses errata, tout moniteur, la branche `claude/scellement-2-fami
 | 14:48 | `origin/main:CLAUDE.md`, lignes 50 à 100 (règles permanentes ajoutées depuis cette branche) | — | règle des appels aux modèles de Google |
 | 14:47 | environnement de la session (outil `get_environment`) : noms des variables seulement | — | lieu d'envoi |
 
+## Après les premières pièces
+
+| heure | chemin | empreinte | motif |
+|---|---|---|---|
+| 14:54–14:56 | `sources-conditions-fournisseurs-v1/` (5 pages) : texte extrait par programme, recherche des citations du constat et de quelques mots (conservation, revue humaine, stockage) ; passages autour des mots rendus | `ad9f490a…`, `b2c1aa50…`, `e1bda710…`, `1edd80fc…` (non ouverte), `361792f0…` | champ n° 18 : vérifier chaque citation mot pour mot |
+| 14:58 | course, brouillon 17 : recherche par programme de l'identifiant de l'ancienne session et de R-4638 et R-4679 dans le texte entier ; fragments rendus des lignes 35, 44, 82, 136, 151, 225, 561, 720 (dont 35, 44, 82 et 720 hors des sections désignées, fragments de moins de 250 signes, sans autre lecture) ; même recherche, sans résultat, dans la répétition et la pièce de sécurité | `cf5d35d8…`, `a58cab35…`, `b8bcda60…` | lieu d'envoi : remplacements exacts |
+
 Note : la recherche du 14:38 a rendu la ligne R-4641, qui nomme la famille de réserve du cycle 2 par une empreinte
 (`a944acdd`), sans contenu ; je n'en ai rien ouvert. Les lignes du registre des GO rendues par recherche portaient sur
 d'autres chantiers (organisme, bras A, saboteur) ; aucune ne portait de contenu de moniteur. La recherche du 14:45
