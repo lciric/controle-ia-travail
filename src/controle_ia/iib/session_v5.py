@@ -6,7 +6,8 @@ la version 1, que la configuration en version 5 porte à l'identique en mode ré
 sous-commande `config` change : elle vérifie par `configuration_v5.exiger_config_v5` (prête à lancer), non par la version 1.
 Usage : `python -I -B -c "… session_v5.main(sys.argv[1:])" config CONFIG.json`, ou toute sous-commande de `session_v1`.
 
-**Coupure propre de l'étalonnage à 12 USD** (devis scellé de la version 5 ; ligne d'accord GO-2026-11-21-70) : sous-commande
+**Coupure propre de l'étalonnage à 16 USD** (relevée de 12 à 16 USD par le correctif 0013, sous le plafond de 17 USD de l'étape 1
+au devis scellé de la version 5 ; ligne d'accord GO-2026-11-21-70) : sous-commande
 `coupure-etalonnage PHASE PROGRES.txt MAINTENANT_S PRIX_CARTE PRIX_STOCKAGE CREATION_S`, jouée par la surveillance du lanceur de
 session à chaque relevé, après la garde de dépense de la ligne (55 USD), qui reste. La dépense comptée est celle de la machine
 depuis le début de l'amorce (première ligne « AMORCE IIB … DEMARRAGE 1 : <instant> » relevée du journal), au prix réel lu à la
@@ -31,7 +32,7 @@ from pathlib import Path
 
 from ..gardes import GardeArret
 
-COUPURE_ETALONNAGE_USD = 12.0          # devis scellé : coupure propre de l'étalonnage, par une règle de la surveillance
+COUPURE_ETALONNAGE_USD = 16.0          # coupure propre de l'étalonnage, par une règle de la surveillance (12 relevé à 16, correctif 0013)
 PHASES = ("etalonnage", "conditions", "course")
 _DEBUT_AMORCE = re.compile(r"^AMORCE IIB v\d+ DEMARRAGE 1 : (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)", re.M)
 
@@ -48,7 +49,7 @@ def _positif(quoi: str, v, strict: bool = False) -> float:
 
 def coupure_etalonnage(phase: str, progres: str, maintenant_s, prix_carte, prix_stockage, creation_s) -> dict:
     """Règle de la surveillance : pendant l'étalonnage, la dépense comptée depuis le début de l'amorce, au prix réel lu, atteint
-    12 USD → arrêt. Hors de l'étalonnage la règle ne joue pas (la coupure de la ligne reste seule)."""
+    16 USD → arrêt. Hors de l'étalonnage la règle ne joue pas (la coupure de la ligne reste seule)."""
     if phase not in PHASES:
         raise GardeArret(f"coupure de l'étalonnage : phase {phase!r} illisible ({', '.join(PHASES)}) : refus, aucun repli")
     now, cree = _positif("maintenant", maintenant_s), _positif("création", creation_s)

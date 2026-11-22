@@ -433,7 +433,7 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     assert hashlib.sha256((s / "lancer_iib_v2.sh").read_bytes()).hexdigest() == "dba3e09769e97e7304600924c4d6c43077412e25347edb76dee193c627947c96"
 
 
-# ---- règle de coupure propre de l'étalonnage à 12 USD, dans la surveillance du lanceur de session (devis scellé, GO-2026-11-21-70) ----
+# ---- règle de coupure propre de l'étalonnage à 16 USD (relevée de 12, correctif 0013), dans la surveillance du lanceur de session (GO-2026-11-21-70) ----
 def test_coupure_de_l_etalonnage_regle_cas_sain_artefact_et_autre_phase():
     from controle_ia.iib import session_v5 as se
 
@@ -442,23 +442,23 @@ def test_coupure_de_l_etalonnage_regle_cas_sain_artefact_et_autre_phase():
         "%Y-%m-%dT%H:%M:%SZ") + ", machine m, commit c\nPROGRES 2026-11-21T00:00:00Z phase=etalonnage lot=1\n"
     prix = (1.30, 0.08)                                                    # prix borne du devis : 1,38 USD par heure
     h = lambda heures: cree + 600 + heures * 3600                          # noqa: E731
-    sain = se.coupure_etalonnage("etalonnage", amorce, h(8.69), *prix, cree)
-    assert sain["joue"] and not sain["arret"] and sain["depuis"] == "début de l'amorce" and 11.98 < sain["depense_usd"] < 12
-    assert se.ligne_de_coupure(sain).startswith("RIEN : dépense comptée de l'étalonnage 11.99 USD < 12 USD")
-    art = se.coupure_etalonnage("etalonnage", amorce, cree + 600 + 12 / 1.38 * 3600 + 1, *prix, cree)      # artefact : la dépense atteint 12
-    assert art["arret"] and art["depense_usd"] >= 12 and se.COUPURE_ETALONNAGE_USD == 12.0
+    sain = se.coupure_etalonnage("etalonnage", amorce, h(11.59), *prix, cree)
+    assert sain["joue"] and not sain["arret"] and sain["depuis"] == "début de l'amorce" and 15.98 < sain["depense_usd"] < 16
+    assert se.ligne_de_coupure(sain).startswith("RIEN : dépense comptée de l'étalonnage 15.99 USD < 16 USD")
+    art = se.coupure_etalonnage("etalonnage", amorce, cree + 600 + 16 / 1.38 * 3600 + 1, *prix, cree)      # artefact : la dépense atteint 16
+    assert art["arret"] and art["depense_usd"] >= 16 and se.COUPURE_ETALONNAGE_USD == 16.0
     ligne = se.ligne_de_coupure(art)
-    assert ligne.startswith("ARRET coupure de l'étalonnage : dépense comptée 12.00 USD ≥ 12 USD") and "par son identifiant (R10)" in ligne
+    assert ligne.startswith("ARRET coupure de l'étalonnage : dépense comptée 16.00 USD ≥ 16 USD") and "par son identifiant (R10)" in ligne
     assert "prix réel lu" in ligne and "destruction" in ligne
     # le prix est le prix réel lu, non le prix borne : à 0,69 USD par heure la même durée ne coupe pas
-    assert not se.coupure_etalonnage("etalonnage", amorce, h(9.0), 0.65, 0.04, cree)["arret"]
+    assert not se.coupure_etalonnage("etalonnage", amorce, h(12.0), 0.65, 0.04, cree)["arret"]
     # début de l'amorce non encore relevé, ou antérieur à la création (artefact) : la dépense se compte depuis la création, jamais moins
     for texte in ("", "AMORCE IIB v1 DEMARRAGE 1 : 2001-01-01T00:00:00Z, machine m\n"):
-        r = se.coupure_etalonnage("etalonnage", texte, cree + 9 * 3600, *prix, cree)
+        r = se.coupure_etalonnage("etalonnage", texte, cree + 12 * 3600, *prix, cree)
         assert r["arret"] and r["depuis"].startswith("création") and r["debut_utc_s"] == cree
     # un second démarrage ne remet pas le compte à zéro : seule la ligne du premier démarrage compte
-    assert se.coupure_etalonnage("etalonnage", amorce + "AMORCE IIB v1 DEMARRAGE 2 : 2099-01-01T00:00:00Z, machine m\n", h(9.0), *prix, cree)["arret"]
-    # hors de l'étalonnage la règle ne joue pas, même très au-delà de 12 USD
+    assert se.coupure_etalonnage("etalonnage", amorce + "AMORCE IIB v1 DEMARRAGE 2 : 2099-01-01T00:00:00Z, machine m\n", h(12.0), *prix, cree)["arret"]
+    # hors de l'étalonnage la règle ne joue pas, même très au-delà de 16 USD
     for phase in ("course", "conditions"):
         r = se.coupure_etalonnage(phase, amorce, h(30.0), *prix, cree)
         assert not r["joue"] and not r["arret"] and "ne joue pas" in se.ligne_de_coupure(r)
@@ -509,17 +509,17 @@ def _surveiller(tmp_path, phase, heures, journal_de_fin=False, duree=5):
     return r.returncode, r.stdout + r.stderr, (d / "surveillance.txt").read_text(encoding="utf-8"), appels, d
 
 
-def test_surveillance_cas_sain_depense_sous_12_rien(tmp_path):
-    code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 8.0)                # 8 h à 1,38 : 11,04 USD
+def test_surveillance_cas_sain_depense_sous_16_rien(tmp_path):
+    code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 11.0)               # 11 h à 1,38 : 15,18 USD
     assert code == 124, sortie                                                                 # la surveillance poursuit : seule la durée de l'essai l'interrompt
     assert "règle de coupure de l'étalonnage : phase etalonnage" in texte and "POURSUIVRE" in texte and "ARRET" not in texte
     assert not (d / "coupure-etalonnage.txt").exists() and all(a.startswith(("logs 61414494", "--version")) for a in appels)
 
 
-def test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant(tmp_path):
-    code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 9.0)                # 9 h à 1,38 : 12,42 USD, sous la coupure de la ligne (55)
+def test_surveillance_artefact_depense_a_16_coupure_motif_ecrit_arret_par_l_identifiant(tmp_path):
+    code, sortie, texte, appels, d = _surveiller(tmp_path, "etalonnage", 12.0)               # 12 h à 1,38 : 16,56 USD, sous la coupure de la ligne (55)
     assert code == 3, sortie
-    assert "ARRET coupure de l'étalonnage : dépense comptée 12.4" in sortie and "ARRET depense" not in texte
+    assert "ARRET coupure de l'étalonnage : dépense comptée 16.5" in sortie and "ARRET depense" not in texte
     assert "ALERTE coupure de l'étalonnage atteinte" in texte and "ARRET coupure de l'étalonnage" in texte
     motif = (d / "coupure-etalonnage.txt").read_text(encoding="utf-8")
     assert "ARRET coupure de l'étalonnage" in motif and "instance 61414494" in motif and "phase etalonnage" in motif
@@ -532,10 +532,10 @@ def test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_iden
 
 
 def test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete(tmp_path):
-    code, sortie, texte, appels, d = _surveiller(tmp_path / "course", "course", 9.0)
+    code, sortie, texte, appels, d = _surveiller(tmp_path / "course", "course", 12.0)
     assert code == 124 and "phase course" in texte and "POURSUIVRE" in texte and "ARRET" not in texte and not (d / "coupure-etalonnage.txt").exists()
-    # la fin du run prime : étalonnage fini, dépense au-delà de 12 USD → FIN, pas de coupure
-    code, sortie, texte, appels, d = _surveiller(tmp_path / "fin", "etalonnage", 9.0, journal_de_fin=True)
+    # la fin du run prime : étalonnage fini, dépense au-delà de 16 USD → FIN, pas de coupure
+    code, sortie, texte, appels, d = _surveiller(tmp_path / "fin", "etalonnage", 12.0, journal_de_fin=True)
     assert code == 0 and "FIN" in sortie and "coupure de l'étalonnage : dépense" not in texte
     # la coupure de la ligne reste, et prime : 41 h à 1,38 USD dépassent 55 USD
     code, sortie, texte, appels, d = _surveiller(tmp_path / "ligne", "course", 41.0)

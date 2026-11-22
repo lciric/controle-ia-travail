@@ -38,12 +38,13 @@ class cuda:  # noqa: N801
     def is_available():
         return os.environ.get("CUDA_VISIBLE_DEVICES") != ""
 '''
-# « 5 failed, 263 passed, 3 errors » : les huit essais arrêtés sur la machine louée (traces de l'exécutante, tests.txt, 21 novembre)
+# « 5 failed, 263 passed, 3 errors » : les huit essais arrêtés sur la machine louée (traces de l'exécutante, tests.txt, 21 novembre) ;
+# les deux essais de la surveillance qui y portaient « 12 » dans leur nom sont renommés « 16 » par le correctif 0013 (seuil relevé)
 ARRETES_SUR_LA_MACHINE = (
     "tests/test_iib_lanceur_v5.py::test_second_passage_des_conditions_refuse",
     "tests/test_iib_lanceur_v5.py::test_essai_a_blanc_de_bout_en_bout_par_le_point_d_entree",
-    "tests/test_iib_lanceur_v5.py::test_surveillance_cas_sain_depense_sous_12_rien",
-    "tests/test_iib_lanceur_v5.py::test_surveillance_artefact_depense_a_12_coupure_motif_ecrit_arret_par_l_identifiant",
+    "tests/test_iib_lanceur_v5.py::test_surveillance_cas_sain_depense_sous_16_rien",
+    "tests/test_iib_lanceur_v5.py::test_surveillance_artefact_depense_a_16_coupure_motif_ecrit_arret_par_l_identifiant",
     "tests/test_iib_lanceur_v5.py::test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_arrete",
     "tests/test_iib_distillation_bout_en_bout_v5.py::test_course_entiere_distillation_et_evaluation_scellees",
     "tests/test_iib_distillation_bout_en_bout_v5.py::test_evaluation_quatre_conditions_deux_oracles_modele_rendu_a_dose_nulle",
@@ -184,9 +185,9 @@ def test_non_regression_de_la_garde_au_point_d_entree_sous_la_machine_simulee(tm
 
 
 def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefact_phase_illisible(tmp_path):
-    """La règle de coupure de l'étalonnage à 12 USD, appelée comme la surveillance l'appelle, sous un python3 sans numpy :
+    """La règle de coupure de l'étalonnage à 16 USD, appelée comme la surveillance l'appelle, sous un python3 sans numpy :
     environnement virtuel vide, puis `-I -S` (aucun paquet tiers) de l'interpréteur des essais et du vrai python3 du système
-    (trouvé sur `/usr/local/bin:/usr/bin:/bin`). Cas sain (sous 12 USD : rien), artefact (à 12 USD : arrêt), autre phase (la
+    (trouvé sur `/usr/local/bin:/usr/bin:/bin`). Cas sain (sous 16 USD : rien), artefact (à 16 USD : arrêt), autre phase (la
     règle ne joue pas), phase illisible (refus, aucun repli) ; la sous-commande `config`, qui charge numpy, y échoue avec le
     message de numpy (la surveillance ne l'appelle pas : essai de l'amorce). Environnement explicite (`LANG=C.UTF-8`, comme
     `_surveiller`), décodage explicite en UTF-8 (correctif 0012, relecture, majeur 1, mineurs 5 et 6)."""
@@ -217,11 +218,11 @@ def test_regle_de_coupure_sous_le_python3_du_systeme_sans_numpy_cas_sain_artefac
             return jouer([*interpreteur, "-c", SESSION, "coupure-etalonnage", phase, str(progres), maintenant, "1.30", "0.08", str(cree)])
         conf = jouer([*interpreteur, "-c", SESSION, "config", str(config)])      # `config` garde numpy : échec, avec le message de numpy
         assert conf.returncode != 0 and "No module named 'numpy'" in conf.stderr, (interpreteur, conf.returncode, conf.stderr[-800:])
-        sain = regle("etalonnage", h(8))                             # 8 h à 1,38 USD/h : 11,04 USD
+        sain = regle("etalonnage", h(11))                            # 11 h à 1,38 USD/h : 15,18 USD
         assert sain.returncode == 0, (interpreteur, sain.stderr[-1500:])
-        assert sain.stdout.startswith("RIEN : dépense comptée de l'étalonnage 11.04 USD < 12 USD (depuis : début de l'amorce)"), sain.stdout
-        art = regle("etalonnage", h(9))                              # 9 h : 12,42 USD
-        assert art.returncode == 0 and art.stdout.startswith("ARRET coupure de l'étalonnage : dépense comptée 12.42 USD ≥ 12 USD"), art.stdout
+        assert sain.stdout.startswith("RIEN : dépense comptée de l'étalonnage 15.18 USD < 16 USD (depuis : début de l'amorce)"), sain.stdout
+        art = regle("etalonnage", h(12))                             # 12 h : 16,56 USD
+        assert art.returncode == 0 and art.stdout.startswith("ARRET coupure de l'étalonnage : dépense comptée 16.56 USD ≥ 16 USD"), art.stdout
         autre = regle("course", h(30))
         assert autre.returncode == 0 and "ne joue pas" in autre.stdout, autre.stderr[-800:]
         illisible = regle("illisible", h(1))
