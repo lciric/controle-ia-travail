@@ -37,7 +37,7 @@ VERSION_VLLM=0.11.0
 # blanc de pip du 21 novembre 2026, 157 paquets, transformers 5.24.0), d'une génération postérieure à vLLM 0.11.0
 VERSION_TRANSFORMERS_VLLM=4.57.1
 MODELE=meta-llama/Llama-3.1-8B-Instruct
-MIN_ESSAIS=126
+MIN_ESSAIS=127
 TEMOIN="$T/versement-final-prouve"
 SIGNAL="$X/signal-pour-la-mere.txt"
 export TZ=UTC PYTHONDONTWRITEBYTECODE=1
@@ -271,7 +271,7 @@ if true; then
 fi
 cd "$D" || arret "dépôt" 2
 # 4. essais du paquet
-PYTHONPATH=src "$PY" -m pytest -q -p no:cacheprovider --color=no tests/test_dopamine_exploratoire_*.py --basetemp="$T/essais-tmp" > "$X/essais.txt" 2>&1; c=$?
+PYTHONPATH=src "$PY" -m pytest -q -p no:cacheprovider --noconftest --color=no tests/test_dopamine_exploratoire_*.py --basetemp="$T/essais-tmp" > "$X/essais.txt" 2>&1; c=$?
 NP=$(tail -n 1 "$X/essais.txt" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -n 1)
 j "essais du paquet : code $c, $(tail -n 1 "$X/essais.txt")"
 [ "$c" = 0 ] && [ "${NP:-0}" -ge "$MIN_ESSAIS" ] || arret "essais en échec ou moins de $MIN_ESSAIS passés" 2

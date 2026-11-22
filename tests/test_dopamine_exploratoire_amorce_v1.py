@@ -188,7 +188,15 @@ def test_amorce_ne_contient_aucune_suppression_ni_arret_par_motif():
 def test_min_essais_de_l_amorce_egal_au_nombre_d_essais_du_paquet():
     n = int(re.search(r"^MIN_ESSAIS=(\d+)$", AMORCE.read_text(encoding="utf-8"), re.M).group(1))
     racine = AMORCE.parents[3]
-    r = subprocess.run([os.sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--collect-only",
+    r = subprocess.run([os.sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--noconftest", "--collect-only",
                         *sorted(str(p) for p in (racine / "tests").glob("test_dopamine_exploratoire_*.py"))],
                        capture_output=True, text=True, cwd=racine, env={**os.environ, "PYTHONPATH": str(racine / "src")})
     assert f"{n} tests collected" in r.stdout, r.stdout[-300:]
+
+
+def test_essais_de_l_amorce_sans_conftest_du_depot():
+    """L'extraction partielle n'emporte ni le greffon des échecs connus ni les fichiers qu'il liste (R-4755) :
+    les essais du paquet se jouent sans le conftest du dépôt, qu'ils n'emploient pas."""
+    t = AMORCE.read_text(encoding="utf-8")
+    ligne = [l for l in t.splitlines() if "-m pytest" in l and "test_dopamine_exploratoire_" in l]
+    assert len(ligne) == 1 and "--noconftest" in ligne[0]
