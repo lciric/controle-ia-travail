@@ -1,0 +1,27 @@
+# Récolte de la session bibliothécaire du 22 novembre 2026 (v1)
+
+Pièce de classe C, session bibliothécaire, statut « non éprouvée » ; index, non preuve. Demande de Lazar relayée par la mère (vers 14:53Z) : « c'était sur quel dépôt, du coup, la liste ? Avons-nous fait autre chose pendant cette session qui pourrait être testé, ou intéressant à récupérer pour l'organisme ou pour le programme ? »
+
+## Sur quel dépôt est la liste
+Dépôt de travail `lciric/controle-ia-travail`, branche `claude/bibliothecaire-v1`, commit `487cefec987beb7da0ce21257478b0d4b2f6c05f` : `docs/notes/memoire-conception-v1/liste-exhaustive-hypotheses-exploration-allumage-v1.md` (`d706bf7e…`). Elle puise dans les deux dépôts ; le dépôt `ideation-organism` n'y est que lu (versement au commit `022c530e`, `docs/sources/ideation-organism-a41b7b50-v1/`). La mère la verse sur `main`.
+
+## Ce que la session a produit, et où chacun pourrait servir
+Chemins relatifs à `docs/notes/memoire-conception-v1/` sauf mention. « Tester » = une mesure qui n'a pas été faite ; « organisme » = matière première à servir à l'organisme d'idéation (N-072 : affinée par l'organisme, puis éprouvée sur devis) ; « programme » = à verser au programme (registres, décisions, outils communs).
+
+| Pièce (chemin) | À tester | Matière première pour l'organisme | À verser au programme |
+|---|---|---|---|
+| Mémo de conception des 21 et 22 novembre, v3 et sa version PDF (`memo-conception-21-22-novembre-v3.md`, `.pdf`) | Les suites (b) et (c) de l'épreuve, en attente du mot de Lazar | — | Carte des pièces des deux jours, seize tensions, négatifs, nœuds ouverts (index seulement, D3) |
+| Épreuve de la bibliothécaire, v3, et ses deux essais (`epreuve-bibliothecaire-v3.md` ; verdicts dans les dossiers « ne-pas-lire ») | — | Méthode réemployable pour la mémoire de l'organisme (registre des tentatives, N-073 complément 3) : bras « mémoire » contre bras « recherche plein texte » apparié, test exact de McNemar, portes de périmètre et de citation à tolérance nulle | **Résultat négatif** : aucun gain mesuré du mémo sur la recherche plein texte (essai 2 : 42 sur 45 contre 45 sur 45 ; paraphrases 13 sur 15, seuil 14 manqué) |
+| Outils de l'épreuve : recherche bornée à une liste d'autorisation, vérificateur de citations (`epreuve-outils-v1/recherche_autorisee_v2.py`, `verifier_citations_v6.py`, jugés conformes après contre-lecture) | Volet « chaînes-canaris » de la porte de périmètre, jamais codé ; plancher de six mots de la porte de citation | Vérificateur de citations mot pour mot au commit épinglé : garde possible contre les citations inventées dans les fiches de l'organisme | Outil commun de cloisonnement par code (lecture au commit, journal des fichiers ouverts) pour toute session fille |
+| Listes d'autorisation v1 à v3 (`liste-autorisation-bibliothecaire-v3.md`) | Exhaustivité des motifs d'exclusion contre un banc de chemins plantés | — | Règle « tout segment contenant ne-pas-lire est exclu » ; liste alignée sur le rôle le plus restreint |
+| Script d'appel aux modèles de Google sous garde, v6 (`appel-google-garde-v3-v6/`, versé sur `main`) | — | — | Instrument conforme : réglage de réflexion explicite, plafond de texte, refus avant envoi, plafond de dépense partagé entre journaux |
+| Contre-lecture du mémo v2 par Argon, Carbon et Neon (`contre-lecture-google-v1/`) | Relance de Carbon et Neon avec un budget de réflexion borné (suspendue) | — | Constat : Carbon et Neon finissent en MAX_TOKENS, la réflexion mange le plafond (renforce la règle de CLAUDE.md sur les appels à Google) |
+| Question de fond 1 : l'invariant « aucun score de moniteur dans l'entraînement de l'agent » (`questions-fond-v1/`, réponse de Fable `reponse-question-1/relecture-fable-api.md`) | — | — | Matière de décision pour Lazar : origine, ce que l'invariant protège, options pour le lever ou le resserrer |
+| Pages des séances antérieures sur l'exploration, v1 et v2 (`exploration-idees-seances-anterieures-v2.md`) | Ce qu'elles listent comme jamais éprouvé : banc à puits plantés, audit des pertes sur journaux bruts, effet de la liste des paires de traits non croisées sur les propositions, reproduction de Gu et Krenn, vrais proposeurs contre bras au hasard | Synthèse des conclusions déjà acquises, à servir comme point de départ pour ne pas refaire | Verdict : une seule méthode jouée avec un gain (tirages répartis du juge, arrêt anticipé, R-3008) |
+| Liste exhaustive des hypothèses d'exploration, d'originalité et d'allumage (`liste-exhaustive-hypotheses-exploration-allumage-v1.md`) | 96 entrées seulement proposées, à trier pour les devis | **Oui** : base de la demande approfondie à Fable, Carbon et Astra (session des puits étroits) | Tableau récapitulatif et 22 désaccords entre sources |
+| Versement du dépôt ideation-organism (`docs/sources/ideation-organism-a41b7b50-v1/`) | — | Code des proposeurs, du bisociateur, du moissonneur et de la recombinaison, réemployable tel quel | Inventaire complet (544 fichiers, empreintes) |
+| Veille : « When Lie Detectors Learn Model Identity » (`veille-bibliothecaire-v1.md`, PDF `docs/sources/exploration-idees-v1/when-lie-detectors-learn-m-v1.pdf`) | — | — | Inscrit en veille, non lu à fond |
+
+## Réserves
+- Les chiffres de l'épreuve viennent des verdicts de l'examinateur, que la bibliothécaire n'ouvre pas ; ils sont repris de ce que la mère et l'examinateur ont rapporté dans la session.
+- Rien ici n'est revendiqué ; tout réemploi dans une mesure passe par un texte contre-lu et le mot de Lazar.
