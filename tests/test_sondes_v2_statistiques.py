@@ -262,3 +262,14 @@ def test_rejeu_croise_minimums_et_taches_non_tenues():
     t, _ = st.charger_table_scores(l, CORR)
     r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=50)["doses"]["1"]
     assert r["brute"]["taches"] == 7 and r["regime"] == "grandeurs"
+
+
+def test_u_par_lot_egal_au_calcul_un_a_un():
+    m, paires = _moyennes(9, trace=0.7, graine=4)
+    X = np.stack([m[s] for s, _ in paires] + [m[j] for _, j in paires])
+    G = X @ X.T
+    iS, iJ = np.arange(9), np.arange(9, 18)
+    ech = np.random.default_rng(0).random((300, 9)) < 0.5
+    lot = st._u_par_lot(G, ech, iS, iJ)
+    un = [st._u_rho_gram(G, np.where(e, iJ, iS), np.where(e, iS, iJ))[0] for e in ech]
+    np.testing.assert_array_equal(lot, un)

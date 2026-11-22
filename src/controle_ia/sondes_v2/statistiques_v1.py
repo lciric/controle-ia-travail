@@ -166,6 +166,27 @@ def _u_rho_gram(G: np.ndarray, iS: np.ndarray, iJ: np.ndarray) -> tuple[float, f
     return U, rho, c
 
 
+def _u_par_lot(G: np.ndarray, ech: np.ndarray, iS: np.ndarray, iJ: np.ndarray) -> np.ndarray:
+    """U pour un lot d'échanges (B, P) à la fois ; même calcul que `_u_rho_gram` (essai d'égalité)."""
+    B, P = ech.shape
+    S = np.where(ech, iJ[None, :], iS[None, :])            # (B, P) indices des saboteurs après échange
+    J = np.where(ech, iS[None, :], iJ[None, :])
+    D = G[S] - G[J]                                        # (B, P, 2P) : d_r · x_k
+    T = D.sum(axis=1)                                      # (B, 2P)
+    b = np.arange(B)[:, None, None]
+    r = np.arange(P)[None, :, None]
+    DS = D[b, r, S[:, None, :]]                            # (B, P, P) : d_r · x_{S_s}
+    DJ = D[b, r, J[:, None, :]]                            # d_r · x_{J_s}
+    TS = np.take_along_axis(T, S, axis=1)                  # (B, P)
+    TJ = np.take_along_axis(T, J, axis=1)
+    p_idx, q_idx = np.where(~np.eye(P, dtype=bool))
+    diag_S = DS[:, np.arange(P), np.arange(P)]             # d_p · x_{S_p}
+    diag_J = DJ[:, np.arange(P), np.arange(P)]             # d_q · x_{J_q}
+    w_sp = TS[:, p_idx] - diag_S[:, p_idx] - DS[:, q_idx, p_idx]   # (P − 2) · w_pq · x_{S_p}
+    w_jq = TJ[:, q_idx] - DJ[:, p_idx, q_idx] - diag_J[:, q_idx]   # (P − 2) · w_pq · x_{J_q}
+    return np.mean((w_sp - w_jq) > 0, axis=1)
+
+
 def _u_direction_fixe(G_w: np.ndarray, iS, iJ) -> float:
     """U pour une direction fixe w : G_w[k] = w · x_k."""
     P = len(iS)
@@ -199,11 +220,15 @@ def diagnostic_etalon_transport(moyennes: dict, paires: list[tuple[str, str]], r
         configs = (rng_signes.random(P) < 0.5 for _ in range(TIRAGES_ECHANGES))
         n_cfg, exact = TIRAGES_ECHANGES, False
     haut = bas = 0
-    for ech in configs:
-        ech = np.asarray(ech, dtype=bool)
-        u = _u_rho_gram(G, np.where(ech, iJ, iS), np.where(ech, iS, iJ))[0]
-        haut += u >= U - 1e-12
-        bas += u <= U + 1e-12
+    lot = []
+    for ech in itertools.chain(configs, [None]):
+        if ech is not None:
+            lot.append(np.asarray(ech, dtype=bool))
+        if lot and (ech is None or len(lot) == 4096):
+            us = _u_par_lot(G, np.array(lot), iS, iJ)
+            haut += int(np.sum(us >= U - 1e-12))
+            bas += int(np.sum(us <= U + 1e-12))
+            lot = []
     if exact:
         p_haut, p_bas = haut / n_cfg, bas / n_cfg
         p_min = min(1.0, 2.0 ** (2 - P))
