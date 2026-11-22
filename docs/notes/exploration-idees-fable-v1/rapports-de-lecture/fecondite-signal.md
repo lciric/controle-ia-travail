@@ -1,0 +1,77 @@
+# Rapport de lecture : fécondité comme signal de recherche (22 novembre 2026)
+
+Dossier des sources : `/tmp/claude-0/-home-user-controle-ia-travail/7225ef84-cf06-5367-97a0-6c2a4e600e2b/scratchpad/sources/fecondite-signal/` (plus les quatre PDF déjà présents, lus sur place). Pages = pages du fichier PDF ; le numéro imprimé est le même pour les PDF arXiv, sauf mention contraire.
+
+## 1. Darwin Gödel Machine — le poids DÉCROÎT avec le nombre d'enfants
+- Zhang, Hu, Lu, Lange, Clune, « Darwin Gödel Machine: Open-Ended Evolution of Self-Improving Agents », arXiv 2505.22954v3 (12 mars 2026), en-tête « Published as a conference paper at ICLR 2026 ».
+- Fichier `preuves-verificateur-exact/dgm.pdf`, sha256 `13ff4abe0c7ad4a7dd3b4876d19a8bf940e39e70dabbf06065aa774a6c3457de`.
+- **Formule, annexe C.2, p. 28** (lu sur PDF, p. 28) : on tire k parents dans E^t = {agents avec αi < 1} « in proportion to a combined measure of performance and number of children with codebase-editing functionality » ; αi = performance ; ni = functioning_children_count ; si = 1 / (1 + exp(−λ(αi − α0))) ; **« (novelty bonus) hi = 1 / (1 + ni) »** ; wi = si·hi ; pi = wi / Σj wj ; tirage catégoriel de k parents. « We set λ = 10 and α0 = 0.5 » ; k = 2 (SWE-bench), k = 4 (Polyglot).
+- **Phrase qui l'explique, texte principal, p. 4** (lu sur PDF, p. 4) : « Parent selection is roughly proportional to each agent's performance score and inversely proportional to the number of its children with codebase-editing functionality (Appendix C.2). This favors high-performing agents that have been underexplored (i.e., have fewer existing children) ». Et : « All agents retain a non-zero selection probability ».
+- Réserve sur la citation de la consigne : la tournure « roughly proportional to their performance score and number of children » se trouve dans l'annexe A.3 (ablation « DGM Greedy »), **p. 25**, non dans le texte principal ; elle est ambiguë, la formule et la p. 4 tranchent : le terme décroît (1/(1+n)). Même page : « DGM Greedy achieves 39.7% and 30.0% on SWE-bench and Polyglot, respectively, compared to 50.0% and 38.0% ».
+- Statut : lu sur PDF, p. 4, 25, 28. Le nombre d'enfants y est un bonus de nouveauté (anti-fécondité), pas un signal de fécondité.
+
+## 2. ShinkaEvolve — le terme DÉCROÎT avec le nombre de descendants
+- Lange, Imajuku, Cetin, « ShinkaEvolve: Towards Open-Ended And Sample-Efficient Program Evolution », arXiv 2509.19349v1 (17 sept. 2025).
+- Fichier `preuves-verificateur-exact/shinka.pdf`, sha256 `ee287343c53240126e16a444d5ade2cd0ad0f290a400e78b97a040b93d965087`.
+- p. 3 (lu sur PDF, p. 3) : deux stratégies. (a) loi de puissance sur les rangs : pi = ri^−α / Σ rj^−α, « Setting α = 0 yields uniform sampling, while α → ∞ implements hill-climbing ». (b) « Inspired by Zhang et al. (2025), we contrast this with weighted sampling, incorporating performance and novelty. » α0 = médiane des aptitudes ; si = σ(λ·(F(Pi) − α0)) ; **« The novelty component hi = 1/(1+N(Pi)) favors programs with fewer offspring. »** ; pi = wi/Σwj, « where wi = si · hi balances performance and novelty ».
+- Statut : lu sur PDF, p. 3. Le terme ne mesure pas la qualité des descendants.
+
+## 3. Huxley-Gödel Machine
+- Wang, Piękos, Nanbo, Laakom, Chen, Ostaszewski, Zhuge, Schmidhuber, « Huxley-Gödel Machine: Human-Level Coding Agent Development by an Approximation of the Optimal Self-Improving Machine », arXiv 2510.21614. URL https://arxiv.org/pdf/2510.21614. Fichier `fecondite-signal/hgm.pdf` (30 p.), sha256 `06cbf326c605e59777d3f8550e01d41e6b49f78bf0d850f2d173c9f06f6cc254`.
+- (a) **Définition**, p. 5 : « CMPπ(T, a) = E_{TB∼pπ(·|T,a)} [U(argmax_{a′∈C(TB,a)} Scoreπ(a′))] = E[max_{a′∈C(TB,a)} U(a′)] (if Score = U) », « where C(TB, a) is the clade (i.e., the subtree with a as the root) ». Variante globale GMP : « GMP directly corresponds to the Q-value function in reinforcement learning ».
+- (b) **Estimation**, p. 6 : « We estimate CMP using the weighted average of agents' empirical performance in the clade » ; estimateur = nC_success(a) / (nC_success(a) + nC_failure(a)), sommes des tests réussis et échoués sur la clade. Choix du nœud à étendre par échantillonnage de Thompson : a* ∼ TS({(τ(1+nC_success(a)), τ(1+nC_failure(a)))}), τ croissant dans le temps (« encouraging exploration in the early stages and polarization ... as it approaches the end »). Avantage dit : « aggregating evidence across a clade yields more statistically robust estimates than single-node outcomes ».
+- (c) **Désaccord score propre / descendance**, p. 2 : « a high-scoring agent may produce unproductive descendants, while a lower-scoring one seeds lineages that achieve greater long-term gains. We term this phenomenon the Metaproductivity–Performance Mismatch. » Mesure, p. 8, Tableau 1 (corrélations de Pearson avec la CMP empirique = maximum de la moyenne empirique dans la clade, racine exclue ; pour HGM, exclusion supplémentaire de la sous-clade contenant le maximum « to avoid target leakage ») :
+
+  | Estimateur | SWE-Verified-60 pondérée | non pondérée | Polyglot pondérée | non pondérée |
+  |---|---|---|---|---|
+  | SICA | 0.444 | 0.444 | 0.274 | 0.274 |
+  | DGM | 0.285 | 0.406 | 0.383 | 0.357 |
+  | HGM | 0.778 | 0.512 | 0.626 | 0.873 |
+
+  Écart relevé : le texte de la p. 8 écrit « 0.8783 », le tableau « 0.873 ». Les auteurs disent « suggesting weak alignments, i.e., MPM » pour SICA et DGM.
+- (d) **Théorème**, p. 5 : « Theorem 1. Under Assumption 1, access to the CMP oracle is sufficient to implement the Gödel Machine. » Hypothèse 1 (p. 5) : objectif fonction du seul agent final, sans récompense intermédiaire ; utilité = performance sur tâches « under the assumption of repeatable trials » ; « The proofs of Gödel Machines do not consume budget » ; « each self-modification costs exactly one unit of the budget ». Preuve en annexe A (non relue). Le théorème porte sur l'oracle vrai, non sur l'estimateur.
+- (e) **Coût**, p. 9, Tableau 2 (800 évaluations, heures de processeur allouées) : SWE-Verified-60 : SICA 50.0 % / « infinite loop », DGM 53.3 % / 1231 h, HGM 56.7 % / 517 h ; Polyglot : SICA 25.4 % / 572 h, DGM 27.1 % / 2385 h, HGM 30.5 % / 347 h. Le gain de temps est attribué en partie à la parallélisation asynchrone (p. 8 : « our asynchronous parallelization of expansion and evaluation enables self-improvement to consume fewer allocated CPU-hours »), non au seul critère.
+- (f) **Limites** : pas de section de limites trouvée par recherche (« limitation », « future work ») ; seules les hypothèses du théorème (p. 4-5, 15) et la conclusion p. 11-12. Nombre de répétitions par méthode : non trouvé dans les pages lues. Statut : lu sur PDF, p. 2, 5, 6, 8, 9, 11-12.
+
+## 4. Évolvabilité directe
+- Mengistu, Lehman, Clune 2016, « Evolvability Search », GECCO 2016, p. 141-148, DOI 10.1145/2908812.2908838 : **non obtenu**. CORE (https://core.ac.uk/download/81666566.pdf) répond par un défi Cloudflare (« Just a moment... ») ; non contourné. Sites de Clune et Lehman : aucun lien PDF trouvé. Nombre de descendants par individu : non vérifié.
+- Gajewski, Clune, Stanley, Lehman 2019, « Evolvability ES: Scalable and Direct Optimization of Evolvability », arXiv 1907.06077. Fichier `fecondite-signal/evoes.pdf`, sha256 `ac252e6900e25cea700e1e34a205fb933be145c6e2738ce36b15b15c6af3ed77`.
+  - p. 2 : « evolvability search is computationally expensive (it requires evaluating enough offspring of each individual in the population to estimate its potential), and has only been demonstrated with small neural networks (NNs); evolvability ES addresses both issues. »
+  - p. 2 : « optimizes an evolvability-inspired objective without incurring any additional overhead in domain evaluations relative to optimizing a traditional objective with ES ».
+  - p. 3 : « The result is an algorithm that does not incur the cost of evolvability search of evaluating potential offspring of all individuals, because in an algorithm like ES that represents the population as a formal distribution over the search space, information about local diversity is shared between individuals ».
+  - Statut : lu sur PDF, p. 2-3 (résultats chiffrés non relus).
+
+## 5. Bandits sur arbres
+- Kocsis, Szepesvári, « Bandit based Monte-Carlo Planning » (ECML 2006, LNAI 4212 — de mémoire, le PDF ne porte pas la référence de l'acte). URL http://ggp.stanford.edu/readings/uct.pdf. Fichier `fecondite-signal/kocsis.pdf` (12 p.), sha256 `eebc37ab8c8660cc26ad816cc2a328f540d6079cfa87ea84234c5373f750eceb`. p. 6 : « Theorem 6 Consider a finite-horizon MDP with rewards scaled to lie in the [0, 1] interval. Let the horizon of the MDP be D, and the number of actions per state be K. Consider algorithm UCT such that the bias terms of UCB1 are multiplied by D. Then the bias of the estimated expected payoff, X̄n, is O(log(n)/n). Further, the failure probability at the root converges to zero at a polynomial rate as the number of episodes grows to infinity. » (précédé de « Now follows our main result »). Statut : lu sur PDF, p. 6.
+- Coquelin, Munos, « Bandit Algorithms for Tree Search », rapport INRIA, arXiv cs/0703062v1 (13 mars 2007). Fichier `fecondite-signal/coquelin.pdf` (22 p.), sha256 `20bf71d89422de9c346a4a398d7460f7fd965102acb283bdacabd84889bae313`.
+  - Résumé, p. 3 : « we show that UCT is too "optimistic" in some cases, leading to a regret Ω(exp(exp(D))) where D is the depth of the tree ».
+  - p. 6 : « its behavior is risky and may lead to a regret as bad as Ω(exp(· · · exp(D) · · · )) (D − 1 composed exponential functions) ».
+  - p. 8, Figure 1 : « In the beginning, the algorithm believes the arm 2 is the best, spending most of its times exploring this branch [...] It takes Ω(exp(exp(D))) rounds to get the 1 reward! »
+  - p. 9 : « For example, for D = 20, we have n ≥ 10^156837 » (exposant lu « 10156837 » dans l'extraction texte) ; « although UCT algorithm has asymptotically regret O(log(n)) in n, [...] the transitory regret is Ω(exp(exp(· · · exp(2) · · · ))) ». Statut : lu sur PDF, p. 3, 6, 8, 9.
+
+## 6. Étapes intermédiaires (« stepping stones »)
+- Lehman, Stanley, « Abandoning Objectives: Evolution through the Search for Novelty Alone », Evolutionary Computation 19(2):189-223, 2011. URL https://www.cs.swarthmore.edu/~meeden/cs81/f17/papers/lehman_ecj11.pdf (copie de cours ; préimpression d'auteur, pagination 1-39 et non celle de la revue). Fichier `fecondite-signal/lehman-ec.pdf`, sha256 `de1e27262b4c10b6d20fae064bb4531e925e86162c5be0e1f4f511da9f2b184a`.
+  - p. 11 : « it does not necessarily reward the intermediate stepping stones that lead to the objective. The more ambitious the objective, the harder it is to identify a priori these stepping stones. [...] identify novelty as a proxy for stepping stones ».
+  - Chiffres, labyrinthe difficile, p. 16-17 : « fitness-based NEAT was only successful in three out of 40 runs », sélection au hasard « four out of 40 », « novelty search was able to solve the same map in 39 out of 40 runs ».
+  - Contre-exemple, p. 19 (labyrinthe non clos, 100 runs) : « novelty search solved the maze only five times out of 100, which is not significantly better than fitness-based NEAT, which solved the maze two times out of 100 ».
+  - Limites, p. 28 : « because it ignores the objective, there is no bias towards optimization once a solution is found » ; et « The problem with the objective is that it fails to identify the stepping stones. » ; « While the trade-off is a more expansive search ».
+  - Le texte ne dit pas, dans les passages lus, que les étapes « ne ressemblent pas » à la cible (aucune occurrence de « resembl » en ce sens). Statut : lu sur PDF, p. 11, 16, 17, 19, 28.
+- Woolley, Stanley, GECCO 2011, p. 957-964 : **non obtenu** (http://eplex.cs.ucf.edu/papers/woolley_gecco11.pdf → 404 ; aucune autre copie libre trouvée). Ce point (« les étapes ne ressemblent pas à la cible », images de Picbreeder) reste non vérifié.
+
+## 7. Philosophie de la fécondité
+- (a) Kuhn, « Objectivity, Value Judgment, and Theory Choice », in The Essential Tension (Univ. of Chicago Press, 1977, ch. 13, p. 320-339 selon une page de cours de Pittsburgh ; la page lue indique « 1972 », « (c) 1974 »). URL https://cseweb.ucsd.edu/~goguen/courses/275f00/kuhn.html (copie HTML sur page de cours, sans pagination). Citation : « Fifth--a somewhat less standard item, but one of special importance to actual scientific decisions--a theory should be fruitful of new research findings: it should, that is, disclose new phenomena or previously unnoted relationships among those already known. These five characteristics--accuracy, consistency, scope, simplicity, and fruitfulness--are all standard criteria for evaluating the adequacy of a theory. » Statut : lu sur page HTML, page imprimée non vérifiée.
+- (b) Lakatos, The Methodology of Scientific Research Programmes, Philosophical Papers vol. 1, éd. Worrall et Currie (Cambridge UP, 1978). Fichier `philosophie/lakatos-msrp.pdf` (257 p., scan DjVu), sha256 `12a5ab5c6ab5b8812acd4cc427a9e3a869e8fda6dabed5c9d02d15ba2fd7cd53`.
+  - p. 40-41 du fichier : « Let us say that such a series of theories is theoretically progressive (or 'constitutes a theoretically progressive problemshift') if each new theory has some excess empirical content over its predecessor, that is, if it predicts some novel, hitherto unexpected fact. Let us say that a theoretically progressive series of theories is also empirically progressive (or 'constitutes an empirically progressive problemshift') if some of this excess empirical content is also corroborated, that is, if each new theory leads us to the actual discovery of some new fact. » ; « degenerating if it is not ».
+  - p. 186 du fichier (autre chapitre) : « It is theoretically progressive if each modification leads to new unexpected predictions and it is empirically progressive if at least some of these novel predictions are corroborated. »
+  - Statut : lu sur PDF, p. 40-41 et 186 du fichier ; numéros imprimés non relevés (de mémoire, p. 33-34 pour le premier passage, à vérifier).
+- (c) McMullin 1976, « The Fertility of Theories and the Unit for Appraisal in Science » (Boston Studies in the Philosophy of Science, vol. 39 — de mémoire, à vérifier) : **non obtenu**, aucune copie libre du texte original trouvée. Sources secondaires repérées, non lues : thèse de Segall 2009 (Université du Cap, https://open.uct.ac.za/items/bcfe9661-11c5-4f09-9a20-b96b7a364e5b) ; Schindler 2017, « Theoretical Fertility McMullin-style », Eur. J. Phil. Sci. (https://philsci-archive.pitt.edu/12114). Les définitions « P-fertility » / « U-fertility » ne sont pas vérifiées.
+
+## Non vérifié
+- Mengistu, Lehman, Clune 2016 (Evolvability Search) : PDF non obtenu (défi Cloudflare sur CORE, non contourné) ; méthode, nombre de descendants simulés, coût, résultat, limites : non vérifiés.
+- Woolley, Stanley 2011 : PDF non obtenu (404) ; affirmation « les étapes ne ressemblent pas à la cible » non vérifiée.
+- McMullin 1976 : texte non obtenu ; P-fertility / U-fertility non vérifiées.
+- Kuhn 1977 : page imprimée ; le texte lu est une copie HTML, non un PDF.
+- Lakatos : numéros de page imprimés.
+- Huxley-Gödel Machine : preuve du théorème 1 (annexe A) ; annexe D (calcul de la CMP empirique) ; nombre de répétitions des courses ; résultats de la section 4.3 (comparaison aux agents humains) ; aucune section de limites trouvée.
+- Evolvability ES : résultats chiffrés.
+- Kocsis, Szepesvári : référence de l'acte (ECML 2006, LNAI 4212), de mémoire.
