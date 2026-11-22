@@ -44,6 +44,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -51,15 +52,18 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from ..gardes import GardeArret
-from ..scellement import verifier
+from ..scellement import sceller, verifier
 from . import analyse_bras_a_v13 as analyse
 from . import arrets_bras_a_v12 as arrets
 from . import cloisonnement_bras_a_v13 as cloisonnement
 from . import configuration_bras_a_v12 as conf_mod
+from . import depots_bras_a_v12 as depots
 from . import graines_bras_a_v12 as graines
 from . import verdicts_bras_a_v13 as verdicts
 
 VERSION = 2
+# D1 (contre-lecture de la version 1) : sous `python -m`, `__name__` vaut "__main__" ; le nom du module est écrit ici.
+MODULE = "controle_ia.organismes_discrets.enchainement_discretion_bras_a_v2"
 RACINE_DU_CODE = Path(__file__).resolve().parents[3]
 PAQUET = Path("src") / "controle_ia" / "organismes_discrets"
 # Les modules que 13.2 nomme : analyse, verdicts et garde statique de la version 13 ; six modules de la version 12.
@@ -100,6 +104,21 @@ CODE_DES_AIRES, CODE_DE_L_ARRET, CODE_DE_LA_GARDE = 0, 3, 4
 CLES_DE_LA_SORTIE_DU_PROGRAMME = ("aires", "cles")
 PAIRES_DE_LA_SORTIE_DE_L_AIRE = ("aires_des_plis", "intervalle")      # deux bornes : listes en JSON, couples en Python
 DELAI_DU_PROGRAMME_DE_L_AIRE = 3600
+
+# D2 : liaison de l'entrée d'une exécution à l'autre — une pièce scellée à la racine du dossier de course, par rang.
+NOM_DE_LA_LIAISON = "liaison-de-l-entree-livraison-{}-bras-a.json"
+CHAMPS_DE_LA_LIAISON = ("rang", "sha256_des_donnees_de_l_entree", "sha256_de_l_entree", "entropie_de_la_configuration_du_bras")
+CLES_DES_DONNEES_DE_L_ENTREE = tuple(c for c in CLES_DE_L_ENTREE if c not in (CLE_DU_PROGRAMME_DE_L_AIRE, CLE_DU_FICHIER))
+# D3 : la livraison refusée est versée dans le dossier de course, sous ce dossier, hors du dossier des arrêts.
+DOSSIER_DES_LIVRAISONS_REFUSEES = "livraisons-refusees"
+# D10 : ce que le programme ne vérifie pas, dit au compte rendu.
+NON_VERIFIE = ("commit du registre courant : donné au constat, non confronté au dépôt du registre",
+               "poussage : `HEAD` de la branche courante est poussé ; un commit étranger au dossier de course non poussé "
+               "part avec lui",
+               "entropie de la configuration du bras et seize tâches : liées d'une exécution à l'autre, non recoupées avec "
+               "la configuration du bras (aucune configuration scellée lue ici ne les porte)",
+               "provenance de l'entrée (journal de la table A, lignes B, états de la base, comptes des lecteurs) : son "
+               "empreinte seule est liée et versée")
 
 
 class RegleNonEcrite(Exception):
@@ -231,7 +250,7 @@ def lire_l_entree(chemin) -> dict:
     programme de l'aire conditionnelle (chemin et empreinte inscrite) et chemin du fichier, **qui n'est pas ouvert**."""
     verifier(chemin)
     try:
-        o = json.loads(Path(chemin).read_text(encoding="utf-8"))
+        o = json.loads(Path(chemin).read_text(encoding="utf-8"), object_pairs_hook=_sans_doublon_dans_l_entree)
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise GardeArret("entrée de l'enchaînement : pièce illisible") from None
     if not isinstance(o, dict) or sorted(o) != sorted(CLES_DE_L_ENTREE):
@@ -292,7 +311,53 @@ def lire_l_entree(chemin) -> dict:
             "programme_de_l_aire": (_chemin_de_l_entree(programme["chemin"], f"{CLE_DU_PROGRAMME_DE_L_AIRE}.chemin", dossier),
                                     programme["sha256"]),
             "fichier": _chemin_de_l_entree(o[CLE_DU_FICHIER], CLE_DU_FICHIER, dossier),
-            "sha256": _sha256(chemin)}
+            "sha256": _sha256(chemin), "sha256_des_donnees": _empreinte_des_donnees(o)}
+
+
+def _empreinte_des_donnees(o: Mapping) -> str:
+    """Empreinte des données de l'entrée (toutes ses clés sauf le programme de l'aire conditionnelle et le chemin du
+    fichier), écrites sous une forme canonique : c'est ce qui décide la table C à l'étape (m) et les aires à l'étape (n)."""
+    donnees = {c: o[c] for c in CLES_DES_DONNEES_DE_L_ENTREE}
+    texte = json.dumps(donnees, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(texte.encode("utf-8")).hexdigest()
+
+
+# --- D2 : liaison de l'entrée ------------------------------------------------------------------------------------------
+
+def chemin_de_la_liaison(course: Path, rang: int) -> Path:
+    return course / NOM_DE_LA_LIAISON.format(rang)
+
+
+def lier_l_entree(course: Path, rang: int, lue: Mapping) -> bool:
+    """Scelle la liaison de l'entrée de ce rang dans le dossier de course, **si elle n'existe pas** (elle part avec le
+    versement d'ouverture). Rend vrai si elle a été écrite. Une liaison existante n'est jamais réécrite."""
+    chemin = chemin_de_la_liaison(course, rang)
+    if chemin.exists():
+        return False
+    contenu = {"rang": rang, "sha256_des_donnees_de_l_entree": lue["sha256_des_donnees"], "sha256_de_l_entree": lue["sha256"],
+               "entropie_de_la_configuration_du_bras": lue["entropie"]}
+    depots.ecrire_et_sceller(chemin, json.dumps(contenu, ensure_ascii=False, sort_keys=True, indent=1) + "\n")
+    return True
+
+
+def exiger_l_entree_liee(course: Path, rang: int, lue: Mapping) -> None:
+    """D2 : l'entrée de cette exécution est **celle que la liaison du rang a scellée** (mêmes données, même entropie) ;
+    sinon garde ordinaire. Liaison absente, illisible ou d'une autre forme : garde ordinaire."""
+    chemin = chemin_de_la_liaison(course, rang)
+    if not chemin.is_file():
+        raise GardeArret(f"liaison de l'entrée du rang {rang} absente du dossier de course : l'entrée de l'étape (m) de ce "
+                         "rang ne peut pas être reconnue — refusé")
+    verifier(chemin)
+    try:
+        lien = json.loads(chemin.read_text(encoding="utf-8"), object_pairs_hook=_sans_doublon_dans_l_entree)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise GardeArret(f"liaison de l'entrée du rang {rang} illisible — refusé") from None
+    if not isinstance(lien, dict) or sorted(lien) != sorted(CHAMPS_DE_LA_LIAISON) or lien["rang"] != rang:
+        raise GardeArret(f"liaison de l'entrée du rang {rang} hors de sa forme — refusé")
+    if lien["sha256_des_donnees_de_l_entree"] != lue["sha256_des_donnees"] \
+            or lien["entropie_de_la_configuration_du_bras"] != lue["entropie"]:
+        raise GardeArret(f"entrée de l'enchaînement changée depuis la liaison du rang {rang} (données ou entropie) : la "
+                         "table C et les aires ne viendraient pas de la même entrée — refusé")
 
 
 def exiger_etape_m_jouee(entree: Mapping) -> verdicts.ResultatA:
@@ -350,6 +415,15 @@ def _sans_doublon(paires):
     cles = [k for k, _ in paires]
     if len(cles) != len(set(cles)):
         raise GardeArret("programme de l'aire conditionnelle : une clé en double dans sa sortie — refusée")
+    return dict(paires)
+
+
+def _sans_doublon_dans_l_entree(paires):
+    """D6 : une clé en double, à tout niveau de l'entrée, la rend illisible (6.9 tient une clé en double pour une pièce
+    illisible)."""
+    cles = [k for k, _ in paires]
+    if len(cles) != len(set(cles)):
+        raise GardeArret("entrée de l'enchaînement : une clé en double — pièce illisible")
     return dict(paires)
 
 
