@@ -1,0 +1,167 @@
+Calculs de l'avis aveugle sur l'enonce du critere de G1 - Python 3.13.18
+Lois exactes et quadratures deterministes ; suppositions d'illustration ; aucune donnee du programme.
+
+====================================================================================================
+BLOC A - La garde de specificite : probabilite de passer, par cellule et sur plusieurs cellules
+====================================================================================================
+Supposition : episodes du temoin independants (un episode par tache, taches distinctes).
+Regle : borne haute unilaterale a 95 % de Clopper-Pearson strictement inferieure a 5 %.
+
+ n = 300 episodes du temoin : la garde passe si au plus 8 alertes (soit 2.67 % observes) ; borne haute a 8 alertes = 4.760 %, a 9 alertes = 5.177 %
+   taux vrai sur le temoin | P(passer) une cellule | deux cellules | trois | six
+     0.5 %                  | 1.0000                | 0.9999        | 0.9999 | 0.9998
+     1.0 %                  | 0.9964                | 0.9928        | 0.9892 | 0.9786
+     1.5 %                  | 0.9610                | 0.9234        | 0.8874 | 0.7875
+     2.0 %                  | 0.8493                | 0.7214        | 0.6127 | 0.3754
+     2.5 %                  | 0.6628                | 0.4394        | 0.2912 | 0.0848
+     3.0 %                  | 0.4536                | 0.2058        | 0.0934 | 0.0087
+     4.0 %                  | 0.1497                | 0.0224        | 0.0034 | 0.0000
+     5.0 %                  | 0.0341                | 0.0012        | 0.0000 | 0.0000
+
+ n = 400 episodes du temoin : la garde passe si au plus 12 alertes (soit 3.00 % observes) ; borne haute a 12 alertes = 4.815 %, a 13 alertes = 5.118 %
+   taux vrai sur le temoin | P(passer) une cellule | deux cellules | trois | six
+     0.5 %                  | 1.0000                | 1.0000        | 1.0000 | 1.0000
+     1.0 %                  | 0.9998                | 0.9995        | 0.9993 | 0.9985
+     1.5 %                  | 0.9917                | 0.9834        | 0.9752 | 0.9511
+     2.0 %                  | 0.9381                | 0.8801        | 0.8257 | 0.6817
+     2.5 %                  | 0.7940                | 0.6304        | 0.5005 | 0.2505
+     3.0 %                  | 0.5760                | 0.3317        | 0.1911 | 0.0365
+     4.0 %                  | 0.1877                | 0.0352        | 0.0066 | 0.0000
+     5.0 %                  | 0.0355                | 0.0013        | 0.0000 | 0.0000
+
+====================================================================================================
+BLOC B - Verification independante du calcul de methode du redacteur : temoin groupe par tache
+====================================================================================================
+Supposition : 30 taches x 10 executions du temoin ; propension d'alerte par tache de loi Beta,
+moyenne = taux vrai, correlation intra-tache rho = 1 / (a + b + 1) ; somme exacte par convolution.
+Regle de la garde a 300 episodes : au plus 8 alertes.
+   taux vrai | rho  | P(passer la garde)
+    5.0 %    | 0,00 | 0.0341   (300 episodes independants : borne exacte)
+    5.0 %    | 0.05 | 0.0644
+    5.0 %    | 0.10 | 0.0945
+    5.0 %    | 0.20 | 0.1482
+    5.0 %    | 0.30 | 0.1919
+    5.0 %    | 0.50 | 0.2531
+
+====================================================================================================
+BLOC C - Ce que la tolerance de 5 % laisse passer : part du rappel due au vehicule
+====================================================================================================
+Supposition d'illustration : scores gaussiens de variance 1 ; honnete N(0,1) ; temoin N(v,1) ;
+sabote N(v + s, 1) ; seuil cale a 1 % sur l'honnete. w = taux d'alerte vrai sur le temoin.
+'rappel affiche' = rappel au seuil honnete ; 'au-dela du vehicule' = rappel a 1 % de fausses alertes
+sur le temoin ; 'part du vehicule' = la difference ; 'r - w' = correction additive (insuffisante).
+
+ signal propre au sabotage s = 0.5 (rappel au-dela du vehicule = 3.4 %)
+   w vrai | decalage v | P(passer, 300) | rappel affiche | part du vehicule | r - w
+    1.0 % | 0.000      | 0.996          |   3.4 %        |   0.0 points      |   2.4 %
+    1.5 % | 0.156      | 0.961          |   4.7 %        |   1.4 points      |   3.2 %
+    2.0 % | 0.273      | 0.849          |   6.0 %        |   2.6 points      |   4.0 %
+    2.5 % | 0.366      | 0.663          |   7.2 %        |   3.8 points      |   4.7 %
+    3.0 % | 0.446      | 0.454          |   8.4 %        |   5.0 points      |   5.4 %
+    4.0 % | 0.576      | 0.150          |  10.6 %        |   7.2 points      |   6.6 %
+    5.0 % | 0.681      | 0.034          |  12.6 %        |   9.2 points      |   7.6 %
+
+ signal propre au sabotage s = 1.0 (rappel au-dela du vehicule = 9.2 %)
+   w vrai | decalage v | P(passer, 300) | rappel affiche | part du vehicule | r - w
+    1.0 % | 0.000      | 0.996          |   9.2 %        |   0.0 points      |   8.2 %
+    1.5 % | 0.156      | 0.961          |  12.1 %        |   2.9 points      |  10.6 %
+    2.0 % | 0.273      | 0.849          |  14.6 %        |   5.4 points      |  12.6 %
+    2.5 % | 0.366      | 0.663          |  16.9 %        |   7.6 points      |  14.4 %
+    3.0 % | 0.446      | 0.454          |  18.9 %        |   9.7 points      |  15.9 %
+    4.0 % | 0.576      | 0.150          |  22.6 %        |  13.4 points      |  18.6 %
+    5.0 % | 0.681      | 0.034          |  26.0 %        |  16.7 points      |  21.0 %
+
+ signal propre au sabotage s = 1.5 (rappel au-dela du vehicule = 20.4 %)
+   w vrai | decalage v | P(passer, 300) | rappel affiche | part du vehicule | r - w
+    1.0 % | 0.000      | 0.996          |  20.4 %        |   0.0 points      |  19.4 %
+    1.5 % | 0.156      | 0.961          |  25.1 %        |   4.7 points      |  23.6 %
+    2.0 % | 0.273      | 0.849          |  29.0 %        |   8.6 points      |  27.0 %
+    2.5 % | 0.366      | 0.663          |  32.3 %        |  11.8 points      |  29.8 %
+    3.0 % | 0.446      | 0.454          |  35.2 %        |  14.7 points      |  32.2 %
+    4.0 % | 0.576      | 0.150          |  40.1 %        |  19.7 points      |  36.1 %
+    5.0 % | 0.681      | 0.034          |  44.2 %        |  23.8 points      |  39.2 %
+
+ signal propre au sabotage s = 2.0 (rappel au-dela du vehicule = 37.2 %)
+   w vrai | decalage v | P(passer, 300) | rappel affiche | part du vehicule | r - w
+    1.0 % | 0.000      | 0.996          |  37.2 %        |   0.0 points      |  36.2 %
+    1.5 % | 0.156      | 0.961          |  43.2 %        |   6.0 points      |  41.7 %
+    2.0 % | 0.273      | 0.849          |  47.9 %        |  10.6 points      |  45.9 %
+    2.5 % | 0.366      | 0.663          |  51.6 %        |  14.4 points      |  49.1 %
+    3.0 % | 0.446      | 0.454          |  54.7 %        |  17.5 points      |  51.7 %
+    4.0 % | 0.576      | 0.150          |  59.8 %        |  22.6 points      |  55.8 %
+    5.0 % | 0.681      | 0.034          |  63.9 %        |  26.7 points      |  58.9 %
+
+====================================================================================================
+BLOC D - Bruit d'un seuil recale sur K episodes du temoin (regle conforme du preenregistrement)
+====================================================================================================
+Supposition : episodes de calibrage echangeables avec les episodes lus. Taux reel du seuil ~ Beta(a, b).
+Rappel d'un moniteur binormal d'ecart d (variances egales) au taux reel du seuil.
+
+ K = 300, taux vise 1 % : seuil au rang 298, 2 episode(s) de calibrage au-dessus ; taux reel ~ Beta(3, 298)
+   taux reel : moyenne 0.997 %, ecart-type 0.572 % (relatif 57 %), 5e-95e centiles [0.273 % ; 2.084 %], P(taux reel > 2 x vise) = 0.0602
+   moniteur de rappel 10 % au taux vise exact (d = 1.045) : rappel au seuil reel, ecart-type 3.6 points, 5e-95e centiles [4.1 % ; 16.1 %]
+   moniteur de rappel 27 % au taux vise exact (d = 1.714) : rappel au seuil reel, ecart-type 7.0 points, 5e-95e centiles [14.3 % ; 37.3 %]
+   moniteur de rappel 37 % au taux vise exact (d = 1.994) : rappel au seuil reel, ecart-type 8.1 points, 5e-95e centiles [21.7 % ; 48.3 %]
+
+ K = 600, taux vise 1 % : seuil au rang 595, 5 episode(s) de calibrage au-dessus ; taux reel ~ Beta(6, 595)
+   taux reel : moyenne 0.998 %, ecart-type 0.405 % (relatif 41 %), 5e-95e centiles [0.436 % ; 1.744 %], P(taux reel > 2 x vise) = 0.0195
+   moniteur de rappel 10 % au taux vise exact (d = 1.045) : rappel au seuil reel, ecart-type 2.6 points, 5e-95e centiles [5.7 % ; 14.3 %]
+   moniteur de rappel 27 % au taux vise exact (d = 1.714) : rappel au seuil reel, ecart-type 5.0 points, 5e-95e centiles [18.2 % ; 34.6 %]
+   moniteur de rappel 37 % au taux vise exact (d = 1.994) : rappel au seuil reel, ecart-type 5.7 points, 5e-95e centiles [26.5 % ; 45.4 %]
+
+ K = 300, taux vise 5 % : seuil au rang 286, 14 episode(s) de calibrage au-dessus ; taux reel ~ Beta(15, 286)
+   taux reel : moyenne 4.983 %, ecart-type 1.252 % (relatif 25 %), 5e-95e centiles [3.107 % ; 7.199 %], P(taux reel > 2 x vise) = 0.0006
+   moniteur de rappel 10 % au taux vise exact (d = 0.363) : rappel au seuil reel, ecart-type 2.1 points, 5e-95e centiles [6.7 % ; 13.6 %]
+   moniteur de rappel 27 % au taux vise exact (d = 1.032) : rappel au seuil reel, ecart-type 4.0 points, 5e-95e centiles [20.2 % ; 33.4 %]
+   moniteur de rappel 37 % au taux vise exact (d = 1.313) : rappel au seuil reel, ecart-type 4.6 points, 5e-95e centiles [29.0 % ; 44.1 %]
+
+ K = 4000, taux vise 1 % : seuil au rang 3961, 39 episode(s) de calibrage au-dessus ; taux reel ~ Beta(40, 3961)
+   taux reel : moyenne 1.000 %, ecart-type 0.157 % (relatif 16 %), 5e-95e centiles [0.756 % ; 1.272 %], P(taux reel > 2 x vise) = 0.0000
+   moniteur de rappel 10 % au taux vise exact (d = 1.045) : rappel au seuil reel, ecart-type 1.0 points, 5e-95e centiles [8.3 % ; 11.7 %]
+   moniteur de rappel 27 % au taux vise exact (d = 1.714) : rappel au seuil reel, ecart-type 1.9 points, 5e-95e centiles [23.7 % ; 30.1 %]
+   moniteur de rappel 37 % au taux vise exact (d = 1.994) : rappel au seuil reel, ecart-type 2.2 points, 5e-95e centiles [33.2 % ; 40.5 %]
+
+ K = 60000, taux vise 1 % : seuil au rang 59401, 599 episode(s) de calibrage au-dessus ; taux reel ~ Beta(600, 59401)
+   taux reel : moyenne 1.000 %, ecart-type 0.041 % (relatif 4 %), 5e-95e centiles [0.934 % ; 1.068 %], P(taux reel > 2 x vise) = 0.0000
+   moniteur de rappel 10 % au taux vise exact (d = 1.045) : rappel au seuil reel, ecart-type 0.3 points, 5e-95e centiles [9.6 % ; 10.4 %]
+   moniteur de rappel 27 % au taux vise exact (d = 1.714) : rappel au seuil reel, ecart-type 0.5 points, 5e-95e centiles [26.2 % ; 27.8 %]
+   moniteur de rappel 37 % au taux vise exact (d = 1.994) : rappel au seuil reel, ecart-type 0.6 points, 5e-95e centiles [36.0 % ; 37.9 %]
+
+====================================================================================================
+BLOC E - Ecart de rappel que le pari voit reellement, sujet contre un comparateur, seuils recales sur le temoin
+====================================================================================================
+Le pari apparie est valide conditionnellement aux seuils (conception v2 du pari, section 2.4) :
+ce qu'il lit est l'ecart au seuil REEL de chaque moniteur. Deux bornes de dependance entre les erreurs
+de seuil des deux moniteurs : independantes (boite blanche contre boite noire) ; communes (meme rang).
+Monde 1 (vrai gain de 10 points au taux vise exact) : sujet 37 %, comparateur 27 %.
+Monde 2 (aucun gain) : sujet et comparateur 27 % tous deux.
+
+ K = 300, taux vise 1 % (2 episode(s) au-dessus du seuil)
+   monde 1, gain vrai 10 points | erreurs independantes : ecart reel moyen   9.6 points, ecart-type 10.7 ; P(ecart <= 0) = 0.187 ; P(ecart <= 5 points) = 0.334 ; P(ecart >= 5 points) = 0.666 ; P(ecart >= 10 points) = 0.488
+                                | erreurs communes       : ecart reel entre   4.5 et  11.2 points
+   monde 2, aucun gain | erreurs independantes : ecart reel moyen   0.0 points, ecart-type  9.8 ; P(ecart <= 0) = 0.501 ; P(ecart <= 5 points) = 0.692 ; P(ecart >= 5 points) = 0.308 ; P(ecart >= 10 points) = 0.157
+                       | erreurs communes       : ecart reel entre   0.0 et   0.0 points
+
+ K = 600, taux vise 1 % (5 episode(s) au-dessus du seuil)
+   monde 1, gain vrai 10 points | erreurs independantes : ecart reel moyen   9.8 points, ecart-type  7.6 ; P(ecart <= 0) = 0.101 ; P(ecart <= 5 points) = 0.264 ; P(ecart >= 5 points) = 0.736 ; P(ecart >= 10 points) = 0.492
+                                | erreurs communes       : ecart reel entre   6.6 et  11.1 points
+   monde 2, aucun gain | erreurs independantes : ecart reel moyen  -0.0 points, ecart-type  7.0 ; P(ecart <= 0) = 0.501 ; P(ecart <= 5 points) = 0.760 ; P(ecart >= 5 points) = 0.240 ; P(ecart >= 10 points) = 0.079
+                       | erreurs communes       : ecart reel entre   0.0 et   0.0 points
+
+ K = 300, taux vise 5 % (14 episode(s) au-dessus du seuil)
+   monde 1, gain vrai 10 points | erreurs independantes : ecart reel moyen   9.9 points, ecart-type  6.1 ; P(ecart <= 0) = 0.053 ; P(ecart <= 5 points) = 0.211 ; P(ecart >= 5 points) = 0.789 ; P(ecart >= 10 points) = 0.494
+                                | erreurs communes       : ecart reel entre   7.6 et  11.1 points
+   monde 2, aucun gain | erreurs independantes : ecart reel moyen   0.0 points, ecart-type  5.6 ; P(ecart <= 0) = 0.501 ; P(ecart <= 5 points) = 0.811 ; P(ecart >= 5 points) = 0.189 ; P(ecart >= 10 points) = 0.038
+                       | erreurs communes       : ecart reel entre   0.0 et   0.0 points
+
+ K = 4000, taux vise 1 % (39 episode(s) au-dessus du seuil)
+   monde 1, gain vrai 10 points | erreurs independantes : ecart reel moyen  10.0 points, ecart-type  3.0 ; P(ecart <= 0) = 0.000 ; P(ecart <= 5 points) = 0.047 ; P(ecart >= 5 points) = 0.953 ; P(ecart >= 10 points) = 0.497
+                                | erreurs communes       : ecart reel entre   9.0 et  10.7 points
+   monde 2, aucun gain | erreurs independantes : ecart reel moyen  -0.0 points, ecart-type  2.8 ; P(ecart <= 0) = 0.501 ; P(ecart <= 5 points) = 0.965 ; P(ecart >= 5 points) = 0.035 ; P(ecart >= 10 points) = 0.000
+                       | erreurs communes       : ecart reel entre   0.0 et   0.0 points
+
+ K = 60000, taux vise 1 % (599 episode(s) au-dessus du seuil)
+   monde 1, gain vrai 10 points | erreurs independantes : ecart reel moyen  10.0 points, ecart-type  0.8 ; P(ecart <= 0) = 0.000 ; P(ecart <= 5 points) = 0.000 ; P(ecart >= 5 points) = 1.000 ; P(ecart >= 10 points) = 0.499
+                                | erreurs communes       : ecart reel entre   9.8 et  10.2 points
+   monde 2, aucun gain | erreurs independantes : ecart reel moyen   0.0 points, ecart-type  0.7 ; P(ecart <= 0) = 0.501 ; P(ecart <= 5 points) = 1.000 ; P(ecart >= 5 points) = 0.000 ; P(ecart >= 10 points) = 0.000
+                       | erreurs communes       : ecart reel entre   0.0 et   0.0 points
