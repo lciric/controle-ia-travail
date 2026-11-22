@@ -1,0 +1,18 @@
+#!/bin/bash
+# Relevé de l'étalonnage v5 : règle de coupure (progrès vide, création comme début), inventaire filtré, ls-remote.
+S=/tmp/claude-0/-home-user-controle-ia-travail/fb960cba-a018-59e4-a804-cde37408459a/scratchpad
+. /home/user/controle-ia-travail/.venv/bin/activate
+NOW=$(date -u +%s); H=$(date -u +%Y%m%dT%H%M%SZ)
+O=$S/releves/releve-$H.txt
+{
+echo "heure $(date -u -d @$NOW +%FT%TZ)"
+cd $S/depot && PYTHONPATH=src python3 -I -B -c "import sys; sys.path.insert(0,'src'); from controle_ia.iib import session_v5; sys.exit(session_v5.main(sys.argv[1:]))" coupure-etalonnage etalonnage $S/progres-vide.txt $NOW 1.16 0.033333 1795303756
+echo "code_regle $?"
+VAST_API_KEY=dummy vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for i in d: print('inst',i.get('id'),i.get('actual_status'),i.get('intended_status'),i.get('label'))"
+echo "code_inventaire $?"
+cd /home/user/controle-ia-travail && git ls-remote origin refs/heads/essai/iib-explo-v6
+} > $O 2>&1
+cat $O
