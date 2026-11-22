@@ -1,0 +1,9 @@
+# Demande 39 — texte neuf de l'invariant « aucun score de moniteur dans l'entraînement de l'agent » (N-053, point 5) et conception du bras de remède
+
+Décisions du directeur, le 22 novembre, sur ta réponse à la question de fond (jointe en remarque) : « go » sur tes cinq recommandations — (1) réécrire l'invariant en trois clauses (entraînement ; choix de l'agent ; choix d'action au déploiement, en règle déclarée) et définir « déclaré » ; (2) appliquer les conditions du barreau 3 de l'étau (quarantaine, non-réemploi) à tout bras déclaré, données dérivées comprises, avec les moniteurs visés nommés et une réserve lue ; (3) n'entraîner que sur la strate d'audit tirée au hasard ; (5) vérifier sur PDF les antériorités et relire la garde de code avant le scellement de la porte de fin de phase 1. Et, à l'encontre de ta recommandation (4) : « go bras remède now » — le bras de remède, qui entraîne l'agent sans revendication de détection, est ouvert maintenant.
+
+Écris, prêt à être contre-lu puis scellé :
+1. Le texte neuf de l'invariant (N-053 v2, point 5), en trois clauses, avec la définition de « bras déclaré » et les conditions communes à tout bras déclaré ; la liste des textes qu'il touche et la phrase qui y change, sans rien changer d'autre.
+2. La conception du bras de remède : son but, ce qu'il entraîne et sur quoi (strate d'audit tirée au hasard seulement, ou autre), comment il reste séparé des mesures de détection (quarantaine, non-réemploi, moniteurs visés et moniteurs de lecture distincts), ce qu'il peut revendiquer et ce qu'il ne peut pas, sa première expérience bon marché avec son critère de réfutation, et ce qui doit exister avant elle.
+3. Les risques que ce bras fait courir au reste du programme, et la garde qui les tient.
+Décisions pour le directeur au format habituel. Termine par « FIN DE LA RÉPONSE ».
