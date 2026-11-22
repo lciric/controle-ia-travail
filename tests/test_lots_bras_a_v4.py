@@ -8,7 +8,17 @@ import pytest
 from controle_ia.gardes import GardeArret
 from controle_ia.organismes_discrets import graines_bras_a_v4 as g
 from controle_ia.organismes_discrets import lots_bras_a_v1 as L1
-from controle_ia.organismes_discrets import lots_bras_a_v2 as L2
+import importlib.util as _iu
+from pathlib import Path as _P
+# La v2 est rangée hors de src/ (garde statique du cloisonnement, journal OD-387) ; elle est chargée depuis son rangement,
+# pour la seule comparaison des octets.
+_spec = _iu.spec_from_file_location("controle_ia.organismes_discrets.lots_bras_a_v2_range", _P(__file__).resolve().parents[1]
+                                    / "docs/notes/relance-organismes-discrets-v1/code-retire-lots-v2-v3/lots_bras_a_v2.py")
+import sys as _sys
+import controle_ia.organismes_discrets  # paquet parent, pour les imports relatifs de la v2
+L2 = _iu.module_from_spec(_spec)
+_sys.modules[_spec.name] = L2
+_spec.loader.exec_module(L2)
 from controle_ia.organismes_discrets import lots_bras_a_v4 as L
 from controle_ia.organismes_discrets.instrument_appariement_v4 import A_EFFET, DEPLACEE_NON_JUGEABLE, SANS_EFFET
 
