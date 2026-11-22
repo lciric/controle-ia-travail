@@ -1,0 +1,14 @@
+# Mandat (classe C) — demande approfondie à Fable 5.2, effort maximal : papier C et banc de juge — v1
+
+Écrit par la session mère le 2026-11-22, sur les mots du directeur (vers 15:25Z, GO-2026-11-22-77). Session Fable neuve par l'abonnement, sans dépense.
+
+## Les mots du directeur (verbatim)
+Sur « quid de la partie du programme de contrôle où l'on utilise l'organisme d'idéation comme exemple de modèle qui peut saboter, et où l'on teste notre système de contrôle, nos sondes et nos juges ? et quid de l'intégration du papier TASTE d'Anthropic ? », après la réponse « Rien n'est décidé ni pour le papier C ni pour un banc de juge » : « go brainstorm ». Puis le prompt des quatre points, verbatim : « Je souhaite une version plus approfondie de cette tâche, pas une version plus longue. Avant de la reformuler : (1) indiquez ce qu'un expert du domaine ferait ici, et que je ne demande pas ; (2) précisez les données brutes qu'il utiliserait au départ, au lieu de celles déjà analysées ; (3) indiquez les méthodes et outils spécifiques qu'il utiliserait ; (4) expliquez ce qui, en dehors de vous ou de moi, permettrait de vérifier la validité du résultat. Ensuite, reformulez ma demande pour qu'elle réponde précisément à cette exigence. »
+
+## Ce que tu fais
+1. Les quatre points et la demande reformulée, écrits avant toute lecture.
+2. La réponse : comment l'organisme d'idéation sert de terrain où un agent peut saboter, pour éprouver nos sondes, nos juges et notre contrôle (papier C, juges de la recherche automatisée sous attaque) ; ce que TASTE (docs/sources/exploration-idees-v1/baig-joren-benton-2026-taste-v1.pdf) apporte ou non (banc tenu à l'écart pour un juge génératif, protocole, voisin du papier C) ; un banc de juge réaliste ; le plan le plus court vers un premier résultat ; ce qui est déjà publié (antériorité, avec citations vérifiées ou « à vérifier sur PDF ») ; les décisions pour le directeur, au format de décision.
+3. Sources à lire d'abord : docs/notes/memoire-conception-v1/recolte-session-bibliothecaire-2026-11-22-v2.md (état du papier C et de TASTE), docs/decisions/ (N-065, N-067, N-071, N-064, N-068), registres/etat.md, docs/notes/comparaison-re-search-taste-v1/.
+
+## Règles
+Interdits de lecture : aucun fichier « consigne-privee » ni « conception-ii-b », ni `brouillons/ii-b-saboteur-budget-v1/`, ni la branche `lot/compte-4-v1`, ni `matiere-premiere/modes-attaque-reponse-24-fable-v1`, ni les branches `prep/quarantaine-*`, rien sous `archives-reponses-modeles/`, aucun résultat de 7a, 7b, T0.6, de l'étape B, de l'étape B bis ni de P3-bis, rien dont le nom porte « vérité », « rendu » ou « scores », rien du coffre. Aucun appel payant. Écris sur la branche `claude/papier-c-banc-de-juge-fable-v1`, dossier `docs/notes/papier-c-banc-de-juge-v1/`, compagnons `.sha256` ; préviens la mère (send_message vers session_01XJ6Mgr4LgbMsg5zLyRZCpG). Français, sans sigles.

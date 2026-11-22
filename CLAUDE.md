@@ -72,6 +72,9 @@ Un collisionneur ne vaut que par ses propositions. À la fin de chaque dossier, 
 ## Veille de cap (mot de Lazar du 22 novembre)
 Une session fille permanente de veille de cap boucle régulièrement le présent sur le passé (une semaine, deux semaines, un mois, deux mois) : dérive, réemploi des idées, tests promis, cap. Elle tient le registre des idées (aucune bonne idée oubliée, non testée ou abandonnée sans décision nommée), commit et pousse à chaque cycle, et répond à la mère. Mandat : `docs/notes/veille-de-cap-v1/mandat-veille-de-cap-v1.md`. Toute mère neuve la relance si elle ne tourne plus.
 
+## Une panne technique n'est pas un résultat (mot de Lazar du 22 novembre, GO-2026-11-22-77)
+Tout essai arrêté pour une cause technique déclarée (authentification, quota, crédit, troncature, classifieur, perte de conteneur, réseau) a droit à une relance sur le même accord ; il entre au registre des idées de la veille de cap comme « faux échec », avec l'une des quatre issues codées (jamais parti, non évaluable, non concluant, verdict valide). Les gardes « aucune relance après dépense » restent, avec une exception par décision nommée.
+
 ## Qui conçoit (mot de Lazar du 19 novembre, R-3735)
 La conception du saboteur et de tout ce qui est délicat est faite par Claude Fable 5.2 : conceptions d'organismes, d'oracles et d'épreuves, préenregistrements, textes de lecture, ordres de course, critères de décision. La contre-lecture est faite par un autre modèle (Opus 5.5), puis la vérification des corrections par le même contre-lecteur. La mère, quel que soit son modèle, orchestre, consigne et scelle ; elle ne rédige pas ces pièces.
 
