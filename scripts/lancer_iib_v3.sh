@@ -4,6 +4,7 @@
 # (`configuration_v5`), les autres contrôles de session restant ceux de `session_v1` ; les tâches sont lues sous `pieces.` ;
 # branche par défaut `essai/iib-explo-v5`. Écrit, jamais lancé par son développeur ; les essais de forme de la version 2 ne
 # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
+# Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
 # --- en-tête d'origine de la version 2 :
 # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
 # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
@@ -78,6 +79,8 @@ QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-crea
 MOI=scripts/lancer_iib_v3.sh
 DEPOT="${IIB_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 A=scripts/amorce_instance_iib_v5.sh
+case "${IIB_AMORCE:-}" in      # correctif 0017 : l'amorce de la course, seule autre valeur permise ; toute autre : refus, rien ne part
+    ''|"$A") ;; scripts/amorce_instance_iib_course_v5.sh) A="$IIB_AMORCE" ;; *) echo "IIB_AMORCE=$IIB_AMORCE : ni l'amorce de l'étalonnage ni celle de la course : refus"; exit 2 ;; esac
 BRANCHE="${IIB_BRANCHE:-essai/iib-explo-v5}"
 GO_ID_ENV="${GO_ID:-}"
 REG="${IIB_REGISTRE_GO:-}"

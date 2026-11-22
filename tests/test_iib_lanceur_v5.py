@@ -583,3 +583,42 @@ def test_replis_de_la_forme_du_lot_des_suites_ecrits_jamais_silencieux(tmp_path,
     r2 = la.executer("etalonnage", config2, sain, "20991231-000031-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
     assert r2["replis_forme_lot_suites"] == []
     assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l)
+
+
+def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choix_par_le_lanceur_de_session(tmp_path):
+    """Correctif 0017 : l'amorce de la course ne diffère de celle de l'étalonnage que par les lignes déclarées (c1 à c5) ; sa
+    liste figée est celle de l'étalonnage plus l'essai du moteur à torch ; le lanceur de session v3 la choisit par IIB_AMORCE,
+    et refuse toute autre valeur (cas sain : variable absente ou égale à l'amorce de l'étalonnage)."""
+    import difflib
+    import hashlib
+    import os
+    import subprocess
+
+    s = DEPOT / "scripts"
+    a, c = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8"), (s / "amorce_instance_iib_course_v5.sh").read_text(encoding="utf-8")
+    assert subprocess.run(["bash", "-n", str(s / "amorce_instance_iib_course_v5.sh")], capture_output=True).returncode == 0
+    d = [l for l in difflib.unified_diff(a.splitlines(), c.splitlines(), n=0, lineterm="") if l[:1] in "+-" and not l.startswith(("+++", "---"))]
+    code = [l for l in d if not l[1:].lstrip().startswith("#")]
+    moins = [l[1:] for l in code if l[0] == "-"]
+    plus = [l[1:] for l in code if l[0] == "+"]
+    assert len(moins) == 5 and len(plus) == 8, (moins, plus)
+    assert all(any(m in l for m in ("LISTE_TESTS=", 'RUN="$(date', 'journal "run : $RUN', "lanceur_v5 --phase etalonnage", 'ajouter "runs/$RUN"')) for l in moins)
+    assert sum(l.startswith(("DES=", "{ [ -n \"$DES\" ]", "RUN_ETAL=")) for l in plus) == 3
+    vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
+    assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL"' in vivantes[0]
+    assert 'IIB_CONSIGNER="$R/iib-consigner.sh"' in vivantes[0] and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in c
+    liste = s / "tests-cibles-iib-course-v5-v1.txt"
+    assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
+                                                              + ["tests/test_iib_distillation_torch_v5.py"])
+    assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in c
+    # la phase lue par la surveillance du lanceur de session (même commande que `lancer_iib_v3.sh`, ligne PHASE=) : « course »
+    lue = subprocess.run(["bash", "-c", "grep -v '^[[:space:]]*#' \"$1\" | sed -n 's/.*controle_ia\\.iib\\.lanceur_v5 --phase \\([a-z_]*\\) .*/\\1/p' | sort -u",
+                          "_", str(s / "amorce_instance_iib_course_v5.sh")], capture_output=True, text=True).stdout.split()
+    assert lue == ["course"]
+    # le lanceur de session : une valeur inconnue de IIB_AMORCE est un refus avant toute sous-commande
+    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
+    r = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_AMORCE": "scripts/amorce_instance_iib_v1.sh"},
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 2 and "ni l'amorce de l'étalonnage ni celle de la course" in r.stdout + r.stderr
+    v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+    assert "scripts/amorce_instance_iib_course_v5.sh) A=\"$IIB_AMORCE\"" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3

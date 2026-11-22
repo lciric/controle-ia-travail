@@ -26,13 +26,15 @@ sys.path[:0] = [str(RACINE / "src"), str(RACINE / "tests")]
 from controle_ia.iib import configuration_v5 as cf  # noqa: E402
 from controle_ia.iib import lanceur_v5 as la  # noqa: E402
 from controle_ia.scellement import sceller  # noqa: E402
+from iib_distillation_v5_outils import section_jouet  # noqa: E402
 from test_iib_lanceur_forme_v2 import FAUX_OUTIL  # noqa: E402
+from controle_ia.iib import configuration_distillation_v5 as cd  # noqa: E402
 from test_iib_scripts_v1 import LIGNE_7B, SAIN, lignes_go  # noqa: E402
 from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E402
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 283        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`, correctif 0014 : 275 et les 8 de la poussée par lot)
+ATTENDUS = 288        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac
@@ -89,6 +91,7 @@ def monde(t: Path) -> dict:
               "offre": {**e2["offre"], "etiquette": "iib-explo-v5", "disque_min_go": 100},
               "calendrier": {"dernier_jour_creation": str(ech - timedelta(days=1)), "fin_go_utc": fin.strftime("%Y-%m-%dT%H:%M:%SZ")},
               "prealables": {"ligne_registre_creation_7b": LIGNE_7B}})
+    c[cd.SECTION] = section_jouet()                       # correctif 0017 : section de la distillation, pour la course jouet
     (src / CONFIG).write_text(json.dumps(c, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     sceller(src / CONFIG)
     subprocess.run(["git", "init", "-q", "-b", "main", str(src)], check=True)
@@ -231,9 +234,65 @@ def main(argv: list[str]) -> int:
     dire(f"désignation scellée : issue {des['issue']}, tours {des['tours']}")
     for p in des["phrases"]:
         dire("   " + p[:300])
+    if des["issue"] in ("N", "P"):
+        course(m, t, rap, run, figee)
     dire("\nRÉPÉTITION RÉUSSIE : lanceur de session v3, amorce v5, lanceur v5 (étalonnage jouet versé par lot, poussé), destruction par identifiant, "
-         "conditions et désignation — bout en bout, sans loueur ni dépense.")
+         "conditions et désignation" + (", puis course par l'amorce de la course (versée par tour, poussée)" if des["issue"] in ("N", "P") else "")
+         + " — bout en bout, sans loueur ni dépense.")
     return 0
+
+
+def course(m: dict, t: Path, rap: Path, run: str, figee: bool) -> None:
+    """Correctif 0017 : la course jouet par l'amorce de la course, choisie par `IIB_AMORCE` au lanceur de session v3, sur le
+    commit qui porte l'étalonnage et la désignation versés (branche neuve), en essai local ; puis après-création et
+    surveillance (phase lue : course, la règle de coupure de l'étalonnage ne joue pas)."""
+    git(rap, "add", "-A", "diag")
+    git(rap, "-c", "user.email=t@example.invalid", "-c", "user.name=t", "commit", "-qm", "désignation versée (répétition)")
+    git(rap, "push", "-q", "origin", "HEAD:refs/heads/prep/iib-repetition-course")
+    commit = git(rap, "rev-parse", "HEAD")
+    sup = {"IIB_AMORCE": "scripts/amorce_instance_iib_course_v5.sh", "IIB_BRANCHE": "essai/iib-explo-v6", "IIB_BRANCHE_CODE": "prep/iib-repetition-course"}
+    d = t / "session-course"
+    m2 = {**m, "src": rap}
+    sortie = session(m2, "controles-explo", d, commit, CONFIG, **sup)
+    assert "CONTRÔLES CONFORMES" in sortie, sortie[-600:]
+    cmd = session(m2, "creation", "auto", "course", "0", d, **sup).splitlines()[-1]
+    assert "-e BRANCHE=essai/iib-explo-v6" in cmd and "create instance" in cmd, cmd[:400]
+    amorce = d / "amorce-creation.sh"
+    assert amorce.read_bytes() == (RACINE / "scripts" / "amorce_instance_iib_course_v5.sh").read_bytes()
+    env_cmd = dict(re.findall(r"-e ([A-Z_0-9]+)=([^ \"\\]+)", cmd))
+    inst = t / "instance-course"
+    inst.mkdir()
+    env = {k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL", "TMPDIR") if k in os.environ}
+    env.update({k: v for k, v in env_cmd.items() if k not in ("HF_TOKEN", "GH_TOKEN", "DEPOT_URL")})
+    env.update(DEPOT_URL=str(m["origine"]), GH_TOKEN="jeton-factice", HF_TOKEN="jeton-hf-factice", RACINE_AMORCE=str(inst), VENV_EXISTANT=str(m["venv"]),
+               HOME=str(t), AMORCE_ESSAI_LOCAL="1", POUSSEE_ATTENTE_S="0",
+               TESTS_ARGS="tests/test_iib_regle_v5.py tests/test_iib_designation_v5.py")      # torch absent : l'essai du moteur se sauterait
+    debut = time.time()
+    r = subprocess.run(["bash", str(amorce)], env=env, capture_output=True, text=True, timeout=3000)
+    journal = (inst / "iib" / "journal.txt").read_text(encoding="utf-8") if (inst / "iib" / "journal.txt").exists() else ""
+    dire(f"\n$ bash amorce_instance_iib_course_v5.sh (AMORCE_ESSAI_LOCAL=1, MODE=jouet, suite courte)  → code {r.returncode}, {time.time() - debut:.0f} s")
+    lignes = journal.strip().splitlines()
+    for ligne in [l for l in lignes if "PROGRES" not in l and "versement" not in l][:40]:
+        dire("   " + ligne[:230])
+    if r.returncode != 0 or not (inst / "iib-fin-normale").exists():
+        dire((r.stdout + r.stderr)[-3000:])
+        raise SystemExit("ÉCHEC DE LA RÉPÉTITION : l'amorce de la course n'a pas fini normalement")
+    fichiers = git(m["origine"], "ls-tree", "-r", "--name-only", "essai/iib-explo-v6").splitlines()
+    tours = [f for f in fichiers if f.startswith(f"diag/{run}/tours/tour-") and f.endswith(".json")]
+    runs_c = [f.split("/")[1] for f in fichiers if f.startswith("diag/") and "-iib-course-" in f and f.endswith("/resume.json")]
+    par_tour = [x for x in git(m["origine"], "log", "--format=%s", "essai/iib-explo-v6").splitlines() if "(versement tour " in x]
+    assert tours and len(par_tour) == len(tours) and len(runs_c) == 1, (len(tours), len(par_tour), runs_c)
+    assert all(f"diag/{run}/evaluation/oracles-evaluation-{c}.json" in fichiers for c in ("H", "B50", "B100", "TJ100"))
+    dire(f"\nbranche essai/iib-explo-v6 poussée : course {runs_c[0]} sur l'étalonnage {run} ; {len(tours)} tours poussés un par un, "
+         "évaluation par condition, résumé présent")
+    reponse = d / "creation-brute-essai1.json"
+    reponse.write_text(json.dumps({"success": True, "new_contract": int(ID)}), encoding="utf-8")
+    assert f"CRÉÉE : instance {ID}" in session(m2, "apres-creation", reponse, 0, d, **sup)
+    (t / "journal-instance.txt").write_text(r.stdout + journal, encoding="utf-8")
+    (t / "inventaire.json").write_text(json.dumps([{"id": int(ID), "label": "iib-explo-v5", "actual_status": "exited"},
+                                                    {"id": AUTRE, "label": "a1-v4", "actual_status": "running"}]), encoding="utf-8")
+    assert "FIN" in session(m2, "surveillance", ID, d, **sup)
+    assert "phase course" in (d / "surveillance.txt").read_text(encoding="utf-8")
 
 
 if __name__ == "__main__":
