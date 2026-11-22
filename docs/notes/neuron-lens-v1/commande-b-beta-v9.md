@@ -96,8 +96,8 @@ clé restreinte s'appelle `HF_TOKEN_RANGEMENT` dans le conteneur ; chaque appel 
    d'options : la moins chère dont le prix avec 200 Go est **≤ 2,62 et ≥ 1,49 USD/h**, trafic ≤ 0,04 USD/Go chacun, débit montant
    ≥ 200 Mbit/s, machine vérifiée ; aucune → rien ne part, message.
 5. **Dépôt réduit v5** : `.venv/bin/python scripts/depot_reduit_neuron_lens_b_beta_v5.py <COMMIT_SOURCE> <dossier neuf>` →
-   `rapport.json`, `liste-fichiers.sha256`, paquet. **Liste attendue : celle de l'essai à blanc v4** (empreinte et nombre de fichiers
-   écrits à la fin de ce texte ; une autre liste exige un nouvel essai à blanc). `<COMMIT_SOURCE>` = commit de la branche qui porte cette
+   `rapport.json`, `liste-fichiers.sha256`, paquet. **Liste attendue : `302b50fd6c923e241bd7564c779b85105e909c51cb4de76f6466bd596e088271`**
+   (87 fichiers, celle de l'essai à blanc v4 ; une autre liste exige un nouvel essai à blanc). `<COMMIT_SOURCE>` = commit de la branche qui porte cette
    commande. Branche `course/neuron-lens-reajustement-reduit-v1` poussée (`git fetch <paquet> course:refs/heads/course/neuron-lens-reajustement-reduit-v1
    && git push origin course/neuron-lens-reajustement-reduit-v1`) ; `git ls-remote origin refs/heads/course/neuron-lens-reajustement-reduit-v1`
    = commit réduit ; `git ls-remote origin refs/heads/calcul/neuron-lens-reajustement-v1` **vide** (sinon arrêt). Le commit réduit est
@@ -202,7 +202,10 @@ clé restreinte s'appelle `HF_TOKEN_RANGEMENT` dans le conteneur ; chaque appel 
     `cloture-*.json`), **croquis** (`b-beta-croquis.json`) et **inventaire clos** (le dernier `inventaire-NNN.json`, `"clos": true`)
     vérifiés par leur sceau ; copie sur la branche de la tranche ; commit ; poussée. **La lecture reste à un lecteur neuf, sur le plan
     scellé de la seconde course** ; la comparaison d'identité est lancée par la mère ou un agent neuf (critère v8, § 8), jamais par la
-    session des lentilles, avec le commit de la branche de résultats lu **après** la destruction (contrôle K1).
+    session des lentilles, avec le commit de la branche de résultats lu **après** la destruction (contrôle K1). Le dépôt donné au
+    programme doit contenir les commits des deux manifestes : `git fetch origin course/neuron-lens-b-beta-reduit-v3
+    course/neuron-lens-reajustement-reduit-v1 calcul/neuron-lens-reajustement-v1` d'abord (relevé le 2026-11-22 : dans un arbre de travail
+    qui ne les a pas, les essais du programme v4 manquent le commit `5e5cb65b…` du 18 et échouent ; le distant le porte).
 14 bis. **Première relecture au lieu de rangement** (devis v9, § 5, point 3, temps (2) ; critère v8, § 4, point 5), clé de la machine
     encore valide, **avant la destruction** :
     ```
@@ -228,10 +231,13 @@ clé restreinte s'appelle `HF_TOKEN_RANGEMENT` dans le conteneur ; chaque appel 
     Code 0 attendu ; sinon nœud de Lazar (la mention d'identité décrirait un fichier qui n'existe plus : critère v8, § 4, point 5).
 
 ## Essai à blanc (sans location), refait
-`scripts/essai_a_blanc_amorce_neuron_lens_b_beta_v4.sh`, joué sur le commit source qui porte ce texte ; journal versé
-`docs/notes/neuron-lens-v1/devis-reajustement/developpement-v4/essai-a-blanc-amorce-b-beta-v4.txt` (empreinte au fichier compagnon).
-Résultat, liste attendue, commit réduit et paquet : dans `docs/notes/neuron-lens-v1/devis-reajustement/developpement-v4/rendu-developpement-v4-v1.md`
-(scellé), qui les recopie du journal. Cas joués : nominal (27 étapes, clé présente aux quatre étapes « jeton » et à la clôture, absente
+`scripts/essai_a_blanc_amorce_neuron_lens_b_beta_v4.sh` (`ab284ebe…`), joué le 2026-11-22 vers 05:28Z sur le commit source `c9fcd30c4`
+(dépôt réduit v5 : 87 fichiers, **liste `302b50fd…`**, commit réduit `34dfa3a8`, paquet `d5cd0342…`), journal
+`docs/notes/neuron-lens-v1/devis-reajustement/developpement-v4/essai-a-blanc-amorce-b-beta-v4.txt` (empreinte au compagnon) :
+**conforme, 0 écart** ; essais réels du cas nominal « 247 passed, 2 deselected » (les deux essais `copie_reelle`, écartés sur la
+machine). Le libellé « v3 » de la ligne de tête du journal est le texte resté de l'essai v3. La v3 de l'essai, jouée sur `443bd8d3f`
+avec l'amorce v4, était **non conforme** (12 écarts au seul cas nominal : un essai embarqué importait le programme de comparaison,
+absent de l'arbre réduit) : `essai-a-blanc-amorce-b-beta-v3.txt`, versé. Cas joués : nominal (27 étapes, clé présente aux quatre étapes « jeton » et à la clôture, absente
 ailleurs, un inventaire poussé par étape, dans son propre commit, inventaire final clos), relance après la fin, reprise après un arrêt
 brutal pendant la passe, échec d'une étape (20), clôture en échec (23, dernière ligne « COPIE EN ECHEC »), **quatorze formes des deux
 secrets écrites à l'étape du croquis, après les copies, toutes refusées par le balayage**, gardes d'entrée (10, 12, 13, 14, 16, 17 dont
