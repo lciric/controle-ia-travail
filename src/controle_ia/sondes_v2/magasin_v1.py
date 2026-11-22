@@ -54,7 +54,7 @@ class Action:
     tache: str
     episode: str
     pas: int
-    graine: int
+    graine: int | None
     position_champ: int | None
     valeur_declaree: float | None
     n_jetons: int
@@ -68,6 +68,8 @@ class Action:
             raise GardeArret(f"action {self.cle} : épisode vide")
         for nom in ("pas", "graine", "n_jetons"):
             v = getattr(self, nom)
+            if nom == "graine" and v is None:  # graine inconnue du format source (barreau 5) : écrite null
+                continue
             if not isinstance(v, int) or isinstance(v, bool) or v < 0:
                 raise GardeArret(f"action {self.cle} : {nom} entier positif ou nul attendu, reçu {v!r}")
         if self.n_jetons < 1:
@@ -98,13 +100,21 @@ class Action:
 
 
 def _verifier_poids(poids: dict) -> dict:
-    """Identifiant des poids qui lisent : {"type": "nu"} ou {"type": "adaptateur", "empreinte_adaptateur": hex64,
-    "dose": nombre} (champs supplémentaires refusés)."""
-    if not isinstance(poids, dict) or poids.get("type") not in ("nu", "adaptateur"):
-        raise GardeArret(f"poids {poids!r} : type « nu » ou « adaptateur » attendu")
+    """Identifiant des poids qui lisent : {"type": "nu"} ; {"type": "adaptateur", "empreinte_adaptateur": hex64,
+    "dose": nombre} ; ou {"type": "adaptateur_nomme", "nom": texte, "dose": nombre ou null} quand l'empreinte n'est
+    pas connue du lecteur (noms opaques du barreau 5). Champs supplémentaires refusés."""
+    if not isinstance(poids, dict) or poids.get("type") not in ("nu", "adaptateur", "adaptateur_nomme"):
+        raise GardeArret(f"poids {poids!r} : type « nu », « adaptateur » ou « adaptateur_nomme » attendu")
     if poids["type"] == "nu":
         if set(poids) != {"type"}:
             raise GardeArret("poids nus : aucun autre champ")
+        return dict(poids)
+    if poids["type"] == "adaptateur_nomme":
+        if set(poids) != {"type", "nom", "dose"} or not isinstance(poids["nom"], str) or not _CLE.match(poids["nom"]):
+            raise GardeArret("poids d'adaptateur nommé : champs type, nom (identifiant), dose attendus")
+        d = poids["dose"]
+        if d is not None and (not isinstance(d, (int, float)) or isinstance(d, bool) or not math.isfinite(float(d))):
+            raise GardeArret("dose : nombre fini ou null attendu")
         return dict(poids)
     if set(poids) != {"type", "empreinte_adaptateur", "dose"}:
         raise GardeArret("poids d'adaptateur : champs type, empreinte_adaptateur, dose attendus")
@@ -136,6 +146,22 @@ def _verifier_regle(regle: dict) -> dict:
     return {"type": "part", "part": regle["part"], "cles": sorted(cles)}
 
 
+MODES_CHEMIN = ("origine", "relu à texte imposé")
+
+
+def verifier_chemin(chemin: dict) -> dict:
+    """Chemin de calcul (erratum 1, § 1) : {"programme": identifiant et version du programme de lecture,
+    "precision": texte, "mode": « origine » ou « relu à texte imposé », "gabarit": gabarit de conversation}."""
+    if not isinstance(chemin, dict) or set(chemin) != {"programme", "precision", "mode", "gabarit"}:
+        raise GardeArret("chemin de calcul : champs programme, precision, mode, gabarit attendus")
+    for k in ("programme", "precision", "gabarit"):
+        if not isinstance(chemin[k], str) or not chemin[k].strip():
+            raise GardeArret(f"chemin de calcul : {k} texte non vide")
+    if chemin["mode"] not in MODES_CHEMIN:
+        raise GardeArret(f"chemin de calcul : mode {chemin['mode']!r} hors de {MODES_CHEMIN}")
+    return dict(chemin)
+
+
 def _en_demi(a, forme_attendue: tuple, ou: str) -> np.ndarray:
     a = np.asarray(a)
     if a.shape != forme_attendue:
@@ -158,7 +184,9 @@ class EcrivainSerie:
     """Écrit une série neuve. Le dossier ne doit pas exister (R12). `clore()` écrit `actions.jsonl` et le manifeste,
     puis scelle le manifeste ; une série non close n'a pas de manifeste et ne se lit pas."""
 
-    def __init__(self, dossier, identifiant_serie: str, poids: dict, source_textes: str, regle: dict, largeur: int):
+    def __init__(self, dossier, identifiant_serie: str, poids: dict, source_textes: str, regle: dict, largeur: int,
+                 chemin_de_calcul: dict):
+        self.chemin_de_calcul = verifier_chemin(chemin_de_calcul)
         self.dossier = Path(dossier)
         if self.dossier.exists():
             raise GardeArret(f"{self.dossier} existe déjà : R12 interdit d'écraser une série")
@@ -227,6 +255,7 @@ class EcrivainSerie:
             "identifiant_serie": self.identifiant,
             "poids": self.poids,
             "source_textes": self.source,
+            "chemin_de_calcul": self.chemin_de_calcul,
             "couches": {"decisive": COUCHE_DECISIVE, "avant_champ": list(COUCHES_AVANT_CHAMP)},
             "precision_disque": "float16",
             "largeur": self.largeur,
@@ -263,6 +292,9 @@ class Serie:
         self.largeur = int(m["largeur"])
         self.regle = _verifier_regle(m["regle"])
         _verifier_poids(m["poids"])
+        if "chemin_de_calcul" not in m:
+            raise GardeArret(f"{chemin} : chemin de calcul absent (erratum 1, § 1)")
+        self.chemin_de_calcul = verifier_chemin(m["chemin_de_calcul"])
         ja = self.dossier / "actions.jsonl"
         if not ja.is_file() or empreinte(ja) != m["actions_sha256"]:
             raise GardeArret(f"{ja} : absent ou empreinte différente du manifeste")
@@ -344,8 +376,24 @@ class Serie:
 
 def intersection_cles(*series: Serie) -> tuple[list[str], dict]:
     """Clés communes à toutes les séries (triées), et effectifs : par série, total et clés absentes de l'intersection.
-    Garde : une même clé portant des métadonnées de texte différentes (tâche, épisode, pas, position du champ, nombre de
+    Gardes : séries de chemins de calcul différents (erratum 1, § 1 ; voir `diagnostic_intersection_chemins_melanges`) ;
+    une même clé portant des métadonnées de texte différentes (tâche, épisode, pas, position du champ, nombre de
     jetons) d'une série à l'autre — elle ne désigne pas la même action."""
+    chemins = {json.dumps(s.chemin_de_calcul, sort_keys=True, ensure_ascii=False) for s in series}
+    if len(chemins) > 1:
+        raise GardeArret(f"comparaison de séries de chemins de calcul différents : {sorted(chemins)}")
+    return _intersection(*series)
+
+
+def diagnostic_intersection_chemins_melanges(*series: Serie) -> tuple[list[str], dict]:
+    """DIAGNOSTIC SEULEMENT : intersection permise entre chemins de calcul différents ; le mélange est écrit dans
+    les effectifs rendus (`melange_de_chemins`), à recopier dans toute sortie."""
+    cles, eff = _intersection(*series)
+    eff["melange_de_chemins"] = {s.identifiant: s.chemin_de_calcul for s in series}
+    return cles, eff
+
+
+def _intersection(*series: Serie) -> tuple[list[str], dict]:
     if len(series) < 2:
         raise GardeArret("intersection : au moins deux séries")
     ids = [s.identifiant for s in series]
@@ -369,7 +417,7 @@ def intersection_cles(*series: Serie) -> tuple[list[str], dict]:
 
 
 def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sortie, identifiant_serie: str,
-                                  poids: dict, source_textes: str, regle: dict) -> Path:
+                                  poids: dict, source_textes: str, regle: dict, chemin_de_calcul: dict) -> Path:
     """Range dans une série neuve un dossier écrit par `ActivationsDemi` (`<dossier_demi>/c<couche>/<clé>.npy`,
     demi-précision, (jetons, largeur)).
 
@@ -429,8 +477,88 @@ def serie_depuis_activations_demi(dossier_demi, lignes: list[dict], dossier_sort
         preparees.append((a, j, avant))
     if not preparees:
         raise GardeArret("aucune ligne")
-    ecrivain = EcrivainSerie(dossier_sortie, identifiant_serie, poids, source_textes, regle, largeur)
+    ecrivain = EcrivainSerie(dossier_sortie, identifiant_serie, poids, source_textes, regle, largeur, chemin_de_calcul)
     for a, j, avant in preparees:
         ecrivain.ajouter(a, j, avant)
     return ecrivain.clore({"adaptateur": "ActivationsDemi", "dossier_source": str(dossier_demi),
                            "empreintes_sources": dict(sorted(sources.items()))})
+
+
+# ------------------------------------------------------------------------------------------- adaptateur du barreau 5
+
+_CHEMIN_B5 = re.compile(r"^activations/([A-Za-z0-9_-]+)/c(7|15|23)/([A-Za-z0-9._-]+)__p([0-9]{1,3})\.npy$")
+
+
+def series_depuis_barreau5(dossier_run, dossier_sortie, chemin_de_calcul: dict, poids_par_serie: dict | None = None,
+                           source_par_serie: dict | None = None) -> dict:
+    """Adaptateur du format des activations gardées par la relecture décisive du barreau 5 (pièce
+    `format-activations-gardees-relecture-b5f-v1.md`, b8539886…) :
+    `<dossier_run>/activations/<série>/c<7|15|23>/<tâche>__p<pas>.npy` (float16, (jetons notés, largeur)),
+    `inventaire-activations.json` et `garde-activations.json` (scellés). Règle « une_sur_dix » : couche 15 seule, même
+    liste de clés dans toutes les séries `nu` et adaptateurs (appariées) ; les séries `propre-*` portent leurs propres
+    clés. Aucun jeton d'avant le champ, aucune étiquette de paire, graine inconnue (null).
+
+    Range chaque série gardée dans une série du magasin, `<dossier_sortie>/<série>`. Gardes : inventaire et liste de
+    garde vérifiés contre leurs compagnons ; chemin hors de la liste blanche ; fichier gardé absent de l'inventaire ou
+    d'empreinte différente ; couche autre que 15 sous « une_sur_dix » ; séries `nu` et adaptateurs de clés différentes ;
+    tableau non float16 ou de forme inattendue. `poids_par_serie` : {série : poids} (défaut : `nu` → nu, sinon
+    adaptateur nommé de dose inconnue) ; `source_par_serie` : {série : source des textes} (défaut : « honnetes-communs »,
+    ou « propres-<série> » pour `propre-*`). Rend {série : chemin du manifeste}."""
+    dossier_run = Path(dossier_run)
+    inv_chemin, garde_chemin = dossier_run / "inventaire-activations.json", dossier_run / "garde-activations.json"
+    verifier(inv_chemin)
+    verifier(garde_chemin)
+    inventaire = {f["chemin"]: f for f in json.loads(inv_chemin.read_text(encoding="utf-8"))["fichiers"]}
+    garde = json.loads(garde_chemin.read_text(encoding="utf-8"))
+    if garde.get("regle") != "une_sur_dix":
+        raise GardeArret(f"règle de garde {garde.get('regle')!r} : seule « une_sur_dix » est prévue par cet adaptateur")
+    par_serie: dict = {}
+    for rel in garde["fichiers"]:
+        m = _CHEMIN_B5.match(rel)
+        if not m:
+            raise GardeArret(f"chemin hors de la liste blanche : {rel!r}")
+        serie, couche, tache, pas = m.group(1), int(m.group(2)), m.group(3), int(m.group(4))
+        if couche != COUCHE_DECISIVE:
+            raise GardeArret(f"{rel} : couche {couche} sous « une_sur_dix » (couche 15 seule)")
+        if rel not in inventaire:
+            raise GardeArret(f"{rel} : absent de l'inventaire")
+        chemin = dossier_run / rel
+        if not chemin.is_file() or empreinte(chemin) != inventaire[rel]["sha256"]:
+            raise GardeArret(f"{rel} : absent ou empreinte différente de l'inventaire")
+        cle = f"{tache}__p{pas}"
+        if cle in par_serie.setdefault(serie, {}):
+            raise GardeArret(f"clé en double : {serie}/{cle}")
+        par_serie[serie][cle] = (tache, pas, chemin)
+    if "nu" not in par_serie:
+        raise GardeArret("série « nu » absente de la garde")
+    cles_nu = sorted(par_serie["nu"])
+    for serie, d in par_serie.items():
+        if not serie.startswith("propre-") and sorted(d) != cles_nu:
+            raise GardeArret(f"série {serie} : clés différentes de celles de « nu » (appariement rompu)")
+    sortie = {}
+    for serie in sorted(par_serie):
+        poids = (poids_par_serie or {}).get(serie) or ({"type": "nu"} if serie == "nu" else
+                                                        {"type": "adaptateur_nomme", "nom": serie, "dose": None})
+        source = (source_par_serie or {}).get(serie) or (f"propres-{serie}" if serie.startswith("propre-")
+                                                          else "honnetes-communs")
+        cles = sorted(par_serie[serie])
+        largeur = None
+        tableaux = []
+        for cle in cles:
+            tache, pas, chemin = par_serie[serie][cle]
+            with open(chemin, "rb") as f:
+                a = np.load(f, allow_pickle=False)
+            if a.dtype != np.float16 or a.ndim != 2 or a.shape[0] < 1:
+                raise GardeArret(f"{chemin} : float16 (jetons, largeur) attendu, reçu {a.dtype} {a.shape}")
+            if largeur is None:
+                largeur = int(a.shape[1])
+            elif a.shape[1] != largeur:
+                raise GardeArret(f"{chemin} : largeur {a.shape[1]} au lieu de {largeur}")
+            tableaux.append((Action(cle, tache, tache, pas, None, None, None, int(a.shape[0])), a))
+        e = EcrivainSerie(Path(dossier_sortie) / serie, serie, poids, source,
+                          {"type": "part", "part": "une_sur_dix", "cles": cles}, largeur, chemin_de_calcul)
+        for act, a in tableaux:
+            e.ajouter(act, a)
+        sortie[serie] = e.clore({"adaptateur": "barreau5-une_sur_dix", "dossier_source": str(dossier_run),
+                                 "inventaire_sha256": empreinte(inv_chemin), "garde_sha256": empreinte(garde_chemin)})
+    return sortie

@@ -424,7 +424,8 @@ def test_integration_magasin_jeu_lecture(tmp_path):
     actions = [mg.Action(f"t{t}-a{a}", f"t{t}", f"e{t}{a}", a, 0, 2, 5.0, 4) for t in range(6) for a in range(4)]
     base = {a.cle: rng.standard_normal((4, D)) for a in actions}
     for nom, dec in (("S", trace), ("H", 0.0)):
-        e = mg.EcrivainSerie(tmp_path / nom, nom, {"type": "nu"}, "textes", {"type": "toutes"}, D)
+        e = mg.EcrivainSerie(tmp_path / nom, nom, {"type": "nu"}, "textes", {"type": "toutes"}, D,
+                             {"programme": "essai/v1", "precision": "float16", "mode": "origine", "gabarit": "g"})
         for a in actions:
             e.ajouter(a, base[a.cle] + dec + 0.1 * rng.standard_normal((4, D)),
                       {c: base[a.cle][1] + dec for c in mg.COUCHES_AVANT_CHAMP})
