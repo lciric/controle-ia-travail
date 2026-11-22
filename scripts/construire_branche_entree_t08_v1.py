@@ -134,11 +134,14 @@ def _commit(depot: Path, c: str, quoi: str) -> str:
     return c
 
 
-def plan(depot: Path, commit_7b: str, commit_code: str, commit_texte: str, texte: str, config: str) -> dict:
-    """Liste blanche (chemin → source, empreinte attendue), toutes empreintes vérifiées ; rien n'est écrit."""
+def plan(depot: Path, commit_7b: str, commit_code: str, commit_texte: str, texte: str, config: str,
+         cite_7b: str | None = None) -> dict:
+    """Liste blanche (chemin → source, empreinte attendue), toutes empreintes vérifiées ; rien n'est écrit. `cite_7b` : commit
+    de 7b que le texte doit citer, quand la source des fichiers de 7b est la branche d'entrée elle-même (vérification seule)."""
     depot = Path(depot)
     for c, q in ((commit_7b, "--commit-7b"), (commit_code, "--commit-code"), (commit_texte, "--commit-texte")):
         _commit(depot, c, q)
+    cite_7b = cite_7b or commit_7b
     texte, config = _chemin_sur(texte), _chemin_sur(config)
     fichiers: dict[str, dict] = {}
 
@@ -166,8 +169,8 @@ def plan(depot: Path, commit_7b: str, commit_code: str, commit_texte: str, texte
     cfg = json.loads(prendre("configuration réelle de la course", commit_texte, config))
     if cfg.get("mode") != "reel":
         raise Arret(f"configuration de la course : mode {cfg.get('mode')!r}, « reel » attendu")
-    if not _tel_quel(corps_texte, commit_7b):
-        raise Arret(f"commit de 7b {commit_7b} non cité tel quel par le texte scellé (tête de la branche de sortie de 7b)")
+    if not (_HEX40.match(str(cite_7b)) and _tel_quel(corps_texte, cite_7b)):
+        raise Arret(f"commit de 7b {cite_7b} non cité tel quel par le texte scellé (tête de la branche de sortie de 7b)")
     entrees = cfg.get("entrees")
     if not isinstance(entrees, dict) or sorted(entrees) != sorted(ENTREES_COURSE):
         raise Arret(f"entrées de la configuration {sorted(entrees) if isinstance(entrees, dict) else entrees!r} ≠ "
@@ -189,7 +192,20 @@ def plan(depot: Path, commit_7b: str, commit_code: str, commit_texte: str, texte
         prendre("commit du code", commit_code, e["chemin"], (("empreinte consignée", e["sha256"]),))
     for chemin in GUIDE:
         prendre("commit du code (guide de classification)", commit_code, chemin)
-    return {"fichiers": dict(sorted(fichiers.items())), "texte": texte, "config": config}
+    return {"fichiers": dict(sorted(fichiers.items())), "texte": texte, "config": config,
+            "commit_code_config": (cfg.get("marqueurs") or {}).get("COMMIT_CODE_T08")}
+
+
+def commits_du_message(depot: Path, ref: str) -> dict:
+    """Commits de 7b, du code et du texte que le message du commit de la branche d'entrée consigne (écrits par `ecrire`)."""
+    m = git(Path(depot), "log", "-1", "--format=%B", ref).decode()
+    r = {}
+    for cle, motif in (("7b", "commit de 7b"), ("code", "commit du code"), ("texte", "commit du texte")):
+        x = re.findall(rf"^{motif} ([0-9a-f]{{40}})$", m, re.M)
+        if len(x) != 1:
+            raise Arret(f"{ref} : message sans une seule ligne « {motif} <40> »")
+        r[cle] = x[0]
+    return r
 
 
 def ecrire(depot: Path, branche: str, p: dict, commits: dict) -> str:
@@ -257,8 +273,8 @@ def main(argv=None) -> int:
     for q in ("construire", "verifier"):
         a = sous.add_parser(q)
         a.add_argument("--depot", required=True)
-        a.add_argument("--commit-7b", required=True)
-        a.add_argument("--commit-code", required=True)
+        a.add_argument("--commit-7b", required=q == "construire")
+        a.add_argument("--commit-code", required=q == "construire")
         a.add_argument("--commit-texte", required=True)
         a.add_argument("--texte", required=True)
         a.add_argument("--config", required=True)
@@ -268,7 +284,18 @@ def main(argv=None) -> int:
             a.add_argument("--ref", required=True)
     a = ap.parse_args(argv)
     try:
-        p = plan(Path(a.depot), a.commit_7b, a.commit_code, a.commit_texte, a.texte, a.config)
+        if a.quoi == "verifier" and not (a.commit_7b and a.commit_code):
+            # vérification seule, sans la branche de 7b : sources lues dans la branche d'entrée elle-même ; le commit de 7b
+            # consigné par son message doit être cité par le texte, le commit du code consigné doit être celui du marqueur
+            cm = commits_du_message(Path(a.depot), a.ref)
+            if cm["texte"] != a.commit_texte:
+                raise Arret(f"{a.ref} : commit du texte consigné {cm['texte'][:12]} ≠ --commit-texte {a.commit_texte[:12]}")
+            rc = git(Path(a.depot), "rev-parse", "--verify", f"{a.ref}^{{commit}}").decode().strip()
+            p = plan(Path(a.depot), rc, rc, a.commit_texte, a.texte, a.config, cite_7b=cm["7b"])
+            if cm["code"] != p["commit_code_config"]:
+                raise Arret(f"{a.ref} : commit du code consigné {cm['code'][:12]} ≠ COMMIT_CODE_T08 de la configuration")
+        else:
+            p = plan(Path(a.depot), a.commit_7b, a.commit_code, a.commit_texte, a.texte, a.config)
         if a.quoi == "construire":
             commit = ecrire(Path(a.depot), a.branche, p, {"7b": a.commit_7b, "code": a.commit_code, "texte": a.commit_texte})
             try:

@@ -126,3 +126,30 @@ def test_artefact_branche_relevee_alteree(fx, capsys):
     A.git(d, "commit", "-qm", "orpheline avec un fichier de trop")
     assert B.main(_args(fx, ct, "verifier", ref="entree/t08-orpheline")) == 1
     assert "liste blanche" in capsys.readouterr().err
+
+
+def test_verification_seule_sans_la_branche_de_7b(fx, capsys):
+    """Le lanceur vérifie la branche relevée sans la branche de 7b : sources lues dans la branche d'entrée, commit de 7b et du
+    code pris dans son message ; artefacts : message altéré (commit du code autre que COMMIT_CODE_T08), autre texte."""
+    c = A.config_factice(fx)
+    c["marqueurs"]["COMMIT_CODE_T08"] = fx["ccode"]
+    ct = A.commit_texte(fx, c)
+    assert B.main(_args(fx, ct, branche="entree/t08-essai")) == 0
+    capsys.readouterr()
+    v = ["verifier", "--depot", str(fx["depot"]), "--commit-texte", ct, "--texte", A.CH_TEXTE, "--config", A.CH_CONFIG,
+         "--ref", "entree/t08-essai"]
+    assert B.main(v) == 0
+    assert json.loads(capsys.readouterr().out)["nombre"] == 20
+    # message altéré : même arbre, commit du code consigné autre
+    d = fx["depot"]
+    arbre = A.git(d, "rev-parse", "entree/t08-essai^{tree}")
+    msg = A.git(d, "log", "-1", "--format=%B", "entree/t08-essai").replace(fx["ccode"], fx["c7b"])
+    faux = A.git(d, "commit-tree", arbre, entree=msg.encode())
+    A.git(d, "branch", "entree/t08-faux", faux)
+    assert B.main(v[:-1] + ["entree/t08-faux"]) == 1
+    assert "COMMIT_CODE_T08" in capsys.readouterr().err
+    # autre commit du texte que celui consigné
+    ct2 = A.commit_texte(fx, c, branche="main-factice-autre")
+    assert B.main(["verifier", "--depot", str(d), "--commit-texte", ct2, "--texte", A.CH_TEXTE, "--config", A.CH_CONFIG,
+                   "--ref", "entree/t08-essai"]) == 1
+    assert "commit du texte consigné" in capsys.readouterr().err
