@@ -1,0 +1,82 @@
+From 9780b7e38d6544fed62d5b8fa50aca2a50e8233a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 16:47:00 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200024,=20corr?=
+ =?UTF-8?q?ections=20de=20la=20contre-lecture=20du=20correctif=200023?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Majeur : plafond-total écrit exact (plus d'arrondi à 6 chiffres qui pouvait laisser la machine
+au-dessus du plafond de la configuration) ; essai artefact à décimales nombreuses. Mineurs :
+refus écrits sans « 60.0 » ; libellé de la surveillance (plafond total de la création).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013QMaym1QE4UyYr1H8KU8Rf
+---
+ scripts/lancer_iib_v3.sh             |  2 +-
+ src/controle_ia/iib/session_v5.py    |  6 +++---
+ tests/test_iib_garde_depense_0023.py | 11 +++++++++++
+ 3 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/lancer_iib_v3.sh b/scripts/lancer_iib_v3.sh
+index b4d50be19..34db78dcf 100644
+--- a/scripts/lancer_iib_v3.sh
++++ b/scripts/lancer_iib_v3.sh
+@@ -407,7 +407,7 @@ surveillance)
+     # déposée dans le dossier de la session ; illisible, la règle refuse à chaque relevé et la surveillance arrête (aucun repli).
+     PHASE=$(grep -v '^[[:space:]]*#' "$D/amorce.sh" 2>/dev/null | sed -n 's/.*controle_ia\.iib\.lanceur_v5 --phase \([a-z_]*\) .*/\1/p' | sort -u)
+     [ -n "$PHASE" ] && [ "$(printf '%s\n' "$PHASE" | wc -l)" = 1 ] || PHASE=illisible
+-    echo "règle de coupure de l'étalonnage : phase $PHASE (lue dans $D/amorce.sh) ; seuil 16 USD de dépense comptée depuis le début de l'amorce, au prix réel lu ; la coupure de la ligne ($PLC USD) reste" >> "$D/surveillance.txt"
++    echo "règle de coupure de l'étalonnage : phase $PHASE (lue dans $D/amorce.sh) ; seuil 16 USD de dépense comptée depuis le début de l'amorce, au prix réel lu ; la garde de dépense au plafond total de la création ($PLC USD, correctif 0023) reste" >> "$D/surveillance.txt"
+     echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond total de la création $PLC USD (correctif 0023 : min(ligne, configuration + antérieure)) ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
+     while true; do
+         now=$(date -u +%s)
+diff --git a/src/controle_ia/iib/session_v5.py b/src/controle_ia/iib/session_v5.py
+index dc4263af8..82c995057 100644
+--- a/src/controle_ia/iib/session_v5.py
++++ b/src/controle_ia/iib/session_v5.py
+@@ -106,9 +106,9 @@ def coupure_effective(registre, go_id: str, plafond_config, anterieure, jour: da
+         raise GardeSession(f"plafond de la configuration {p} (> 0 exigé) ou dépense antérieure {a} (≥ 0 exigé)")
+     limite = Decimal(repr(float(ligne["plafond_usd"])))
+     if p > limite:
+-        raise GardeSession(f"plafond de la configuration {p} > plafond de la ligne {limite} ({go_id}) : refus")
++        raise GardeSession(f"plafond de la configuration {_d(p)} > plafond de la ligne {_d(limite)} ({go_id}) : refus")
+     if a >= limite:
+-        raise GardeSession(f"dépense antérieure {a} ≥ plafond de la ligne {limite} ({go_id}) : aucune coupure effective, refus")
++        raise GardeSession(f"dépense antérieure {_d(a)} ≥ plafond de la ligne {_d(limite)} ({go_id}) : aucune coupure effective, refus")
+     total = min(limite, p + a)
+     machine = total - a
+     if machine <= 0:                               # garde redondante (a < limite et p > 0 l'impliquent) : jamais un repli
+@@ -171,7 +171,7 @@ def main(argv: list[str]) -> int:
+         if argv[0] == "go":
+             print(f"{r['go']} conforme (plafond {r['plafond_usd']:g} USD, {r['accorde']} → {r['echeance']}) ; {r['plafond_verifie']}")
+         else:
+-            print(f"{float(r['plafond_total_usd']):g}")
++            print(_d(r["plafond_total_usd"]))          # exact, jamais arrondi (vérification de la contre-lecture, majeur)
+         return 0
+     from . import session_v1
+ 
+diff --git a/tests/test_iib_garde_depense_0023.py b/tests/test_iib_garde_depense_0023.py
+index aaf3ffa7f..423c74a80 100644
+--- a/tests/test_iib_garde_depense_0023.py
++++ b/tests/test_iib_garde_depense_0023.py
+@@ -110,3 +110,14 @@ def test_creation_passe_le_plafond_total_a_la_garde_de_depense():
+     assert '"$SESSION3" depense "$PLC"' not in src and '"$DEP" "$PTOT"' in bloc
+     # la surveillance lit le plafond total enregistré à la création (champ plafond_creation), qu'elle passe à la garde de dépense
+     assert 'PLC=$(champ plafond_creation "$D/lancement.txt")' in src and '"$SESSION3" surveillance "$PLC"' in src
++
++
++def test_plafond_total_ecrit_exact_jamais_arrondi(reg):
++    """Artefact de la contre-lecture : antérieure à décimales nombreuses ; l'écriture du total ne s'arrondit jamais vers le haut."""
++    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "3.123456")
++    assert r.returncode == 0 and r.stdout.strip() == "58.123456", r.stdout
++    assert Decimal(r.stdout.strip()) - Decimal("3.123456") <= Decimal("55")
++    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "0.1234567891")
++    assert r.returncode == 0 and r.stdout.strip() == "55.1234567891"
++    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "60")
++    assert r.returncode == 1 and "≥ plafond de la ligne 60 " in r.stdout
+-- 
+2.43.0
+

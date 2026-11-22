@@ -1,0 +1,314 @@
+From 9b03d0ea410a38a4cce923a41cb07f85233da8d1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 16:39:32 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200023=20(coup?=
+ =?UTF-8?q?ure=20effective=20=3D=20ligne=20=E2=88=92=20d=C3=A9pense=20ant?=
+ =?UTF-8?q?=C3=A9rieure=20vraie)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+GO-2026-11-22-77, correction étroite de la garde, option (b). session_v5 : go et plafond-total
+(configuration ≤ ligne, antérieure < ligne ; total = min(ligne, configuration + antérieure)) ;
+lancer_iib_v3.sh : la création passe le plafond total à la garde de dépense et l'enregistre en
+plafond_creation. Essais : tests/test_iib_garde_depense_0023.py (26), compte des lignes changées
+du lanceur mis à jour. Amorces et listes figées inchangées.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013QMaym1QE4UyYr1H8KU8Rf
+---
+ scripts/lancer_iib_v3.sh             |   9 ++-
+ src/controle_ia/iib/session_v5.py    |  69 ++++++++++++++++-
+ tests/test_iib_garde_depense_0023.py | 112 +++++++++++++++++++++++++++
+ tests/test_iib_lanceur_v5.py         |   5 +-
+ 4 files changed, 189 insertions(+), 6 deletions(-)
+ create mode 100644 tests/test_iib_garde_depense_0023.py
+
+diff --git a/scripts/lancer_iib_v3.sh b/scripts/lancer_iib_v3.sh
+index 6569e3b46..b4d50be19 100644
+--- a/scripts/lancer_iib_v3.sh
++++ b/scripts/lancer_iib_v3.sh
+@@ -6,6 +6,8 @@
+ # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
+ # Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
+ # Correctif 0021 : `IIB_TIRAGE` (processeur, par défaut, ou carte) est passé à la machine (`-e IIB_TIRAGE=…`) ; toute autre valeur est un refus.
++# Correctif 0023 (GO-2026-11-22-77) : `go` juge plafond de la configuration ≤ ligne et dépense antérieure < ligne ; la création passe à la
++#   garde de dépense le plafond total min(ligne, configuration + antérieure) (`session_v5 plafond-total`), enregistré en `plafond_creation`.
+ # --- en-tête d'origine de la version 2 :
+ # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
+ # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
+@@ -282,6 +284,7 @@ creation)
+     case "$BRANCHE" in essai/iib-explo-v[0-9]*) ;; *) echo "IIB_BRANCHE doit être essai/iib-explo-v<n> ($BRANCHE)"; exit 2;; esac
+     GOL=$(python3 -I -B -c "$SESSION" go "$REG" "$GOC" "$PLC" "$ANT") || { echo "ligne de GO $GOC non conforme au jour de la création : $GOL : pas de création"; exit 2; }
+     PGL=$(python3 -I -B -c "$SESSION" plafond-ligne "$REG" "$GOC") || { echo "plafond de la ligne illisible"; exit 2; }
++    PTOT=$(python3 -I -B -c "$SESSION" plafond-total "$REG" "$GOC" "$PLC" "$ANT") || { echo "plafond total (correctif 0023 : min(ligne, configuration + antérieure)) refusé : $PTOT : pas de création"; exit 2; }
+     VAR=$(python3 -I -B -c "$SESSION" variante "$D/config.json" "$PGL") || { echo "$VAR : pas de création"; exit 2; }
+     CAR=$(python3 -I -B -c "$SESSION" carte "$D/config.json" "$CARTE") || { echo "$CAR : nœud, pas de création"; exit 3; }
+     S7B=$(python3 -I -B -c "$SESSION" creation-7b "$REGDEC" "$D/config.json") || { echo "$S7B : pas de création"; exit 2; }
+@@ -311,7 +314,7 @@ creation)
+     inventaire_lu "$D" instances "" "" || { echo "inventaire des instances impossible ou illisible (code $? ; $INV_LIGNE) : pas de création"; exit 2; }
+     INV=$(python3 -I -B -c "$SESSION" instances "$INV_FICHIER") || { echo "$INV : nœud, pas de création"; exit 3; }
+     NOW=$(date +%s)
+-    DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?
++    DEP=$(python3 -I -B -c "$SESSION3" depense "$PTOT" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?
+     [ "$code_dep" = 0 ] || { echo "dépense cumulée déjà au plafond ou illisible ($DEP) : nœud, pas de création"; exit 3; }
+     EPUIS=$(printf '%s\n' "$DEP" | sed -n 's/.*epuisement_utc_s=\([0-9]*\).*/\1/p'); [[ "$EPUIS" =~ ^[0-9]+$ ]] || { echo "heure d'épuisement illisible"; exit 2; }
+     git -C "$DEPOT" show "$S:$A" > "$D/amorce-creation.sh" 2>/dev/null || { echo "amorce absente du commit $S"; exit 2; }
+@@ -329,7 +332,7 @@ creation)
+     printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
+     # Tous les refus sont AU-DESSUS de cette ligne : un refus ne consomme pas un des trois essais de création.
+     printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' \
+-        "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
++        "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PTOT" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
+     printf 'etiquette %s\n' "$ETIQ" >> "$D/lancement.txt"
+     echo "OFFRE CONFORME : $OF ; $INV ; $DEP ; $CAR ; $S7B"
+     echo "COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :"
+@@ -405,7 +408,7 @@ surveillance)
+     PHASE=$(grep -v '^[[:space:]]*#' "$D/amorce.sh" 2>/dev/null | sed -n 's/.*controle_ia\.iib\.lanceur_v5 --phase \([a-z_]*\) .*/\1/p' | sort -u)
+     [ -n "$PHASE" ] && [ "$(printf '%s\n' "$PHASE" | wc -l)" = 1 ] || PHASE=illisible
+     echo "règle de coupure de l'étalonnage : phase $PHASE (lue dans $D/amorce.sh) ; seuil 16 USD de dépense comptée depuis le début de l'amorce, au prix réel lu ; la coupure de la ligne ($PLC USD) reste" >> "$D/surveillance.txt"
+-    echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond de la configuration $PLC USD ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
++    echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond total de la création $PLC USD (correctif 0023 : min(ligne, configuration + antérieure)) ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
+     while true; do
+         now=$(date -u +%s)
+         ( umask 077; timeout -k 5 120 "$VAST" logs "$ID" --tail 20000 > "$D/journal-brut.tmp" 2>&1 </dev/null ); CJ=$?      # sur disque d'abord : rien n'est perdu si le masquage échoue
+diff --git a/src/controle_ia/iib/session_v5.py b/src/controle_ia/iib/session_v5.py
+index 064b126e7..dc4263af8 100644
+--- a/src/controle_ia/iib/session_v5.py
++++ b/src/controle_ia/iib/session_v5.py
+@@ -20,6 +20,18 @@ par l'identifiant (R10), puis la destruction par la sous-commande `destruction`
+ première tentative de l'étalonnage, 21 novembre : « No module named 'numpy' », par `configuration_v5` puis les lois exactes).
+ Le chemin de la règle ne charge donc que la bibliothèque standard et `gardes` ; `configuration_v5` n'est chargé que par la
+ sous-commande `config`, qui en a besoin. Rien d'autre ne change : seuil, compte, phase illisible refusée.
++
++**Correctif 0023 — coupure effective de la machine = plafond de la ligne − dépense antérieure vraie** (mot de Lazar, GO-2026-11-22-77,
++« correction étroite de la garde, option (b) » ; constat du développeur, point 1). Avant : `go` exigeait plafond de la configuration
+++ dépense antérieure ≤ plafond de la ligne, ce qui refusait toute dépense antérieure au-delà de 5 USD sous une ligne de 60 et une
++configuration de 55. Désormais, sous-commandes `go` et `plafond-total` de ce module (elles priment sur celles de `session_v1`) :
++- la ligne reste lue et jugée comme avant (`session_v12.ligne_go_calcul` : type, accord, échéance, révocation, forme « N USD ») ;
++- plafond de la configuration ≤ plafond de la ligne, et dépense antérieure < plafond de la ligne, sinon refus ;
++- plafond **total** passé à la garde de dépense (`session_v3 depense`, qui retranche elle-même la dépense antérieure et le
++  téléchargement) : T = min(plafond de la ligne, plafond de la configuration + dépense antérieure). La machine neuve peut donc
++  dépenser au plus min(plafond de la configuration, plafond de la ligne − dépense antérieure) : jamais plus que le plafond scellé
++  de la configuration, jamais un total au-delà de la ligne. À dépense antérieure ≤ ligne − configuration, rien ne change.
++- coupure effective nulle (machine sans reste) : refus. Le plafond scellé de la configuration ne change pas.
+ """
+ from __future__ import annotations
+ 
+@@ -27,7 +39,8 @@ import json
+ import math
+ import re
+ import sys
+-from datetime import datetime, timezone
++from datetime import date, datetime, timezone
++from decimal import Decimal, InvalidOperation
+ from pathlib import Path
+ 
+ from ..gardes import GardeArret
+@@ -69,6 +82,44 @@ def coupure_etalonnage(phase: str, progres: str, maintenant_s, prix_carte, prix_
+             "seuil_usd": COUPURE_ETALONNAGE_USD, "prix_usd_h": round(prix, 6), "depuis": origine, "debut_utc_s": int(debut)}
+ 
+ 
++def _d(x: Decimal) -> str:
++    """Écriture décimale sans exposant ni zéro final (60.0 → 60, 50.350 → 50.35)."""
++    s = f"{x:f}"
++    return s.rstrip("0").rstrip(".") if "." in s else s
++
++
++def coupure_effective(registre, go_id: str, plafond_config, anterieure, jour: date | None = None) -> dict:
++    """Correctif 0023 : ligne de GO jugée comme avant, puis plafond total T = min(ligne, configuration + antérieure) et coupure de
++    la machine T − antérieure = min(configuration, ligne − antérieure). Refus : configuration > ligne, antérieure ≥ ligne, valeurs
++    illisibles, non finies ou négatives. Aucun repli."""
++    from ..t06 import session_v12 as s12          # bibliothèque standard seule (lu par `python3 -I` du système)
++    from ..t06.session import GardeSession
++
++    ligne = s12.ligne_go_calcul(registre, go_id, jour)
++    try:
++        p, a = Decimal(str(plafond_config)), Decimal(str(anterieure))
++    except InvalidOperation:
++        raise GardeSession(f"plafond de la configuration ({plafond_config!r}) ou dépense antérieure ({anterieure!r}) illisible") from None
++    if not (p.is_finite() and a.is_finite()):
++        raise GardeSession("plafond de la configuration ou dépense antérieure non fini")
++    if p <= 0 or a < 0:
++        raise GardeSession(f"plafond de la configuration {p} (> 0 exigé) ou dépense antérieure {a} (≥ 0 exigé)")
++    limite = Decimal(repr(float(ligne["plafond_usd"])))
++    if p > limite:
++        raise GardeSession(f"plafond de la configuration {p} > plafond de la ligne {limite} ({go_id}) : refus")
++    if a >= limite:
++        raise GardeSession(f"dépense antérieure {a} ≥ plafond de la ligne {limite} ({go_id}) : aucune coupure effective, refus")
++    total = min(limite, p + a)
++    machine = total - a
++    if machine <= 0:                               # garde redondante (a < limite et p > 0 l'impliquent) : jamais un repli
++        raise GardeSession(f"coupure effective de la machine {machine} ≤ 0 : refus")
++    return {**ligne, "plafond_config_usd": p, "anterieure_usd": a, "plafond_ligne_usd": limite, "plafond_total_usd": total,
++            "coupure_machine_usd": machine,
++            "plafond_verifie": (f"coupure effective de la machine {_d(machine)} = min(plafond de la configuration {_d(p)}, plafond de la ligne "
++                                f"{_d(limite)} − dépense antérieure {_d(a)}) ; total {_d(total)} ≤ {_d(limite)} (plafond de la ligne {go_id} du registre, "
++                                f"{ligne['accorde']} → {ligne['echeance']}) ; correctif 0023")}
++
++
+ def ligne_de_coupure(r: dict) -> str:
+     if not r["joue"]:
+         return f"RIEN : phase {r['phase']} : la règle de coupure de l'étalonnage ne joue pas"
+@@ -106,6 +157,22 @@ def main(argv: list[str]) -> int:
+             print(f"REFUS : {e}", file=sys.stderr)
+             return 1
+         return 0
++    if argv and argv[0] in ("go", "plafond-total"):              # correctif 0023 : ces deux sous-commandes priment sur session_v1
++        from ..t06.session import GardeSession
++
++        if len(argv) not in (5, 6):
++            print(f"usage : {argv[0]} REGISTRE GO_ID PLAFOND_CONFIG ANTERIEURE [AAAA-MM-JJ]", file=sys.stderr)
++            return 2
++        try:
++            r = coupure_effective(argv[1], argv[2], argv[3], argv[4], date.fromisoformat(argv[5]) if len(argv) == 6 else None)
++        except (GardeSession, ValueError) as e:                  # ValueError : jour illisible ; jamais un repli
++            print(str(e))
++            return 1
++        if argv[0] == "go":
++            print(f"{r['go']} conforme (plafond {r['plafond_usd']:g} USD, {r['accorde']} → {r['echeance']}) ; {r['plafond_verifie']}")
++        else:
++            print(f"{float(r['plafond_total_usd']):g}")
++        return 0
+     from . import session_v1
+ 
+     return session_v1.main(argv)
+diff --git a/tests/test_iib_garde_depense_0023.py b/tests/test_iib_garde_depense_0023.py
+new file mode 100644
+index 000000000..aaf3ffa7f
+--- /dev/null
++++ b/tests/test_iib_garde_depense_0023.py
+@@ -0,0 +1,112 @@
++"""Correctif 0023 : coupure effective de la machine = plafond de la ligne − dépense antérieure vraie (GO-2026-11-22-77, option (b)).
++
++Cas sains : dépense antérieure 0, 5, 5,52, 9,65 et 16,22 USD sous une ligne de 60 et une configuration de 55 (avant 0023, tout
++au-delà de 5 était refusé). Artefacts : dépense antérieure ≥ ligne, configuration > ligne, valeurs illisibles, négatives ou non
++finies, ligne échue ou révoquée. Composition avec la garde de dépense (`session_v3 depense`) : le total ne dépasse jamais la ligne,
++et la machine ne dépense jamais plus que le plafond scellé de la configuration. Lanceur : `--verifier-go-seulement` de bout en bout
++(cas sain et artefact), et la création passe le plafond total, non le plafond de la configuration, à la garde de dépense.
++"""
++from __future__ import annotations
++
++import os
++import re
++import subprocess
++from decimal import Decimal
++from pathlib import Path
++
++import pytest
++
++from controle_ia.iib import session_v5 as s5
++from controle_ia.t06 import session_v3 as s3
++from controle_ia.t06.session import GardeSession
++from test_iib_scripts_v1 import ECHU, REVOQUE, SAIN, lignes_go
++
++DEPOT = Path(__file__).resolve().parents[1]
++LANCEUR = DEPOT / "scripts" / "lancer_iib_v3.sh"
++SESSION = re.search(r'^SESSION="(.+)"$', LANCEUR.read_text(encoding="utf-8"), re.M).group(1).replace("$DEPOT", str(DEPOT))
++SESSION3 = re.search(r'^SESSION3="(.+)"$', LANCEUR.read_text(encoding="utf-8"), re.M).group(1).replace("$DEPOT", str(DEPOT))
++
++
++@pytest.fixture
++def reg(tmp_path):
++    f = tmp_path / "go.md"
++    f.write_text(lignes_go(), encoding="utf-8")
++    return f
++
++
++@pytest.mark.parametrize("anterieure, total, machine", [("0", "55", "55"), ("5", "60", "55"), ("5.52", "60", "54.48"),
++                                                         ("9.65", "60", "50.35"), ("16.22", "60", "43.78"), ("59.99", "60", "0.01")])
++def test_cas_sains_coupure_effective(reg, anterieure, total, machine):
++    r = s5.coupure_effective(reg, SAIN, "55", anterieure)
++    assert r["plafond_total_usd"] == Decimal(total) and r["coupure_machine_usd"] == Decimal(machine)
++    assert r["coupure_machine_usd"] <= Decimal("55") and r["plafond_total_usd"] <= Decimal("60")
++    assert "correctif 0023" in r["plafond_verifie"]
++
++
++@pytest.mark.parametrize("plafond, anterieure, motif", [("55", "60", "≥ plafond de la ligne"), ("55", "60.01", "≥ plafond de la ligne"),
++                                                        ("55", "1000", "≥ plafond de la ligne"), ("61", "0", "> plafond de la ligne"),
++                                                        ("55", "-1", "≥ 0 exigé"), ("0", "1", "> 0 exigé"), ("55", "nan", "non fini"),
++                                                        ("55", "inf", "non fini"), ("55", "x", "illisible"), ("abc", "0", "illisible")])
++def test_artefacts_refuses(reg, plafond, anterieure, motif):
++    with pytest.raises(GardeSession, match=re.escape(motif)):
++        s5.coupure_effective(reg, SAIN, plafond, anterieure)
++
++
++@pytest.mark.parametrize("go", [ECHU, REVOQUE, "GO-2099-01-01-09"])
++def test_ligne_echue_revoquee_ou_absente_refusee(reg, go):
++    with pytest.raises(GardeSession):
++        s5.coupure_effective(reg, go, "55", "9.65")
++
++
++def _py(*args):
++    return subprocess.run(["python3", "-I", "-B", "-c", *args], capture_output=True, text=True, timeout=60)
++
++
++def test_ligne_de_commande_go_et_plafond_total(reg):
++    r = _py(SESSION, "go", str(reg), SAIN, "55", "9.65")
++    assert r.returncode == 0 and "coupure effective de la machine 50.35" in r.stdout and "total 60 ≤ 60" in r.stdout, r.stdout + r.stderr
++    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "9.65")
++    assert r.returncode == 0 and r.stdout.strip() == "60"
++    r = _py(SESSION, "plafond-total", str(reg), SAIN, "55", "0")
++    assert r.returncode == 0 and r.stdout.strip() == "55"
++    # artefacts : code 1, motif sur la dernière ligne, rien sur la sortie qui ressemble à un nombre
++    for args in (("55", "60"), ("61", "0"), ("55", "-0.5")):
++        r = _py(SESSION, "plafond-total", str(reg), SAIN, *args)
++        assert r.returncode == 1 and not re.fullmatch(r"[0-9.]+", r.stdout.strip()), r.stdout
++    r = _py(SESSION, "go", str(reg), SAIN, "55")
++    assert r.returncode == 2 and "usage" in r.stderr
++    # les autres sous-commandes restent celles de session_v1
++    r = _py(SESSION, "plafond-ligne", str(reg), SAIN)
++    assert r.returncode == 0 and r.stdout.strip() == "60"
++
++
++@pytest.mark.parametrize("anterieure", ["0", "5.52", "9.65", "16.22"])
++def test_composition_avec_la_garde_de_depense_total_jamais_au_dela_de_la_ligne(reg, anterieure):
++    total = s5.coupure_effective(reg, SAIN, "55", anterieure)["plafond_total_usd"]
++    cree, prix_c, prix_s, tel = 1_800_000_000, 1.30, 0.08, 0.03
++    d = s3.depense_cumulee_v3(str(total), prix_c, prix_s, cree, anterieure, tel, cree)
++    epuisement = d["epuisement_utc_s"]
++    machine_a_l_epuisement = (epuisement - cree) / 3600.0 * (prix_c + prix_s)
++    assert float(anterieure) + tel + machine_a_l_epuisement <= 60.0 + 1e-6
++    assert machine_a_l_epuisement <= 55.0 + 1e-6
++    # une seconde après l'épuisement, la garde arrête
++    apres = s3.depense_cumulee_v3(str(total), prix_c, prix_s, cree, anterieure, tel, epuisement + 2)
++    assert apres["arret"]
++
++
++def test_lanceur_verifier_go_seulement_cas_sain_et_artefact(reg, tmp_path):
++    base = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": str(tmp_path), "LANG": "C.UTF-8", "GO_ID": SAIN, "IIB_REGISTRE_GO": str(reg)}
++    r = subprocess.run(["bash", str(LANCEUR), "--verifier-go-seulement", "55", "9.65"], env=base, capture_output=True, text=True, timeout=60)
++    assert r.returncode == 0 and "GO VÉRIFIÉ, RIEN CRÉÉ" in r.stdout and "coupure effective de la machine 50.35" in r.stdout, r.stdout + r.stderr
++    r = subprocess.run(["bash", str(LANCEUR), "--verifier-go-seulement", "55", "60"], env=base, capture_output=True, text=True, timeout=60)
++    assert r.returncode == 2 and "refusé" in r.stdout
++
++
++def test_creation_passe_le_plafond_total_a_la_garde_de_depense():
++    src = LANCEUR.read_text(encoding="utf-8")
++    bloc = src[src.index("\ncreation)\n"):src.index("\napres-creation)\n")]
++    i_go, i_tot, i_dep = bloc.index('"$SESSION" go "$REG" "$GOC" "$PLC" "$ANT"'), bloc.index('PTOT=$(python3 -I -B -c "$SESSION" plafond-total "$REG" "$GOC" "$PLC" "$ANT")'), bloc.index('"$SESSION3" depense "$PTOT"')
++    assert i_go < i_tot < i_dep
++    assert '"$SESSION3" depense "$PLC"' not in src and '"$DEP" "$PTOT"' in bloc
++    # la surveillance lit le plafond total enregistré à la création (champ plafond_creation), qu'elle passe à la garde de dépense
++    assert 'PLC=$(champ plafond_creation "$D/lancement.txt")' in src and '"$SESSION3" surveillance "$PLC"' in src
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 3c4266554..d4b2544e0 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -434,9 +434,10 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+     assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
+     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
+     # correctif 0021 : une ligne de plus, la commande de création (`-e IIB_TIRAGE=$TIRAGE` passé à la machine)
+-    assert len([l for l in dl if l[0] == "-"]) == 16 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
++    # correctif 0023 : trois lignes de plus (la garde de dépense reçoit le plafond total ; il est enregistré ; la surveillance le nomme)
++    assert len([l for l in dl if l[0] == "-"]) == 19 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
+-                                                                                     "    else", "    fi", "create instance")) for l in dl if l[0] == "-")
++                                                                                     "    else", "    fi", "create instance", "depense \"$PLC\"", "\"$DEP\" \"$PLC\"", "plafond de la configuration $PLC")) for l in dl if l[0] == "-")
+     assert sum("create instance" in l for l in dl if l[0] == "-") == 1 and sum("-e IIB_TIRAGE=$TIRAGE" in l for l in dl if l[0] == "+") == 1
+     # version 3 : l'attestation « aucune intouchable » n'existe plus (vérification de la contre-lecture, n1)
+     assert "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+-- 
+2.43.0
+
