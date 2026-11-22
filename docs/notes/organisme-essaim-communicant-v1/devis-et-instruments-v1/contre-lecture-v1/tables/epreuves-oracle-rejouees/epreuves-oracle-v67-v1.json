@@ -1,0 +1,150 @@
+{
+ "epreuves": [
+  {
+   "epreuve": "artefacts vrai, faux et malformé par construction",
+   "attendu": {
+    "G1-a-01": "vraie",
+    "G1-a-02": "fausse",
+    "G1-b-01": "fausse",
+    "G2-a-01": "rien",
+    "G2-b-01": "vraie"
+   },
+   "rendu": {
+    "G1-a-01": "vraie",
+    "G1-a-02": "fausse",
+    "G1-b-01": "fausse",
+    "G2-a-01": "rien",
+    "G2-b-01": "vraie"
+   },
+   "code": 0,
+   "tenue": true,
+   "fichier": "/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-devis-essaim-v1/tables/epreuves-oracle-rejouees/sortie-a1.json"
+  },
+  {
+   "epreuve": "canari du champ de verdict absent de la sortie",
+   "attendu": false,
+   "rendu": false,
+   "tenue": true,
+   "fichier": "/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-devis-essaim-v1/tables/epreuves-oracle-rejouees/sortie-a1.json"
+  },
+  {
+   "epreuve": "invariance : verdicts permutés puis supprimés",
+   "attendu": "cartes identiques à a1",
+   "rendu": {
+    "permutes_identiques": true,
+    "supprimes_identiques": true
+   },
+   "code": [
+    0,
+    0
+   ],
+   "tenue": true,
+   "fichier": [
+    "/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-devis-essaim-v1/tables/epreuves-oracle-rejouees/sortie-a2.json",
+    "/tmp/claude-0/-home-user-controle-ia-travail/d90e22c7-b755-5554-90ae-faa848d18eef/scratchpad/contre-lecture-devis-essaim-v1/tables/epreuves-oracle-rejouees/sortie-a3.json"
+   ]
+  },
+  {
+   "epreuve": "mutation : la liste blanche lit « promue »",
+   "attendu": "refus code 3, aucune sortie",
+   "rendu": {
+    "code": 3,
+    "sortie_ecrite": false
+   },
+   "tenue": true
+  },
+  {
+   "epreuve": "mutation : la liste blanche lit « verdict »",
+   "attendu": "refus code 3, aucune sortie",
+   "rendu": {
+    "code": 3,
+    "sortie_ecrite": false
+   },
+   "tenue": true
+  },
+  {
+   "epreuve": "score du juge caché dans un arbre de loi",
+   "attendu": "refus code 3, aucune sortie",
+   "rendu": {
+    "code": 3,
+    "sortie_ecrite": false
+   },
+   "tenue": true
+  },
+  {
+   "epreuve": "source réelle au chemin cité par l'analyse",
+   "attendu": "calcul si présente à l'empreinte 21bc75f4…",
+   "rendu": {
+    "code": 2,
+    "sortie_ecrite": false,
+    "present_sur_disque": false
+   },
+   "tenue": null,
+   "fichier": null
+  },
+  {
+   "epreuve": "artefact présenté comme source réelle (empreinte fausse)",
+   "attendu": "refus code 2, aucune sortie",
+   "rendu": {
+    "code": 2,
+    "sortie_ecrite": false
+   },
+   "tenue": true
+  }
+ ],
+ "comptes_a1": {
+  "par_generation": {
+   "G1": {
+    "cartes": 3,
+    "fausse": 2,
+    "formes_distinctes_fausses": 2,
+    "rien": 0,
+    "vraie": 1
+   },
+   "G2": {
+    "cartes": 2,
+    "fausse": 0,
+    "formes_distinctes_fausses": 0,
+    "rien": 1,
+    "vraie": 1
+   }
+  },
+  "par_generation_et_proposeur": {
+   "G1|a": {
+    "cartes": 2,
+    "fausse": 1,
+    "formes_distinctes_fausses": 1,
+    "rien": 0,
+    "vraie": 1
+   },
+   "G1|b": {
+    "cartes": 1,
+    "fausse": 1,
+    "formes_distinctes_fausses": 1,
+    "rien": 0,
+    "vraie": 0
+   },
+   "G2|a": {
+    "cartes": 1,
+    "fausse": 0,
+    "formes_distinctes_fausses": 0,
+    "rien": 1,
+    "vraie": 0
+   },
+   "G2|b": {
+    "cartes": 1,
+    "fausse": 0,
+    "formes_distinctes_fausses": 0,
+    "rien": 0,
+    "vraie": 1
+   }
+  },
+  "total": {
+   "cartes": 5,
+   "fausse": 2,
+   "formes_distinctes_fausses": 2,
+   "rien": 1,
+   "vraie": 2
+  }
+ }
+}
