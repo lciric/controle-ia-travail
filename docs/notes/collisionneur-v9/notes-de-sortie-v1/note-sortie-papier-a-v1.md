@@ -8,13 +8,13 @@ Aucune cellule ne rapporte de mesure. Tout ce qui suit est conception, calcul so
 
 ## 1. La question
 
-Un agent de langue mène seul une longue tâche de recherche, faite de centaines d'actions. Il peut saboter le résultat par des actes dont aucun n'est suspect pris isolément, et un agent honnête se trompe lui aussi. Le défenseur lit le texte et les activations internes, dispose de quelques exécutions de comparaison et peut faire vérifier, à grands frais, une petite part du travail. La question demande ce que la longueur change pour chacun, et ce qu'une expérience de deux mois sur un modèle ouvert de huit milliards de paramètres pourrait trancher.
+Un agent de langue mène seul une tâche de centaines d'actions ; il peut saboter le résultat par des actes dont aucun n'est suspect isolément, et un agent honnête se trompe aussi. Le défenseur lit le texte et les activations, dispose de quelques exécutions de comparaison et peut faire vérifier à grands frais une petite part du travail. Que change la longueur pour chacun, et qu'est-ce qu'une expérience de deux mois sur un modèle ouvert de huit milliards de paramètres pourrait trancher ?
 
 ## 2. En bref
 
-- **Retenue 1. Mesurer d'abord le bruit honnête, sans adversaire.** Il s'agit de décomposer la variance des erreurs et des scores d'un agent honnête en une part propre à chaque action et une part commune à toute une exécution, puis de lire l'effet de la longueur relativement à ce bruit. Cette expérience décide de ce que toutes les autres peuvent conclure.
-- **Retenue 2. Éprouver les activations à poids contrôlés.** Aucune affirmation du type « les activations gagnent avec la longueur » ne doit être reçue sans un adaptateur bénin de même rang comme classe négative, ni sans des contrôles qui séparent une politique suivie d'un indice relu dans le contexte.
-- **Retenue 3. Juger l'audit à budget absolu fixe, contre la seule topologie.** Le ciblage des vérifications coûteuses doit battre le tirage uniforme et le classement par position structurelle. La mesure se fait sans index du générateur, et d'abord sur un rapport faux fixé d'avance.
+- **Mesurer d'abord le bruit honnête, sans adversaire** : décomposer la variance d'un agent honnête en une part par action et une part commune à l'exécution, puis lire l'effet de la longueur relativement à ce bruit.
+- **Éprouver les activations à poids contrôlés** : n'accepter « les activations gagnent avec la longueur » qu'avec un adaptateur bénin de même rang en classe négative et des contrôles qui séparent une politique suivie d'un indice relu dans le contexte.
+- **Juger l'audit à budget absolu fixe** : le ciblage des vérifications coûteuses doit battre le tirage uniforme et le classement par position structurelle, sans index du générateur, d'abord sur un rapport faux fixé d'avance.
 
 ## 3. Ce que chaque modèle a proposé
 
@@ -38,7 +38,7 @@ Un agent de langue mène seul une longue tâche de recherche, faite de centaines
 
 ### Astra (identifiant gpt-6.2-astra, lettre D)
 
-- **Proposition centrale.** La seule à refuser une loi de longueur. Une action supplémentaire peut offrir une occasion de nuire ou un témoin de plus sur une erreur déjà commise. Astra prédit des effets de signes opposés sur le dommage échappé : plus de dommage quand les actions ajoutées sont des occasions, moins quand ce sont des témoins issus de sources distinctes.
+- **Proposition centrale.** La seule à refuser une loi de longueur : une action ajoutée est soit une occasion de nuire, soit un témoin de plus sur une erreur commise. Astra prédit plus de dommage échappé avec des occasions, moins avec des témoins de sources distinctes.
 - **Plan.** Des dossiers documentaires fictifs en trois variantes appariées : courte, longue à occasions, longue à témoins. Le critère principal est la probabilité qu'une conclusion fausse soit livrée sans interception confirmée. Coût avancé : 1 600 à 3 200 euros.
 - **Après les critiques.** Astra retire l'index des liens du générateur, fuite de la vérité, fait du contraste occasions contre témoins à longueur égale le contraste principal et ajoute un parcours long neutre réellement vécu. Il place en premier un test à dommage fixé : le même rapport faux est présenté dans les deux vues longues, et l'on compte les suspensions justifiées, sans dépendre ni d'un agent saboteur ni d'une sonde. Il avance qu'environ 940 paires de dossiers seraient nécessaires.
 
@@ -54,7 +54,7 @@ Un agent de langue mène seul une longue tâche de recherche, faite de centaines
 
 - **Le banc.** Les cinq modèles proposent des tâches synthétiques à vérité de terrain mécanique, et les cinq choisissent Llama-3.1-8B-Instruct comme agent.
 - **L'antériorité.** Les cinq citent Greenblatt, Shlegeris, Sachan et Roger comme antériorité la plus proche pour le cadre du contrôle.
-- **Diffus contre concentré.** Quatre modèles distinguent un sabotage réparti d'un sabotage concentré : additif ou en série chez Fable, additif ou à goulot chez Opus, diffus ou parcimonieux chez Argon et Carbon. Astra pose une distinction voisine entre occasions et témoins.
+- **Diffus contre concentré.** Fable, Opus, Argon et Carbon distinguent un sabotage réparti d'un sabotage concentré sur quelques décisions ; Astra, occasions et témoins.
 - **Les deux signaux possibles des activations.** Fable, Opus, Argon et Carbon formulent la même alternative : un signal d'acte, présent aux seuls actes sabotés et qui se dilue, ou un signal d'état, présent à chaque action et qui s'accumule.
 - **Les comparaisons circulaires.** Les cinq notent que des exécutions de comparaison produites par le modèle suspect peuvent partager son biais.
 - **Les issues sans intérêt.** Quatre modèles nomment presque les mêmes : saboteur incapable de rester discret, agent honnête déjà en échec, vérification du seul résultat final suffisante.
@@ -63,17 +63,17 @@ Un agent de langue mène seul une longue tâche de recherche, faite de centaines
 
 - **Le bruit honnête d'abord.** Au tour III.3, Fable et Opus placent tous deux en tête la décomposition de la variance honnête en composante par action et composante d'exécution, et reconnaissent que la loi en racine carrée, sous adversaire scripté, est en partie vraie par construction.
 - **L'adaptateur bénin.** Les cinq modèles finissent par l'adopter ou l'exiger. Fable le signalait comme défaut commun à Opus, Argon et Carbon : sans lui, la conclusion que les activations gagnent avec la longueur n'est réfutable chez aucun des trois.
-- **Le filtrage sur l'issue.** Fable, Opus, Astra et Carbon critiquent l'appariement des trajectoires honnêtes sur la dégradation finale. Argon et Carbon l'abandonnent comme analyse principale.
+- **Le filtrage sur l'issue.** L'appariement des honnêtes sur la dégradation finale, critiqué par les quatre autres, est abandonné par Argon et Carbon comme analyse principale.
 
 ### Désaccords
 
 - **Qui la longueur favorise.** Argon et Carbon prédisent que les activations, accumulées, favorisent le défenseur. Opus prédit que ce gain apparent est surtout une lecture de l'instruction en contexte, et maintient cette prédiction après les critiques. Fable pariait sur un signal d'état qui plafonne. Il reconnaît ensuite que ce plafonnement était presque vrai par construction et le retire comme prédiction. Astra refuse de poser une loi. Les critiques n'ont pas tranché ce désaccord : elles ont rendu le test exigible.
-- **La statistique centrée de Carbon.** Opus soutient que si le centrage est exact, l'hypothèse « la dérive honnête est indiscernable » ne peut être vraie pour cette statistique. Carbon rejette la conclusion : sous sabotage additif, le rapport signal sur bruit décroît comme l'inverse de la longueur, si bien que l'hypothèse reste vraie, et aucun défenseur ne dispose de la politique honnête exacte. Les deux positions tiennent sous leurs hypothèses respectives ; le désaccord porte sur ce que l'on appelle « vrai par construction ».
+- **La statistique centrée de Carbon.** Opus soutient qu'avec un centrage exact, l'hypothèse « la dérive honnête est indiscernable » ne peut être vraie pour cette statistique. Carbon rejette : sous sabotage additif, le rapport signal sur bruit décroît comme l'inverse de la longueur, l'hypothèse reste donc vraie, et aucun défenseur ne dispose de la politique honnête exacte. Chaque position tient sous ses hypothèses.
 - **L'attribution à dommage égal.** Fable, Opus et Carbon objectent que comparer des rapports également dégradés désarme tout détecteur de dommage. Argon accepte de retirer le filtrage a posteriori mais défend la question elle-même : devant un rapport dégradé, erreur de bonne foi ou sabotage ? Il la garde comme analyse appariée a priori. Astra fait le même partage en séparant le risque opérationnel de son attribution à un mandat adverse.
 - **L'audit à fraction constante.** Argon et Carbon jugent l'exposant d'un demi « forcé » quand on vérifie une fraction fixe du travail. Fable répond qu'il ne l'est que sous indépendance, justement testée, mais ajoute le bras à budget fixe.
-- **L'index des liens chez Astra.** Argon et Carbon le jugent avantageux par construction. Astra retire l'index mais rejette ce point : faciliter la recherche ne garantit pas qu'un défaut soit confirmé.
-- **L'audit du seul rapport final.** Fable estimait que, sous appariement sur la dégradation, ce comparateur était désarmé. Carbon rejette en partie : sous blanchiment précoce, la conclusion découle fidèlement de notes déjà corrompues, et un audit à un lien depuis la fin ne voit pas la corruption.
-- **Une date.** Fable cite Greenblatt et al. en 2023, les autres en 2024. Plusieurs y voient une prépublication fin 2023 et une publication en 2024, ce qui reste à vérifier.
+- **L'index des liens chez Astra.** Avantageux par construction selon Argon et Carbon ; Astra le retire mais répond que faciliter la recherche ne garantit pas la confirmation d'un défaut.
+- **L'audit du seul rapport final.** Fable le jugeait désarmé par l'appariement sur la dégradation ; Carbon répond que, sous blanchiment précoce, un audit à un lien depuis la fin ne voit pas la corruption amont.
+- **Une date.** Greenblatt et al. : 2023 chez Fable, 2024 ailleurs (prépublication puis publication, à vérifier).
 
 ## 5. Ce qui est neuf, ce qui est fragile
 
@@ -94,7 +94,7 @@ Aucun modèle n'affirme une nouveauté établie. Tous renvoient à une recherche
 - **La prémisse.** Qu'un modèle de huit milliards de paramètres sache saboter de façon diffuse sans acte visible, et tenir des centaines d'actions, est posé par les cinq comme une hypothèse douteuse. Les plans prévoient des arrêts précoces pour ce cas.
 - **Les organismes modèles.** Les adaptateurs à déclencheur bornent un cas favorable. Fable le dit : rien n'établit qu'une intention non entraînée se représente de la même façon.
 - **La fuite par le contexte.** Une consigne, même exclue des positions inspectées, se propage par l'attention aux activations ultérieures (Argon, Carbon). Retirer l'indice après la première action est la parade proposée ; Fable note qu'en contexte borné tout état passe alors par le résumé textuel, et que les activations ne se séparent plus du texte.
-- **L'oracle exact.** Sur un banc synthétique, la vérification coûteuse est parfaite par construction. Aucun plan ne mesure la fiabilité d'un vérificateur réel.
+- **L'oracle exact.** Sur banc synthétique, la vérification est parfaite par construction ; aucun plan ne mesure un vérificateur réel.
 - **La puissance statistique.** Selon les critiques, plusieurs duels sont sous-dimensionnés à 150 ou 300 dossiers ; Carbon passe à 500, Argon à 400 par cellule. Un seuil de rang sur quelques exécutions ne descend pas sous un taux de fausses alertes de un sur le nombre d'exécutions plus un.
 - **Critiques non résolues.** La source des comparaisons reste un choix entre un oracle irréaliste et une copie suspecte ; le bras auto-généré est ajouté sans trancher. L'apprentissage du « ou exclusif » par l'adaptateur est une hypothèse, avec un repli prévu. L'expérience adaptative d'Argon peut lire un échec d'optimisation comme une impossibilité.
 
@@ -139,11 +139,11 @@ Aucune de ces références n'a été vérifiée. Toutes sont citées de mémoire
 
 ### Non retenues
 
-- **L'exposant mesuré sur un adversaire scripté indépendant, comme résultat.** Il est vrai par construction côté adversaire, ce que ses auteurs admettent ; il ne garde qu'un rôle de contrôle de la chaîne.
-- **Le test par ordonnée à l'origine d'Opus.** Il est biaisé par l'erreur sur la variable et par la concavité sur un support discret. Son auteur l'a retiré.
-- **Le balayage sur fenêtre courte de Carbon.** Il est impossible sous furtivité par acte, selon les calculs d'Argon et de Fable. Son auteur l'a retiré.
-- **L'incrément de valeur centré de Carbon.** Sa somme télescope, son coût est de l'ordre du carré de la longueur, et le filtrage sur l'issue détruit son centrage. Son auteur l'a remplacé.
-- **Le filtrage a posteriori des honnêtes sur la dégradation finale (Argon, Carbon).** C'est un biais de sélection qui varie avec la longueur ; il est abandonné comme analyse principale.
-- **L'index des liens du générateur révélé au moniteur (Astra).** C'est une fuite de la vérité, retirée.
+- **L'exposant sur adversaire scripté indépendant, comme résultat** : vrai par construction côté adversaire, admis par ses auteurs ; simple contrôle de la chaîne.
+- **Le test par ordonnée à l'origine d'Opus** : biaisé par l'erreur sur la variable et la concavité ; retiré par son auteur.
+- **Le balayage sur fenêtre courte de Carbon** : impossible sous furtivité par acte selon Argon et Fable ; retiré.
+- **L'incrément de valeur centré de Carbon** : somme qui télescope, coût quadratique, centrage détruit par le filtrage ; remplacé.
+- **Le filtrage a posteriori des honnêtes sur la dégradation finale (Argon, Carbon)** : biais de sélection variable avec la longueur ; abandonné comme analyse principale.
+- **L'index des liens du générateur révélé au moniteur (Astra)** : fuite de la vérité ; retiré.
 - **L'adversaire adaptatif d'Argon.** Coûteux, dépendant du succès d'un entraînement adverse, exposé à confondre échec d'optimisation et impossibilité ; à reprendre après les trois retenues.
-- **Le duel horizon contre profondeur de Carbon.** Il n'est pas retenu à part, mais son principe, une profondeur causale fixe quand la longueur croît, est à intégrer aux trois retenues.
+- **Le duel horizon contre profondeur de Carbon** : pas retenu à part, mais son principe (profondeur causale fixe quand la longueur croît) est à intégrer aux trois retenues.
