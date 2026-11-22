@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Collisionneur v9, mode « essaim » (v3) : société de modèles sous pseudonymes, à budget apparié par modèle.
+"""Collisionneur v9, mode « essaim » (v4) : société de modèles sous pseudonymes, à budget apparié par modèle.
+
+v4 (même développeur, 22 novembre 2026) : copie de la v3 (b2f0e091…, inchangée, R12), corrigée selon la vérification du
+même contre-lecteur : 1 borne du brouillon (le brouillon n'a pas de limite appliquée : borne au plafond de sortie de
+l'espèce, ou à la longueur réelle du brouillon écrit) ; a réserve des finales vérifiée aussi pour une cellule reprise ;
+b réserve comparée au plus petit du plafond et de la ligne restante ; c `simuler` et `enveloppe` : dossiers donnés par
+--isoles CHEMIN=EMPREINTE_DU_JOURNAL, refus des dossiers dont l'étage III n'est pas fini.
 
 v3 (même développeur, 22 novembre 2026) : copie de la v2 (0e9eecaa…, inchangée, R12), corrigée selon la vérification du
 même contre-lecteur : B1 MOTIF_PROPOSITION sensible à la casse de la lettre ; B2 --faits différent de --question refusé
@@ -47,7 +53,7 @@ from pathlib import Path
 
 import numpy as np
 
-VERSION = "collisionneur-v9-essaim-v3"
+VERSION = "collisionneur-v9-essaim-v4"
 ICI = Path(__file__).resolve().parent
 SCRIPT_V8D = ICI.parent / "collisionneur_v9_v8d.py"
 SHA_V8D = "b780383874598f12b24c79e4087d335c8e01cda685e295f5116898fa3b1715ac"
@@ -760,9 +766,13 @@ def appel(v, cfg, tirage, dossier, phase, k, lettre, plafond, absences, appelant
     p = part(cfg, espece, phase)
     deja = depense_agent(v, cfg, dossier, lettre, phase)
     protegee = phase == "temps2" and cfg["finale_jamais_sautee"]
-    if phase == "temps1" and cfg.get("reserver_finales", False) and not v.essais_journal(dossier, cid):
+    if phase == "temps1" and cfg.get("reserver_finales", False):  # v4 (a) : cellule neuve ou reprise
         besoin, reserve = reserve_des_finales(v, cfg, dossier, lettre, absences)
-        if v.depense(dossier) + besoin + reserve > plafond:  # v3 : option, désactivée par défaut
+        marge = plafond - v.depense(dossier)
+        ligne = v.ligne_courante(dossier)
+        if ligne:  # v4 (b) : le plus petit du plafond et de la ligne restante
+            marge = min(marge, ligne["montant"] - v.depense_ligne(dossier, ligne))
+        if besoin + reserve > marge:  # v3 : option, désactivée par défaut
             v.ajouter_journal(dossier, {"saut": cid, "motif": "réserve des réponses finales", "phase": phase,
                                         "lettre": lettre, "depense_usd": v.depense(dossier), "besoin_usd": round(besoin, 4),
                                         "reserve_usd": round(reserve, 4), "plafond_usd": plafond,
@@ -812,9 +822,13 @@ def reserve_des_finales(v, cfg, dossier, lettre, absences):
     """v3 (option reserver_finales) : (pire du plan complet de cet appel de cycle, somme des pires des plans complets
     des réponses finales non encore écrites), sur les bornes d'invite du devis (tenues, essai à l'appui)."""
     question = v.lire_sceau(Path(dossier) / "question-etage3.md")[0]
-    car = bornes_caracteres(v, cfg, question, question)
-    besoin = pire_appel(v, v.MODELES[lettre], car["temps1"])[1]
-    reserve = sum(pire_appel(v, v.MODELES[l], car["temps2"])[1] for l in v.LETTRES
+
+    def car(l):  # v4 (1) : borne depuis le brouillon réellement écrit par l'agent (absent : zéro)
+        b = v.cellule_valide(dossier, v.id_cellule(TOUR_BROUILLON, l))
+        return bornes_caracteres(v, cfg, question, question, car_brouillon=len(b[0]) if b else 0, lettre=l)
+
+    besoin = pire_appel(v, v.MODELES[lettre], car(lettre)["temps1"])[1]
+    reserve = sum(pire_appel(v, v.MODELES[l], car(l)["temps2"])[1] for l in v.LETTRES
                   if not v.cellule_valide(dossier, v.id_cellule(TOUR_FINALE, l))
                   and v.id_cellule(TOUR_FINALE, l) not in absences)
     return besoin, reserve
@@ -896,8 +910,20 @@ def pire_appel(v, m, caracteres):
     return pire, pire + relances * v.cout_pire_garde(m, garde, m["max_relance"])
 
 
-def bornes_caracteres(v, cfg, faits, question):
-    """Bornes larges des caractères d'invite par temps (7 caractères par mot). Temps 0 : invite III.1 de la v8d."""
+def borne_brouillon(v, mo, lettre=None, car_brouillon=None):
+    """v4 (1) : le brouillon n'a pas de limite appliquée ; sa borne est sa longueur réelle s'il est écrit, sinon le
+    plafond de sortie de l'espèce (ou de la plus large) en caractères (CAR_SORTIE_MAX de la v8d), au moins la limite
+    de mots × 7."""
+    if car_brouillon is not None:
+        return car_brouillon + v.SURCOUT_BLOC + 120
+    lettres = [lettre] if lettre else list(v.LETTRES)
+    sortie = max(v.MODELES[l]["max"] * v.CAR_SORTIE_MAX[v.MODELES[l]["fournisseur"]] for l in lettres)
+    return max(mo["brouillon"] * CAR_PAR_MOT, int(sortie)) + v.SURCOUT_BLOC + 120
+
+
+def bornes_caracteres(v, cfg, faits, question, car_brouillon=None, lettre=None):
+    """Bornes larges des caractères d'invite par temps (7 caractères par mot). Temps 0 : invite III.1 de la v8d.
+    v4 : brouillon borné par borne_brouillon (lettre : celui de cette espèce ; car_brouillon : longueur écrite)."""
     n, mo, N = len(cfg["especes"]), cfg["mots"], cfg["cycles"]
     entete = len(ENTETE_COMMUN) + len(regles_integrite(v)) + 20 + len(question) + 200
     texte = lambda m: m * CAR_PAR_MOT + v.SURCOUT_BLOC + 120
@@ -906,7 +932,7 @@ def bornes_caracteres(v, cfg, faits, question):
     ligne = 2 * COUPE_LIGNE + MARGE_LIGNE
     salons = (n * N * cfg["messages_salon_max"] + 1) * texte(mo["salon"])
     recues = cfg["relecteurs"] * N * texte(mo["revue"])
-    commun = (texte(mo["brouillon"]) + texte(mo["prepublication"]) + N * par_appel * 20
+    commun = (borne_brouillon(v, mo, lettre, car_brouillon) + texte(mo["prepublication"]) + N * par_appel * 20
               + cfg["ouvertures_max"] * texte(mo["prepublication"]) + recues)
     t0 = len(v.PREAMBULE_GABARIT) + 400 + len(faits) + len(question) + len(v.CONSIGNES["E3-T1"]) + 400
     return {"temps0": t0,
@@ -935,7 +961,6 @@ def devis(v, a):
     question = v.lire_entree(a.question)
     faits = v.lire_entree(a.faits) if a.faits else question
     refs = references_donnees(cfg, a, cfg["especes"])
-    car = bornes_caracteres(v, cfg, faits, question)
     appels = {"temps0": 1, "temps1": cfg["cycles"], "temps2": 1}
     print(f"Devis de l'essaim ({VERSION}), {len(v.LETTRES)} agents, {cfg['cycles']} cycles, ordre {cfg['ordre']}, "
           f"parts {cfg['parts']}, sans réseau.")
@@ -944,6 +969,7 @@ def devis(v, a):
     tot, borne_parts = {p: [0.0, 0.0] for p in PHASES}, 0.0
     for l in v.LETTRES:
         m = v.MODELES[l]
+        car = bornes_caracteres(v, cfg, faits, question, lettre=l)  # v4 (1) : brouillon au plafond de l'espèce
         pire_max = 0.0
         du_modele = 0.0
         for p in PHASES:
@@ -976,6 +1002,53 @@ def devis(v, a):
 
 # ---------- enveloppe : référence par modèle ----------
 
+SUFFIXE_REJEU = "-rejeu-argon-v8d-v1"
+
+
+def etage3_fini(v, dossier):
+    v.lire_composition(dossier)
+    return all(v.cellule_valide(dossier, v.id_cellule(t, l)) for t in v.ORDRE_ETAGE[3] for l in v.LETTRES)
+
+
+def lire_isoles(v, items, rejeux_admis):
+    """v4 (c) : chaque dossier est donné CHEMIN=EMPREINTE du journal.jsonl ; l'empreinte doit tenir et l'étage III être
+    fini. Avec `rejeux_admis` (simulation seulement), un dossier de rejeu d'Argon est admis comme complément si son
+    origine est dans la liste et finie (choix du développeur). Lève Arret sinon."""
+    paires = []
+    for it in items or []:
+        chemin, sep, h = it.rpartition("=")
+        if not sep or not re.fullmatch(r"[0-9a-f]{64}", h):
+            raise v.Arret(v.CODE_USAGE, f"--isoles attend CHEMIN=EMPREINTE (sha256 du journal.jsonl) : {it!r}")
+        paires.append((Path(chemin), h))
+    if not paires:
+        raise v.Arret(v.CODE_USAGE, "--isoles : au moins un dossier")
+    noms = {p.resolve() for p, _ in paires}
+    for p, h in paires:
+        reel = v.empreinte_fichier(p / "journal.jsonl")
+        if reel != h:
+            raise v.Arret(v.CODE_USAGE, f"{p.name} : journal {reel} différent de l'empreinte donnée {h}")
+        if p.name.endswith(SUFFIXE_REJEU):
+            origine = p.with_name(p.name[:-len(SUFFIXE_REJEU)])
+            if not rejeux_admis:
+                raise v.Arret(v.CODE_USAGE, f"{p.name} : dossier de rejeu, pas une exécution isolée")
+            if origine.resolve() not in noms or not etage3_fini(v, origine):
+                raise v.Arret(v.CODE_USAGE, f"{p.name} : rejeu admis seulement avec son origine finie dans la liste")
+        elif not etage3_fini(v, p):
+            raise v.Arret(v.CODE_USAGE, f"{p.name} : étage III non fini ; dossier refusé")
+    return paires
+
+
+def candidats(v, racine):
+    """Aide : dossiers de `racine`, avec l'empreinte de leur journal et l'état de leur étage III."""
+    for d in dossiers_isoles(racine):
+        try:
+            etat = "fini" if etage3_fini(v, d) else "non fini"
+        except (v.Arret, ValueError, KeyError):
+            etat = "illisible"
+        print(f"  {d}={v.empreinte_fichier(d / 'journal.jsonl')}   ({etat}"
+              + (", rejeu" if d.name.endswith(SUFFIXE_REJEU) else "") + ")")
+
+
 def lire_isole(v, dossier):
     """Coût d'un dossier isolé, par espèce, sur l'étage III seul (R2), relances et appels échoués compris."""
     dossier = Path(dossier)
@@ -1004,7 +1077,14 @@ def lire_isole(v, dossier):
 
 def enveloppe(v, a):
     lus, bloquant = [], False
-    for d in a.dossiers:
+    try:
+        paires = lire_isoles(v, a.isoles, rejeux_admis=False)
+    except v.Arret as e:
+        print(f"ARRÊT (code {e.code}) : {e}", file=sys.stderr)
+        if not a.isoles:
+            candidats(v, RACINE / "runs")
+        return e.code
+    for d, _ in paires:
         try:
             lu = lire_isole(v, d)
         except (v.Arret, ValueError, KeyError, OSError) as e:
@@ -1169,7 +1249,14 @@ def simuler(v, a, choisir=False):
         print(f"ARRÊT (code {e.code}) : {e}", file=sys.stderr)
         return e.code
     question = v.lire_entree(a.question)
-    dossiers = [Path(d) for d in a.isoles] if a.isoles else dossiers_isoles(RACINE / "runs")
+    try:
+        dossiers = [p for p, _ in lire_isoles(v, a.isoles, rejeux_admis=True)]
+    except v.Arret as e:
+        print(f"ARRÊT (code {e.code}) : {e}", file=sys.stderr)
+        if not a.isoles:
+            print("Dossiers candidats (à donner par --isoles CHEMIN=EMPREINTE) :", file=sys.stderr)
+            candidats(v, RACINE / "runs")
+        return e.code
     empreintes = {d: v.empreinte_fichier(Path(d) / "journal.jsonl") for d in dossiers}  # avant la lecture
     mesures = mesures_isolees(v, dossiers, cfg["especes"])
     if any(v.empreinte_fichier(Path(d) / "journal.jsonl") != h for d, h in empreintes.items()):
@@ -1392,7 +1479,7 @@ def principal(argv=None, appelants=None, v=None):
     la.add_argument("--accepter-absence", action="append", default=[])
     la.add_argument("--reprise", action="store_true")
     e = sous.add_parser("enveloppe")
-    e.add_argument("dossiers", nargs="+")
+    e.add_argument("--isoles", nargs="*", default=None, help="CHEMIN=EMPREINTE du journal.jsonl, étage III fini")
     for nom in ("simuler", "cycles"):
         s = sous.add_parser(nom)
         s.add_argument("--configuration", required=True)

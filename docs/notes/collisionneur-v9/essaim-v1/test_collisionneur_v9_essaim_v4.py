@@ -1,4 +1,8 @@
-"""Essais du collisionneur v9, mode essaim (v3) : copie des essais v2 (42efb232…), rejoués sur la v3, plus les essais
+"""Essais du collisionneur v9, mode essaim (v4) : copie des essais v3 (df6547cc…), rejoués sur la v4, accordés là où
+la v4 change (--isoles CHEMIN=EMPREINTE ; réserve calculée sur les brouillons écrits), plus les essais de la v4 en fin
+de fichier. En-tête v3 :
+
+Essais du collisionneur v9, mode essaim (v3) : copie des essais v2 (42efb232…), rejoués sur la v3, plus les essais
 de la vérification (B1, B2, points c à f) en fin de fichier. En-tête v2 :
 
 Essais du collisionneur v9, mode essaim (v2). Faux appelants, aucun réseau ; chaque garde a un cas sain et un
@@ -19,7 +23,7 @@ from pathlib import Path
 import pytest
 
 ICI = Path(__file__).resolve().parent
-CHEMIN = Path(os.environ.get("ESSAIM_MODULE") or ICI / "collisionneur_v9_essaim_v3.py")
+CHEMIN = Path(os.environ.get("ESSAIM_MODULE") or ICI / "collisionneur_v9_essaim_v4.py")
 QUESTION = ("Des agents de langue accomplissent de longues tâches. Quelle expérience trancherait entre deux "
             "hypothèses sur les moniteurs ? Donnez une question, une réponse réfutable et une expérience.\n")
 FINS = {"anthropic": "end_turn", "gemini": "STOP", "openai": "stop"}
@@ -65,7 +69,7 @@ class FauxCompteur:
 
 
 def charger():
-    spec = importlib.util.spec_from_file_location("essaim_essai_v3", CHEMIN)
+    spec = importlib.util.spec_from_file_location("essaim_essai_v4", CHEMIN)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -89,7 +93,7 @@ def es(monkeypatch):
 
 
 def config(tmp, **sur):
-    cfg = json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))
+    cfg = json.loads((ICI / "configuration-pilote-essaim-v4.json").read_text(encoding="utf-8"))
     cfg.update(references_usd={e: 20.0 for e in ESPECES}, cycles=3, parts="bloquantes")
     cfg.update(sur)
     p = tmp / f"configuration-{len(list(tmp.glob('configuration-*')))}.json"
@@ -707,6 +711,10 @@ def test_devis_sans_reseau(es, tmp_path, capsys):
     assert v.TRANSPORT_COMPTE.appels == []
 
 
+def iso(v, d):
+    return f"{d}={v.empreinte_fichier(Path(d) / 'journal.jsonl')}"
+
+
 def faux_isole(v, d, couts, hors=False, interrompu=False, sans_niveau=False):
     v.fixer_composition(ESPECES)
     v.sceller_composition(d)
@@ -734,7 +742,7 @@ def test_enveloppe_par_modele(es, tmp_path, capsys):  # Fable, point 1, et R2
     couts = {e: 0.5 for e in ESPECES}
     faux_isole(v, tmp_path / "i1", couts, hors=True, interrompu=True)
     faux_isole(v, tmp_path / "i2", dict(couts, fable=1.0))
-    assert mod.principal(["enveloppe", str(tmp_path / "i1"), str(tmp_path / "i2")], v=v) == 0
+    assert mod.principal(["enveloppe", "--isoles", iso(v, tmp_path / "i1"), iso(v, tmp_path / "i2")], v=v) == 0
     sortie = capsys.readouterr().out
     refs = json.loads(re.search(r"references_usd = (\{.*\})", sortie).group(1))
     assert refs["fable"] == round((1.5 + 1.0 + 3.0) / 2, 4) and refs["opus"] == 1.5  # étage III seul, échecs compris
@@ -742,7 +750,8 @@ def test_enveloppe_par_modele(es, tmp_path, capsys):  # Fable, point 1, et R2
     assert "| A | fable |" in sortie
     (tmp_path / "i2" / "cellules" / f"{v.id_cellule('E3-T3', 'B')}.md").chmod(0o644)
     (tmp_path / "i2" / "cellules" / f"{v.id_cellule('E3-T3', 'B')}.md").unlink()
-    assert mod.principal(["enveloppe", str(tmp_path / "i1"), str(tmp_path / "i2")], v=v) == v.CODE_USAGE
+    assert mod.principal(["enveloppe", "--isoles", iso(v, tmp_path / "i1"), iso(v, tmp_path / "i2")], v=v) == v.CODE_USAGE
+    assert "étage III non fini" in capsys.readouterr().err
 
 
 def test_simuler_et_cycles(es, tmp_path, capsys):  # Fable, points 2 et 9
@@ -753,7 +762,8 @@ def test_simuler_et_cycles(es, tmp_path, capsys):  # Fable, points 2 et 9
     q = tmp_path / "q.md"
     q.write_text(QUESTION, encoding="utf-8")
     cfg = config(tmp_path, references_usd={e: 30.0 for e in ESPECES})
-    args = ["--configuration", str(cfg), "--question", str(q), "--isoles", str(tmp_path / "i1"), str(tmp_path / "i2")]
+    args = ["--configuration", str(cfg), "--question", str(q), "--isoles", iso(v, tmp_path / "i1"),
+            iso(v, tmp_path / "i2")]
     assert mod.principal(["simuler", *args], v=v) == 0
     sortie = capsys.readouterr().out
     assert re.search(r"\| argon \| 3 \|", sortie) and re.search(r"\| fable \| 6 \|", sortie)
@@ -864,7 +874,7 @@ def test_faits_differents_de_la_question_refuses(es, tmp_path):  # v3 (B2)
 
 def test_limites_du_brouillon_et_de_la_finale(es, tmp_path):  # v3 (c)
     mod, v = es
-    mots = json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))["mots"]
+    mots = json.loads((ICI / "configuration-pilote-essaim-v4.json").read_text(encoding="utf-8"))["mots"]
     mod.lire_configuration(v, config(tmp_path))
     for cle in ("brouillon", "finale"):
         with pytest.raises(v.Arret):
@@ -883,8 +893,8 @@ def test_enveloppe_exige_la_meme_composition(es, tmp_path, capsys):  # v3 (d)
             v.ecrire_neuf(v.chemin_cellule(d, cid), "texte")
             v.ajouter_journal(d, {"cellule": cid, "essai": 1, "statut": "OK", "espece": v.MODELES[l]["espece"],
                                   "cout_usd": 0.5})
-    assert mod.principal(["enveloppe", str(tmp_path / "i1")], v=v) == 0
-    assert mod.principal(["enveloppe", str(tmp_path / "i1"), str(d)], v=v) == v.CODE_USAGE
+    assert mod.principal(["enveloppe", "--isoles", iso(v, tmp_path / "i1")], v=v) == 0
+    assert mod.principal(["enveloppe", "--isoles", iso(v, tmp_path / "i1"), iso(v, d)], v=v) == v.CODE_USAGE
     assert "compositions différentes" in capsys.readouterr().err
 
 
@@ -938,15 +948,15 @@ def test_format_final_comme_l_isole(es, tmp_path):  # v3 (décision de la mère)
 
 def test_reserve_des_finales(es, tmp_path):  # v3 (option, désactivée par défaut)
     mod, v = es
-    assert json.loads((ICI / "configuration-pilote-essaim-v3.json").read_text(encoding="utf-8"))["reserver_finales"] is False
+    assert json.loads((ICI / "configuration-pilote-essaim-v4.json").read_text(encoding="utf-8"))["reserver_finales"] is False
     q = tmp_path / "question.md"
     q.write_text(QUESTION, encoding="utf-8")
     cfg = mod.lire_configuration(v, config(tmp_path))
     mod.installer_tours(v, cfg)
     v.fixer_composition(cfg["especes"])
-    car = mod.bornes_caracteres(v, cfg, QUESTION, QUESTION)
-    reserve = sum(mod.pire_appel(v, v.MODELES[l], car["temps2"])[1] for l in v.LETTRES)
-    besoin_max = max(mod.pire_appel(v, v.MODELES[l], car["temps1"])[1] for l in v.LETTRES)
+    car = {l: mod.bornes_caracteres(v, cfg, QUESTION, QUESTION, car_brouillon=0, lettre=l) for l in v.LETTRES}
+    reserve = sum(mod.pire_appel(v, v.MODELES[l], car[l]["temps2"])[1] for l in v.LETTRES)  # v4 : brouillons écrits
+    besoin_max = max(mod.pire_appel(v, v.MODELES[l], car[l]["temps1"])[1] for l in v.LETTRES)
     plafond = reserve + besoin_max + 1.0  # sain : cycles appelés tant que la réserve tient
 
     def lance(nom, reserver, plafond):
@@ -964,3 +974,79 @@ def test_reserve_des_finales(es, tmp_path):  # v3 (option, désactivée par déf
     assert all(v.cellule_valide(d, v.id_cellule("W2-T1", l)) for l in v.LETTRES)  # les cinq finales tiennent
     code, faux = lance("sans", False, reserve + 0.5)  # sans l'option : les cycles partent
     assert code == 0 and mod.sauts(v, tmp_path / "sans") == {}
+
+
+# ---------- v4 ----------
+
+def test_borne_du_brouillon_long(es, tmp_path):  # v4 (1)
+    mod, v = es
+    long = ("mot " * 15000)[:60000] + "\nFIN-DE-CELLULE"
+
+    def special(n, m, prompt):
+        return long if phase(prompt) == "brouillon" and m["espece"] == "argon" else None
+
+    faux = Faux(v, special=special)
+    assert lancer(mod, v, tmp_path, config(tmp_path, cycles=2), faux) == 0
+    d = tmp_path / "essaim"
+    cfg = mod.lire_configuration(v, d / "configuration.json")
+    l = lettre_de(v, "argon")
+    nb = len(v.cellule_valide(d, v.id_cellule("W0-T1", l))[0])
+    assert nb > 3500 * 7  # la borne de la v3 (limite de mots × 7) ne tenait pas
+    sans = mod.bornes_caracteres(v, cfg, QUESTION, QUESTION, lettre=l)  # devis : plafond de sortie de l'espèce
+    ecrit = mod.bornes_caracteres(v, cfg, QUESTION, QUESTION, car_brouillon=nb, lettre=l)  # réserve : brouillon écrit
+    temps = {"cycle": "temps1", "finale": "temps2"}
+    argon = [p for e, p in faux.invites if e == "argon" and phase(p) != "brouillon"]
+    assert len(argon) == 3 and all(len(p) <= ecrit[temps[phase(p)]] <= sans[temps[phase(p)]] for p in argon)
+    assert all(len(p) > nb for p in argon)  # le brouillon entier est servi
+    assert sans["temps1"] >= 65536 * 4.5  # Argon : 65 536 jetons × 4,5 caractères (CAR_SORTIE_MAX de la v8d)
+
+
+def test_reserve_verifiee_a_la_reprise_et_sous_la_ligne(es, tmp_path):  # v4 (a) et (b)
+    mod, v = es
+    q = tmp_path / "question.md"
+    q.write_text(QUESTION, encoding="utf-8")
+    cfg = mod.lire_configuration(v, config(tmp_path))
+    mod.installer_tours(v, cfg)
+    v.fixer_composition(cfg["especes"])
+    car = {l: mod.bornes_caracteres(v, cfg, QUESTION, QUESTION, car_brouillon=0, lettre=l) for l in v.LETTRES}
+    reserve = sum(mod.pire_appel(v, v.MODELES[l], car[l]["temps2"])[1] for l in v.LETTRES)
+    cfgp = config(tmp_path, cycles=1, reserver_finales=True)
+
+    def args(nom, plafond, ligne):
+        return ["lancer", "--configuration", str(cfgp), "--question", str(q), "--sortie", str(tmp_path / nom),
+                "--plafond-usd", str(plafond), "--ligne-usd", str(ligne), "--cle-anthropic", "MA_CLE", "--cle-openai",
+                "OPENAI_API_KEY_ESSAI"]
+
+    faux = Faux(v)  # (b) : plafond large, ligne serrée : la ligne décide
+    assert mod.principal(args("ligne", 500, reserve + 0.5), appelants=faux.table(), v=v) == 0
+    assert faux.n == 10 and len(mod.sauts(v, tmp_path / "ligne")) == 5
+    faux = Faux(v)  # sain : ligne et plafond larges, aucun saut
+    assert mod.principal(args("large", 500, 500), appelants=faux.table(), v=v) == 0 and faux.n == 15
+    coupe = Faux(v, special=lambda n, m, p: (_ for _ in ()).throw(ConnectionResetError("x")) if n == 6 else None)
+    assert mod.principal(args("reprise", 500, 500), appelants=coupe.table(), v=v) == v.CODE_ECHEC
+    d = tmp_path / "reprise"
+    cid = v.essais_journal(d)[-1]["cellule"]
+    assert cid.startswith("W1-C01") and v.essais_journal(d)[-1]["statut"] == "INTERROMPU"
+    suite = Faux(v)  # (a) : la cellule coupée, reprise sous un plafond serré, est soumise à la réserve
+    assert mod.principal(args("reprise", v.depense(d) + reserve + 0.5, 500), appelants=suite.table(), v=v) == 0
+    assert cid in mod.sauts(v, d) and mod.sauts(v, d)[cid]["motif"] == "réserve des réponses finales"
+
+
+def test_isoles_avec_empreintes_et_etats(es, tmp_path, capsys):  # v4 (c)
+    mod, v = es
+    couts = {e: 0.5 for e in ESPECES}
+    faux_isole(v, tmp_path / "o", couts)
+    faux_isole(v, tmp_path / ("o" + mod.SUFFIXE_REJEU), couts)
+    q = tmp_path / "q.md"
+    q.write_text(QUESTION, encoding="utf-8")
+    cfg = config(tmp_path, references_usd={e: 30.0 for e in ESPECES})
+    base = ["--configuration", str(cfg), "--question", str(q), "--isoles"]
+    rejeu = iso(v, tmp_path / ("o" + mod.SUFFIXE_REJEU))
+    assert mod.principal(["simuler", *base, iso(v, tmp_path / "o"), rejeu], v=v) == 0  # rejeu avec son origine
+    assert mod.principal(["simuler", *base, rejeu], v=v) == v.CODE_USAGE  # rejeu sans origine
+    assert mod.principal(["enveloppe", "--isoles", iso(v, tmp_path / "o"), rejeu], v=v) == v.CODE_USAGE
+    assert mod.principal(["simuler", *base, f"{tmp_path / 'o'}={'0' * 64}"], v=v) == v.CODE_USAGE  # empreinte fausse
+    assert mod.principal(["simuler", *base, str(tmp_path / "o")], v=v) == v.CODE_USAGE  # sans empreinte
+    capsys.readouterr()
+    assert mod.principal(["simuler", "--configuration", str(cfg), "--question", str(q)], v=v) == v.CODE_USAGE
+    assert "Dossiers candidats" in capsys.readouterr().err
