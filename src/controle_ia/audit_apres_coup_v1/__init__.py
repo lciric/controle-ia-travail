@@ -16,9 +16,11 @@ Modules, dans l'ordre d'écriture de la spécification :
 - `gardes_invariants` : les gardes des quatre invariants (rang 8, section 6) ;
 - `attaque_choisie` : la famille plantée « attaque choisie » (rang 9, section 2) ;
 - `score_trompeur` : le score trompeur planté (rang 10, section 3) ;
-- `harnais_simule` et `epreuves_boucle` : le harnais simulé et les épreuves permises (rang 11, section 5) ;
+- `harnais_simule` et `epreuves_boucle` : le harnais simulé (interdit entier par défaut, mode « bras de flux » planté
+  étiqueté « non en vigueur », enclave à jetons de capacité) et les treize épreuves (rang 11, section 5) ;
+- `echelons_simules` : l'échelle des échelons simulée (rang 12) ;
 - `simulations_longues` : script séparé des simulations longues (hors des essais).
 
-Non écrits ici (nœuds ou hors de la commande) : épreuves 1 et 13, mode « bras de flux », enclave, échelle des échelons
-(rang 12), devins, étape 1 de la boucle.
+Épreuves 1 et 13, mode « bras de flux » planté et échelle écrits sur le mot du directeur (GO-2026-11-22-57), sur
+harnais simulé seulement. Non écrits : devins, bras « correction tirée au hasard », devis et étape 1 de la boucle.
 """

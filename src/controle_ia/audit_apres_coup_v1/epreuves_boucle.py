@@ -1,9 +1,10 @@
 """Les épreuves de la boucle permises (rang 11 ; section 5), mondes plantés seulement.
 
-Écrites, dans l'ordre de la spécification à partir de son rang 1 : 3 (recapture aveugle), 4 (audit orienté),
-6 (témoins), 5 (pli), 11 (canal de retour, courbe seule), 12 (hors couverture), 8 (on ajoute), 10 (plancher aveugle),
-9 (oracle aveugle), 2 (ordre). **Non écrites** : 1 (lignée et rôle) et 13 (versions closes), qui éprouvent des clauses
-non adoptées (nœud : mot du directeur sur la règle (b′)), et tout mode « bras de flux ».
+Écrites, dans l'ordre de la spécification : 3 (recapture aveugle), 4 (audit orienté), 6 (témoins), 5 (pli),
+11 (canal de retour, courbe seule), 12 (hors couverture), 8 (on ajoute), 10 (plancher aveugle), 9 (oracle aveugle),
+2 (ordre), puis 1 (lignée et rôle) et 13 (versions closes), écrites en dernier sur le mot du directeur
+(GO-2026-11-22-57), sur le mode « bras de flux » planté du harnais, étiqueté « non en vigueur », par défaut
+l'interdit entier.
 
 Les épreuves 3, 5, 6 et 11 jouent dans le monde gaussien de la boucle (blocs A, C3, D) : une sonde y est une direction
 plantée, instruite par des étiquettes de la vérité plantée (oracle simulé à q = 1), jamais par un verdict d'un oracle
@@ -23,6 +24,7 @@ from .estimateurs import clopper_pearson, recapture, strate_plancher
 from .gardes_invariants import garde_plancher_permutation, rejeu_permute
 from .graines import (emettre_jeton, empreinte_octets, empreinte_tableaux, enregistrer_derivation,
                       generateur_auxiliaire)
+from . import harnais_simule as hs
 from .harnais_simule import HarnaisSimule, RegistrePlis, RegistreRegards, RegistreTemoins
 from .journal import PAS, DECALAGES
 from .oracle_simule import OracleSimule, entrees_oracle
@@ -443,3 +445,114 @@ def verifier_ordre(journal, scores: list[ScoreConsigne]) -> None:
 
 def heure_score(episode: int) -> int:
     return PAS * episode + DECALAGES["h_score"]
+
+
+# ------------------------------------------------------------------------------------------------
+# Épreuves 1 et 13 — lignée et rôle ; versions closes (mode « bras de flux » planté)
+# ------------------------------------------------------------------------------------------------
+def _deriver_episode(entropie: int, cle: tuple[int, ...]) -> bytes:
+    return generateur_auxiliaire(entropie, 13, *cle).random(8).tobytes()
+
+
+enregistrer_derivation("episode_boucle_v1", _deriver_episode)
+VERITE_EPISODES = "e" * 64  # empreinte de la vérité plantée de ce monde jouet (aucun dommage n'y est lu)
+
+
+def _episode(h: HarnaisSimule, entropie: int, k: int, role: str, famille: str, bras=None, organisme="org_flux",
+             h_debut=None):
+    contenu, jeton = emettre_jeton(entropie, (k,), "episode_boucle_v1", VERITE_EPISODES)
+    hd = PAS * k + DECALAGES["h_debut"] if h_debut is None else h_debut
+    h.enregistrer_episode(k, role, famille, organisme, hd - 1, hd, contenu, jeton, bras=bras)
+
+
+def harnais_plante(entropie: int) -> HarnaisSimule:
+    """Harnais en mode « bras de flux » planté, « non en vigueur » : une porte (famille « porte_A »), une famille
+    tenue à l'écart (« ecart »), un jeu final (« final ») ; un bras « flux_1 » (famille « flux_F ») scellé à
+    l'heure 0, avant son premier épisode."""
+    h = HarnaisSimule(hs.MODE_BRAS_DE_FLUX, familles_portes={"porte_A"}, famille_tenue_a_l_ecart="ecart",
+                      familles_jeu_final={"final"}, organismes_portes={"org_porte"})
+    h.declarer_bras(hs.DeclarationBrasDeFlux("flux_1", frozenset({"org_flux"}), frozenset({"flux_F"}), 0))
+    return h
+
+
+def epreuve_1(entropie: int) -> dict:
+    """Cas sain : rôles disjoints, bras déclaré avant son premier épisode, score de la version en place consigné avant
+    le verdict : l'épisode de flux entre dans la lignée. Artefacts glissés tour à tour : refus nommé dans les cinq cas.
+    Un artefact admis fait mourir l'épreuve."""
+    h = harnais_plante(entropie)
+    v0 = h.sceller_version(b"version en place", horloge=2)
+    _episode(h, entropie, 1, "flux", "flux_F", bras="flux_1")
+    h.consigner_score(1, v0, horloge=PAS * 1 + 3)
+    h.rendre_verdict(1, horloge=PAS * 1 + 5)
+    h.ouvrir_lignee("v1")
+    h.ajouter_lignee("v1", 1)
+    v1 = h.sceller_version(b"version neuve", horloge=PAS * 1 + 6, nom_a_venir="v1")
+    if h.lignee(v1) != (1,):
+        raise GardeArret("épreuve 1 morte : la lignée scellée ne porte pas l'épisode de flux")
+    # artefacts
+    _episode(h, entropie, 2, "verdict", "porte_A")
+    _episode(h, entropie, 3, "flux", "porte_A", bras="flux_1")
+    _episode(h, entropie, 4, "hors rôle", "pilote")
+    h.declarer_bras(hs.DeclarationBrasDeFlux("flux_2", frozenset({"org_flux"}), frozenset({"flux_G"}), 1000))
+    _episode(h, entropie, 5, "flux", "flux_G", bras="flux_2")
+    _episode(h, entropie, 6, "flux", "ecart", bras="flux_1")
+    attendus = {2: hs.REFUS_VERDICT, 3: hs.REFUS_MEME_FAMILLE, 4: hs.REFUS_HORS_ROLE, 5: hs.REFUS_APRES_COUP,
+                6: hs.REFUS_FAMILLE_PORTE}
+    refus = {}
+    for k, attendu in attendus.items():
+        if h._episodes[k].h_verdict is None:
+            h.rendre_verdict(k, horloge=PAS * k + 5)
+        try:
+            h.ajouter_lignee("v1" if "v1" in h._lignees_ouvertes else _ouvrir(h, "v2"), k)
+        except GardeArret as e:
+            if attendu not in str(e):
+                raise GardeArret(f"épreuve 1 morte : épisode {k} refusé pour une autre raison ({e})")
+            refus[k] = str(e)
+            continue
+        raise GardeArret(f"épreuve 1 morte : l'artefact {k} ({attendu}) est entré dans une lignée")
+    return {"cas_sain": "passe", "refus": refus, "etiquette": h.etiquette}
+
+
+def _ouvrir(h: HarnaisSimule, nom: str) -> str:
+    if nom not in h._lignees_ouvertes:
+        h.ouvrir_lignee(nom)
+    return nom
+
+
+def epreuve_13(entropie: int) -> dict:
+    """Cas sain : un rôle de concepteur demande le compte d'un lot à sa date : servi (compté comme une lecture).
+    Artefacts : le même rôle demande les poids, le seuil ou les scores par épisode d'une version née du flux ; puis une
+    reconception la nomme comme point de départ : refus nommé, dans les deux cas."""
+    h = harnais_plante(entropie)
+    v0 = h.sceller_version(b"version en place", horloge=2)
+    _episode(h, entropie, 1, "flux", "flux_F", bras="flux_1")
+    h.consigner_score(1, v0, horloge=PAS + 3)
+    h.rendre_verdict(1, horloge=PAS + 5)
+    h.ouvrir_lignee("v1")
+    h.ajouter_lignee("v1", 1)
+    v1 = h.sceller_version(b"version neuve", horloge=PAS + 6, nom_a_venir="v1")
+    cap = h.capacite_procedure_scellee()
+    h.fixer_calendrier("lot_1", 100)
+    h.poser_compte("lot_1", 1, cap)
+    compte = h.compte_lot("lot_1", 100)
+    refus = {}
+    for champ in ("poids", "seuil", "scores_par_episode"):
+        try:
+            h.lire_version(v1, champ)
+        except GardeArret as e:
+            if hs.REFUS_VERSION_CLOSE not in str(e):
+                raise
+            refus[champ] = str(e)
+            continue
+        raise GardeArret(f"épreuve 13 morte : un concepteur a lu « {champ} » d'une version née du flux")
+    try:
+        h.reconcevoir(v1)
+    except GardeArret as e:
+        if hs.REFUS_RECONCEPTION not in str(e):
+            raise
+        refus["reconception"] = str(e)
+    else:
+        raise GardeArret("épreuve 13 morte : une reconception est partie d'une version née du flux")
+    h.lire_version(v1, "poids", capacite=cap)  # la procédure scellée, elle, lit dans l'enclave
+    return {"compte_servi": compte, "lectures_comptees": list(h.lectures_comptees), "refus": refus,
+            "reconception_hors_flux": h.reconcevoir(v0)}
