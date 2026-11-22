@@ -25,7 +25,7 @@ générateur processeur par ligne. Sur une carte, c'est un aller-retour et une b
   qui viennent de finir ou de tirer un jeton déclencheur (pour l'arrêt « bloc clos », la fonction `arreter` de l'appelant ne
   se joue que sur ces lignes-là, en Python, comme dans l'ancien chemin) ; à la fin, les jetons et les longueurs ; et les logits
   **seulement** si `empreinte_logits` est demandé (diagnostic de rejeu, comme l'ancien).
-- Résolution : uniforme sur 53 bits ; un jeton de probabilité inférieure à environ 2⁻⁵³ n'est jamais tiré (sans effet mesurable).
+- Résolution : uniforme sur 53 bits (deux hachages indépendants de 32 et 21 bits, correctif 0021) ; un jeton de probabilité inférieure à environ 2⁻⁵³ n'est jamais tiré (sans effet mesurable).
 
 Gardes (essais `tests/test_tirage_carte_v1.py`) : graine entière dans [0, 2⁶⁴[ (sinon refus) ; logits finis à la ligne tirée
 (un NaN, un +inf ou une ligne entièrement à −inf rendrait un argmax arbitraire : arrêt ; −inf sur une partie du vocabulaire reste permis, comme sous softmax) ; température finie ; lot, contextes et graines comme l'ancien.
@@ -41,7 +41,8 @@ from ..gardes import GardeArret
 MASQUE32 = 0xFFFFFFFF
 _MULT = 0x45D9F3B                       # constante du mélange (< 2³¹ : produit < 2⁶³, aucun dépassement)
 _SEL_PAS, _SEL_JETON, _SEL_DEUX = 0x9E3779B1, 0x7F4A7C15, 0x2545F491
-METHODE = "gumbel-max à bruit compté (hachage entier de la graine, du pas et du jeton), v1"
+_SEL_JETON_2, _SEL_BASE_2 = 0x6C8E9CF5, 0x1B873593          # correctif 0021 (cl1, m1) : second hachage, indépendant du premier
+METHODE = "gumbel-max à bruit compté (hachage entier de la graine, du pas et du jeton), v1, uniforme à 53 bits (correctif 0021)"
 
 
 def _melange32(x: torch.Tensor) -> torch.Tensor:
@@ -62,25 +63,34 @@ def moities_des_graines(graines, appareil) -> torch.Tensor:
     return torch.tensor(out, dtype=torch.int64, device=appareil)
 
 
-def bruit_de_gumbel(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> torch.Tensor:
-    """(B, V) en double précision : G[b, v] = −log(−log(u(graine_b, pas, v))), fonction pure de ses entrées."""
+def deux_hachages(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """(a, b), chacun (B, V) dans [0, 2³²[ : deux hachages **indépendants** de (graine, pas, jeton) (correctif 0021, cl1, m1)."""
     appareil = moities.device
     base = _melange32(_melange32(moities[:, 0] ^ _SEL_DEUX) ^ moities[:, 1])
     base = _melange32(base ^ ((int(pas) * _SEL_PAS) & MASQUE32))                             # (B,)
     v = torch.arange(int(taille_vocabulaire), dtype=torch.int64, device=appareil)
-    hv = _melange32(v ^ _SEL_JETON)                                                           # (V,)
-    a = _melange32(base[:, None] ^ hv[None, :])
-    b = _melange32(a ^ _SEL_DEUX)
+    a = _melange32(base[:, None] ^ _melange32(v ^ _SEL_JETON)[None, :])
+    b = _melange32(_melange32(base ^ _SEL_BASE_2)[:, None] ^ _melange32(v ^ _SEL_JETON_2)[None, :])
+    return a, b
+
+
+def bruit_de_gumbel(moities: torch.Tensor, pas: int, taille_vocabulaire: int) -> torch.Tensor:
+    """(B, V) en double précision : G[b, v] = −log(−log(u(graine_b, pas, v))), fonction pure de ses entrées ; u sur 53 bits,
+    21 bits de `a` et 32 bits de `b`."""
+    a, b = deux_hachages(moities, pas, taille_vocabulaire)
     u = ((a >> 11).double() * 2.0 ** 32 + b.double() + 0.5) / 2.0 ** 53                       # 21 + 32 = 53 bits, u dans ]0, 1[
     return -torch.log(-torch.log(u))
 
 
-def tirer(logits: torch.Tensor, temperature: float, moities: torch.Tensor, pas: int) -> torch.Tensor:
-    """Un jeton par ligne, sur l'appareil des logits : argmax à température nulle, sinon Gumbel-max. Rend (B,) long."""
+def tirer(logits: torch.Tensor, temperature: float, moities: torch.Tensor, pas: int, actives: torch.Tensor | None = None) -> torch.Tensor:
+    """Un jeton par ligne, sur l'appareil des logits : argmax à température nulle, sinon Gumbel-max. Rend (B,) long.
+    `actives` (correctif 0021, cl1, m2) : la garde des logits ne juge que les lignes actives (une ligne finie n'arrête rien,
+    comme dans l'ancien chemin, qui ne lisait pas ses logits)."""
     if not math.isfinite(float(temperature)):
         raise GardeArret(f"température {temperature!r} non finie (refus)")
     l = logits.float()
-    if bool(torch.isnan(l).any() | torch.isposinf(l).any() | torch.isneginf(l.amax(dim=-1)).any()):
+    vues = l if actives is None else l[actives]
+    if vues.numel() and bool(torch.isnan(vues).any() | torch.isposinf(vues).any() | torch.isneginf(vues.amax(dim=-1)).any()):
         raise GardeArret("logits invalides au tirage (NaN, +inf, ou ligne entièrement à −inf) : arrêt, aucun argmax arbitraire")
     if temperature <= 0:
         return torch.argmax(l, dim=-1)
@@ -133,7 +143,7 @@ def _boucle(modele, contextes, max_nouveaux, temperature, graines, fins, pad_id,
                 for r in range(B):
                     if act[r]:
                         empreintes[r].update(cpu[r].contiguous().numpy().tobytes())
-            j = tirer(logits, temperature, moities, pas)
+            j = tirer(logits, temperature, moities, pas, actives)
             j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
             sorties[:, pas] = j
             longueurs += actives.long()
@@ -196,7 +206,7 @@ def suites_cache_duplique_carte(modele, prefixe, graines, max_jetons: int, tempe
         cache.batch_repeat_interleave(K)
         logits = sortie.logits[:, -1].repeat(K, 1)
         for pas in range(int(max_jetons)):
-            j = tirer(logits, temperature, moities, pas)
+            j = tirer(logits, temperature, moities, pas, actives)
             j = torch.where(actives, j, torch.full_like(j, int(pad_id)))
             sorties[:, pas] = j
             longueurs += actives.long()

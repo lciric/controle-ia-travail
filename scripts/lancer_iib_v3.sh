@@ -5,6 +5,7 @@
 # branche par défaut `essai/iib-explo-v5`. Écrit, jamais lancé par son développeur ; les essais de forme de la version 2 ne
 # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
 # Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
+# Correctif 0021 : `IIB_TIRAGE` (processeur, par défaut, ou carte) est passé à la machine (`-e IIB_TIRAGE=…`) ; toute autre valeur est un refus.
 # --- en-tête d'origine de la version 2 :
 # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
 # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
@@ -79,6 +80,7 @@ QUOI="${1:?outil, --verifier-go-seulement, controles-explo, creation, apres-crea
 MOI=scripts/lancer_iib_v3.sh
 DEPOT="${IIB_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 A=scripts/amorce_instance_iib_v5.sh
+TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) echo "IIB_TIRAGE=$TIRAGE : processeur ou carte : refus"; exit 2 ;; esac    # correctif 0021
 case "${IIB_AMORCE:-}" in      # correctif 0017 : l'amorce de la course, seule autre valeur permise ; toute autre : refus, rien ne part
     ''|"$A") ;; scripts/amorce_instance_iib_course_v5.sh) A="$IIB_AMORCE" ;; *) echo "IIB_AMORCE=$IIB_AMORCE : ni l'amorce de l'étalonnage ni celle de la course : refus"; exit 2 ;; esac
 BRANCHE="${IIB_BRANCHE:-essai/iib-explo-v5}"
@@ -317,7 +319,7 @@ creation)
     B64=$(base64 -w0 < "$D/amorce-creation.sh")
     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
     TA="$(champ tests_attendus "$D/lancement.txt")"; [[ "$TA" =~ ^[0-9]*$ ]] || { echo "tests attendus illisibles"; exit 2; }
-    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
+    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e IIB_GO_ID=$GOC -e MODE=$MODE_C -e IIB_TIRAGE=$TIRAGE -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=$TA -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute-essai$((ESSAIS + 1)).json\" 2>&1 </dev/null; VAST=$VAST bash $DEPOT/$MOI apres-creation \"$D/creation-brute-essai$((ESSAIS + 1)).json\" \$? \"$D\""
     [ ! -e "$D/creation-brute-essai$((ESSAIS + 1)).json" ] || { echo "$D/creation-brute-essai$((ESSAIS + 1)).json existe déjà (R12) : pas de création"; exit 2; }
     case "$ETIQ" in "$PREFIXE_ETIQUETTE"*) ;; *) echo "étiquette de la configuration ($ETIQ) hors du préfixe « $PREFIXE_ETIQUETTE » du saboteur à budget : pas de création"; exit 2;; esac
     [[ "$ETIQ" =~ ^[A-Za-z0-9_.-]{1,60}$ ]] || { echo "étiquette de la configuration illisible (1 à 60 caractères de [A-Za-z0-9_.-]) : pas de création"; exit 2; }

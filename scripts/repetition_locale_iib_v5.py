@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
 from test_t06_v12_scripts import OFFRES  # noqa: E402
 
 ID, AUTRE = "61414494", 58936096
-ATTENDUS = 295        # liste figée v6 : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage choisi (0020) 1
+ATTENDUS = 296        # liste figée v6 : 275 ; poussée (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage (0020) 1 ; même tirage (0021) 1
 CONFIG = "prereg/config-iib-v5-jouet.json"
 RECHERCHE = '''"search offers")
     case "$3" in id=*) echo '[]'; exit 0;; esac

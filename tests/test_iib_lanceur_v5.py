@@ -427,12 +427,15 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
         return [l for l in d if l[:1] in "+-" and not l.startswith(("+++", "---"))]
     da = changees("amorce_instance_iib_v1.sh", "amorce_instance_iib_v5.sh")
     # correctif 0014 : une ligne de plus de chaque côté (le choix de la trace selon le motif « versement … » du lanceur)
-    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 10
+    # correctif 0021 : une ligne ajoutée de plus (le tirage passé par l'ordre, IIB_TIRAGE)
+    assert len([l for l in da if l[0] == "-"]) == 11 and len([l for l in da if l[0] == "+" and not l[1:].lstrip().startswith("#")]) == 11
     assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
-    assert len([l for l in dl if l[0] == "-"]) == 15 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+    # correctif 0021 : une ligne de plus, la commande de création (`-e IIB_TIRAGE=$TIRAGE` passé à la machine)
+    assert len([l for l in dl if l[0] == "-"]) == 16 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
-                                                                                     "    else", "    fi")) for l in dl if l[0] == "-")
+                                                                                     "    else", "    fi", "create instance")) for l in dl if l[0] == "-")
+    assert sum("create instance" in l for l in dl if l[0] == "-") == 1 and sum("-e IIB_TIRAGE=$TIRAGE" in l for l in dl if l[0] == "+") == 1
     # version 3 : l'attestation « aucune intouchable » n'existe plus (vérification de la contre-lecture, n1)
     assert "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
     assert "attesté par IIB_AUCUNE_INTOUCHABLE=oui\"" not in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
@@ -608,7 +611,7 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
     assert all(any(m in l for m in ("LISTE_TESTS=", 'RUN="$(date', 'journal "run : $RUN', "lanceur_v5 --phase etalonnage", 'ajouter "runs/$RUN"')) for l in moins)
     assert sum(l.startswith(("DES=", "{ [ -n \"$DES\" ]", "RUN_ETAL=")) for l in plus) == 3
     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
-    assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL"' in vivantes[0]
+    assert len(vivantes) == 1 and '--phase course --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" --etalonnage "$RUN_ETAL"' in vivantes[0]
     assert 'IIB_CONSIGNER="$R/iib-consigner.sh"' in vivantes[0] and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in c
     liste = s / "tests-cibles-iib-course-v5-v2.txt"                     # correctif 0020 : plus l'essai du tirage sur la carte
     assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
@@ -664,3 +667,42 @@ def test_tirage_choisi_explicitement_defaut_inchange(tmp_path):
     assert not (tmp_path / "runs" / "20991231-000040-iib-jouet").exists()
     r = la.executer("etalonnage", config, tmp_path, "20991231-000041-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
     assert r["tirage"] == "processeur"
+
+
+def test_meme_tirage_a_l_etalonnage_et_a_la_course_et_variable_de_l_ordre(tmp_path):
+    """Correctif 0021 (voie (A), GO-2026-11-22-73) : la course tire comme l'étalonnage dont elle part ; le tirage est passé par
+    une variable explicite de l'ordre (IIB_TIRAGE), à l'étalonnage comme à la course, et refusé s'il est inconnu."""
+    import os
+    import subprocess
+
+    from controle_ia.scellement import sceller
+
+    run = "20991231-000050-iib-reel"
+    r = tmp_path / "diag" / run / "resume.json"
+    r.parent.mkdir(parents=True)
+    assert la.exiger_meme_tirage(tmp_path, run, "processeur") == "processeur"           # résumé absent : processeur seulement
+    with pytest.raises(GardeArret, match="tirent de même"):
+        la.exiger_meme_tirage(tmp_path, run, "carte")
+    for vu, demande, ok in (("carte", "carte", True), ("processeur", "processeur", True), ("carte", "processeur", False),
+                            ("processeur", "carte", False), (None, "processeur", True), (None, "carte", False)):
+        if r.exists():
+            r.unlink()
+            Path(str(r) + ".sha256").unlink()
+        r.write_text(json.dumps({"resultat": {} if vu is None else {"tirage": vu}}) + "\n", encoding="utf-8")
+        sceller(r)
+        if ok:
+            assert la.exiger_meme_tirage(tmp_path, run, demande) == demande
+        else:
+            with pytest.raises(GardeArret, match="tirent de même"):
+                la.exiger_meme_tirage(tmp_path, run, demande)
+    s = DEPOT / "scripts"
+    for f in ("amorce_instance_iib_v5.sh", "amorce_instance_iib_course_v5.sh"):
+        t = (s / f).read_text(encoding="utf-8")
+        assert 'TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;;' in t, f
+        vivante = [l for l in t.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
+        assert len(vivante) == 1 and '--tirage "$TIRAGE"' in vivante[0], f
+    v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+    assert "-e IIB_TIRAGE=$TIRAGE " in v3
+    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
+    mauvais = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_TIRAGE": "gpu"}, capture_output=True, text=True, timeout=60)
+    assert mauvais.returncode == 2 and "IIB_TIRAGE=gpu" in mauvais.stdout

@@ -185,3 +185,35 @@ def test_aucune_copie_des_logits_ni_boucle_par_ligne_dans_le_tirage():
         assert not any(x in src for x in ('.to("cpu"', ".cpu()", "multinomial", "Generator", "for ", ".item()")), f.__name__
     module = inspect.getsource(tc)
     assert module.count('.to("cpu"') == 6 and "multinomial(" not in module and "torch.Generator(" not in module
+
+
+# -- correctif 0021 : contre-lecture cl1 du 0020 (m1, m2) ---------------------------------------------------------------------
+def test_uniforme_a_53_bits_deux_hachages_independants():
+    """m1 : `b` n'est plus une fonction de `a` (avant : b = H(a ^ c), 32 bits d'entropie). Cas sain : sur 64 000 couples, b diffère
+    de l'ancienne fonction de a presque partout, et a et b ne sont pas corrélés ; artefact : l'ancienne construction est vue."""
+    mo = tc.moities_des_graines(list(range(1000)), "cpu")
+    a, b = tc.deux_hachages(mo, 7, 64)
+    ancien = tc._melange32(a ^ tc._SEL_DEUX)
+    assert float((b == ancien).double().mean()) < 1e-3
+    assert abs(float(torch.corrcoef(torch.stack([a.flatten().double(), b.flatten().double()]))[0, 1])) < 0.02
+    assert bool((ancien == tc._melange32(a ^ tc._SEL_DEUX)).all())                     # artefact : l'ancienne b est une fonction de a
+    u = ((a >> 11).double() * 2.0 ** 32 + b.double() + 0.5) / 2.0 ** 53
+    assert 0.0 < float(u.min()) and float(u.max()) < 1.0 and abs(float(u.mean()) - 0.5) < 0.005
+    import inspect
+
+    src = inspect.getsource(tc.deux_hachages)
+    assert not any(x in src for x in ('.to("cpu"', ".cpu()", "multinomial", "Generator", "for ", ".item()"))
+
+
+def test_garde_des_logits_sur_les_seules_lignes_actives():
+    """m2 : un NaN sur une ligne finie n'arrête pas le lot (l'ancien chemin ne lisait pas ses logits) ; un NaN sur une ligne
+    active l'arrête ; un lot dont toutes les lignes sont finies ne juge rien."""
+    mo = tc.moities_des_graines([1, 2, 3], "cpu")
+    l = torch.tensor([[0.0, 1.0, 2.0], [float("nan")] * 3, [1.0, 0.0, 0.0]])
+    j = tc.tirer(l, 1.0, mo, 0, torch.tensor([True, False, True]))
+    assert j.shape == (3,) and 0 <= int(j[0]) < 3
+    with pytest.raises(GardeArret, match="logits invalides"):
+        tc.tirer(l, 1.0, mo, 0, torch.tensor([True, True, True]))
+    with pytest.raises(GardeArret, match="logits invalides"):
+        tc.tirer(l, 1.0, mo, 0)                                                         # sans masque : toutes les lignes jugées
+    tc.tirer(l, 1.0, mo, 0, torch.tensor([False, False, False]))

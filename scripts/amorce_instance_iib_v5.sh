@@ -15,7 +15,9 @@
 #      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1 ;
 #  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
 #      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
-#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6).
+#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6) ;
+#  (h) correctif 0021 : le tirage des jetons vient de l'ordre (`IIB_TIRAGE`, « processeur » par défaut, ou « carte ») et passe au
+#      lanceur par `--tirage` ; toute autre valeur est un refus.
 # --- en-tête d'origine de la v1 :
 # Amorce de l'instance de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 5 à 7) : tirée de
 # `scripts/amorce_instance_t06_v11.sh` (nom neuf, R12 ; la v11 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à
@@ -202,6 +204,7 @@ fi
 [ "$(date +%s)" -lt "$DEP" ] || detruire "démarrage après l'heure de dépense épuisée (C08) : aucun calcul"
 for v in COMMIT GH_TOKEN; do [ -n "${!v:-}" ] || refus "$v absent"; done
 MODE="${MODE:-reel}"
+TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) refus "IIB_TIRAGE=$TIRAGE (processeur ou carte)";; esac    # correctif 0021
 case "$MODE" in reel|jouet) ;; *) refus "MODE=$MODE (reel ou jouet)";; esac
 [ "$MODE" = reel ] && { [ -n "${HF_TOKEN:-}" ] || refus "HF_TOKEN absent en mode reel"; }
 case "$COMMIT" in *[!0-9a-f]*|'') refus "COMMIT illisible";; esac
@@ -322,7 +325,7 @@ case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consig
 exit $?
 CONSIGNER
 . "$R/iib-consigner.sh" --source
-journal "début iib v5 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
+journal "début iib v5 : MODE=$MODE TIRAGE=$TIRAGE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
 SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
 SESSION_V12="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
 PLAFOND_LIGNE_GO=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V12" plafond-ligne registres/go.md "$GO_ID" 2>&1) || refus "$GO_ID non conforme dans registres/go.md du commit ($PLAFOND_LIGNE_GO)"
@@ -412,7 +415,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-$MODE"
 journal "run : $RUN (sans couperet de temps ; lanceur iib v5, étalonnage seul)"
 : >"$T/run.err"; : >"$T/progres-retenues.txt"
 SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" >"$T/run.json" 2>>"$T/run.err" &
+PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase etalonnage --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" >"$T/run.json" 2>>"$T/run.err" &
 PID_RUN=$!
 # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
 ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do

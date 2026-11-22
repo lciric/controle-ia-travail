@@ -11,6 +11,8 @@
 #  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
 #       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
 #       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
+#  (c7) correctif 0021 : `IIB_TIRAGE` passé au lanceur par `--tirage`, comme à l'étalonnage ; le lanceur refuse une course qui
+#       ne tire pas comme l'étalonnage dont elle part ;
 #       correctif 0020 : liste de la course en version 2 (`tests-cibles-iib-course-v5-v2.txt`), plus l'essai du tirage sur la
 #       carte (`tests/test_tirage_carte_v1.py`, dont un essai marqué « carte » qui ne se joue que là) ; le tirage par défaut ne change pas ;
 #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
@@ -220,6 +222,7 @@ fi
 [ "$(date +%s)" -lt "$DEP" ] || detruire "démarrage après l'heure de dépense épuisée (C08) : aucun calcul"
 for v in COMMIT GH_TOKEN; do [ -n "${!v:-}" ] || refus "$v absent"; done
 MODE="${MODE:-reel}"
+TIRAGE="${IIB_TIRAGE:-processeur}"; case "$TIRAGE" in processeur|carte) ;; *) refus "IIB_TIRAGE=$TIRAGE (processeur ou carte)";; esac    # correctif 0021
 case "$MODE" in reel|jouet) ;; *) refus "MODE=$MODE (reel ou jouet)";; esac
 [ "$MODE" = reel ] && { [ -n "${HF_TOKEN:-}" ] || refus "HF_TOKEN absent en mode reel"; }
 case "$COMMIT" in *[!0-9a-f]*|'') refus "COMMIT illisible";; esac
@@ -340,7 +343,7 @@ case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consig
 exit $?
 CONSIGNER
 . "$R/iib-consigner.sh" --source
-journal "début iib v5 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
+journal "début iib v5 : MODE=$MODE TIRAGE=$TIRAGE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
 SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
 SESSION_V12="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
 PLAFOND_LIGNE_GO=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V12" plafond-ligne registres/go.md "$GO_ID" 2>&1) || refus "$GO_ID non conforme dans registres/go.md du commit ($PLAFOND_LIGNE_GO)"
@@ -445,7 +448,7 @@ RUN="$(date -u +%Y%m%d-%H%M%S)-iib-course-$MODE"
 journal "run : $RUN (sans couperet de temps ; lanceur iib v5, course sur l'étalonnage $RUN_ETAL)"
 : >"$T/run.err"; : >"$T/progres-retenues.txt"
 SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
-PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase course --config "$CONFIG" --run-id "$RUN" --etalonnage "$RUN_ETAL" >"$T/run.json" 2>>"$T/run.err" &
+PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase course --config "$CONFIG" --run-id "$RUN" --tirage "$TIRAGE" --etalonnage "$RUN_ETAL" >"$T/run.json" 2>>"$T/run.err" &
 PID_RUN=$!
 # C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
 ( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do

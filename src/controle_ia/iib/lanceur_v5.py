@@ -749,6 +749,23 @@ def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> l
     return ids
 
 
+def exiger_meme_tirage(racine, etalonnage: str, tirage: str) -> str:
+    """Correctif 0021 (voie (A), GO-2026-11-22-73) : la course tire comme l'étalonnage dont elle part. Le tirage de l'étalonnage
+    est lu dans son résumé scellé (`resultat.tirage`) ; un résumé écrit avant le correctif 0020 ne porte pas la clé, et ce code-là
+    ne savait tirer que sur le processeur : « processeur ». Résumé absent : « processeur » seulement (le mode réel exige déjà le
+    résumé, `exiger_identifiants_de_l_etalonnage`). Différent : refus avant tout manifeste."""
+    chemin = Path(racine) / "diag" / etalonnage / "resume.json"
+    if chemin.is_file():
+        verifier(chemin)
+        vu = json.loads(chemin.read_text(encoding="utf-8")).get("resultat", {}).get("tirage", "processeur")
+    else:
+        vu = "processeur"
+    if vu != tirage:
+        raise GardeArret(f"course : tirage {tirage!r} ≠ tirage de l'étalonnage {vu!r} (résumé de {etalonnage}) : l'étalonnage et la course "
+                         "tirent de même (refus)")
+    return vu
+
+
 def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
                      autoriser_depot_sale: bool, carte, tirage: str = "processeur") -> dict:
     from ..gardes import motif_d_arret
@@ -761,6 +778,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
     from .modele_v5 import exiger_tirage
 
     exiger_tirage(tirage, config["mode"])                                 # correctif 0020
+    exiger_meme_tirage(racine, etalonnage, tirage)                        # correctif 0021
     dossier = Path("diag") / etalonnage
     if not (racine / dossier / NOMS["designation"]).is_file():
         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
