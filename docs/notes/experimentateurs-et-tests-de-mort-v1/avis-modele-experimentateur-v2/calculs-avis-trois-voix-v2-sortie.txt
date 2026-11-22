@@ -1,0 +1,73 @@
+Calculs de l'avis v2 sur le modèle de l'expérimentateur d'épreuve (nœud N4) — sortie
+python 3.13 ; aucun tirage ; prix rapportés de l'énoncé neutre, non vérifiés
+
+[0] Auto-essai des deux gardes du programme (cas sain, puis artefact)
+    comparaison à l'arrondi : 4,452 contre « 4,5 » : égal (attendu : égal) ; 4,452 contre « 4,6 » : différent (attendu : différent)
+    empreinte : fichier à l'empreinte attendue : lu ; même fichier, empreinte attendue fausse : arrêt (attendu : arrêt)
+    bilan du bloc [0] : les deux gardes distinguent le cas sain de l'artefact
+
+[A] Table de coût de l'avis v1 (18a3883d…, l. 36 à 44), refaite
+    scénarios de la v1 (« supposés ») : court = 6 000 jetons d'entrée et 3 000 de sortie ;
+    long = 150 000 d'entrée et 40 000 de sortie ; par greffon, pour 12 témoins, pour 106 greffons
+    Sonnet 5.5    court : 0,042 ; x12 = 0,504 ; x106 = 4,452 | imprimé 0,04 ; 0,5 ; 4,5 | égal à l'arrondi
+    Sonnet 5.5    long  : 0,700 ; x12 = 8,400 ; x106 = 74,200 | imprimé 0,70 ; 8,4 ; 74 | égal à l'arrondi
+    Opus 5.5      court : 0,084 ; x12 = 1,008 ; x106 = 8,904 | imprimé 0,08 ; 1,0 ; 8,9 | égal à l'arrondi
+    Opus 5.5      long  : 1,400 ; x12 = 16,800 ; x106 = 148,400 | imprimé 1,40 ; 16,8 ; 148 | égal à l'arrondi
+    Carbon        court : 0,084 ; x12 = 1,008 ; x106 = 8,904 | imprimé 0,08 ; 1,0 ; 8,9 | égal à l'arrondi
+    Carbon        long  : 1,400 ; x12 = 16,800 ; x106 = 148,400 | imprimé 1,40 ; 16,8 ; 148 | égal à l'arrondi
+    Fable 5.2     court : 0,168 ; x12 = 2,016 ; x106 = 17,808 | imprimé 0,17 ; 2,0 ; 17,8 | égal à l'arrondi
+    Fable 5.2     long  : 2,800 ; x12 = 33,600 ; x106 = 296,800 | imprimé 2,80 ; 33,6 ; 297 | égal à l'arrondi
+    Astra, Argon  court : 0,210 ; x12 = 2,520 ; x106 = 22,260 | imprimé 0,21 ; 2,5 ; 22 | égal à l'arrondi
+    Astra, Argon  long  : 3,500 ; x12 = 42,000 ; x106 = 371,000 | imprimé 3,50 ; 42 ; 371 | égal à l'arrondi
+    lecteur témoin, 106 greffons : 6,466 à 10,600 | imprimé 6,5 à 10,6 | égal à l'arrondi
+    lecteur témoin, 12 témoins : 0,732 à 1,200
+    bilan du bloc [A] : toutes les valeurs imprimées par la v1 sont égales à l'arrondi
+
+[B] Tables de coût de Carbon (c3132009…, l. 9 à 28) et d'Astra (e679f728…, table), refaites
+    scénario commun aux deux : 5 000 ou 200 000 jetons par implémentation, 80 % en entrée, 20 % en sortie,
+    pour 100 implémentations ; Carbon ajoute « jusqu'à + 65 % »
+    Sonnet 5.5    : 1,80 à 72,00 ; + 65 % : 118,80 | Astra imprime 1,80 à 72 : égal | Carbon imprime environ 2 à 75, jusqu'à 120
+    Opus 5.5      : 3,60 à 144,00 ; + 65 % : 237,60 | Astra imprime 3,60 à 144 : égal | Carbon imprime environ 4 à 150, jusqu'à 240
+    Carbon        : 3,60 à 144,00 ; + 65 % : 237,60 | Astra imprime 3,60 à 144 : égal | Carbon imprime environ 4 à 150, jusqu'à 240
+    Fable 5.2     : 7,20 à 288,00 ; + 65 % : 475,20 | Astra imprime 7,20 à 288 : égal | Carbon imprime environ 7 à 290, jusqu'à 480
+    Astra, Argon  : 9,00 à 360,00 ; + 65 % : 594,00 | Astra imprime 9 à 360 : égal | Carbon imprime environ 9 à 360, jusqu'à 600
+    bilan du bloc [B] : la table d'Astra est exacte sous ses hypothèses ; celle de Carbon est la même, arrondie par lui
+
+[C] Bornes de l'erratum 1 (0198f5f8…, § 2, point (a)) : de 0,14 à 4,10 USD par greffon, lecteur témoin compris
+    0,081 + 0,061 = 0,142 ; 4 + 0,10 = 4,10 ; rapport = 28,9
+    douze témoins : 1,68 à 49,20 USD d'appels, machine en plus
+    cent six greffons : 14,84 à 434,60 USD d'appels, machine en plus
+
+[D] Borne binomiale exacte : zéro faute sur n essais indépendants, borne haute unilatérale à 95 % du taux de faute
+    p_haut(n) = 1 - 0,05^(1/n) : le plus grand taux p tel que (1 - p)^n >= 0,05
+    n =  12 : p_haut = 0,2209
+    n =  24 : p_haut = 0,1173
+    n =  29 : p_haut = 0,0981
+    n =  59 : p_haut = 0,0495
+    n =  94 : p_haut = 0,0314
+    plus petit n sans faute qui borne le taux à 0,20 : n = 14
+    plus petit n sans faute qui borne le taux à 0,10 : n = 29
+    plus petit n sans faute qui borne le taux à 0,05 : n = 59
+    taux vrai 0,05 : probabilité de ne voir aucune faute sur 12 = 0,5404
+    taux vrai 0,10 : probabilité de ne voir aucune faute sur 12 = 0,2824
+    taux vrai 0,20 : probabilité de ne voir aucune faute sur 12 = 0,0687
+    94 cartes au taux borné par douze témoins sans faute : jusqu'à 20,8 greffons infidèles
+    contrôle : ln(0,05) / ln(0,90) = 28,43 ; ln(0,05) / ln(0,95) = 58,40
+
+[E] Garde 9 : lignes 692 à 695 de tour_ferme_v64.py (35a8294e…), exécutées telles quelles
+    sain : expérimentateur « claude », lecteur « google » : passe | attendu : passe | conforme
+    sain : expérimentateur « openai », lecteur « google » : passe | attendu : passe | conforme
+    artefact : même famille « google » : refus | attendu : refus | conforme
+    artefact : même famille « claude » : refus | attendu : refus | conforme
+    artefact : famille de l'expérimentateur vide : refus | attendu : refus | conforme
+    artefact : famille du lecteur vide (course sans lecteur déclaré) : refus | attendu : refus | conforme
+    limite : même étiquette, familles déclarées différentes : passe | attendu : passe | conforme
+    bilan du bloc [E] : 7 cas conformes sur 7 ; le dernier montre que la garde compare les familles déclarées, non les identifiants
+
+[F] Divisions de contrôle
+    relevé du relais Argon à la course v67 (registre des dépenses, l. 430) : 0,85618 / 14 = 0,0612 USD par test
+    sortie du lot d'Astra : code 200, modèle servi « gpt-6.2-astra », fin « stop », refus : None, erreur : None
+    jetons : entrée 1301, sortie 5059 dont réflexion 3687, texte 1372 ; réponse de 5294 signes et 864 mots
+    énoncé neutre (cf566995…) : 5058 signes ; rapportés aux 1301 jetons d'entrée du lot : 3,89 signes par jeton
+    lecture : l'entrée du lot a la taille de l'énoncé seul ; ce n'est pas une preuve que l'énoncé servi est celui-là
+
