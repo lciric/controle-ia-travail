@@ -1,0 +1,190 @@
+Rejeu des calculs du devis v2 du pilote « oracles plantés » — calculs v2
+Montants en USD. Tolérance d'arrondi : 0,005 (au centime). Profils de jetons SUPPOSÉS (repris du v1).
+
+Bloc 0 — prix relevés (entrée / sortie, par million)
+   opus55              4.00 / 20.00
+   argon_nov           2.00 / 10.00
+   argon_dec           4.00 / 20.00
+   kimi                2.00 / 10.00
+   astra               8.00 / 40.00
+   astra_v1_suppose   10.00 / 50.00
+   machine observée 0.28 USD/h ; borne haute 1.30 USD/h (repris du v1)
+
+Bloc 1 — effectifs
+   propositions Opus 12 × (12 + 24)                                       devis   432.0000  script   432.0000  écart +0.0000
+   propositions Argon 12 × 12                                             devis   144.0000  script   144.0000  écart +0.0000
+   témoins servis par bras (2 + 2 par monde × 12)                         devis    48.0000  script    48.0000  écart +0.0000
+   items par bras S et N (150 + 48 + 10)                                  devis   208.0000  script   208.0000  écart +0.0000
+   items ajoutés au v1 (48 + 10)                                          devis    58.0000  script    58.0000  écart +0.0000
+   témoins triviaux servis par bras (garde A4)                            devis    24.0000  script    24.0000  écart +0.0000
+   témoins grossiers servis par bras (garde A4)                           devis    24.0000  script    24.0000  écart +0.0000
+   NB : les 10 redoublés sont des énoncés déjà comptés dans les 150, servis une seconde fois ;
+        seuls les 48 témoins sont des énoncés absents de la sous-banque v1 (les 58 sont des appels neufs).
+
+Bloc 2 — coûts unitaires
+   proposition Opus [bas]                                                 devis     0.0420  script     0.0420  écart +0.0000
+   proposition Opus [attendu]                                             devis     0.1000  script     0.1000  écart +0.0000
+   proposition Opus [pire]                                                devis     0.3200  script     0.3200  écart +0.0000
+   proposition Argon 2/10 [bas]                                           devis     0.0210  script     0.0210  écart +0.0000
+   proposition Argon 2/10 [attendu]                                       devis     0.0500  script     0.0500  écart +0.0000
+   proposition Argon 2/10 [pire]                                          devis     0.1600  script     0.1600  écart +0.0000
+   proposition Argon 4/20 [bas]                                           devis     0.0420  script     0.0420  écart +0.0000
+   proposition Argon 4/20 [attendu]                                       devis     0.1000  script     0.1000  écart +0.0000
+   proposition Argon 4/20 [pire]                                          devis     0.3200  script     0.3200  écart +0.0000
+   item S (agent Opus + relecteur Kimi) [bas]                             devis     0.1560  script     0.1560  écart +0.0000
+   item S (agent Opus + relecteur Kimi) [attendu]                         devis     0.3080  script     0.3080  écart +0.0000
+   item S (agent Opus + relecteur Kimi) [pire]                            devis     1.2720  script     1.2720  écart +0.0000
+   item N (Opus sans outil) [bas]                                         devis     0.0520  script     0.0520  écart +0.0000
+   item N (Opus sans outil) [attendu]                                     devis     0.1360  script     0.1360  écart +0.0000
+   item N (Opus sans outil) [pire]                                        devis     0.4960  script     0.4960  écart +0.0000
+   reformulation Kimi [bas]                                               devis     0.0280  script     0.0280  écart +0.0000
+   reformulation Kimi [attendu]                                           devis     0.0420  script     0.0420  écart +0.0000
+   reformulation Kimi [pire]                                              devis     0.0960  script     0.0960  écart +0.0000
+   jugement Astra 8/40 [bas]                                              devis     0.1280  script     0.1280  écart +0.0000
+   jugement Astra 8/40 [attendu]                                          devis     0.2240  script     0.2240  écart +0.0000
+   jugement Astra 8/40 [pire]                                             devis     0.5760  script     0.5760  écart +0.0000
+   détail item S [bas] : agent 0.1400 (borné 0.1400, plafond 1.50 non atteint), relecteur 0.0160
+   détail item S [attendu] : agent 0.2800 (borné 0.2800, plafond 1.50 non atteint), relecteur 0.0280
+   détail item S [pire] : agent 1.2000 (borné 1.2000, plafond 1.50 non atteint), relecteur 0.0720
+   contrôles des reprises écrites au devis :
+   sortie v1 bras S 23.4 / 150 [bas]                                      devis     0.1560  script     0.1560  écart +0.0000
+   sortie v1 bras S 46.2 / 150 [attendu]                                  devis     0.3080  script     0.3080  écart +0.0000
+   sortie v1 bras S 190.8 / 150 [pire]                                    devis     1.2720  script     1.2720  écart +0.0000
+   sortie v1 bras N 7.8 / 150 [bas]                                       devis     0.0520  script     0.0520  écart +0.0000
+   sortie v1 bras N 20.4 / 150 [attendu]                                  devis     0.1360  script     0.1360  écart -0.0000
+   sortie v1 bras N 74.4 / 150 [pire]                                     devis     0.4960  script     0.4960  écart +0.0000
+   jugement Astra v1 10/50 × 0,8 [attendu]                                devis     0.2240  script     0.2240  écart +0.0000
+   jugement Astra v1 10/50 × 0,8 [pire]                                   devis     0.5760  script     0.5760  écart +0.0000
+   jugement Kimi [bas] (bas v1, cité 0,032)                               devis     0.0320  script     0.0320  écart +0.0000
+   rapport jugement Astra / Kimi [bas] (« quatre fois »)                  devis     4.0000  script     4.0000  écart +0.0000
+
+Bloc 3 — appels de fumée (montant forfaitaire SUPPOSÉ 0,10)
+   un appel opus55 à 1 000 / 1 000 jetons : 0.0240
+   un appel argon_nov à 1 000 / 1 000 jetons : 0.0120
+   un appel argon_dec à 1 000 / 1 000 jetons : 0.0240
+   un appel kimi à 1 000 / 1 000 jetons : 0.0120
+   un appel astra à 1 000 / 1 000 jetons : 0.0480
+   fumée : un appel par modèle, Argon 2/10 (borne haute)                  devis     0.1000  script     0.0960  écart -0.0040
+   fumée : un appel par modèle, Argon 4/20 (borne haute)                  devis     0.1000  script     0.1080  écart +0.0080   <<< ÉCART
+   fumée : 2 Astra + 2 Kimi (lecture du § 7, point 2) (borne haute)       devis     0.1000  script     0.1200  écart +0.0200   <<< ÉCART
+   fumée : 4 Astra (borne haute la plus large)                            devis     0.1000  script     0.1920  écart +0.0920   <<< ÉCART
+   le devis garde 0,10 dans les totaux ; le script fait de même ci-dessous (valeur SUPPOSÉE, non bornante).
+
+Bloc 4 — postes et totaux
+   P1 [bas]                                                               devis     8.8000  script     8.8000  écart +0.0000
+   P1 [attendu]                                                           devis    15.1200  script    15.1200  écart +0.0000
+   P1 [pire]                                                              devis    38.4000  script    38.4000  écart -0.0000
+   P2_nov [bas]                                                           devis    21.1700  script    21.1680  écart -0.0020
+   P2_nov [attendu]                                                       devis    50.4000  script    50.4000  écart +0.0000
+   P2_nov [pire]                                                          devis   161.2800  script   161.2800  écart +0.0000
+   P2_dec [bas]                                                           devis    24.1900  script    24.1920  écart +0.0020
+   P2_dec [attendu]                                                       devis    57.6000  script    57.6000  écart +0.0000
+   P2_dec [pire]                                                          devis   184.3200  script   184.3200  écart +0.0000
+   P3_S [bas]                                                             devis    32.4500  script    32.4480  écart -0.0020
+   P3_S [attendu]                                                         devis    64.0600  script    64.0640  écart +0.0040
+   P3_S [pire]                                                            devis   264.5800  script   264.5760  écart -0.0040
+   P3_N [bas]                                                             devis    10.8200  script    10.8160  écart -0.0040
+   P3_N [attendu]                                                         devis    28.2900  script    28.2880  écart -0.0020
+   P3_N [pire]                                                            devis   103.1700  script   103.1680  écart -0.0020
+   fumee [bas]                                                            devis     0.1000  script     0.1000  écart +0.0000
+   fumee [attendu]                                                        devis     0.1000  script     0.1000  écart +0.0000
+   fumee [pire]                                                           devis     0.1000  script     0.1000  écart +0.0000
+   total_nov [bas]                                                        devis    73.3300  script    73.3320  écart +0.0020
+   total_nov [attendu]                                                    devis   157.9700  script   157.9720  écart +0.0020
+   total_nov [pire]                                                       devis   567.5200  script   567.5240  écart +0.0040
+   total_dec [bas]                                                        devis    76.3600  script    76.3560  écart -0.0040
+   total_dec [attendu]                                                    devis   165.1700  script   165.1720  écart +0.0020
+   total_dec [pire]                                                       devis   590.5600  script   590.5640  écart +0.0040
+   P4 [bas]                                                               devis     3.3600  script     3.3600  écart +0.0000
+   P4 [attendu]                                                           devis     6.7200  script     6.7200  écart +0.0000
+   P4 [pire]                                                              devis    62.4000  script    62.4000  écart +0.0000
+   total appels + machine (non écrit au devis v2) :
+   appels (30 nov.) + machine [bas]                                       devis    —     script    76.6920
+   appels (1er déc.) + machine [bas]                                      devis    —     script    79.7160
+   appels (30 nov.) + machine [attendu]                                   devis    —     script   164.6920
+   appels (1er déc.) + machine [attendu]                                  devis    —     script   171.8920
+   appels (30 nov.) + machine [pire]                                      devis    —     script   629.9240
+   appels (1er déc.) + machine [pire]                                     devis    —     script   652.9640
+   course à cheval sur le 1er décembre : tout total est entre la colonne « 30 nov. » et « 1er déc. »
+   (seul le poste Argon change ; écart maximal = 144 × (Argon 4/20 − Argon 2/10)) :
+   écart d'un jour de prix à l'autre [bas]                                devis    —     script     3.0240
+   écart d'un jour de prix à l'autre [attendu]                            devis    —     script     7.2000
+   écart d'un jour de prix à l'autre [pire]                               devis    —     script    23.0400
+
+Bloc 5 — repli R1 (attendu) et lignes absentes du devis
+   jugement Kimi attendu (unitaire)                                       devis     0.0560  script     0.0560  écart +0.0000
+   60 jugements Kimi                                                      devis     3.3600  script     3.3600  écart +0.0000
+   60 jugements Astra                                                     devis    13.4400  script    13.4400  écart +0.0000
+   différence juge Kimi − juge Astra                                      devis   -10.0800  script   -10.0800  écart +0.0000
+   reformulation Argon 4/20 (unitaire)                                    devis     0.0840  script     0.0840  écart +0.0000
+   40 reformulations Argon 4/20                                           devis     3.3600  script     3.3600  écart +0.0000
+   40 reformulations Kimi                                                 devis     1.6800  script     1.6800  écart +0.0000
+   surcoût reformulateur Argon 4/20                                       devis     1.6800  script     1.6800  écart +0.0000
+   surcoût reformulateur Argon 2/10 (§ 5 écrit +0,84)                     devis     0.8400  script     0.0000  écart -0.8400   <<< ÉCART
+   repli « Kimi échoue », surcoût attendu, Argon 2/10 (absent du devis)   devis    —     script     0.0000
+   repli « Kimi échoue », surcoût attendu, Argon 4/20 (absent du devis)   devis    —     script     7.5040
+   repli « les deux échouent », total attendu, Argon 2/10 (absent du devis) devis    —     script   142.8520
+   repli « les deux échouent », total attendu, Argon 4/20 (absent du devis) devis    —     script   155.8760
+
+Bloc 6 — sensibilité (total des appels, attendu)
+   Argon 2/10, juge Astra                                                 devis   157.9700  script   157.9720  écart +0.0020
+   Argon 2/10, juge Kimi (repli R1, reformulateur Argon)                  devis   147.8900  script   147.8920  écart +0.0020
+   Argon 4/20, juge Astra                                                 devis   165.1700  script   165.1720  écart +0.0020
+   Argon 4/20, juge Kimi (repli R1, reformulateur Argon)                  devis   156.7700  script   156.7720  écart +0.0020
+   Argon 2/10, juge Kimi, si l'on ajoutait le +0,84 du texte              devis   147.8900  script   148.7320  écart +0.8420   <<< ÉCART
+   postes dominants à l'attendu (Argon 4/20) : P3_S 64.06, P2_dec 57.60, P3_N 28.29, P1 15.12
+   postes dominants au pire (Argon 4/20)    : P3_S 264.58, P2_dec 184.32, P3_N 103.17, P1 38.40
+
+Bloc 7 — lignes conditionnelles, réserve, plafonds (Argon 4/20)
+   propositions par monde (48)                                            devis    48.0000  script    48.0000  écart +0.0000
+   item S + item N attendu (0,444)                                        devis     0.4440  script     0.4440  écart +0.0000
+   banque de connus refaite une fois                                      devis    15.1200  script    15.1200  écart +0.0000
+   un monde régénéré et rejoué                                            devis    12.5000  script    12.4960  écart -0.0040
+   un monde régénéré, logique du script v1 (postes / 12)                  devis    12.5000  script    12.4960  écart -0.0040
+   attendu avec lignes conditionnelles                                    devis   192.7900  script   192.7880  écart -0.0020
+   attendu avec lignes conditionnelles, Argon 2/10 (non écrit)            devis    —     script   184.9880
+   réserve des appels en vol (3 × 1,50 + 2 × 0,32 + 0,576)                devis     5.7200  script     5.7160  écart -0.0040
+   réserve, logique du script v1 (relecteur Kimi au pire compté)          devis     5.7200  script     5.9320  écart +0.2120   <<< ÉCART
+   attendu avec conditionnelles × 1,5 + réserve (non arrondi)             devis   294.9100  script   294.8980  écart -0.0120   <<< ÉCART
+   même calcul sur les valeurs arrondies du devis (192,79 × 1,5 + 5,72)   devis   294.9100  script   294.9050  écart -0.0050
+   plafond d'appels (dizaine supérieure)                                  devis   300.0000  script   300.0000  écart +0.0000
+   plafond d'appels, réserve logique v1                                   devis   300.0000  script   300.0000  écart +0.0000
+   machine 48 h × 1,30 (non arrondi)                                      devis    65.0000  script    62.4000  écart -2.6000   <<< ÉCART
+   plafond machine (arrondi aux 5 supérieurs, règle du script v1, non écrite au v2) devis    65.0000  script    65.0000  écart +0.0000
+   somme des plafonds                                                     devis   365.0000  script   365.0000  écart +0.0000
+   pire des appels (1er déc.) 590.56 > plafond 300 : la coupure A6 joue avant le pire cas (vrai)
+   pire des appels (30 nov.)  567.52 > plafond 300 : (vrai)
+   marge du plafond sur l'attendu avec conditionnelles : 107.21 ; sur l'attendu simple (1er déc.) : 134.83
+
+Bloc 8 — intervalle de P7 (brouillon 2 : total des appels dans [110 ; 250])
+   bas 30 nov.                         73.33  HORS de [110 ; 250]
+   bas 1er déc.                        76.36  HORS de [110 ; 250]
+   attendu 30 nov.                    157.97  dans [110 ; 250]
+   attendu 1er déc.                   165.17  dans [110 ; 250]
+   attendu juge Kimi 2/10             147.89  dans [110 ; 250]
+   attendu juge Kimi 4/20             156.77  dans [110 ; 250]
+   attendu avec conditionnelles       192.79  dans [110 ; 250]
+   pire 30 nov.                       567.52  HORS de [110 ; 250]
+   pire 1er déc.                      590.56  HORS de [110 ; 250]
+   plafond d'appels                   300.00  HORS de [110 ; 250]
+   bornes de P7 rapportées aux attendus : 110 / 157.97 = 0.696 ; 250 / 165.17 = 1.514
+   brouillon 1 (P7 [120 ; 260] autour de 164,28) : 120 / 164,28 = 0.730 ; 260 / 164,28 = 1.583
+   mêmes rapports transposés au v2 : [115.39 ; 261.41]
+   aucune formule des bornes 110 et 250 n'est écrite au devis v2 ni au brouillon 2 (chiffre sans source).
+
+Bloc 9 — contrôles d'effectifs du brouillon 2 (P9 et garde A4), sans donnée
+   énoncés de forme seuil par monde                                       devis    10.0000  script    10.0000  écart +0.0000
+   faux parmi eux                                                         devis     6.0000  script     6.0000  écart +0.0000
+   P9 : rappel « forme seule » sur les pièges                             devis     1.0000  script     1.0000  écart +0.0000
+   P9 : rappel « forme seule » sur les faux tôt                           devis     0.5000  script     0.5000  écart +0.0000
+   P9 : fausses morts « forme seule » sur les vérités                     devis     0.5000  script     0.5000  écart +0.0000
+
+Bilan : 8 écart(s) supérieur(s) à la tolérance
+   fumée : un appel par modèle, Argon 4/20 (borne haute) : devis 0.1 ; script 0.1080
+   fumée : 2 Astra + 2 Kimi (lecture du § 7, point 2) (borne haute) : devis 0.1 ; script 0.1200
+   fumée : 4 Astra (borne haute la plus large) : devis 0.1 ; script 0.1920
+   surcoût reformulateur Argon 2/10 (§ 5 écrit +0,84) : devis 0.84 ; script 0.0000
+   Argon 2/10, juge Kimi, si l'on ajoutait le +0,84 du texte : devis 147.89 ; script 148.7320
+   réserve, logique du script v1 (relecteur Kimi au pire compté) : devis 5.72 ; script 5.9320
+   attendu avec conditionnelles × 1,5 + réserve (non arrondi) : devis 294.91 ; script 294.8980
+   machine 48 h × 1,30 (non arrondi) : devis 65 ; script 62.4000
