@@ -195,16 +195,16 @@ creation)
     python3 -I -B -c "$SESSION8" go "$REG" "$D/config.json" "$GO_ID_ENV" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }   # T08
     JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (ni CONTROLE_IA_GITHUB_TOKEN ni CONTROLE_IA_GITHUB_TOKEN_2, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
     command -v "$VAST" >/dev/null || { echo "outil de location introuvable : offre non relue, pas de création"; exit 2; }
-    DISQUE=$(cle_config "$D/vue-offre.json" offre.disque_min_go)   # T08 : vue de l'offre || { echo "disque illisible"; exit 2; }
+    DISQUE=$(cle_config "$D/vue-offre.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }   # T08 : vue de l'offre
     [[ "$DISQUE" =~ ^[0-9]+([.][0-9]+)?$ ]] && [ "${DISQUE%%.*}" -gt 0 ] || { echo "offre.disque_min_go illisible ($DISQUE) : pas de création"; exit 2; }
     # C-V5-1 : au plus trois essais (une machine refusée est exclue du suivant) ; offre choisie DANS LA LISTE FILTRÉE, prix lus dans la liste,
     # au disque demandé (--storage, C-V3-3) ; aucune relecture par identifiant
     ESSAIS=$(grep -c '^essai_creation ' "$D/lancement.txt" || true)
     [ "${ESSAIS:-0}" -lt 3 ] || { echo "trois essais de création déjà faits (essai_creation = $ESSAIS) : arrêt, aucune création ; message à la mère"; exit 3; }
     EXCL=$(sed -n 's/^machine_refusee //p' "$D/lancement.txt" | paste -sd, -)
-    FILTRE=$(python3 -I -B -c "$SESSION7" filtre "$D/vue-offre.json" "$CARTE")   # T08 : vue de l'offre || { echo "filtre illisible : $FILTRE"; exit 2; }
+    FILTRE=$(python3 -I -B -c "$SESSION7" filtre "$D/vue-offre.json" "$CARTE") || { echo "filtre illisible : $FILTRE"; exit 2; }   # T08 : vue de l'offre
     timeout -k 5 120 "$VAST" search offers "$FILTRE" -o dph_total --storage "$DISQUE" --raw > "$D/offres.json" 2>"$D/offres.err" || { echo "recherche filtrée impossible (--storage $DISQUE) : pas de création"; exit 2; }
-    OF=$(python3 -I -B -c "$SESSION7" choisir "$D/offres.json" "$D/vue-offre.json" "$CARTE" "$EXCL")   # T08 : vue de l'offre || { echo "aucune offre conforme dans la liste filtrée : $OF : nœud, pas de création"; exit 3; }
+    OF=$(python3 -I -B -c "$SESSION7" choisir "$D/offres.json" "$D/vue-offre.json" "$CARTE" "$EXCL") || { echo "aucune offre conforme dans la liste filtrée : $OF : nœud, pas de création"; exit 3; }   # T08 : vue de l'offre
     OFFRE=$(printf '%s\n' "$OF" | sed -n 's/^id=\([0-9]*\) .*/\1/p'); MACH=$(printf '%s\n' "$OF" | sed -n 's/.* machine=\([^ ]*\) .*/\1/p'); RANG=$(printf '%s\n' "$OF" | sed -n 's/.* rang=\([0-9]*\) .*/\1/p')
     [[ "$OFFRE" =~ ^[0-9]+$ ]] && [ -n "$MACH" ] && [ -n "$RANG" ] || { echo "offre choisie illisible ($OF)"; exit 2; }
     PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
