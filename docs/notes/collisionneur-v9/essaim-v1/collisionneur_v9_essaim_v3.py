@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Collisionneur v9, mode « essaim » (v2) : société de modèles sous pseudonymes, à budget apparié par modèle.
+"""Collisionneur v9, mode « essaim » (v3) : société de modèles sous pseudonymes, à budget apparié par modèle.
+
+v3 (même développeur, 22 novembre 2026) : copie de la v2 (0e9eecaa…, inchangée, R12), corrigée selon la vérification du
+même contre-lecteur : B1 MOTIF_PROPOSITION sensible à la casse de la lettre ; B2 --faits différent de --question refusé
+(les textes de Fable ne portent pas les faits) ; limites du brouillon et de la finale égales à celles des tours III.1 et
+III.3 de la v8d ; enveloppe : même composition dans tous les dossiers ; chevrons normalisés (NFKC) refusés ; simulation :
+salons des autres non comptés au cycle 1 en ordre simultané, dossiers lus listés avec l'empreinte de leur journal.
+Recommandations de la réponse 13 de Fable accordées par Lazar (GO-2026-11-22-24).
 
 Pièce d'instrument (classe B), Opus 5.5, 22 novembre 2026. Copie revue de la v1 (collisionneur_v9_essaim_v1.py, c2db738c…,
 inchangée, R12), qui porte :
@@ -35,11 +42,12 @@ import json
 import math
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import numpy as np
 
-VERSION = "collisionneur-v9-essaim-v2"
+VERSION = "collisionneur-v9-essaim-v3"
 ICI = Path(__file__).resolve().parent
 SCRIPT_V8D = ICI.parent / "collisionneur_v9_v8d.py"
 SHA_V8D = "b780383874598f12b24c79e4087d335c8e01cda685e295f5116898fa3b1715ac"
@@ -61,7 +69,14 @@ SALLES_ALIAS = {"anteriorite": "antériorité", "experience": "expérience", "de
 MOTIF_NOMS_MODELES = re.compile(r"(?i)(?<![^\W_])(?:fable|opus|argon|astra|carbon|neon|kimi|claude|gemini|gpt|chatgpt|"
                                 r"anthropic|openai|google|deepmind)(?![^\W_])")
 MOTIF_LETTRE = re.compile(r"(?<![\w-])[A-E](?![\w-])")  # v2 (R5)
-MOTIF_PROPOSITION = re.compile(r"(?i)\bproposition\s+[A-E]\b")  # lettre de la v8d reprise par un agent depuis son brouillon
+# v3 (B1) : seul le mot est insensible à la casse ; la lettre doit être une capitale de A à E, seule.
+MOTIF_PROPOSITION = re.compile(r"\b(?i:proposition)\s+[A-E](?!\w)")  # lettre de la v8d reprise depuis le brouillon
+
+
+def porte_balise(texte):
+    """v3 : « <<< » ou « >>> », y compris sous une forme qui s'y ramène par NFKC (chevrons pleine chasse…)."""
+    t = unicodedata.normalize("NFKC", texte)
+    return "<<<" in t or ">>>" in t
 # v2 (R6, point 8 de Fable) : une note chiffrée explicite seulement ; les verdicts en mots ne sont pas détectés.
 MOTIF_NOTE = re.compile(r"(?i)\b(?:note|score)\s*[:=]\s*\d")
 GENRES = ("SALON", "PREPUBLICATION", "REVUE", "ERRATUM", "OUVRIR")
@@ -204,6 +219,9 @@ def lire_configuration(v, chemin, exiger_references=True):
     for cle in ("brouillon", "cycle", "finale", "salon", "prepublication", "revue", "erratum"):
         if not isinstance(cfg["mots"].get(cle), int) or cfg["mots"][cle] <= 0:
             probl.append(f"mots.{cle} : entier positif")
+    for cle, tour in (("brouillon", "E3-T1"), ("finale", "E3-T3")):  # v3 (c) : mêmes limites que le mode isolé
+        if cfg["mots"].get(cle) != v.TOURS[tour]["mots"]:
+            probl.append(f"mots.{cle} : {cfg['mots'].get(cle)} ≠ {v.TOURS[tour]['mots']} (tour {tour} de la v8d)")
     if not cfg["salles"] or cfg["salle_injection"] not in cfg["salles"]:
         probl.append("salles : liste non vide, salle_injection dedans")
     pool = cfg["pseudonymes"]
@@ -596,7 +614,7 @@ def publier(v, cfg, tirage, dossier, cid, k, lettre, pos, texte):
             motif = f"{mots(corps)} mots > {cfg['mots'][limite]}"
         elif v.motifs_trouves(corps):
             motif = "motif interdit (" + ", ".join(t[0] for t in v.motifs_trouves(corps)) + ")"
-        elif any(b in corps for b in ("<<<", ">>>")):  # v2 (B2)
+        elif porte_balise(corps):  # v2 (B2), v3 : formes NFKC
             motif = "balise de bloc dans le texte"
         elif MOTIF_PROPOSITION.search(corps):
             motif = "lettre de proposition"
@@ -678,7 +696,7 @@ def injecter_erreurs(v, cfg, tirage, dossier, chemin):
     texte = v.normaliser(texte)
     if v.motifs_trouves(texte):
         raise v.Arret(v.CODE_MOTIF, "erreurs plantées : motif interdit dans le fichier ; rien n'est injecté")
-    if "<<<" in texte or ">>>" in texte:  # v2 (B2)
+    if porte_balise(texte):  # v2 (B2), v3 : formes NFKC
         raise v.Arret(v.CODE_USAGE, "erreurs plantées : balise de bloc dans le fichier ; rien n'est injecté")
     titre, reste = titre_et_corps(texte)
     ident = ident_opaque(tirage, "salon", "injection")
@@ -811,6 +829,9 @@ def lancer(v, a, appelants=None):
         v.verser_une_fois(dossier / "configuration.json", a.configuration, "--configuration")
         v.verser_une_fois(dossier / "faits.md", a.faits or a.question, "--faits (défaut : la question, comme le mode isolé)")
         v.verser_une_fois(dossier / "question-etage3.md", a.question, "--question")
+        if v.lire_sceau(dossier / "faits.md")[0] != v.lire_sceau(dossier / "question-etage3.md")[0]:  # v3 (B2)
+            raise v.Arret(v.CODE_USAGE, "--faits différent de --question : les invites des cycles et de la réponse "
+                                        "finale (textes de Fable) ne portent pas les faits ; rien n'est envoyé")
         v.sceller_composition(dossier)
         v.declarer_script(dossier, a.reprise)
         declarer_programme(v, dossier, a.reprise)
@@ -939,6 +960,7 @@ def lire_isole(v, dossier):
         reserves.append("statuts " + ", ".join(pires) + " : comptés au pire, pas au facturé")
     lettres = {v.MODELES[l]["espece"]: l for l in v.LETTRES}
     return {"par_espece": {e: round(c, 4) for e, c in par.items()}, "lettres": lettres,
+            "composition": [v.MODELES[l]["espece"] for l in v.LETTRES],
             "total": round(sum(e.get("cout_usd", 0) for e in e3), 4), "reserves": reserves}
 
 
@@ -955,6 +977,10 @@ def enveloppe(v, a):
               + ", ".join(f"{lu['lettres'].get(e, '?')} {e} {c:.4f}" for e, c in sorted(lu["par_espece"].items()))
               + (" ; RÉSERVES : " + " ; ".join(lu["reserves"]) if lu["reserves"] else ""))
         bloquant |= "dossier incomplet" in lu["reserves"]
+    if any(lu["composition"] != lus[0]["composition"] for lu in lus):  # v3 (d)
+        print(f"ARRÊT : compositions différentes entre dossiers {[lu['composition'] for lu in lus]} ; aucune "
+              f"référence", file=sys.stderr)
+        return v.CODE_USAGE
     especes = sorted(set().union(*(lu["par_espece"] for lu in lus)))
     refs = {e: round(sum(lu["par_espece"].get(e, 0.0) for lu in lus) / len(lus), 4) for e in especes}
     print("| lettre | espèce | référence USD (moyenne des dossiers) |")
@@ -1034,7 +1060,9 @@ def caracteres_prevus(v, cfg, question, car_brouillon, k, phase):
     rel = cfg["relecteurs"]
     if phase == "temps1":
         s += len(CONSIGNE_CYCLE) + len(BALISES)
-        s += (n - 1) * cfg["messages_salon_max"] * (mo["salon"] * f + 300) + (300 + mo["salon"] * f if k == 1 else 0)
+        if k >= 2 or cfg["ordre"] != "simultane":  # v3 (f) : en simultané, rien des autres n'est visible au cycle 1
+            s += (n - 1) * cfg["messages_salon_max"] * (mo["salon"] * f + 300)
+        s += 300 + mo["salon"] * f if k == 1 else 0  # injection
         if k >= 2:
             s += mo["prepublication"] * f                      # sa prépublication
             s += (n - 1) * 450 + (n - 1) * rel * 450           # lignes : prépublications et revues des autres
@@ -1108,6 +1136,9 @@ def simuler(v, a, choisir=False):
     refs = cfg.get("references_usd") or references_simulees(mesures, cfg["especes"])
     source = "configuration" if cfg.get("references_usd") else "simulées (somme des cellules III moyennes)"
     print(f"Simulation sans dépense ({VERSION}) sur {len(dossiers)} dossiers isolés ; références {source}.")
+    print("Dossiers lus (empreinte du journal.jsonl au moment de la lecture) :")  # v3 (a)
+    for d in dossiers:
+        print(f"- {Path(d).name} : {v.empreinte_fichier(Path(d) / 'journal.jsonl')}")
     print("| espèce | essais OK lus | cellule III.1 | III.2 | III.3 | sortie moyenne (jetons) | pensées moyennes "
           "| jetons d'entrée par octet | surcoût des échecs | référence |")
     print("|---|---|---|---|---|---|---|---|---|---|")
@@ -1241,7 +1272,7 @@ def verifier_essaim(v, dossier):
                 probl.append(f"{el['id']} : relecteurs différents du tirage")
         if el["genre"] == "REVUE" and MOTIF_NOTE.search(texte):
             probl.append(f"{el['id']} : revue publiée avec une note chiffrée")
-        if "<<<" in texte or ">>>" in texte:
+        if porte_balise(texte):
             probl.append(f"{el['id']} : balise de bloc dans un texte publié")
     ids = [el["id"] for el in els]
     if len(ids) != len(set(ids)):
