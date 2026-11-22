@@ -1,0 +1,85 @@
+# Rejeu indépendant du programme de validation v2 sur la configuration v3, par le vérificateur (session Fable), le 2026-11-22T14:51:18Z
+# Arbre détaché de main au commit a5badd95c8c8567dd4ec290c054a07d7730381af ; programme 9b4cff87083aea0188f0f441596b175ae64c31bc504749ee1cd74161012436d3 ; configuration 28cf908f412fc2c777613a0971bb451868a469fb47818ee90e952b44997e90e9
+# Python 3.13.18 ; numpy 2.5.3
+## 1. cas sain : python3 -B docs/notes/configuration-calage-g1-v1/valider_configuration_calage_v2.py --configuration prereg/configuration-generation-calage-g1-v3.json
+avis   | requirements-cpu.txt a changé dans l'arbre de travail : relue au commit de lecture
+configuration-generation-calage-g1-v3.json (28cf908f412fc2c777613a0971bb451868a469fb47818ee90e952b44997e90e9)
+69 entrées, 211 sources relues, 33 pièces à leur empreinte ; 7 valeur(s) à remplir hors du fichier : gabarit_de_conversation.empreinte, gabarit_de_conversation.jeton_de_remplissage, gabarit_de_conversation.jetons_d_arret, harnais.commit, modele.fichiers_du_modele, pile_d_inference.python, pile_d_inference.torch_construction
+configuration valide
+code de sortie : 0
+## 2. contrôle de lancement : python3 -B docs/notes/configuration-calage-g1-v1/valider_configuration_calage_v2.py --configuration prereg/configuration-generation-calage-g1-v3.json --lancement
+avis   | requirements-cpu.txt a changé dans l'arbre de travail : relue au commit de lecture
+configuration-generation-calage-g1-v3.json (28cf908f412fc2c777613a0971bb451868a469fb47818ee90e952b44997e90e9)
+69 entrées, 211 sources relues, 33 pièces à leur empreinte ; 7 valeur(s) à remplir hors du fichier : gabarit_de_conversation.empreinte, gabarit_de_conversation.jeton_de_remplissage, gabarit_de_conversation.jetons_d_arret, harnais.commit, modele.fichiers_du_modele, pile_d_inference.python, pile_d_inference.torch_construction
+configuration valide
+code de sortie : 0
+## 3. épreuves : python3 -B docs/notes/configuration-calage-g1-v1/valider_configuration_calage_v2.py --configuration prereg/configuration-generation-calage-g1-v3.json --essai
+réussi | cas sain : la configuration du dépôt | 69 entrées, 211 sources, 33 pièces, 0 défaut(s)
+réussi | artefact : révision tronquée à 39 caractères | modele.revision : révision qui n'est pas un commit complet (40 caractères hexadécimaux)
+réussi | artefact : révision donnée par un nom de branche | modele.revision : révision qui n'est pas un commit complet (40 caractères hexadécimaux)
+réussi | artefact : autre modèle | modele.nom : modèle 'meta-llama/Llama-3.2-3B-Instruct' : meta-llama/Llama-3.1-8B-Instruct attendu (changer de modèle exige un GO)
+réussi | artefact : adaptateur présent | modele.adaptateur : adaptateur 'adaptateur de rang 8' : « aucun » attendu (agent nu)
+réussi | artefact : valeur sans source | echantillonnage.temperature : sans source, alors que la nature n'est pas « choix neuf »
+réussi | artefact : mention « choix, à faire valider » retirée | episode.lot : mention « choix, à faire valider » absente alors que la valeur n'est pas décidée
+réussi | artefact : valeur nulle sans état | episode.lot : valeur nulle sans état : rien ne dit qui la remplit ni quand
+réussi | artefact : valeur de l'opérateur écrite dans le fichier | gabarit_de_conversation.empreinte : la valeur doit rester nulle : elle s'écrit hors de ce fichier, qui ne change plus (R12)
+réussi | artefact : valeur laissée à l'opérateur sans méthode | gabarit_de_conversation.empreinte : valeur laissée à l'opérateur sans méthode de calcul
+réussi | artefact : commit du harnais sans règle | harnais.commit : valeur à remplir au lancement sans règle
+réussi | artefact : état posé sur une valeur qui doit être fixée | echantillonnage.temperature : état A_CALCULER_PAR_L_OPERATEUR inattendu pour cette entrée : une valeur fixée est exigée ici
+réussi | artefact : marqueur « À REMPLIR » dans une valeur | pile_d_inference.appareil : marqueur 'À REMPLIR' : une valeur à remplir se dit par un état, pas par un texte
+réussi | artefact : entrée exigée absente (noyau) | pile_d_inference.noyau_attention : entrée exigée absente
+réussi | artefact : noyau inconnu du harnais | pile_d_inference.noyau_attention : noyau 'flash' hors de ('defaut', 'math')
+réussi | artefact : précision des poids changée | pile_d_inference.precision_des_poids : précision autre que bfloat16 : le harnais refuse la conversion
+réussi | artefact : version de torch hors des dépendances figées | pile_d_inference.versions : torch 2.14.0 : pas de ligne « torch==2.14.0 » dans requirements-cpu.txt
+réussi | artefact : matériel sans règle d'égalité des deux postes | pile_d_inference.materiel : règle d'égalité des deux postes ou domaine revalidé absents
+réussi | artefact : température donnée en texte | echantillonnage.temperature : température '1.0' : un nombre strictement positif attendu
+réussi | artefact : troncature de l'échantillonnage | echantillonnage.troncature : troncature autre que « aucune » : le harnais tire dans la loi entière
+réussi | artefact : cent pas par épisode | episode.nombre_de_pas : 100 actions par épisode : plafond du banc fermé de 64 dépassé
+réussi | artefact : deux mille jetons par action | echantillonnage.jetons_par_action_max : 2000 jetons par action : plafond du banc fermé de 1024 dépassé
+réussi | artefact : plafond de jetons par épisode du banc dépassé | echantillonnage.jetons_par_action_max : 4000 jetons par épisode : plafond du banc fermé de 3999 dépassé
+réussi | artefact : outil exposé | outils.outils_exposes : outil exposé ['lire_piece'] : l'environnement (a) n'a pas d'appel d'outil, la liste doit être vide
+réussi | artefact : champ d'action hors du code de l'environnement | environnement.forme_de_l_action : champs, champs exigés ou taille de l'ensemble différents de ceux du code de l'environnement (a)
+réussi | artefact : consigne d'une autre empreinte | environnement.consigne_privee : empreinte de la consigne honnête différente de celle du code, au nombre de pas de la configuration
+réussi | artefact : texte attendu sans la date du gabarit | gabarit_de_conversation.texte_attendu_dans_l_ouverture : le texte attendu ne porte pas la date figée du gabarit
+réussi | artefact : extrait absent de la ligne citée | echantillonnage.temperature : source prereg/P3-premier-test-config-v1.json:49 : l'extrait '"temperature": 0.7' n'est pas dans les lignes citées
+réussi | artefact : ligne citée décalée d'un rang | echantillonnage.temperature : source prereg/P3-premier-test-config-v1.json:50 : l'extrait '"temperature": 1.0' n'est pas dans les lignes citées
+réussi | artefact : pièce citée d'une autre empreinte | pieces_citees.docs/programme-controle-ia-v2.md : pièce introuvable à l'empreinte citée (ni dans l'arbre de travail ni au commit cité ; si l'objet git 
+réussi | artefact : pièce citée absente de la table des pièces | pieces_citees.requirements-cpu.txt : pièce citée par une source mais absente de « pieces_citees », ou sans nature
+réussi | artefact : pièce sans empreinte qui n'est pas un document vivant | pieces_citees.requirements-cpu.txt : empreinte absente pour une pièce qui n'est pas dite vivante, ou pièce dite vivante qui porte une empreinte
+réussi | artefact : vecteur d'essai des graines altéré | graines.vecteurs_d_essai[0] : vecteur d'essai des graines non reproduit par numpy.random.SeedSequence
+réussi | artefact : quantile incohérent avec la statistique | garde_d_equivalence.quantile : quantile 0.9 incohérent avec la statistique q99
+réussi | artefact : couche hors du modèle | enregistrement.couches : couche hors de [0 ; 32[, en double ou hors d'ordre : [7, 15, 40]
+réussi | artefact : fichier du harnais d'une autre empreinte | harnais.fichiers : src/controle_ia/harnais/modeles.py : fichier du harnais introuvable à l'empreinte citée
+réussi | artefact : programme de l'opérateur d'une autre empreinte | gabarit_de_conversation.empreinte : programme de l'opérateur d'une autre empreinte que celle de la configuration
+réussi | artefact : valeur changée, extrait inchangé : révision 1111… | modele.revision : valeur '1111111111111111111111111111111111111111' pas à sa source : la clé « revision » de prereg/P3-premier-test-config-v1.json:8 v
+réussi | artefact : révision différente de celle de T0.7, l. 1057 | modele.revision : révision '1111111111111111111111111111111111111111' différente de celle de T0.7, l. 1057 (['0e9e39f249a16976918f6564b8830bc894c89659
+réussi | artefact : valeur changée, extrait inchangé : température 0,9 | echantillonnage.temperature : valeur 0.9 pas à sa source : la clé « temperature » de prereg/P3-premier-test-config-v1.json:49 vaut 1.0
+réussi | artefact : valeur changée, extrait inchangé : tolérance 0,3 | garde_d_equivalence.tolerance : valeur 0.3 pas à sa source : la clé « tolerance_equivalence » de prereg/P3-premier-test-config-v1.json:50 vaut 0.2
+réussi | artefact : valeur changée, extrait inchangé : couches [7, 15, 24] | enregistrement.couches : valeur [7, 15, 24] pas à sa source : la clé « couches » de prereg/P3-premier-test-config-v1.json:23-27 vaut [7, 15, 23]
+réussi | artefact : valeur changée, extrait inchangé : lot de 4 | episode.lot : valeur 4 pas à sa source : la clé « lot » de prereg/P3-premier-test-config-v1.json:35 vaut 8
+réussi | artefact : valeur changée, extrait inchangé : noyau « math » | pile_d_inference.noyau_attention : valeur 'math' pas à sa source : la clé « noyau_attention » de prereg/P3-premier-test-config-v1.json:44 vaut 'defaut
+réussi | artefact : valeur changée, extrait inchangé : attention « eager » | pile_d_inference.implementation_de_l_attention : valeur 'eager' pas à sa source : aucun extrait de ses sources ne la porte
+réussi | artefact : valeur changée, extrait inchangé : quatre fils | pile_d_inference.fils : valeur 4 pas à sa source : la clé « fils » de prereg/P3-premier-test-config-v1.json:31 vaut 1
+réussi | artefact : valeur changée, extrait inchangé : 300 jetons par action | echantillonnage.jetons_par_action_max : valeur 300 pas à sa source : la clé « max_nouveaux » de prereg/P3-premier-test-config-v1.json:38 vaut 400
+réussi | artefact : valeur changée, extrait inchangé : quantile 0,95 sous la statistique « q99 » | garde_d_equivalence.quantile : valeur 0.95 pas à sa source : la clé « statistique_equivalence » de prereg/P3-premier-test-config-v1.json:48 vaut 'q99'
+réussi | artefact : source JSON sans clé désignée pour l'entrée | echantillonnage.temperature : source JSON prereg/P3-premier-test-config-v1.json:38 : aucune clé désignée pour cette entrée ('temperature') dans les li
+réussi | artefact : type des activations conservées sans règle de conversion | enregistrement.type_conserve : type des activations conservées : règle d'égalité, conversion, type retenu ou précédent de T0.7 non dits (regle, conver
+réussi | artefact : type des activations conservées absent | enregistrement.type_conserve : entrée exigée absente
+réussi | artefact : relevé de référence sans la règle « absent ou non scellé » | releve_de_l_operateur.releve_de_reference : relevé de référence incomplet : poste, quand, nom, unicite, citations, comparaison, absent_ou_non_scelle a
+réussi | artefact : relevé de référence d'un nom hors de la forme | releve_de_l_operateur.releve_de_reference : relevé de référence de nom 'releve.json' hors de la forme attendue
+réussi | cas sain : comparaison qui part du relevé de référence | aucun défaut
+réussi | artefact : comparaison qui ne part pas du relevé de référence | le premier relevé comparé (configuration-generation-calage-g1-v2-releve-operateur-banc-v1.json) n'est pas le relevé de référence (configuration-genera
+réussi | artefact : fichier tronqué | configuration illisible (JSON) : Expecting property name enclosed in double quotes: line 1 column 37
+réussi | cas sain : contrôle de lancement sur l'arbre de travail | 0 défaut(s)
+réussi | artefact : contrôle de lancement, fichier du harnais d'une autre empreinte | src/controle_ia/harnais/modeles.py : le fichier de l'arbre de travail n'est pas celui de la configuration (contrôle de lancement)
+réussi | cas sain : relevé de synthèse complet | 0 défaut(s)
+réussi | artefact : relevé au tokeniseur jouet | mode 'jouet' : un relevé au tokeniseur jouet ne vaut pour aucune mesure
+réussi | artefact : relevé d'une autre configuration | relevé établi pour une autre configuration (empreinte différente)
+réussi | artefact : relevé sans empreinte de la conversation de contrôle | champ « gabarit_de_conversation.conversation_de_controle.ids_sha256 » absent du relevé (entrée gabarit_de_conversation.empreinte)
+réussi | artefact : relevé sans les fichiers de poids | champ « modele.poids_releves » : « vrai » attendu
+réussi | cas sain : deux relevés identiques | 0 écart(s)
+réussi | artefact : deux relevés, conversation de contrôle d'une autre empreinte | gabarit_de_conversation : diffère sur conversation_de_controle
+réussi | artefact : deux relevés, processeur d'une autre capacité | versions.capacite_du_processeur : 'AVX2' contre 'AVX512'
+réussi | artefact : deux relevés, un champ absent d'un côté | versions.jinja2 : absent d'un relevé
+épreuves : toutes réussies
+code de sortie : 0
