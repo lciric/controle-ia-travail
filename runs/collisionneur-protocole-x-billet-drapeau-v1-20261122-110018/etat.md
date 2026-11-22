@@ -17,8 +17,8 @@
 | E3-T3-reponse-C | OK | 1 | gemini-4-argon | 37633 | oui | 0.63 |
 | E3-T3-reponse-D | OK | 1 | gpt-6.2-astra | 17997 | oui | 0.79 |
 | E3-T3-reponse-E | OK | 1 | gemini-4-carbon | 32790 | oui | 0.90 |
-| E3-T3-reponse-F | INTERROMPU | 1 | gemini-4-neon | 16387 | non | 1.65 |
+| E3-T3-reponse-F | OK | 2 | gemini-4-neon | 31986 | oui | 2.41 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 16.20 USD.
-Dépense totale : 16.20 USD. Mis à jour 2026-11-22T12:26:43Z.
+Ligne : 50.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 16.96 USD.
+Dépense totale : 16.96 USD. Mis à jour 2026-11-22T12:33:13Z.
