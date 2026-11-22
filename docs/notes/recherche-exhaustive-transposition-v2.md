@@ -17,12 +17,12 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 ## 2. Objet A — lemme d'additivité
 
 **Travaux trouvés**
-- Tailor, « Audit the Whisper », 2510.04303v2, octobre 2025 : collusion stéganographique entre agents, information mutuelle d'une course à l'autre. Théorème 3 (p. 12) : sur K courses indépendantes, l'erreur de tout test est bornée par la divergence totale K·d (Pinsker et Le Cam). C'est une borne sur la divergence totale, en boîte noire. Elle ne porte pas sur la puissance d'une accumulation de scores et ne dit rien d'une répartition inégale.
-- Ghanem, 2608.02698v1, août 2026 : collusion couverte dans des populations d'agents. La puissance de tout test y est bornée par la divergence totale, sous décomposition additive (p. 5, lecture du niveau 2 déjà au dépôt). C'est une borne supérieure, en boîte noire, et les résultats sont annoncés comme provisoires.
+- Tailor, « Audit the Whisper », 2510.04303v2, octobre 2025 : collusion stéganographique entre agents. Théorème 3 (p. 12) : sur K courses indépendantes, l'erreur de tout test est bornée par la divergence totale K·d. Boîte noire ; rien sur une accumulation de scores ni sur une répartition inégale.
+- Ghanem, 2608.02698v1, août 2026 : puissance de tout test bornée par la divergence totale, sous décomposition additive (p. 5, lecture déjà au dépôt). Borne supérieure, boîte noire, résultats provisoires.
 - Khilar, « The Limits of Query Monitoring against Distributed Model Extraction », 2610.13083v1, 9 octobre 2026 : proposition 3 (p. 5), le délai du meilleur test séquentiel vaut environ ln(1/α)/D ; martingales de test conformes. Objet : extraction par des comptes, non sabotage.
 - Li et al., 2607.13003v1 (p. 1) : pour le filigrane, le total de l'information paie l'attribution, sa répartition la localisation.
 - Wen et al., 2411.17693v1 : « menace distribuée » et crédence mise à jour (p. 1) ; tâches corrélées laissées ouvertes (p. 10) ; aucune invariance.
-- Makins et al., 2607.07368v2, juillet 2026 : quand on répartit l'attaque entre plus d'agents, le maximum du soupçon baisse (effet de fragmentation, p. 1). Ils ne testent pas la somme.
+- Makins et al., 2607.07368v2 (p. 1) : répartie entre plus d'agents, l'attaque abaisse le maximum du soupçon ; la somme n'est pas testée.
 - Griffin et al., « Games for AI Control », 2409.07985v2 (p. 10) : rapproche la surveillance de confiance des jeux d'inspection d'Avenhaus, pas de la balance des matières.
 - Greenblatt, mars 2025 : « total des bits » qui sépare l'agent du bon modèle, informel. Déjà au dépôt : 2601.20022, 2607.11751.
 
@@ -41,7 +41,7 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 - Sous-performance stratégique : aucune loi d'échelle trouvée (résumés de 2512.07810, 2611.14950, 2508.00943).
 
 **Verdict.**
-- Pour la surveillance des modèles de langue en général : **occupé en partie** par 2610.13083. La loi de la racine carrée y est transposée et chiffrée, mais contre des utilisateurs qui extraient le modèle, pas contre un agent qui sabote.
+- Surveillance des modèles de langue en général : **occupé en partie** par 2610.13083, loi transposée et chiffrée contre des utilisateurs qui extraient le modèle, non contre un agent qui sabote.
 - Pour le sabotage d'agents, la sous-performance stratégique et la faible probabilité de détection d'agents : **non trouvé après la recherche décrite**.
 - Pour le régime n/√m avec référence estimée (Ker 2010) : **non trouvé** en contrôle de l'IA. 2610.13083 en montre le symptôme, la rampe qui empoisonne, sans la loi.
 
@@ -50,10 +50,10 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 ## 4. Objet C — théorème négatif et statistiques de dépendance
 
 **Travaux trouvés**
-- Zhang et Gao, 2606.10456v2 : proposition 1 (p. 3), toute statistique de marginale a une puissance égale au taux de fausses alarmes. L'article revendique d'être le premier à traiter ce trou formellement (p. 1). Sur de vraies traces (p. 8), un agent Qwen 7B jugé par un moniteur Llama 3B, l'attaque est fabriquée au niveau des scores, pas jouée par l'agent. Il suppose un attaquant aveugle aux traits. Le cas est temporel, en boîte noire.
+- Zhang et Gao, 2606.10456v2 : proposition 1 (p. 3), toute statistique de marginale a une puissance égale au taux de fausses alarmes ; revendique le premier traitement formel (p. 1). Sur de vraies traces (p. 8, agent Qwen 7B, moniteur Llama 3B), l'attaque est fabriquée sur les scores, non jouée par l'agent. Temporel, boîte noire.
 - Hu et Wang, 2607.11751v1 (déjà au dépôt) : la moitié négative, fragments localement bénins.
-- Khilar, 2610.13083v1 : proposition 1 (p. 5), une campagne qui épouse la loi conjointe est indétectable. Un détecteur de comptes qui « bougent ensemble » rattrape les campagnes rembourrées (p. 1-2). C'est une statistique de co-élévation entre comptes, en boîte noire, sur données réelles.
-- Rose et al., NARCBench et HELIOS, 2604.01151v5 : statistiques de groupe tirées des tests composites (p. 1, 3). L'« alignement d'activations » (p. 17) est une moyenne des cosinus entre agents qui bouge « même quand les scores individuels restent normaux ». C'est une boîte blanche entre agents, empirique, sans théorème.
+- Khilar, 2610.13083v1 : proposition 1 (p. 5), une campagne qui épouse la loi conjointe est indétectable. Un détecteur de comptes qui « bougent ensemble » rattrape les campagnes rembourrées (p. 1-2). Co-élévation entre comptes, boîte noire, données réelles.
+- Rose et al., NARCBench et HELIOS, 2604.01151v5 : statistiques de groupe tirées des tests composites (p. 1, 3). L'« alignement d'activations » (p. 17) est une moyenne des cosinus entre agents qui bouge « même quand les scores individuels restent normaux ». Boîte blanche, empirique, sans théorème.
 - 2607.06807v1 (p. 4) : activations corrélées entre agents compromis par injection. 2611.10620v1 (p. 1) : balayage en ligne sur les scores d'agents.
 - Makins et al., 2607.07368v2 (p. 45) : dépendance positive mesurée du soupçon d'un commit à l'autre chez de vrais agents, traitée comme une nuisance.
 - Autres voisins : 2512.22154v1 (p. 2, scores corrélés) ; 2610.25032v1 (p. 5, la marginale de chaque tour ne suffit pas) ; 2502.14828v2 (p. 1, attaques indétectables point par point) ; 2402.07510, 2510.04303, 2608.02698 (information mutuelle entre courses, boîte noire).
@@ -67,7 +67,7 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 
 ## 5. Ce que le programme peut écrire
 
-- « Après la recherche décrite (section 1), nous n'avons pas trouvé d'énoncé, pour des moniteurs d'agents de langue, de l'invariance de la puissance d'une accumulation de scores à la répartition du sabotage ; des bornes en divergence totale existent en boîte noire (2510.04303, 2608.02698). »
+- « Après la recherche décrite, nous n'avons pas trouvé d'énoncé, pour des moniteurs d'agents de langue, de l'invariance de la puissance d'une accumulation de scores à la répartition du sabotage ; des bornes en divergence totale existent en boîte noire (2510.04303, 2608.02698). »
 - « La loi de la racine carrée a été transposée au suivi des usages des modèles de langue contre l'extraction répartie (2610.13083) ; nous l'étudions contre un agent qui sabote, avec une référence honnête estimée de taille m. »
 - « L'aveuglement des statistiques de marginales est connu en contrôle (2606.10456, 2607.11751, 2610.13083) ; nous l'énonçons sur des scores de sondes et le mesurons sur des attaques jouées par de vrais agents. »
 - Ker 2006-2010, Filler-Ker-Fridrich 2009, Bash et al. 2013, Avenhaus et Jaech 1981, Arias-Castro et al. 2012, cités comme sources des outils.
@@ -77,5 +77,5 @@ Sources lues sur PDF, empreintes à côté : `docs/sources/recherche-exhaustive-
 - « Premier à transposer la stéganographie, ou la loi de la racine carrée, au contrôle de l'IA » : 2610.13083, 2510.04303 et 2606.10456 l'interdisent.
 - « Premier traitement formel des attaques qui préservent la marginale », ou « premières statistiques de dépendance entre agents » : 2606.10456, 2604.01151 et 2610.13083 l'interdisent.
 - « Zone libre » ou « inédit » pour l'un des trois objets.
-- Tout chiffre de ces articles qui n'est pas vérifié à la page citée. Toute affirmation sur la descendance de Ker 2006 et 2007, d'Arias-Castro 2012 et d'Avenhaus : ces arbres de citations n'ont pas été parcourus.
-- Que la comptabilité des matières n'a « jamais » été rapprochée du contrôle : seuls les jeux d'inspection ont été trouvés (2409.07985, p. 10), et la recherche n'a pas épuisé les sources.
+- Un chiffre de ces articles non vérifié à la page ; un mot sur les citants de Ker 2006-2007, d'Arias-Castro 2012 et d'Avenhaus (arbres non parcourus).
+- Que la comptabilité des matières n'a « jamais » été rapprochée du contrôle : seuls les jeux d'inspection l'ont été (2409.07985, p. 10).
