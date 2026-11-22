@@ -295,7 +295,7 @@ def executer_course(config: dict, racine, run_id: str, prereg: str | None = None
         marqueurs = reel["marqueurs"]
         exiger_code_importe_sous(racine)
         exiger_code_au_commit(racine, marqueurs["COMMIT_CODE_T08"])
-        instance = en.exiger_instance_sans_interdits(racine)
+        instance = en.exiger_instance_sans_interdits(racine, marqueurs["RUN_7B"]["run_id"])
         entropie = marqueurs["ENTROPIE_T08"]
     else:
         instance = None

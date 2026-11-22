@@ -28,7 +28,8 @@
 - `ArretPieceHD` : classe d'arrêt propre à la lecture descriptive de la pièce HD (« non lue » ou « non calculable »,
   avec son motif), attrapée par cette seule lecture : aucun arrêt n'est trié par les mots de son message (CLT8C-02).
 - `exiger_instance_sans_interdits` : l'amorce vérifie, avant tout calcul, qu'aucun `lecture-sondes-t06*` ni aucun
-  `resume.json` n'est extrait sur l'instance, ni comme fichier ni comme objet git.
+  `resume.json` **de 7b** (chemin qui porte l'identifiant du run de 7b) n'est extrait sur l'instance, ni comme fichier
+  ni comme objet git (garde resserrée à la lettre du texte, décision de la session mère du 2026-11-22, option (a)).
 """
 from __future__ import annotations
 
@@ -393,21 +394,31 @@ def exiger_ligne(registre: dict, cle: str) -> dict:
 
 # --- amorce de l'instance ------------------------------------------------------------------------------------------
 
-def _nom_interdit_instance(nom: str) -> bool:
-    base = nom.rsplit("/", 1)[-1]
-    return base.startswith("lecture-sondes-t06") or base == "resume.json"
+_RUN_7B = re.compile(r"^[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,62}$")
 
 
-def exiger_instance_sans_interdits(racine) -> dict:
-    """Avant tout calcul sur l'instance : aucun `lecture-sondes-t06*` ni `resume.json` extrait, ni comme fichier, ni
-    comme objet git de la copie clonée. Ne lit le contenu d'aucun fichier."""
+def _nom_interdit_instance(nom: str, run_7b: str) -> bool:
+    """Interdit sur l'instance : tout `lecture-sondes-t06*`, où qu'il soit ; un `resume.json` **de 7b**, c'est-à-dire dont
+    un dossier du chemin est l'identifiant du run de 7b (lettre du texte : « aucun `lecture-sondes-t06*` ni aucun
+    `resume.json` de 7b »). Les `resume.json` d'autres runs (runs jouets, notes) ne sont pas visés."""
+    parties = nom.replace("\\", "/").split("/")
+    base = parties[-1]
+    return base.startswith("lecture-sondes-t06") or (base == "resume.json" and run_7b in parties[:-1])
+
+
+def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
+    """Avant tout calcul sur l'instance : aucun `lecture-sondes-t06*` ni `resume.json` de 7b (`run_7b` : identifiant du
+    run, marqueur `RUN_7B`) extrait, ni comme fichier, ni comme objet git de la copie clonée. Ne lit le contenu d'aucun
+    fichier."""
+    if not isinstance(run_7b, str) or not _RUN_7B.match(run_7b):
+        raise GardeArret(f"identifiant du run de 7b {run_7b!r} d'une autre forme : garde de l'instance non jouable : arrêt")
     racine = Path(racine)
     fichiers = 0
     for dossier, sous, noms in os.walk(racine):
         sous[:] = [s for s in sous if s != ".git"]
         for n in noms:
             fichiers += 1
-            if _nom_interdit_instance(n):
+            if _nom_interdit_instance(str(Path(dossier, n).relative_to(racine)), run_7b):
                 raise GardeArret(f"{Path(dossier, n).relative_to(racine)} présent sur l'instance : arrêt et nœud (DT-4)")
     objets = None
     if (racine / ".git").exists():
@@ -418,6 +429,16 @@ def exiger_instance_sans_interdits(racine) -> dict:
         for l in r.stdout.splitlines():
             parts = l.split(" ", 1)
             objets += 1
-            if len(parts) == 2 and _nom_interdit_instance(parts[1]):
+            if len(parts) == 2 and _nom_interdit_instance(parts[1], run_7b):
                 raise GardeArret(f"objet git {parts[1]} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
+        # `rev-list --objects` ne nomme un blob qu'une fois, par le premier chemin rencontré : un `resume.json` de 7b aux
+        # mêmes octets qu'un autre fichier y serait nommé par l'autre chemin. Tous les chemins de chaque commit (racines
+        # et bords d'un clone peu profond compris) sont donc aussi lus.
+        r = subprocess.run(["git", "-C", str(racine), "log", "--all", "--root", "--no-renames", "-m", "--format=",
+                            "--name-only"], capture_output=True, text=True)
+        if r.returncode != 0:
+            raise GardeArret(f"chemins des commits illisibles : {r.stderr.strip()}")
+        for chemin in set(r.stdout.splitlines()):
+            if chemin and _nom_interdit_instance(chemin, run_7b):
+                raise GardeArret(f"objet git {chemin} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
     return {"fichiers": fichiers, "objets_git": objets, "interdits": 0}

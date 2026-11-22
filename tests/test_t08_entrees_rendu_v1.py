@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -178,27 +179,65 @@ def _git(d, *a):
                         "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin"})
 
 
+RUN_7B_FACTICE = "20261115-120000-t06-7b"
+
+
 def test_amorce_instance_sans_fichier_interdit(tmp_path):
     _fichier(tmp_path, "donnees/7b/mesures-t06.npz")
-    assert en.exiger_instance_sans_interdits(tmp_path)["interdits"] == 0
-    _fichier(tmp_path, "diag/7b/lecture-sondes-t06.json")
+    _fichier(tmp_path, "diag/20261004-104156-harnais-factice/resume.json")         # resume.json d'un autre run : admis
+    _fichier(tmp_path, f"diag/{RUN_7B_FACTICE}-bis/resume.json")                  # préfixe de l'identifiant : admis
+    assert en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)["interdits"] == 0
+    _fichier(tmp_path, f"diag/{RUN_7B_FACTICE}/resume.json")                       # resume.json de 7b : arrêt
+    with pytest.raises(GardeArret, match=f"diag/{RUN_7B_FACTICE}/resume.json présent sur l'instance"):
+        en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)
+    (tmp_path / f"diag/{RUN_7B_FACTICE}/resume.json").unlink()
+    _fichier(tmp_path, "docs/notes/x/lecture-sondes-t06.json")                     # lecture-sondes-t06*, où qu'il soit
     with pytest.raises(GardeArret, match="lecture-sondes-t06"):
-        en.exiger_instance_sans_interdits(tmp_path)
+        en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)
+    for mauvais in (None, "", "7b", "../20261115-120000-t06-7b"):
+        with pytest.raises(GardeArret, match="identifiant du run de 7b"):
+            en.exiger_instance_sans_interdits(tmp_path, mauvais)
 
 
 def test_amorce_instance_objet_git_interdit(tmp_path):
     _git(tmp_path, "init", "-q")
     _fichier(tmp_path, "donnees/7b/mesures-t06.npz")
+    _fichier(tmp_path, "diag/20261004-110921-repetition-jouet/resume.json")
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-q", "-m", "sain")
-    assert en.exiger_instance_sans_interdits(tmp_path)["objets_git"] > 0
-    _fichier(tmp_path, "diag/7b/resume.json")
+    assert en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)["objets_git"] > 0
+    _fichier(tmp_path, f"diag/{RUN_7B_FACTICE}/resume.json")
     _git(tmp_path, "add", "-A")
     _git(tmp_path, "commit", "-q", "-m", "artefact")
-    (tmp_path / "diag/7b/resume.json").unlink()
-    (tmp_path / "diag/7b/resume.json.sha256").unlink()
-    with pytest.raises(GardeArret, match="objet git"):
-        en.exiger_instance_sans_interdits(tmp_path)
+    (tmp_path / f"diag/{RUN_7B_FACTICE}/resume.json").unlink()
+    (tmp_path / f"diag/{RUN_7B_FACTICE}/resume.json.sha256").unlink()
+    # le resume.json de 7b a les mêmes octets (« x ») que deux fichiers déjà suivis : son blob n'est pas nommé par son
+    # chemin dans `rev-list --objects` ; la garde le trouve par les chemins des commits
+    with pytest.raises(GardeArret, match=f"objet git diag/{RUN_7B_FACTICE}/resume.json"):
+        en.exiger_instance_sans_interdits(tmp_path, RUN_7B_FACTICE)
+
+
+def test_amorce_instance_clone_de_l_arbre_aligne(tmp_path):
+    """Décision de la session mère (option (a)) : un clone d'une seule branche, profondeur 1, de l'arbre du dépôt, qui
+    porte des `resume.json` de runs jouets et de notes (aucun de 7b), est accepté ; le même clone plus un commit qui
+    verse le `resume.json` du run de 7b est arrêté."""
+    depot = Path(__file__).resolve().parents[1]
+    clone = tmp_path / "clone"                       # branche courante du dépôt, une seule, profondeur 1
+    _git(tmp_path, "clone", "-q", "--depth", "1", "--single-branch", "--no-checkout", f"file://{depot}", str(clone))
+    etrangers = [l for l in subprocess.run(["git", "-C", str(clone), "ls-tree", "-r", "--name-only", "HEAD"],
+                                           capture_output=True, text=True, check=True).stdout.splitlines()
+                 if l.endswith("/resume.json")]
+    assert etrangers, "l'arbre ne porte plus de resume.json étranger : essai sans objet"
+    r = en.exiger_instance_sans_interdits(clone, RUN_7B_FACTICE)                   # cas sain
+    assert r["interdits"] == 0 and r["objets_git"] > len(etrangers)
+    _fichier(clone, f"diag/{RUN_7B_FACTICE}/resume.json")
+    _git(clone, "add", f"diag/{RUN_7B_FACTICE}")
+    _git(clone, "commit", "-q", "-m", "artefact")
+    for p in (clone / "diag").rglob("*"):
+        if p.is_file():
+            p.unlink()
+    with pytest.raises(GardeArret, match=f"objet git diag/{RUN_7B_FACTICE}/resume.json"):
+        en.exiger_instance_sans_interdits(clone, RUN_7B_FACTICE)
 
 
 # --- marqueurs ------------------------------------------------------------------------------------------------------------
