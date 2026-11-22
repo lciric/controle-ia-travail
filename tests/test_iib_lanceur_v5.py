@@ -434,9 +434,10 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
     assert any("TRACE_CONSIGNATION=1 consigner_partiel" in l for l in da if l[0] == "-")
     dl = changees("lancer_iib_v2.sh", "lancer_iib_v3.sh")
     # correctif 0021 : une ligne de plus, la commande de création (`-e IIB_TIRAGE=$TIRAGE` passé à la machine)
-    assert len([l for l in dl if l[0] == "-"]) == 16 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
+    # correctif 0023 : trois lignes de plus (la garde de dépense reçoit le plafond total ; il est enregistré ; la surveillance le nomme)
+    assert len([l for l in dl if l[0] == "-"]) == 19 and all(any(m in l for m in ("lancer_iib_v", "amorce_instance_iib_v", "iib-explo-v", "session_v",
                                                                                      "taches_", "pieces.", "consigne", "$cle.", "AUCUNE", "INTOUCHABLES",
-                                                                                     "    else", "    fi", "create instance")) for l in dl if l[0] == "-")
+                                                                                     "    else", "    fi", "create instance", "depense \"$PLC\"", "\"$DEP\" \"$PLC\"", "plafond de la configuration $PLC")) for l in dl if l[0] == "-")
     assert sum("create instance" in l for l in dl if l[0] == "-") == 1 and sum("-e IIB_TIRAGE=$TIRAGE" in l for l in dl if l[0] == "+") == 1
     # version 3 : l'attestation « aucune intouchable » n'existe plus (vérification de la contre-lecture, n1)
     assert "IIB_AUCUNE_INTOUCHABLE n'existe plus dans cette version" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")

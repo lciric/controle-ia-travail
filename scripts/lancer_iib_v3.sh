@@ -6,6 +6,8 @@
 # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
 # Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
 # Correctif 0021 : `IIB_TIRAGE` (processeur, par défaut, ou carte) est passé à la machine (`-e IIB_TIRAGE=…`) ; toute autre valeur est un refus.
+# Correctif 0023 (GO-2026-11-22-77) : `go` juge plafond de la configuration ≤ ligne et dépense antérieure < ligne ; la création passe à la
+#   garde de dépense le plafond total min(ligne, configuration + antérieure) (`session_v5 plafond-total`), enregistré en `plafond_creation`.
 # --- en-tête d'origine de la version 2 :
 # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
 # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
@@ -282,6 +284,7 @@ creation)
     case "$BRANCHE" in essai/iib-explo-v[0-9]*) ;; *) echo "IIB_BRANCHE doit être essai/iib-explo-v<n> ($BRANCHE)"; exit 2;; esac
     GOL=$(python3 -I -B -c "$SESSION" go "$REG" "$GOC" "$PLC" "$ANT") || { echo "ligne de GO $GOC non conforme au jour de la création : $GOL : pas de création"; exit 2; }
     PGL=$(python3 -I -B -c "$SESSION" plafond-ligne "$REG" "$GOC") || { echo "plafond de la ligne illisible"; exit 2; }
+    PTOT=$(python3 -I -B -c "$SESSION" plafond-total "$REG" "$GOC" "$PLC" "$ANT") || { echo "plafond total (correctif 0023 : min(ligne, configuration + antérieure)) refusé : $PTOT : pas de création"; exit 2; }
     VAR=$(python3 -I -B -c "$SESSION" variante "$D/config.json" "$PGL") || { echo "$VAR : pas de création"; exit 2; }
     CAR=$(python3 -I -B -c "$SESSION" carte "$D/config.json" "$CARTE") || { echo "$CAR : nœud, pas de création"; exit 3; }
     S7B=$(python3 -I -B -c "$SESSION" creation-7b "$REGDEC" "$D/config.json") || { echo "$S7B : pas de création"; exit 2; }
@@ -311,7 +314,7 @@ creation)
     inventaire_lu "$D" instances "" "" || { echo "inventaire des instances impossible ou illisible (code $? ; $INV_LIGNE) : pas de création"; exit 2; }
     INV=$(python3 -I -B -c "$SESSION" instances "$INV_FICHIER") || { echo "$INV : nœud, pas de création"; exit 3; }
     NOW=$(date +%s)
-    DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?
+    DEP=$(python3 -I -B -c "$SESSION3" depense "$PTOT" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?
     [ "$code_dep" = 0 ] || { echo "dépense cumulée déjà au plafond ou illisible ($DEP) : nœud, pas de création"; exit 3; }
     EPUIS=$(printf '%s\n' "$DEP" | sed -n 's/.*epuisement_utc_s=\([0-9]*\).*/\1/p'); [[ "$EPUIS" =~ ^[0-9]+$ ]] || { echo "heure d'épuisement illisible"; exit 2; }
     git -C "$DEPOT" show "$S:$A" > "$D/amorce-creation.sh" 2>/dev/null || { echo "amorce absente du commit $S"; exit 2; }
@@ -329,7 +332,7 @@ creation)
     printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
     # Tous les refus sont AU-DESSUS de cette ligne : un refus ne consomme pas un des trois essais de création.
     printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' \
-        "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
+        "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PTOT" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
     printf 'etiquette %s\n' "$ETIQ" >> "$D/lancement.txt"
     echo "OFFRE CONFORME : $OF ; $INV ; $DEP ; $CAR ; $S7B"
     echo "COMMANDE DE CRÉATION (à exécuter une seule fois par l'exécutante, jetons par leur nom seulement) :"
@@ -405,7 +408,7 @@ surveillance)
     PHASE=$(grep -v '^[[:space:]]*#' "$D/amorce.sh" 2>/dev/null | sed -n 's/.*controle_ia\.iib\.lanceur_v5 --phase \([a-z_]*\) .*/\1/p' | sort -u)
     [ -n "$PHASE" ] && [ "$(printf '%s\n' "$PHASE" | wc -l)" = 1 ] || PHASE=illisible
     echo "règle de coupure de l'étalonnage : phase $PHASE (lue dans $D/amorce.sh) ; seuil 16 USD de dépense comptée depuis le début de l'amorce, au prix réel lu ; la coupure de la ligne ($PLC USD) reste" >> "$D/surveillance.txt"
-    echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond de la configuration $PLC USD ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
+    echo "surveillance iib v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, plafond total de la création $PLC USD (correctif 0023 : min(ligne, configuration + antérieure)) ; alerte après 2 h sans PROGRES ; aucune autre instance lue au-delà des champs filtrés ni touchée" >> "$D/surveillance.txt"
     while true; do
         now=$(date -u +%s)
         ( umask 077; timeout -k 5 120 "$VAST" logs "$ID" --tail 20000 > "$D/journal-brut.tmp" 2>&1 </dev/null ); CJ=$?      # sur disque d'abord : rien n'est perdu si le masquage échoue

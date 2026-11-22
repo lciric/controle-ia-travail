@@ -20,6 +20,18 @@ par l'identifiant (R10), puis la destruction par la sous-commande `destruction` 
 première tentative de l'étalonnage, 21 novembre : « No module named 'numpy' », par `configuration_v5` puis les lois exactes).
 Le chemin de la règle ne charge donc que la bibliothèque standard et `gardes` ; `configuration_v5` n'est chargé que par la
 sous-commande `config`, qui en a besoin. Rien d'autre ne change : seuil, compte, phase illisible refusée.
+
+**Correctif 0023 — coupure effective de la machine = plafond de la ligne − dépense antérieure vraie** (mot de Lazar, GO-2026-11-22-77,
+« correction étroite de la garde, option (b) » ; constat du développeur, point 1). Avant : `go` exigeait plafond de la configuration
++ dépense antérieure ≤ plafond de la ligne, ce qui refusait toute dépense antérieure au-delà de 5 USD sous une ligne de 60 et une
+configuration de 55. Désormais, sous-commandes `go` et `plafond-total` de ce module (elles priment sur celles de `session_v1`) :
+- la ligne reste lue et jugée comme avant (`session_v12.ligne_go_calcul` : type, accord, échéance, révocation, forme « N USD ») ;
+- plafond de la configuration ≤ plafond de la ligne, et dépense antérieure < plafond de la ligne, sinon refus ;
+- plafond **total** passé à la garde de dépense (`session_v3 depense`, qui retranche elle-même la dépense antérieure et le
+  téléchargement) : T = min(plafond de la ligne, plafond de la configuration + dépense antérieure). La machine neuve peut donc
+  dépenser au plus min(plafond de la configuration, plafond de la ligne − dépense antérieure) : jamais plus que le plafond scellé
+  de la configuration, jamais un total au-delà de la ligne. À dépense antérieure ≤ ligne − configuration, rien ne change.
+- coupure effective nulle (machine sans reste) : refus. Le plafond scellé de la configuration ne change pas.
 """
 from __future__ import annotations
 
@@ -27,7 +39,8 @@ import json
 import math
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from ..gardes import GardeArret
@@ -69,6 +82,44 @@ def coupure_etalonnage(phase: str, progres: str, maintenant_s, prix_carte, prix_
             "seuil_usd": COUPURE_ETALONNAGE_USD, "prix_usd_h": round(prix, 6), "depuis": origine, "debut_utc_s": int(debut)}
 
 
+def _d(x: Decimal) -> str:
+    """Écriture décimale sans exposant ni zéro final (60.0 → 60, 50.350 → 50.35)."""
+    s = f"{x:f}"
+    return s.rstrip("0").rstrip(".") if "." in s else s
+
+
+def coupure_effective(registre, go_id: str, plafond_config, anterieure, jour: date | None = None) -> dict:
+    """Correctif 0023 : ligne de GO jugée comme avant, puis plafond total T = min(ligne, configuration + antérieure) et coupure de
+    la machine T − antérieure = min(configuration, ligne − antérieure). Refus : configuration > ligne, antérieure ≥ ligne, valeurs
+    illisibles, non finies ou négatives. Aucun repli."""
+    from ..t06 import session_v12 as s12          # bibliothèque standard seule (lu par `python3 -I` du système)
+    from ..t06.session import GardeSession
+
+    ligne = s12.ligne_go_calcul(registre, go_id, jour)
+    try:
+        p, a = Decimal(str(plafond_config)), Decimal(str(anterieure))
+    except InvalidOperation:
+        raise GardeSession(f"plafond de la configuration ({plafond_config!r}) ou dépense antérieure ({anterieure!r}) illisible") from None
+    if not (p.is_finite() and a.is_finite()):
+        raise GardeSession("plafond de la configuration ou dépense antérieure non fini")
+    if p <= 0 or a < 0:
+        raise GardeSession(f"plafond de la configuration {p} (> 0 exigé) ou dépense antérieure {a} (≥ 0 exigé)")
+    limite = Decimal(repr(float(ligne["plafond_usd"])))
+    if p > limite:
+        raise GardeSession(f"plafond de la configuration {p} > plafond de la ligne {limite} ({go_id}) : refus")
+    if a >= limite:
+        raise GardeSession(f"dépense antérieure {a} ≥ plafond de la ligne {limite} ({go_id}) : aucune coupure effective, refus")
+    total = min(limite, p + a)
+    machine = total - a
+    if machine <= 0:                               # garde redondante (a < limite et p > 0 l'impliquent) : jamais un repli
+        raise GardeSession(f"coupure effective de la machine {machine} ≤ 0 : refus")
+    return {**ligne, "plafond_config_usd": p, "anterieure_usd": a, "plafond_ligne_usd": limite, "plafond_total_usd": total,
+            "coupure_machine_usd": machine,
+            "plafond_verifie": (f"coupure effective de la machine {_d(machine)} = min(plafond de la configuration {_d(p)}, plafond de la ligne "
+                                f"{_d(limite)} − dépense antérieure {_d(a)}) ; total {_d(total)} ≤ {_d(limite)} (plafond de la ligne {go_id} du registre, "
+                                f"{ligne['accorde']} → {ligne['echeance']}) ; correctif 0023")}
+
+
 def ligne_de_coupure(r: dict) -> str:
     if not r["joue"]:
         return f"RIEN : phase {r['phase']} : la règle de coupure de l'étalonnage ne joue pas"
@@ -105,6 +156,22 @@ def main(argv: list[str]) -> int:
         except (GardeArret, OSError, ValueError) as e:
             print(f"REFUS : {e}", file=sys.stderr)
             return 1
+        return 0
+    if argv and argv[0] in ("go", "plafond-total"):              # correctif 0023 : ces deux sous-commandes priment sur session_v1
+        from ..t06.session import GardeSession
+
+        if len(argv) not in (5, 6):
+            print(f"usage : {argv[0]} REGISTRE GO_ID PLAFOND_CONFIG ANTERIEURE [AAAA-MM-JJ]", file=sys.stderr)
+            return 2
+        try:
+            r = coupure_effective(argv[1], argv[2], argv[3], argv[4], date.fromisoformat(argv[5]) if len(argv) == 6 else None)
+        except (GardeSession, ValueError) as e:                  # ValueError : jour illisible ; jamais un repli
+            print(str(e))
+            return 1
+        if argv[0] == "go":
+            print(f"{r['go']} conforme (plafond {r['plafond_usd']:g} USD, {r['accorde']} → {r['echeance']}) ; {r['plafond_verifie']}")
+        else:
+            print(f"{float(r['plafond_total_usd']):g}")
         return 0
     from . import session_v1
 
