@@ -1,0 +1,450 @@
+"""Entrées de T0.8 : liste blanche, lecteurs projetés, registres (plan d'analyse, points 1 et 5 (a) ; liste d'arrêt).
+
+- `ListeBlanche` : chaque entrée a un nom, un chemin relatif à la racine, une empreinte attendue (ou `None` : le
+  compagnon seul fait foi) et une phase (`course`, `lecture`, `hd`). Tout chemin hors de la liste est refusé ; un
+  chemin qui porte un motif interdit (sondes, résumé de 7b, adaptateurs, activations, sorties des pièces R et L,
+  bras d'attaque, P3-bis, étiqueteur…) est refusé même s'il est inscrit dans la liste ; les fichiers de la phase `hd`
+  (pièce HD du texte de validité) ne s'ouvrent, contrôle d'empreinte compris, qu'après `ouvrir_phase("hd")`, que la
+  lecture n'appelle qu'à l'étape (h bis), après l'écriture des tables D et F.
+- Lecteurs projetés : chaque fichier lu ne rend que les clés que le texte nomme (`episodes-t06.json` : empreintes et
+  effectifs ; manifeste de 7b : graines `partition-taches` et `tache/<identifiant>`, identifiant du run ;
+  `lecture-cout-t06.json` : T6-10, T6-8 et la ligne de la table A ; `base-a-t08.json` : centres, modèles par (jeu,
+  pli), lignes BA-L0 à BA-L4, réserves R-BA1 à R-BA7).
+- Registres : format `| CLÉ | date UTC | chemin | empreinte |` ; seules les clés à la marque `T08`, plus
+  `RUN-CONFIRMATION-T06` et `CODE-MOTS-ET-COUT-T06`, sont lues (les autres ignorées et comptées) ; du registre du texte
+  de validité, la seule ligne `SORTIES-HD-VADAPT` (jamais une ligne VA) ; rien n'est jamais écrit dans un registre.
+  Une ligne de tableau qui n'a pas la forme du registre (par exemple une quatrième cellule qui n'est pas une empreinte
+  entière) est **comptée et signalée** (`mal_formees`, avec sa clé), jamais ignorée en silence (CLT8C-17) ; une clé à
+  la marque `T08` inscrite deux fois arrête (gardé). Pour la seule clé `CODE-T08`, la quatrième cellule peut aussi être
+  un commit de 40 caractères hexadécimaux (`| CODE-T08 | date | chemin | <commit> |`, lue avec `sha256` à `None` et
+  `commit` rempli ; VCT8-03 : la forme de cette ligne reste à fixer par la session mère, question déclarée) ;
+  `ligne_cite_commit` dit si une ligne cite un commit dans l'une de ses cellules.
+- `lire_manifeste_course` : le manifeste de la course de T0.8 auquel `course-t08.json` est rattaché (même run, empreinte
+  de son enveloppe), pour sa date de création (début de la course ; VCT8-03).
+- `ListeBlanche.controler` : les mêmes contrôles que `chemin` (empreinte contre le compagnon et contre l'empreinte
+  consignée, présence d'un registre vivant), rendus comme un état au lieu d'un arrêt ; la lecture descriptive de la
+  pièce HD s'en sert pour écrire « non lue » sans jamais arrêter la lecture de T0.8 (liste d'arrêt, l. 248) ; une
+  entrée hors de la liste ou d'une phase non ouverte arrête toujours (arrêt et nœud).
+- `ArretPieceHD` : classe d'arrêt propre à la lecture descriptive de la pièce HD (« non lue » ou « non calculable »,
+  avec son motif), attrapée par cette seule lecture : aucun arrêt n'est trié par les mots de son message (CLT8C-02).
+- `exiger_instance_sans_interdits` : l'amorce vérifie, avant tout calcul, qu'aucun `lecture-sondes-t06*` ni aucun
+  `resume.json` **de 7b** (chemin qui porte l'identifiant du run de 7b) n'est extrait sur l'instance, ni comme fichier
+  ni comme objet git (garde resserrée à la lettre du texte, décision de la session mère du 2026-11-22, option (a)).
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+
+from ..gardes import GardeArret
+from ..manifeste import lire_manifeste
+from ..scellement import compagnon, empreinte, lire_compagnon, verifier
+
+PHASES = ("course", "lecture", "hd")
+
+
+class ArretPieceHD(GardeArret):
+    """Issue de la lecture descriptive des épisodes de la pièce HD (plan, point 8 bis) : `etat` « non lue » ou
+    « non calculable », `motif` (phrase gelée du texte, ou « non lue (<motif>) » / « non calculable (<motif>) », l. 193).
+    Levée par les seules étapes de cette lecture, attrapée par `temoin_distille_v1.lire_temoin_distille` seulement :
+    elle n'arrête jamais la lecture de T0.8 (liste d'arrêt, l. 248). Une `GardeArret` d'une autre classe garde son
+    sens : arrêt de toute la lecture (chemin interdit, hors liste : arrêt et nœud)."""
+
+    ETATS = ("non lue", "non calculable")
+
+    def __init__(self, etat: str, motif: str, **plus):
+        if etat not in self.ETATS:
+            raise GardeArret(f"issue {etat!r} de la pièce HD inconnue : {self.ETATS}")
+        super().__init__(f"pièce HD : {etat} : {motif}")
+        self.etat, self.motif, self.plus = etat, motif, plus
+# motifs sur le nom du fichier
+NOMS_INTERDITS_DEBUT = ("lecture-sondes", "distillation-t06", "adaptateur", "scores-relecture-vadapt",
+                        "divergences-vadapt", "lecture-vadapt")
+NOMS_INTERDITS_EXACTS = ("resume.json",)
+NOMS_INTERDITS_CONTIENT = ("activations",)
+SUFFIXES_INTERDITS = (".pt", ".safetensors")
+# motifs sur le chemin entier
+CHEMINS_INTERDITS = ("bras-attaque", "mode-tenu-a-l-ecart", "p3bis", "p3-bis", "etiqueteur", "lecture-b-7a",
+                     "mesure-unanime", "t06-explo", "anteriorite-bras-informe", "textes-actions-p3", "lecture-p3",
+                     "lecture-sondes")
+MOTIFS_INTERDITS = NOMS_INTERDITS_DEBUT + NOMS_INTERDITS_EXACTS + NOMS_INTERDITS_CONTIENT + SUFFIXES_INTERDITS \
+    + CHEMINS_INTERDITS
+COLONNES_MESURES = ("cle", "episode", "condition", "tache", "phase", "pas", "jetons", "jetons_notes", "dose", "cout",
+                    "valide", "cout_present", "cout_plusieurs_nombres", "cout_multiplication", "cout_intervalle",
+                    "cout_suffixe_k", "cout_milliers_espace", "mention", "mention_etendue")
+CLES_TEXTES = ("cle", "episode", "condition", "tache", "pas", "texte", "ids")
+
+
+def motif_interdit(chemin: str) -> str | None:
+    """Motif interdit porté par le chemin (nom du fichier ou chemin entier), ou `None`."""
+    c = str(chemin).lower().replace("\\", "/")
+    nom = c.rsplit("/", 1)[-1]
+    for m in NOMS_INTERDITS_DEBUT:
+        if nom.startswith(m):
+            return m
+    for m in NOMS_INTERDITS_EXACTS:
+        if nom == m:
+            return m
+    for m in NOMS_INTERDITS_CONTIENT:
+        if m in nom:
+            return m
+    for m in SUFFIXES_INTERDITS:
+        if nom.endswith(m):
+            return m
+    return next((m for m in CHEMINS_INTERDITS if m in c), None)
+
+
+class ListeBlanche:
+    """Liste blanche des entrées d'une course ou d'une lecture de T0.8 (R5 : cas sain et artefacts éprouvés)."""
+
+    def __init__(self, racine, entrees: dict[str, dict]):
+        self.racine = Path(racine)
+        self.entrees = {}
+        self.ouvertes: list[str] = []
+        self._phases = {"course", "lecture"}
+        for nom, e in entrees.items():
+            if set(e) - {"chemin", "sha256", "phase", "scelle"} or "chemin" not in e:
+                raise GardeArret(f"entrée {nom!r} : clés chemin, sha256, phase, scelle attendues")
+            if e.get("scelle", True) is False and e.get("sha256") is not None:
+                raise GardeArret(f"entrée {nom!r} : un registre vivant (non scellé) n'a pas d'empreinte attendue")
+            if e.get("phase", "lecture") not in PHASES:
+                raise GardeArret(f"entrée {nom!r} : phase {e.get('phase')!r} inconnue")
+            m = motif_interdit(e["chemin"])
+            if m:
+                raise GardeArret(f"entrée {nom!r} ({e['chemin']}) porte le motif interdit {m!r} : arrêt et nœud "
+                                 "(embargo DT-4 ; interdits communs)")
+            if Path(e["chemin"]).is_absolute() or ".." in Path(e["chemin"]).parts:
+                raise GardeArret(f"entrée {nom!r} : chemin relatif à la racine, sans « .. », attendu")
+            self.entrees[nom] = {"chemin": e["chemin"], "sha256": e.get("sha256"), "phase": e.get("phase", "lecture"),
+                                 "scelle": bool(e.get("scelle", True))}
+
+    def ouvrir_phase(self, phase: str) -> None:
+        if phase not in PHASES:
+            raise GardeArret(f"phase {phase!r} inconnue")
+        self._phases.add(phase)
+
+    def phase_ouverte(self, phase: str) -> bool:
+        return phase in self._phases
+
+    def controler(self, nom: str) -> tuple[Path, dict]:
+        """Contrôles de `chemin`, rendus comme un état (aucun arrêt pour l'état du fichier) : `present` (registre vivant
+        présent), `conforme` (empreinte égale au compagnon et, s'il y en a une, à l'empreinte consignée), `absent`
+        (fichier ou registre absent du disque), `compagnon_absent`, `compagnon_illisible`, `differe_du_compagnon`,
+        `differe_de_la_consignee`. Une entrée hors de la liste, ou d'une phase non ouverte, arrête toujours (arrêt et
+        nœud). Le fichier n'est compté ouvert que s'il est `present` ou `conforme`."""
+        if nom not in self.entrees:
+            raise GardeArret(f"entrée {nom!r} hors de la liste blanche : arrêt et nœud")
+        e = self.entrees[nom]
+        if e["phase"] not in self._phases:
+            raise GardeArret(f"entrée {nom!r} de la phase {e['phase']!r} ouverte avant son étape : refusée")
+        p = self.racine / e["chemin"]
+        if not p.is_file():
+            return p, {"etat": "absent", "detail": f"{e['chemin']} : " + ("registre absent sur disque" if not e["scelle"]
+                                                                         else "fichier absent sur disque")}
+        if not e["scelle"]:            # registre vivant (versionné par git, sans compagnon) : présence seulement
+            self.ouvertes.append(e["chemin"])
+            return p, {"etat": "present", "detail": None}
+        c = compagnon(p)
+        if not c.is_file():
+            return p, {"etat": "compagnon_absent", "detail": f"{e['chemin']} : empreinte compagnon {c.name} absente"}
+        try:
+            attendue = lire_compagnon(c, p.name)
+        except GardeArret as x:        # compagnon d'une autre forme (une seule ligne « <hex>  <nom> » attendue)
+            return p, {"etat": "compagnon_illisible", "detail": str(x)}
+        sha = empreinte(p)
+        if sha != attendue:
+            return p, {"etat": "differe_du_compagnon", "detail": f"{p} : empreinte {sha[:12]}… ≠ scellée {attendue[:12]}…"}
+        if e["sha256"] is not None and sha != e["sha256"]:
+            return p, {"etat": "differe_de_la_consignee",
+                       "detail": f"{e['chemin']} : empreinte {sha[:12]}… ≠ empreinte consignée {e['sha256'][:12]}… (R11)"}
+        self.ouvertes.append(e["chemin"])
+        return p, {"etat": "conforme", "detail": None, "sha256": sha}
+
+    def chemin(self, nom: str) -> Path:
+        """Chemin d'une entrée de la liste, empreinte vérifiée contre son compagnon et contre l'empreinte attendue ;
+        tout autre état arrête (R11)."""
+        p, c = self.controler(nom)
+        if c["etat"] not in ("present", "conforme"):
+            raise GardeArret(c["detail"])
+        return p
+
+    def lire_json(self, nom: str):
+        return json.loads(self.chemin(nom).read_text(encoding="utf-8"))
+
+    def lire_jsonl(self, nom: str) -> list[dict]:
+        with open(self.chemin(nom), encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    def lire_npz(self, nom: str, colonnes=COLONNES_MESURES) -> dict[str, np.ndarray]:
+        with np.load(self.chemin(nom), allow_pickle=False) as z:
+            cles = tuple(sorted(z.files))
+            if cles != tuple(sorted(colonnes)):
+                raise GardeArret(f"{nom} : colonnes {cles} ≠ colonnes attendues {tuple(sorted(colonnes))}")
+            return {k: np.array(z[k]) for k in colonnes}
+
+
+# --- projections : seules les clés que le texte nomme --------------------------------------------------------------
+
+def projeter_episodes_t06(corps: dict) -> dict:
+    r = corps["resultat"] if "resultat" in corps else corps
+    manquantes = [k for k in ("mesures_sha256", "textes_sha256", "effectifs") if k not in r]
+    if manquantes:
+        raise GardeArret(f"episodes-t06.json : clés {manquantes} absentes")
+    return {k: r[k] for k in ("mesures_sha256", "textes_sha256", "effectifs")}
+
+
+def projeter_manifeste_7b(m: dict, taches: list[str]) -> dict:
+    g = m.get("graines", {})
+    cles = ["partition-taches"] + [f"tache/{t}" for t in taches]
+    absentes = [k for k in cles if k not in g]
+    if absentes:
+        raise GardeArret(f"manifeste de 7b : graines {absentes[:3]} absentes")
+    return {"run_id": m["run_id"], "graines": {k: g[k] for k in cles}}
+
+
+def lire_manifeste_7b(lb: ListeBlanche, nom: str, taches: list[str]) -> dict:
+    chemin = lb.chemin(nom)
+    m, sha = lire_manifeste(chemin)
+    return {**projeter_manifeste_7b(m, taches), "sha256": sha}
+
+
+def lire_manifeste_course(lb: ListeBlanche, nom: str, corps_course: dict) -> dict:
+    """Manifeste de la course de T0.8 (`runs/<run-course>/manifeste.json`, entrée `nom` de la liste blanche) : celui
+    auquel `course-t08.json` (`corps_course`, enveloppe comprise) est rattaché — même identifiant de run, empreinte égale
+    à `manifeste_sha256` de l'enveloppe ; sinon arrêt. Rend l'identifiant du run, l'empreinte et la date de création
+    (`cree_le`, début de la course, en UTC ; VCT8-03) ; rien d'autre n'est gardé."""
+    m, sha = lire_manifeste(lb.chemin(nom))
+    if sha != corps_course.get("manifeste_sha256") or m.get("run_id") != corps_course.get("run_id"):
+        raise GardeArret(f"course-t08.json (run {corps_course.get('run_id')}, manifeste "
+                         f"{str(corps_course.get('manifeste_sha256'))[:12]}…) rattaché à un autre manifeste que l'entrée "
+                         f"{nom!r} (run {m.get('run_id')}, {sha[:12]}…) : arrêt")
+    return {"run_id": m["run_id"], "sha256": sha, "cree_le": date_utc(m.get("cree_le")).isoformat()}
+
+
+def projeter_lecture_cout(corps: dict) -> dict:
+    lec = corps["resultat"]["lecture"]
+    for k in ("T6-10", "T6-8", "table_A"):
+        if k not in lec:
+            raise GardeArret(f"lecture-cout-t06.json : clé {k} absente")
+    return {"T6-10": lec["T6-10"], "T6-8": lec["T6-8"], "ligne_A": lec["table_A"]["ligne"],
+            "run_id": corps.get("run_id"), "manifeste_sha256": corps.get("manifeste_sha256")}
+
+
+CLES_MODELE_BASE_A = ("calculable", "motif", "traits_retires", "convergence", "coefficients", "ordonnee", "moyennes",
+                      "ecarts")
+LIGNES_BA = ("BA-L0", "BA-L1", "BA-L2", "BA-L3", "BA-L3b", "BA-L4")
+RESERVES_BA = ("R-BA1", "R-BA2", "R-BA2b", "R-BA3", "R-BA4", "R-BA5", "R-BA6", "R-BA7")
+
+
+def projeter_base_a(obj: dict) -> dict:
+    """`base-a-t08.json` (objet à la racine) : centres, modèles par (jeu, pli), lignes BA-L, réserves R-BA ; rien d'autre."""
+    for k in ("centres", "modeles", "lignes", "reserves", "run_id", "manifeste_sha256"):
+        if k not in obj:
+            raise GardeArret(f"base-a-t08.json : clé {k} absente")
+    modeles = {}
+    for jeu, plis in obj["modeles"].items():
+        modeles[jeu] = {}
+        for pli, m in plis.items():
+            manquantes = [k for k in CLES_MODELE_BASE_A if k not in m]
+            if manquantes:
+                raise GardeArret(f"base-a-t08.json : modèle ({jeu}, pli {pli}) sans {manquantes}")
+            modeles[jeu][str(pli)] = {k: m[k] for k in CLES_MODELE_BASE_A}
+    lignes = {k: obj["lignes"][k] for k in LIGNES_BA if k in obj["lignes"]}
+    if set(lignes) != set(LIGNES_BA):
+        raise GardeArret(f"base-a-t08.json : lignes BA {sorted(set(LIGNES_BA) - set(lignes))} absentes")
+    reserves = [r for r in obj["reserves"] if r.get("code") in RESERVES_BA]
+    return {"centres": dict(obj["centres"]), "modeles": modeles, "lignes": lignes, "reserves": reserves,
+            "run_id": obj["run_id"], "manifeste_sha256": obj["manifeste_sha256"]}
+
+
+# --- registres (format du registre partagé) ------------------------------------------------------------------------
+
+_LIGNE = re.compile(r"^\|\s*([A-Za-z0-9-]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{64})\s*\|\s*$")
+CODE_T08 = "CODE-T08"
+# ligne `CODE-T08` dont la quatrième cellule est le commit (40 caractères) : seule autre forme lue (VCT8-03, déclarée)
+_LIGNE_CODE_COMMIT = re.compile(r"^\|\s*(" + CODE_T08 + r")\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{40})\s*\|\s*$")
+_HEX40 = re.compile(r"^[0-9a-f]{40}$")
+_SEPARATEUR = re.compile(r"^\|[\s:|-]*$")
+_CLE = re.compile(r"^[A-Za-z0-9-]+$")
+_MARQUE_T08 = re.compile(r"(^|-)T08(-|$)")
+CLES_LUES_HORS_T08 = ("RUN-CONFIRMATION-T06", "CODE-MOTS-ET-COUT-T06")
+SORTIES_HD = "SORTIES-HD-VADAPT"
+
+
+def date_utc(texte: str) -> datetime:
+    t = str(texte).strip()
+    try:
+        d = datetime.fromisoformat(t.replace("Z", "+00:00"))
+    except ValueError:
+        raise GardeArret(f"date {t!r} illisible (ISO 8601 UTC attendu)") from None
+    if d.tzinfo is None:
+        raise GardeArret(f"date {t!r} sans fuseau : UTC attendu")
+    return d.astimezone(timezone.utc)
+
+
+def _lignes_registre(chemin: Path) -> tuple[list[tuple], list[dict]]:
+    """(lignes de la forme du registre, lignes de tableau d'une autre forme). Une ligne de tableau (qui commence par
+    « | ») qui n'est ni l'en-tête, ni un séparateur, ni de la forme `| CLÉ | date | chemin | empreinte entière |` (ni,
+    pour la seule clé `CODE-T08`, `| CODE-T08 | date | chemin | commit de 40 caractères |`) est rendue dans la seconde
+    liste avec son numéro et sa clé (première cellule, si elle a la forme d'une clé) : comptée et signalée, jamais
+    ignorée en silence (CLT8C-17)."""
+    sortie, mal = [], []
+    for i, l in enumerate(Path(chemin).read_text(encoding="utf-8").splitlines(), start=1):
+        s = l.strip()
+        if not s.startswith("|") or _SEPARATEUR.match(s):
+            continue
+        cellules = [c.strip() for c in s.strip("|").split("|")]
+        if cellules and cellules[0] in ("CLÉ", "CLE"):
+            continue
+        m = _LIGNE.match(s) or _LIGNE_CODE_COMMIT.match(s)
+        if m:
+            sortie.append(m.groups())
+        else:
+            mal.append({"numero": i, "cle": cellules[0] if cellules and _CLE.match(cellules[0]) else None,
+                        "cellules": len(cellules)})
+    return sortie, mal
+
+
+def _lue(cle: str | None) -> bool:
+    return bool(cle) and bool(_MARQUE_T08.search(cle) or cle in CLES_LUES_HORS_T08)
+
+
+def lire_registre_scellements(chemin) -> dict:
+    """Clés à la marque `T08` et `RUN-CONFIRMATION-T06`, `CODE-MOTS-ET-COUT-T06` ; les autres ignorées et comptées.
+    Une clé lue deux fois arrête (une clé, une ligne). Les lignes d'une autre forme sont comptées et signalées
+    (`mal_formees`, `mal_formees_lues` : celles dont la clé serait lue). Une ligne `CODE-T08` dont la quatrième cellule
+    est un commit (40 caractères) est rendue `{date, chemin, sha256: None, commit}` (VCT8-03)."""
+    lues, ignorees = {}, 0
+    bonnes, mal = _lignes_registre(chemin)
+    for cle, date, ch, sha in bonnes:
+        if not _lue(cle):
+            ignorees += 1
+            continue
+        if cle in lues:
+            raise GardeArret(f"registre : clé {cle} inscrite deux fois")
+        if cle == CODE_T08 and _HEX40.match(sha):
+            lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": None, "commit": sha}
+        else:
+            lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
+    return {"lignes": lues, "ignorees": ignorees, "mal_formees": mal,
+            "mal_formees_lues": [m for m in mal if _lue(m["cle"])]}
+
+
+def ligne_cite_commit(ligne: dict, commit: str) -> bool:
+    """La ligne de registre cite `commit` (40 caractères hexadécimaux) dans l'une de ses cellules : sa quatrième cellule
+    est ce commit (forme `| CODE-T08 | date | chemin | <commit> |`), ou sa cellule « chemin » le porte comme mot entier
+    (ni précédé ni suivi d'un caractère hexadécimal : un préfixe ou un prolongement ne compte pas). Les cellules « clé »
+    et « date » ne peuvent pas le porter ; une empreinte de 64 caractères n'est jamais lue comme un commit (VCT8-03)."""
+    if not (isinstance(commit, str) and _HEX40.match(commit)):
+        raise GardeArret(f"commit {commit!r} : 40 caractères hexadécimaux attendus")
+    if ligne.get("commit") == commit:
+        return True
+    return re.search(r"(?<![0-9A-Fa-f])" + commit + r"(?![0-9A-Fa-f])", str(ligne.get("chemin") or "")) is not None
+
+
+def lire_sorties_hd(chemin) -> dict:
+    """Registre propre du texte de validité, lu sans jamais arrêter la lecture de T0.8 : seule la ligne
+    `SORTIES-HD-VADAPT` (jamais une ligne VA ; rien n'est écrit). Rend `ligne` (`{date, chemin, sha256}` si elle est
+    inscrite une fois, de la forme du registre, à date lisible en UTC ; sinon `None`), `inscriptions` (lignes de la
+    forme du registre à cette clé), `mal_formees` (lignes d'une autre forme à cette clé, comptées et signalées),
+    `mal_formees_toutes`, `ignorees` et `date_illisible` (motif, ou `None`)."""
+    bonnes, mal = _lignes_registre(chemin)
+    a_la_cle = [x for x in bonnes if x[0] == SORTIES_HD]
+    r = {"ligne": None, "inscriptions": len(a_la_cle), "mal_formees": [m for m in mal if m["cle"] == SORTIES_HD],
+         "mal_formees_toutes": len(mal), "ignorees": len(bonnes) - len(a_la_cle), "date_illisible": None}
+    if len(a_la_cle) == 1:
+        cle, date, ch, sha = a_la_cle[0]
+        try:
+            r["ligne"] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
+        except GardeArret as e:          # date de la ligne illisible ou sans fuseau : motif rendu, jamais d'arrêt
+            r["date_illisible"] = str(e)
+    return r
+
+
+def lire_ligne_sorties_hd(chemin) -> dict | None:
+    """Forme stricte, pour l'épreuve du registre réel par la session mère avant le scellement : la ligne
+    `SORTIES-HD-VADAPT` ou `None` si elle n'est pas inscrite ; arrêt si elle est inscrite deux fois, à une date
+    illisible, ou d'une autre forme. La lecture de T0.8 emploie `lire_sorties_hd`, qui n'arrête jamais."""
+    r = lire_sorties_hd(chemin)
+    if r["inscriptions"] > 1:
+        raise GardeArret("registre du texte de validité : SORTIES-HD-VADAPT inscrite deux fois")
+    if r["date_illisible"]:
+        raise GardeArret(f"registre du texte de validité : SORTIES-HD-VADAPT : {r['date_illisible']}")
+    if r["mal_formees"]:
+        raise GardeArret(f"registre du texte de validité : SORTIES-HD-VADAPT d'une autre forme (lignes "
+                         f"{[m['numero'] for m in r['mal_formees']]})")
+    if r["ligne"] is None:
+        return None
+    return {**r["ligne"], "ignorees": r["ignorees"]}
+
+
+def exiger_ligne(registre: dict, cle: str) -> dict:
+    if cle not in registre["lignes"]:
+        mal = [m["numero"] for m in registre.get("mal_formees", []) if m["cle"] == cle]
+        raise GardeArret(f"ligne {cle} absente du registre : entrée manquante"
+                         + (f" (ligne(s) {mal} à cette clé d'une autre forme que celle du registre)" if mal else ""))
+    return registre["lignes"][cle]
+
+
+# --- amorce de l'instance ------------------------------------------------------------------------------------------
+
+_RUN_7B = re.compile(r"^[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,62}$")
+
+
+def _nom_interdit_instance(nom: str, run_7b: str) -> bool:
+    """Interdit sur l'instance : tout `lecture-sondes-t06*`, où qu'il soit ; un `resume.json` **de 7b**, c'est-à-dire dont
+    un dossier du chemin est l'identifiant du run de 7b (lettre du texte : « aucun `lecture-sondes-t06*` ni aucun
+    `resume.json` de 7b »). Les `resume.json` d'autres runs (runs jouets, notes) ne sont pas visés."""
+    parties = nom.replace("\\", "/").split("/")
+    base = parties[-1]
+    return base.startswith("lecture-sondes-t06") or (base == "resume.json" and run_7b in parties[:-1])
+
+
+def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
+    """Avant tout calcul sur l'instance : aucun `lecture-sondes-t06*` ni `resume.json` de 7b (`run_7b` : identifiant du
+    run, marqueur `RUN_7B`) extrait, ni comme fichier, ni comme objet git de la copie clonée. Ne lit le contenu d'aucun
+    fichier."""
+    if not isinstance(run_7b, str) or not _RUN_7B.match(run_7b):
+        raise GardeArret(f"identifiant du run de 7b {run_7b!r} d'une autre forme : garde de l'instance non jouable : arrêt")
+    racine = Path(racine)
+    fichiers = 0
+    for dossier, sous, noms in os.walk(racine):
+        sous[:] = [s for s in sous if s != ".git"]
+        for n in noms:
+            fichiers += 1
+            if _nom_interdit_instance(str(Path(dossier, n).relative_to(racine)), run_7b):
+                raise GardeArret(f"{Path(dossier, n).relative_to(racine)} présent sur l'instance : arrêt et nœud (DT-4)")
+    objets = None
+    if (racine / ".git").exists():
+        # chemins lus en octets et décodés sans perte (CA-11) ; `core.quotePath=false` : aucun guillemet ni échappement
+        r = subprocess.run(["git", "-c", "core.quotePath=false", "-C", str(racine), "rev-list", "--all", "--objects"],
+                           capture_output=True)
+        if r.returncode != 0:
+            raise GardeArret(f"objets git illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
+        objets = 0
+        for l in r.stdout.decode("utf-8", "surrogateescape").splitlines():
+            parts = l.split(" ", 1)
+            objets += 1
+            if len(parts) == 2 and _nom_interdit_instance(parts[1], run_7b):
+                raise GardeArret(f"objet git {parts[1]} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
+        # `rev-list --objects` ne nomme un blob qu'une fois, par le premier chemin rencontré : un `resume.json` de 7b aux
+        # mêmes octets qu'un autre fichier y serait nommé par l'autre chemin. Tous les chemins de chaque commit (racines
+        # et bords d'un clone peu profond compris) sont donc aussi lus.
+        # `-z` : chemins séparés par NUL, jamais entourés de guillemets ni échappés en octal (CA-10 : un chemin non ASCII
+        # cité entre guillemets échappait à la garde)
+        r = subprocess.run(["git", "-C", str(racine), "log", "--all", "--root", "--no-renames", "-m", "--format=",
+                            "--name-only", "-z"], capture_output=True)
+        if r.returncode != 0:
+            raise GardeArret(f"chemins des commits illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
+        # entrées séparées par NUL seulement ; le saut de ligne qui sépare deux commits précède le premier chemin du
+        # commit suivant et est seul retiré (un saut de ligne dans un nom de chemin est gardé, CA-13)
+        for chemin in {c.lstrip("\n") for c in r.stdout.decode("utf-8", "surrogateescape").split("\0")}:
+            if chemin and _nom_interdit_instance(chemin, run_7b):
+                raise GardeArret(f"objet git {chemin} présent dans la copie de l'instance : arrêt et nœud (DT-4)")
+    return {"fichiers": fichiers, "objets_git": objets, "interdits": 0}

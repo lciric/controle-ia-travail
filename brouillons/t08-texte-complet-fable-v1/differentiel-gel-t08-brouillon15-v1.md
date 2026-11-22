@@ -1,0 +1,56 @@
+# Différentiel du brouillon 15 de T0.8 contre le brouillon 4 gelé (ligne GEL-T08) — v1
+
+Produit par `brouillons/t08-texte-complet-fable-v1/faire-t08-brouillon15-v1.py` ; aucune ligne n'est écrite à la main.
+
+- Brouillon 4 gelé : `brouillons/T0.8-bases-boite-noire-v0-v1-brouillon4.md`, `7da0c3839a7a714b441b018b3cceb704ec431434498653db1496ca839c38c5b5`.
+- Brouillon 10 (candidat du compte 4) : `brouillons/T0.8-bases-boite-noire-v0-v1-brouillon10.md`, `fb004b96bf7fd70d6fe4f1938cba8bcd1afa9a3261135b5ddea336a9e0c68ba1`.
+- Brouillon 14 (départ) : `brouillons/T0.8-bases-boite-noire-v0-v1-brouillon14.md`, `e81e4ddb2ea88adb377219780ae18614d1e17502dff4ccd761ddeeef2228937b`.
+- Brouillon 15 : `brouillons/T0.8-bases-boite-noire-v0-v1-brouillon15.md`, `8d68b7a01cbb534e0f4a0422bb7fa5a184d0c9455ec3c87dc343881345ee8d5f`.
+
+## 1. Sections « Hypothèse » à « Liste d'arrêt »
+
+Brouillon 4 : lignes 79 à 252 (174 lignes), empreinte de la plage `f2689209da7197b80da049b2c7c0dafde710ae30b96d5cafe74c6d70156b4ba6`. Brouillon 10 : empreinte de la plage `3f5dafbfbe2182f7f59c6f21c538d4401a7ad91a06efc7fddb44f375de16be27`. Brouillon 15 : lignes 81 à 255 (175 lignes), empreinte de la plage `3c0ab4fab57c21c0ecc68e2591b943b01adcf654eab95f2d91d2dc76b0ff3f78`.
+
+**Contrôle par programme, tenu** (`controle_gel_t08_v1.py`) : (a) la plage du brouillon 10, une fois retirée la phrase T5-19, est égale à l'octet à celle du brouillon 4 ; (b) la plage du brouillon 15, une fois remis le nom de chaque marqueur à la place de sa valeur, est égale à l'octet à celle du brouillon 10. La phrase T5-19 est donc celle du brouillon 10, dans son texte et à sa place (rang 103 de la plage).
+
+Différences avec le brouillon 4, toutes :
+
+### Différence 1 — Métrique (brouillon 4, l. 122-122 ; brouillon 15, l. 124-124)
+
+- marqueur `CODE_MOTS_ET_COUT_T06` rempli : au brouillon 4, le nom du marqueur entre chevrons ; au brouillon 15 : « ligne du 2026-11-14T14:55:41Z, qui cite le fichier d'inscription `registres/code-mots-et-cout-t06/CODE-MOTS-ET-COUT-T06-v1.json`, `e418fdafbf8362f0458eb0448ec2d32ffa9a8bb122ec619ad0aaf68a9df3b43b` : commit `da06bb57610f840152e4e9a8c449b036577cc582`, module `scripts/mots_et_cout_t06_v3.py`, `9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674`, lanceur `scripts/lancer_mots_et_cout_t06_v3.sh`, `e1d2514cd6361f8201a6773a4cf108ac333aa7ca647807698b90c3abeb97a7c5` ; R-2778 »
+- hors de ces valeurs, la ligne est égale à l'octet à celle du brouillon 4
+
+### Différence 2 — Plan d'analyse (brouillon 4, l. 177-177 ; brouillon 15, l. 179-179)
+
+- marqueur `RUN_7B` rempli : au brouillon 4, le nom du marqueur entre chevrons ; au brouillon 15 : « run `20261111-151701-t06-reel`, branche de sortie `calcul/t06-confirmation-7b-v1` (tête `55c3e3eb89a4650419f35999aaa4c54288275b0d`), manifeste `runs/20261111-151701-t06-reel/manifeste.json`, `7e1ac1f02584e4f8babf664e78d12f3122bfdca18292734f28281e9459479bf6` ; ligne inscrite le 2026-11-13T18:52:43Z »
+- marqueur `EMPREINTES_ENTREES_7B` rempli : au brouillon 4, le nom du marqueur entre chevrons ; au brouillon 15 : « lues le 2026-11-22 sur les compagnons seuls, sans ouvrir les fichiers : `mesures-t06.npz`, `aca5afd068a8749952c7424a7708a1e4c8b78c082fba495d5d406f2605435049` ; `textes-actions-t06.jsonl`, `d196bb4fffd793dc52190aa2674aeff33619f17bd40d303f564515bde2ad783d` ; `episodes-t06.json`, `c7911933a6cc797db4be094bd252393bb4360cdc55a25867b624be721ccdb51c` ; `manifeste.json`, `7e1ac1f02584e4f8babf664e78d12f3122bfdca18292734f28281e9459479bf6` ; `lecture-cout-t06.json`, `c69884ed54b48ba5a37b17572060a3d2a6258a92ccf8b92d30beb11422196a1c` »
+- hors de ces valeurs, la ligne est égale à l'octet à celle du brouillon 4
+
+### Différence 3 — Plan d'analyse (brouillon 4, l. 181-180 ; brouillon 15, l. 183-183)
+
+Ligne ajoutée (phrase T5-19, brouillon 5 ; gardée par le mot de Lazar, R-2657) :
+
+>    - de la course de T0.8 elle-même, pour la lecture seulement : ses sorties scellées (`diag/<run-t08>/course-t08.json` et les fichiers qu'il cite sous `donnees/<run-t08>/`) et son manifeste (`runs/<run-t08>/manifeste.json`, pour son identifiant de run et son empreinte, qui le rattachent à `course-t08.json`, et pour sa date de création, rien d'autre n'en étant gardé : antériorité des lignes `SCELLEMENT-T08` et `CODE-T08` sur le début de la course, « avant toute exécution », en-tête), empreintes vérifiées contre leurs compagnons ; aucune donnée de 7b, aucune sonde, aucun résultat n'en est tiré au-delà de ce que nomment le plan et la « Métrique » (phrase ajoutée au brouillon 5, VCT8B-01 ; nœud de Lazar, VT5-03 : **gardée**, option (a), mot de Lazar « go a pour T5-19 » (journal du compte 4, C4-0054, `registres-provisoires/compte-4-2026-11-14-v16.md`, `190fb7ed632c52c36f3ece7d837b84d9f9529f830553bf46c1ae10021cec9288`) ; ligne du registre et confirmation de la session mère : `<<LIGNE_MOT_LAZAR_T5_19>>`) ;
+
+## 2. La phrase T5-19 d'un brouillon à l'autre
+
+Empreinte épinglée de la ligne (brouillon 10) : `906b82d6c063eb60cc0c6179d43fdbcbe0dbc434e430ac6026837fd0ae06cde4`. Table des brouillons 5 à 12 : `differentiel-gel-t08-brouillon12-v1.md`, section 2 ; la ligne du brouillon 15 est celle du brouillon 10 (contrôle (b) ci-dessus).
+
+## 3. Hors des sections gelées : opérations du brouillon 14 au brouillon 15
+
+| id | nature | section | motif |
+|---|---|---|---|
+| T15-01 | remplacer | en-tête | titre : brouillon 15 |
+| T15-02 | remplacer_ligne | en-tête | statut du brouillon 15 |
+| T15-03 | ajouter_en_fin_de_ligne | en-tête | auteur du brouillon 15 |
+| T15-04 | ajouter_en_debut_de_valeur | en-tête | date du brouillon 15 |
+| T15-05 | ajouter_en_fin_de_ligne | Ce que les auteurs savaient avant le scellement | déclaration de vue : ce que l'auteur a lu pour le brouillon 15 |
+| T15-06 | inserer_avant | Depuis le gel du 10 novembre : faits, déclarations et ce qui reste (brouillon 11) | deux cas de la lecture des juges avec raisonnement nommés (balise à cheval ; réponse finie sans balise), sans règle neuve |
+| T15-07 | remplacer | Contre-lecture | vérification du brouillon 14 inscrite ; la vérification finale porte sur le brouillon 15 |
+| T15-08 | remplacer | Marqueurs à remplir avant le scellement | vérification des marqueurs : brouillon 15 |
+
+Texte ancien et texte nouveau de chaque opération : `brouillons/t08-texte-complet-fable-v1/couples-t08-brouillon15-v1.json`. Opérations antérieures : différentiels des brouillons 11 à 14, même dossier, sections 3.
+
+## 4. Opérations du brouillon 15 qui touchent une section gelée
+
+Aucune (contrôlé par le programme).
