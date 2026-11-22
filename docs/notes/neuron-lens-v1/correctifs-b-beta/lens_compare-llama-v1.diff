@@ -1,0 +1,59 @@
+--- a/scripts/checks/lens_compare.py
++++ b/scripts/checks/lens_compare.py
+@@ -15,6 +15,7 @@
+ """
+ import argparse
+ import itertools
++import json
+ import random
+ 
+ import torch
+@@ -26,7 +27,7 @@
+ from neuron_lens.readout import layer_logit_stats, read, read_z
+ from neuron_lens.weights import down_proj, readout_names, tensors
+ 
+-MODEL = "Qwen/Qwen3-8B"
++from neuron_lens.catalog import MODEL  # correctif (4) : le modèle de NEURON_LENS_MODEL, comme kept()
+ 
+ 
+ def main() -> None:
+@@ -35,15 +36,17 @@
+     ap.add_argument("--layers", default="2,8,14,20,26,32")
+     ap.add_argument("--samples", type=int, default=0)
+     ap.add_argument("--seed", type=int, default=0)
++    ap.add_argument("--json", default=None, help="correctif (4) : écrire les valeurs non arrondies dans ce fichier")
+     args = ap.parse_args()
+-    dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
++    dev = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+     random.seed(args.seed)
+     tok = AutoTokenizer.from_pretrained(MODEL)
+     layers = [int(x) for x in args.layers.split(",")]
+     known = {k: v for k, v in KNOWN.items() if args.samples}
+     all_layers = sorted(set(layers) | {v[0] for v in known.values()})
+     w = tensors(MODEL, readout_names() + [down_proj(l) for l in all_layers])
+-    keep = kept()  # the catalog's token mask
++    keep = kept(MODEL)  # the catalog's token mask
++    out = {"model": MODEL, "lenses": args.lenses, "layers": {}}
+     unembed = w["lm_head.weight"][keep].to(dev, torch.float16)
+     gamma = w["model.norm.weight"].to(dev, torch.float32)
+     specs = args.lenses.split(",")
+@@ -76,6 +79,8 @@
+                 overlap = torch.tensor([len(set(x.tolist()) & set(y.tolist())) / ia.shape[1]
+                                         for x, y in zip(ia, ib)]).mean()
+                 print(f"  {a} vs {b}: top-1 agree {top1:.2f}, top-10 overlap {overlap:.2f}")
++                out["layers"].setdefault(str(layer), {})[f"{a} vs {b}"] = {
++                    "top1_agree": top1.item(), "top10_overlap": overlap.item(), "rows": int(ia.shape[0])}
+         picks = [(f"n{n}", n, sgn) for n in random.sample(range(wd.shape[1]), args.samples)
+                  for sgn in (1, -1)] if layer in layers else []
+         picks += [(name, n, sgn) for name, (l, n, sgn) in known.items() if l == layer]
+@@ -88,6 +93,10 @@
+                 z = read_z(sgn * wd[:, n:n + 1], unembed, gamma, jac[s], *stats[s])[0]
+                 print(f"    {'':16s} z    | {fmt(z)}")
+ 
++    if args.json:
++        with open(args.json, "w") as f:
++            json.dump(out, f, indent=1)
++
+ 
+ if __name__ == "__main__":
+     main()

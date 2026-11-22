@@ -1,0 +1,68 @@
+--- a/scripts/06_activations.py
++++ b/scripts/06_activations.py
+@@ -284,7 +284,10 @@
+             hs.append(layer.mlp.down_proj.register_forward_pre_hook(lambda m, x, l=l: self.neuron(l, x[0])))
+             hs.append(layer.input_layernorm.register_forward_pre_hook(
+                 lambda m, x, l=l: self.input_norm(l, x[0], arch.norm_eps(m))))
+-            for side, norm in (("q", at.q_norm), ("k", at.k_norm)) + ((("v", at.v_norm),) if hasattr(at, "v_norm") else ()):
++            # Llama 3.1 has no q_norm or k_norm (correctif du 2026-11-14): a missing norm gets no hook, and its
++            # QK statistics (q, q_r, q_m, k_r, k_m) stay at zero; collect() marks the pass with meta["qk_norm"] = False.
++            norms = (("q", getattr(at, "q_norm", None)), ("k", getattr(at, "k_norm", None)), ("v", getattr(at, "v_norm", None)))
++            for side, norm in ((side, norm) for side, norm in norms if norm is not None):
+                 hs.append(norm.register_forward_hook(
+                     lambda m, x, out, l=l, side=side: self.qk_norm(l, side, x[0], out, arch.norm_eps(m))))
+             hs.append(at.o_proj.register_forward_pre_hook(lambda m, x, l=l: self.stash.__setitem__(l, x[0])))
+@@ -333,6 +336,8 @@
+     meta = {"model": MODEL, "slices": list(ACT_SLICES), "docs": len(rows), "seq_len": SEQ,
+             "neuron_from": NEURON_FROM, "head_from": HEAD_FROM, "edges": EDGES.tolist(), "top_docs": TOP,
+             "batch_docs": args.batch_docs, "dtype": "bfloat16", "attention": "eager"}
++    if any(getattr(layer.self_attn, n, None) is None for layer in model.layers for n in ("q_norm", "k_norm")):
++        meta["qk_norm"] = False  # no QK statistics in this pass (a convention: no script reads this key yet)
+     col = Collector(model, len(ACT_SLICES), device)
+     plan = plan_batches(slice_of, args.batch_docs)
+     next_batch, stage = 0, "main"
+@@ -586,17 +591,22 @@
+     head = tensors(MODEL, sorted({nm["unembed"], nm["norm"]}))
+     unembed = head[nm["unembed"]][keep].to(device, torch.float16)
+     gamma = head[nm["norm"]].to(device, torch.float32)
+-    J = arch.lens(MODEL, "R_mid", R_FIT)
+-    ids, vals = [], []
+-    for l in range(L):
+-        O = top["h_out"][l].reshape(H * K, -1).to(device, torch.float32).T  # [d, H·K]
+-        lg = arch.cap(MODEL, unembed @ rms_norm_columns(J[l].to(device) @ O, gamma).half()).float()  # [V, H·K]
+-        z = (lg - lg.mean(1, keepdim=True)) / lg.std(1, keepdim=True).clamp_min(1e-6)
+-        mz = z.view(-1, H, K).mean(-1).T  # [H, V]
+-        v, i = mz.topk(TOP, dim=1)
+-        ids.append(keep[i.cpu()])
+-        vals.append(v.cpu())
+-    put(cols, "out_R_z", torch.cat(ids), torch.cat(vals))
++    # Correctif du 2026-11-14: without a local R fit, the release (stdlogits/rs-lenses) holds R-lenses for Qwen3-8B and
++    # Gemma 4 12B only; for another model (Llama 3.1) the heads' table is written without out_R_z instead of failing.
++    if R_FIT == "hub" and arch.stem(MODEL) not in ("qwen3-8b", "gemma-4-12b"):
++        print(f"{time.strftime('%H:%M:%S')} no released R-lens for {MODEL}: heads/acts without out_R_z", flush=True)
++    else:
++        J = arch.lens(MODEL, "R_mid", R_FIT)
++        ids, vals = [], []
++        for l in range(L):
++            O = top["h_out"][l].reshape(H * K, -1).to(device, torch.float32).T  # [d, H·K]
++            lg = arch.cap(MODEL, unembed @ rms_norm_columns(J[l].to(device) @ O, gamma).half()).float()  # [V, H·K]
++            z = (lg - lg.mean(1, keepdim=True)) / lg.std(1, keepdim=True).clamp_min(1e-6)
++            mz = z.view(-1, H, K).mean(-1).T  # [H, V]
++            v, i = mz.topk(TOP, dim=1)
++            ids.append(keep[i.cpu()])
++            vals.append(v.cpu())
++        put(cols, "out_R_z", torch.cat(ids), torch.cat(vals))
+     cols |= {k: pa.array(v.float().numpy()) for k, v in head_modes(saved).items()}
+     write(cols, head_table("acts"))
+     print(f"{time.strftime('%H:%M:%S')} heads/acts written", flush=True)
+--- a/neuron_lens/arch.py
++++ b/neuron_lens/arch.py
+@@ -263,7 +263,7 @@
+     template, the first token of ``05_act_corpus.py``'s plain ``User:`` turns."""
+     if tok.chat_template:
+         return tok.convert_tokens_to_ids("<|im_start|>") if "<|im_start|>" in tok.get_vocab() else \
+-            tok.apply_chat_template([{"role": "user", "content": "a"}], tokenize=True)[len(bos(tok))]
++            tok.apply_chat_template([{"role": "user", "content": "a"}], tokenize=True, return_dict=False)[len(bos(tok))]
+     return tok("User:", add_special_tokens=False)["input_ids"][0]
+ 
+ 
