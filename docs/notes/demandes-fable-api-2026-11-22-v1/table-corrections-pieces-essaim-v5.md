@@ -14,7 +14,7 @@
 - chaque ajout suit son ancre ;
 - défaire les 17 opérations, dans l'ordre inverse, rend exactement le corps de la v4.
 
-Hors du corps de la pièce, seul l'en-tête change : sept lignes neuves en tête, puis l'en-tête de la v4 gardé tel quel.
+Hors du corps de la pièce, seul l'en-tête change : un en-tête neuf (un titre et six puces), puis l'en-tête de la v4 gardé tel quel.
 
 | N° | Lieu | ANCIEN trouvé | Porté | Remarque |
 |---|---|---|---|---|
