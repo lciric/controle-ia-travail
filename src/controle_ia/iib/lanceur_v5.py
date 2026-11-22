@@ -163,6 +163,13 @@ def _manifeste(dossier: Path, phase: str, config: dict, graines, sorties: dict, 
         "sorties": dict(sorted(sorties.items()))})
 
 
+def replis_de(modele) -> list[dict]:
+    """Replis de la forme du lot des suites consignés par le modèle réel (`modele_v1.ModeleTorch.replis` : `cache_duplique` vers
+    `prerempli_par_suite`) ; [] pour un modèle qui n'en tient pas (jouet). Correctif 0016 : la version 5 ne les écrivait nulle
+    part, si bien qu'un repli aurait été silencieux (note de lecture du 22 novembre, point 3 (b))."""
+    return [dict(r) for r in (getattr(modele, "replis", None) or [])]
+
+
 def reglages_de_l_agent(config: dict) -> dict:
     """Réglages de tirage de l'agent tels que la génération les emploie : la température de la génération, rien d'autre."""
     return {**config["tirage"], "temperature": float(config["generation"]["temperature"])}
@@ -271,7 +278,8 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
             "ids": _ids(episodes), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in episodes if "consignes" in ep}})
         par_phase[phase].extend(episodes)
         tous.extend(episodes)
-        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0))
+        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0),
+                replis=len(replis_de(modele)))
         if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
                                                      for p in (f, Path(str(f) + ".sha256"))])
@@ -325,13 +333,15 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
                  "lecture_de_la_troisieme_donnee": rp.lecture_de_la_troisieme_donnee(_lignes(honnetes, "N"), _lignes(honnetes, "P"),
                                                                                     graines.generateur("iib/rapportes/troisieme-donnee")),
                  "durees": durees, "duree_d_une_action_d_oracle_par_oracle_h": oracle_h["par_oracle_h"],
+                 "replis_forme_lot_suites": replis_de(modele),
                  "depense": {"usd": depense, "depuis": "création de la machine" if debut_utc_s is not None else "début de la phase (instant de création non fourni)"},
                  "chrono": chrono}
     sorties[NOMS["rapportes_etalonnage"]] = _ecrire(dossier, NOMS["rapportes_etalonnage"], rapportes)
     sorties["graines-etalonnage-iib-v5.json"] = _ecrire(dossier, "graines-etalonnage-iib-v5.json", {"entropie": str(graines.entropie), "prefixe": graines.prefixe,
                                                                              "graines": graines.employees})
     progres(etape="etalonnage", phase="fin", episodes=len(tous), lots=n_lot[0])
-    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0]}
+    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0],
+            "replis_forme_lot_suites": replis_de(modele)}
 
 
 def lire_entrees(config: dict, racine) -> dict | None:
@@ -453,7 +463,7 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
     sorties = {}
     progres(etape="course", phase="debut", tours_prevus=R, oracle=oracle)
     res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument,
-                              apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"]))
+                              apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"], replis=len(replis_de(modele))))
     premiers["cumul à la fin"] = pc.controle([e["oracle"][oracle][0] for e in joues], "le maître, cumul à la fin", course, validite)
     par_nom = {e["episode"]: e for e in joues}
     acceptes = [par_nom[e["episode"]] for e in res["episodes"] if e["decision"]["accepte"]]
@@ -482,7 +492,8 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
               "controle_premier_cout": premiers,
               "rapportes": {"maitre/" + oracle: rp.rapportes(_lignes(joues, oracle)),
                             **({"acceptes/" + autre: rp.rapportes(_lignes(acceptes, autre))} if res["arret"] is None and acceptes else {})},
-              "configuration_de_course": {"oracle_de_la_regle": course["oracle_de_la_regle"]}, "chrono": chrono}
+              "configuration_de_course": {"oracle_de_la_regle": course["oracle_de_la_regle"]}, "chrono": chrono,
+              "replis_forme_lot_suites": replis_de(modele)}
     sorties[NOMS["course"]] = _ecrire(dossier_abs, NOMS["course"], resume)
     verser("tours finis", _fichiers_scelles(*(dossier_abs / NOMS[k] for k in ("course", "oracle_course", "ids_course")
                                               if (dossier_abs / NOMS[k]).exists()),
@@ -544,7 +555,7 @@ def evaluer(course: dict, racine, dossier: Path, modele, monde, distillateur, gr
     sorties |= {NOMS["evaluation"]: _ecrire(dossier, NOMS["evaluation"], {
         "oracle_de_la_regle": oracle, "lignes": [l for o in ("P", "N") for l in _lignes(episodes, o)], "controle_premier_cout": premiers,
         "rapportes": {f"{c}/{o}": rp.rapportes([l for e in episodes if e["condition_evaluation"] == c for l in e["oracle"][o]])
-                      for c in CONDITIONS_EVALUATION for o in ("P", "N")}}),
+                      for c in CONDITIONS_EVALUATION for o in ("P", "N")}, "replis_forme_lot_suites": replis_de(modele)}),
                NOMS["ids_evaluation"]: _ecrire(dossier, NOMS["ids_evaluation"], {"ids": _ids(episodes)})}
     return {"sorties": sorties, "resume": {"episodes": len(episodes), "controle_premier_cout": {c: p["phrase"] for c, p in premiers.items()}}}
 
@@ -671,6 +682,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
+                  "replis_forme_lot_suites": r["replis_forme_lot_suites"],
                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
         ecrire_resultat(racine, chemin_m, "resume", resume)
         return resume
@@ -679,6 +691,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
                                                      "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
                                                      "duree_s": round(time.perf_counter() - debut, 1), "versements": versement.journal,
+                                                     "replis_forme_lot_suites": replis_de(modele),
                                                      "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
         progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
         raise
@@ -744,7 +757,8 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
-                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
+                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
+                  "duree_s": round(time.perf_counter() - debut, 1),
                   "aucune_activation": True}
         ecrire_resultat(racine, chemin_m, "resume", resume)
         return resume
@@ -754,7 +768,8 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
         ecrits += sorted(str((racine / dossier / NOMS[k]).relative_to(racine)) for k in SORTIES_DE_LA_COURSE if (racine / dossier / NOMS[k]).exists())
         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage,
                                                      "etape": etat["etape"], "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
-                                                     "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
+                                                     "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
+                                                     "duree_s": round(time.perf_counter() - debut, 1),
                                                      "issue": "course interrompue : ce qui est écrit est scellé et versé ; toute reprise est une course neuve"})
         progres(etape="arret", phase="course", fichiers_ecrits=len(ecrits))
         raise

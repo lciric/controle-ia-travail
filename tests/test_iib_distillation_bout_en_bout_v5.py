@@ -193,6 +193,9 @@ def test_point_d_entree_de_la_course_versee_par_tour_poussee_et_resumee(point_d_
     tours = sorted((dossier / "tours").glob("tour-*-maitre.json"))
     course = json.loads((dossier / la.NOMS["course"]).read_text(encoding="utf-8"))
     assert len(tours) == len(course["tours"]) >= 1
+    # correctif 0016 : replis de la forme du lot des suites écrits (aucun sur le jouet), au résumé, à la course, à l'évaluation
+    assert resume["replis_forme_lot_suites"] == course["replis_forme_lot_suites"] == []
+    assert json.loads((dossier / la.NOMS["evaluation"]).read_text(encoding="utf-8"))["replis_forme_lot_suites"] == []
     # chaque tour est sur la branche distante, dans un commit à lui (« versement tour NNN »), avant la fin de la course
     distant = set(git(point_d_entree["origine"], "ls-tree", "-r", "--name-only", BRANCHE).splitlines())
     messages = git(point_d_entree["origine"], "log", "--format=%s", BRANCHE).splitlines()
@@ -212,6 +215,7 @@ def test_point_d_entree_de_la_course_versee_par_tour_poussee_et_resumee(point_d_
     assert sorted(map(json.dumps, par)) == sorted(map(json.dumps, ev["lignes"]))
     progres = [l for l in r.stderr.splitlines() if l.startswith("PROGRES ")]
     assert sum("etape=course" in l and " tour=" in l for l in progres) == len(tours)
+    assert all(l.endswith(" replis=0") for l in progres if "etape=course" in l and " tour=" in l)
     assert not any("acceptes=" in l for l in progres if "etape=course" in l)      # marque neutre : aucun compte d'acceptés
     for f in tours:
         brut = f.read_text(encoding="utf-8")

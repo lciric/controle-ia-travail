@@ -560,3 +560,26 @@ def test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_ar
     # phase illisible (amorce absente du dossier de la session) : arrêt, aucun repli silencieux
     code, sortie, texte, appels, d = _surveiller(tmp_path / "illisible", None, 1.0)
     assert code == 3 and "règle de coupure de l'étalonnage illisible" in sortie and "phase illisible" in texte
+
+
+def test_replis_de_la_forme_du_lot_des_suites_ecrits_jamais_silencieux(tmp_path, capfd):
+    """Correctif 0016 : un repli consigné par le modèle (`modele_v1` : `cache_duplique` vers `prerempli_par_suite`) est écrit
+    au résumé et aux rapportés de l'étalonnage, et compté dans chaque marque de progrès de lot ; cas sain : modèle sans repli,
+    liste vide et « replis=0 » ; un modèle qui ne tient pas de liste (jouet) rend une liste vide, jamais une erreur avalée."""
+    config, _ = _depot_jouet(tmp_path)
+    modele = ModeleJouetDeLangue()
+    assert la.replis_de(modele) == [] and la.replis_de(None) == []
+    modele.replis = [{"de": "cache_duplique", "vers": "prerempli_par_suite", "motif": "RuntimeError: essai (artefact planté)"}]
+    r = la.executer("etalonnage", config, tmp_path, "20991231-000030-iib-jouet", modele, la.MondeJouet(), {}, carte=False)
+    assert r["replis_forme_lot_suites"] == modele.replis
+    d = tmp_path / "diag" / "20991231-000030-iib-jouet"
+    assert json.loads((d / "resume.json").read_text(encoding="utf-8"))["resultat"]["replis_forme_lot_suites"] == modele.replis
+    assert json.loads((d / la.NOMS["rapportes_etalonnage"]).read_text(encoding="utf-8"))["replis_forme_lot_suites"] == modele.replis
+    lots = [l for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l and "etape=etalonnage" in l]
+    assert len(lots) == 28 and all(l.endswith(" replis=1") for l in lots)
+    sain = tmp_path / "sain"
+    sain.mkdir()
+    config2, _ = _depot_jouet(sain)
+    r2 = la.executer("etalonnage", config2, sain, "20991231-000031-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+    assert r2["replis_forme_lot_suites"] == []
+    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l)
