@@ -436,7 +436,7 @@ Chaque pièce de `version-servie/` a son `.sha256`. Elles ont été committées 
 | `sortie-devis-v8d-six-especes.txt` ; `sortie-devis-v8m-cinq-especes-sortie-max.txt` | dcfd4ff5… ; 6431b62d… |
 | `servi/question-v8-depuis-le-titre.md` (avant la version servie) | 38a1a8e9… |
 
-**Calculs de la v2**, versés ici avec leurs compagnons, non committés, dans `calculs-v3/` :
+**Calculs de la v2**, versés avec leurs compagnons dans `calculs-v3/` (committés par la mère au commit dbafadaa) :
 
 | fichier | empreinte |
 |---|---|
