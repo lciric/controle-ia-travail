@@ -1,0 +1,188 @@
+diff --git a/src/controle_ia/t08/lecture_v1.py b/src/controle_ia/t08/lecture_v1.py
+index 746621912..d8bfcf6c7 100644
+--- a/src/controle_ia/t08/lecture_v1.py
++++ b/src/controle_ia/t08/lecture_v1.py
+@@ -193,6 +193,8 @@ def passage_a_blanc_reel(marqueurs: dict, registre, prereg, maintenant: datetime
+             "SCELLEMENT-T08": controles["SCELLEMENT-T08"], "CODE-T08": controles["CODE-T08"],
+             "anteriorite_sur": controles["anteriorite_sur"], "RUN-CONFIRMATION-T06": run,
+             "CODE-MOTS-ET-COUT-T06": code_piece, "piece_mots_et_cout": piece_controlee,
++            "piece_points_joues": "(a) seul ; (b) à (e) et chargement NON joués (racine_piece absente)"
++            if racine_piece is None else "(a) à (e) et chargement par chemin",
+             "LECTURE-T08-BASE-A_presente": "LECTURE-T08-BASE-A" in reg["lignes"],
+             "registre": {"lignes_lues": sorted(reg["lignes"]), "ignorees": reg["ignorees"],
+                          "mal_formees": reg["mal_formees"], "mal_formees_lues": reg["mal_formees_lues"]}}
+@@ -1066,6 +1068,14 @@ def executer_lecture(config: dict, racine, run_id: str, prereg: str | None = Non
+     if mode == "reel" and (piece.mode != "reel" or piece.inscription is None):
+         raise GardeArret("lecture réelle : pièce « mots et coût » non chargée par `charger_piece` en mode réel (contrôles "
+                          "(a) à (e) exigés) : arrêt")
++    if mode == "reel":                  # pièce rattachée au marqueur de cette configuration (CA-02)
++        c, i = marqueurs["CODE_MOTS_ET_COUT_T06"], piece.inscription
++        vu = {"commit": i["commit"], "fichier_inscription": i["fichier_inscription"]["chemin"],
++              "sha256_inscription": i["fichier_inscription"]["sha256"], "module": i["module"]["chemin"],
++              "sha256_module": i["module"]["sha256"]}
++        if vu != {k: c[k] for k in vu}:
++            raise GardeArret("lecture réelle : pièce « mots et coût » contrôlée sur un autre marqueur que "
++                             "CODE_MOTS_ET_COUT_T06 de la configuration : arrêt")
+     debut = time.perf_counter()
+     lecture = LectureT08(config, racine, None, piece, prereg=prereg)
+     # (a) et (b) ne tirent rien : ils passent avant le manifeste ; un arrêt par leurs gardes (entrées, empreintes,
+diff --git a/src/controle_ia/t08/mots_et_cout_v1.py b/src/controle_ia/t08/mots_et_cout_v1.py
+index c3291aeb9..f25c18f79 100644
+--- a/src/controle_ia/t08/mots_et_cout_v1.py
++++ b/src/controle_ia/t08/mots_et_cout_v1.py
+@@ -261,7 +261,7 @@ def charger_module_par_chemin(chemin, sha_attendue: str, nom: str = NOM_MODULE_P
+             sys.modules.pop(nom, None)
+         else:
+             sys.modules[nom] = ancien
+-        if isinstance(e, GardeArret):
++        if isinstance(e, GardeArret) or not isinstance(e, Exception):    # interruption, sortie : relevées telles quelles
+             raise
+         raise GardeArret(f"pièce « mots et coût » : chargement par chemin de {chemin.name} impossible "
+                          f"({type(e).__name__}: {e}) : arrêt") from e
+@@ -277,9 +277,17 @@ def charger_piece(mode: str, marqueur: dict | None = None, racine=".", ligne: di
+     if marqueur is None:
+         raise GardeArret("pièce « mots et coût » : marqueur CODE_MOTS_ET_COUT_T06 absent : aucune lecture en mode réel")
+     controle = verifier_inscription(marqueur, ligne, racine)
++    ancien = sys.modules.get(NOM_MODULE_PIECE)
+     module = charger_module_par_chemin(_sous_racine(racine, marqueur["module"], "module de la pièce"),
+                                        marqueur["sha256_module"])
+-    piece = Piece(module, marqueur["module"], mode)
++    try:
++        piece = Piece(module, marqueur["module"], mode)
++    except BaseException:               # pièce refusée (jouet, contrat incomplet) : `sys.modules` tel qu'avant (CA-01)
++        if ancien is None:
++            sys.modules.pop(NOM_MODULE_PIECE, None)
++        else:
++            sys.modules[NOM_MODULE_PIECE] = ancien
++        raise
+     piece.inscription = controle
+     return piece
+ 
+diff --git a/tests/test_t08_alignement_piece_v1.py b/tests/test_t08_alignement_piece_v1.py
+index 94b622463..79248ede2 100644
+--- a/tests/test_t08_alignement_piece_v1.py
++++ b/tests/test_t08_alignement_piece_v1.py
+@@ -238,8 +238,7 @@ def test_chargement_autre_garde_arret(tmp_path):
+ 
+ def test_chargement_contrat_incomplet(tmp_path):
+     r, mq, ligne = _module_inscrit(tmp_path, "def centres(a):\n    return {}\n")
+-    with pytest.raises(GardeArret, match="fonctions du contrat absentes"):
+-        mc.charger_piece("reel", mq, r, ligne)
++    _exiger_arret(r, mq, ligne, "fonctions du contrat absentes")      # aucun module laissé dans sys.modules (CA-01)
+ 
+ 
+ def test_enveloppe_du_paquet_par_chemin_refusee(tmp_path):
+@@ -317,3 +316,57 @@ def test_chargement_par_chemin_relit_l_empreinte(tmp_path):
+     with pytest.raises(GardeArret, match="≠ empreinte citée"):
+         mc.charger_module_par_chemin(m, "0" * 64, nom="controle_ia_t08_essai_chargeur")
+     assert "controle_ia_t08_essai_chargeur" not in sys.modules
++
++
++class _Espion:
++    """Module de la pièce vu par l'enveloppe : enregistre chaque attribut lu et chaque appel (CA-03)."""
++
++    def __init__(self, module):
++        self._module, self.lus, self.appels = module, [], []
++
++    def __getattr__(self, nom):
++        self.lus.append(nom)
++        v = getattr(self._module, nom)
++        if not callable(v):
++            return v
++
++        def appel(*a, **k):
++            self.appels.append((nom, a, k))
++            return v(*a, **k)
++        return appel
++
++
++def test_enveloppe_n_appelle_que_le_contrat_et_passe_les_entrees_telles_quelles(piece_reelle):
++    """CA-03 : l'enveloppe lit seulement les six fonctions du contrat (et `PIECE_JOUET`, au refus du jouet), et passe à
++    la pièce les actions, les étiquettes et les centres tels qu'elle les a reçus (centres : tâche et coût seuls)."""
++    espion = _Espion(piece_reelle.module)
++    p = mc.Piece(espion, "espion", "reel")
++    app, y = _actions_factices(3, [f"t{i}" for i in range(5)])
++    lus, _ = _actions_factices(4, [f"u{i}" for i in range(2)])
++    c = p.centres(app + lus)
++    for base in ("A", "B"):
++        m = p.apprendre(base, "S100", 0, app, y, c, [a["cle"] for a in app])
++        p.noter(m, lus, c)
++        if base == "A":
++            p.etat_a(m)
++    assert set(espion.lus) <= set(mc.CONTRAT) | {"PIECE_JOUET"}
++    assert [n for n, _, _ in espion.appels] == ["centres", "apprendre_a", "noter_a", "etat_a", "apprendre_b", "noter_b"]
++    appels = {n: (a, k) for n, a, k in espion.appels}
++    assert appels["centres"][0][0] == [{"tache": a["tache"], "cout": a["cout"]} for a in app + lus]
++    for n in ("apprendre_a", "apprendre_b"):
++        (acts, yy, cc), k = appels[n]
++        assert acts is app and np.array_equal(yy, y) and cc is c and k == {}
++    for n in ("noter_a", "noter_b"):
++        (interne, acts, cc), k = appels[n]
++        assert acts is lus and cc is c and k == {}
++
++
++
++def test_chargement_interruption_relevee_telle_quelle(tmp_path):
++    """CA-05 : une interruption ou une sortie pendant l'exécution de la pièce est relevée telle quelle (non convertie en
++    `GardeArret`), après restauration de `sys.path` et `sys.modules`."""
++    r, mq, ligne = _module_inscrit(tmp_path, "raise SystemExit(3)\n" + CONTRAT_VIDE)
++    avant = set(sys.modules)
++    with pytest.raises(SystemExit):
++        mc.charger_piece("reel", mq, r, ligne)
++    assert set(sys.modules) - avant == set()
+diff --git a/tests/test_t08_lecture_course_v1.py b/tests/test_t08_lecture_course_v1.py
+index 9af0e4471..c70184785 100644
+--- a/tests/test_t08_lecture_course_v1.py
++++ b/tests/test_t08_lecture_course_v1.py
+@@ -812,6 +812,19 @@ def test_lecture_reelle_charge_la_piece_par_charger_piece(env, monkeypatch):
+     run = f"{env['h']}-t08-lecture-reel-piece"
+     with pytest.raises(GardeArret, match="non chargée par `charger_piece` en mode réel"):
+         lv.executer_lecture(cfg, env["racine"], run, prereg="prereg/x.md", piece=lv.mc.charger_piece("jouet"))
++    # CA-02 : pièce réelle contrôlée sur un autre marqueur (celui du brouillon 11) que celui de la configuration
++    from controle_ia.t08 import entrees_v1 as en_
++
++    mq_reel = {"commit": "da06bb57610f840152e4e9a8c449b036577cc582",
++               "fichier_inscription": "registres/code-mots-et-cout-t06/CODE-MOTS-ET-COUT-T06-v1.json",
++               "sha256_inscription": "e418fdafbf8362f0458eb0448ec2d32ffa9a8bb122ec619ad0aaf68a9df3b43b",
++               "module": "scripts/mots_et_cout_t06_v3.py",
++               "sha256_module": "9dbcc55ca47b21674636f5d6c9126af15244d5ee63a9df8dee274df126c4e674"}
++    ligne = en_.exiger_ligne(en_.lire_registre_scellements(ej.RACINE_DEPOT / "registres" / "scellements-v1.md"),
++                             "CODE-MOTS-ET-COUT-T06")
++    autre = lv.mc.charger_piece("reel", mq_reel, ej.RACINE_DEPOT, ligne)
++    with pytest.raises(GardeArret, match="contrôlée sur un autre marqueur"):
++        lv.executer_lecture(cfg, env["racine"], run, prereg="prereg/x.md", piece=autre)
+     # (a) à (c) passent sur le registre et l'inscription factices ; le module cité n'est pas sous la racine des entrées :
+     # arrêt au point (d) (le refus de l'enveloppe chargée par chemin : `test_t08_alignement_piece_v1`)
+     with pytest.raises(GardeArret, match=r"^\(d\) module src/controle_ia/t08/mots_et_cout_v1.py absent sur disque"):
+diff --git a/tests/test_t08_tokeniseur_balise_v1.py b/tests/test_t08_tokeniseur_balise_v1.py
+index ce28910c9..40e8beca4 100644
+--- a/tests/test_t08_tokeniseur_balise_v1.py
++++ b/tests/test_t08_tokeniseur_balise_v1.py
+@@ -159,3 +159,27 @@ def test_constat_balise_a_cheval(tok):
+         elif suite[:1].isdigit():                                 # premier groupe de trois chiffres au plus, lu après
+             groupe = int(re.match(r"\d{1,3}", suite).group())       # la balise : jeton d'une valeur s'il vaut 0 à 100
+             assert (ids[j] == jetons[groupe]) if groupe <= 100 else (ids[j] not in jetons.values()), suite
++
++
++# Balayage (CA-06) : caractères ASCII imprimables et blancs qui, écrits juste après la balise, fusionnent avec `>` en un
++# seul jeton du tokeniseur réel (état « à cheval ») ; constat figé, relevé par cet essai : 41 lettres sur 52, le saut de
++# ligne, et toute la ponctuation sauf `!`, `^`, `~` ; ni chiffre, ni espace, ni tabulation, ni retour chariot.
++A_CHEVAL_ASCII = set("abcdefijkmnprstvwxyABCDEFGHIJKLMNOPRSTVXZ" + "\"#$%&'()*+,-./:;<=>?@[\\]_`{|}" + "\n")
++
++
++def test_balayage_ascii_apres_la_balise(tok):
++    """Chaque caractère ASCII imprimable ou blanc après la balise, puis la valeur 85 : la détection ne manque jamais la
++    balise ; l'état est « balise » (jeton suivant = jeton de la valeur, ou le caractère lui-même) ou « a_cheval » pour
++    exactement les caractères de `A_CHEVAL_ASCII`."""
++    import string
++
++    vus = set()
++    for ch in string.printable:
++        ids = tok.encode(f"{BALISE}{ch}85", add_special_tokens=False)
++        j = _arret(tok, ids)
++        assert j is not None, repr(ch)
++        coupe = couper_a_la_balise(tok, ids[:j])
++        assert coupe["k"] == j and coupe["etat"] in ("balise", "a_cheval"), (repr(ch), coupe)
++        if coupe["etat"] == "a_cheval":
++            vus.add(ch)
++    assert vus == A_CHEVAL_ASCII, (sorted(vus - A_CHEVAL_ASCII), sorted(A_CHEVAL_ASCII - vus))
