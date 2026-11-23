@@ -29,3 +29,5 @@
 - raisons et regard : claude/raisons-ou-regard-reprise-v1 9508a43a, 2026-11-23-0639-raisons-ou-regard.md (ffb51779…) ; relance d'Astra en attente de recharge OpenAI
 - lecteur des verdicts P3-bis, B, B bis : lecture/verdicts-p3bis-b-bbis-pour-lazar-v1 b301ed5a5, 2026-11-23-0639-lecteur-verdicts-p3bis-b-bbis.md (d746a681…) — cloisonné
 - renvois par l'interface : claude/renvois-api-classifieur-v1 17e520ad (a0071f8b…) ; 50 fichiers d'essais versés ; sorties en quarantaine prep/quarantaine-renvois-api-v1
+- lecteur repreneur lentilles B bis : lecture/lentilles-sondes-bbis-v1 abf4a299a, 2026-11-23-0640-lecteur-repreneur-lentilles-bbis.md (fb1afaf1…) — cloisonné
+- passation collective par la mère (18 sessions non essentielles) : registres/passations/2026-11-23-0645-passation-collective-par-la-mere.md
