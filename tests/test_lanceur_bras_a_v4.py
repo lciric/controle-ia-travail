@@ -1030,3 +1030,30 @@ def test_dose_recue_explicite(jouet):
     for champ, n in ((None, 128), ("CONTROLS", 127)):
         with pytest.raises(GardeArret, match="dose reçue"):
             la.fabriquer_condition(fmt, eps[:n], TACHES, champ, (1.0,), ENTROPIE_FICTIVE, REG, None, dose_recue=True)
+
+
+# --- Essais ajoutés après la campagne de mutants (survivants de la première passe) ----------------------------------------
+
+def test_ligne_1_plafond_deja_franchi_avant_le_premier_lot(config_lue, constat, tmp_path):
+    """Relevé **avant** le premier lot : un compteur déjà au-dessus du plafond n'en joue aucun ; rien n'est écrit."""
+    d, appels = _sorties(tmp_path), []
+    with pytest.raises(la.ArretDePlafond):
+        la.jouer_ligne_1(None, Fmt(), config_lue, _plan(), {}, None, d,
+                         la.CompteurDePlafond(18.0, 1.38, 0.0, horloge=Horloge(3600 * 14.0)), constat,
+                         jouer_lot=_jeu_espion(appels))
+    assert appels == [] and not list(d.iterdir())
+
+
+def test_perimetre_au_pluriel_refuse():
+    """« lignes 1 … » au pluriel, même accompagné de la ligne jouée : refusé (un GO pour la seule ligne jouée)."""
+    with pytest.raises(GardeArret, match="nomme aussi"):
+        la.exiger_ligne_de_go("GO-2026-11-23-150", _registre(SAINE.replace(
+            "ligne 1 du bras A", "ligne 1 du bras A ; lignes 1 et suivantes")), AUJOURD_HUI)
+
+
+def test_constat_date_le_go_par_son_horloge(config_lue):
+    """Le GO est daté par l'horloge du constat : passé son échéance (2026-11-30), le départ est refusé même avec un
+    relevé du jour."""
+    tard = datetime(2026, 12, 5, 9, 0, 0, tzinfo=timezone.utc)
+    with pytest.raises(GardeArret, match="validité"):
+        _constat(config_lue, maintenant=tard, tarifs=dict(TARIFS, date_utc="2026-12-05T08:00:00Z"))
