@@ -33,3 +33,8 @@ ai je oublié des choses à modéliser ?
 ## Message 3 (envoi)
 
 « j'aimerais que la demande reformulée soit envoyée au collisionneur avec toutes les espèces, à fable max en session pas api, opus 5.5 max aussi, et neon » ; puis « interroge carbon à part aussi dessus et argon je suis curieux, avec la clé gemini rigaud qui a 60 dollars dessus, je sais plus laquelle c'est, teste-les » ; puis « et neon ».
+
+## Message 4 (vers 13:30Z, après l'envoi des premières demandes ; non servi aux répondants déjà partis, versé pour la suite)
+
+oui a mon avis au fur et a mesure que deux reseaux ou deux bouts d'un reseau deformé se rpprochent, le champ d'iteraction doit devenir plus puissant, donc augmenter avec l'inverse d'une fonction croissnate de la distance . toute la difcuclte c'est de definir  la bone distance, dans la bonne dimensions ou le sbone sdimensions . mais il ne suffit pas que deux reseau se rapprochet pour qu'ils interaissent, il faut que des colsiosn soient activemlnt menees, des experiences des publications non? je ne sais pas avec la relativite c'etait dans l'air du temps mais impublié totalement hormis les travaux de piincaré qui a faill aboutir d'ailleurs , pourquoi parc qu'il avait toruve la bonne invariance
+donc le champ d'interaction auglenterait au fur et a mesure qu'on se rapproche de la bonne invariance ? ce serait donc lié a direction dans laquelle l'invarinace apparait evidente ? il est peut etre maximal dans cete direction là ?
