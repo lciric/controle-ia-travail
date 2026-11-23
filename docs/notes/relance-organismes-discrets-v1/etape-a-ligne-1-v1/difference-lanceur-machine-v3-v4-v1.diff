@@ -1,0 +1,186 @@
+--- scripts/lanceur_machine_ligne_1_bras_a_v3.py	2026-11-23 03:49:40.090758048 +0000
++++ scripts/lanceur_machine_ligne_1_bras_a_v4.py	2026-11-23 04:27:46.090004179 +0000
+@@ -1,7 +1,20 @@
+-"""Lanceur de la machine autonome de la ligne 1 de carte du bras A, version 3 (23 novembre 2026 ; les versions 1 et 2
+-restent telles quelles, jamais jouées).
++"""Lanceur de la machine autonome de la ligne 1 de carte du bras A, version 4 (23 novembre 2026 ; les versions 1 à 3
++restent telles quelles).
+ 
+-Différences avec la version 2 (contre-lecture de la machine v2) : amorce d'appel v2
++Différence avec la version 3 : le masquage seul. Constaté en vrai : la sous-commande `masquer` de la v3 laissait passer
++le champ `instance_api_key` de la réponse du loueur à la création (`Started. {'success': True, 'new_contract': …,
++'instance_api_key': '…'}`, dict Python, ou JSON). La v4 masque, en `***` : (1) la valeur de tout champ dont le nom
++contient `api_key`, `apikey`, `token`, `secret`, `password` ou `key` (casse ignorée), sous forme JSON
++(`"nom": "valeur"`), dict Python (`'nom': 'valeur'`), `nom=valeur` ou paire `[nom, valeur]`, et dans les objets
++structurés ; (2) toute suite d'au moins 32 caractères hexadécimaux et tout ce qui ressemble à un jeton GitHub
++(`ghp_`, `gho_`, `ghs_`, `ghu_`, `ghr_`, `github_pat_`) ou Hugging Face (`hf_`), sauf les empreintes et commits connus
++(liste blanche : `--commit-entree`, `--amorce-sha256`, `--connue`, ou `COMMIT_ENTREE` et `AMORCE_SHA256` de
++l'environnement ; la vérification y met le commit lu et l'empreinte du manifeste qu'elle a calculés) ; (3) les
++valeurs des variables secrètes présentes dans l'environnement, comme la v3. La commande de création passe le commit
++d'entrée et l'empreinte de l'amorce complète à `masquer`. Ce qui suit décrit la version 3, au nom du programme et au
++masque près.
++
++Différences de la version 3 avec la version 2 (contre-lecture de la machine v2) : amorce d'appel v2
+ (`scripts/amorce_appel_ligne_1_bras_a_v2.sh`) et amorce complète v3 (`scripts/amorce_ligne_1_bras_a_v3.sh`) ; la
+ commande imprimée porte `${GH_TOKEN:?}` et `${HF_TOKEN:?}` (un secret vide fait échouer la commande chez la mère, au
+ lieu d'un démarrage perdu), et sa sortie passe par la sous-commande `masquer` de ce programme (m8).
+@@ -56,17 +69,30 @@
+ ETIQUETTE = "bras-a-ligne-1-v1"
+ AMORCE = "scripts/amorce_appel_ligne_1_bras_a_v2.sh"
+ AMORCE_COMPLETE = "scripts/amorce_ligne_1_bras_a_v3.sh"
+-CE_PROGRAMME = "scripts/lanceur_machine_ligne_1_bras_a_v3.py"
++CE_PROGRAMME = "scripts/lanceur_machine_ligne_1_bras_a_v4.py"
+ TAILLE_MAX_APPEL = 2500
+ BRANCHE_ENTREE = "entree/bras-a-ligne-1-v1"
+ BRANCHE_SORTIE = "calcul/bras-a-ligne-1-v1"
+ API = "https://console.vast.ai/api/v0"
+ SECRETS = ("VAST_API_KEY", "HF_TOKEN", "GH_TOKEN", "CONTAINER_API_KEY")
+-_NOM_SECRET = re.compile(r"api_?key|token|secret|password", re.I)
++_NOM = r"[\w.-]*?(?:api_?key|apikey|token|secret|password|key)[\w.-]*"
++_NOM_SECRET = re.compile(r"api_?key|apikey|token|secret|password|key", re.I)
++_CHAINE = r"""(?P<q2>["'])(?:\\.|(?!(?P=q2))[^\\])*(?P=q2)"""
++# "nom": valeur  /  'nom': valeur  (JSON, dict Python)
++_CHAMP = re.compile(r"""(?P<tete>(?P<q>["'])""" + _NOM + r"""(?P=q)\s*:\s*)(?:""" + _CHAINE + r"""|[^,\s}\]]+)""", re.I)
++# [nom, valeur]  /  ("nom", valeur)
++_PAIRE = re.compile(r"""(?P<tete>[\[(]\s*(?P<q>["'])""" + _NOM + r"""(?P=q)\s*,\s*)(?:""" + _CHAINE
++                    + r"""|[^\]\)\s,]+)(?P<queue>\s*[\])])""", re.I)
++# nom=valeur
++_EGAL = re.compile(r"""(?P<tete>(?<![\w.-])""" + _NOM + r"""\s*=(?!=)\s*)(?:""" + _CHAINE + r"""|[^\s,;&'"\]}\)]+)""", re.I)
++_JETON = re.compile(r"(?<![A-Za-z0-9_])(?:gh[opsur]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|hf_[A-Za-z0-9]{20,})")
++_HEX = re.compile(r"(?<![0-9A-Fa-f])[0-9A-Fa-f]{32,}(?![0-9A-Fa-f])")
++_CONNUE = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
++CONNUES_ENV = ("COMMIT_ENTREE", "AMORCE_SHA256")
+ _COMMIT = re.compile(r"[0-9a-f]{40}")
+ _BRANCHE = re.compile(r"[a-z0-9][a-z0-9/._-]*[a-z0-9]")
+ _VERSEMENT = re.compile(r"diag/organismes-discrets-v-a-v2/ligne-1-(fini|arret|echec|reprise)-\d{8}T\d{6}Z")
+-MASQUE = "[masqué]"
++MASQUE = "***"
+ CHAMPS_ETAT = ("id", "label", "actual_status", "intended_status", "cur_state", "next_state", "status_msg", "gpu_name",
+                "driver_version", "dph_total", "dph_base", "storage_cost", "disk_space", "start_date", "end_date")
+ 
+@@ -79,24 +105,58 @@
+     return [v for v in (os.environ.get(n, "") for n in SECRETS) if len(v) >= 4]
+ 
+ 
+-def masquer(objet, valeurs=None):
+-    """Copie masquée : valeurs secrètes de l'environnement, champs au nom de secret, paires [nom, valeur] de secret."""
++def connues_de_l_environnement() -> list[str]:
++    return [os.environ.get(n, "") for n in CONNUES_ENV]
++
++
++def _liste_blanche(connues) -> frozenset:
++    return frozenset(c.strip().lower() for c in (connues or ()) if isinstance(c, str) and _CONNUE.fullmatch(c.strip().lower()))
++
++
++def _valeur_masquee(m, nue: str = MASQUE) -> str:
++    q = m.group("q2")
++    return m.group("tete") + (f"{q}{MASQUE}{q}" if q else nue) + (m.groupdict().get("queue") or "")
++
++
++def _valeur_masquee_citee(m) -> str:
++    """Champ JSON ou paire dont la valeur n'est pas une chaîne (nombre, null) : `"***"`, pour que le JSON reste lisible."""
++    return _valeur_masquee(m, f'"{MASQUE}"')
++
++
++def masquer_texte(texte: str, valeurs=None, connues=None) -> str:
++    """Texte masqué : (3) valeurs secrètes de l'environnement ; (1) valeur de tout champ au nom de secret (JSON, dict
++    Python, `nom=valeur`, paire) ; (2) jetons GitHub et Hugging Face, suites hexadécimales d'au moins 32 caractères
++    hors liste blanche."""
++    valeurs = valeurs_secretes() if valeurs is None else valeurs
++    blanche = _liste_blanche(connues_de_l_environnement() if connues is None else connues)
++    for v in sorted(valeurs, key=len, reverse=True):
++        texte = texte.replace(v, MASQUE)
++    texte = _CHAMP.sub(_valeur_masquee_citee, texte)
++    texte = _PAIRE.sub(_valeur_masquee_citee, texte)
++    texte = _EGAL.sub(_valeur_masquee, texte)
++    texte = _JETON.sub(MASQUE, texte)
++    return _HEX.sub(lambda m: m.group(0) if m.group(0).lower() in blanche else MASQUE, texte)
++
++
++def masquer(objet, valeurs=None, connues=None):
++    """Copie masquée : champs au nom de secret, paires [nom, valeur] de secret, et chaque chaîne par `masquer_texte`."""
+     valeurs = valeurs_secretes() if valeurs is None else valeurs
++    connues = connues_de_l_environnement() if connues is None else connues
+     if isinstance(objet, dict):
+-        return {k: (MASQUE if isinstance(k, str) and _NOM_SECRET.search(k) else masquer(v, valeurs)) for k, v in objet.items()}
++        return {k: (MASQUE if isinstance(k, str) and _NOM_SECRET.search(k) else masquer(v, valeurs, connues))
++                for k, v in objet.items()}
+     if isinstance(objet, (list, tuple)):
+         if len(objet) == 2 and isinstance(objet[0], str) and _NOM_SECRET.search(objet[0]):
+             return [objet[0], MASQUE]
+-        return [masquer(x, valeurs) for x in objet]
++        return [masquer(x, valeurs, connues) for x in objet]
+     if isinstance(objet, str):
+-        for v in valeurs:
+-            objet = objet.replace(v, MASQUE)
+-        return objet
++        return masquer_texte(objet, valeurs, connues)
+     return objet
+ 
+ 
+-def ecrire(objet) -> None:
+-    print(masquer(json.dumps(masquer(objet), ensure_ascii=False, indent=1)))
++def ecrire(objet, connues=None) -> None:
++    connues = list(connues or ()) + connues_de_l_environnement()
++    print(masquer(json.dumps(masquer(objet, connues=connues), ensure_ascii=False, indent=1), connues=connues))
+ 
+ 
+ # --- creation ------------------------------------------------------------------------------------------------------------
+@@ -122,7 +182,7 @@
+                     "-e AVANT_CREATION_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)"])
+     return (f"GO_ID={GO_ID} vastai create instance {offre} --image {image} --disk {disque} --label {etiquette} "
+             f"--cancel-unavail --raw --env \"{env}\" --onstart {amorce} 2>&1 | PYTHONPATH=src .venv/bin/python "
+-            f"{CE_PROGRAMME} masquer")
++            f"{CE_PROGRAMME} masquer --commit-entree {commit_entree} --amorce-sha256 {amorce_sha256}")
+ 
+ 
+ def _ls_remote(distant: str, branche: str, racine: Path) -> str | None:
+@@ -238,19 +298,22 @@
+     if start_date is not None:
+         sortie["start_date_utc"] = instant_bas(start_date)
+         sortie["creation_retenue_au_plus_start_date"] = amorce.get("creation_retenue_utc", "9") <= sortie["start_date_utc"]
+-    return masquer(sortie)
++    return masquer(sortie, connues=[lu, sha] + connues_de_l_environnement())
+ 
+ 
+ def sous_verification(a) -> int:
+     sortie = verifier_la_sortie(a.distant, a.branche_sortie, Path(a.racine), a.start_date, a.commit)
+-    ecrire(sortie)
++    ecrire(sortie, connues=[sortie["commit"], sortie["manifeste_du_versement_sha256"]])
+     return 0 if sortie.get("creation_retenue_au_plus_start_date", True) else 3
+ 
+ 
+ def sous_masquer(a) -> int:
+-    """Recopie l'entrée standard masquée (sortie de la commande de création du loueur, `--raw`)."""
++    """Recopie l'entrée standard masquée (sortie de la commande de création du loueur, `--raw`) ; liste blanche des
++    suites hexadécimales : commit d'entrée, empreinte de l'amorce, `--connue`, et l'environnement."""
++    connues = [a.commit_entree, a.amorce_sha256, *(a.connue or [])] + connues_de_l_environnement()
++    valeurs = valeurs_secretes()
+     for ligne in sys.stdin:
+-        sys.stdout.write(masquer(ligne))
++        sys.stdout.write(masquer_texte(ligne, valeurs, [c for c in connues if c]))
+     return 0
+ 
+ 
+@@ -270,7 +333,10 @@
+     c.add_argument("--branche-sortie", default=BRANCHE_SORTIE)
+     c.add_argument("--distant", default="origin")
+     c.add_argument("--sans-verifier-entree", action="store_true")
+-    s.add_parser("masquer")
++    m = s.add_parser("masquer")
++    m.add_argument("--commit-entree", help="commit cité par la commande (gardé lisible)")
++    m.add_argument("--amorce-sha256", help="empreinte citée par la commande (gardée lisible)")
++    m.add_argument("--connue", action="append", help="autre empreinte ou commit connu (gardé lisible)")
+     e = s.add_parser("etat")
+     e.add_argument("--instance", required=True)
+     e.add_argument("--constat")
+@@ -285,7 +351,8 @@
+         return {"creation": sous_creation, "etat": sous_etat, "verification": sous_verification,
+                 "masquer": sous_masquer}[a.sous](a)
+     except (Refus, OSError, ValueError, KeyError) as e:
+-        print(masquer(f"REFUS : {e}"), file=sys.stderr)
++        citees = [getattr(a, n, None) for n in ("commit_entree", "amorce_sha256", "commit")] + list(getattr(a, "connue", None) or [])
++        print(masquer(f"REFUS : {e}", connues=[c for c in citees if c] + connues_de_l_environnement()), file=sys.stderr)
+         return 2
+ 
+ 
