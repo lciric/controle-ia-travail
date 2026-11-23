@@ -1,0 +1,3 @@
+# Bloc-notes de la session de clôture du réajustement des lentilles (session_013QMaymDD9CUP1p4VeNSBpH), versé le 2026-11-23
+
+Versement sans tri (mot de Lazar, GO-2026-11-23-09). Fichiers : `logs1.txt` à `logs4.txt`, fins du journal de l'instance 61932710 lues par l'outil de suivi v6 (balayé des secrets), 19:24Z, 19:24Z, 20:24Z et 20:30Z, non lues en entier par la session (seules les lignes AMORCE et l'état ont été lus) ; `attendre.sh`, script d'attente de la poussée de la course ; `relecture.log` et `heure_relecture`, sortie console et heure de la relecture 14 bis ; `tache-*.output`, sorties des tâches de fond. Aucun secret (balayage par valeur des variables d'environnement à clé, propre). Aucune mesure n'y a été lue ; ce versement ne vaut pas lecture.
