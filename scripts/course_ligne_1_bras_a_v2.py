@@ -28,6 +28,12 @@ chargé par la fonction du dépôt (`environnements.invites.charger_invite`, qui
 encore aux empreintes de la configuration, puis passé à `jouer_ligne_1`. Le guide entier (identifiant, chemins,
 empreintes) est porté au manifeste.
 
+Corrections de la contre-lecture de la préparation v1 (`contre-lecture-preparation-ligne-1-v1.md`, `83ec8586…`) :
+D1, toute exception, et non la seule `GardeArret`, est dite au journal avec sa trace et la ligne « FIN », et rend le
+code 2 avant tout jeu ou 3 pendant le jeu (jamais 1) ; D2, `regler_determinisme` (fils de la configuration de
+référence, `cuda` en mode réel, `cpu` en mode jouet) avant le chargement du modèle, son retour (carte, capacité, CUDA,
+cuDNN, pilote, réglages relus) versé au manifeste ; m3, le compteur est relevé et gardé avant et après le chargement.
+
 Codes de sortie : 0 ligne jouée ; 2 refus avant tout jeu (rien n'est joué, rien n'est dépensé par ce programme) ;
 3 arrêt pendant le jeu (plafond, coupe à 400 jetons, autre garde) : ce qui est joué reste écrit, le manifeste porte
 l'arrêt ; la session rapatrie, scelle le versement, puis détruit l'instance par son identifiant (8.5 ; R10).
@@ -182,6 +188,14 @@ def charger_le_guide(la, configuration: dict, racine: Path) -> tuple[str, str, d
     return texte, sha, guide
 
 
+def regler_le_determinisme(fils: int, appareil: str) -> dict:
+    """D2 (contre-lecture de la préparation v1) : `harnais.modeles.regler_determinisme`, comme les programmes de T0.6,
+    avant tout chargement ; sur carte, son retour porte la carte, la capacité, CUDA, cuDNN et le pilote ; il est versé
+    au manifeste de la ligne (`resume.determinisme`)."""
+    from controle_ia.harnais.modeles import regler_determinisme
+    return regler_determinisme(fils, appareil)
+
+
 def jeu_du_modele_jouet():
     """Essais seulement : le modèle jouet n'a que quatre couches ; la passe des couches (non lue) prend la couche 1."""
     from controle_ia.organismes_discrets import lanceur_bras_a_v2 as l2
@@ -245,32 +259,48 @@ def main(argv=None, horloge=time.time) -> int:
         journal(f"guide {guide['identifiant']} : {guide['fichier']} {sha_guide} ; index {guide['index']} "
                 f"{guide['index_sha256']} — octets vérifiés, guide chargé")
         from controle_ia.organismes_discrets import lanceur_bras_a_v2 as l2
+        fils = configuration["reference"].get("fils")
+        if isinstance(fils, bool) or not isinstance(fils, int) or fils < 1:
+            raise GardeArret(f"configuration de référence : `fils` {fils!r}, entier positif exigé")
         if a.mode == "reel":
             import torch
             if not torch.cuda.is_available():
                 raise GardeArret(f"mode réel : aucune carte vue par torch {torch.__version__} (pilote à relever)")
+        determinisme = regler_le_determinisme(fils, "cuda" if a.mode == "reel" else "cpu")
+        journal(f"déterminisme réglé ({determinisme['appareil']}, {determinisme['fils']} fil(s)) ; carte "
+                f"{determinisme.get('carte', 'aucune')} ; pilote {determinisme.get('pilote', 'sans objet')} ; cuda "
+                f"{determinisme.get('cuda', 'sans objet')} ; torch {determinisme['torch']}")
+        journal(f"compteur avant le chargement du modèle : {compteur.exiger_sous_plafond():.2f} USD")
+        debut_chargement = time.perf_counter()
+        if a.mode == "reel":
             spec = configuration["reference"]["agent"]
-            debut_chargement = time.perf_counter()
             modele, fmt = l2.charger_modele_et_format(spec, "reel", 0, hors_ligne=a.hors_ligne)
             jouer_lot = None
         else:
-            debut_chargement = time.perf_counter()
             modele, fmt = l2.charger_modele_et_format({}, "jouet", a.graine_jouet)
             jouer_lot = jeu_du_modele_jouet()
         chargement_s = time.perf_counter() - debut_chargement
-        journal(f"modèle chargé en {chargement_s:.1f} s ; cumul {compteur.cumul_usd():.2f} USD")
+        journal(f"modèle chargé en {chargement_s:.1f} s ; compteur après le chargement : "
+                f"{compteur.exiger_sous_plafond():.2f} USD")
     except GardeArret as e:
-        journal(f"REFUS AVANT JEU : {e}")
+        journal(f"REFUS AVANT JEU : {type(e).__name__} : {e}")
+        journal("FIN : code 2 ; rien n'est joué ; la session détruit l'instance par son identifiant")
+        journal.fermer()
+        return 2
+    except Exception as e:                                   # D1 : défaut technique avant jeu, dit, jamais code 1
+        journal(f"REFUS AVANT JEU (exception) : {type(e).__name__} : {e}")
+        journal(traceback.format_exc())
+        journal("FIN : code 2 ; rien n'est joué ; la session détruit l'instance par son identifiant")
         journal.fermer()
         return 2
 
-    episodes = dossier / SOUS_DOSSIER_DES_EPISODES
-    episodes.mkdir()
     mise_en_route_s = horloge() - creation.timestamp()
     chrono: dict = {}
     resume, arret, code = None, None, 0
     journal(f"jeu des 128 épisodes : mise en route {mise_en_route_s:.0f} s depuis la création de l'instance")
     try:
+        episodes = dossier / SOUS_DOSSIER_DES_EPISODES
+        episodes.mkdir()
         resume = la.jouer_ligne_1(modele, fmt, configuration, plan, graines, texte_guide, episodes, compteur, constat,
                                   jouer_lot=jouer_lot, chrono=chrono)
         journal(f"LIGNE JOUÉE : {resume['episodes']} épisodes, {resume['actions_coupees']} actions coupées "
@@ -283,7 +313,7 @@ def main(argv=None, horloge=time.time) -> int:
         journal(f"ARRÊT PENDANT LE JEU (exception) : {arret}")
         journal(traceback.format_exc())
     mesures = {"mise_en_route_s": mise_en_route_s, "chargement_du_modele_s": chargement_s, "chrono": chrono,
-               "guide": dict(guide, sha256_charge=sha_guide), "mode": a.mode,
+               "guide": dict(guide, sha256_charge=sha_guide), "mode": a.mode, "determinisme": determinisme,
                "plan_scelle": {"chemin": a.plan_scelle, "sha256": sha_plan},
                "creation_instance_utc": a.creation_instance_utc,
                "compteur": {"plafond_usd": compteur.plafond_usd, "taux_usd_h": compteur.taux,
@@ -297,8 +327,8 @@ def main(argv=None, horloge=time.time) -> int:
         manifeste = la.manifeste_de_la_ligne_1(configuration, constat, graines, resume, a.commit, arret)
         la.ecrire_sans_ecraser(dossier / NOM_DU_MANIFESTE_DE_LIGNE, manifeste)
         journal(f"manifeste de la ligne écrit : {NOM_DU_MANIFESTE_DE_LIGNE}")
-    except GardeArret as e:
-        journal(f"MANIFESTE NON ÉCRIT : {e}")
+    except Exception as e:                                   # D1 : dit au journal, jamais avalé ni code 1
+        journal(f"MANIFESTE NON ÉCRIT : {type(e).__name__} : {e}")
         code = 3
     journal(f"FIN : code {code} ; rien n'est supprimé ; la session rapatrie, scelle le versement, puis détruit "
             "l'instance par son identifiant")

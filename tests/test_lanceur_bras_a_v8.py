@@ -1,10 +1,16 @@
-"""Essais du lanceur de la course du bras A, version 4 (`lanceur_bras_a_v4.py`) : les essais de la version 3, portés
+"""Essais du lanceur de la course du bras A, version 8 (`lanceur_bras_a_v8.py`) : les essais de la version 7 portés
+(configuration augmentée de la clé `guide`), puis ceux du guide (fin du fichier) : cas sain et artefacts de la clé
+`guide` (identifiant, chemin, empreinte, clé en trop ou manquante), et vérification des octets sur des **fichiers de
+guide fictifs** posés dans un dossier temporaire (rien n'est lu sous `docs/sources/`). Ce qui suit décrit la version 4.
+
+Essais du lanceur de la course du bras A, version 4 (`lanceur_bras_a_v4.py`) : les essais de la version 3, portés
 sur la version 4, et ceux des corrections de la contre-lecture (M-2 ; m-1 à m-6), chacun sur un cas sain et sur un
 artefact (R5). Processeur seul ; aucune instance, aucun réseau, aucune clé. Entropie fictive, déclarée telle, sauf pour
 la ligne 1 : une configuration d'essai à entropie fictive n'a jamais de constat de départ (M-2), la ligne simulée est
 donc jouée sous une configuration déclarée réelle, sur un texte fictif, dans un dossier temporaire."""
 import ast
 import json
+import re
 import shutil
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -14,7 +20,7 @@ import pytest
 from controle_ia.gardes import GardeArret
 from controle_ia.organismes_discrets import fabrication_v3 as fab
 from controle_ia.organismes_discrets import instrument_appariement_v4 as iv
-from controle_ia.organismes_discrets import lanceur_bras_a_v7 as la
+from controle_ia.organismes_discrets import lanceur_bras_a_v8 as la
 from controle_ia.scellement import sceller
 
 DEPOT = Path(__file__).resolve().parents[1]
@@ -58,7 +64,7 @@ def _configuration(racine: Path, nom="configuration-lanceur-bras-a-v4.json", sce
          "configuration_de_reference": {"chemin": la.CHEMIN_CONFIGURATION_DE_REFERENCE,
                                         "sha256": la.EMPREINTE_CONFIGURATION_DE_REFERENCE},
          "entropie": ENTROPIE_FICTIVE, "entropie_fictive": True, "reglages_instrument": dict(REGLAGES),
-         "ligne_1": {"plafond_usd": 18.0, "marge_de_credit_usd": 2.0}}
+         "ligne_1": {"plafond_usd": 18.0, "marge_de_credit_usd": 2.0}, "guide": la.guide_attendu()}
     c.update(ecarts)
     p = racine / nom
     p.write_text(json.dumps(c, ensure_ascii=False), encoding="utf-8")
@@ -1126,7 +1132,7 @@ def test_v6_autre_forme_arrete_toujours(ident):
 
 # --- v7 ----------------------------------------------------------------------------------------------------------------
 def test_v7_chemin_du_lanceur_est_le_fichier_joue():
-    assert la.CHEMIN_DU_LANCEUR.endswith("lanceur_bras_a_v7.py")
+    assert la.CHEMIN_DU_LANCEUR.endswith("lanceur_bras_a_v8.py")          # v8 : porté
     assert Path(la.__file__).resolve().as_posix().endswith("/" + la.CHEMIN_DU_LANCEUR)
 
 
@@ -1146,3 +1152,141 @@ def test_v7_faux_accords_de_la_v6_refuses(perimetre):
 @pytest.mark.parametrize("perimetre", ["ligne 1 du bras A", "bras A, ligne 1 de carte (fabrication et rejeu honnête, 128 épisodes)"])
 def test_v7_sains_toujours_acceptes(perimetre):
     assert la.exiger_perimetre_de_la_ligne_1("GO-2026-11-22-148", perimetre) == perimetre
+
+
+# --- v8 : guide d'invite de l'agent dans les épisodes honnêtes --------------------------------------------------------
+GUIDE = {"identifiant": "H1-classification",
+         "fichier": "docs/sources/invites-2606.08892-v1/invites/H1-classification.txt",
+         "sha256": "69d50fb972f3255c94430205ab09c4f21054185d7def25b061c7255d71cc5540",
+         "index": "docs/sources/invites-2606.08892-v1/index.json",
+         "index_sha256": "adb4b8bca7788baf2c4714df96dcdcc2c5043e8f1943542d0fbe1863491ae2d9"}
+
+
+def test_v8_constantes_du_guide():
+    assert la.guide_attendu() == GUIDE and la.IDENTIFIANT_DU_GUIDE == "H1-classification"
+    assert "guide" in la.CLES_DE_LA_CONFIGURATION and sorted(la.CLES_DU_GUIDE) == sorted(GUIDE)
+
+
+def test_v8_configuration_avec_le_guide_saine_sans_toucher_aux_fichiers(racine):
+    """La lecture de la configuration ne touche pas aux fichiers du guide : ils sont absents de ce dossier."""
+    assert not (racine / GUIDE["fichier"]).exists()
+    c = la.lire_la_configuration(_configuration(racine), racine, essai=True)
+    assert c["guide"] == GUIDE
+
+
+def test_v8_configuration_reelle_v2():
+    c = la.lire_la_configuration(DEPOT / "prereg/T0.7-organismes-discrets-v-a-v2-config-lanceur-ligne-1-v2.json", DEPOT)
+    assert c["guide"] == GUIDE and c["entropie_fictive"] is False and c["lanceur_sha256"] == _sha(Path(la.__file__))
+
+
+@pytest.mark.parametrize("guide, motif", [
+    (dict(GUIDE, identifiant="aucun"), "seul 'H1-classification'"),
+    (dict(GUIDE, identifiant="H3"), "seul 'H1-classification'"),
+    (dict(GUIDE, fichier="docs/sources/invites-2606.08892-v1/invites/H3.txt"), "guide.fichier"),
+    (dict(GUIDE, index="docs/sources/invites-2606.08892-v1/index-v2.json"), "guide.index"),
+    (dict(GUIDE, sha256="0" * 64), "guide.sha256"),
+    (dict(GUIDE, index_sha256="1" * 64), "guide.index_sha256"),
+    (dict(GUIDE, sha256=GUIDE["sha256"].upper()), "empreinte"),
+    (dict(GUIDE, sha256=GUIDE["sha256"][:12]), "empreinte"),
+    (dict(GUIDE, en_trop=1), "aucune de plus"),
+    ({k: v for k, v in GUIDE.items() if k != "index_sha256"}, "aucune de plus"),
+    ("H1-classification", "aucune de plus"),
+    (None, "aucune de plus"),
+])
+def test_v8_guide_artefacts_refuses(racine, guide, motif):
+    with pytest.raises(GardeArret, match=re.escape(motif)):
+        la.lire_la_configuration(_configuration(racine, guide=guide), racine, essai=True)
+
+
+def test_v8_configuration_sans_guide_refusee(racine):
+    p = _configuration(racine, sceller_=False)
+    c = json.loads(p.read_text(encoding="utf-8"))
+    del c["guide"]
+    p.write_text(json.dumps(c), encoding="utf-8")
+    sceller(p)
+    with pytest.raises(GardeArret, match="aucune de plus"):
+        la.lire_la_configuration(p, racine, essai=True)
+
+
+def test_v8_configuration_avec_une_cle_en_trop_refusee(racine):
+    with pytest.raises(GardeArret, match="aucune de plus"):
+        la.lire_la_configuration(_configuration(racine, guide_bis=GUIDE), racine, essai=True)
+
+
+# Vérification des octets : fichiers de guide FICTIFS dans un dossier temporaire, constantes remplacées par l'essai.
+TEXTE_FICTIF_DU_GUIDE = "GUIDE FICTIF D'ESSAI — pas le guide H1-classification.\n"
+
+
+@pytest.fixture
+def guide_fictif(tmp_path, monkeypatch):
+    d = tmp_path / "essai" / "guide-fictif-v1"
+    (d / "invites").mkdir(parents=True)
+    f = d / "invites" / "H1-classification.txt"
+    f.write_text(TEXTE_FICTIF_DU_GUIDE, encoding="utf-8")
+    index = d / "index.json"
+    index.write_text(json.dumps({"invites": [{"id": "H1-classification", "fichier": "invites/H1-classification.txt",
+                                              "sha256": _sha(f)}]}), encoding="utf-8")
+    g = {"identifiant": "H1-classification", "fichier": "essai/guide-fictif-v1/invites/H1-classification.txt",
+         "sha256": _sha(f), "index": "essai/guide-fictif-v1/index.json", "index_sha256": _sha(index)}
+    for k, v in (("CHEMIN_DU_GUIDE", g["fichier"]), ("EMPREINTE_DU_GUIDE", g["sha256"]),
+                 ("CHEMIN_DE_L_INDEX_DU_GUIDE", g["index"]), ("EMPREINTE_DE_L_INDEX_DU_GUIDE", g["index_sha256"])):
+        monkeypatch.setattr(la, k, v)
+    return tmp_path, g
+
+
+def test_v8_octets_du_guide_sains(guide_fictif):
+    r, g = guide_fictif
+    assert la.verifier_les_octets_du_guide(g, r) == g
+
+
+def test_v8_octets_du_guide_alteres(guide_fictif):
+    r, g = guide_fictif
+    (r / g["fichier"]).write_text(TEXTE_FICTIF_DU_GUIDE + " ", encoding="utf-8")
+    with pytest.raises(GardeArret, match="fichier du guide .* empreinte sur disque"):
+        la.verifier_les_octets_du_guide(g, r)
+
+
+def test_v8_octets_de_l_index_alteres(guide_fictif):
+    r, g = guide_fictif
+    (r / g["index"]).write_text("{}", encoding="utf-8")
+    with pytest.raises(GardeArret, match="index du guide .* empreinte sur disque"):
+        la.verifier_les_octets_du_guide(g, r)
+
+
+@pytest.mark.parametrize("cle", ["fichier", "index"])
+def test_v8_fichier_du_guide_absent(guide_fictif, cle):
+    r, g = guide_fictif
+    (r / g[cle]).unlink()
+    with pytest.raises(GardeArret, match="absent sur disque"):
+        la.verifier_les_octets_du_guide(g, r)
+
+
+def test_v8_octets_lien_symbolique_refuse(guide_fictif):
+    r, g = guide_fictif
+    f = r / g["fichier"]
+    vrai = r / "ailleurs.txt"
+    f.rename(vrai)
+    f.symlink_to(vrai)
+    with pytest.raises(GardeArret, match="lien symbolique"):
+        la.verifier_les_octets_du_guide(g, r)
+
+
+def test_v8_octets_guide_autre_que_les_constantes_refuse(guide_fictif):
+    r, g = guide_fictif
+    with pytest.raises(GardeArret, match="guide.sha256"):
+        la.verifier_les_octets_du_guide(dict(g, sha256="0" * 64), r)
+    with pytest.raises(GardeArret, match="aucune de plus"):
+        la.verifier_les_octets_du_guide(dict(g, en_trop=1), r)
+
+
+def test_v8_vrai_guide_absent_ici_refuse(tmp_path):
+    """Constantes réelles, dossier vide : la vérification des octets refuse (fichier absent), sans rien lire ailleurs."""
+    with pytest.raises(GardeArret, match="absent sur disque"):
+        la.verifier_les_octets_du_guide(GUIDE, tmp_path)
+
+
+def test_v8_lire_la_configuration_n_appelle_pas_la_verification_des_octets(racine, monkeypatch):
+    appels = []
+    monkeypatch.setattr(la, "verifier_les_octets_du_guide", lambda *a, **k: appels.append(a))
+    la.lire_la_configuration(_configuration(racine), racine, essai=True)
+    assert appels == []
