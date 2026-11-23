@@ -1,0 +1,6 @@
+# Fiche de code des sondes v2, v2 — erratum 1
+
+- **Porte sur** `docs/procedures/sondes-v2/fiche-code-sondes-v2-v2.md` (`0a789768…`), qui reste en vigueur ailleurs. Écrit le 2026-11-23T05:11:59Z (`date -u`) par le développeur session_013QMaykMZAR8jYKempS4coQ, après la vérification des corrections (branche `contre-lecture/sondes-v2-code-v1`, commit `3f0651812` : conforme, une réserve mineure, 8 c). Aucun résultat.
+- **Correction** : une ligne « non calculable » de `lecture_v1.lire_ligne` porte désormais les mêmes clés de premier niveau qu'une ligne calculée, avec des valeurs nulles nommées (`_non_calculable`) ; une ligne calculée porte `motif: "aucun"`. Le résumé sans nombre ne distingue plus les deux issues par la présence ou l'absence de clés. Essai : `test_resume_aveugle_identique_calculee_ou_non`.
+- **Code** au commit `c92d4e14604813c30bf9b8ad190f21349cff11ce`. Essais du paquet : 128 passés, 1 sauté (l'essai lent).
+- **Empreintes changées** : `src/controle_ia/sondes_v2/lecture_v1.py` `d9cefb660bda8ca0f8d650c3dd26c517345ba4cfd482fd66f6f186af16bd7633` ; `tests/test_sondes_v2_lecture.py` `67c2a08aaa3b486aa3886faeb2d638f03ca585b6fe165dd54a4bd0f1cbc57d2f`. Les autres empreintes de la fiche v2 sont inchangées.
