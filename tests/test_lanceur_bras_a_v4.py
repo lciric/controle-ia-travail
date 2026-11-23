@@ -475,6 +475,8 @@ def test_six_adaptateurs_sains(jouet):
     assert d1["bilan"]["dose_recue"]["seuils_tenus"] and six["controls-0.25"]["bilan"]["actions_deplacees"] == 384
     assert [e["actions"] for e in six["identite"]["episodes"]] == [e["actions"] for e in eps]
     assert six["prediction-1.00"]["bilan"]["actions_deplacees"] == 1280
+    assert six["prediction-1.00"]["bilan"]["dose_recue"]["champ"] == "PREDICTION"     # m-6 : témoin bénin compris
+    assert "dose_recue" not in six["identite"]["bilan"]
     assert la.fabriquer_les_six(fmt, eps, TACHES, ENTROPIE_FICTIVE, REG, None)["controls-0.50"]["episodes"] == \
         six["controls-0.50"]["episodes"]
     with pytest.raises(GardeArret, match="128"):
@@ -1057,3 +1059,22 @@ def test_constat_date_le_go_par_son_horloge(config_lue):
     tard = datetime(2026, 12, 5, 9, 0, 0, tzinfo=timezone.utc)
     with pytest.raises(GardeArret, match="validité"):
         _constat(config_lue, maintenant=tard, tarifs=dict(TARIFS, date_utc="2026-12-05T08:00:00Z"))
+
+
+def test_temoin_identite_texte_qui_n_est_pas_le_decodage(jouet):
+    """Le contrôle du décodage tient aussi pour le témoin identité, où aucun rejeu ne le rattraperait plus loin."""
+    _, fmt = jouet
+    eps = _episodes(fmt)
+    eps[0] = dict(eps[0], textes=["autre"] + eps[0]["textes"][1:])
+    with pytest.raises(GardeArret, match="décodage de ses jetons"):
+        la.fabriquer_condition(fmt, eps[:1], TACHES, None, (1.0,), ENTROPIE_FICTIVE, REG, None)
+
+
+def test_temoin_identite_deplace_arrete(jouet, monkeypatch):
+    """Artefact : une fabrication qui déplacerait sous le témoin identité (planté) arrête."""
+    _, fmt = jouet
+    ep = _episodes(fmt)[0]
+    plantee = _fabrique_plantee(fmt, ep, False)[1.0]
+    monkeypatch.setattr(la.iv, "fabriquer_episode_jetons", lambda *a, **k: plantee)
+    with pytest.raises(GardeArret, match="témoin identité"):
+        la.fabriquer_condition(fmt, [ep], TACHES, None, (1.0,), ENTROPIE_FICTIVE, REG, None)
