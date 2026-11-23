@@ -1,0 +1,34 @@
+# Demande reformulée : un modèle mathématique testable de ce qui rend une idée intéressante, et de sa naissance (v1)
+
+Pièce de travail (classe C), 2026-11-23, écrite par la mère sur la demande du directeur (méthode « demande approfondie »). Servie telle quelle, sans nom de personne, aux répondants : collisionneur (toutes les espèces disponibles), Fable 5.2 et Opus 5.5 en effort maximal (sessions), Neon, Carbon et Argon (seuls). Les intuitions d'origine, mot pour mot : `intuitions-directeur-2026-11-23-v1.md` (lues seulement par les sessions Claude).
+
+---
+
+## Contexte
+
+Un chercheur avance les intuitions suivantes sur la naissance des idées scientifiques intéressantes. Ce sont des hypothèses de travail à éprouver, pas des conclusions.
+
+- **H1, mariage éloigné.** Une idée intéressante marie deux concepts (ou plus) éloignés « en surface » (vocabulaire, usages, disciplines, publications) mais proches sur une dimension cachée et abstraite (structure relationnelle ou mathématique). La surprise viendrait de la distance de surface, la viabilité de la proximité cachée.
+- **H2, cascades et transferts.** Des chaînes de mariages (A lié à B, B lié à C, donc un lien neuf A–C), et le transfert d'un résultat connu vers un domaine jeune (exemple : douleur et anesthésie chez l'humain, anesthésie et conscience, puis recherche dans un modèle de langage d'un motif interne équivalent à l'état d'anesthésie, pour approcher la question de la conscience).
+- **H3, serrure et clé.** Il ne suffit pas que deux points se correspondent : les réseaux de concepts en amont de chaque parent doivent pouvoir coexister et s'aligner. Un invariant doit être conservé sous une transformation (projection, changement de base), d'où une analogie avec symétrie et conservation (théorème de Noether, lagrangien).
+- **H4, ni trop près ni trop loin.** Trop proches : banal ; trop loin : rien ne se lie.
+- **H5, champ d'interaction et air du temps.** L'interaction décroît avec la distance, sauf si deux concepts lointains répondent à un même « champ » (analogie ferromagnétique). Ce champ naîtrait d'un cadre de pensée nouveau (technologie, méthode, instrument : chemins de fer, horloges et ascenseur pour la relativité ; expériences de mécanique des fluides pour les trous noirs) qui projette les réseaux dans un espace où des concepts lointains se rapprochent. Il expliquerait les découvertes simultanées. Après l'agitation, l'emboîtement serait aléatoire, comme l'appariement de protéines.
+- **H6, connexion et distinction.** La même projection sépare aussi ce qui semblait identique (fausses identités) ; une bonne idée trie les vraies invariances des fausses par collision des réseaux.
+- **H7, profondeur de l'idée fille.** L'idée neuve doit tomber près de concepts « nœuds », et expliquer après coup pourquoi elle surprenait (lever un mystère, unifier : la Lune et la pomme).
+- **H8, émergence.** Phénomène de transition de phase, de percolation entre deux milieux différents ; l'échange et la confrontation d'idées augmentent la surface de contact.
+- **H9, structure cachée du langage.** Le langage porterait une structure mathématique exploitable pour trouver les dimensions abstraites (analyse en composantes principales, modèles non supervisés).
+- **H10, signal de surprise.** Un agent qui explore des idées pourrait porter un signal mesurable de surprise, analogue d'un signal dopaminergique.
+
+## Tâche
+
+Travaillez comme un spécialiste de la découverte scientifique, de l'analogie et des réseaux complexes. Rendez au plus 3 500 mots, en sept parties.
+
+1. **Confrontation à la littérature.** Pour chaque hypothèse : soutenue, contredite, inconnue, ou métaphore sans contenu testable, avec les travaux qui fondent ce jugement (référence complète ; « à vérifier » si vous n'êtes pas sûr qu'elle existe ; aucun chiffre sans source). Distinguez trois questions que les hypothèses mêlent : ce qui rend une idée intéressante pour un public humain (relatif à ses croyances du moment), ce qui la rend vraie et féconde, et comment la produire.
+2. **Modèle formel minimal.** Objets, variables et équations : un espace des concepts (par exemple un graphe à plusieurs couches, daté : usage, structure, communautés humaines) ; deux distances (surface et structure) et la façon de les mesurer d'un domaine à l'autre ; le critère serrure-clé (application qui préserve la structure, couverture, conflits) ; le champ (dépendant du temps) ; la probabilité de naissance d'une idée ; l'intérêt de l'idée fille ; la dynamique d'émergence. Pour chaque analogie physique (puits, champ, polarisation, résonance, Noether et lagrangien, percolation), donnez son équivalent mathématique exact avec des grandeurs mesurables, ou écartez-la explicitement.
+3. **Données brutes.** Quelles données prendre au départ (corpus datés en texte intégral, graphes de citation et de coauteurs, ontologies, corpus d'équations, catalogues de découvertes, y compris simultanées, et d'analogies qui ont échoué) et comment en tirer chaque variable.
+4. **Méthodes et outils.** Algorithmes précis, nommés, pour chaque variable et chaque test.
+5. **Validation hors de l'auteur du modèle.** Prédiction rétrospective sur une période future tenue à l'écart, contre des bases simples ; traitement du biais du survivant (on se souvient des mariages réussis) ; test sur les découvertes simultanées ; évaluation humaine en aveugle ; préenregistrement ; résultat qui réfuterait le modèle.
+6. **Ce que les hypothèses oublient.** Ce qu'il faudrait modéliser en plus, et pourquoi.
+7. **Une première expérience peu coûteuse** (quelques jours, petit budget) capable de réfuter le cœur (H1 et H3), avec sa prédiction, son seuil et sa lecture.
+
+Règles : aucune référence inventée ; tout chiffre renvoie à sa source ; une métaphore n'est gardée que si elle produit une prédiction mesurable.

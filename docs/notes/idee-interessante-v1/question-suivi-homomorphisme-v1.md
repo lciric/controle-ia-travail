@@ -1,0 +1,11 @@
+# Question de suivi : de l'analogie à une invariance mathématique précise (v1)
+
+On cherche une formalisation rigoureuse de l'idée qu'une découverte relie deux domaines éloignés en conservant une structure, une « invariance ». Une proposition a été faite : un réseau de concepts est discret, orienté et sans dynamique hamiltonienne ou lagrangienne canonique ; son équivalent rigoureux serait l'homomorphisme de graphes typés, ou l'équivariance d'opérateurs discrets. Éprouvez cette proposition, y compris pour la rejeter ou la remplacer.
+
+1. **Objets.** Définissez précisément les candidats : graphe typé ou étiqueté, homomorphisme, homomorphisme partiel, isomorphisme de sous-graphe, foncteur entre catégories, équivariance sous un groupe ou un groupoïde. Pour chacun, dites ce qu'il capture et ce qu'il manque d'une analogie scientifique réelle, sur trois exemples : la gravitation terrestre et céleste ; les écoulements de fluides qui imitent un horizon de trou noir ; un traitement de la douleur qui continue sous anesthésie, transposé aux états internes d'un modèle de langage.
+2. **Alignement imparfait.** Comment mesurer l'alignement de deux réseaux issus de vocabulaires différents : homomorphismes approchés ou gradués, transport optimal de Gromov-Wasserstein, distance d'édition de graphes, moteur d'appariement de structures. Ce que chaque mesure conserve, son coût de calcul, ses échecs connus.
+3. **Symétrie et conservation.** Quel est l'analogue discret d'une symétrie et d'une quantité conservée : automorphismes, groupoïdes de symétries, invariants de graphes, naturalité au sens des catégories. Existe-t-il un énoncé de type Noether, discret, qui s'applique ici ? Séparez ce qui est démontré de ce qui est spéculatif.
+4. **Avant la découverte.** Comment détecter, à une date donnée, qu'un changement de représentation (cadre, méthode ou instrument nouveaux) augmente la qualité du meilleur alignement entre deux réseaux, avant que le lien ne soit publié ? Quelles données datées, quel calcul, quel risque de circularité ?
+5. **Expérience minimale.** Données, algorithme, prédiction, seuil, résultat qui réfuterait la proposition.
+
+Règles : références complètes ; aucune référence inventée ; « à vérifier » quand vous n'êtes pas sûr ; aucun chiffre sans source. Au plus 2 500 mots.
