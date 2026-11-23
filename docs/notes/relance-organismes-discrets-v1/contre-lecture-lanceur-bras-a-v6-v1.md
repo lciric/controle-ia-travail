@@ -1,0 +1,25 @@
+# Contre-lecture courte du lanceur de la course du bras A, version 6 — agent neuf
+
+- **Date (UTC)** : 2026-11-23. Relecteur : agent neuf (Claude Sonnet 5.5), qui n'a écrit ni le lanceur, ni les essais, ni les différences. Processeur seul, aucun réseau hors git, aucune dépense. Cloisonnement tenu ; le registre réel des GO n'a pas été ouvert (point 5 : pris de la session).
+- **Lu** : `src/controle_ia/organismes_discrets/lanceur_bras_a_v6.py` (`28dac2b5df44858ce4c96db4b5552b64a49728ee5ec0397f84d28d6775a34552`, recalculée, égale) ; la contre-lecture de la v4 (`dddcaf00…`) ; les différences v4→v5 et v5→v6 ; `tests/test_lanceur_bras_a_v6.py` (constante `LIGNE_GO_148`, ligne 1084).
+- **Rejeu** : `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_lanceur_bras_a_v6.py` : **158 passent** (129 s).
+
+## Verdict : bon pour le départ — aucun défaut bloquant ; trois réserves mineures
+
+## Vérifications demandées
+
+1. **Différence v4→v6, faite par moi** (`diff lanceur_bras_a_v4.py lanceur_bras_a_v6.py`) : l'en-tête (docstring), quatre constantes neuves (`_BRAS_A`, `_LIGNE_1`, `MOTS_D_UNE_AUTRE_LIGNE`, `_SOUS_POSTE`), le corps de `exiger_perimetre_de_la_ligne_1` (avec son texte d'explication) et deux lignes de `_cellules_du_registre` (la forme stricte n'est plus exigée si l'identifiant est un sous-poste complet). Rien d'autre. Conforme à l'annonce.
+2. **Règle de périmètre.** Sur la ligne réelle de GO-148, à la lettre (« Même mot (GO-2026-11-22-147) : bras A, ligne 1 de carte … », 18 USD, 22 au 30 novembre, Lazar) : **acceptée**, y compris par `exiger_ligne_de_go`. Refusés, dans mes essais : « ligne 2 de carte » ; « … et ligne 2 » ; « lignes 1 et 2 » ; « ligne 1, ligne 2 » ; « ligne 1 ; lignes 1 » ; « ligne 11 » ; « ligne 1,5 » ; « ligne 1-2 » ; « bras B, ligne 1 » ; « ligne 1 du bras C » ; « moniteurs » ; « puis la seconde » ; « (hors bras B) » ; « sauf la ligne 3 » ; « ligne 1 et 2 lignes ». Acceptés : « ligne 1 du bras A », « Bras  A ; Ligne 1 » (casse et blancs). **Faux accords trouvés** (périmètre qui dit en fait plus que la ligne 1), tous de forme tordue et sans portée sur le GO réel, déjà accordé par Lazar : (a) « bras A, ligne 1 **et 2** » (le « et 2 » nu n'est pas une mention « ligne N ») ; (b) « bras A **et bras AB** ligne 1 » et « … bras Ab » (« bras ab » n'est pas dans la liste des mots interdits) ; (c) « ligne 1 **et suivantes** » ; (d) « ligne1 bis » (sans espace). Aucun faux refus trouvé sur les formulations raisonnables.
+3. **Sous-postes et révocation.** Dans `exiger_ligne_de_go`, une révocation est toute ligne du registre (sous-poste compris, puisque `_cellules_du_registre` rend toutes les lignes `| GO-`) dont la cellule de type vaut exactement « révocation » et dont l'une des cellules 3 à 7 cite l'identifiant joué, par bornes (`(?<![0-9A-Za-z-])ID(?![0-9])`) ; l'identifiant de la ligne révocante n'a pas à être de forme stricte. Essayé : une révocation de GO-148 portée par une ligne de sous-poste (`GO-2026-11-23-150-P2`) **révoque** (arrêt) ; citation en cellule de référence : révoque ; citation `…148-P2` : révoque (plus strict, sans mal) ; identifiant de sous-poste mal formé (`…-150-P`) : arrêt de lecture ; sous-poste à date hors calendrier (`2026-13-45-…-P2`) : admis comme sous-poste mais, s'il révoque, la révocation est lue (arrêt). **Aucun sous-poste ne peut révoquer GO-148 sans être lu.** Un sous-poste ne peut pas servir de GO joué : `…-148-P1` demandé comme GO est refusé par la forme stricte avant toute lecture ; une ligne `…-148-P1` n'est pas prise pour `…-148` (« absent du registre »). **Révocations non lues** (identiques à la garde de calcul, donc cohérentes mais à connaître) : type « Révocation » (majuscule) ou « revocation » (sans accent) ; ligne précédée d'un blanc avant la barre (`  | GO-…`, non reconnue comme ligne de GO) ; `…-1480` (voulu, autre GO). La session doit vérifier à l'œil que le registre réel n'en porte aucune.
+4. **Essais** : 158 passent (voir plus haut).
+5. **Registre réel** : non ouvert par moi ; la session dit qu'il passe, GO-148 accepté, plafond 18. Je n'ai pas de raison de le contester : ma lecture de `_cellules_du_registre` et de `exiger_ligne_de_go` est cohérente avec ce résultat.
+
+## Réserves mineures (aucune ne bloque)
+
+- **m-1** Règle de périmètre : les quatre faux accords du point 2 ; resserrement possible (« bras a » suivi de « et » ou autre mot « bras X » interdit ; « et N » nu), mais inutile pour le GO déjà accordé, et une v7 coûterait un tour de contre-lecture de plus.
+- **m-2** Sous-poste : `_SOUS_POSTE` ne contrôle pas que la date est du calendrier (le rang l'est par `\d{2,3}`, le suffixe `P<n>` à un ou deux chiffres). Sans effet sur la sûreté, la ligne étant lue comme n'importe quelle autre.
+- **m-3** Révocation par type exact en minuscules et lignes indentées : écart possible avec l'intention humaine, identique à la garde de calcul ; couvert si la session relit le registre avant le départ.
+
+## Suite
+
+Le lanceur v6 peut partir avec GO-2026-11-22-148 ; citer son empreinte (`28dac2b5…`) dans la configuration du constat.
