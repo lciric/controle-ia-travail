@@ -1,0 +1,34 @@
+{
+ "gabarit": "v11d — relevé des crédits avant la course d'affinage v11 (lanceur v11d, `verifier_credits`) ; à copier au chemin `course-v11/releve-credits-avant-course-affinage-mentors-v11.json`, remplir `releve_utc` (heure du relevé, du jour) et les lignes, puis sceller ; noms de clé seulement, jamais une valeur ; les champs commençant par « _ » sont des notes",
+ "version": "releve-credits-gabarit-course-affinage-v11d",
+ "releve_utc": "À REMPLIR : AAAA-MM-JJTHH:MM:SSZ (du jour du départ)",
+ "cles": {
+  "RR_ANTHROPIC_API_KEY_LUC": {
+   "solde_non_lu": true,
+   "reference": "GO-2026-11-22-124",
+   "source": "session d'exécution : solde non lu, sur le mot de Lazar (GO-2026-11-22-124)"
+  },
+  "GEMINI_API_KEY": {
+   "non_lisible": true,
+   "motif": "À REMPLIR : pourquoi le crédit n'est pas lisible (ou remplacer par credit_usd, reste_usd, source)"
+  },
+  "OPENAI_API_KEY_2": {
+   "non_lisible": true,
+   "motif": "À REMPLIR : pourquoi le crédit n'est pas lisible (ou remplacer par credit_usd, reste_usd, source)"
+  }
+ },
+ "dispense": {
+  "par": "mère",
+  "reference": "R-3237",
+  "cles": [
+   "GEMINI_API_KEY",
+   "OPENAI_API_KEY_2"
+  ],
+  "_note": "dispense écrite de la mère pour les seules clés au crédit non lisible (Argon, Carbon, Astra) ; à retirer pour une clé lisible"
+ },
+ "_regles": [
+  "Clé LUC (v11d, constat 3) : champs permis solde_non_lu (vrai), reference (GO-2026-11-22-124), source, note ; aucun solde, crédit, reste, couverture, réserve, recharge ni plancher : sinon refus.",
+  "Clé lisible : {\"credit_usd\": nombre, \"reste_usd\": nombre ≤ crédit, \"source\": texte} ; reste sous un cinquième du crédit ou sous la part au pire : alerte, code 3.",
+  "Clé non lisible : {\"non_lisible\": true, \"motif\": texte}, permise pour Argon, Carbon et Astra sous la dispense de la mère (R-3237) seulement."
+ ]
+}
