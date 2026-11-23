@@ -20,3 +20,4 @@
 - contre-lecteur T0.8 (brouillon 11) : prep/t08-texte-complet-fable-v1 86efe3e8, 2026-11-23-0625-contre-lecteur-t08.md (d9bf5d27…) ; 25 fichiers versés
 - contre-lecteur de la chaîne T0.8 : t08/contre-lecture-chaine-v1 1582d8b21, 2026-11-23-0626-contre-lecteur-chaine-t08.md (9a3881f0…) ; versement contre-lecteur-versement-v1/ (arbres d'essai factices non versés, refaisables)
 - versements sur main en retard : main bd472b89c, 2026-11-23-0638-versement-branches-cloture.md (1c5f32a2…) ; listes d'entrée versées
+- conseiller Opus garde des activations b5 : avis/garde-activations-b5f-opus-v1 7ac71a57, 2026-11-23-0628-conseiller-garde-activations-b5f-opus.md (a42636ed…)
