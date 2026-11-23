@@ -1,0 +1,77 @@
+73be063822531b27e74cf522794cd262495ba21ceea9b62a41ef4a17879a4850  .claude/hooks/garde_calcul.py
+./registres/t07-etape-b-bis/feu-bbis-v7.txt
+./docs/notes/organisme-bassins-etroits-v1/verification-courte-lanceur-v3-v2.md
+./docs/notes/organisme-bassins-etroits-v1/verification-outils-v3-v2/couples-epingle-lanceur-v3-v1.json
+./docs/notes/prealables-course-etape-b-bis-v1/projet-de-feu-v3-non-en-vigueur.md
+./docs/notes/prealables-course-etape-b-bis-v1/projet-de-feu-v6.md
+./docs/notes/prealables-course-etape-b-bis-v1/contre-lecture-projet-de-feu-v4.md
+./docs/notes/prealables-course-etape-b-bis-v1/projet-de-feu-v5.md
+./docs/notes/prealables-course-etape-b-bis-v1/projet-de-feu-v7.md
+./docs/notes/prealables-course-etape-b-bis-v1/projet-de-feu-v4.md
+./docs/notes/organisme-multi-generations-v1/pilote-v1/procedure-pilote-v74-compte-organisme/verification-differentiel-procedure-pilote-mr2-v74-machine-v12-v1.md
+"""Garde de calcul (hook PreToolUse) : cas sains et artefacts (R5)."""
+import json
+import shutil
+import subprocess
+import sys
+from datetime import date, timedelta
+from pathlib import Path
+
+import pytest
+
+HOOK = Path(__file__).resolve().parents[1] / ".claude" / "hooks" / "garde_calcul.py"
+AUJ = date.today()
+ENTETE = "| id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |\n|---|---|---|---|---|---|---|---|\n"
+
+
+def ligne(ident, accorde, echeance, typ="calcul", par="Lazar"):
+    return f"| {ident} | {accorde} | {typ} | phase 0 | 150 USD | {echeance} | {par} | message |\n"
+
+
+@pytest.fixture
+def racine(tmp_path):
+    (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+    shutil.copy(HOOK, tmp_path / ".claude" / "hooks" / "garde_calcul.py")
+    (tmp_path / "registres").mkdir()
+    return tmp_path
+
+
+def registre(racine, contenu):
+    (racine / "registres" / "go.md").write_text("# GO\n\n" + ENTETE + contenu, encoding="utf-8")
+
+
+def lancer(racine, commande, brut=None):
+    entree = brut if brut is not None else json.dumps({"tool_name": "Bash", "tool_input": {"command": commande}})
+    r = subprocess.run([sys.executable, str(racine / ".claude" / "hooks" / "garde_calcul.py")],
+                       input=entree, capture_output=True, text=True)
+    return r.returncode, r.stderr
+
+
+GO_OK = "GO-2026-10-05-01"
+
+
+@pytest.mark.parametrize("commande", [
+    "ls -la", "kill 12345", "kill -TERM 4242", "vastai show instances", "vastai destroy instance 987654",
+    "python -m pytest", "echo pkillers",
+])
+def test_sain_commandes_ordinaires(racine, commande):
+    registre(racine, "")
+    assert lancer(racine, commande)[0] == 0
+
+
+def test_sain_lancement_avec_go_valide(racine):
+    registre(racine, ligne(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10)))
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 0, err
+
+
+@pytest.mark.parametrize("commande", [
+    "pkill -f vllm", "killall python3", "kill $(pgrep -f train.py)", "kill `pgrep python`",
+    "pgrep -f serve | xargs kill", "pgrep -f serve | xargs -r kill -9", "sleep 1; pkill python",
+])
+787:| GO-2026-11-22-100 | 2026-11-22 | calcul | Mot de Lazar vers 2026-11-22T17:25:58Z sur le point 2 du bras A (épreuves sans plancher) : « demande a neon ». Un appel à Neon (gemini-4-neon, GEMINI_API_KEY) par la session du bras A (session_013QMayn5HfnqnuvfPbwUUQf), question neutre relue pour le cloisonnement, recommandation motivée entre (a), (b), (c) ; remplace la recommandation demandée à Fable (GO-2026-11-22-99, point 2). Décision gardée par Lazar. | plafond 1,00 USD (fixé par la mère) | 2026-11-23 | Lazar | — |
+788:| GO-2026-11-22-101 | 2026-11-22 | calcul | Mot de Lazar vers 2026-11-22T17:27:59Z : « Option (b) : relancer Argon une troisième fois, ce qui veut dire repayer jusqu'à 13,05 USD. go ». Troisième essai d'Argon (gemini-4-argon) pour le travail raisons et regard, par la session session_013QMayiuG5VE8s6yDCgFMKz, dans lciric/raisons-ou-regard-travail ; le second essai (parti 16:07:11Z sous GO-2026-11-22-92) est clos à part « interrompu, réponses perdues », coût inscrit au pire (13,05 USD) en attendant la console. | plafond 13,05 USD | 2026-11-30 | Lazar | GO-2026-11-22-92 |
+789:| GO-2026-11-22-103 | 2026-11-22 | calcul | Mot de Lazar vers 2026-11-22T17:40:55Z : « il faut utiliser luc » ; « go a tout ». Renvois par l'interface (passe X Opus 5.5 groupe 2, exploration Opus 5.5, exploration Fable 5.1), devis 7008a11e… (claude/renvois-api-classifieur-v1), session session_013QMayj5YDSrZN5yVG1XgG2 ; clé RR_ANTHROPIC_API_KEY_LUC. | plafond 17,50 USD | 2026-11-30 | Lazar | GO-2026-11-22-90 |
+24
+
+[exited with code 0]
