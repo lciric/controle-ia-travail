@@ -1,0 +1,299 @@
+--- scripts/lancer_t06_v13.sh	2026-11-22 19:29:05.402505951 +0000
++++ scripts/lancer_t08_v1.sh	2026-11-22 20:22:15.527140280 +0000
+@@ -1,4 +1,27 @@
+ #!/usr/bin/env bash
++# [T0.8 v1 (consigne de la chaîne de lancement de T0.8, `722ceb5e…`, § 3.4) : copie de `scripts/lancer_t06_v13.sh` sous un nom neuf
++# (R12 : la v13 reste telle quelle), dont rien ne change hors ce que la consigne nomme ; chaque ligne changée porte « T08 » ou est
++# déclarée dans le rapport de la chaîne. Mêmes sous-commandes, mêmes codes de sortie. Changent : (1) les noms (`t08`), la branche
++# de sortie par défaut (`calcul/t08-course-v1`), la branche d'entrée (`entree/t08-course-v1`), la configuration lue sur la branche
++# d'entrée (`prereg/T0.8-configuration-course-v1.json`), le commit du code (marqueur `COMMIT_CODE_T08` de la configuration, ancêtre
++# de `T08_BRANCHE_CODE`), l'amorce `scripts/amorce_instance_t08_v1.sh` citée par son empreinte (`T08_AMORCE_SHA256`, celle de
++# l'ordre de course, égale au compagnon au commit du code) ; (2) la ligne de GO, toujours par la variable `GO_ID`, admise par la
++# configuration, lue au registre avec sa fin de validité et son plafond (`lancement_t08.session_v1 go` : prolongation comprise) ;
++# plafond de la course 120 USD cumulés sur toutes les tentatives (dépense antérieure relevée au registre des dépenses), compte
++# rendu à 40 USD (alerte unique de la surveillance) ; (3) les bornes de l'offre, celles de « Machine » (vue `vue-offre.json` tirée
++# de la configuration) ; (4) aucune relance sur une carte H200 : la carte `relance` est refusée (code 2), ni automatique ni
++# proposée ; (5) aucun couperet de temps (inchangé) ; deux heures sans ligne de progression : alerte, sans arrêt (inchangé) ;
++# (6) `controles-epreuve` refuse (code 2) : aucune épreuve à blanc n'est prévue par l'ordre de course de T0.8 ;
++# `--verifier-go-seulement` vérifie la ligne `GO_ID` contre la configuration (premier argument : la configuration).
++# Usage T0.8 :
++#   bash scripts/lancer_t08_v1.sh controles DOSSIER_NEUF [JOUR]
++#       Variables : GO_ID, T08_BRANCHE_ENTREE, T08_BRANCHE_CODE, T08_AMORCE_SHA256 ; facultatives : T08_PREREG, T08_CONFIG,
++#       T08_BRANCHE, T08_REGISTRE_GO, T08_DEPOT. Codes : 0 ; 2 tout échec.
++#   bash scripts/lancer_t08_v1.sh creation auto course DEPENSE_ANTERIEURE_USD DOSSIER [ECHEANCE_UTC_S]
++#   bash scripts/lancer_t08_v1.sh apres-creation FICHIER CODE DOSSIER
++#   bash scripts/lancer_t08_v1.sh surveillance ID DOSSIER [FACTURE_USD]
++#   bash scripts/lancer_t08_v1.sh --verifier-go-seulement CONFIG.json [DEPENSE_ANTERIEURE] [JOUR]
++# Texte de la v13 de la course de confirmation (conservé) :]
+ # [v13 (contre-lecture CLE3T-01 de l'ordre E3 ter ; nom neuf, R12 : la v12 reste telle quelle) : copie du lanceur v12 SANS identifiant de GO d'épreuve en dur. La ligne de GO de l'épreuve vient de la variable d'environnement GO_ID (convention de la garde de calcul), doit égaler le go_id de la configuration, et est LUE dans le registre T06_REGISTRE_GO par le module de session v12 (`session_v12.py` : ligne présente, type calcul, accordée par Lazar, non échue au jour donné, non révoquée) ; le plafond d'une épreuve n'est plus borné à 8 USD mais au plafond de la ligne (plafond + dépense antérieure ≤ plafond de la ligne, plus de marge ni de dépense antérieure minimale propres aux deux lignes cumulées des épreuves E2, E3 et E3 bis de la v12) ; l'amorce citée est `scripts/amorce_instance_t06_v11.sh` (lanceur de run v6) ; sous-commande neuve `--verifier-go-seulement PLAFOND [DEPENSE_ANTERIEURE] [JOUR]` qui vérifie et ne crée rien. Tout échec : code 2 et ligne de fin explicite (R5). Le reste (garde d'équivalence, création, surveillance, lecture du coût) ne change pas.]
+ # [v12 (GO-2026-11-08-01, contre-lecture de la v11 v2) : copie du lanceur v11 qui cite l'amorce v10 (bras B v4, liste figée v2) et valide `T06_TESTS_ATTENDUS` (^[0-9]*$ : sans cela une valeur comme « 7 -e PYTEST_ADDOPTS=… » s'insérerait dans la commande de création) ; rien d'autre ne change]
+ # [v11 (R-1746, contre-lecture de la v11) : le module de session est session_v11.py ; les épreuves se jouent sous GO-2026-11-06-01 (E2, E3 ; total 5 USD) ou GO-2026-11-07-08 (E3 bis ; total 8 USD, dépense antérieure ≥ 2,092 USD exigée), les deux lignes vérifiées au registre ; T06_TESTS_ARGS est refusé hors du mode jouet ; plus de variable T06_GO_EPREUVES_TOTAL_USD]
+@@ -75,21 +98,22 @@
+ # (défaut calcul/t06-reel-v4) ; T06_IMAGE ; VAST (outil) ; INTERVALLE.
+ set -uo pipefail
+ QUOI="${1:?controles, creation, apres-creation ou surveillance}"
+-DEPOT="${T06_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+-P="${T06_PREREG:-prereg/T0.6-organismes-v0-v1.md}"
+-A=scripts/amorce_instance_t06_v11.sh
+-BRANCHE="${T06_BRANCHE:-calcul/t06-reel-v4}"
+-GO_ID_ENV="${GO_ID:-}"              # v13 : identifiant de la ligne de GO de l'ÉPREUVE, reçu de l'environnement (convention de la garde de calcul : GO_ID=GO-AAAA-MM-JJ-NN), vérifié au registre ; relevé AVANT que GO_ID prenne la valeur de la course
+-GO_ID=GO-2026-11-02-28
+-REG="${T06_REGISTRE_GO:-$DEPOT/registres/go.md}"   # registre des GO lu par toutes les sous-commandes ; pour une épreuve : celui d'un clone de `main` (obligatoire)
++DEPOT="${T08_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"                 # T08
++P="${T08_PREREG:-prereg/T0.8-bases-boite-noire-v0-v1.md}"               # T08 : texte scellé de T0.8 (sur main)
++A=scripts/amorce_instance_t08_v1.sh                                     # T08
++BRANCHE="${T08_BRANCHE:-calcul/t08-course-v1}"                          # T08 : branche de sortie
++BE="${T08_BRANCHE_ENTREE:-entree/t08-course-v1}"                        # T08 : branche d'entrée (liste blanche seule, orpheline)
++CONFIG="${T08_CONFIG:-prereg/T0.8-configuration-course-v1.json}"        # T08 : configuration réelle de la course, lue sur la branche d'entrée
++GO_ID_ENV="${GO_ID:-}"              # T08 : identifiant de la ligne de GO de la COURSE, toujours reçu de l'environnement (convention de la garde de calcul : GO_ID=GO-AAAA-MM-JJ-NN), admis par la configuration et vérifié au registre ; aucun identifiant en dur
++REG="${T08_REGISTRE_GO:-$DEPOT/registres/go.md}"   # T08 : registre des GO lu par toutes les sous-commandes (celui de `main`, qui fait foi)
+ MOTIF_GO='^GO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}$'
+-# v13 : plafond de la LIGNE du registre du GO d'épreuve, LU dans le registre (ligne présente, type calcul, accordée par Lazar, non échue au jour donné, non révoquée) ; plus aucun identifiant en dur
+-plafond_ligne_go() { python3 -I -B -c "$SESSION7" plafond-ligne "$REG" "$1" ${2:+"$2"}; }
+-IMAGE="${T06_IMAGE:-python:3.11-bookworm}"
++IMAGE="${T08_IMAGE:-python:3.11-bookworm}"                              # T08 : nom de la variable
+ VAST="${VAST:-vastai}"
+ SESSION="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.t06 import session_v2; sys.exit(session_v2.main(sys.argv[1:]))"
+ SESSION3="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
+ SESSION7="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
++SESSION8="import sys; sys.path.insert(0, '$DEPOT/src'); from controle_ia.lancement_t08 import session_v1; sys.exit(session_v1.main(sys.argv[1:]))"   # T08 : GO et prolongation, calendrier, vue de l'offre, surveillance
++BRANCHE_PROG="$DEPOT/scripts/construire_branche_entree_t08_v1.py"      # T08 : vérification de la branche d'entrée relevée
+ masquer() { python3 -c '
+ import os, sys
+ t = sys.stdin.read()
+@@ -119,120 +143,83 @@
+ controles)
+     D=$(realpath -m "${2:?dossier neuf}"); JOUR="${3:-$(date -u +%F)}"
+     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
++    [[ "$GO_ID_ENV" =~ $MOTIF_GO ]] || { echo "GO_ID absent ou illisible dans l'environnement (GO_ID=GO-AAAA-MM-JJ-NN : la ligne de GO de calcul de la course, convention de la garde de calcul) : pas de création"; exit 2; }   # T08
++    BC="${T08_BRANCHE_CODE:?T08_BRANCHE_CODE : branche qui porte le commit du code cité par CODE-T08}"; AS="${T08_AMORCE_SHA256:?T08_AMORCE_SHA256 : empreinte de l amorce, celle de l ordre de course}"   # T08
++    [[ "$AS" =~ ^[0-9a-f]{64}$ ]] || { echo "T08_AMORCE_SHA256 : 64 caractères hexadécimaux"; exit 2; }   # T08
+     mkdir -p "$D"
+-    python3 -I -B -c "$SESSION" go "$REG" "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
+     LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
+     S=$(commit_s); [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit de scellement de $P introuvable"; exit 2; }
+     timeout 300 git -C "$DEPOT" fetch -q origin main || { echo "fetch impossible"; exit 2; }
+     git -C "$DEPOT" merge-base --is-ancestor "$S" origin/main || { echo "commit de scellement $S absent de origin/main"; exit 2; }
+     git -C "$DEPOT" show "$S:$P" > "$D/prereg-S.md" || { echo "préenregistrement absent de S"; exit 2; }
+-    for motif in "Entropie : \`[0-9]+\`" "Configuration de T0.6 \(empreinte canonique\) : \`[0-9a-f]{64}\`" "Tâches d'évaluation de T0.6 : \`[0-9a-f]{64}\`" \
+-                 "Tests attendus : \`[0-9]+\`" "Chemin de la configuration de T0.6 : \`[^\`]+\`" "Chemin des tâches d'évaluation de T0.6 : \`[^\`]+\`" \
+-                 "Chemin des tâches de distillation de T0.6 : \`[^\`]+\`" "Chemin des consignes de P3 : \`[^\`]+\`"; do
+-        n=$(grep -cE "$motif" "$D/prereg-S.md" || true); [ "$n" = 1 ] || { echo "citation « ${motif%% :*} » absente ou en double dans le texte de S ($n)"; exit 2; }
+-    done
+-    for cle in "Chemin de la configuration de T0.6" "Chemin des tâches d'évaluation de T0.6" "Chemin des tâches de distillation de T0.6" "Chemin des consignes de P3"; do
+-        f=$(sed -n "s/.*$cle : \`\\([^\`]*\\)\`.*/\\1/p" "$D/prereg-S.md")
+-        git -C "$DEPOT" cat-file -e "$S:$f" 2>/dev/null && git -C "$DEPOT" cat-file -e "$S:$f.sha256" 2>/dev/null || { echo "fichier cité $f ou son sceau absent de S"; exit 2; }
+-        [ "$(git -C "$DEPOT" show "$S:$f" | sha256sum | cut -d' ' -f1)" = "$(git -C "$DEPOT" show "$S:$f.sha256" | cut -d' ' -f1)" ] || { echo "sceau de $f non conforme à S"; exit 2; }
+-        [ "$cle" = "Chemin de la configuration de T0.6" ] && { git -C "$DEPOT" show "$S:$f" > "$D/config.json"; CONFIG_CHEMIN="$f"; }
+-    done
+-    CAL=$(python3 -I -B -c "$SESSION" calendrier "$D/config.json" "$REG" "$JOUR") || { echo "calendrier de la configuration (L11) : $CAL : pas de création"; exit 2; }
+-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v11 absente de S"; exit 2; }
++    [ "$(sha256sum < "$D/prereg-S.md" | cut -d' ' -f1)" = "$(git -C "$DEPOT" show "$S:$P.sha256" 2>/dev/null | cut -d' ' -f1)" ] || { echo "sceau de $P non conforme à S"; exit 2; }   # T08
++    # T08 : branche d'entrée relevée (refspec explicite), vérifiée par programme sans la branche de 7b : liste blanche exacte, orpheline, aucun interdit, empreintes
++    timeout 300 git -C "$DEPOT" fetch -q origin "refs/heads/$BE:refs/remotes/origin/$BE" || { echo "branche d'entrée $BE introuvable"; exit 2; }
++    EC=$(git -C "$DEPOT" rev-parse "refs/remotes/origin/$BE^{commit}") || { echo "branche d'entrée illisible"; exit 2; }
++    git -C "$DEPOT" show "$EC:$CONFIG" > "$D/config.json" 2>/dev/null || { echo "configuration $CONFIG absente de la branche d'entrée"; exit 2; }
++    [ "$(git -C "$DEPOT" rev-parse "$EC:$P")" = "$(git -C "$DEPOT" rev-parse "$S:$P")" ] || { echo "texte de la branche d'entrée ≠ texte scellé de S"; exit 2; }
++    VB=$(python3 -I -B "$BRANCHE_PROG" verifier --depot "$DEPOT" --ref "refs/remotes/origin/$BE" --commit-texte "$S" --texte "$P" --config "$CONFIG" 2>&1) || { echo "branche d'entrée non conforme : $(printf '%s' "$VB" | tail -n 1)"; exit 2; }
++    COMMIT=$(cle_config "$D/config.json" marqueurs.COMMIT_CODE_T08) && [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "COMMIT_CODE_T08 illisible dans la configuration"; exit 2; }
++    timeout 300 git -C "$DEPOT" fetch -q origin "refs/heads/$BC:refs/remotes/origin/$BC" || { echo "branche du code $BC introuvable"; exit 2; }
++    git -C "$DEPOT" merge-base --is-ancestor "$COMMIT" "refs/remotes/origin/$BC" 2>/dev/null || { echo "commit du code $COMMIT absent de refs/remotes/origin/$BC"; exit 2; }
++    git -C "$DEPOT" show "$COMMIT:$A" > "$D/amorce.sh" || { echo "amorce absente du commit du code $COMMIT"; exit 2; }
+     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
+-    tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v11 ($E) non citée par le texte de S"; exit 2; }
++    [ "$E" = "$AS" ] && [ "$E" = "$(git -C "$DEPOT" show "$COMMIT:$A.sha256" 2>/dev/null | cut -d' ' -f1)" ] || { echo "empreinte de l'amorce ($E) ≠ T08_AMORCE_SHA256 ($AS) ou son compagnon au commit du code"; exit 2; }
++    GOL=$(python3 -I -B -c "$SESSION8" go "$REG" "$D/config.json" "$GO_ID_ENV" "$JOUR") || { echo "GO : $GOL : pas de création"; exit 2; }   # T08
++    printf '%s\n' "$GOL" | tee -a "$D/lancement.txt"
++    CAL=$(python3 -I -B -c "$SESSION8" calendrier "$REG" "$D/config.json" "$GO_ID_ENV" "$JOUR") || { echo "calendrier lu au registre : $CAL : pas de création"; exit 2; }   # T08
++    VUE=$(python3 -I -B -c "$SESSION8" vue "$D/config.json" "$D/vue-offre.json") || { echo "bornes de l'offre : $VUE : pas de création"; exit 2; }   # T08
++    PLC=$(cle_config "$D/config.json" lancement.plafond_usd) && CRU=$(cle_config "$D/config.json" lancement.compte_rendu_usd) || { echo "plafond ou compte rendu illisibles"; exit 2; }   # T08
+     [ -n "${HF_TOKEN:-}" ] && JGHN=$(jeton_gh_nom) || { echo "jeton absent (HF_TOKEN, ou CONTROLE_IA_GITHUB_TOKEN / CONTROLE_IA_GITHUB_TOKEN_2) : pas de création"; exit 2; }
+-    printf 'controles t06 v13 %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\namorce %s\ngo %s\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$P" "$CONFIG_CHEMIN" "$BRANCHE" "$E" "$GO_ID" "$CAL" >> "$D/lancement.txt"
+-    echo "CONTRÔLES CONFORMES : S=$S ; amorce v11 $E ; GO $GO_ID ; $CAL" ;;
++    printf 'controles t08 v1 %s\ncommit_texte %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\nbranche_entree %s\nentree %s\nbranche_code %s\namorce %s\ngo %s\nplafond %s\ncompte_rendu %s\nmode reel\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$COMMIT" "$P" "$CONFIG" "$BRANCHE" "$BE" "$EC" "$BC" "$E" "$GO_ID_ENV" "$PLC" "$CRU" "$CAL" >> "$D/lancement.txt"   # T08
++    echo "CONTRÔLES CONFORMES : texte S=$S ; code $COMMIT ; entrée $EC ; amorce t08 v1 $E ; $GOL ; $CAL" ;;
+ controles-epreuve)
+-    D=$(realpath -m "${2:?dossier neuf}"); S="${3:?commit à cloner (40 caractères)}"; CFG="${4:?chemin de la configuration de l epreuve dans le commit}"; JOUR="${5:-$(date -u +%F)}"
+-    [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
+-    [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit : 40 caractères hexadécimaux"; exit 2; }
+-    BC="${T06_BRANCHE_CODE:?T06_BRANCHE_CODE : branche prep/… du code}"
+-    [ -n "${T06_REGISTRE_GO:-}" ] && [ -f "$T06_REGISTRE_GO" ] || { echo "T06_REGISTRE_GO : registres/go.md d'un clone de main exigé pour une épreuve (le registre du commit du code peut être antérieur au GO)"; exit 2; }
+-    case "$BC" in prep/*) ;; *) echo "T06_BRANCHE_CODE doit commencer par prep/ ($BC)"; exit 2;; esac
+-    mkdir -p "$D"
+-    git -C "$DEPOT" cat-file -e "$S^{commit}" 2>/dev/null || { echo "commit $S absent du dépôt local (git fetch origin refs/heads/$BC:refs/remotes/origin/$BC d'abord)"; exit 2; }
+-    git -C "$DEPOT" merge-base --is-ancestor "$S" "refs/remotes/origin/$BC" 2>/dev/null || { echo "commit $S absent de refs/remotes/origin/$BC (fetch par refspec explicite d'abord)"; exit 2; }
+-    git -C "$DEPOT" show "$S:$CFG" > "$D/config.json" 2>/dev/null || { echo "configuration $CFG absente du commit $S"; exit 2; }
+-    GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
+-    [[ "$GO_ID_ENV" =~ $MOTIF_GO ]] || { echo "GO_ID absent ou illisible dans l'environnement (GO_ID=GO-AAAA-MM-JJ-NN : la ligne de GO de calcul de l'épreuve, convention de la garde de calcul) : pas de création"; exit 2; }
+-    [ "$GOC" = "$GO_ID_ENV" ] || { echo "go_id de la configuration ($GOC) ≠ GO_ID de l'environnement ($GO_ID_ENV) : pas de création"; exit 2; }
+-    [ "$GOC" != "$GO_ID" ] || { echo "go_id de la configuration ($GOC) est le GO de la course : cette sous-commande ne sert que les épreuves à blanc, sous leur propre ligne de GO de calcul"; exit 2; }
+-    PGL=$(plafond_ligne_go "$GOC" "$JOUR") || { echo "ligne de GO $GOC du registre $REG non conforme ($PGL) : pas de création"; exit 2; }
+-    # R-1696 : plafond d'épreuve lu dans la configuration, borné par le reste du GO (plus de liste fermée) ; dépense réelle et finale des autres épreuves donnée explicitement
+-    ANT_EPR="${T06_DEPENSE_EPREUVES_ANTERIEURES_USD:-}"; [[ "$ANT_EPR" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "T06_DEPENSE_EPREUVES_ANTERIEURES_USD : dépense réelle et finale des autres épreuves du GO, en USD (0 pour la première), exigée"; exit 2; }
+-    PLAF=$(python3 -I -B -c "$SESSION7" plafond "$PLC" "$ANT_EPR" "$GOC" "$REG" "$JOUR") || { echo "plafond_usd $PLC refusé : $PLAF"; exit 2; }
+-    case "$MODE_C" in jouet|reel) ;; *) echo "mode $MODE_C illisible"; exit 2;; esac
+-    python3 -I -B -c "$SESSION3" go "$REG" "$GOC" "$PGL" "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
+-    # l'amorce relit le registre DU COMMIT cloné : le GO doit y figurer aussi (sinon elle refuserait sur l'instance)
+-    git -C "$DEPOT" show "$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION3" go "$D/go-commit.md" "$GOC" "$PGL" "$JOUR" >/dev/null || { echo "GO $GOC absent ou non conforme dans registres/go.md du commit $S (l'amorce le relit) : commit postérieur au GO exigé"; exit 2; }
+-    LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
+-    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" "$PGL" "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
+-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v11 absente de $S"; exit 2; }
+-    E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
+-    if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
+-    JGHN=$(jeton_gh_nom) || { echo "jeton absent (ni CONTROLE_IA_GITHUB_TOKEN ni CONTROLE_IA_GITHUB_TOKEN_2) : pas de création"; exit 2; }
+-    printf 'controles-epreuve t06 v4 %s\ncommit %s\nprereg -\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nepreuves_anterieures %s\nmode %s\nepreuve oui\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$ANT_EPR" "$MODE_C" "$CAL" >> "$D/lancement.txt"
+-    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v11 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur $PGL, plafond de la ligne du registre ; $PLAF) ; mode $MODE_C ; $CAL" ;;
++    echo "controles-epreuve : non offerte pour T0.8 (aucune épreuve à blanc n'est prévue par l'ordre de course) : rien vérifié, rien créé"; exit 2 ;;   # T08
+ creation)
+-    OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course ou relance}"; ANT="${4:?dépense antérieure en USD (registre des dépenses ; 0 pour la première tentative)}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
++    OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course}"; ANT="${4:?dépense antérieure en USD (registre des dépenses ; 0 pour la première tentative)}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
+     [ "$OFFRE_ARG" = auto ] || { echo "offre : « auto » seulement (v5 : un identifiant donné à la main serait périmé, il change d'une recherche à l'autre ; l'offre est choisie dans la liste filtrée, juste avant la création)"; exit 2; }
+-    case "$CARTE" in course|relance) ;; *) echo "carte : course ou relance (DT-6)"; exit 2;; esac
++    case "$CARTE" in course) ;; relance) echo "carte « relance » : aucune relance sur une carte H200, ni automatique ni proposée (section « Machine » du texte de T0.8 ; mot de Lazar exigé) : pas de création"; exit 2;; *) echo "carte : course (seule carte de T0.8)"; exit 2;; esac   # T08
+     [[ "$ANT" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "dépense antérieure : nombre positif en USD"; exit 2; }
+     [ -f "$D/lancement.txt" ] && grep -q '^commit ' "$D/lancement.txt" && [ -f "$D/config.json" ] || { echo "contrôles absents ($D/lancement.txt, config.json) : pas de création"; exit 2; }
+-    S=$(champ commit "$D/lancement.txt"); [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit illisible"; exit 2; }
+-    EPR=non; [ "$(champ epreuve "$D/lancement.txt")" = oui ] && EPR=oui
+-    GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
+-    if [ "$EPR" = oui ]; then
+-        [ -n "${T06_REGISTRE_GO:-}" ] || { echo "épreuve : T06_REGISTRE_GO (registres/go.md d'un clone de main) exigé"; exit 2; }
+-        [ "$GOC" = "$GO_ID_ENV" ] || { echo "épreuve : go_id de la configuration ($GOC) ≠ GO_ID de l'environnement (${GO_ID_ENV:-absent}) : pas de création"; exit 2; }
+-        PGL=$(plafond_ligne_go "$GOC") || { echo "épreuve : ligne de GO $GOC non conforme au jour de la création ($PGL) : pas de création"; exit 2; }
+-        [ "$(champ go "$D/lancement.txt")" = "$GOC" ] && [ "$(champ plafond "$D/lancement.txt")" = "$PLC" ] || { echo "épreuve : GO ou plafond de la configuration ≠ ceux des contrôles"; exit 2; }
+-        case "$BRANCHE" in essai/*) ;; *) echo "épreuve : la branche poussée doit commencer par essai/ ($BRANCHE) : jamais calcul/"; exit 2;; esac
+-        PGO=$PGL
+-        PLAF=$(python3 -I -B -c "$SESSION7" plafond "$PLC" "$(champ epreuves_anterieures "$D/lancement.txt")" "$GOC" "$REG") || { echo "épreuve : plafond $PLC hors du reste du GO : $PLAF"; exit 2; }
+-    else
+-        [ "$S" = "$(commit_s)" ] || { echo "commit de scellement changé depuis les contrôles"; exit 2; }
+-        [ "$GOC" = "$GO_ID" ] && [ "$PLC" = 200 ] || { echo "course : GO ($GOC) ou plafond ($PLC) de la configuration ≠ $GO_ID, 200"; exit 2; }
+-        [ -z "${T06_EPUISEMENT_SIMULE_S:-}" ] || { echo "T06_EPUISEMENT_SIMULE_S : réservé aux épreuves à blanc"; exit 2; }
+-        PGO=200
+-    fi
+-    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" "$PGO") || { echo "calendrier (L11) au jour de la création : $CAL : nœud, pas de création"; exit 3; }
++    S=$(champ commit_texte "$D/lancement.txt"); [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit du texte illisible"; exit 2; }   # T08
++    COMMIT=$(champ commit "$D/lancement.txt"); [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "commit du code illisible"; exit 2; }   # T08
++    [ "$S" = "$(commit_s)" ] || { echo "commit de scellement changé depuis les contrôles"; exit 2; }
++    [ "$(cle_config "$D/config.json" marqueurs.COMMIT_CODE_T08)" = "$COMMIT" ] || { echo "commit du code de la configuration ≠ celui des contrôles"; exit 2; }   # T08
++    [[ "$GO_ID_ENV" =~ $MOTIF_GO ]] && [ "$GO_ID_ENV" = "$(champ go "$D/lancement.txt")" ] || { echo "GO_ID de l'environnement (${GO_ID_ENV:-absent}) ≠ GO des contrôles ($(champ go "$D/lancement.txt")) : pas de création"; exit 2; }   # T08
++    PLC=$(cle_config "$D/config.json" lancement.plafond_usd) && [ "$PLC" = "$(champ plafond "$D/lancement.txt")" ] && [ "$PLC" = 120 ] || { echo "plafond de la configuration ($PLC) ≠ plafond des contrôles ou ≠ 120 USD (texte) : pas de création"; exit 2; }   # T08
++    MODE_C=reel   # T08 : la course de T0.8 n'a qu'un mode sur la machine (aucune épreuve à blanc)
++    [ -z "${T08_EPUISEMENT_SIMULE_S:-}" ] || { echo "T08_EPUISEMENT_SIMULE_S : aucune épreuve à blanc pour T0.8"; exit 2; }   # T08
++    CAL=$(python3 -I -B -c "$SESSION8" calendrier "$REG" "$D/config.json" "$GO_ID_ENV") || { echo "calendrier lu au registre au jour de la création : $CAL : nœud, pas de création"; exit 3; }   # T08
+     FIN_GO=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'); [ -n "$ECH" ] || ECH="$FIN_GO"
+     [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
+-    python3 -I -B -c "$SESSION3" go "$REG" "$GOC" "$PGO" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }
++    python3 -I -B -c "$SESSION8" go "$REG" "$D/config.json" "$GO_ID_ENV" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }   # T08
+     JGHN=$(jeton_gh_nom) && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent (ni CONTROLE_IA_GITHUB_TOKEN ni CONTROLE_IA_GITHUB_TOKEN_2, ou HF_TOKEN en mode réel) : pas de création"; exit 2; }
+     command -v "$VAST" >/dev/null || { echo "outil de location introuvable : offre non relue, pas de création"; exit 2; }
+-    DISQUE=$(cle_config "$D/config.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }
++    DISQUE=$(cle_config "$D/vue-offre.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }   # T08 : vue de l'offre
+     [[ "$DISQUE" =~ ^[0-9]+([.][0-9]+)?$ ]] && [ "${DISQUE%%.*}" -gt 0 ] || { echo "offre.disque_min_go illisible ($DISQUE) : pas de création"; exit 2; }
+     # C-V5-1 : au plus trois essais (une machine refusée est exclue du suivant) ; offre choisie DANS LA LISTE FILTRÉE, prix lus dans la liste,
+     # au disque demandé (--storage, C-V3-3) ; aucune relecture par identifiant
+     ESSAIS=$(grep -c '^essai_creation ' "$D/lancement.txt" || true)
+     [ "${ESSAIS:-0}" -lt 3 ] || { echo "trois essais de création déjà faits (essai_creation = $ESSAIS) : arrêt, aucune création ; message à la mère"; exit 3; }
+     EXCL=$(sed -n 's/^machine_refusee //p' "$D/lancement.txt" | paste -sd, -)
+-    FILTRE=$(python3 -I -B -c "$SESSION7" filtre "$D/config.json" "$CARTE") || { echo "filtre illisible : $FILTRE"; exit 2; }
++    FILTRE=$(python3 -I -B -c "$SESSION7" filtre "$D/vue-offre.json" "$CARTE") || { echo "filtre illisible : $FILTRE"; exit 2; }   # T08 : vue de l'offre
+     timeout -k 5 120 "$VAST" search offers "$FILTRE" -o dph_total --storage "$DISQUE" --raw > "$D/offres.json" 2>"$D/offres.err" || { echo "recherche filtrée impossible (--storage $DISQUE) : pas de création"; exit 2; }
+-    OF=$(python3 -I -B -c "$SESSION7" choisir "$D/offres.json" "$D/config.json" "$CARTE" "$EXCL") || { echo "aucune offre conforme dans la liste filtrée : $OF : nœud, pas de création"; exit 3; }
++    OF=$(python3 -I -B -c "$SESSION7" choisir "$D/offres.json" "$D/vue-offre.json" "$CARTE" "$EXCL") || { echo "aucune offre conforme dans la liste filtrée : $OF : nœud, pas de création"; exit 3; }   # T08 : vue de l'offre
+     OFFRE=$(printf '%s\n' "$OF" | sed -n 's/^id=\([0-9]*\) .*/\1/p'); MACH=$(printf '%s\n' "$OF" | sed -n 's/.* machine=\([^ ]*\) .*/\1/p'); RANG=$(printf '%s\n' "$OF" | sed -n 's/.* rang=\([0-9]*\) .*/\1/p')
+     [[ "$OFFRE" =~ ^[0-9]+$ ]] && [ -n "$MACH" ] && [ -n "$RANG" ] || { echo "offre choisie illisible ($OF)"; exit 2; }
+     PC=$(printf '%s\n' "$OF" | sed -n 's/.*prix_carte=\([0-9.]*\).*/\1/p'); PS=$(printf '%s\n' "$OF" | sed -n 's/.*prix_stockage=\([0-9.]*\).*/\1/p')
+     TEL=$(printf '%s\n' "$OF" | sed -n 's/.*telechargement_forfait=\([0-9.]*\).*/\1/p')
+     [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] || { echo "prix illisibles dans la relecture de l'offre"; exit 2; }
+-    ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 2; }
++    ETIQ=$(cle_config "$D/vue-offre.json" offre.etiquette) || { echo "étiquette illisible"; exit 2; }   # T08 : vue de l'offre
+     vast_masque "$D/instances.json" timeout -k 5 120 "$VAST" show instances --raw || { echo "inventaire des instances impossible ou masquage en échec (code $?) : pas de création"; exit 2; }
+     INV=$(python3 -I -B -c "$SESSION" instances "$D/instances.json" "$ETIQ") || { echo "$INV : nœud, pas de création"; exit 3; }
+     NOW=$(date +%s)
+-    DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW" ${T06_EPUISEMENT_SIMULE_S:+- "$T06_EPUISEMENT_SIMULE_S"}); code_dep=$?
++    DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW"); code_dep=$?   # T08 : aucune simulation d'épuisement
+     [ "$code_dep" = 0 ] || { echo "dépense cumulée déjà au plafond ou illisible ($DEP) : nœud, pas de création"; exit 3; }
+     EPUIS=$(printf '%s\n' "$DEP" | sed -n 's/.*epuisement_utc_s=\([0-9]*\).*/\1/p'); [[ "$EPUIS" =~ ^[0-9]+$ ]] || { echo "heure d'épuisement illisible"; exit 2; }
+     B64=$(base64 -w0 < "$D/amorce.sh")
+     [ "$(printf %s "$B64" | base64 -d | sha256sum | cut -d' ' -f1)" = "$(champ amorce "$D/lancement.txt")" ] || { echo "encodage de l'amorce"; exit 2; }
+-    EXTRA=""
+-    [[ "${T06_TESTS_ATTENDUS:-}" =~ ^[0-9]*$ ]] || { echo "T06_TESTS_ATTENDUS illisible (^[0-9]*$ exigé : un entier ou rien) : pas de création"; exit 2; }
+-    [ "$EPR" != oui ] || [ -z "${T06_TESTS_ARGS:-}" ] || [ "$MODE_C" = jouet ] || { echo "T06_TESTS_ARGS refusé en mode $MODE_C : la suite ciblée figée de l'amorce est la seule jouée hors de la répétition jouet"; exit 2; }
+-    [ "$EPR" = oui ] && EXTRA=" -e EPREUVE_GO_ID=$GOC -e MODE=$MODE_C -e PREREG_ABSENT=1 -e CONFIG=$(champ config "$D/lancement.txt") -e TESTS_ATTENDUS=${T06_TESTS_ATTENDUS:-}${T06_TESTS_ARGS:+ -e TESTS_ARGS=$T06_TESTS_ARGS}"
+-    CMD="GO_ID=$GOC timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$S -e PREREG=$P -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN$EXTRA\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute.json\" 2>&1; bash $DEPOT/scripts/lancer_t06_v13.sh apres-creation \"$D/creation-brute.json\" \$? \"$D\""
++    CMD="GO_ID=$GO_ID_ENV timeout -k 10 300 $VAST create instance $OFFRE --raw --image $IMAGE --disk $DISQUE --cancel-unavail --label $ETIQ --env \"-e COMMIT=$COMMIT -e PREREG=$P -e CONFIG=$(champ config "$D/lancement.txt") -e BRANCHE=$BRANCHE -e BRANCHE_ENTREE=$(champ branche_entree "$D/lancement.txt") -e ENTREE_COMMIT=$(champ entree "$D/lancement.txt") -e BRANCHE_CODE=$(champ branche_code "$D/lancement.txt") -e GO_ID_T08=$GO_ID_ENV -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e ECHEANCE_UTC_S=$ECH -e FIN_GO_UTC_S=$FIN_GO -e DEPENSE_EPUISEE_UTC_S=$EPUIS -e HF_TOKEN=\$HF_TOKEN -e GH_TOKEN=\$$JGHN\" --entrypoint bash --args -c \"echo $B64 | base64 -d > /root/amorce.sh && bash /root/amorce.sh\" > \"$D/creation-brute.json\" 2>&1; bash $DEPOT/scripts/lancer_t08_v1.sh apres-creation \"$D/creation-brute.json\" \$? \"$D\""   # T08 : variables de la branche d'entrée et du code, GO de la course
+     printf '{"tool_input":{"command":%s}}' "$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$CMD")" | python3 "$DEPOT/.claude/hooks/garde_calcul.py" || { echo "garde de calcul : commande refusée"; exit 2; }
+     printf 'creation preparee %s\noffre %s\ncarte %s\nstorage %s\nprix_carte %s\nprix_stockage %s\ntelechargement_forfait %s\nanterieure %s\necheance %s\nepuisement %s\ndepense %s\nplafond_creation %s\nessai_creation %s\nmachine_proposee %s\nrang %s\n' "$(date -u +%FT%TZ)" "$OFFRE" "$CARTE" "$DISQUE" "$PC" "$PS" "$TEL" "$ANT" "$ECH" "$EPUIS" "$DEP" "$PLC" "$((ESSAIS + 1))" "$MACH" "$RANG" >> "$D/lancement.txt"
+     echo "OFFRE CONFORME : $OF ; $INV ; $DEP"
+@@ -246,14 +233,14 @@
+     rm -f -- "$F"
+     if [ "$C" = 0 ] && [ -n "$ID" ] && [ "${OK:-0}" -ge 1 ]; then
+         CR=$(date +%s); printf 'instance %s\ncreation %s\n' "$ID" "$CR" >> "$D/lancement.txt"
+-        echo "CRÉÉE : instance $ID (création $CR ; sortie de vastai non affichée) ; surveillance : bash scripts/lancer_t06_v13.sh surveillance $ID $D"; exit 0
++        echo "CRÉÉE : instance $ID (création $CR ; sortie de vastai non affichée) ; surveillance : bash scripts/lancer_t08_v1.sh surveillance $ID $D"; exit 0
+     fi
+     if [ -z "$ID" ] && [ "${NON:-0}" -ge 1 ] && [ "${OK:-0}" -eq 0 ]; then
+         # C-V5-1 : refus explicite (offre retirée) : retenter au rang suivant seulement si aucune instance du programme n'existe
+         ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 4; }
+         if vast_masque "$D/instances-apres.json" timeout -k 5 120 "$VAST" show instances --raw && python3 -I -B -c "$SESSION" instances "$D/instances-apres.json" "$ETIQ" >/dev/null; then
+             printf 'machine_refusee %s\n' "$(champ machine_proposee "$D/lancement.txt")" >> "$D/lancement.txt"
+-            echo "OFFRE REFUSÉE À LA CRÉATION (retirée ?) : aucune instance du programme ; machine $(champ machine_proposee "$D/lancement.txt") exclue ; rang suivant : bash $DEPOT/scripts/lancer_t06_v13.sh creation auto $(champ carte "$D/lancement.txt") $(champ anterieure "$D/lancement.txt") $D $(champ echeance "$D/lancement.txt")"; exit 5
++            echo "OFFRE REFUSÉE À LA CRÉATION (retirée ?) : aucune instance du programme ; machine $(champ machine_proposee "$D/lancement.txt") exclue ; rang suivant : bash $DEPOT/scripts/lancer_t08_v1.sh creation auto $(champ carte "$D/lancement.txt") $(champ anterieure "$D/lancement.txt") $D $(champ echeance "$D/lancement.txt")"; exit 5
+         fi
+     fi
+     echo "CRÉATION INCERTAINE (code $C, identifiant « ${ID:-aucun} ») : vérifier « vastai show instances » sans --raw ; aucune seconde création avant"; exit 4 ;;
+@@ -264,7 +251,8 @@
+     [ "$(champ instance "$D/lancement.txt")" = "$ID" ] || { echo "identifiant $ID ≠ instance créée d'après $D/lancement.txt (R10)"; exit 2; }
+     CR=$(champ creation "$D/lancement.txt"); PC=$(champ prix_carte "$D/lancement.txt"); PS=$(champ prix_stockage "$D/lancement.txt")
+     TEL=$(champ telechargement_forfait "$D/lancement.txt"); ANT=$(champ anterieure "$D/lancement.txt")
+-    PLC=$(champ plafond_creation "$D/lancement.txt"); [ -n "$PLC" ] || PLC=200               # C-V4-3 : plafond de la configuration (200 pour la course)
++    PLC=$(champ plafond_creation "$D/lancement.txt"); [ "$PLC" = 120 ] || { echo "plafond de la création illisible ou ≠ 120 USD dans lancement.txt"; exit 2; }   # T08 : plafond cumulé de la course, sans valeur par défaut
++    CRU=$(champ compte_rendu "$D/lancement.txt"); [[ "$CRU" =~ ^[0-9]+$ ]] || { echo "seuil du compte rendu illisible dans lancement.txt"; exit 2; }   # T08 : compte rendu à 40 USD
+     [[ "$CR" =~ ^[0-9]+$ ]] && [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] && [ -n "$ANT" ] || { echo "création, prix ou dépense antérieure illisibles dans lancement.txt"; exit 2; }
+     # C-V5-2 : HF_TOKEN n'est exigé (masquage) qu'en mode réel ; une épreuve en mode jouet n'en a pas besoin
+     JGH="${CONTROLE_IA_GITHUB_TOKEN:-${CONTROLE_IA_GITHUB_TOKEN_2:-}}"      # R-1693 : sous `set -u`, `${#VAR}` d'une variable absente sortait en 127 au lieu de 2 ; v13 : l'un ou l'autre nom
+@@ -294,7 +282,7 @@
+         python3 -I -B -c "$SESSION7" seule "$D/instance-seule.json" "$ID" > "$D/presence-seule.txt" 2>&1; SP=$?
+         [ "$SP" != 2 ] || [ "$st" = 0 ] || SP=9
+     }
+-    echo "surveillance v13 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, téléchargement $TEL USD, antérieur $ANT USD ; sans couperet de temps ; arrêt sur processus mort ou dépense cumulée ≥ $PLC USD (plafond de la configuration, C-V5-3) ; alerte après 2 h sans PROGRES" >> "$D/surveillance.txt"
++    echo "surveillance t08 v1 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, téléchargement $TEL USD, antérieur $ANT USD ; sans couperet de temps ; arrêt sur processus mort ou dépense cumulée ≥ $PLC USD (plafond de la configuration, C-V5-3) ; alerte après 2 h sans PROGRES ; alerte unique de compte rendu à $CRU USD" >> "$D/surveillance.txt"
+     while true; do
+         now=$(date -u +%s)
+         # R-1683 : journal entier (--tail 20000), masqué PAR UN TUBE (aucun fichier brut sur le disque), copié à chaque relevé
+@@ -334,7 +322,7 @@
+             DEC="ARRET mort : instance $ID absente à deux relevés (liste non vide sans elle, ou instance seule introuvable) ; confirmer par show instance $ID avant de conclure à une destruction ; relever la cause dans $D/journal-instance.txt (dernières lignes AMORCE) et sur la branche poussée"
+             alerte "$DEC"; exit 3
+         fi
+-        if DEC=$(python3 -I -B -c "$SESSION3" surveillance "$PLC" "$D/progres.txt" "$now" "$PC" "$PS" "$CR" "$ANT" "$TEL" ${FACT:+"$FACT"} 2>&1); then ILLISIBLES=0
++        if DEC=$(python3 -I -B -c "$SESSION8" surveillance "$PLC" "$CRU" "$D/progres.txt" "$now" "$PC" "$PS" "$CR" "$ANT" "$TEL" ${FACT:+"$FACT"} 2>&1); then ILLISIBLES=0   # T08 : compte rendu à 40 USD
+         else
+             ILLISIBLES=$((ILLISIBLES + 1))
+             if [ "$ILLISIBLES" -ge 3 ]; then DEC="ARRET garde : garde de dépense illisible trois fois de suite ($DEC) : arrêter l'instance par son identifiant (R10), sans garde la dépense n'est plus bornée"
+@@ -345,19 +333,20 @@
+             ARRET*) echo "$DEC"; echo "ARRÊT PAR L'IDENTIFIANT (R10) : timeout -k 5 120 $VAST stop instance $ID"; exit 3 ;;
+             FIN*) echo "$DEC"; echo "FIN : instance à arrêter par son identifiant, disque gardé jusqu'au verdict : timeout -k 5 120 $VAST stop instance $ID"; exit 0 ;;
+             REFUS*) echo "$DEC"; exit 4 ;;
++            "ALERTE compte rendu"*) if [ ! -e "$D/compte-rendu-alerte.txt" ]; then echo "$(date -u +%FT%TZ) $DEC" | tee "$D/compte-rendu-alerte.txt"; fi ;;   # T08 : une seule fois
+             ALERTE*) echo "$(date -u +%FT%TZ) $DEC" ;;
+         esac
+         sleep "$INTERVALLE"
+     done ;;
+ --verifier-go-seulement)
+-    # v13 : vérification seule de la ligne de GO de l'épreuve (GO_ID de l'environnement, registre T06_REGISTRE_GO) et du plafond demandé ; NE CRÉE RIEN (aucun dossier, aucun fichier, aucun appel à l'outil de location)
+-    PLC="${2:?plafond demandé pour l épreuve, en USD}"; ANT_EPR="${3:-0}"; JOUR="${4:-$(date -u +%F)}"
++    # T08 : vérification seule de la ligne de GO de la course (GO_ID de l'environnement, admise par la configuration donnée, lue au registre avec sa prolongation, son plafond et sa fin de validité) et de la dépense antérieure ; NE CRÉE RIEN (aucun dossier, aucun fichier, aucun appel à l'outil de location)
++    CFG="${2:?configuration de la course (fichier JSON)}"; ANT_EPR="${3:-0}"; JOUR="${4:-$(date -u +%F)}"
+     [[ "$GO_ID_ENV" =~ $MOTIF_GO ]] || { echo "GO_ID absent ou illisible dans l'environnement (GO_ID=GO-AAAA-MM-JJ-NN) : rien vérifié, rien créé"; exit 2; }
+-    [ -n "${T06_REGISTRE_GO:-}" ] && [ -f "$T06_REGISTRE_GO" ] || { echo "T06_REGISTRE_GO : registres/go.md d'un clone de main exigé : rien vérifié, rien créé"; exit 2; }
+-    [ "$GO_ID_ENV" != "$GO_ID" ] || { echo "GO_ID=$GO_ID_ENV est le GO de la course : une épreuve se joue sous sa propre ligne de GO de calcul : refus"; exit 2; }
+-    [[ "$PLC" =~ ^[0-9]+([.][0-9]+)?$ ]] && [[ "$ANT_EPR" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "plafond ($PLC) ou dépense antérieure ($ANT_EPR) : nombre positif en USD attendu : refus"; exit 2; }
+-    GOL=$(python3 -I -B -c "$SESSION7" go-ligne "$REG" "$GO_ID_ENV" "$JOUR") || { echo "GO $GO_ID_ENV refusé : $GOL"; exit 2; }
+-    PLAF=$(python3 -I -B -c "$SESSION7" plafond "$PLC" "$ANT_EPR" "$GO_ID_ENV" "$REG" "$JOUR") || { echo "plafond $PLC refusé : $PLAF"; exit 2; }
+-    echo "GO VÉRIFIÉ, RIEN CRÉÉ : $GOL ; $PLAF" ;;
++    [ -f "$CFG" ] && [ -f "$REG" ] || { echo "configuration $CFG ou registre $REG absent : rien vérifié, rien créé"; exit 2; }
++    [[ "$ANT_EPR" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "dépense antérieure ($ANT_EPR) : nombre positif en USD attendu : refus"; exit 2; }
++    GOL=$(python3 -I -B -c "$SESSION8" go "$REG" "$CFG" "$GO_ID_ENV" "$JOUR") || { echo "GO $GO_ID_ENV refusé : $GOL"; exit 2; }
++    PLC=$(cle_config "$CFG" lancement.plafond_usd) || { echo "plafond illisible : refus"; exit 2; }
++    python3 -I -c 'import sys; from decimal import Decimal as D; sys.exit(0 if D(sys.argv[1]) < D(sys.argv[2]) else 1)' "$ANT_EPR" "$PLC" || { echo "dépense antérieure $ANT_EPR ≥ plafond $PLC USD : refus"; exit 2; }
++    echo "GO VÉRIFIÉ, RIEN CRÉÉ : $GOL ; dépense antérieure $ANT_EPR < plafond $PLC USD" ;;
+ *) echo "usage : controles | controles-epreuve | creation | apres-creation | surveillance | --verifier-go-seulement" >&2; exit 2 ;;
+ esac
