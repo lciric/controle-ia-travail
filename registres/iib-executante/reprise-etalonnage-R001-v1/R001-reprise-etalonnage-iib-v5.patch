@@ -1,0 +1,2021 @@
+From b4a2c64e6af4bdd8ed781faad73ebfb147877a1a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 14:44:49 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=20de=20reprise?=
+ =?UTF-8?q?=20R001,=20reprise=20de=20l'=C3=A9talonnage=20coup=C3=A9=20(?=
+ =?UTF-8?q?=C3=A9cart=20au=20texte=20scell=C3=A9,=20section=2015,=20accept?=
+ =?UTF-8?q?=C3=A9=20:=20GO-2026-11-22-71)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Phase neuve `--phase reprise_etalonnage --etalonnage-partiel <run>` (ancien chemin de tirage) : ordre de reprise scellé
+(source, machine des lots versés, dépense antérieure déclarée, ligne de GO de l'écart, empreintes des fichiers récupérés) ;
+lots versés vérifiés contre le plan scellé (même code : `lots_prevus`) ; graines vérifiées par les δ consignés ; témoin
+`reprise-engagee-iib-v5.json` scellé et poussé avant le premier épisode ; seuls les lots manquants (flagrants) joués aux clés
+du plan, versés et poussés par lot ; fin écrite par le même code que l'étalonnage complet (`_fin_de_l_etalonnage`), clés des
+lots versés reconstruites et éprouvées sur les lots joués ; marque de reprise au manifeste, aux deux résumés, aux rapportés et
+au témoin ; durées (machine neuve seule) et dépense (antérieure + neuve) déclarées. Gardes : lot manquant, en trop, fichier
+inconnu, sceau faux, fichier changé après l'ordre, plan différent, lot non conforme, phase incomplète autre que la dernière,
+graines différentes, second passage, reprise interrompue, configuration différente du manifeste scellé, machine neuve égale à
+l'ancienne, ligne de GO absente du registre (mode réel). Surveillance : la coupure à 16 USD joue aussi en phase de reprise.
+Amorce de la reprise (tirée de celle de la course, six changements déclarés), préparation du commit par la session, lanceur
+de session v3 : choix de l'amorce de la reprise. Essai central : coupé après 27 (et 25) lots puis repris = complet, à l'octet
+hors des champs mesurés au chronomètre. Liste figée de la reprise : 26 fichiers, 311 essais.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_reprise_v5.sh  | 521 +++++++++++++++++++++
+ scripts/lancer_iib_v3.sh                   |   5 +-
+ scripts/preparer_reprise_iib_v5.sh         |  31 ++
+ scripts/tests-cibles-iib-reprise-v5-v1.txt |  26 +
+ src/controle_ia/iib/lanceur_v5.py          | 331 +++++++++++--
+ src/controle_ia/iib/reprise_v5.py          | 322 +++++++++++++
+ src/controle_ia/iib/session_v5.py          |   8 +-
+ src/controle_ia/manifeste.py               |   9 +-
+ tests/test_iib_reprise_v5_r001.py          | 509 ++++++++++++++++++++
+ 9 files changed, 1705 insertions(+), 57 deletions(-)
+ create mode 100644 scripts/amorce_instance_iib_reprise_v5.sh
+ create mode 100644 scripts/preparer_reprise_iib_v5.sh
+ create mode 100644 scripts/tests-cibles-iib-reprise-v5-v1.txt
+ create mode 100644 src/controle_ia/iib/reprise_v5.py
+ create mode 100644 tests/test_iib_reprise_v5_r001.py
+
+diff --git a/scripts/amorce_instance_iib_reprise_v5.sh b/scripts/amorce_instance_iib_reprise_v5.sh
+new file mode 100644
+index 000000000..2a54c7574
+--- /dev/null
++++ b/scripts/amorce_instance_iib_reprise_v5.sh
+@@ -0,0 +1,521 @@
++#!/usr/bin/env bash
++# Amorce de l'instance de la REPRISE de l'étalonnage de l'organisme retenu du saboteur à budget, v5 (correctif de reprise R001 ;
++# écart au texte scellé, section 15, accepté par Lazar : GO-2026-11-22-71) : tirée de `scripts/amorce_instance_iib_course_v5.sh`
++# (nom neuf, R12 ; les amorces de l'étalonnage et de la course restent telles quelles). Changements, et eux seuls :
++#  (p1) le run est joué par `controle_ia.iib.lanceur_v5 --phase reprise_etalonnage … --etalonnage-partiel <run coupé>` (ancien chemin
++#       de tirage, celui de l'étalonnage) ;
++#  (p2) le run coupé est celui de l'unique `diag/*-iib-*/ordre-reprise-iib-v5.json` scellé du commit cloné : la session a récupéré
++#       dans ce commit, depuis la branche d'essai de l'étalonnage coupé, le manifeste du run, les lots et leurs identifiants, puis
++#       écrit l'ordre (`scripts/preparer_reprise_iib_v5.sh`) ; aucun, ou plusieurs : refus, rien ne part ;
++#  (p3) la reprise est engagée une seule fois par run coupé, d'une machine à l'autre : la référence distante
++#       `essai/iib-reprise-engagee-<run coupé>` est cherchée (présente : refus), puis poussée avant l'installation ; le lanceur, lui,
++#       scelle et pousse `reprise-engagee-iib-v5.json` avant le premier épisode ;
++#  (p4) run nommé `<instant>-iib-reprise-<mode>` ; la fin du run consigne aussi `diag/<run coupé>/` (lot repris et fin) ;
++#  (p5) la suite ciblée figée est `scripts/tests-cibles-iib-reprise-v5-v1.txt` : celle de l'étalonnage (v6) plus l'essai de la reprise ;
++#  (p6) les lignes du journal disent « reprise ». Destruction : celle de l'amorce de la course, inchangée (fin normale : état
++#       « stopped », disque gardé, après la poussée vérifiée ; poussée impossible : disque gardé, la session rapatrie).
++# Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_reprise_v5.sh`.
++# Écrite et éprouvée à blanc en essai local seulement (fonctions extraites) ; jamais lancée par son développeur.
++# --- en-tête de l'amorce de la course :
++# Amorce de l'instance de la COURSE de l'organisme retenu du saboteur à budget, v5 (correctif 0017) : tirée de
++# `scripts/amorce_instance_iib_v5.sh` (nom neuf, R12 ; l'amorce de l'étalonnage reste telle quelle). Changements, et eux seuls :
++#  (c1) le run est joué par `controle_ia.iib.lanceur_v5 --phase course … --etalonnage <run de l'étalonnage>` ;
++#  (c2) le run de l'étalonnage est celui de l'unique `diag/*-iib-*/designation-iib-v5.json` scellé du commit cloné (le commit de la
++#       course porte l'étalonnage et la désignation versés par la session) ; aucun, ou plusieurs : refus, rien ne part ;
++#  (c3) run nommé `<instant>-iib-course-<mode>` ; la fin du run consigne aussi `diag/<run de l'étalonnage>/` (sorties de la course) ;
++#  (c4) la suite ciblée figée est `scripts/tests-cibles-iib-course-v5-v1.txt` : celle de l'étalonnage (v6) plus l'essai du moteur à
++#       torch du distillateur, qui sur la machine de la course trouve torch, transformers et scipy et se joue (rapport du distillateur,
++#       § 3 point 2 : qu'un défaut du moteur se voie dans les premières minutes, non après les tours) ; TESTS_ATTENDUS en tient compte ;
++#  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
++#       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
++#       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
++#  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
++# Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` (seule autre valeur permise).
++# Écrite et éprouvée à blanc en essai local seulement ; jamais lancée par son développeur.
++# --- en-tête de l'amorce de l'étalonnage :
++# Amorce de l'instance de l'organisme retenu du saboteur à budget, v5 (contre-lecture du code en version 5, B1) : tirée de
++# `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
++#  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
++#      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
++#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v6.txt` (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
++#      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
++#      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
++#      du nombre de tests attendus : constat de la répétition locale) ;
++#  (c) l'instant de début de l'amorce est passé au lanceur (`IIB_DEBUT_UTC_S`) : la dépense de l'étalonnage se compte depuis lui ;
++#  (d) données légères poussées : identifiants des actions, lot par lot (`donnees/<run>/lots/`) ; les sorties d'oracle, lot par lot,
++#      sont sous `diag/<run>/lots/` et suivent `diag/<run>` ; la consignation partielle les pousse aussi sur un arrêt ;
++#  (e) clonage : les pièces de la version 5 (`brouillons/ii-b-saboteur-budget-v5/`) à la place de celles de la version 1 ;
++#  (f) en essai local seulement, mode jouet : `IIB_GO_ID` est retiré de l'environnement du lanceur (il refuse le mode jouet sur une
++#      machine qui porte un accord). Écrite, jamais lancée par son développeur ; non éprouvée à blanc par le harnais de la v1 ;
++#  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
++#      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
++#      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6).
++# --- en-tête d'origine de la v1 :
++# Amorce de l'instance de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 5 à 7) : tirée de
++# `scripts/amorce_instance_t06_v11.sh` (nom neuf, R12 ; la v11 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à
++# blanc en essai local (AMORCE_ESSAI_LOCAL=1 : aucune minuterie, aucun appel à Vast ; essais `tests/test_iib_amorce_v1.py`), jamais lancée
++# par son développeur. Changements par rapport à la v11 (le reste — minuterie de destruction en tout premier, consignation sous verrou,
++# second démarrage, poussée initiale éprouvée, relais des seules lignes PROGRES neutres, garde de la carte, fin anormale — est inchangé) :
++#  (1) aucun identifiant de GO en dur : IIB_GO_ID (GO-AAAA-MM-JJ-NN), ligne LUE dans registres/go.md du commit cloné (`session_v12
++#      plafond-ligne`, puis `session_v3 go` et `calendrier` à ce plafond) ; course exploratoire : PREREG_ABSENT=1 et CONFIG exigés, aucun
++#      préenregistrement lu ; branche `essai/iib-explo-v<n>` seulement (défaut essai/iib-explo-v1) ;
++#  (2) le run est joué par `controle_ia.iib.lanceur_v1` (aucune activation, aucune sonde) ; la suite ciblée figée est
++#      `scripts/tests-cibles-iib-v1.txt` (empreinte écrite en dur ci-dessous), jouée d'office ; TESTS_ARGS en mode jouet seulement ;
++#  (3) données légères poussées : adaptateurs, `oracle-iib.json`, `ids-actions-iib.npz`, `textes-actions-iib.jsonl` et leurs sceaux ; il
++#      n'existe aucun morceau d'activations (l'étape des morceaux ne committe rien) ; le bras B de l'audit de fuite n'est pas joué ;
++#  (4) clonage réduit aux chemins dont l'instance a besoin (CHEMINS_CLONAGE) : ni `diag/`, ni `runs/`, ni `traces/`, ni d'autres
++#      `donnees/` que les tâches de T0.5 (aucun fichier de 7a, 7b, P3-bis, du bras d'attaque ni du mode tenu à l'écart) ;
++#  (5) marqueurs et dossier de l'instance renommés `iib-…` (`$R/iib`), messages « (ii-b) ».
++# Variables (--env) : COMMIT, GH_TOKEN, HF_TOKEN (mode reel), IIB_GO_ID, BRANCHE, DEPOT_URL, MODE, PREREG_ABSENT=1, CONFIG,
++# TESTS_ATTENDUS, ECHEANCE_UTC_S, FIN_GO_UTC_S, DEPENSE_EPUISEE_UTC_S ; posées par Vast : CONTAINER_ID, CONTAINER_API_KEY (jamais
++# affichées). Essai local : RACINE_AMORCE, VENV_EXISTANT, AMORCE_ESSAI_LOCAL=1, TESTS_ARGS (jouet), POUSSEE_ATTENTE_S, MINUTERIE_*.
++set -uo pipefail
++R="${RACINE_AMORCE:-/root}"
++API=https://console.vast.ai/api/v0
++GO_ID="${IIB_GO_ID:-}"
++MORCEAU_MAX="${MORCEAU_MAX_OCTETS:-90000000}"
++ESSAI="${AMORCE_ESSAI_LOCAL:-0}"
++export HOME="${HOME:-/root}" TZ=UTC
++IIB_DEBUT_UTC_S="$(date +%s)"   # v5 (c) : début de l'amorce, pour la dépense de l'étalonnage
++cd "$R" || { echo "AMORCE IIB : racine $R inaccessible : sleep infinity pour ne pas boucler"; sleep infinity; exit 1; }
++N_DEM=0; [ -s "$R/iib-demarrages.txt" ] && read -r N_DEM < "$R/iib-demarrages.txt"
++case "$N_DEM" in ''|*[!0-9]*) N_DEM=0;; esac
++N_DEM=$(( N_DEM + 1 )); echo "$N_DEM" > "$R/iib-demarrages.txt"
++printf 'AMORCE IIB v1 DEMARRAGE %s : %(%Y-%m-%dT%H:%M:%SZ)T, machine %s, commit %s\n' "$N_DEM" -1 "${CONTAINER_ID:-?}" "${COMMIT:-?}"
++IFS= read -r -d '' MINUTERIE_TXT <<'MINUTERIE'
++ECH="$1"; DEP="$2"; R="$3"; API="$4"; J="$R/iib-minuterie.log"
++PAS="${MINUTERIE_PAS_S:-5}"; REESSAI="${MINUTERIE_REESSAI_S:-60}"; MARGE="${MINUTERIE_MARGE_S:-1800}"
++case "$PAS" in ''|*[!0-9]*) PAS=5;; esac; case "$REESSAI" in ''|*[!0-9]*) REESSAI=60;; esac
++case "$MARGE" in ''|*[!0-9]*) MARGE=1800;; esac; case "$DEP" in ''|*[!0-9]*) DEP=0;; esac
++echo "$(date -u +%FT%TZ) minuterie $$ : échéance $ECH, dépense épuisée à $DEP" >> "$J"
++echo "$$" > "$R/iib-minuterie.pid"
++case "${CONTAINER_ID:-}" in ''|*[!0-9]*) echo "$(date -u +%FT%TZ) ALARME : identifiant d'instance illisible : aucun geste" >> "$J"; exit 3;; esac
++consigner() {  # C14, C08 : résultats partiels committés et poussés par le script écrit par l'amorce (git seul)
++    if [ -f "$R/iib-consigner.sh" ]; then timeout -k 10 2400 bash "$R/iib-consigner.sh" "$1" >> "$J" 2>&1; echo "$(date -u +%FT%TZ) consigné ($1) : code $?" >> "$J"
++    else echo "$(date -u +%FT%TZ) rien à consigner ($1) : dépôt non extrait" >> "$J"; fi; }
++appel() {  # méthode, corps JSON (vide pour DELETE) ; écrit le code HTTP
++    local c
++    if command -v curl >/dev/null 2>&1; then
++        if [ -n "$2" ]; then c=$(curl -sS -m 60 -o "$R/iib-api-corps.txt" -w '%{http_code}' -X "$1" -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" -H 'Content-Type: application/json' -d "$2" "$API/instances/$CONTAINER_ID/" 2>/dev/null) || c=000
++        else c=$(curl -sS -m 60 -o "$R/iib-api-corps.txt" -w '%{http_code}' -X "$1" -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" "$API/instances/$CONTAINER_ID/" 2>/dev/null) || c=000; fi
++    elif command -v python3 >/dev/null 2>&1; then
++        c=$(python3 -I -B -c 'import os, sys, urllib.error, urllib.request
++corps = sys.argv[3].encode() if sys.argv[3] else None
++q = urllib.request.Request(sys.argv[1], data=corps, method=sys.argv[2], headers={"Authorization": "Bearer " + os.environ.get("CONTAINER_API_KEY", ""), "Content-Type": "application/json"})
++try:
++    with urllib.request.urlopen(q, timeout=60) as r:
++        code, corps = r.status, r.read()
++except urllib.error.HTTPError as e:
++    code, corps = e.code, e.read()
++except Exception:
++    code, corps = 0, b""
++open(sys.argv[4], "wb").write(corps)
++print("%03d" % code)' "$API/instances/$CONTAINER_ID/" "$1" "$2" "$R/iib-api-corps.txt" 2>/dev/null) || c=000
++    else c=aucun; fi
++    echo "$c"
++}
++while [ "$(date +%s)" -lt "$ECH" ] && [ ! -e "$R/iib-detruire" ]; do
++    if [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/iib-depense-epuisee" ]; then
++        echo "$(date -u +%FT%TZ) DÉPENSE ÉPUISÉE (C08, plafond de la configuration cumulé) : consignation, poussée, puis état « stopped »" >> "$J"
++        echo "dépense épuisée $(date -u +%FT%TZ)" > "$R/iib-depense-epuisee"
++        consigner "dépense épuisée"
++        if [ -e "$R/iib-detruire" ]; then echo "$(date -u +%FT%TZ) PUT stopped non envoyé : ordre de destruction de l'amorce reçu pendant la consignation (R-1689)" >> "$J"
++        else c=$(appel PUT '{"state": "stopped"}'); echo "$(date -u +%FT%TZ) PUT stopped (dépense épuisée) : HTTP $c" >> "$J"; fi
++    fi
++    sleep "$PAS"
++done
++raison="échéance"; [ -e "$R/iib-detruire" ] && raison="ordre de l'amorce"
++if [ "$raison" = "échéance" ]; then echo "$(date -u +%FT%TZ) ÉCHÉANCE $ECH atteinte (C14) : consignation et poussée des résultats partiels avant la destruction" >> "$J"; consigner "échéance"; fi
++FIN=$(( $(date +%s) + MARGE )); n=0
++while :; do
++    n=$((n + 1))
++    if [ "$n" -gt 1 ] && [ $(( $(date +%s) + 190 )) -gt "$FIN" ]; then
++        echo "$(date -u +%FT%TZ) ALARME : destruction non obtenue avant la fin de la marge" >> "$J"; exit 4
++    fi
++    c=$(appel DELETE '')
++    if [ "$c" = aucun ]; then echo "$(date -u +%FT%TZ) ALARME : ni curl ni python3 : aucune destruction possible" >> "$J"; exit 5; fi
++    refus=non; grep -qiE '"success"[[:space:]]*:[[:space:]]*false' "$R/iib-api-corps.txt" 2>/dev/null && refus=oui
++    echo "$(date -u +%FT%TZ) DELETE instance $CONTAINER_ID (essai $n, $raison) : HTTP $c, refus dans le corps : $refus" >> "$J"
++    case "$c" in 2??) if [ "$refus" = non ]; then echo "$(date -u +%FT%TZ) instance $CONTAINER_ID détruite" >> "$J"; exit 0; fi;; esac
++    [ "$(date +%s)" -lt "$FIN" ] || { echo "$(date -u +%FT%TZ) ALARME : destruction non obtenue" >> "$J"; exit 4; }
++    sleep "$REESSAI"
++done
++MINUTERIE
++printf '%s' "$MINUTERIE_TXT" > "$R/iib-minuterie.sh" || { echo "AMORCE IIB : minuterie impossible à écrire"; [ "$ESSAI" = 1 ] && exit 1; sleep infinity; exit 1; }
++PM=""
++attendre_minuterie() { local lim=$(( $(date +%s) + ${MINUTERIE_MARGE_S:-1800} + 120 )); while [ -n "$PM" ] && kill -0 "$PM" 2>/dev/null && [ "$(date +%s)" -lt "$lim" ]; do sleep 2; done; }
++detruire() {  # destruction demandée à la minuterie ; essai local : fichier posé, sortie
++    echo "$1" > "$R/iib-detruire"; echo "AMORCE $(date -u +%FT%TZ) : destruction demandée ($1)"
++    if [ "$ESSAI" = 1 ]; then exit "${2:-2}"; fi
++    attendre_minuterie
++    local st=124; { [ -n "$PM" ] && ! kill -0 "$PM" 2>/dev/null; } && { wait "$PM" 2>/dev/null; st=$?; }
++    [ "$st" = 0 ] && exit "${2:-2}"
++    echo "AMORCE $(date -u +%FT%TZ) : destruction non obtenue (minuterie, code $st) : sleep infinity ; la session détruit par l'identifiant"
++    sleep infinity; exit "${2:-2}"; }
++REFUS_ATTENTE_S=180            # R-1677 : constante d'exploitation ; seul l'essai local (AMORCE_ESSAI_LOCAL=1) la remplace par REFUS_ATTENTE_ESSAI_S (0 par défaut)
++[ "$ESSAI" = 1 ] && REFUS_ATTENTE_S="${REFUS_ATTENTE_ESSAI_S:-0}"
++attente_refus() { echo "AMORCE $(date -u +%FT%TZ) : refus annoncé : destruction demandée dans ${REFUS_ATTENTE_S} s (la session relève la cause dans le journal avant)"; sleep "$REFUS_ATTENTE_S"; }
++refus() { echo "AMORCE $(date -u +%FT%TZ) : refus : $1 : rien ne part"; attente_refus; detruire "refus : $1" 2; }
++refus_precoce() {  # avant la minuterie : destruction immédiate (minuterie lancée à l'échéance 0), ou fichier posé en essai
++    echo "AMORCE $(date -u +%FT%TZ) : refus : $1 : rien ne part"; attente_refus; echo "refus : $1" > "$R/iib-detruire"
++    if [ "$ESSAI" = 1 ]; then exit 2; fi
++    bash "$R/iib-minuterie.sh" 0 0 "$R" "$API" < /dev/null >> "$R/iib-minuterie.log" 2>&1; sleep infinity; exit 2; }
++sommeil() {  # disque lisible par la session ; arrêt et destruction par l'identifiant (R10)
++    echo "AMORCE $(date -u +%FT%TZ) : sommeil ($1) : disque lisible, la session arrête et détruit par l'identifiant"
++    if [ "$ESSAI" = 1 ]; then echo "sommeil ($1)" > "$R/iib-sommeil"; exit "${2:-0}"; fi
++    sleep infinity; exit "${2:-0}"; }
++arreter_instance() {  # fin normale : état voulu « stopped » (disque gardé jusqu'au verdict) ; C13 : sommeil après l'arrêt obtenu
++    echo "AMORCE $(date -u +%FT%TZ) : fin, code $2"
++    if [ "$ESSAI" = 1 ]; then  # essai local : C-V4-1 observe que le verrou de consignation (descripteur 9) est relâché AVANT l'arrêt
++        if [ -e "/proc/$$/fd/9" ]; then echo "verrou tenu à l'arrêt ($1)" > "$R/iib-verrou-tenu-a-l-arret"; fi
++        echo "stopped ($1)" > "$R/iib-arret-demande"; exit "$2"; fi
++    local c corps="$R/iib-arret-corps.txt" ok=non
++    if command -v curl >/dev/null 2>&1; then
++        c=$(curl -sS -m 60 -o "$corps" -w '%{http_code}' -X PUT -H "Authorization: Bearer ${CONTAINER_API_KEY:-}" \
++            -H 'Content-Type: application/json' -d '{"state": "stopped"}' "$API/instances/${CONTAINER_ID:-}/" 2>/dev/null) || c=000
++    else c=aucun; fi
++    case "$c" in 2??) grep -qiE '"success"[[:space:]]*:[[:space:]]*true' "$corps" 2>/dev/null && ok=oui;; esac
++    if [ "$ok" = oui ]; then echo "AMORCE $(date -u +%FT%TZ) : ARRÊT OBTENU (état voulu « stopped », HTTP $c) : sommeil jusqu'à l'arrêt effectif (C13)"; sommeil "arrêt obtenu" "$2"; fi
++    echo "AMORCE $(date -u +%FT%TZ) : ARRÊT NON OBTENU (HTTP $c) : le conteneur reste en vie ; la session arrête par l'identifiant (R10)"
++    sommeil "arrêt non obtenu" "$2"; }
++FIN_GO="${FIN_GO_UTC_S:-}"
++case "$FIN_GO" in ''|*[!0-9]*) refus_precoce "FIN_GO_UTC_S absente ou non entière (L11 : fin du GO lue dans la configuration par la session)";; esac
++if [ "$ESSAI" != 1 ]; then
++    OUTILS="curl git python3 timeout setsid flock sha256sum tar gzip awk sed sort cut tail head mktemp grep date sleep stat"
++    manquants() { local o m=""; for o in $OUTILS; do command -v "$o" >/dev/null 2>&1 || m="$m $o"; done; printf '%s' "$m"; }
++    paquet() { case "$1" in curl|git|python3|tar|gzip|sed|grep) printf '%s' "$1";; awk) printf gawk;; setsid|flock) printf util-linux;; *) printf coreutils;; esac; }
++    MANQ=$(manquants)
++    if [ -n "$MANQ" ]; then
++        echo "AMORCE IIB : outils absents :$MANQ : installation bornée (apt-get, 300 s par étape)"
++        if command -v apt-get >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
++            PAQ="ca-certificates"; for o in $MANQ; do PAQ="$PAQ $(paquet "$o")"; done
++            DEBIAN_FRONTEND=noninteractive timeout -k 10 300 apt-get update -qq >/dev/null 2>&1 \
++                && DEBIAN_FRONTEND=noninteractive timeout -k 10 300 apt-get install -y -qq --no-install-recommends $PAQ >/dev/null 2>&1
++            echo "AMORCE IIB : installation ($PAQ) : code $?"
++        fi
++        MANQ=$(manquants); [ -z "$MANQ" ] || refus_precoce "outils absents :$MANQ"
++    fi
++fi
++E="$R/iib-echeance.txt"; DE="$R/iib-depense-epuisee-utc.txt"
++if [ -s "$E" ]; then read -r ECH < "$E"; else
++    ECH="${ECHEANCE_UTC_S:-}"
++    case "$ECH" in ''|*[!0-9]*) refus_precoce "ECHEANCE_UTC_S absente ou non entière";; esac
++    [ "$ECH" -le "$FIN_GO" ] || { echo "AMORCE IIB : échéance ramenée à la fin du GO ($FIN_GO)"; ECH=$FIN_GO; }
++    echo "$ECH" > "$E"
++fi
++if [ -s "$DE" ]; then read -r DEP < "$DE"; else
++    DEP="${DEPENSE_EPUISEE_UTC_S:-}"
++    case "$DEP" in ''|*[!0-9]*) refus_precoce "DEPENSE_EPUISEE_UTC_S absente ou non entière (C08 : heure d'épuisement du plafond de la configuration, calculée à la création)";; esac
++    echo "$DEP" > "$DE"
++fi
++if [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/iib-depense-epuisee" ]; then      # R-1689 : l'argent est déjà épuisé au démarrage, l'amorce détruira
++    echo "dépense déjà épuisée au démarrage $(date -u +%FT%TZ) (R-1689)" > "$R/iib-depense-epuisee"
++fi
++if [ "$ESSAI" != 1 ]; then
++    setsid bash "$R/iib-minuterie.sh" "$ECH" "$DEP" "$R" "$API" < /dev/null >> "$R/iib-minuterie.log" 2>&1 &
++    PM=$!
++    echo "AMORCE IIB : minuterie lancée (échéance $ECH, $(date -u -d "@$ECH" +%FT%TZ 2>/dev/null || echo "?") ; dépense épuisée à $DEP)"
++fi
++if [ -d "$R/amorce-depot" ]; then
++    # C-V3-2 (C13) : second démarrage, AVANT les contrôles d'heure : les commits en attente sont poussés d'abord, quelle que
++    # soit l'heure ; puis destruction si l'argent est épuisé ou l'échéance passée (rien ne doit plus coûter), sommeil après
++    # une fin normale, destruction après un run interrompu ; jamais un nouveau run
++    if [ -e "$R/iib-fin-normale" ] || [ -e "$R/iib-depense-epuisee" ]; then
++        echo "AMORCE $(date -u +%FT%TZ) : second démarrage après une fin normale ou une dépense épuisée (C13, C-V3-2) : poussée des commits en attente d'abord"
++        [ -f "$R/iib-consigner.sh" ] && timeout -k 10 1200 bash "$R/iib-consigner.sh" "second démarrage"
++        if [ -e "$R/iib-depense-epuisee" ] || [ "$(date +%s)" -ge "$DEP" ]; then
++            detruire "second démarrage après la dépense épuisée (C08, C-V3-2) : commits en attente poussés, l'argent est épuisé : destruction, pas de sommeil" 0
++        fi
++        [ "$(date +%s)" -lt "$ECH" ] || detruire "second démarrage après l'échéance (C14, C-V3-2) : commits en attente poussés, destruction" 0
++        sommeil "second démarrage après une fin normale, rien ne repart" 0
++    fi
++    [ -f "$R/iib-consigner.sh" ] && timeout -k 10 1200 bash "$R/iib-consigner.sh" "redémarrage d'un run interrompu"
++    refus "redémarrage : dépôt déjà extrait sur le disque (second démarrage d'un run interrompu) : résultats partiels consignés, rien ne repart"
++fi
++[ "$(date +%s)" -lt "$ECH" ] || detruire "démarrage après l'échéance : aucun calcul"
++[ "$(date +%s)" -lt "$DEP" ] || detruire "démarrage après l'heure de dépense épuisée (C08) : aucun calcul"
++for v in COMMIT GH_TOKEN; do [ -n "${!v:-}" ] || refus "$v absent"; done
++MODE="${MODE:-reel}"
++case "$MODE" in reel|jouet) ;; *) refus "MODE=$MODE (reel ou jouet)";; esac
++[ "$MODE" = reel ] && { [ -n "${HF_TOKEN:-}" ] || refus "HF_TOKEN absent en mode reel"; }
++case "$COMMIT" in *[!0-9a-f]*|'') refus "COMMIT illisible";; esac
++[ "${#COMMIT}" = 40 ] || refus "COMMIT de 40 caractères attendu"
++DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia-travail.git}"; export DEPOT_URL
++BRANCHE="${BRANCHE:-essai/iib-explo-v1}"
++PREREG_ABSENT="${PREREG_ABSENT:-0}"
++# course exploratoire (ii-b) : aucun préenregistrement ; la ligne de GO de la course (IIB_GO_ID) est lue dans registres/go.md du commit
++case "$GO_ID" in GO-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) refus "IIB_GO_ID=$GO_ID : identifiant de ligne de GO illisible ou absent (GO-AAAA-MM-JJ-NN attendu)";; esac
++[ "$PREREG_ABSENT" = 1 ] || refus "course exploratoire : PREREG_ABSENT=1 exigé (aucun préenregistrement n'est lu par (ii-b))"
++case "$BRANCHE" in essai/iib-explo-v[0-9]*) ;; *) refus "la branche doit être essai/iib-explo-v<n> ($BRANCHE) : jamais main, 7a, 7b, P3-bis";; esac
++[ -n "${CONFIG:-}" ] || refus "CONFIG exigé (chemin de la configuration scellée de (ii-b) dans le commit)"
++[ -n "${TESTS_ARGS:-}" ] && [ "$MODE" != jouet ] && refus "TESTS_ARGS n'est permis qu'en répétition jouet (jamais en mode réel : la suite ciblée figée est la seule jouée)"
++AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
++echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
++# Clonage réduit (v11, R-1677), chemins de (ii-b) seulement (mode sans cône ; motifs de type gitignore) : code et essais joués par
++# l'amorce ; préenregistrements (consignes de P3) ; tâches de T0.5 (réserve et évaluation) ; registres (GO lu par l'amorce et les essais) ;
++# documents et invites scellées que lisent le lanceur et la suite ciblée (guide de classification H1, notes : configuration et consigne
++# scellées) ; textes de (ii-b) (essais de forme de la consigne) ; dossiers des runs de (ii-b) seulement (`*-iib-*`, `traces/iib-*` :
++# git n'ajoute à l'index que des chemins de l'extraction partielle). Exclus : tout autre `diag/`, `runs/`, `traces/` et `donnees/`.
++CHEMINS_CLONAGE='/.claude/
++/src/
++/tests/
++/scripts/
++/pyproject.toml
++/requirements-*.txt
++/prereg/
++/donnees/20261007-082440-t05-extraction/
++/registres/*.md
++/docs/*.md
++/docs/*.txt
++/docs/*.sha256
++/docs/notes/
++/docs/sources/invites-2606.07054-v1/
++/docs/sources/invites-2606.08892-v1/
++/brouillons/ii-b-saboteur-budget-v5/
++/diag/*-iib-*/
++/runs/*-iib-*/
++/donnees/*-iib-*/
++/traces/iib-*/'
++T_CLONE0=$(date +%s)
++timeout -k 10 900 git -c credential.helper="$AIDE" clone -q --filter=blob:none --no-checkout "$DEPOT_URL" "$R/amorce-depot" || refus "clonage impossible (jeton GitHub ?)"
++git -C "$R/amorce-depot" config credential.helper "$AIDE"
++git -C "$R/amorce-depot" config user.name "instance de calcul (ii-b)"
++git -C "$R/amorce-depot" config user.email "instance-calcul@invalid"
++SP_MSG=$(git -C "$R/amorce-depot" sparse-checkout init --no-cone 2>&1) || refus "extraction partielle impossible (sparse-checkout init) : $(printf '%s' "$SP_MSG" | head -c 300 | tr '\n' ' ')"
++SP_MSG=$(printf '%s\n' "$CHEMINS_CLONAGE" | git -C "$R/amorce-depot" sparse-checkout set --no-cone --stdin 2>&1) || refus "extraction partielle impossible (sparse-checkout set) : $(printf '%s' "$SP_MSG" | head -c 300 | tr '\n' ' ')"
++[ -z "$SP_MSG" ] || echo "AMORCE $(date -u +%FT%TZ) : sparse-checkout : $(printf '%s' "$SP_MSG" | head -c 200 | tr '\n' ' ')"
++timeout -k 10 900 git -C "$R/amorce-depot" checkout -q "$COMMIT" || refus "commit $COMMIT introuvable"
++T_CLONE1=$(date +%s)
++CL_S=$(( T_CLONE1 - T_CLONE0 )); [ "$CL_S" -ge 1 ] || CL_S=1
++CL_GIT=$(du -sb "$R/amorce-depot/.git" 2>/dev/null | cut -f1); CL_ARBRE=$(du -sb --exclude=.git "$R/amorce-depot" 2>/dev/null | cut -f1)
++echo "AMORCE $(date -u +%FT%TZ) : CLONAGE mode=$MODE secondes=$CL_S octets_git=${CL_GIT:-?} octets_arbre=${CL_ARBRE:-?} debit_Mo_s=$(awk -v b="${CL_GIT:-0}" -v a="${CL_ARBRE:-0}" -v s="$CL_S" 'BEGIN {printf "%.2f", (b + a) / s / 1000000}') motifs=$(printf '%s\n' "$CHEMINS_CLONAGE" | grep -c .)"
++T="$R/iib"; mkdir -p "$T"
++JOURNAL="$T/journal.txt"
++journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
++MOTIF_PROGRES='^PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+$'
++MOTIF_INTERDIT='au-dessus|interpr|échec|echec|aire=|bas=|haut=|ligne_|table_|plancher'
++cd "$R/amorce-depot" || refus "dépôt extrait inaccessible"
++# script de consignation (C11, C14, C08 ; git seul), lu aussi par la minuterie et par un second démarrage
++cat > "$R/iib-consigner.sh" <<CONSIGNER
++#!/usr/bin/env bash
++# écrit par l'amorce v1 de (ii-b) : consigne et pousse les résultats partiels ; git seul, sous verrou ; \$1 = motif
++R='$R'; BRANCHE='$BRANCHE'; T='$T'; JOURNAL='$JOURNAL'; MORCEAU_MAX='$MORCEAU_MAX'; POUSSEE_ATTENTE_S='${POUSSEE_ATTENTE_S:-15}'
++CONSIGNER
++cat >> "$R/iib-consigner.sh" <<'CONSIGNER'
++journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
++pousser() { local essai; for essai in 1 2 3; do timeout -k 10 600 git push -q origin "$BRANCHE" 2>"$T/poussee.err" && return 0; journal "poussée : tentative $essai refusée"; [ "$essai" -lt 3 ] && sleep $((POUSSEE_ATTENTE_S * essai * essai)); done; return 1; }
++refuser_gros() {  # C11 : aucun fichier de plus de MORCEAU_MAX octets ne part dans un commit (le dépôt distant le refuserait)
++    local f t; while IFS= read -r f; do [ -f "$f" ] || continue; t=$(stat -c %s -- "$f" 2>/dev/null || echo 0)
++        if [ "$t" -gt "$MORCEAU_MAX" ]; then git rm -q --cached -- "$f" >/dev/null 2>&1; journal "ERREUR DE CHAÎNE (C11) : $f fait $t octets > $MORCEAU_MAX : retiré du commit, resté sur l'instance"; echo "$f $t" >> "$R/iib-fichiers-trop-gros.txt"; fi
++    done < <(git diff --cached --name-only --diff-filter=AM); return 0; }
++ajouter() {  # C-V4-1 : un `git add` en échec (index.lock) n'est jamais lu comme « rien à committer » ; code 1 et journal
++    git add "$@" 2>"$T/add.err" && return 0
++    journal "ERREUR DE CHAÎNE (C-V4-1) : git add en échec ($*) : $(tr '\n' ' ' < "$T/add.err" | cut -c1-200)"; echo "$(date -u +%FT%TZ) git add en échec : $*" >> "$R/iib-erreurs-chaine.txt"; return 1; }
++ajouter_legeres() { local f rc=0; for f in donnees/*/lots/ids-lot-*.json donnees/*/lots/ids-lot-*.json.sha256 \
++        donnees/*/ids-actions-*-iib-v5.json donnees/*/ids-actions-*-iib-v5.json.sha256; do
++        if [ -f "$f" ]; then ajouter -f "$f" || rc=1; fi; done; return $rc; }
++ajouter_morceaux() { return 0; }    # (ii-b) : aucune activation, aucun morceau
++commit_verifie() {  # C-V4-1 : 0 = commit fait ; 10 = rien à committer (index vide) ; 1 = commit en échec (réessayé une fois)
++    refuser_gros
++    local rc essai; git diff --cached --quiet 2>/dev/null; rc=$?
++    [ "$rc" = 0 ] && return 10
++    if [ "$rc" != 1 ]; then journal "ERREUR DE CHAÎNE (C-V4-1) : lecture de l'index impossible (git diff, code $rc)"; echo "$(date -u +%FT%TZ) lecture de l'index impossible : $1" >> "$R/iib-erreurs-chaine.txt"; return 1; fi
++    for essai in 1 2; do
++        git commit -qm "$1" >/dev/null 2>"$T/commit.err" && return 0
++        journal "ERREUR DE CHAÎNE (C-V4-1) : commit en échec (tentative $essai) : $(tr '\n' ' ' < "$T/commit.err" | cut -c1-200)"
++        [ "$essai" = 1 ] && sleep "${COMMIT_ATTENTE_S:-2}"
++    done
++    echo "$(date -u +%FT%TZ) commit en échec : $1" >> "$R/iib-erreurs-chaine.txt"; return 1; }
++etape_commit() {  # $1 = message, $2 = journal si fait, $3 = journal si rien à committer ; rend 0 (fait ou rien) ou 1 (échec de chaîne)
++    local rc; commit_verifie "$1"; rc=$?
++    case "$rc" in 0) [ -z "$2" ] || journal "$2"; return 0;; 10) [ -z "$3" ] || journal "$3"; return 0;; *) return 1;; esac; }
++trace_consignation() {  # R-1692 (E2-6) : le journal de l'instance atteint la branche quand la consignation vient de la minuterie (échéance, dépense épuisée) ou d'un redémarrage ; sinon une échéance pendant l'installation ne laisse RIEN sur la branche
++    local d; mkdir -p traces || return 1
++    d=$(mktemp -d "traces/iib-consignation-$(date -u +%Y%m%d-%H%M%S)-XXXX") || return 1
++    { echo "motif : $1"; echo "heure : $(date -u +%FT%TZ)"; echo "dernière ligne du journal avant la consignation : ${DERNIERE_LIGNE_AVANT:-$(tail -n 1 "$JOURNAL" 2>/dev/null)}" | cut -c1-400
++      echo "--- 400 dernières lignes du journal de l'instance (ligne d'échéance et dernière étape atteinte comprises) ---"; tail -n 400 "$JOURNAL" 2>/dev/null | cut -c1-400; } > "$d/journal-consignation.txt"
++    [ -f "$R/iib-minuterie.log" ] && tail -n 200 "$R/iib-minuterie.log" | cut -c1-400 > "$d/iib-minuterie-fin.txt"      # la ligne « ÉCHÉANCE … atteinte (C14) » est écrite par la minuterie, pas par l'amorce
++    (cd "$d" && sha256sum -- * > empreintes.sha256) || true
++    ajouter "$d" || return 1
++    etape_commit "(ii-b) : journal de l'instance ($1)" "$1 : journal de l'instance committé" ""; }
++consigner_partiel() {  # $1 = motif ; deux commits (données légères d'abord, morceaux ensuite), poussée ; 0 = tout, 1 = poussée impossible, 2 = poussée faite de ce qui existe, mais échec de chaîne
++    local echec=0
++    ajouter -A runs diag || echec=1
++    ajouter_legeres || echec=1
++    etape_commit "(ii-b) : résultats et données légères ($1)" "$1 : résultats et données légères committés" "$1 : aucun résultat léger à committer" || echec=1
++    ajouter_morceaux || echec=1
++    etape_commit "(ii-b) : sous-ensemble d'activations en morceaux ($1)" "$1 : morceaux committés" "" || echec=1
++    if [ "${TRACE_CONSIGNATION:-0}" = 1 ]; then trace_consignation "$1" || echec=1; fi    # fixé par le seul chemin de la ligne de commande (minuterie, redémarrages), jamais par la fin de run
++    if pousser; then journal "branche $BRANCHE poussée ($1)"; [ "$echec" = 0 ] && return 0; journal "ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe ($1), mais un ajout ou un commit a échoué"; return 2; fi
++    journal "poussée impossible ($1) : résultats restés sur l'instance"; return 1; }
++if [ "${1:-}" = "--source" ]; then return 0 2>/dev/null || exit 0; fi
++exec 9>>"$R/iib-consigner.lock"; flock -w 1500 9 || { echo "verrou de consignation non obtenu ($1)"; exit 1; }
++cd "$R/amorce-depot" || { echo "dépôt extrait inaccessible"; exit 1; }
++DERNIERE_LIGNE_AVANT=$(tail -n 1 "$JOURNAL" 2>/dev/null)    # étape atteinte avant que la consignation écrive ses propres lignes
++case "$1" in "versement "*) TC=0;; *) TC=1;; esac; TRACE_CONSIGNATION=$TC consigner_partiel "$1"    # (g) : lot du lanceur, sans trace
++exit $?
++CONSIGNER
++. "$R/iib-consigner.sh" --source
++journal "début iib v5 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE CONFIG=$CONFIG GO=$GO_ID FIN_GO=$FIN_GO ECHEANCE=$ECH DEPENSE_EPUISEE=$DEP"
++SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
++SESSION_V12="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v12; sys.exit(session_v12.main(sys.argv[1:]))"
++PLAFOND_LIGNE_GO=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V12" plafond-ligne registres/go.md "$GO_ID" 2>&1) || refus "$GO_ID non conforme dans registres/go.md du commit ($PLAFOND_LIGNE_GO)"
++GOL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" go registres/go.md "$GO_ID" "$PLAFOND_LIGNE_GO" 2>&1) || refus "$GO_ID non conforme ($GOL)"
++journal "GO : $GOL"
++ATTENDUS="${TESTS_ATTENDUS:-}"
++CITES=("$CONFIG")
++for f in "${CITES[@]}"; do
++    { [ -f "$f" ] && [ -f "$f.sha256" ]; } || refus "configuration $f ou son sceau absent de l'arbre du commit $COMMIT"
++done
++PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src timeout -k 5 300 python3 -u -m controle_ia.scellement verifier "${CITES[@]}" >"$T/sceaux.txt" 2>&1 \
++    || refus "sceau non conforme de la configuration ($(grep -v '^OK ' "$T/sceaux.txt" | tail -n 1 || true))"
++journal "configuration citée présente et scellée : $CONFIG ; tests attendus ${ATTENDUS:-(dernière ligne relevée)}"
++CAL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" calendrier "$CONFIG" registres/go.md "$GO_ID" "$PLAFOND_LIGNE_GO" 2>&1) || refus "calendrier de la configuration non conforme ($CAL)"
++FIN_CONFIG=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p' | tail -1)
++[ "$FIN_CONFIG" = "$FIN_GO" ] || refus "fin du GO reçue ($FIN_GO) ≠ calendrier.fin_go_utc de la configuration ($FIN_CONFIG) (L11)"
++[ "$ECH" -le "$FIN_CONFIG" ] || refus "échéance $ECH après la fin du GO de la configuration ($FIN_CONFIG)"
++journal "calendrier : $CAL"
++DES=$(ls -1 diag/*-iib-*/ordre-reprise-iib-v5.json 2>/dev/null)      # (p2) le run coupé, par son ordre de reprise scellé
++{ [ -n "$DES" ] && [ "$(printf '%s\n' "$DES" | wc -l)" = 1 ] && [ -f "$DES.sha256" ]; } || refus "reprise : il faut un et un seul ordre de reprise scellé diag/*-iib-*/ordre-reprise-iib-v5.json dans le commit ($(printf '%s' "$DES" | tr '\n' ' '))"
++RUN_ETAL=$(basename "$(dirname "$DES")"); ENGAGEE="refs/heads/essai/iib-reprise-engagee-$RUN_ETAL"; journal "reprise : étalonnage coupé $RUN_ETAL (ordre $DES) ; lots versés : $(ls -1 diag/"$RUN_ETAL"/lots/lot-*.json 2>/dev/null | wc -l) ; identifiants : $(ls -1 donnees/"$RUN_ETAL"/lots/ids-lot-*.json 2>/dev/null | wc -l)"
++code_branche=0
++timeout -k 5 300 git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>"$T/ls-remote.err" || code_branche=$?
++case "$code_branche" in
++    0) refus "branche $BRANCHE déjà présente sur le dépôt distant (relancement sous une branche nouvelle)";;
++    2) ;;
++    *) refus "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche)";;
++esac
++# --- (p3) engagement de la reprise
++engager_reprise() {  # $1 = référence d'engagement ; 0 si absente puis poussée ; refus sinon (aucune reprise ne part deux fois sur un run coupé)
++    local c=0; timeout -k 5 300 git ls-remote --exit-code origin "$1" >/dev/null 2>"$T/engagement.err" || c=$?
++    case "$c" in
++        0) refus "reprise déjà engagée sur cet étalonnage ($1 présente sur le dépôt distant) : second passage refusé";;
++        2) ;;
++        *) refus "vérification de l'engagement de la reprise impossible (git ls-remote $1, code $c)";;
++    esac
++    timeout -k 5 300 git push -q origin "HEAD:$1" 2>"$T/engagement-poussee.err" || refus "poussée de l'engagement de la reprise ($1) refusée"
++    journal "reprise engagée : $1 poussée (avant l'installation)"; }
++# --- fin (p3)
++engager_reprise "$ENGAGEE"
++git checkout -q -b "$BRANCHE"
++timeout -k 5 300 git push -q origin "$BRANCHE" 2>"$T/poussee-initiale.err" || refus "poussée initiale de la branche $BRANCHE refusée (droit d'écriture du jeton ?)"
++journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"
++traces() { local d; mkdir -p traces; d=$(mktemp -d "traces/iib-$(date -u +%Y%m%d-%H%M%S)-XXXX")
++    for f in "$JOURNAL" "$T/tests.txt" "$T/tests.err" "$T"/run.json "$T"/run.err "$T"/nvidia-smi.txt "$T"/pip-freeze.txt "$R/iib-minuterie.log" "$R/iib-fichiers-trop-gros.txt" "$T/progres-retenues.txt"; do [ -f "$f" ] && cp "$f" "$d/"; done
++    (cd "$d" && sha256sum -- * > empreintes.sha256) || true
++    ajouter "$d" || return 1; etape_commit "(ii-b) : traces de l'instance ($1)" "" "traces : aucun fichier neuf à committer"; }
++# C-V4-1 : la fin de run et les consignations d'arrêt prennent le verrou de `iib-consigner.sh` (fd 9) ; il n'est pris qu'APRÈS
++# la fin du run et du relais (aucun processus fils ne garde le descripteur) et relâché AVANT `arreter_instance`
++prendre_verrou() {  # $1 = motif ; 0 = verrou pris ; 1 = non obtenu en 1500 s (journalisé, la chaîne continue sans lui : poussée au mieux)
++    exec 9>>"$R/iib-consigner.lock"
++    if flock -w "${VERROU_ATTENTE_S:-1500}" 9; then return 0; fi
++    journal "ERREUR DE CHAÎNE (C-V4-1) : verrou de consignation non obtenu ($1)"; echo "$(date -u +%FT%TZ) verrou non obtenu : $1" >> "$R/iib-erreurs-chaine.txt"
++    exec 9>&-; return 1; }
++liberer_verrou() { exec 9>&-; }
++consigner_arret() { prendre_verrou "arrêt pendant $1"; consigner_partiel "arrêt pendant $1"; traces "arrêt pendant $1"; pousser || true; liberer_verrou; }
++fin_anormale() {  # C-V4-1 : ce qui existe est déjà poussé ; marqueur, verrou relâché, arrêt de l'instance, code 1
++    echo "fin anormale $(date -u +%FT%TZ), run $RUN : $1" > "$R/iib-fin-anormale"; journal "FIN ANORMALE (C-V4-1) : $1"
++    liberer_verrou; arreter_instance "fin anormale" 1; }
++[ "$MODE" = reel ] && nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee -a "$JOURNAL" "$T/nvidia-smi.txt"
++if [ -n "${VENV_EXISTANT:-}" ]; then . "$VENV_EXISTANT/bin/activate"; else
++    timeout -k 10 1800 python3.11 -m venv .venv && . .venv/bin/activate && timeout -k 10 3600 pip install -q -r requirements-gpu.txt || { journal "installation impossible"; consigner_arret "installation"; arreter_instance "installation impossible" 1; }
++fi
++python -m pip freeze --all >"$T/pip-freeze.txt" 2>/dev/null || true
++# C-V4-3 : matériel de l'instance (E2-7, E2-8, E3-10) ; ligne neutre relayée par la surveillance (aucun état de sonde)
++echo "AMORCE $(date -u +%FT%TZ) : MATERIEL MemTotal_ko=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || echo ?) coeurs=$(nproc 2>/dev/null || echo ?) flock=$(command -v flock >/dev/null 2>&1 && echo oui || echo non)" | tee -a "$JOURNAL"
++TESTS_ARGS="${TESTS_ARGS:-}"; TESTS_ARGS="${TESTS_ARGS//,/ }"      # C-V4-3 : la virgule sépare les essais dans la variable d'environnement de Vast (aucun espace permis)
++python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"
++# R-1686 : garde de la carte, avant tout calcul en mode réel (E2, tentative 2 : « The NVIDIA driver on your system is too old (found version 12020) », torch 2.14.1+cu130,
++# cuda_disponible False). Carte invisible → journal (pilote, CUDA de torch, message), consignation de la cause sur la branche, puis `refus` (annonce, 180 s, destruction)
++if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)" 2>"$T/torch-cuda.err"; then
++    PILOTE=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n 1 | tr -d ' ')
++    CUDA_TORCH=$(python -c "import torch; print(torch.version.cuda)" 2>/dev/null | tail -n 1)
++    journal "carte invisible pour torch : torch.cuda.is_available() faux ; pilote ${PILOTE:-inconnu} ; CUDA de torch ${CUDA_TORCH:-?} ; message : $(tail -c 300 "$T/torch-cuda.err" 2>/dev/null | tr '\n' ' ')"
++    consigner_arret "contrôle de la carte"
++    refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
++fi
++# v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
++LISTE_TESTS="scripts/tests-cibles-iib-reprise-v5-v1.txt"; LISTE_SHA256="b3209c6a88ada8249e08b9c3a9d70b157afc95fdbc725da9ca9de5919d83cfb0"; FICHIERS_TESTS=""
++if [ -z "${TESTS_ARGS:-}" ]; then
++    liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
++    [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
++    [ "$(sha256sum "$LISTE_TESTS" | cut -d' ' -f1)" = "$LISTE_SHA256" ] || liste_refus "empreinte de $LISTE_TESTS ≠ celle de l'amorce ($LISTE_SHA256)"
++    while IFS= read -r f; do
++        [ -n "$f" ] || continue
++        printf '%s\n' "$f" | grep -Eq '^tests/test_[A-Za-z0-9_]+\.py$' || liste_refus "chemin illisible dans la liste : $f"
++        [ -f "$f" ] || liste_refus "essai absent du dépôt : $f"
++        FICHIERS_TESTS="$FICHIERS_TESTS $f"
++    done < "$LISTE_TESTS"
++    [ -n "$FICHIERS_TESTS" ] || liste_refus "liste vide"
++    journal "suite ciblée : $(printf '%s\n' $FICHIERS_TESTS | wc -l) fichiers d'essais, liste $LISTE_TESTS sha256 $LISTE_SHA256"
++fi
++if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no ${TESTS_ARGS:-} $FICHIERS_TESTS >"$T/tests.txt" 2>"$T/tests.err"; then
++    tail -n 5 "$T/tests.txt" "$T/tests.err" | tee -a "$JOURNAL"; journal "tests en échec : arrêt"; consigner_arret "tests"; arreter_instance "tests en échec" 1
++fi
++DERNIERE=$(tail -1 "$T/tests.txt"); journal "tests : $DERNIERE"
++if [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERNIERE" | grep -Eq "^$ATTENDUS passed(, [0-9]+ warnings?)? in [0-9.]+s( \([0-9]+:[0-9]{2}:[0-9]{2}\))?$"; then
++    journal "tests : « $DERNIERE » ≠ « $ATTENDUS passed » : arrêt"; consigner_arret "tests"; arreter_instance "nombre de tests" 1
++fi
++journal "course exploratoire sans préenregistrement (R-522, non opposable)"
++RUN="$(date -u +%Y%m%d-%H%M%S)-iib-reprise-$MODE"
++journal "run : $RUN (sans couperet de temps ; lanceur iib v5, reprise de l'étalonnage coupé $RUN_ETAL)"
++: >"$T/run.err"; : >"$T/progres-retenues.txt"
++SANS_GO=""; { [ "$MODE" = jouet ] && [ "$ESSAI" = 1 ]; } && SANS_GO="env -u IIB_GO_ID"
++PYTHONPATH=src IIB_DEBUT_UTC_S="$IIB_DEBUT_UTC_S" IIB_CONSIGNER="$R/iib-consigner.sh" $SANS_GO python -m controle_ia.iib.lanceur_v5 --phase reprise_etalonnage --config "$CONFIG" --run-id "$RUN" --etalonnage-partiel "$RUN_ETAL" >"$T/run.json" 2>>"$T/run.err" &
++PID_RUN=$!
++# C01 : relais des seules lignes PROGRES bien formées ; une ligne qui porte un mot d'état de sonde n'est pas relayée, elle est comptée
++( tail -n +1 -F --pid="$PID_RUN" "$T/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" | while IFS= read -r ligne; do
++    if printf '%s\n' "$ligne" | grep -qiE "$MOTIF_INTERDIT"; then printf '%s\n' "$(date -u +%FT%TZ) PROGRES non relayée : motif interdit (C01)" | tee -a "$JOURNAL" >> "$T/progres-retenues.txt"
++    else printf '%s\n' "$ligne" | tee -a "$JOURNAL"; fi; done ) &
++PID_RELAIS=$!
++code=0; wait "$PID_RUN" || code=$?
++wait "$PID_RELAIS" 2>/dev/null || true
++if [ "$code" -ne 0 ]; then
++    if [ -f "diag/$RUN/resume.json" ] && [ ! -f "diag/$RUN/arret.json" ]; then journal "run : code $code, mais résumé écrit sans arrêt consigné : run complet"
++    elif [ -f "diag/$RUN/arret.json" ]; then
++        grep -v '^PROGRES ' "$T/run.err" | grep -viE "$MOTIF_INTERDIT" | tail -n 5 | tee -a "$JOURNAL" || true
++        consigner_arret "run (code $code)"; arreter_instance "arrêt consigné pendant le run" 1
++    else
++        grep -v '^PROGRES ' "$T/run.err" | grep -viE "$MOTIF_INTERDIT" | tail -n 5 | tee -a "$JOURNAL" || true
++        echo "AMORCE $(date -u +%FT%TZ) : RUN MORT sans résumé ni arrêt consigné (code $code) : arrêt de l'instance par son identifiant (R10)" | tee -a "$JOURNAL"
++        consigner_arret "run mort (code $code)"; arreter_instance "run mort" 1
++    fi
++fi
++# C11 : données légères d'abord, dans un commit à part, poussées ; morceaux ensuite ; traces enfin.
++# C-V4-1 : tout cela sous le verrou de consignation ; « rien à committer » (code 10) ≠ commit en échec (code 1)
++ECHEC=0
++prendre_verrou "fin de run" || ECHEC=1
++ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL" || ECHEC=1
++ajouter_legeres || ECHEC=1
++etape_commit "(ii-b) ($MODE), run $RUN : résultats et données légères" "" "aucun résultat léger à committer" || ECHEC=1
++journal "run terminé : $RUN"
++pousser || journal "poussée des résultats impossible : résultats restés sur l'instance"
++ajouter_morceaux || ECHEC=1
++commit_verifie "(ii-b) ($MODE), run $RUN : sous-ensemble d'activations en morceaux (< $MORCEAU_MAX octets chacun)"; rc_m=$?
++case "$rc_m" in
++    0) journal "morceaux committés : $(git show --stat --format= HEAD | grep -c 'activations-sous-ensemble-iib-[0-9]' || true) fichier(s)"
++       pousser || journal "poussée des morceaux impossible : morceaux restés sur l'instance";;
++    10) journal "aucun morceau à committer";;
++    *) ECHEC=1;;
++esac
++traces "fin" || ECHEC=1
++# un fichier retiré du commit (C11) reste sur l'instance, hors de `git status` si `donnees/` est ignoré : c'est un échec de chaîne
++[ ! -s "$R/iib-fichiers-trop-gros.txt" ] || { journal "ERREUR DE CHAÎNE (C-V4-1) : fichier(s) trop gros retiré(s) du commit, restés sur l'instance : $(head -n 3 "$R/iib-fichiers-trop-gros.txt" | tr '\n' ';')"; ECHEC=1; }
++if [ "$ECHEC" != 0 ]; then
++    pousser || journal "poussée de ce qui existe impossible"
++    fin_anormale "un ajout, un commit ou le verrou a échoué en fin de run : poussée de ce qui existe tentée, aucun marqueur de fin normale"
++fi
++# C-V4-1 : rien ne doit rester hors du dépôt avant la fin normale (fichiers légers, résultats, traces, y compris les fichiers ignorés)
++RESTE=$(git status --porcelain --ignored -- runs diag donnees traces 2>&1)
++if [ -n "$RESTE" ]; then
++    journal "ERREUR DE CHAÎNE (C-V4-1) : git status --porcelain --ignored non vide avant la fin normale ($(printf '%s' "$RESTE" | head -n 3 | tr '\n' ';')) : consignation de rattrapage"
++    consigner_partiel "fin de run"
++    RESTE=$(git status --porcelain --ignored -- runs diag donnees traces 2>&1)
++    if [ -n "$RESTE" ]; then pousser || true; fin_anormale "fichiers non consignés après le rattrapage : $(printf '%s' "$RESTE" | head -n 3 | tr '\n' ';')"; fi
++fi
++AUTRES=$(git status --porcelain 2>&1 | head -n 3 | tr '\n' ';'); [ -z "$AUTRES" ] || journal "note : git status --porcelain (hors runs, diag, donnees, traces) : $AUTRES"
++echo "fin normale $(date -u +%FT%TZ), run $RUN" > "$R/iib-fin-normale"
++if pousser; then journal "branche $BRANCHE poussée (résultats, données légères et traces)"; liberer_verrou; arreter_instance "fin du run" 0; fi
++journal "run complet, mais poussée finale impossible après trois tentatives : résultats restés sur l'instance (disque lisible ; un second démarrage repousse, C13)"
++liberer_verrou
++arreter_instance "poussée impossible" 1
+diff --git a/scripts/lancer_iib_v3.sh b/scripts/lancer_iib_v3.sh
+index 7d7d9ef6c..db6a07058 100644
+--- a/scripts/lancer_iib_v3.sh
++++ b/scripts/lancer_iib_v3.sh
+@@ -5,6 +5,7 @@
+ # branche par défaut `essai/iib-explo-v5`. Écrit, jamais lancé par son développeur ; les essais de forme de la version 2 ne
+ # sont pas rejoués sur lui (ils dépendent de la configuration de la version 1) : à contre-lire et à éprouver avant l'ordre.
+ # Correctif 0017 : `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` choisit l'amorce de la course ; toute autre valeur est un refus.
++# Correctif de reprise R001 : `IIB_AMORCE=scripts/amorce_instance_iib_reprise_v5.sh` choisit l'amorce de la reprise de l'étalonnage.
+ # --- en-tête d'origine de la version 2 :
+ # Chaîne de session de (ii-b), v1 (conception ii-b, brouillon 2, section 10 ; ordre exploratoire, brouillon 2, §§ 1, 3, 5 et 6) : tirée de
+ # `scripts/lancer_t06_v13.sh` (nom neuf, R12 ; la v13 reste telle quelle). EXPLORATOIRE, NON OPPOSABLE (R-522). Écrite et éprouvée à blanc
+@@ -80,7 +81,9 @@ MOI=scripts/lancer_iib_v3.sh
+ DEPOT="${IIB_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+ A=scripts/amorce_instance_iib_v5.sh
+ case "${IIB_AMORCE:-}" in      # correctif 0017 : l'amorce de la course, seule autre valeur permise ; toute autre : refus, rien ne part
+-    ''|"$A") ;; scripts/amorce_instance_iib_course_v5.sh) A="$IIB_AMORCE" ;; *) echo "IIB_AMORCE=$IIB_AMORCE : ni l'amorce de l'étalonnage ni celle de la course : refus"; exit 2 ;; esac
++    ''|"$A") ;; scripts/amorce_instance_iib_course_v5.sh) A="$IIB_AMORCE" ;;
++    scripts/amorce_instance_iib_reprise_v5.sh) A="$IIB_AMORCE" ;;      # correctif de reprise R001 (GO-2026-11-22-71)
++    *) echo "IIB_AMORCE=$IIB_AMORCE : ni l'amorce de l'étalonnage ni celle de la course ni celle de la reprise : refus"; exit 2 ;; esac
+ BRANCHE="${IIB_BRANCHE:-essai/iib-explo-v5}"
+ GO_ID_ENV="${GO_ID:-}"
+ REG="${IIB_REGISTRE_GO:-}"
+diff --git a/scripts/preparer_reprise_iib_v5.sh b/scripts/preparer_reprise_iib_v5.sh
+new file mode 100644
+index 000000000..f07918f32
+--- /dev/null
++++ b/scripts/preparer_reprise_iib_v5.sh
+@@ -0,0 +1,31 @@
++#!/usr/bin/env bash
++# Préparation, par la session, du commit de la REPRISE de l'étalonnage de l'organisme retenu, v5 (correctif de reprise R001 ;
++# GO-2026-11-22-71). Sur un clone de travail propre, à la tête de la branche de code de la reprise (prep/…). Ne pousse rien,
++# ne committe rien, ne supprime rien : récupère depuis la branche d'essai de l'étalonnage coupé, à son commit nommé, le manifeste
++# du run, les lots et leurs identifiants (et eux seuls), vérifie qu'ils sont égaux à l'octet à ce commit et que leurs sceaux
++# tiennent, puis écrit et scelle l'ordre de reprise (`diag/<run>/ordre-reprise-iib-v5.json`). La session relit, committe et
++# pousse la branche de code ; l'amorce de la reprise trouve l'ordre dans le commit cloné.
++# Variables : PYTHON (interpréteur, défaut python), PYTHONPATH (ajouté après src).
++# Usage : bash scripts/preparer_reprise_iib_v5.sh RUN BRANCHE_SOURCE COMMIT_SOURCE MACHINE_ANTERIEURE DEPENSE_ANTERIEURE_USD GO_ECART
++#   ex. : … 20261121-234254-iib-reel essai/iib-explo-v6 f4bf68bb7f5ffc4a30d07a4fc949ab02832e904b 61875617 <USD du registre> GO-2026-11-22-71
++set -euo pipefail
++RUN="${1:?run coupé}"; SRC_B="${2:?branche source essai/…}"; SRC_C="${3:?commit source (40 caractères)}"; MACH="${4:?machine des lots versés}"
++DEP="${5:?dépense antérieure en USD (registre des dépenses)}"; GO="${6:?ligne de GO (ecart au texte scelle)}"
++refus() { echo "REFUS : $1 : rien n'est écrit de plus" >&2; exit 2; }
++[[ "$RUN" =~ ^[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+$ ]] || refus "run $RUN illisible"
++[[ "$SRC_B" =~ ^essai/ ]] || refus "branche source $SRC_B : essai/… attendue"
++[[ "$SRC_C" =~ ^[0-9a-f]{40}$ ]] || refus "commit source : 40 caractères hexadécimaux"
++[ -z "$(git status --porcelain)" ] || refus "clone de travail non propre"
++git fetch -q origin "refs/heads/$SRC_B" || refus "branche $SRC_B introuvable sur le dépôt distant"
++[ "$(git rev-parse FETCH_HEAD)" = "$SRC_C" ] || refus "tête de $SRC_B ($(git rev-parse FETCH_HEAD)) ≠ commit nommé $SRC_C"
++CHEMINS=("runs/$RUN" "diag/$RUN/lots" "donnees/$RUN/lots")
++for c in "${CHEMINS[@]}"; do [ ! -e "$c" ] || refus "$c existe déjà dans le clone (R12)"; done
++AUTRES=$(git ls-tree -r --name-only "$SRC_C" -- "runs/$RUN" "diag/$RUN" "donnees/$RUN" | grep -vE "^(runs/$RUN/manifeste\.json(\.sha256)?|diag/$RUN/lots/lot-[0-9]{3}-etalonnage-[a-z]+\.json(\.sha256)?|donnees/$RUN/lots/ids-lot-[0-9]{3}-etalonnage-[a-z]+\.json(\.sha256)?)$" || true)
++[ -z "$AUTRES" ] || refus "le commit source porte d'autres fichiers du run ($(printf '%s' "$AUTRES" | head -n 3 | tr '\n' ' ')) : à trancher par la session"
++git checkout -q "$SRC_C" -- "${CHEMINS[@]}" || refus "récupération des fichiers du run impossible"
++git diff --quiet "$SRC_C" -- "${CHEMINS[@]}" || refus "fichiers récupérés ≠ commit source à l'octet"
++N=$(ls -1 "diag/$RUN/lots"/lot-*.json | wc -l); NI=$(ls -1 "donnees/$RUN/lots"/ids-lot-*.json | wc -l)
++PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "${PYTHON:-python}" -m controle_ia.scellement verifier "runs/$RUN/manifeste.json" "diag/$RUN/lots"/lot-*.json "donnees/$RUN/lots"/ids-lot-*.json >/dev/null \
++    || refus "un sceau ne tient pas"
++PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "${PYTHON:-python}" -m controle_ia.iib.reprise_v5 ordre "$RUN" "$SRC_B" "$SRC_C" "$MACH" "$DEP" "$GO"
++echo "récupérés de $SRC_B@$SRC_C : manifeste, $N lots, $NI fichiers d'identifiants ; à relire, committer et pousser par la session (rien n'est poussé ici)"
+diff --git a/scripts/tests-cibles-iib-reprise-v5-v1.txt b/scripts/tests-cibles-iib-reprise-v5-v1.txt
+new file mode 100644
+index 000000000..c7fcbbdfa
+--- /dev/null
++++ b/scripts/tests-cibles-iib-reprise-v5-v1.txt
+@@ -0,0 +1,26 @@
++tests/test_iib_artefacts_centrage_v5.py
++tests/test_iib_bout_en_bout_nul_v5.py
++tests/test_iib_branches_v5.py
++tests/test_iib_configuration_distillation_v5.py
++tests/test_iib_configuration_v5.py
++tests/test_iib_controle_premier_cout_v5.py
++tests/test_iib_couplage_v5.py
++tests/test_iib_designation_v5.py
++tests/test_iib_distillation_bout_en_bout_v5.py
++tests/test_iib_distillation_v5.py
++tests/test_iib_environnement_machine_v5.py
++tests/test_iib_epreuve_centrage_v5.py
++tests/test_iib_epreuves_v5.py
++tests/test_iib_fuite_v5.py
++tests/test_iib_jumeau_v5.py
++tests/test_iib_lanceur_v5.py
++tests/test_iib_lecture_cout_v5.py
++tests/test_iib_oracle_v5.py
++tests/test_iib_rapportes_v5.py
++tests/test_iib_reecriture_v5.py
++tests/test_iib_regenere_v5.py
++tests/test_iib_regle_v5.py
++tests/test_iib_reprise_v5_r001.py
++tests/test_iib_temoin_jumeau_v5.py
++tests/test_iib_tours_v5.py
++tests/test_iib_versement_v5.py
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index d3016be1d..5510e9ca9 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -240,6 +240,66 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
+     return {"par_oracle_h": par, "retenue_h": max(par.values())}
+ 
+ 
++def plan_de_l_etalonnage(config: dict, reserve: list) -> tuple[list[dict], list[dict]]:
++    """Plan scellé de l'étalonnage : épisodes honnêtes, puis flagrants, chacun avec sa clé de graines (section 14)."""
++    e = config["etalonnage"]
++    plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
++              for t in reserve for k in range(e["honnetes_par_tache"])]
++    plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
++               "cle": f"iib/etalonnage/flagrant/{t}" + ("" if k == 0 else f"/e{k}")} for t in reserve for k in range(e["flagrants_par_tache"])]
++    return plan_h, plan_f
++
++
++def lots_prevus(config: dict, reserve: list) -> list[dict]:
++    """Lots dans l'ordre où l'étalonnage les joue et les verse : par lot d'honnêtes, l'honnête, le régénéré et le planté (mêmes
++    épisodes) ; puis les lots de flagrants. [{"numero", "phase", "plan"}] (correctif de reprise R001 : le plan que la reprise
++    compare aux lots versés est celui-là, calculé par le même code)."""
++    plan_h, plan_f = plan_de_l_etalonnage(config, reserve)
++    lot, sortie = int(config["generation"]["lot"]), []
++    for morceau in _par_lots(plan_h, lot):
++        sortie += [{"phase": p, "plan": morceau} for p in ("etalonnage-honnete", "etalonnage-regenere", "etalonnage-plante")]
++    sortie += [{"phase": "etalonnage-flagrant", "plan": morceau} for morceau in _par_lots(plan_f, lot)]
++    return [{"numero": k, **l} for k, l in enumerate(sortie, start=1)]
++
++
++class _Lots:
++    """Lots versés d'un étalonnage : écriture et sceau de chaque lot (`lots/`), poussée, marque de progrès ; garde les sorties
++    d'oracle de chaque lot (dans l'ordre) pour l'écriture de fin. La reprise y charge d'abord les lots déjà versés."""
++
++    def __init__(self, dossier: Path, donnees: Path, modele, chrono: dict, versement):
++        self.dossier, self.donnees, self.modele, self.chrono, self.versement = dossier, donnees, modele, chrono, versement
++        self.sorties, self.lignes, self.taches, self.n, self.episodes = {}, [], {}, 0, 0
++
++    def charger(self, lot: dict) -> None:
++        """Lot déjà versé (reprise) : relu, jamais réécrit."""
++        if lot["numero"] != self.n + 1:
++            raise GardeArret("reprise : lots chargés hors de l'ordre (défaut de code)")
++        self.n = lot["numero"]
++        self.sorties[f"lots/{lot['nom']}"] = verifier(self.dossier / "lots" / lot["nom"])
++        self.sorties[f"lots/ids-{lot['nom']}"] = verifier(self.donnees / "lots" / f"ids-{lot['nom']}")
++        self.lignes.append(list(lot["lignes"]))
++        self.taches.update(lot["taches"])
++        self.episodes += len(lot["plan"])
++
++    def verser(self, phase: str, episodes: list[dict]) -> None:
++        """Lot scellé : sorties d'oracle par épisode (aucun texte) et identifiants des actions ; puis marque de progrès."""
++        self.n += 1
++        nom = f"lot-{self.n:03d}-{phase}.json"
++        lignes = [l for ep in episodes for o in ("P", "N") for l in ep["oracle"].get(o, [])]
++        ov.exiger_aucun_texte(lignes)
++        self.sorties[f"lots/{nom}"] = _ecrire(self.dossier / "lots", nom, {"lignes": lignes, "taches": {ep["episode"]: ep["tache"] for ep in episodes}})
++        self.sorties[f"lots/ids-{nom}"] = _ecrire(self.donnees / "lots", f"ids-{nom}", {
++            "ids": _ids(episodes), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in episodes if "consignes" in ep}})
++        self.lignes.append(lignes)
++        self.taches.update({ep["episode"]: ep["tache"] for ep in episodes})
++        self.episodes += len(episodes)
++        progres(etape="etalonnage", phase=phase, lot=self.n, episodes=self.episodes, actions_oracle=self.chrono.get("actions_oracle", 0),
++                replis=len(replis_de(self.modele)))
++        if self.versement is not None:                      # correctif 0014 : le lot scellé part sur la branche, aussitôt
++            self.versement(f"lot {self.n:03d} {phase}", [p for f in (self.dossier / "lots" / nom, self.donnees / "lots" / f"ids-{nom}")
++                                                         for p in (f, Path(str(f) + ".sha256"))])
++
++
+ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
+                      debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
+     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
+@@ -256,7 +316,8 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+     if config["oracle_de_la_regle"]["valeur"] is not None:
+         raise GardeArret("étalonnage : la configuration porte déjà un oracle de la règle (il n'est écrit qu'après, par la désignation)")
+     if (dossier / NOMS["etalonnage"]).exists() or (dossier / "lots").exists():
+-        raise GardeArret("étalonnage déjà joué dans ce dossier : toute reprise est une course neuve, sous devis neuf (refus)")
++        raise GardeArret("étalonnage déjà joué dans ce dossier : toute reprise est une course neuve, sous devis neuf (refus ; la reprise "
++                         "acceptée par Lazar passe par la phase reprise_etalonnage)")
+     graines, chrono, e = graines_de(config), {}, config["etalonnage"]
+     reserve = list(monde.taches_reserve)
+     if len(reserve) * e["honnetes_par_tache"] != e["honnetes"] or len(reserve) * e["flagrants_par_tache"] != e["flagrants"]:
+@@ -264,34 +325,13 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+     entrees = lire_entrees(config, racine)
+     debut = time.time() if debut_utc_s is None else float(debut_utc_s)
+     fins, lot = frozenset(modele.fmt.fins), int(config["generation"]["lot"])
+-    sorties, tous, n_lot = {}, [], [0]
+-    par_phase = {"etalonnage-honnete": [], "etalonnage-regenere": [], "etalonnage-plante": [], "etalonnage-flagrant": []}
+-
+-    def verser(phase: str, episodes: list[dict]) -> None:
+-        """Lot scellé : sorties d'oracle par épisode (aucun texte) et identifiants des actions ; puis marque de progrès."""
+-        n_lot[0] += 1
+-        nom = f"lot-{n_lot[0]:03d}-{phase}.json"
+-        lignes = [l for ep in episodes for o in ("P", "N") for l in ep["oracle"].get(o, [])]
+-        ov.exiger_aucun_texte(lignes)
+-        sorties[f"lots/{nom}"] = _ecrire(dossier / "lots", nom, {"lignes": lignes, "taches": {ep["episode"]: ep["tache"] for ep in episodes}})
+-        sorties[f"lots/ids-{nom}"] = _ecrire(donnees / "lots", f"ids-{nom}", {
+-            "ids": _ids(episodes), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in episodes if "consignes" in ep}})
+-        par_phase[phase].extend(episodes)
+-        tous.extend(episodes)
+-        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0),
+-                replis=len(replis_de(modele)))
+-        if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
+-            versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
+-                                                     for p in (f, Path(str(f) + ".sha256"))])
+-    plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
+-              for t in reserve for k in range(e["honnetes_par_tache"])]
+-    plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
+-               "cle": f"iib/etalonnage/flagrant/{t}" + ("" if k == 0 else f"/e{k}")} for t in reserve for k in range(e["flagrants_par_tache"])]
++    lots = _Lots(dossier, donnees, modele, chrono, versement)
++    plan_h, plan_f = plan_de_l_etalonnage(config, reserve)
+     progres(etape="etalonnage", phase="debut", episodes_prevus=len(plan_h) * 3 + len(plan_f))
+     for morceau in _par_lots(plan_h, lot):
+         honnetes = jouer(modele, monde, morceau, config, graines, chrono)
+         appliquer_oracles(modele, monde, honnetes, config, graines, chrono)
+-        verser("etalonnage-honnete", honnetes)
++        lots.verser("etalonnage-honnete", honnetes)
+         t0 = time.perf_counter()
+         joues = rg.jouer_regeneres(modele, [monde.environnement("honnete", h["tache"]) for h in honnetes], [h["episode"] for h in honnetes],
+                                    [h["graines_actions"] for h in honnetes], graines, config, honnetes)
+@@ -300,50 +340,161 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+         regeneres = [{"phase": "etalonnage-regenere", "episode": h["episode"], "tache": h["tache"], "condition": "honnete", "actions": j["actions"],
+                       "empreintes_agent": j["empreintes_prefixes"], "consignes": j["consignes"]} for h, j in zip(honnetes, joues)]
+         appliquer_oracles(modele, monde, regeneres, config, graines, chrono)
+-        verser("etalonnage-regenere", regeneres)
++        lots.verser("etalonnage-regenere", regeneres)
+         plantes = []
+         for h in honnetes:
+             p = pl.planter(modele.fmt.tok, h["actions"], graines, h["episode"], config, fins)
+             plantes.append({"phase": "etalonnage-plante", "episode": h["episode"], "tache": h["tache"], "condition": "honnete",
+                             "actions": p["actions"], "consignes": p["consignes"]})
+         appliquer_oracles(modele, monde, plantes, config, graines, chrono, oracles=("N",))
+-        verser("etalonnage-plante", plantes)
++        lots.verser("etalonnage-plante", plantes)
+     for morceau in _par_lots(plan_f, lot):
+         flagrants = jouer(modele, monde, morceau, config, graines, chrono)
+         appliquer_oracles(modele, monde, flagrants, config, graines, chrono)
+-        verser("etalonnage-flagrant", flagrants)
+-    honnetes, regeneres, plantes, flagrants = (par_phase[k] for k in ("etalonnage-honnete", "etalonnage-regenere", "etalonnage-plante",
+-                                                                         "etalonnage-flagrant"))
+-    lignes = [l for ep in tous for o in ("P", "N") for l in ep["oracle"].get(o, [])]
++        lots.verser("etalonnage-flagrant", flagrants)
++    depense = max(0.0, time.time() - debut) / 3600.0 * float(entrees["prix_horaire_usd"]) if entrees is not None else 0.0
++    depuis = "création de la machine" if debut_utc_s is not None else "début de la phase (instant de création non fourni)"
++    return _fin_de_l_etalonnage(config, dossier, graines, lots, chrono, depense, {"usd": depense, "depuis": depuis}, modele)
++
++
++def _fin_de_l_etalonnage(config: dict, dossier: Path, graines, lots: _Lots, chrono: dict, depense: float, depense_rapportee: dict, modele,
++                         reprise: dict | None = None) -> dict:
++    """Écriture de fin, calculée des sorties de tous les lots dans l'ordre (correctif de reprise R001 : le même code écrit la fin
++    d'un étalonnage complet et celle d'une reprise ; les groupes par condition et par oracle sont pris dans les sorties des lots,
++    qui portent leur phase et leur oracle) : fichier des oracles, rapportés, graines."""
++    lignes = [l for lot in lots.lignes for l in lot]
++
++    def groupe(phase: str, oracle: str) -> list[dict]:
++        return [l for l in lignes if l["phase"] == phase and l["oracle"] == oracle]
++    sorties = lots.sorties
+     oracle_h = duree_d_une_action_d_oracle(chrono)
+     durees = {"episode_genere_h": chrono["generation_s"] / chrono["episodes_generes"] / 3600.0, "action_oracle_h": oracle_h["retenue_h"]}
+-    depense = max(0.0, time.time() - debut) / 3600.0 * float(entrees["prix_horaire_usd"]) if entrees is not None else 0.0
+     sorties[NOMS["etalonnage"]] = _ecrire(dossier, NOMS["etalonnage"], {
+-        "schema": cf.SCHEMA_ETALONNAGE, "lignes": lignes, "taches": {ep["episode"]: ep["tache"] for ep in tous}, "durees": durees,
+-        "depense_etalonnage_usd": depense})
++        "schema": cf.SCHEMA_ETALONNAGE, "lignes": lignes, "taches": dict(lots.taches), "durees": durees, "depense_etalonnage_usd": depense})
+     progres(etape="etalonnage", phase="oracles_ecrits", lignes=len(lignes))
+-    premier = pc.controle([l for l in _lignes(honnetes, "P") if l["pas"] == 0], pc.GROUPE_DE_VALIDITE, config)
++    premier = pc.controle([l for l in groupe("etalonnage-honnete", "P") if l["pas"] == 0], pc.GROUPE_DE_VALIDITE, config)
+     validite = premier["validite"]
+     rapportes = {"controle_premier_cout": {"honnetes": premier,
+-                                           "flagrants": pc.controle([l for l in _lignes(flagrants, "P") if l["pas"] == 0],
++                                           "flagrants": pc.controle([l for l in groupe("etalonnage-flagrant", "P") if l["pas"] == 0],
+                                                                     "les flagrants de l'étalonnage", config, validite)},
+-                 "par_condition_et_par_oracle": {f"{nom}/{o}": rp.rapportes(_lignes(eps, o))
+-                                                 for nom, eps in (("honnetes", honnetes), ("regeneres", regeneres), ("plantes", plantes),
+-                                                                  ("flagrants", flagrants)) for o in ("P", "N") if _lignes(eps, o)},
+-                 "lecture_de_la_troisieme_donnee": rp.lecture_de_la_troisieme_donnee(_lignes(honnetes, "N"), _lignes(honnetes, "P"),
++                 "par_condition_et_par_oracle": {f"{nom}/{o}": rp.rapportes(groupe(ph, o))
++                                                 for nom, ph in (("honnetes", "etalonnage-honnete"), ("regeneres", "etalonnage-regenere"),
++                                                                 ("plantes", "etalonnage-plante"), ("flagrants", "etalonnage-flagrant"))
++                                                 for o in ("P", "N") if groupe(ph, o)},
++                 "lecture_de_la_troisieme_donnee": rp.lecture_de_la_troisieme_donnee(groupe("etalonnage-honnete", "N"), groupe("etalonnage-honnete", "P"),
+                                                                                     graines.generateur("iib/rapportes/troisieme-donnee")),
+                  "durees": durees, "duree_d_une_action_d_oracle_par_oracle_h": oracle_h["par_oracle_h"],
+                  "replis_forme_lot_suites": replis_de(modele),
+-                 "depense": {"usd": depense, "depuis": "création de la machine" if debut_utc_s is not None else "début de la phase (instant de création non fourni)"},
++                 "depense": depense_rapportee,
+                  "chrono": chrono}
++    if reprise is not None:
++        rapportes["reprise"] = reprise
+     sorties[NOMS["rapportes_etalonnage"]] = _ecrire(dossier, NOMS["rapportes_etalonnage"], rapportes)
+     sorties["graines-etalonnage-iib-v5.json"] = _ecrire(dossier, "graines-etalonnage-iib-v5.json", {"entropie": str(graines.entropie), "prefixe": graines.prefixe,
+                                                                              "graines": graines.employees})
+-    progres(etape="etalonnage", phase="fin", episodes=len(tous), lots=n_lot[0])
+-    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0],
++    progres(etape="etalonnage", phase="fin", episodes=lots.episodes, lots=lots.n)
++    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": lots.n,
+             "replis_forme_lot_suites": replis_de(modele)}
+ 
+ 
++def _plage(debut: int, fin: int) -> str:
++    return f"lot {debut}" if debut == fin else f"lots {debut}–{fin}"
++
++
++def marque_de_reprise(n_avant: int, total: int, machine_anterieure, machine_neuve) -> str:
++    neuve = f"de la machine neuve {machine_neuve}" if machine_neuve is not None else "de la machine neuve (identifiant non fourni : essai)"
++    return f"reprise : {_plage(1, n_avant)} de la machine {machine_anterieure}, {_plage(n_avant + 1, total)} {neuve}"
++
++
++def phase_reprise_etalonnage(config: dict, racine, run_partiel: str, modele, monde, ordre: dict, ordre_sha256: str,
++                             environnement: dict | None = None, debut_utc_s: float | None = None, carte=None,
++                             versement: vs.Versement | None = None, machine_neuve=None, run_reprise: str | None = None) -> dict:
++    """Reprise d'un étalonnage coupé (correctif R001 ; écart au texte scellé, section 15, accepté : GO-2026-11-22-71). Ancien
++    chemin de tirage (celui de `phase_etalonnage`, sur la machine telle qu'elle est), jamais un autre. Lit les lots versés
++    (`diag/<run>/lots/`, `donnees/<run>/lots/`) par le code seulement, les vérifie contre le plan scellé (`reprise_v5`), vérifie
++    les graines par les δ consignés, scelle et pousse le témoin `reprise-engagee-iib-v5.json`, puis joue **seulement** les lots
++    manquants (flagrants), aux clés de graines du plan, dans le même ordre et la même taille de lot, et les verse comme
++    l'étalonnage (poussée par lot) ; enfin la fin, calculée de tous les lots par le même code que l'étalonnage complet, avec la
++    marque de reprise et la déclaration des durées (lot(s) joué(s) par la reprise seulement) et de la dépense (antérieure
++    déclarée par l'ordre + machine neuve)."""
++    from datetime import datetime, timezone
++
++    from . import reprise_v5 as rr
++
++    racine = Path(racine)
++    dossier, donnees = racine / "diag" / run_partiel, racine / "donnees" / run_partiel
++    cf.exiger_config_v5(config, racine, pour_lancer=True)
++    exiger_accord(config, environnement or {}, carte)
++    if config["mode"] == "reel" and versement is None:
++        raise GardeArret("reprise en mode réel sans poussée par lot : refus avant tout calcul")
++    if config["oracle_de_la_regle"]["valeur"] is not None:
++        raise GardeArret("reprise : la configuration porte déjà un oracle de la règle (refus)")
++    rr.exiger_forme_de_l_ordre(ordre, run_partiel)
++    if machine_neuve is not None and str(machine_neuve) == str(ordre["machine_anterieure"]):
++        raise GardeArret("reprise : la machine neuve est celle des lots versés (refus : la reprise se déclare sur deux machines)")
++    graines, chrono, e = graines_de(config), {}, config["etalonnage"]
++    reserve = list(monde.taches_reserve)
++    if len(reserve) * e["honnetes_par_tache"] != e["honnetes"] or len(reserve) * e["flagrants_par_tache"] != e["flagrants"]:
++        raise GardeArret(f"{len(reserve)} tâches de réserve : incohérent avec {e['honnetes']} honnêtes et {e['flagrants']} flagrants")
++    prevus = lots_prevus(config, reserve)
++    etat = rr.etat_partiel(config, dossier, donnees, prevus)
++    deltas = rr.exiger_graines_des_lots(config, etat["existants"])
++    entrees = lire_entrees(config, racine)
++    debut = time.time() if debut_utc_s is None else float(debut_utc_s)
++    n_avant, total = len(etat["existants"]), etat["total"]
++    marque = marque_de_reprise(n_avant, total, ordre["machine_anterieure"], machine_neuve)
++    sorties_temoin = {rr.TEMOIN: _ecrire(dossier, rr.TEMOIN, {
++        "run_partiel": run_partiel, "run_reprise": run_reprise, "marque": marque, "lots_verses": n_avant,
++        "lots_a_jouer": [l["numero"] for l in etat["manquants"]], "ordre_sha256": ordre_sha256,
++        "instant_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})}
++    if versement is not None:                                # le témoin part avant le premier épisode : tout second passage le voit
++        versement("reprise engagee", _fichiers_scelles(dossier / rr.TEMOIN))
++    progres(etape="etalonnage", phase="reprise", lots_verses=n_avant, lots_a_jouer=len(etat["manquants"]))
++    lots = _Lots(dossier, donnees, modele, chrono, versement)
++    for lot in etat["existants"]:
++        lots.charger(lot)
++    for lot in etat["manquants"]:                          # seule la phase des flagrants peut manquer (`etat_partiel`)
++        flagrants = jouer(modele, monde, lot["plan"], config, graines, chrono)
++        appliquer_oracles(modele, monde, flagrants, config, graines, chrono)
++        lots.verser("etalonnage-flagrant", flagrants)
++    # reconstruction des clés, éprouvée sur les lots joués ici : clés reconstruites de leurs sorties = clés employées
++    joues = set(graines.employees)
++    reconstruites = {graines.prefixe + k for i, lot in enumerate(etat["manquants"])
++                     for k in rr.cles_d_un_lot(lot["phase"], lot["plan"], lots.lignes[n_avant + i], {})}
++    if joues != reconstruites:
++        raise GardeArret(f"reprise : clés de graines reconstruites des lots joués ≠ clés employées ({len(reconstruites ^ joues)} d'écart) : "
++                         "la reconstruction des clés des lots versés n'est pas sûre (arrêt ; lots joués scellés et versés)")
++    for lot in etat["existants"]:
++        for k in sorted(rr.cles_d_un_lot(lot["phase"], lot["plan"], lot["lignes"], lot["multiplications"])):
++            graines.generateur(k)
++    neuve = max(0.0, time.time() - debut) / 3600.0 * float(entrees["prix_horaire_usd"]) if entrees is not None else 0.0
++    anterieure = float(ordre["depense_anterieure_usd"])
++    depuis = "création de la machine neuve" if debut_utc_s is not None else "début de la reprise (instant de création non fourni)"
++    joues_n = [l["numero"] for l in etat["manquants"]]
++    reprise = {
++        "marque": marque, "run_partiel": run_partiel, "run_reprise": run_reprise, "machine_anterieure": ordre["machine_anterieure"],
++        "machine_neuve": machine_neuve, "lots_verses_avant_la_reprise": n_avant, "lots_joues_par_la_reprise": joues_n,
++        "ordre_de_reprise_sha256": ordre_sha256, "source": ordre["source"], "go_ecart": ordre["go_ecart"],
++        "deltas_verifies": deltas, "cles_reconstruites_des_lots_verses": len(set(graines.employees) - joues),
++        "durees": (f"MÉLANGE DÉCLARÉ, AUCUN REPLI SILENCIEUX : les sorties d'oracle viennent de deux machines ({_plage(1, n_avant)} : machine "
++                   f"{ordre['machine_anterieure']} ; {_plage(n_avant + 1, total)} : machine neuve), mais les durées (« durees », "
++                   "« duree_d_une_action_d_oracle_par_oracle_h », « chrono ») sont mesurées sur la machine neuve seule, sur les "
++                   f"{len(joues_n)} lot(s) de flagrants qu'elle a joués : les lots versés n'ont versé aucune durée. Elles ne valent pas "
++                   "pour la génération des honnêtes ni des régénérés, et la carte de la machine neuve peut différer ; le plafond de "
++                   "tours des conditions de départ les lit telles quelles."),
++        "depense": {"anterieure_declaree_usd": anterieure, "machine_neuve_usd": neuve, "total_usd": anterieure + neuve,
++                    "depuis": depuis, "note": "« depense_etalonnage_usd » du fichier des oracles = dépense antérieure déclarée par l'ordre de "
++                                              "reprise + dépense de la machine neuve comptée comme l'étalonnage la compte"},
++        "replis_forme_lot_suites": "machine neuve seulement (les lots versés n'en ont versé aucun)",
++        "graines": ("clés des lots versés reconstruites de leurs sorties (génération du plan, suites des jumeaux, couplage, "
++                    "multiplications), éprouvées sur les lots joués par la reprise ; δ consignés retirés à nouveau et égaux")}
++    r = _fin_de_l_etalonnage(config, dossier, graines, lots, chrono, anterieure + neuve,
++                             {"usd": anterieure + neuve, "depuis": f"dépense antérieure déclarée ({anterieure:g} USD) + {depuis}"}, modele, reprise)
++    r["sorties"].update(sorties_temoin)
++    r["reprise"] = reprise
++    return r
++
++
+ def lire_entrees(config: dict, racine) -> dict | None:
+     """Fichier d'entrées scellé avant l'étalonnage : relu (sceau, empreinte citée) ; None s'il est absent du disque."""
+     spec = config["pieces"]["entrees"]
+@@ -638,12 +789,13 @@ class MondeReel:
+ # Point d'entrée (contre-lecture, B1) : `python -m controle_ia.iib.lanceur_v5 --phase … --config … --run-id …`
+ # ------------------------------------------------------------------------------------------------------------------------------
+ COMMANDE = "python -m controle_ia.iib.lanceur_v5"
+-PHASES = ("etalonnage", "conditions", "course")
++PHASES = ("etalonnage", "conditions", "course", "reprise_etalonnage")
+ _RUN_ETALONNAGE = re.compile(r"[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+")
+ 
+ 
+ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=None, environnement: dict | None = None,
+-             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None) -> dict:
++             autoriser_depot_sale: bool = False, carte=None, etalonnage: str | None = None, distillateur=None,
++             etalonnage_partiel: str | None = None) -> dict:
+     """Joue une phase sous `runs/<run>/`, `diag/<run>/` et `donnees/<run>/` (la forme que l'amorce consigne et pousse).
+ 
+     - `etalonnage` : manifeste du run (R9) ; étalonnage versé par lot ; à la fin `diag/<run>/resume.json` ; sur toute garde ou
+@@ -655,7 +807,9 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+       manifeste de l'étalonnage a scellée (empreinte égale, sinon refus) ; `runs/<run>/` et `diag/<run>/` (résumé ou arrêt)
+       sont ceux de la course. Le distillateur du mode réel est construit ici (`distillateur_du_mode_reel`, identifiants des
+       lots de l'étalonnage sous `donnees/<etalonnage>/lots/`), et c'est son modèle surveillé qui joue la course ; en mode
+-      jouet, le distillateur jouet (`jouet_distillation_v5`) sauf s'il est fourni."""
++      jouet, le distillateur jouet (`jouet_distillation_v5`) sauf s'il est fourni.
++    - `reprise_etalonnage` (correctif de reprise R001, GO-2026-11-22-71) : `etalonnage_partiel` nomme le run de l'étalonnage
++      coupé ; voir `_executer_reprise`."""
+     import os
+ 
+     from ..gardes import motif_d_arret
+@@ -669,6 +823,12 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+     if phase == "conditions":
+         cf.exiger_config_v5(config, racine, pour_lancer=True)
+         return phase_conditions(config, racine, diag)
++    if phase == "reprise_etalonnage":
++        if etalonnage is not None:
++            raise GardeArret("--etalonnage n'a de sens que pour la phase course (refus)")
++        return _executer_reprise(config, racine, run_id, etalonnage_partiel, modele, monde, environnement, autoriser_depot_sale, carte)
++    if etalonnage_partiel is not None:
++        raise GardeArret("--etalonnage-partiel n'a de sens que pour la phase reprise_etalonnage (refus)")
+     if phase == "course":
+         return _executer_course(config, racine, run_id, etalonnage, modele, monde, distillateur, environnement, autoriser_depot_sale, carte)
+     if etalonnage is not None:
+@@ -707,20 +867,20 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         raise
+ 
+ 
+-def exiger_configuration_de_l_etalonnage(config: dict, racine, etalonnage: str) -> str:
++def exiger_configuration_de_l_etalonnage(config: dict, racine, etalonnage: str, quoi: str = "course") -> str:
+     """La configuration passée à la course est celle que le manifeste du run de l'étalonnage a scellée : empreinte canonique
+     égale (`manifeste.config_canonique`), sinon refus (rapport du développeur v3 : aucune garde ne le comparait)."""
+     from ..manifeste import lire_manifeste
+ 
+     if not isinstance(etalonnage, str) or not _RUN_ETALONNAGE.fullmatch(etalonnage):
+-        raise GardeArret(f"course : run de l'étalonnage {etalonnage!r} illisible (AAAAMMJJ-HHMMSS-iib-… exigé, --etalonnage)")
++        raise GardeArret(f"{quoi} : run de l'étalonnage {etalonnage!r} illisible (AAAAMMJJ-HHMMSS-iib-… exigé, --etalonnage)")
+     chemin = Path(racine) / "runs" / etalonnage / "manifeste.json"
+     if not chemin.is_file():
+-        raise GardeArret(f"course : manifeste de l'étalonnage {chemin} absent (refus)")
++        raise GardeArret(f"{quoi} : manifeste de l'étalonnage {chemin} absent (refus)")
+     m, _ = lire_manifeste(chemin)
+     vue = hashlib.sha256(config_canonique(config)).hexdigest()
+     if m["config_sha256"] != vue:
+-        raise GardeArret(f"course : la configuration passée ({vue[:12]}…) n'est pas celle que le manifeste de l'étalonnage a scellée "
++        raise GardeArret(f"{quoi} : la configuration passée ({vue[:12]}…) n'est pas celle que le manifeste de l'étalonnage a scellée "
+                          f"({m['config_sha256'][:12]}…) : refus")
+     return m["config_sha256"]
+ 
+@@ -805,6 +965,73 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         raise
+ 
+ 
++def _executer_reprise(config, racine: Path, run_id: str, partiel, modele, monde, environnement: dict, autoriser_depot_sale: bool,
++                      carte) -> dict:
++    """Reprise d'un étalonnage coupé, sous `runs/<run de la reprise>/` (manifeste, résumé ou arrêt) ; lots et fin écrits sous
++    `diag/<run coupé>/` et `donnees/<run coupé>/`, où les conditions de départ et la course les lisent. Gardes avant tout
++    manifeste : configuration égale à celle que le manifeste du run coupé a scellée ; ordre de reprise scellé et fichiers
++    récupérés intacts ; lots conformes au plan ; graines vérifiées ; aucun second passage ; en mode réel, identifiant de la
++    machine neuve lisible et autre que celui de la machine des lots versés. À la fin, le résumé est écrit deux fois : sous le
++    run de la reprise, et sous le run coupé (rattaché à son manifeste, avec l'empreinte du manifeste de la reprise), où la
++    course compte les lots ; les deux portent la marque de reprise."""
++    from ..gardes import motif_d_arret
++    from ..manifeste import creer_manifeste, ecrire_resultat, lire_manifeste
++    from . import reprise_v5 as rr
++
++    cf.exiger_config_v5(config, racine, pour_lancer=True)
++    exiger_accord(config, environnement, carte)
++    sha_config = exiger_configuration_de_l_etalonnage(config, racine, partiel, quoi="reprise")
++    if run_id == partiel:
++        raise GardeArret("reprise : le run de la reprise doit être neuf, distinct du run coupé (R12) : refus")
++    rr.exiger_aucune_reprise(racine / "diag" / partiel)
++    ordre, sha_ordre = rr.lire_ordre(racine, partiel, config["mode"])
++    neuve = environnement.get("CONTAINER_ID") or None
++    if config["mode"] == "reel" and (neuve is None or not str(neuve).isdigit()):
++        raise GardeArret(f"reprise en mode réel : identifiant de la machine neuve illisible (CONTAINER_ID={neuve!r}) : refus")
++    monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
++    etat = rr.etat_partiel(config, racine / "diag" / partiel, racine / "donnees" / partiel, lots_prevus(config, list(monde.taches_reserve)))
++    rr.exiger_graines_des_lots(config, etat["existants"])          # avant le manifeste : un refus n'écrit rien
++    marque = marque_de_reprise(len(etat["existants"]), etat["total"], ordre["machine_anterieure"], neuve)
++    versement = vs.Versement(racine, environnement, config["mode"], progres)
++    chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste-reprise"], entropie=int(config["entropie"]),
++                                  decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale,
++                                  commande=f"{COMMANDE} --phase reprise_etalonnage --etalonnage-partiel {partiel}",
++                                  reserves_declarees=[marque, f"écart au texte scellé, section 15 (« toute reprise est une course neuve »), accepté : "
++                                                              f"{ordre['go_ecart']} ; deux machines", f"ordre de reprise {sha_ordre}"])
++    etat_e, debut = {"etape": "chargement"}, time.perf_counter()
++    try:
++        from . import modele_v5
++
++        progres(etape="chargement", mode=config["mode"], phase="reprise_etalonnage")
++        modele = modele if modele is not None else modele_v5.construire_modele(config)
++        etat_e["etape"] = "reprise_etalonnage"
++        cree = environnement.get("IIB_DEBUT_UTC_S")
++        r = phase_reprise_etalonnage(config, racine, partiel, modele, monde, ordre, sha_ordre, environnement, float(cree) if cree else None,
++                                     carte, versement, neuve, run_id)
++        resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
++                  "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
++                  "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
++                  "replis_forme_lot_suites": r["replis_forme_lot_suites"], "configuration_sha256": sha_config,
++                  "reprise": {**r["reprise"], "phase_jouee": "reprise_etalonnage"},
++                  "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées (run coupé)"}
++        ecrire_resultat(racine, chemin_m, "resume", resume)
++        _, sha_m = lire_manifeste(chemin_m)
++        ecrire_resultat(racine, racine / "runs" / partiel / "manifeste.json", "resume",
++                        {**resume, "manifeste_de_la_reprise": {"chemin": str(chemin_m.relative_to(racine)), "sha256": sha_m}})
++        return resume
++    except BaseException as e:
++        ecrits = sorted(str(f.relative_to(racine)) for d in (racine / "diag" / partiel, racine / "donnees" / partiel, racine / "diag" / run_id)
++                        if d.is_dir() for f in d.rglob("*.json"))
++        ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": "reprise_etalonnage", "etape": etat_e["etape"],
++                                                     "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits, "marque": marque,
++                                                     "duree_s": round(time.perf_counter() - debut, 1), "versements": versement.journal,
++                                                     "replis_forme_lot_suites": replis_de(modele),
++                                                     "issue": "aucune : reprise interrompue ; le témoin de reprise, s'il est écrit, refuse tout "
++                                                              "second passage (nœud pour Lazar)"})
++        progres(etape="arret", phase="reprise_etalonnage", fichiers_ecrits=len(ecrits))
++        raise
++
++
+ def len_reserve(config: dict) -> int:
+     return int(config["etalonnage"]["honnetes"]) // int(config["etalonnage"]["honnetes_par_tache"])
+ 
+@@ -822,12 +1049,14 @@ def _main(argv: list[str]) -> int:
+     p.add_argument("--run-id", required=True)
+     p.add_argument("--autoriser-depot-sale", action="store_true")
+     p.add_argument("--etalonnage", default=None, help="phase course seulement : run de l'étalonnage (dossier diag/<run>/)")
++    p.add_argument("--etalonnage-partiel", default=None, help="phase reprise_etalonnage seulement : run de l'étalonnage coupé")
+     args = p.parse_args(argv)
+     signal.signal(signal.SIGTERM, lever_sur_term)
+     try:
+         verifier(args.config)
+         config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+-        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage)
++        r = executer(args.phase, config, Path("."), args.run_id, autoriser_depot_sale=args.autoriser_depot_sale, etalonnage=args.etalonnage,
++                     etalonnage_partiel=args.etalonnage_partiel)
+     except GardeArret as e:
+         print(f"ARRÊT : {e}", file=sys.stderr)
+         return 1
+diff --git a/src/controle_ia/iib/reprise_v5.py b/src/controle_ia/iib/reprise_v5.py
+new file mode 100644
+index 000000000..27e4a73ab
+--- /dev/null
++++ b/src/controle_ia/iib/reprise_v5.py
+@@ -0,0 +1,322 @@
++"""Reprise de l'étalonnage de l'organisme retenu, v5 (correctif de reprise R001 ; écart au texte scellé, section 15, accepté par
++Lazar : GO-2026-11-22-71). EXPLORATOIRE, NON OPPOSABLE (R-522).
++
++Un étalonnage coupé laisse sur la branche d'essai des lots scellés (`diag/<run>/lots/`, `donnees/<run>/lots/`) et le manifeste
++du run. Ce module lit ces lots **par le code seulement** et vérifie, avant tout calcul :
++
++- l'**ordre de reprise** (`diag/<run>/ordre-reprise-iib-v5.json`, scellé, écrit par la session qui a récupéré les lots de la
++  branche d'essai) : run, branche et commit d'origine, machine des lots versés, dépense antérieure déclarée, ligne de GO de
++  l'écart, et l'empreinte de chaque fichier récupéré ; chaque empreinte est relue sur le disque (R11) ;
++- que les lots présents sont **exactement** un début du plan scellé (`lanceur_v5.lots_prevus` : même ordre des tâches, mêmes
++  phases, même taille de lot, mêmes épisodes et mêmes tâches), sans lot manquant, en trop, ni fichier inconnu, et que seuls
++  des lots de la dernière phase (flagrants) manquent ;
++- que les graines sont celles de la configuration : chaque δ consigné par les lots régénérés et plantés est **retiré** sous sa
++  clé (`iib/regenere/…`, `iib/plante/…`) et doit être égal au δ consigné ; un seul écart est un refus ;
++- qu'aucune reprise n'a déjà été engagée ni finie (témoin `reprise-engagee-iib-v5.json`, fichiers de fin, résumé).
++
++Il rend aussi les **clés de graines** qu'un lot a employées, reconstruites de ses sorties (clés de génération du plan, suites
++des jumeaux là où la coupe est conforme, couplage de l'oracle à contexte réécrit, multiplications consignées) : le fichier des
++graines de fin porte ainsi les clés des lots versés sans les rejouer ; la reconstruction est vérifiée sur les lots joués par la
++reprise elle-même (clés reconstruites = clés employées, sinon arrêt). Aucun texte n'est lu ni écrit.
++"""
++from __future__ import annotations
++
++import json
++import math
++import re
++from pathlib import Path
++
++from ..gardes import GardeArret
++from ..scellement import sceller, verifier
++from . import configuration_v5 as cf
++from . import jumeau_v5 as jm
++from . import oracle_v5 as ov
++from .plante_v5 import cle_du_plante
++from .regenere_v5 import cle_du_regenere, tirer_delta
++from .regle_v5 import CLES_ORACLE
++
++SCHEMA_ORDRE = "ordre-reprise-iib-v5"
++ORDRE = "ordre-reprise-iib-v5.json"
++TEMOIN = "reprise-engagee-iib-v5.json"
++CHAMPS_ORDRE = frozenset({"schema", "avertissement", "run_partiel", "source", "machine_anterieure", "depense_anterieure_usd", "go_ecart",
++                          "fichiers"})
++H, R, P, F = "etalonnage-honnete", "etalonnage-regenere", "etalonnage-plante", "etalonnage-flagrant"
++ORACLES_DE = {H: ("P", "N"), R: ("P", "N"), P: ("N",), F: ("P", "N")}
++_LOT = re.compile(r"lot-([0-9]{3})-(etalonnage-[a-z]+)\.json")
++_IDS = re.compile(r"ids-lot-([0-9]{3})-(etalonnage-[a-z]+)\.json")
++_GO = re.compile(r"GO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}")
++_COMMIT = re.compile(r"[0-9a-f]{40}")
++_RUN = re.compile(r"[0-9]{8}-[0-9]{6}-iib-[a-z0-9-]+")
++
++
++def nom_du_lot(numero: int, phase: str) -> str:
++    return f"lot-{numero:03d}-{phase}.json"
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# Ordre de reprise
++# ------------------------------------------------------------------------------------------------------------------------------
++def fichiers_recuperes(racine, run: str) -> dict:
++    """Fichiers d'un étalonnage coupé, relatifs à `racine` : manifeste du run (s'il est là), lots et identifiants (sans les
++    sceaux compagnons) ; chacun avec l'empreinte que son sceau vérifie (R11)."""
++    racine = Path(racine)
++    chemins = [racine / "runs" / run / "manifeste.json"] if (racine / "runs" / run / "manifeste.json").is_file() else []
++    chemins += sorted((racine / "diag" / run / "lots").glob("lot-*.json")) + sorted((racine / "donnees" / run / "lots").glob("ids-lot-*.json"))
++    return {str(c.relative_to(racine)): verifier(c) for c in chemins}
++
++
++def ecrire_ordre(racine, run: str, source_branche: str, source_commit: str, machine_anterieure: int, depense_anterieure_usd: float,
++                 go_ecart: str) -> str:
++    """Écrit et scelle l'ordre de reprise, après que la session a récupéré les fichiers du run depuis la branche d'essai (elle
++    vérifie, hors de ce module, que chaque fichier est égal à l'octet à celui du commit d'origine). Rend l'empreinte."""
++    racine = Path(racine)
++    ordre = {"schema": SCHEMA_ORDRE, "avertissement": cf.AVERTISSEMENT, "run_partiel": run,
++             "source": {"branche": source_branche, "commit": source_commit}, "machine_anterieure": machine_anterieure,
++             "depense_anterieure_usd": depense_anterieure_usd, "go_ecart": go_ecart, "fichiers": fichiers_recuperes(racine, run)}
++    exiger_forme_de_l_ordre(ordre, run)
++    chemin = racine / "diag" / run / ORDRE
++    if chemin.exists():
++        raise GardeArret(f"{chemin} existe déjà : R12 interdit d'écraser")
++    chemin.write_text(json.dumps(ordre, indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    return sceller(chemin)
++
++
++def exiger_forme_de_l_ordre(ordre: dict, run: str) -> None:
++    if not isinstance(ordre, dict) or set(ordre) != CHAMPS_ORDRE or ordre["schema"] != SCHEMA_ORDRE:
++        raise GardeArret(f"ordre de reprise : champs {sorted(ordre) if isinstance(ordre, dict) else ordre!r} ≠ {sorted(CHAMPS_ORDRE)} (refus)")
++    if ordre["run_partiel"] != run or not _RUN.fullmatch(str(run)):
++        raise GardeArret(f"ordre de reprise : run {ordre['run_partiel']!r} ≠ run repris {run!r} (refus)")
++    s = ordre["source"]
++    if not isinstance(s, dict) or set(s) != {"branche", "commit"} or not str(s["branche"]).startswith("essai/") or not _COMMIT.fullmatch(str(s["commit"])):
++        raise GardeArret(f"ordre de reprise : source {s!r} illisible (branche essai/…, commit en 40 caractères) (refus)")
++    m = ordre["machine_anterieure"]
++    if isinstance(m, bool) or not isinstance(m, int) or m <= 0:
++        raise GardeArret(f"ordre de reprise : machine des lots versés {m!r} : identifiant entier attendu (refus)")
++    d = ordre["depense_anterieure_usd"]
++    if isinstance(d, bool) or not isinstance(d, (int, float)) or not math.isfinite(d) or d < 0:
++        raise GardeArret(f"ordre de reprise : dépense antérieure {d!r} : nombre positif ou nul attendu, déclaré par la session (refus)")
++    if not isinstance(ordre["go_ecart"], str) or not _GO.fullmatch(ordre["go_ecart"]):
++        raise GardeArret(f"ordre de reprise : ligne de GO de l'écart {ordre['go_ecart']!r} illisible (GO-AAAA-MM-JJ-NN) (refus)")
++    f = ordre["fichiers"]
++    if not isinstance(f, dict) or not f or not all(isinstance(v, str) and re.fullmatch(r"[0-9a-f]{64}", v) for v in f.values()):
++        raise GardeArret("ordre de reprise : liste des fichiers récupérés vide ou illisible (refus)")
++
++
++def lire_ordre(racine, run: str, mode: str) -> tuple[dict, str]:
++    """Ordre de reprise relu (sceau, forme) ; chaque fichier qu'il cite a encore son empreinte, et l'ensemble des lots et des
++    identifiants sur le disque est exactement celui qu'il cite. En mode réel, la ligne de GO de l'écart figure dans
++    `registres/go.md` du commit joué. Rend l'ordre et son empreinte."""
++    racine = Path(racine)
++    chemin = racine / "diag" / run / ORDRE
++    if not chemin.is_file():
++        raise GardeArret(f"reprise : ordre de reprise {chemin} absent (la session l'écrit après avoir récupéré les lots) : refus")
++    sha = verifier(chemin)
++    ordre = json.loads(chemin.read_text(encoding="utf-8"))
++    exiger_forme_de_l_ordre(ordre, run)
++    vus = fichiers_recuperes(racine, run)
++    lots_vus = {k for k in vus if not k.endswith("manifeste.json")}
++    lots_cites = {k for k in ordre["fichiers"] if not k.endswith("manifeste.json")}
++    if lots_vus != lots_cites:
++        raise GardeArret(f"reprise : lots sur le disque ≠ lots de l'ordre (en trop : {sorted(lots_vus - lots_cites)[:3]} ; manquants : "
++                         f"{sorted(lots_cites - lots_vus)[:3]}) : refus")
++    for nom, attendu in ordre["fichiers"].items():
++        if vus.get(nom) != attendu:
++            raise GardeArret(f"reprise : {nom} : empreinte sur le disque ≠ empreinte de l'ordre de reprise (R11) : refus")
++    if mode == "reel":
++        go = racine / "registres" / "go.md"
++        if not go.is_file() or not re.search(rf"(?<![0-9A-Za-z-]){re.escape(ordre['go_ecart'])}(?![0-9])", go.read_text(encoding="utf-8")):
++            raise GardeArret(f"reprise : ligne {ordre['go_ecart']} absente de registres/go.md du commit joué : aucune reprise sans le mot de Lazar (refus)")
++    return ordre, sha
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# État de l'étalonnage coupé
++# ------------------------------------------------------------------------------------------------------------------------------
++def _lire_scelle(chemin: Path) -> dict:
++    if not chemin.is_file():
++        raise GardeArret(f"reprise : {chemin.name} absent (lot manquant) : refus")
++    try:
++        verifier(chemin)
++    except GardeArret as e:
++        raise GardeArret(f"reprise : sceau de {chemin.name} faux ou absent ({e}) : refus") from None
++    return json.loads(chemin.read_text(encoding="utf-8"))
++
++
++def _repertorier(dossier: Path, motif: re.Pattern, autre: re.Pattern | None) -> dict[int, str]:
++    """Numéro → nom des fichiers de lot ; refus sur tout fichier inconnu, tout sceau orphelin, tout numéro en double."""
++    vus: dict[int, str] = {}
++    if not dossier.is_dir():
++        return vus
++    for f in sorted(dossier.iterdir()):
++        nom = f.name[:-len(".sha256")] if f.name.endswith(".sha256") else f.name
++        m = motif.fullmatch(nom)
++        if m is None and autre is not None and autre.fullmatch(nom):
++            continue                                       # même dossier pour les lots et les identifiants (essais)
++        if m is None or not f.is_file():
++            raise GardeArret(f"reprise : fichier inconnu {f.name} dans {dossier} : refus")
++        if f.name.endswith(".sha256"):
++            if not (dossier / nom).is_file():
++                raise GardeArret(f"reprise : sceau {f.name} sans son fichier : refus")
++            continue
++        n = int(m.group(1))
++        if n in vus:
++            raise GardeArret(f"reprise : deux lots de numéro {n} ({vus[n]}, {nom}) : refus")
++        vus[n] = nom
++    return vus
++
++
++def exiger_aucune_reprise(dossier) -> None:
++    """Ni témoin de reprise (reprise engagée, finie ou interrompue), ni fichier de fin, ni résumé dans le dossier du run coupé."""
++    dossier = Path(dossier)
++    for nom in (TEMOIN, "etalonnage-oracles-iib-v5.json", "rapportes-etalonnage-iib-v5.json", "graines-etalonnage-iib-v5.json", "resume.json"):
++        if (dossier / nom).exists() or (dossier / (nom + ".sha256")).exists():
++            raise GardeArret(f"reprise : {nom} existe déjà dans {dossier} : second passage de la reprise refusé (refus)")
++
++
++def etat_partiel(config: dict, dossier, donnees, prevus: list[dict]) -> dict:
++    """Vérifie les lots présents contre le plan scellé (`prevus` = `lanceur_v5.lots_prevus`) et rend
++    {"existants": [{numero, phase, plan, lignes, taches, ids, multiplications, noms}], "manquants": [lots prévus non joués]}."""
++    dossier, donnees = Path(dossier), Path(donnees)
++    exiger_aucune_reprise(dossier)
++    meme = dossier / "lots" == donnees / "lots"
++    lots = _repertorier(dossier / "lots", _LOT, _IDS if meme else None)
++    ids = _repertorier(donnees / "lots", _IDS, _LOT if meme else None)
++    total = len(prevus)
++    n = len(lots)
++    if not lots:
++        raise GardeArret("reprise : aucun lot versé : ce n'est pas une reprise (refus)")
++    if max(lots) > total or n > total:
++        raise GardeArret(f"reprise : lot en trop ({max(lots)} pour {total} lots prévus) : refus")
++    if sorted(lots) != list(range(1, n + 1)):
++        manque = sorted(set(range(1, max(lots) + 1)) - set(lots))
++        raise GardeArret(f"reprise : lot(s) manquant(s) au milieu des lots versés : {manque} : refus")
++    if sorted(ids) != sorted(lots) or any(ids[k] != "ids-" + lots[k] for k in lots):
++        raise GardeArret("reprise : fichiers d'identifiants ≠ lots versés (manquant, en trop ou d'une autre phase) : refus")
++    if n == total:
++        raise GardeArret(f"reprise : les {total} lots sont déjà versés : rien à reprendre (second passage ?) : refus")
++    manquants = prevus[n:]
++    if any(lot["phase"] != F for lot in manquants):
++        raise GardeArret(f"reprise : il manque des lots d'une phase autre que la dernière ({sorted({l['phase'] for l in manquants})}) : seule "
++                         "la phase des flagrants peut être reprise (refus)")
++    existants = []
++    for lot in prevus[:n]:
++        k, phase, plan = lot["numero"], lot["phase"], lot["plan"]
++        attendu = nom_du_lot(k, phase)
++        if lots[k] != attendu:
++            raise GardeArret(f"reprise : lot {k} : {lots[k]} ≠ {attendu} du plan scellé (phase ou ordre différent) : refus")
++        contenu, idc = _lire_scelle(dossier / "lots" / attendu), _lire_scelle(donnees / "lots" / f"ids-{attendu}")
++        existants.append(exiger_lot_conforme(config, k, phase, plan, contenu, idc))
++    return {"existants": existants, "manquants": manquants, "total": total}
++
++
++def exiger_lot_conforme(config: dict, numero: int, phase: str, plan: list[dict], contenu: dict, idc: dict) -> dict:
++    """Un lot versé est celui du plan : mêmes épisodes, dans le même ordre, mêmes tâches, oracles de sa phase, une sortie par
++    action et par oracle (pas 0, 1, …), schéma des sorties, aucun texte ; identifiants et multiplications cohérents."""
++    quoi = f"reprise : lot {numero} ({phase})"
++    if set(contenu) != {"avertissement", "lignes", "taches"} or set(idc) != {"avertissement", "ids", "multiplications"}:
++        raise GardeArret(f"{quoi} : champs du lot ou des identifiants hors de la forme versée : refus")
++    episodes = [p["episode"] for p in plan]
++    if contenu["taches"] != {p["episode"]: p["tache"] for p in plan}:
++        raise GardeArret(f"{quoi} : épisodes ou tâches ≠ plan scellé (ordre des tâches, taille de lot) : refus")
++    lignes = contenu["lignes"]
++    ov.exiger_aucun_texte(lignes)
++    oracles = ORACLES_DE[phase]
++    ordre_vu, par = [], {}
++    for l in lignes:
++        if not isinstance(l, dict) or set(l) != CLES_ORACLE or l["schema"] != cf.SCHEMA_ORACLE or l["phase"] != phase or l["oracle"] not in oracles:
++            raise GardeArret(f"{quoi} : sortie hors du schéma, d'une autre phase ou d'un autre oracle : refus")
++        if not ordre_vu or ordre_vu[-1] != l["episode"]:
++            ordre_vu.append(l["episode"])
++        par.setdefault((l["episode"], l["oracle"]), []).append(int(l["pas"]))
++    if ordre_vu != episodes:
++        raise GardeArret(f"{quoi} : ordre des épisodes des sorties ≠ plan scellé : refus")
++    cles_ids = {f"{phase}/{e}" for e in episodes}
++    if set(idc["ids"]) != cles_ids:
++        raise GardeArret(f"{quoi} : identifiants d'actions ≠ épisodes du plan : refus")
++    for e in episodes:
++        n_actions = len(idc["ids"][f"{phase}/{e}"])
++        if n_actions == 0:
++            raise GardeArret(f"{quoi} : épisode {e} sans action : refus")
++        for o in oracles:
++            if par.get((e, o)) != list(range(n_actions)):
++                raise GardeArret(f"{quoi} : épisode {e}, oracle {o} : sorties ≠ une par action, dans l'ordre : refus")
++    mult = idc["multiplications"]
++    if phase in (R, P):
++        if set(mult) != cles_ids or any(len(mult[f"{phase}/{e}"]) != len(idc["ids"][f"{phase}/{e}"]) for e in episodes):
++            raise GardeArret(f"{quoi} : multiplications consignées ≠ une par action de chaque épisode : refus")
++    elif mult:
++        raise GardeArret(f"{quoi} : multiplications consignées dans une phase qui n'en a pas : refus")
++    return {"numero": numero, "phase": phase, "plan": plan, "lignes": lignes, "taches": contenu["taches"], "ids": idc["ids"],
++            "multiplications": mult, "nom": nom_du_lot(numero, phase)}
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# Graines
++# ------------------------------------------------------------------------------------------------------------------------------
++def _multiplications(phase: str, multiplications: dict):
++    for cle, notes in multiplications.items():
++        episode = cle.split("/", 1)[1]
++        for t, n in enumerate(notes):
++            if t >= 1 and n is not None and n.get("delta") is not None:
++                yield (cle_du_regenere(episode, t) if phase == R else cle_du_plante(episode, t)), float(n["delta"])
++
++
++def cles_d_un_lot(phase: str, plan: list[dict], lignes: list[dict], multiplications: dict) -> set[str]:
++    """Clés (sans préfixe) qu'un lot a employées, reconstruites de ses sorties : génération (plan, honnêtes et flagrants ; les
++    régénérés reprennent les graines d'actions de l'honnête) ; suites des jumeaux là où la coupe est conforme (`cle_du_jumeau` :
++    aux pas 0 et 1, la clé de l'oracle au contexte de l'agent) ; couplage de l'oracle à contexte réécrit (pas ≥ 1, coupe
++    conforme) ; multiplications consignées (δ non vide, pas ≥ 1)."""
++    cles = {p["cle"] for p in plan} if phase in (H, F) else set()
++    for l in lignes:
++        if l["coupe_conforme"]:
++            cles.add(jm.cle_du_jumeau(l["oracle"], l["phase"], l["episode"], int(l["pas"])))
++            if l["oracle"] == "N" and int(l["pas"]) >= 1:
++                cles.add(ov.cle_du_couplage(l["phase"], l["episode"], int(l["pas"])))
++    cles |= {k for k, _ in _multiplications(phase, multiplications)}
++    return cles
++
++
++def exiger_graines_des_lots(config: dict, existants: list[dict]) -> int:
++    """Chaque δ consigné par les lots régénérés et plantés, retiré à nouveau sous sa clé avec l'entropie et le préfixe de la
++    configuration, est égal au δ consigné ; sinon refus (graines différentes). Rend le nombre de δ vérifiés (zéro : refus,
++    graines invérifiables)."""
++    verif, loi, n = jm.Graines(config["entropie"], config["prefixe_graines"]), config["organisme"]["loi"], 0
++    for lot in existants:
++        if lot["phase"] not in (R, P):
++            continue
++        for cle, delta in _multiplications(lot["phase"], lot["multiplications"]):
++            if tirer_delta(verif.generateur(cle), loi) != delta:
++                raise GardeArret(f"reprise : lot {lot['numero']} : δ consigné sous {cle} ≠ δ retiré sous les graines de la configuration "
++                                 "(entropie ou préfixe différents) : refus")
++            n += 1
++    if n == 0:
++        raise GardeArret("reprise : aucun δ consigné dans les lots versés : graines invérifiables (refus)")
++    return n
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# Point d'entrée de la session : `python -m controle_ia.iib.reprise_v5 ordre RUN BRANCHE COMMIT MACHINE DEPENSE_USD GO` (après
++# `scripts/preparer_reprise_iib_v5.sh`, qui récupère les fichiers et les compare à l'octet au commit d'origine)
++# ------------------------------------------------------------------------------------------------------------------------------
++def _main(argv: list[str]) -> int:
++    import sys
++
++    if len(argv) != 7 or argv[0] != "ordre":
++        print("usage : python -m controle_ia.iib.reprise_v5 ordre RUN BRANCHE COMMIT MACHINE DEPENSE_ANTERIEURE_USD GO_ECART", file=sys.stderr)
++        return 2
++    try:
++        _, run, branche, commit, machine, depense, go = argv
++        if not re.fullmatch(r"[0-9]+", machine) or not re.fullmatch(r"[0-9]+([.][0-9]+)?", depense):
++            raise GardeArret(f"machine {machine!r} ou dépense {depense!r} illisibles (entier ; nombre positif en USD)")
++        sha = ecrire_ordre(Path("."), run, branche, commit, int(machine), float(depense), go)
++    except GardeArret as e:
++        print(f"REFUS : {e}", file=sys.stderr)
++        return 1
++    print(f"ordre de reprise écrit et scellé : diag/{run}/{ORDRE} {sha}")
++    return 0
++
++
++if __name__ == "__main__":
++    import sys
++
++    sys.exit(_main(sys.argv[1:]))
+diff --git a/src/controle_ia/iib/session_v5.py b/src/controle_ia/iib/session_v5.py
+index 064b126e7..62356ba5a 100644
+--- a/src/controle_ia/iib/session_v5.py
++++ b/src/controle_ia/iib/session_v5.py
+@@ -33,7 +33,8 @@ from pathlib import Path
+ from ..gardes import GardeArret
+ 
+ COUPURE_ETALONNAGE_USD = 16.0          # coupure propre de l'étalonnage, par une règle de la surveillance (12 relevé à 16, correctif 0013)
+-PHASES = ("etalonnage", "conditions", "course")
++PHASES = ("etalonnage", "conditions", "course", "reprise_etalonnage")
++PHASES_COUPEES = ("etalonnage", "reprise_etalonnage")   # correctif R001 : la règle joue aussi pendant la reprise, même seuil, depuis la machine neuve
+ _DEBUT_AMORCE = re.compile(r"^AMORCE IIB v\d+ DEMARRAGE 1 : (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)", re.M)
+ 
+ 
+@@ -49,12 +50,13 @@ def _positif(quoi: str, v, strict: bool = False) -> float:
+ 
+ def coupure_etalonnage(phase: str, progres: str, maintenant_s, prix_carte, prix_stockage, creation_s) -> dict:
+     """Règle de la surveillance : pendant l'étalonnage, la dépense comptée depuis le début de l'amorce, au prix réel lu, atteint
+-    16 USD → arrêt. Hors de l'étalonnage la règle ne joue pas (la coupure de la ligne reste seule)."""
++    16 USD → arrêt. Hors de l'étalonnage la règle ne joue pas (la coupure de la ligne reste seule). Correctif de reprise R001 :
++    elle joue aussi pendant la reprise de l'étalonnage, au même seuil, comptée sur la machine neuve seule (nœud pour Lazar)."""
+     if phase not in PHASES:
+         raise GardeArret(f"coupure de l'étalonnage : phase {phase!r} illisible ({', '.join(PHASES)}) : refus, aucun repli")
+     now, cree = _positif("maintenant", maintenant_s), _positif("création", creation_s)
+     prix = _positif("prix de la carte", prix_carte, strict=True) + _positif("prix du stockage", prix_stockage)
+-    if phase != "etalonnage":
++    if phase not in PHASES_COUPEES:
+         return {"joue": False, "arret": False, "phase": phase, "seuil_usd": COUPURE_ETALONNAGE_USD}
+     m = _DEBUT_AMORCE.search(progres or "")
+     debut, origine = cree, "création (début de l'amorce non encore relevé)"
+diff --git a/src/controle_ia/manifeste.py b/src/controle_ia/manifeste.py
+index cce9ff81c..59552418e 100644
+--- a/src/controle_ia/manifeste.py
++++ b/src/controle_ia/manifeste.py
+@@ -68,8 +68,9 @@ def versions() -> dict:
+ def creer_manifeste(racine: str | Path, run_id: str, config: dict, taches: list[str], *,
+                     entropie: int | None = None, decisif: bool = False,
+                     prereg: str | Path | None = None, autoriser_depot_sale: bool = False,
+-                    commande: str | None = None) -> tuple[Path, dict]:
+-    """Crée et scelle `runs/<run_id>/manifeste.json`. Lève `GardeArret` sur toute violation."""
++                    commande: str | None = None, reserves_declarees: list[str] | None = None) -> tuple[Path, dict]:
++    """Crée et scelle `runs/<run_id>/manifeste.json`. Lève `GardeArret` sur toute violation. `reserves_declarees` : réserves
++    que l'appelant déclare (par exemple la marque d'une reprise), ajoutées à la liste `reserves` (aucune par défaut)."""
+     racine = Path(racine)
+     if not _RUN_ID.match(run_id):
+         raise GardeArret(f"identifiant de run {run_id!r} : format AAAAMMJJ-HHMMSS-nom attendu")
+@@ -82,6 +83,10 @@ def creer_manifeste(racine: str | Path, run_id: str, config: dict, taches: list[
+         if not autoriser_depot_sale:
+             raise GardeArret("arbre de travail non propre : committer avant le run\n" + git["statut"])
+         reserves.append("arbre de travail non propre au lancement (autorisé explicitement)")
++    for r in reserves_declarees or []:
++        if not isinstance(r, str) or not r:
++            raise GardeArret(f"réserve déclarée {r!r} : texte non vide attendu")
++        reserves.append(r)
+     prereg_info = None
+     if decisif and prereg is None:
+         raise GardeArret("run décisif sans préenregistrement : R1 interdit de lancer")
+diff --git a/tests/test_iib_reprise_v5_r001.py b/tests/test_iib_reprise_v5_r001.py
+new file mode 100644
+index 000000000..80926b87d
+--- /dev/null
++++ b/tests/test_iib_reprise_v5_r001.py
+@@ -0,0 +1,509 @@
++"""Reprise de l'étalonnage de l'organisme retenu, v5 (correctif de reprise R001 ; GO-2026-11-22-71) : essai central (un
++étalonnage jouet coupé après N lots puis repris rend les mêmes fichiers de fin qu'un étalonnage complet, mêmes graines), gardes
++(cas sain et artefacts, R5), point d'entrée, amorce et surveillance. Aucune sortie réelle n'est lue : tout est jouet."""
++import json
++import shutil
++from pathlib import Path
++
++import pytest
++from test_iib_lanceur_v5 import _depot_jouet, _monde
++
++from controle_ia.gardes import GardeArret
++from controle_ia.iib import lanceur_v5 as la
++from controle_ia.iib import reprise_v5 as rr
++from controle_ia.iib.jouet_v5 import ModeleJouetDeLangue, TokeniseurJouet
++from controle_ia.scellement import sceller, verifier
++
++DEPOT = Path(__file__).resolve().parents[1]
++RUN = "20991231-000100-iib-jouet"
++COMMIT = "f4bf68bb7f5ffc4a30d07a4fc949ab02832e904b"
++GO = "GO-2026-11-22-71"
++TEMPS_RAPPORTES = {"durees", "duree_d_une_action_d_oracle_par_oracle_h", "chrono", "depense", "reprise"}   # mesurés : diffèrent d'une course à l'autre
++TEMPS_ETALONNAGE = {"durees", "depense_etalonnage_usd"}
++
++
++class Coupure(Exception):
++    pass
++
++
++def _coupe_apres(n: int):
++    """Versement factice qui coupe l'étalonnage juste après le n-ième lot scellé (la machine qui s'arrête)."""
++    vus = []
++
++    def versement(motif, fichiers):
++        vus.append(motif)
++        if len(vus) == n:
++            raise Coupure(motif)
++    return versement
++
++
++def _modele(vocabulaire=None):
++    """Modèle jouet ; `vocabulaire` : tokeniseur au vocabulaire fixé d'avance. Le tokeniseur jouet par défaut numérote chaque
++    caractère à sa première rencontre : ses identifiants dépendent de tout ce qu'il a déjà lu, si bien qu'une machine neuve
++    (qui n'a pas lu les lots 1 à 27) numéroterait autrement. Un tokeniseur réel a un vocabulaire fixe ; l'essai central fixe
++    donc le vocabulaire jouet, et vérifie qu'aucun caractère neuf n'a été numéroté en cours de route."""
++    return ModeleJouetDeLangue() if vocabulaire is None else ModeleJouetDeLangue(tok=TokeniseurJouet(vocabulaire))
++
++
++def _jouer_complet(racine: Path, config: dict, modele=None) -> dict:
++    return la.phase_etalonnage(config, racine, racine / "diag" / RUN, modele or _modele(), la.MondeJouet(), donnees=racine / "donnees" / RUN,
++                               carte=False)
++
++
++def _jouer_coupe(racine: Path, config: dict, n: int, modele=None) -> None:
++    with pytest.raises(Coupure):
++        la.phase_etalonnage(config, racine, racine / "diag" / RUN, modele or _modele(), la.MondeJouet(), donnees=racine / "donnees" / RUN,
++                            carte=False, versement=_coupe_apres(n))
++
++
++def _ordre(racine: Path, depense: float = 16.0) -> tuple[dict, str]:
++    chemin = racine / "diag" / RUN / rr.ORDRE
++    for c in (chemin, Path(str(chemin) + ".sha256")):
++        if c.exists():
++            c.unlink()
++    rr.ecrire_ordre(racine, RUN, "essai/iib-explo-v6", COMMIT, 61875617, depense, GO)
++    return rr.lire_ordre(racine, RUN, "jouet")
++
++
++def _reprendre(racine: Path, config: dict, monde=None, **kw) -> dict:
++    ordre, sha = _ordre(racine) if "ordre" not in kw else (kw.pop("ordre"), kw.pop("sha"))
++    return la.phase_reprise_etalonnage(config, racine, RUN, kw.pop("modele", None) or _modele(), monde or la.MondeJouet(), ordre, sha, carte=False,
++                                       machine_neuve=kw.pop("machine_neuve", "99"), **kw)
++
++
++def _json(chemin: Path) -> dict:
++    return json.loads(chemin.read_text(encoding="utf-8"))
++
++
++@pytest.fixture(scope="module")
++def vocabulaire(tmp_path_factory):
++    """Caractères qu'un étalonnage jouet complet fait lire au tokeniseur jouet (vocabulaire fixé des essais d'égalité)."""
++    racine = tmp_path_factory.mktemp("vocabulaire")
++    m = _modele()
++    _jouer_complet(racine, _monde(racine), m)
++    return list(m.fmt.tok.texte_de[1:])
++
++
++@pytest.fixture(scope="module")
++def complet(tmp_path_factory, vocabulaire):
++    racine = tmp_path_factory.mktemp("complet")
++    config = _monde(racine)
++    m = _modele(vocabulaire)
++    r = _jouer_complet(racine, config, m)
++    assert len(m.fmt.tok) == len(vocabulaire) + 1                  # aucun caractère neuf : identifiants indépendants de l'histoire
++    return {"racine": racine, "config": config, "r": r, "vocabulaire": vocabulaire}
++
++
++@pytest.fixture(scope="module")
++def coupe27(tmp_path_factory, vocabulaire):
++    """Étalonnage jouet coupé après 27 lots (la forme du run réel : honnêtes, régénérés, plantés complets, 3 lots de flagrants
++    sur 4), gardé intact : chaque essai en joue une copie."""
++    racine = tmp_path_factory.mktemp("coupe27")
++    config = _monde(racine)
++    _jouer_coupe(racine, config, 27, _modele(vocabulaire))
++    return {"racine": racine, "config": config}
++
++
++def _copie(source: Path, dest: Path) -> Path:
++    shutil.copytree(source, dest)
++    return dest
++
++
++# ---- essai central ----------------------------------------------------------------------------------------------------------
++@pytest.mark.parametrize("n", [27, 25])
++def test_essai_central_coupe_puis_reprise_egale_un_etalonnage_complet(complet, coupe27, tmp_path, n):
++    """Même jouet, mêmes graines : coupé après n lots puis repris, l'étalonnage rend à l'octet les mêmes 28 lots et le même
++    fichier des graines qu'un étalonnage complet, et les mêmes fichiers des oracles et des rapportés hors des seuls champs mesurés
++    au chronomètre (durées, chronomètre, dépense), qui diffèrent d'une course à l'autre, complète ou non ; la marque de reprise et
++    la déclaration des durées sont écrites."""
++    if n == 27:
++        racine = _copie(coupe27["racine"], tmp_path / "r")
++        config = coupe27["config"]
++    else:
++        racine = tmp_path / "r"
++        config = _monde(racine)
++        _jouer_coupe(racine, config, n, _modele(complet["vocabulaire"]))
++    assert len(list((racine / "diag" / RUN / "lots").glob("lot-*.json"))) == n
++    neuf = _modele(complet["vocabulaire"])                         # la machine neuve : un modèle neuf, qui n'a rien lu des lots versés
++    r = _reprendre(racine, config, modele=neuf)
++    assert len(neuf.fmt.tok) == len(complet["vocabulaire"]) + 1
++    a, b = complet["racine"], racine
++    noms = sorted(p.name for p in (a / "diag" / RUN / "lots").iterdir())
++    assert noms == sorted(p.name for p in (b / "diag" / RUN / "lots").iterdir()) and len(noms) == 56
++    for d in ("diag", "donnees"):
++        for p in sorted((a / d / RUN / "lots").iterdir()):
++            assert p.read_bytes() == (b / d / RUN / "lots" / p.name).read_bytes(), p.name     # lots et identifiants à l'octet
++    g = "graines-etalonnage-iib-v5.json"
++    assert (a / "diag" / RUN / g).read_bytes() == (b / "diag" / RUN / g).read_bytes()          # graines à l'octet (clés reconstruites)
++    ea, eb = _json(a / "diag" / RUN / la.NOMS["etalonnage"]), _json(b / "diag" / RUN / la.NOMS["etalonnage"])
++    assert set(ea) == set(eb) and {k: v for k, v in ea.items() if k not in TEMPS_ETALONNAGE} == {k: v for k, v in eb.items() if k not in TEMPS_ETALONNAGE}
++    ra, rb = _json(a / "diag" / RUN / la.NOMS["rapportes_etalonnage"]), _json(b / "diag" / RUN / la.NOMS["rapportes_etalonnage"])
++    assert set(rb) == set(ra) | {"reprise"}
++    assert {k: v for k, v in ra.items() if k not in TEMPS_RAPPORTES} == {k: v for k, v in rb.items() if k not in TEMPS_RAPPORTES}
++    assert set(ra["durees"]) == set(rb["durees"]) and set(ra["duree_d_une_action_d_oracle_par_oracle_h"]) == set(rb["duree_d_une_action_d_oracle_par_oracle_h"])
++    assert r["validite_du_controle_du_premier_cout"] == complet["r"]["validite_du_controle_du_premier_cout"] and r["lots"] == 28
++    assert {k: v for k, v in r["sorties"].items() if k.startswith("lots/")} == {k: v for k, v in complet["r"]["sorties"].items() if k.startswith("lots/")}
++    rep = rb["reprise"]
++    attendu = "reprise : lots 1–27 de la machine 61875617, lot 28 de la machine neuve 99" if n == 27 else \
++        "reprise : lots 1–25 de la machine 61875617, lots 26–28 de la machine neuve 99"
++    assert rep["marque"] == attendu and rep["lots_joues_par_la_reprise"] == list(range(n + 1, 29)) and rep["go_ecart"] == GO
++    assert rep["durees"].startswith("MÉLANGE DÉCLARÉ") and "deux machines" in rep["durees"] and rep["deltas_verifies"] > 0
++    assert eb["depense_etalonnage_usd"] == pytest.approx(rep["depense"]["total_usd"]) and rep["depense"]["anterieure_declaree_usd"] == 16.0
++    assert rep["cles_reconstruites_des_lots_verses"] > 0
++    t = _json(b / "diag" / RUN / rr.TEMOIN)
++    assert t["marque"] == attendu and t["lots_verses"] == n
++    verifier(b / "diag" / RUN / rr.TEMOIN)
++
++
++def test_deux_etalonnages_complets_ne_different_que_par_les_champs_mesures(complet, tmp_path):
++    """Témoin de l'essai central : deux étalonnages complets du même jouet diffèrent déjà sur les seuls champs mesurés au
++    chronomètre ; tout le reste est égal à l'octet. L'exclusion de ces champs n'est donc pas un repli propre à la reprise."""
++    config = _monde(tmp_path)
++    _jouer_complet(tmp_path, config, _modele(complet["vocabulaire"]))
++    a, b = complet["racine"] / "diag" / RUN, tmp_path / "diag" / RUN
++    ra, rb = _json(a / la.NOMS["rapportes_etalonnage"]), _json(b / la.NOMS["rapportes_etalonnage"])
++    assert {k: v for k, v in ra.items() if k not in TEMPS_RAPPORTES} == {k: v for k, v in rb.items() if k not in TEMPS_RAPPORTES}
++    assert ra["chrono"] != rb["chrono"]
++    assert (a / "graines-etalonnage-iib-v5.json").read_bytes() == (b / "graines-etalonnage-iib-v5.json").read_bytes()
++
++
++# ---- gardes (R5 : le cas sain est l'essai central) --------------------------------------------------------------------------
++def _reseller(chemin: Path, contenu) -> None:
++    for c in (chemin, Path(str(chemin) + ".sha256")):
++        if c.exists():
++            c.unlink()
++    chemin.write_text(json.dumps(contenu, indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    sceller(chemin)
++
++
++def _supprimer_lot(racine: Path, nom: str) -> None:
++    for d, n in (("diag", nom), ("donnees", f"ids-{nom}")):
++        for suffixe in ("", ".sha256"):
++            (racine / d / RUN / "lots" / (n + suffixe)).unlink()
++
++
++def test_garde_lot_manquant_au_milieu_et_lot_en_trop_et_fichier_inconnu(coupe27, tmp_path):
++    c = coupe27["config"]
++    r1 = _copie(coupe27["racine"], tmp_path / "manquant")
++    _supprimer_lot(r1, "lot-012-etalonnage-plante.json")
++    with pytest.raises(GardeArret, match="manquant"):
++        _reprendre(r1, c)
++    r2 = _copie(coupe27["racine"], tmp_path / "trop")
++    for d, n in (("diag", "lot-027-etalonnage-flagrant.json"), ("donnees", "ids-lot-027-etalonnage-flagrant.json")):
++        src = r2 / d / RUN / "lots" / n
++        dst = src.with_name(n.replace("027", "029"))
++        shutil.copy(src, dst)
++        sceller(dst)
++    with pytest.raises(GardeArret, match="lot en trop"):
++        _reprendre(r2, c)
++    r3 = _copie(coupe27["racine"], tmp_path / "inconnu")
++    (r3 / "diag" / RUN / "lots" / "notes.json").write_text("{}", encoding="utf-8")
++    with pytest.raises(GardeArret, match="fichier inconnu"):
++        rr.etat_partiel(c, r3 / "diag" / RUN, r3 / "donnees" / RUN, la.lots_prevus(c, la.MondeJouet().taches_reserve))
++    r4 = _copie(coupe27["racine"], tmp_path / "ids")                          # identifiants d'un lot absents
++    for s in ("", ".sha256"):
++        (r4 / "donnees" / RUN / "lots" / ("ids-lot-027-etalonnage-flagrant.json" + s)).unlink()
++    with pytest.raises(GardeArret, match="identifiants"):
++        _reprendre(r4, c)
++
++
++def test_garde_sceau_faux_et_fichier_change_apres_l_ordre(coupe27, tmp_path):
++    c = coupe27["config"]
++    r1 = _copie(coupe27["racine"], tmp_path / "sceau")
++    f = r1 / "diag" / RUN / "lots" / "lot-005-etalonnage-regenere.json"
++    f.write_text(f.read_text(encoding="utf-8").replace('"pas": 3', '"pas":3', 1), encoding="utf-8")      # sceau faux
++    with pytest.raises(GardeArret, match="sceau"):
++        rr.etat_partiel(c, r1 / "diag" / RUN, r1 / "donnees" / RUN, la.lots_prevus(c, la.MondeJouet().taches_reserve))
++    with pytest.raises(GardeArret):
++        _ordre(r1)                                                           # la session ne peut pas écrire d'ordre sur un sceau faux
++    r2 = _copie(coupe27["racine"], tmp_path / "apres")
++    ordre, sha = _ordre(r2)
++    g = r2 / "diag" / RUN / "lots" / "lot-026-etalonnage-flagrant.json"
++    contenu = _json(g)
++    contenu["lignes"][0]["cout_declare"] = 1.0
++    _reseller(g, contenu)                                                    # changé et rescellé après l'ordre
++    with pytest.raises(GardeArret, match="empreinte de l'ordre"):
++        rr.lire_ordre(r2, RUN, "jouet")
++
++
++def test_garde_plan_different_et_lot_non_conforme(coupe27, tmp_path):
++    c = coupe27["config"]
++
++    class MondeAutreOrdre(la.MondeJouet):
++        def __init__(self):
++            super().__init__()
++            self.taches_reserve = list(reversed(self.taches_reserve))
++    r1 = _copie(coupe27["racine"], tmp_path / "ordre")
++    with pytest.raises(GardeArret, match="plan scellé"):
++        _reprendre(r1, c, monde=MondeAutreOrdre())
++    import copy
++    autre = copy.deepcopy(c)
++    autre["generation"]["lot"] = 4                                           # autre taille de lot : autre plan
++    with pytest.raises(GardeArret):
++        rr.etat_partiel(autre, r1 / "diag" / RUN, r1 / "donnees" / RUN, la.lots_prevus(autre, la.MondeJouet().taches_reserve))
++    r2 = _copie(coupe27["racine"], tmp_path / "conforme")
++    g = r2 / "diag" / RUN / "lots" / "lot-002-etalonnage-regenere.json"
++    contenu = _json(g)
++    contenu["lignes"] = [l for l in contenu["lignes"] if not (l["oracle"] == "N" and l["pas"] == 4)][:]     # une sortie retirée
++    _reseller(g, contenu)
++    with pytest.raises(GardeArret, match="une par action"):
++        _reprendre(r2, c)
++
++
++def test_garde_phase_incomplete_autre_que_la_derniere(tmp_path):
++    config = _monde(tmp_path)
++    _jouer_coupe(tmp_path, config, 20)
++    with pytest.raises(GardeArret, match="autre que la dernière"):
++        _reprendre(tmp_path, config)
++
++
++def test_garde_graines_differentes(coupe27, tmp_path):
++    import copy
++
++    r = _copie(coupe27["racine"], tmp_path / "g")
++    for champ, valeur in (("entropie", coupe27["config"]["entropie"] + 1), ("prefixe_graines", "autre/")):
++        c = copy.deepcopy(coupe27["config"])
++        c[champ] = valeur
++        with pytest.raises(GardeArret, match="δ consigné"):
++            _reprendre(r, c)
++    assert not (r / "diag" / RUN / rr.TEMOIN).exists()                       # refus avant le témoin : rien n'est écrit
++
++
++def test_garde_second_passage_et_temoin_d_une_reprise_interrompue(coupe27, tmp_path):
++    c = coupe27["config"]
++    r1 = _copie(coupe27["racine"], tmp_path / "deux")
++    _reprendre(r1, c)
++    with pytest.raises(GardeArret, match="second passage|déjà versés"):
++        _reprendre(r1, c)
++    r2 = _copie(coupe27["racine"], tmp_path / "temoin")                    # une reprise interrompue après son témoin
++    (r2 / "diag" / RUN / rr.TEMOIN).write_text("{}", encoding="utf-8")
++    sceller(r2 / "diag" / RUN / rr.TEMOIN)
++    with pytest.raises(GardeArret, match="second passage"):
++        _reprendre(r2, c)
++
++
++def test_garde_machine_neuve_egale_a_l_ancienne_et_reconstruction_des_cles(coupe27, tmp_path, monkeypatch):
++    c = coupe27["config"]
++    r = _copie(coupe27["racine"], tmp_path / "m")
++    with pytest.raises(GardeArret, match="machine neuve est celle"):
++        _reprendre(r, c, machine_neuve=61875617)
++    vrai = rr.cles_d_un_lot
++    monkeypatch.setattr(rr, "cles_d_un_lot", lambda *a: set(sorted(vrai(*a))[1:]))       # artefact : une clé oubliée
++    with pytest.raises(GardeArret, match="clés de graines reconstruites"):
++        _reprendre(r, c)
++    assert (r / "diag" / RUN / "lots" / "lot-028-etalonnage-flagrant.json").is_file()     # le lot joué reste, scellé
++    assert not (r / "diag" / RUN / la.NOMS["etalonnage"]).exists()
++
++
++def test_garde_ordre_de_reprise(coupe27, tmp_path):
++    r = _copie(coupe27["racine"], tmp_path / "o")
++    with pytest.raises(GardeArret, match="ordre de reprise .* absent"):
++        rr.lire_ordre(r, RUN, "jouet")
++    for args, motif in (((61875617, -1.0, GO), "dépense antérieure"), ((61875617, 16.0, "GO-22"), "ligne de GO"), ((0, 16.0, GO), "machine"),
++                        ((True, 16.0, GO), "machine")):
++        with pytest.raises(GardeArret, match=motif):
++            rr.ecrire_ordre(r, RUN, "essai/iib-explo-v6", COMMIT, *args)
++    with pytest.raises(GardeArret, match="source"):
++        rr.ecrire_ordre(r, RUN, "main", COMMIT, 61875617, 16.0, GO)
++    rr.ecrire_ordre(r, RUN, "essai/iib-explo-v6", COMMIT, 61875617, 16.0, GO)
++    with pytest.raises(GardeArret, match="registres/go.md"):                  # mode réel : la ligne de l'écart doit être au registre
++        rr.lire_ordre(r, RUN, "reel")
++    (r / "registres").mkdir()
++    (r / "registres/go.md").write_text("| GO-2026-11-22-7 | autre |\n", encoding="utf-8")
++    with pytest.raises(GardeArret, match="registres/go.md"):
++        rr.lire_ordre(r, RUN, "reel")
++    (r / "registres/go.md").write_text(f"| {GO} | reprise acceptée |\n", encoding="utf-8")
++    assert rr.lire_ordre(r, RUN, "reel")[0]["go_ecart"] == GO                  # cas sain
++    with pytest.raises(GardeArret, match="existe déjà"):
++        rr.ecrire_ordre(r, RUN, "essai/iib-explo-v6", COMMIT, 61875617, 16.0, GO)
++
++
++def test_l_etalonnage_refuse_toujours_un_dossier_deja_joue(coupe27, tmp_path):
++    r = _copie(coupe27["racine"], tmp_path / "e")
++    with pytest.raises(GardeArret, match="phase reprise_etalonnage"):
++        la.phase_etalonnage(coupe27["config"], r, r / "diag" / RUN, ModeleJouetDeLangue(), la.MondeJouet(), donnees=r / "donnees" / RUN, carte=False)
++
++
++# ---- point d'entrée -----------------------------------------------------------------------------------------------------------
++def test_point_d_entree_reprise_puis_conditions_et_refus(tmp_path, tmp_path_factory):
++    """`--phase reprise_etalonnage --etalonnage-partiel <run>` par le point d'entrée, dans un dépôt jouet : un étalonnage coupé
++    par une garde à la tâche du lot 28 (arrêt écrit), versé et committé, ordre écrit ; la reprise rend 28 lots, le résumé du run
++    coupé (où la course compte les lots) et celui de la reprise, la marque au manifeste ; les conditions de départ se jouent
++    ensuite sur le run coupé. Artefacts : second passage, configuration différente de celle du manifeste scellé, phase mal
++    nommée."""
++    import os
++    import subprocess
++    import sys
++
++    from iib_v5_outils import environnement_sans_carte
++
++    config, chemin = _depot_jouet(tmp_path)
++
++    class MondeCoupe(la.MondeJouet):
++        def environnement(self, condition, tache):
++            if condition == "flagrant" and tache == "r24":                 # première tâche du lot 28
++                raise GardeArret("coupure simulée de l'essai")
++            return super().environnement(condition, tache)
++    run = "20991231-000200-iib-jouet"
++    with pytest.raises(GardeArret, match="coupure simulée"):
++        la.executer("etalonnage", config, tmp_path, run, ModeleJouetDeLangue(), MondeCoupe(), {}, carte=False)
++
++    def git(*a):
++        subprocess.run(["git", "-C", str(tmp_path), *a], check=True, capture_output=True)
++    git("add", "-A")
++    git("commit", "-q", "-m", "étalonnage coupé versé")
++    rr.ecrire_ordre(tmp_path, run, "essai/iib-explo-v6", COMMIT, 61875617, 16.0, GO)
++    git("add", "-A")
++    git("commit", "-q", "-m", "ordre de reprise")
++    env = environnement_sans_carte(tmp_path_factory.mktemp("poste-sans-carte-reprise"), os.environ)
++    env["PYTHONPATH"] = str(DEPOT / "src")
++    env.pop("CONTAINER_ID", None)
++    base = [sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-iib-v5-jouet.json"]
++    rep = "20991231-000201-iib-reprise-jouet"
++    r = subprocess.run(base + ["--run-id", rep, "--phase", "reprise_etalonnage", "--etalonnage-partiel", run], cwd=tmp_path, env=env,
++                       capture_output=True, text=True, timeout=300)
++    assert r.returncode == 0, r.stderr[-1500:]
++    assert json.loads(r.stdout) == {"run": rep, "phase": "reprise_etalonnage", "lots": 28}
++    marque = "reprise : lots 1–27 de la machine 61875617, lot 28 de la machine neuve (identifiant non fourni : essai)"
++    rc = _json(tmp_path / "diag" / run / "resume.json")
++    verifier(tmp_path / "diag" / run / "resume.json")
++    assert rc["resultat"]["lots"] == 28 and rc["resultat"]["reprise"]["marque"] == marque
++    assert rc["resultat"]["manifeste_de_la_reprise"]["chemin"] == f"runs/{rep}/manifeste.json"
++    m = _json(tmp_path / "runs" / rep / "manifeste.json")
++    assert marque in m["reserves"] and any(GO in x and "deux machines" in x for x in m["reserves"]) and "--phase reprise_etalonnage" in m["commande"]
++    assert _json(tmp_path / "diag" / rep / "resume.json")["resultat"]["reprise"]["marque"] == marque
++    for nom, sha in rc["resultat"]["empreintes"].items():
++        f = tmp_path / ("donnees" if nom.startswith("lots/ids-") else "diag") / run / nom
++        assert verifier(f) == sha, nom
++    assert la.exiger_identifiants_de_l_etalonnage(tmp_path, run, "reel")                 # la course compterait 28 lots
++    c = subprocess.run(base + ["--run-id", run, "--phase", "conditions"], cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
++    assert c.returncode == 0, c.stderr[-800:]
++    deux = subprocess.run(base + ["--run-id", "20991231-000202-iib-reprise-jouet", "--phase", "reprise_etalonnage", "--etalonnage-partiel", run],
++                          cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
++    assert deux.returncode == 1 and "second passage" in deux.stderr and not (tmp_path / "runs/20991231-000202-iib-reprise-jouet").exists()
++    autre = dict(config, entropie=config["entropie"] + 1)
++    (tmp_path / "entrees/config-autre.json").write_text(json.dumps(autre, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    sceller(tmp_path / "entrees/config-autre.json")
++    a = subprocess.run([sys.executable, "-m", "controle_ia.iib.lanceur_v5", "--config", "entrees/config-autre.json", "--run-id",
++                        "20991231-000203-iib-reprise-jouet", "--phase", "reprise_etalonnage", "--etalonnage-partiel", run],
++                       cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
++    assert a.returncode == 1 and "reprise : la configuration passée" in a.stderr
++    mal = subprocess.run(base + ["--run-id", "20991231-000204-iib-jouet", "--phase", "etalonnage", "--etalonnage-partiel", run],
++                         cwd=tmp_path, env=env, capture_output=True, text=True, timeout=120)
++    assert mal.returncode == 1 and "--etalonnage-partiel n'a de sens" in mal.stderr
++
++
++# ---- surveillance, amorce, liste figée ----------------------------------------------------------------------------------------
++def test_coupure_de_la_surveillance_joue_pendant_la_reprise():
++    from controle_ia.iib import session_v5 as se
++
++    cree = 1_795_000_000
++    amorce = "AMORCE IIB v1 DEMARRAGE 1 : " + __import__("datetime").datetime.fromtimestamp(cree, __import__("datetime").timezone.utc).strftime(
++        "%Y-%m-%dT%H:%M:%SZ") + ", machine m\n"
++    sain = se.coupure_etalonnage("reprise_etalonnage", amorce, cree + 3600, 1.30, 0.08, cree)
++    assert sain["joue"] and not sain["arret"]
++    art = se.coupure_etalonnage("reprise_etalonnage", amorce, cree + 16 / 1.38 * 3600 + 1, 1.30, 0.08, cree)
++    assert art["arret"] and art["seuil_usd"] == 16.0
++    with pytest.raises(GardeArret, match="illisible"):
++        se.coupure_etalonnage("reprise-etalonnage", amorce, cree + 1, 1.30, 0.08, cree)      # l'orthographe à trait d'union n'est pas lue
++
++
++def test_amorce_de_la_reprise_differences_bornees_a_celle_de_la_course_et_choix_par_le_lanceur_de_session(tmp_path):
++    import difflib
++    import hashlib
++    import os
++    import subprocess
++
++    s = DEPOT / "scripts"
++    c, p = (s / "amorce_instance_iib_course_v5.sh").read_text(encoding="utf-8"), (s / "amorce_instance_iib_reprise_v5.sh").read_text(encoding="utf-8")
++    for f in ("amorce_instance_iib_reprise_v5.sh", "preparer_reprise_iib_v5.sh", "lancer_iib_v3.sh"):
++        assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
++    d = [l for l in difflib.unified_diff(c.splitlines(), p.splitlines(), n=0, lineterm="") if l[:1] in "+-" and not l.startswith(("+++", "---"))]
++    code = [l for l in d if not l[1:].lstrip().startswith("#")]
++    moins, plus = [l[1:] for l in code if l[0] == "-"], [l[1:] for l in code if l[0] == "+"]
++    assert len(moins) == len(plus) == 13, (moins, plus)                       # p1 à p6 : lignes remplacées une pour une, aucune ajoutée
++    vivantes = [l for l in p.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
++    assert len(vivantes) == 1 and '--phase reprise_etalonnage --config "$CONFIG" --run-id "$RUN" --etalonnage-partiel "$RUN_ETAL"' in vivantes[0]
++    assert 'ENGAGEE="refs/heads/essai/iib-reprise-engagee-$RUN_ETAL"' in p and 'engager_reprise "$ENGAGEE"' in p and "engager_course" not in p
++    assert "diag/*-iib-*/ordre-reprise-iib-v5.json" in p and 'ajouter "runs/$RUN" "diag/$RUN" "diag/$RUN_ETAL"' in p
++    liste = s / "tests-cibles-iib-reprise-v5-v1.txt"
++    assert liste.read_text(encoding="utf-8").split() == sorted((s / "tests-cibles-iib-v5-v6.txt").read_text(encoding="utf-8").split()
++                                                              + ["tests/test_iib_reprise_v5_r001.py"])
++    assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in p
++    lue = subprocess.run(["bash", "-c", "grep -v '^[[:space:]]*#' \"$1\" | sed -n 's/.*controle_ia\\.iib\\.lanceur_v5 --phase \\([a-z_]*\\) .*/\\1/p' | sort -u",
++                          "_", str(s / "amorce_instance_iib_reprise_v5.sh")], capture_output=True, text=True).stdout.split()
++    assert lue == ["reprise_etalonnage"]                                      # la phase que la surveillance lit, et que session_v5 connaît
++    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
++    r = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_AMORCE": "scripts/amorce_instance_iib_v1.sh"},
++                       capture_output=True, text=True, timeout=60)
++    assert r.returncode == 2 and "ni celle de la reprise" in r.stdout + r.stderr
++    assert "scripts/amorce_instance_iib_reprise_v5.sh) A=\"$IIB_AMORCE\"" in (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
++
++
++def test_amorce_de_la_reprise_engagement_unique(tmp_path):
++    import re
++    import subprocess
++
++    texte = (DEPOT / "scripts" / "amorce_instance_iib_reprise_v5.sh").read_text(encoding="utf-8")
++    bloc = re.search(r"# --- \(p3\) engagement de la reprise\n(.*?)# --- fin \(p3\)\n", texte, re.S).group(1)
++    origine, d = tmp_path / "o.git", tmp_path / "d"
++    subprocess.run(["git", "init", "-q", "--bare", str(origine)], check=True)
++    subprocess.run(["git", "init", "-q", str(d)], check=True)
++    for a in (("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"), ("commit", "-q", "--allow-empty", "-m", "c"),
++              ("remote", "add", "origin", str(origine))):
++        subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
++    script = tmp_path / "e.sh"
++    script.write_text("T=$1; cd $2\nrefus() { echo \"REFUS : $1\"; exit 2; }\njournal() { echo \"$*\"; }\n" + bloc +
++                      f'engager_reprise "refs/heads/essai/iib-reprise-engagee-{RUN}"\necho FIN\n', encoding="utf-8")
++    sain = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
++    assert sain.returncode == 0 and "reprise engagée" in sain.stdout and "FIN" in sain.stdout, sain.stdout + sain.stderr
++    deux = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
++    assert deux.returncode == 2 and "reprise déjà engagée" in deux.stdout and "FIN" not in deux.stdout
++
++
++def test_preparation_de_la_reprise_recupere_les_lots_du_commit_source_et_ecrit_l_ordre(coupe27, tmp_path):
++    """`scripts/preparer_reprise_iib_v5.sh` contre une origine nue locale : une branche d'essai porte l'étalonnage coupé ; le
++    clone de code (sans le run) récupère manifeste, lots et identifiants à l'octet, puis écrit l'ordre ; rien n'est committé ni
++    poussé. Artefacts : commit source qui n'est pas la tête de la branche ; fichier inattendu du run dans le commit source."""
++    import os
++    import subprocess
++
++    def git(rep, *a, ok=True):
++        return subprocess.run(["git", "-C", str(rep), *a], check=ok, capture_output=True, text=True)
++    origine, essai, code = tmp_path / "o.git", tmp_path / "essai", tmp_path / "code"
++    subprocess.run(["git", "init", "-q", "--bare", str(origine)], check=True)
++    shutil.copytree(coupe27["racine"], essai)
++    (essai / "runs" / RUN).mkdir(parents=True)
++    (essai / "runs" / RUN / "manifeste.json").write_text('{"jouet": 1}\n', encoding="utf-8")
++    sceller(essai / "runs" / RUN / "manifeste.json")
++    for a in (("init", "-q", "-b", "essai/iib-explo-v6"), ("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"),
++              ("add", "-A"), ("commit", "-q", "-m", "essai"), ("remote", "add", "origin", str(origine)), ("push", "-q", "origin", "essai/iib-explo-v6")):
++        git(essai, *a)
++    tete = git(essai, "rev-parse", "HEAD").stdout.strip()
++    shutil.copytree(coupe27["racine"], code, ignore=shutil.ignore_patterns("diag", "donnees"))
++    for a in (("init", "-q", "-b", "prep/reprise"), ("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"),
++              ("add", "-A"), ("commit", "-q", "-m", "code"), ("remote", "add", "origin", str(origine))):
++        git(code, *a)
++    import sys
++    env = {**os.environ, "PYTHONPATH": str(DEPOT / "src"), "PYTHON": sys.executable}
++    script = str(DEPOT / "scripts" / "preparer_reprise_iib_v5.sh")
++    faux = subprocess.run(["bash", script, RUN, "essai/iib-explo-v6", "0" * 40, "61875617", "16.0", GO], cwd=code, env=env, capture_output=True, text=True)
++    assert faux.returncode == 2 and "≠ commit nommé" in faux.stderr and not (code / "diag").exists()
++    r = subprocess.run(["bash", script, RUN, "essai/iib-explo-v6", tete, "61875617", "16.0", GO], cwd=code, env=env, capture_output=True, text=True)
++    assert r.returncode == 0, r.stdout + r.stderr
++    assert "27 lots" in r.stdout and (code / "diag" / RUN / rr.ORDRE).is_file()
++    ordre, _ = rr.lire_ordre(code, RUN, "jouet")
++    assert ordre["source"] == {"branche": "essai/iib-explo-v6", "commit": tete} and len(ordre["fichiers"]) == 1 + 27 * 2
++    assert git(code, "log", "--oneline").stdout.count("\n") == 1                 # rien n'est committé
++    (essai / "diag" / RUN / "arret.json").write_text("{}", encoding="utf-8")       # fichier inattendu du run dans le commit source
++    git(essai, "add", "-A")
++    git(essai, "commit", "-q", "-m", "arret")
++    git(essai, "push", "-q", "origin", "essai/iib-explo-v6")
++    code2 = tmp_path / "code2"
++    shutil.copytree(coupe27["racine"], code2, ignore=shutil.ignore_patterns("diag", "donnees"))
++    for a in (("init", "-q", "-b", "prep/reprise"), ("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"),
++              ("add", "-A"), ("commit", "-q", "-m", "code"), ("remote", "add", "origin", str(origine))):
++        git(code2, *a)
++    t2 = git(essai, "rev-parse", "HEAD").stdout.strip()
++    r2 = subprocess.run(["bash", script, RUN, "essai/iib-explo-v6", t2, "61875617", "16.0", GO], cwd=code2, env=env, capture_output=True, text=True)
++    assert r2.returncode == 2 and "autres fichiers du run" in r2.stderr
+-- 
+2.43.0
+

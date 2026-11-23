@@ -1,0 +1,7 @@
+# Erratum 2 au mandat du brouillon 4 de la voie (A) (c5c2d5de…) — prime sur lui et sur l'erratum 1 pour ce qu'il nomme
+
+Contre-lecture du correctif 0022 rendue (`p1-code-course-v1/contre-lecture-0022-cl1.md`, « autorisable après corrections ») ; corrections portées par le **correctif 0025** (Opus, vérification par le même contre-lecteur en cours) :
+1. **Code de la voie** : commit `f7a5123e0fe8e55cfecbb0ac16b17eff50b0d4e1`, arbre `717f0b203a78256f44a822dd3891ba31c88c22d8` (0022, 0023, 0024, 0025) ; rejoue la vérification des gardes v4 à ce commit (au lieu de `9780b7e3`). `<<COMMIT_CODE_REVU_VOIE_A>>` et `<<ARBRE_CODE_VOIE_A>>` restent des champs jusqu'à la vérification du 0025.
+2. **Vitesse du premier lot** : c'est un diagnostic, **jamais un arrêt**. Une durée non mesurée est écrite `null` et nommée dans `non_mesurees`, et la marque de progrès porte « non_mesuree » (jamais zéro). La règle d'arrêt de A4 reste celle des instants des marques des lots (`phase=debut`, `lot=2`). Le fichier de vitesse n'entre dans aucune règle.
+3. **Empreintes** : l'amorce de l'étalonnage passe à `4140d3b3cadd6dae3a39845ce841a9491d4f7e86586d89af4e8fc549a0083717` (en-tête corrigé : il cite la liste v7). L'amorce de la course est inchangée (`03962c29…`). Les listes figées sont inchangées : 311 et 313 essais collectés.
+4. **Répétition locale** : `ATTENDUS = 311`. `--liste-figee` ne passe que sur une machine à carte, et la suite courte passe.

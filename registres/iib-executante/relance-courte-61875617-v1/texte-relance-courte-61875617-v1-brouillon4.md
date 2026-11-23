@@ -1,0 +1,45 @@
+# Relance courte de la machine 61875617 : pousser tout ce que le disque porte de l'étalonnage — brouillon 4
+
+> **Statut** : brouillon 4, à vérifier par le contre-lecteur 1 (classe B). **Ne remplace pas** le brouillon 3 (`f106f712206c18191bbdffa62cb468d733ff715161e968d5350068d81f995132`, intact, R12) : il le complète ; tout ce que le brouillon 3 dit (préalables P1 à P10, règles d'arrêt, vérification fichier par fichier, liste d'arrêt) reste en vigueur, avec le script v3 à la place du v2.
+> **Auteur** : rédacteur, Claude Opus 5.5. **Heure** : 2026-11-22T12:44:34Z (`date -u`). Aucun appel au vrai loueur (`--help` seul, versions 1.8.3 et 1.11.2 ; lecture du code de l'outil 1.8.3).
+> **Script** : `relance-courte-61875617-v3.sh`, sha256 `9911cdaad346df7d2a0c7961aa02fb67389f7eb816b3c4556cd21a6836975800` ; **essais à blanc** : `essais-blanc-relance-courte-v3.txt`, sha256 `e827e7ce409612072970ed6b172a44e66dce0e5e85d63e209224766be1e4576c`.
+> Décisions inscrites : GO-2026-11-22-44 ; risque de destruction par la minuterie accepté par la mère ; demande de la mère du 22/11 vers 12:40Z (« pousser tout »).
+
+## 1. Ce qui est sûr, ce qui ne l'est pas (franchement)
+
+| moyen | verdict | pourquoi (code et aide) |
+|---|---|---|
+| **`rm` d'un fichier qui désarme la minuterie** | **impossible** | La minuterie lit l'identifiant et la clé du loueur dans **l'environnement** posé par le loueur (`CONTAINER_ID`, `CONTAINER_API_KEY`, amorce l. 55, 62, 67), jamais dans un fichier. Les fichiers lus du disque (`iib-echeance.txt`, `iib-depense-epuisee-utc.txt`) seraient relus de l'environnement à la même valeur (l. 162-173) ; `iib-minuterie.sh` est réécrit à chaque démarrage (l. 107). Le seul `rm` qui empêche la destruction serait celui de `curl` **et** de `python3` (l. 99) : l'amorce les réinstalle par `apt-get` (l. 147-159) ou part en `refus_precoce` ; c'est un `rm` de binaires du système, sans garantie : **rejeté**. Le seul chemin sans destruction (sommeil, l. 186-193) exige le marqueur `iib-fin-normale`, qu'un `rm` ne peut pas créer. |
+| **`vastai update instance --args/--onstart`** (changer le point d'entrée) | **non sûr, rejeté** | Le code de l'outil 1.8.3 envoie `PUT /instances/update_template/{id}/` ; sa documentation dit « *Update/recreate an instance from a new or updated template* ». Un conteneur recréé perd sa couche d'écriture, où vit `/root` (aucun volume monté). Rien dans l'aide ne garantit que le disque survit. Le tenter sur ce disque, c'est risquer toute la donnée. Il ne pourrait être essayé que sur une machine jouet, créée à part (dépense, nœud). |
+| **`vastai copy C.61875617:/root/… local:…`** | **non utilisable** | L'outil passe par `/commands/rsync/` avec une authentification ssh vers le conteneur ; l'image `python:3.11-bookworm` lancée par `bash` ne lance aucun démon ssh, et la copie locale exige la machine en marche (donc l'amorce). |
+| **`vastai copy` d'instance à instance, `cloud copy` vers un stockage tiers** | **possible mais non vérifié, nœud** | Ne démarre pas l'amorce si le loueur copie depuis une machine arrêtée (non dit par l'aide). Exige une seconde machine (dépense) ou une connexion de stockage tiers (compte, et cloisonnement : les données du saboteur chez un tiers). Non retenu dans ce texte ; à trancher par Lazar si la poussée par l'amorce échoue. |
+| **`vastai execute` sur la machine arrêtée** (`ls`, `du`) | **sûr pour lister** | Fait vérifié par la mère à 12:41Z (« only avail on stopped instances »). Sous-commande `lister` du script : trois commandes fixes, refus si la machine n'est pas arrêtée ; jamais `rm`. |
+| **Pousser par l'amorce** (`iib-consigner.sh`, chemin « run interrompu ») | **sûr pour ce qu'elle prend ; destruction ensuite, sauf arrêt dans la fenêtre** | Méthode du brouillon 3, inchangée. |
+
+## 2. Ce que l'amorce pousse, et ce qu'elle ne pousse pas
+
+- **Les transcriptions des épisodes partent avec les lots, dans le même commit et la même poussée.** Le lanceur n'écrit aucun texte d'épisode sur le disque : les transcriptions sont les **identifiants des actions en jetons**, `donnees/<run>/lots/ids-lot-NNN-*.json` (`lanceur_v5.py` l. 259), ajoutées de force par `ajouter_legeres` (amorce l. 277-279), dans le commit « résultats et données légères » avec `diag/<run>/lots/` et `runs/<run>/` (l. 306-308), poussé en une fois (l. 312). « Transcriptions avant les lots » est donc tenu sans changement : elles ne peuvent pas partir après. Aucun autre fichier n'est écrit par le lanceur (`_ecrire` et `ecrire_resultat` seuls).
+- **Journaux** : la consignation de redémarrage pousse `traces/iib-consignation-*/` : les **400 dernières lignes** du journal de l'instance et les 200 dernières de la minuterie (l. 295-303).
+- **Ne partent pas par ce chemin** (restent sur le disque, puis perdus si la minuterie détruit) : `/root/iib/journal.txt` complet, `run.err`, `run.json`, `tests.txt`, `tests.err`, `nvidia-smi.txt`, `pip-freeze.txt`, `progres-retenues.txt` (seule la fonction `traces`, jouée en fin de run ou sur un arrêt consigné, les prend : l. 351-354), `/root/iib-minuterie.log` entier, le cache du modèle. **Aucun moyen sûr ne les rapporte** (§ 1). Ce sont des journaux de diagnostic, aucune sortie de mesure.
+
+## 3. Méthode v3, dans l'ordre
+
+1. **Après l'arrêt de 12:54Z, machine arrêtée** : la mère joue `ID=61875617 D2="$D2" VAST="$VAST" LOC="$LOC" bash relance-courte-61875617-v3.sh lister` (`execute` de `ls -l -R` sur `diag`, `runs`, `donnees` et `traces` du dépôt extrait, de `ls -l -a /root /root/iib`, de `du -k -d 2 /root`) et rend au rédacteur les noms et les tailles. Sortie masquée dans `$D2/liste-disque-{1,2,3}.txt`. Elle sert de **liste de référence** : chaque fichier de `diag/<run>`, `runs/<run>` et `donnees/<run>` qu'elle cite doit se retrouver sur la branche (§ 7 du brouillon 3), au nombre près.
+2. **Préalables P1 à P10 du brouillon 3**, plus : P11, la liste du disque est rendue et ne montre sous `donnees/<run>/` et `diag/<run>/` que des chemins que `iib-consigner.sh` prend (`lots/`, manifeste, résumé ou arrêt) ; un autre fichier de mesure non pris par l'amorce est un nœud avant le start.
+3. **Relance** : `jouer` du script v3 (identique au v2 pour la relance : un seul start, arrêt aussitôt décidé sur la ligne de poussée, avant toute lecture d'état ; illisibles comptés une fois la machine en marche). L'amorce pousse sur `essai/iib-explo-v6` seule (sa branche est fixée à la création, l. 207, 348).
+4. **Vérification fichier par fichier** (§ 7 du brouillon 3), et comparaison à la liste du disque.
+5. **Branche cloisonnée en plus**, faite par la session, sans rien ouvrir : depuis le clone vérifié, `TAILLE_MORCEAU=95000000 bash relance-courte-61875617-v3.sh archiver "$W/archive-disque" diag/<run> runs/<run> donnees/<run> traces/iib-consignation-*` → morceaux `archive.tar.part-NNN` de 95 000 000 octets au plus, `morceaux.sha256`, `archive-entiere.sha256`, réassemblage vérifié, liste des noms et tailles (`tar -tv`). Chaque fichier reçoit son compagnon `.sha256` (`scellement sceller`), la garde des secrets passe à 0, puis la mère pousse sur une branche orpheline neuve, nom proposé **`donnees/iib-v5-etalonnage-disque-61875617-v1`** (à confirmer). Elle porte ce qui a été poussé par l'amorce, sous forme d'archive scellée. Elle ne porte rien de plus que `essai/iib-explo-v6` : les journaux complets ne sont pas accessibles (§ 2).
+
+## 4. Essais à blanc joués (faux outil, dossier `scratchpad/essais-relance-courte-v3/`)
+
+Tri du journal (9 cas) ; `jouer` : A (poussée faite : 1 start, 1 stop, l'appel avant l'arrêt est `logs`), second `jouer` (refus, aucun appel), B (tentative 1 refusée puis poussée), C (quatre illisibles, trois comptés, arrêt), F (poussée impossible, deux arrêts, non confirmé, code 1), j2, j3, j4, j5, j8, E ; `lister` : machine arrêtée → trois `execute` ; machine en marche → refus, aucun `execute` ; `archiver` (morceaux de 1 000 octets) : 11 morceaux, réassemblage conforme, second `archiver` dans le même dossier refusé (R12) ; garde des secrets 0 et 1. Aucun `destroy`, aucun `rm` dans aucun essai. Non éprouvés : le vrai outil, ses latences et la forme réelle de la sortie d'`execute`.
+
+## 5. Heure au plus tôt
+
+Le start peut partir **au plus tôt vers 13:10Z le 22/11** : après l'arrêt confirmé de 12:54Z, la latence d'arrêt relevée (P10, au-delà de 90 s : mot de Lazar), la liste du disque rendue (P11), et la vérification courte de ce brouillon par le contre-lecteur. Au plus tard : 2026-11-23T19:40:00Z.
+
+## 6. Nœuds
+
+- N8 : nom de la branche cloisonnée (`donnees/iib-v5-etalonnage-disque-61875617-v1` proposé).
+- N9 : journaux complets et autres fichiers non pris par l'amorce : perdus si la minuterie détruit. Les rapporter demanderait `update instance` (risque de perte totale du disque) ou une copie d'instance à instance, ou `cloud copy` (non vérifiés, dépense ou compte). Recommandation : les laisser ; confiance moyenne.
+- N10 : si la poussée par l'amorce échoue (« poussée impossible »), machine arrêtée par la veille : seule la copie d'instance à instance ou `cloud copy` resterait, à trancher par Lazar.

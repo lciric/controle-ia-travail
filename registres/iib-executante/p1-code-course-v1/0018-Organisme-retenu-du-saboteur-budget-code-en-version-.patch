@@ -1,0 +1,155 @@
+From 2d0d3fa509b9df3f6927e4fdd64e46d0b4425be3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 12:14:03 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200018,=20grai?=
+ =?UTF-8?q?nes=20de=20la=20course=20sous=20un=20pr=C3=A9fixe=20propre=20(t?=
+ =?UTF-8?q?exte=20scell=C3=A9,=20section=2014,=20suivi=20=C3=A0=20la=20let?=
+ =?UTF-8?q?tre=20;=20R9)=20:=20la=20configuration=20de=20course=20porte=20?=
+ =?UTF-8?q?le=20pr=C3=A9fixe=20de=20l'=C3=A9talonnage=20suivi=20de=20?=
+ =?UTF-8?q?=C2=AB=20course/=20=C2=BB,=20m=C3=AAme=20entropie=20;=20tours,?=
+ =?UTF-8?q?=20t=C3=A9moins,=20=C3=A9valuation,=20manifeste=20de=20la=20cou?=
+ =?UTF-8?q?rse=20et=20distillateur=20tirent=20sous=20lui=20;=20le=20lanceu?=
+ =?UTF-8?q?r=20refuse=20une=20course=20dont=20le=20pr=C3=A9fixe=20n'est=20?=
+ =?UTF-8?q?pas=20celui-l=C3=A0=20;=20essais=20:=20cl=C3=A9s=20disjointes?=
+ =?UTF-8?q?=20de=20celles=20de=20l'=C3=A9talonnage=20(cas=20sain),=20pr?=
+ =?UTF-8?q?=C3=A9fixe=20vide=20et=20course=20qui=20reprend=20le=20pr=C3=A9?=
+ =?UTF-8?q?fixe=20de=20l'=C3=A9talonnage=20(artefacts)=20;=20290=20essais?=
+ =?UTF-8?q?=20attendus?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/repetition_locale_iib_v5.py           |  2 +-
+ src/controle_ia/iib/designation_v5.py         | 17 +++++++-
+ src/controle_ia/iib/lanceur_v5.py             |  4 +-
+ .../test_iib_distillation_bout_en_bout_v5.py  | 42 +++++++++++++++++++
+ 4 files changed, 62 insertions(+), 3 deletions(-)
+
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index 7a8357cd1..537a23288 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 288        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5
++ATTENDUS = 290        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe de la course (0018) 2
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+diff --git a/src/controle_ia/iib/designation_v5.py b/src/controle_ia/iib/designation_v5.py
+index b4d22573c..22459d92b 100644
+--- a/src/controle_ia/iib/designation_v5.py
++++ b/src/controle_ia/iib/designation_v5.py
+@@ -94,9 +94,23 @@ def ecrire(resultat: dict, chemin) -> str:
+     return sceller(chemin)
+ 
+ 
++PREFIXE_DE_LA_COURSE = "course/"     # correctif 0018 : texte scellé, section 14 (« la course dérive ses clés de la même entropie
++                                     # sous un préfixe propre ») ; R9
++
++
++def prefixe_de_la_course(config_etalonnage: dict) -> str:
++    """Préfixe propre de la course : celui de l'étalonnage suivi de `course/` ; jamais égal à celui de l'étalonnage."""
++    p = str(config_etalonnage["prefixe_graines"]) + PREFIXE_DE_LA_COURSE
++    if p == config_etalonnage["prefixe_graines"] or not PREFIXE_DE_LA_COURSE:
++        raise GardeArret("préfixe des graines de la course égal à celui de l'étalonnage : la section 14 exige un préfixe propre (refus)")
++    return p
++
++
+ def configuration_de_course(config_etalonnage: dict, racine, chemin_designation: str) -> dict:
+     """Configuration de la course : celle de l'étalonnage, où `oracle_de_la_regle` porte l'issue et l'empreinte du résultat scellé
+-    de la désignation. Refus si l'issue n'est ni N ni P (la course ne part pas), ou si la configuration en porte déjà un."""
++    de la désignation, et où `prefixe_graines` est le préfixe propre de la course (`prefixe_de_la_course`, section 14 : même
++    entropie, clés sous un préfixe propre ; correctif 0018). Refus si l'issue n'est ni N ni P (la course ne part pas), ou si la
++    configuration porte déjà un oracle de la règle."""
+     if config_etalonnage["oracle_de_la_regle"] != {"valeur": None, "designation": None}:
+         raise GardeArret("configuration de course : la configuration porte déjà un oracle de la règle (refus)")
+     chemin = Path(racine) / chemin_designation
+@@ -106,5 +120,6 @@ def configuration_de_course(config_etalonnage: dict, racine, chemin_designation:
+         raise GardeArret(f"pas de course sans résultat de désignation scellé « part » (issue lue : {r.get('issue')!r})")
+     c = copy.deepcopy(config_etalonnage)
+     c["oracle_de_la_regle"] = {"valeur": r["issue"], "designation": {"chemin": str(chemin_designation), "sha256": sha}}
++    c["prefixe_graines"] = prefixe_de_la_course(config_etalonnage)
+     cf.exiger_oracle_de_la_regle(c, racine)
+     return c
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index c3dce6835..6d35f7c9b 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -423,6 +423,8 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
+         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+     course = dg.configuration_de_course(config, racine, str(chemin_d))            # refuse toute issue autre que N ou P
+     oracle = cf.exiger_config_v5(course, racine, pour_lancer=True)["oracle_de_la_regle"]
++    if course["prefixe_graines"] != dg.prefixe_de_la_course(config):         # correctif 0018 : section 14, préfixe propre de la course
++        raise GardeArret("course : préfixe des graines différent du préfixe propre de la course (section 14) : refus")
+     if distillateur is not None:
+         cd.section_de(course, pour_lancer=True)                # section de la distillation exigée avant le premier tour du maître
+     autre = "P" if oracle == "N" else "N"
+@@ -729,7 +731,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+     exiger_course_non_jouee(racine / dossier)
+     versement = vs.Versement(racine, environnement, config["mode"], progres)
+-    chemin_m, _ = creer_manifeste(racine, run_id, config, [config["prefixe_graines"] + "iib/v5/manifeste-course"], entropie=int(config["entropie"]),
++    chemin_m, _ = creer_manifeste(racine, run_id, config, [dg.prefixe_de_la_course(config) + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+     etat, debut = {"etape": "chargement"}, time.perf_counter()
+     try:
+diff --git a/tests/test_iib_distillation_bout_en_bout_v5.py b/tests/test_iib_distillation_bout_en_bout_v5.py
+index 806d1de5b..df2ca90d9 100644
+--- a/tests/test_iib_distillation_bout_en_bout_v5.py
++++ b/tests/test_iib_distillation_bout_en_bout_v5.py
+@@ -272,3 +272,45 @@ def test_phase_course_en_mode_reel_refuse_sans_distillateur_ou_sans_poussee(tmp_
+     for dist, vers in ((None, object()), (object(), None), (None, None)):
+         with pytest.raises(GardeArret, match="sans poussée par tour ou sans distillateur"):
+             la.phase_course(config, tmp_path, "course", None, None, dist, {}, carte=False, versement=vers)
++
++
++def test_graines_de_la_course_sous_un_prefixe_propre(course):
++    """Correctif 0018 (texte scellé, section 14 ; R9) : même entropie, clés de la course sous un préfixe propre, disjointes de
++    celles de l'étalonnage ; le distillateur tire sous le même préfixe que les tours."""
++    from controle_ia.iib import designation_v5 as dg
++
++    d, config = course["racine"] / "course", course["config"]
++    p = config["prefixe_graines"] + dg.PREFIXE_DE_LA_COURSE
++    m = json.loads((d / "manifeste-course-iib-v5.json").read_text(encoding="utf-8"))
++    e = json.loads((d / "graines-etalonnage-iib-v5.json").read_text(encoding="utf-8"))
++    assert m["prefixe_graines"] == p != e["prefixe"] and m["entropie"] == e["entropie"]
++    assert m["graines"] and all(k.startswith(p) for k in m["graines"]) and not set(m["graines"]) & set(e["graines"])
++    assert any(k.startswith(p + "iib/maitre/") for k in m["graines"]) and any(k.startswith(p + "iib/temoin/") for k in m["graines"])
++    s = json.loads((d / "distillation-iib-v5.json").read_text(encoding="utf-8"))
++    assert s["prefixe_graines"] == p and all(k.startswith(p) for k in s["graines"])
++    assert m["config"]["prefixe_graines"] == p and config["prefixe_graines"] == "essai/"      # la configuration de l'étalonnage, intacte
++
++
++def test_prefixe_de_la_course_artefacts(course, monkeypatch):
++    from controle_ia.iib import designation_v5 as dg
++
++    assert dg.prefixe_de_la_course({"prefixe_graines": ""}) == "course/"                # cas sain : la configuration réelle porte ""
++    monkeypatch.setattr(dg, "PREFIXE_DE_LA_COURSE", "")
++    with pytest.raises(GardeArret, match="préfixe propre"):
++        dg.prefixe_de_la_course({"prefixe_graines": "essai/"})
++    monkeypatch.undo()
++    if course["conditions"]["issue"] not in ("N", "P"):
++        pytest.skip("la course jouet n'est pas partie")
++    vraie = dg.configuration_de_course
++
++    def sans_prefixe_propre(c, racine, chemin):                                         # artefact : la course reprend le préfixe de l'étalonnage
++        r = vraie(c, racine, chemin)
++        r["prefixe_graines"] = c["prefixe_graines"]
++        return r
++    monkeypatch.setattr(dg, "configuration_de_course", sans_prefixe_propre)
++    racine = course["avant"]
++    modele = ModeleJouetEleve()
++    d = _distillateur(racine, modele)
++    with pytest.raises(GardeArret, match="préfixe propre de la course"):
++        la.phase_course(course["config"], racine, "course", d.modele, course["monde"], d, carte=False)
++    assert not (racine / "course" / "tours").exists()
+-- 
+2.43.0
+

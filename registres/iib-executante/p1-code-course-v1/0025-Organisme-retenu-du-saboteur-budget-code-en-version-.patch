@@ -1,0 +1,198 @@
+From f7a5123e0fe8e55cfecbb0ac16b17eff50b0d4e1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 17:14:32 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200025,=20corr?=
+ =?UTF-8?q?ections=20de=20la=20contre-lecture=20du=20correctif=200022?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Majeur : la vitesse du premier lot est un diagnostic, jamais un arrêt ; une durée non mesurée est
+écrite null et nommée (non_mesurees), la marque dit « non_mesuree » ; essai d'intégration de
+l'artefact (oracle N non mesuré au lot 1 : l'étalonnage va à sa fin), hors des listes figées.
+Mineurs : aucun arrondi qui écrirait zéro, numérateur absent sans KeyError ; tirage passé par
+l'appelant (sinon « non lu », jamais deviné) ; ATTENDUS = 311 dans la répétition locale ;
+en-tête (b) de l'amorce de l'étalonnage cite la liste v7. Comptes collectés inchangés (311, 313).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_013QMaym1QE4UyYr1H8KU8Rf
+---
+ scripts/amorce_instance_iib_v5.sh   |  2 +-
+ scripts/repetition_locale_iib_v5.py |  2 +-
+ src/controle_ia/iib/lanceur_v5.py   | 51 ++++++++++++++++++++---------
+ tests/test_iib_lanceur_v5.py        | 13 ++++++--
+ tests/test_iib_vitesse_0025.py      | 27 +++++++++++++++
+ 5 files changed, 75 insertions(+), 20 deletions(-)
+ create mode 100644 tests/test_iib_vitesse_0025.py
+
+diff --git a/scripts/amorce_instance_iib_v5.sh b/scripts/amorce_instance_iib_v5.sh
+index 3f7dd1bc3..8bf9e1348 100644
+--- a/scripts/amorce_instance_iib_v5.sh
++++ b/scripts/amorce_instance_iib_v5.sh
+@@ -3,7 +3,7 @@
+ # `scripts/amorce_instance_iib_v1.sh` (nom neuf, R12 ; la v1 reste telle quelle). Changements, et eux seuls :
+ #  (a) le run est joué par `controle_ia.iib.lanceur_v5 --phase etalonnage` (étalonnage seul ; les conditions de départ et la
+ #      désignation se jouent ensuite, une fois, sur processeur, sur les sorties scellées rapatriées) ;
+-#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v6.txt` (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
++#  (b) la suite ciblée figée est `scripts/tests-cibles-iib-v5-v7.txt` depuis le correctif 0022, voir (i) (empreinte écrite en dur ci-dessous ; v6, correctif 0014 : poussée par lot) : les vingt-cinq fichiers d'essais
+ #      en version 5, distillateur et environnement de la machine simulée compris (correctif 0011), sans celui du tokeniseur réel ni celui du
+ #      moteur à torch du distillateur (une ligne « N passed, 1 skipped » ne passe pas le contrôle
+ #      du nombre de tests attendus : constat de la répétition locale) ;
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index 679ba0d60..679b95909 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 297        # fichiers de la liste v6 : 296 et la vitesse du premier lot (0022) ; la liste v7 de l’amorce y ajoute l’essai du tirage (14 sur une machine à carte ; sans torch, 1 fichier sauté : `--liste-figee` ne passe que sur la machine)
++ATTENDUS = 311        # liste v7 de l’amorce sur une machine à carte (correctif 0025, mineur 3 de la contre-lecture du 0022 : 297 + 14 essais du tirage) ; sans carte, `--liste-figee` ne passe pas (essai « carte » sauté) : la suite courte, elle, passe
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index 8db830088..7ab9c4e64 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -243,22 +243,43 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
+ VITESSE = "vitesse-premier-lot-iib-v5.json"
+ 
+ 
+-def vitesse_du_premier_lot(chrono: dict, modele) -> dict:
++def vitesse_du_premier_lot(chrono: dict, modele, tirage: str | None = None) -> dict:
+     """Correctif 0022 : durées mesurées sur le premier lot (honnêtes : génération, puis les deux oracles), en secondes, par
+     épisode généré et par action d'oracle de chaque oracle ; méthode de tirage du modèle. Aucun texte, aucun jeton, aucune sortie
+-    d'oracle : seulement des durées et des comptes. Une durée non mesurée est un refus (jamais un zéro inventé)."""
+-    def par(s, n):
+-        if not chrono.get(n):
+-            raise GardeArret(f"vitesse du premier lot : {n} nul ou absent (aucune durée inventée)")
+-        return round(float(chrono[s]) / float(chrono[n]), 4)
+-    return {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0)), "generation_s_par_episode": par("generation_s", "episodes_generes"),
+-            "oracle_P_actions": int(chrono.get("oracle_P_actions", 0)), "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions"),
+-            "oracle_N_actions": int(chrono.get("oracle_N_actions", 0)), "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions"),
+-            "tirage": getattr(modele, "tirage", None) or "processeur (multinomial ligne par ligne, générateur processeur)"}
+-
++    d'oracle : seulement des durées et des comptes.
++    Correctif 0025 (contre-lecture du 0022, majeur) : c'est un diagnostic ; il n'arrête jamais un étalonnage payant. Une durée non
++    mesurée (compte nul ou absent, durée absente ou non positive) est écrite `null` et nommée dans `non_mesurees` : jamais un zéro
++    inventé, jamais un arrêt. Aucun arrondi qui écrirait zéro (mineur 1). Le tirage est celui que l'appelant a passé au modèle,
++    sinon l'attribut du modèle, sinon « non lu » : jamais deviné (mineur 2)."""
++    non_mesurees = []
++
++    def par(s, n, nom):
++        try:
++            num, den = float(chrono[s]), float(chrono[n])
++        except (KeyError, TypeError, ValueError):
++            num = den = 0.0
++        if not (den > 0 and num > 0):
++            non_mesurees.append(nom)
++            return None
++        return float(num / den)
++
++    v = {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0) or 0),
++         "generation_s_par_episode": par("generation_s", "episodes_generes", "generation_s_par_episode"),
++         "oracle_P_actions": int(chrono.get("oracle_P_actions", 0) or 0),
++         "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions", "oracle_P_s_par_action"),
++         "oracle_N_actions": int(chrono.get("oracle_N_actions", 0) or 0),
++         "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions", "oracle_N_s_par_action"),
++         "tirage": tirage or getattr(modele, "tirage", None) or "non lu"}
++    v["non_mesurees"] = non_mesurees
++    return v
++
++
++def marque_de_vitesse(v: dict) -> dict:
++    """Champs de la marque de progrès de la vitesse : une durée non mesurée s'écrit « non_mesuree » (jamais zéro)."""
++    return {k: (f"{v[k]:.6g}" if v[k] is not None else "non_mesuree") for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")}
+ 
+ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
+-                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
++                     debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None, tirage: str | None = None) -> dict:
+     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
+     ses actions sont écrits et scellés (`lots/`) ; une garde qui arrête laisse donc sur le disque tout ce qui a été joué, et
+     l'appelant (`executer`) écrit le motif. Marques de progrès à chaque lot (M2). `donnees` : dossier des identifiants d'actions
+@@ -301,9 +322,9 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
+                                                      for p in (f, Path(str(f) + ".sha256"))])
+         if n_lot[0] == 1:                                    # correctif 0022 : vitesse mesurée en marche, dès le premier lot
+-            v = vitesse_du_premier_lot(chrono, modele)
++            v = vitesse_du_premier_lot(chrono, modele, tirage)
+             sorties[VITESSE] = _ecrire(dossier, VITESSE, v)
+-            progres(etape="vitesse", lot=1, **{k: v[k] for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")})
++            progres(etape="vitesse", lot=1, **marque_de_vitesse(v))
+             if versement is not None:
+                 versement("vitesse du premier lot", _fichiers_scelles(dossier / VITESSE))
+     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
+@@ -715,7 +736,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         monde = monde if monde is not None else (MondeJouet(len_reserve(config)) if config["mode"] == "jouet" else MondeReel(config, racine))
+         etat["etape"] = "etalonnage"
+         cree = environnement.get("IIB_DEBUT_UTC_S")
+-        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement)
++        r = phase_etalonnage(config, racine, diag, modele, monde, environnement, donnees, float(cree) if cree else None, carte, versement, tirage)
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index d4b2544e0..9a61a146f 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -722,12 +722,19 @@ def test_vitesse_du_premier_lot_scellee_sans_texte(course, capfd):
+     v = json.loads(f.read_text(encoding="utf-8"))
+     assert verifier(f) and v["lot"] == 1 and v["episodes_generes"] == 8 and v["oracle_P_actions"] > 0 and v["oracle_N_actions"] > 0
+     assert set(v) == {"avertissement", "lot", "episodes_generes", "generation_s_par_episode", "oracle_P_actions", "oracle_P_s_par_action",
+-                      "oracle_N_actions", "oracle_N_s_par_action", "tirage"}
++                      "oracle_N_actions", "oracle_N_s_par_action", "tirage", "non_mesurees"}
++    assert v["non_mesurees"] == [] and v["tirage"] == "non lu"             # correctif 0025 : appel direct sans tirage : « non lu », jamais deviné
+     assert all(isinstance(v[k], float) and v[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))
+     brut = f.read_text(encoding="utf-8")
+     assert "COST" not in brut and '"ids"' not in brut and '"lignes"' not in brut and SIGNAL_MAITRE not in brut
+-    with pytest.raises(GardeArret, match="aucune durée inventée"):
+-        la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
++    # correctif 0025 : une durée non mesurée est écrite null et nommée, jamais zéro, jamais un arrêt (diagnostic)
++    nm = la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
++    assert nm["oracle_P_s_par_action"] is None and nm["oracle_N_s_par_action"] is None and nm["generation_s_par_episode"] == 0.125
++    assert nm["non_mesurees"] == ["oracle_P_s_par_action", "oracle_N_s_par_action"] and nm["tirage"] == "non lu"
++    assert la.marque_de_vitesse(nm)["oracle_N_s_par_action"] == "non_mesuree"
++    petit = la.vitesse_du_premier_lot({"generation_s": 1e-6, "episodes_generes": 8, "oracle_P_s": 1e-7, "oracle_P_actions": 80,
++                                       "oracle_N_s": 1e-7, "oracle_N_actions": 80}, None)
++    assert all(petit[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))   # jamais un zéro d'arrondi
+     m = la.vitesse_du_premier_lot({"generation_s": 4.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 80, "oracle_N_s": 3.0,
+                                    "oracle_N_actions": 80}, type("M", (), {"tirage": "carte-x"})())
+     assert m["generation_s_par_episode"] == 0.5 and m["oracle_P_s_par_action"] == 0.025 and m["tirage"] == "carte-x"
+diff --git a/tests/test_iib_vitesse_0025.py b/tests/test_iib_vitesse_0025.py
+new file mode 100644
+index 000000000..d7a3d6cd6
+--- /dev/null
++++ b/tests/test_iib_vitesse_0025.py
+@@ -0,0 +1,27 @@
++"""Correctif 0025 (contre-lecture du 0022, majeur) : la vitesse du premier lot est un diagnostic ; une durée non mesurée au lot 1
++(ici l'oracle N, que la fin de l'étalonnage n'exige pas) s'écrit null, nommée, et l'étalonnage continue jusqu'à sa fin.
++Cas sain : tirage passé par l'appelant, écrit tel quel. Hors des listes figées (aucun nombre d'essais attendus ne change)."""
++import json
++
++from test_iib_lanceur_v5 import _monde
++
++from controle_ia.iib import lanceur_v5 as la
++from controle_ia.iib.jouet_v5 import ModeleJouetDeLangue
++from controle_ia.scellement import verifier
++
++
++def test_artefact_oracle_N_non_mesure_au_lot_1_l_etalonnage_continue(tmp_path, monkeypatch, capfd):
++    origine = la.vitesse_du_premier_lot
++
++    def sans_oracle_N(chrono, modele, tirage=None):
++        return origine({k: v for k, v in chrono.items() if not k.startswith("oracle_N")}, modele, tirage)
++
++    monkeypatch.setattr(la, "vitesse_du_premier_lot", sans_oracle_N)
++    config = _monde(tmp_path)
++    r = la.phase_etalonnage(config, tmp_path, tmp_path / "course", ModeleJouetDeLangue(), la.MondeJouet(), carte=False, tirage="processeur")
++    assert r is not None and (tmp_path / "course" / la.NOMS["etalonnage"]).exists()        # fin écrite : aucun arrêt
++    f = tmp_path / "course" / la.VITESSE
++    v = json.loads(f.read_text(encoding="utf-8"))
++    assert verifier(f) and v["oracle_N_s_par_action"] is None and v["non_mesurees"] == ["oracle_N_s_par_action"]
++    assert v["oracle_P_s_par_action"] > 0 and v["tirage"] == "processeur"
++    assert "oracle_N_s_par_action=non_mesuree" in capfd.readouterr().err
+-- 
+2.43.0
+

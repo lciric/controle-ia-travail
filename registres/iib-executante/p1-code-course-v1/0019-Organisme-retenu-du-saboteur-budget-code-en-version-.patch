@@ -1,0 +1,343 @@
+From 997bed6a18397bf5a7c4dab15fbd080d59894b7a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 12:45:33 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200019,=20corr?=
+ =?UTF-8?q?ections=20de=20la=20contre-lecture=20cl1=20du=20code=20de=20la?=
+ =?UTF-8?q?=20course=20(M1=20:=20t=C3=A9moin=20`course-engagee-iib-v5.json?=
+ =?UTF-8?q?`=20scell=C3=A9=20et=20pouss=C3=A9=20avant=20le=20premier=20tou?=
+ =?UTF-8?q?r,=20second=20passage=20refus=C3=A9=20sur=20tout=20dossier=20qu?=
+ =?UTF-8?q?i=20le=20porte,=20et=20l'amorce=20de=20la=20course=20cherche=20?=
+ =?UTF-8?q?puis=20pousse=20`essai/iib-course-engagee-<=C3=A9talonnage>`=20?=
+ =?UTF-8?q?avant=20l'installation,=20refus=20si=20la=20r=C3=A9f=C3=A9rence?=
+ =?UTF-8?q?=20existe=20;=20m1=20:=20en=20mode=20r=C3=A9el,=20refus=20si=20?=
+ =?UTF-8?q?les=20fichiers=20d'identifiants=20de=20l'=C3=A9talonnage=20manq?=
+ =?UTF-8?q?uent=20ou=20diff=C3=A8rent=20des=20lots=20de=20son=20r=C3=A9sum?=
+ =?UTF-8?q?=C3=A9=20;=20m2=20:=20d=C3=A9lai=20de=20consignation=203=20600?=
+ =?UTF-8?q?=20s=20;=20m3=20:=20le=20saut=20de=20l'essai=20du=20pr=C3=A9fix?=
+ =?UTF-8?q?e=20devient=20une=20assertion=20;=20r=C3=A9p=C3=A9tition=20loca?=
+ =?UTF-8?q?le=20:=20seconde=20machine=20refus=C3=A9e=20;=20294=20essais=20?=
+ =?UTF-8?q?attendus,=20296=20avec=20torch)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_course_v5.sh      | 17 ++++-
+ scripts/repetition_locale_iib_v5.py           | 11 +++-
+ src/controle_ia/iib/lanceur_v5.py             | 36 +++++++++--
+ src/controle_ia/iib/versement_v5.py           |  2 +-
+ .../test_iib_distillation_bout_en_bout_v5.py  | 64 ++++++++++++++++++-
+ tests/test_iib_lanceur_v5.py                  | 32 +++++++++-
+ 6 files changed, 152 insertions(+), 10 deletions(-)
+
+diff --git a/scripts/amorce_instance_iib_course_v5.sh b/scripts/amorce_instance_iib_course_v5.sh
+index 35cd94dad..607d472d7 100644
+--- a/scripts/amorce_instance_iib_course_v5.sh
++++ b/scripts/amorce_instance_iib_course_v5.sh
+@@ -8,6 +8,9 @@
+ #  (c4) la suite ciblée figée est `scripts/tests-cibles-iib-course-v5-v1.txt` : celle de l'étalonnage (v6) plus l'essai du moteur à
+ #       torch du distillateur, qui sur la machine de la course trouve torch, transformers et scipy et se joue (rapport du distillateur,
+ #       § 3 point 2 : qu'un défaut du moteur se voie dans les premières minutes, non après les tours) ; TESTS_ATTENDUS en tient compte ;
++#  (c6) correctif 0019 (contre-lecture cl1, M1) : la course est engagée une seule fois par étalonnage, d'une machine à l'autre ; la
++#       référence distante `essai/iib-course-engagee-<run de l'étalonnage>` est cherchée (présente : refus, rien ne part), puis
++#       poussée avant l'installation ; le lanceur, lui, scelle et pousse `course-engagee-iib-v5.json` avant le premier tour ;
+ #  (c5) les lignes du journal disent « course ». Machine neuve (le second démarrage de l'amorce de l'étalonnage ne relance rien).
+ # Choisie par le lanceur de session v3 avec `IIB_AMORCE=scripts/amorce_instance_iib_course_v5.sh` (seule autre valeur permise).
+ # Écrite et éprouvée à blanc en essai local seulement ; jamais lancée par son développeur.
+@@ -356,7 +359,7 @@ FIN_CONFIG=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'
+ journal "calendrier : $CAL"
+ DES=$(ls -1 diag/*-iib-*/designation-iib-v5.json 2>/dev/null)      # (c2) le run de l'étalonnage, par sa désignation scellée
+ { [ -n "$DES" ] && [ "$(printf '%s\n' "$DES" | wc -l)" = 1 ] && [ -f "$DES.sha256" ]; } || refus "course : il faut une et une seule désignation scellée diag/*-iib-*/designation-iib-v5.json dans le commit ($(printf '%s' "$DES" | tr '\n' ' '))"
+-RUN_ETAL=$(basename "$(dirname "$DES")"); journal "course : étalonnage $RUN_ETAL (désignation $DES) ; identifiants des lots : $(ls -1 donnees/"$RUN_ETAL"/lots/ids-lot-*.json 2>/dev/null | wc -l)"
++RUN_ETAL=$(basename "$(dirname "$DES")"); ENGAGEE="refs/heads/essai/iib-course-engagee-$RUN_ETAL"; journal "course : étalonnage $RUN_ETAL (désignation $DES) ; identifiants des lots : $(ls -1 donnees/"$RUN_ETAL"/lots/ids-lot-*.json 2>/dev/null | wc -l)"
+ code_branche=0
+ timeout -k 5 300 git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>"$T/ls-remote.err" || code_branche=$?
+ case "$code_branche" in
+@@ -364,6 +367,18 @@ case "$code_branche" in
+     2) ;;
+     *) refus "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche)";;
+ esac
++# --- (c6) engagement de la course
++engager_course() {  # $1 = référence d'engagement ; 0 si absente puis poussée ; refus sinon (aucune course ne part deux fois sur un étalonnage)
++    local c=0; timeout -k 5 300 git ls-remote --exit-code origin "$1" >/dev/null 2>"$T/engagement.err" || c=$?
++    case "$c" in
++        0) refus "course déjà engagée sur cet étalonnage ($1 présente sur le dépôt distant) : second passage refusé, toute reprise est une course neuve sous devis neuf";;
++        2) ;;
++        *) refus "vérification de l'engagement de la course impossible (git ls-remote $1, code $c)";;
++    esac
++    timeout -k 5 300 git push -q origin "HEAD:$1" 2>"$T/engagement-poussee.err" || refus "poussée de l'engagement de la course ($1) refusée"
++    journal "course engagée : $1 poussée (avant l'installation)"; }
++# --- fin (c6)
++engager_course "$ENGAGEE"
+ git checkout -q -b "$BRANCHE"
+ timeout -k 5 300 git push -q origin "$BRANCHE" 2>"$T/poussee-initiale.err" || refus "poussée initiale de la branche $BRANCHE refusée (droit d'écriture du jeton ?)"
+ journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index 537a23288..d0ccf451f 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 290        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe de la course (0018) 2
++ATTENDUS = 294        # essais de la liste figée (`scripts/tests-cibles-iib-v5-v6.txt`) : 275 ; poussée par lot (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; contre-lecture cl1 (0019) 4
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+@@ -285,6 +285,15 @@ def course(m: dict, t: Path, rap: Path, run: str, figee: bool) -> None:
+     assert all(f"diag/{run}/evaluation/oracles-evaluation-{c}.json" in fichiers for c in ("H", "B50", "B100", "TJ100"))
+     dire(f"\nbranche essai/iib-explo-v6 poussée : course {runs_c[0]} sur l'étalonnage {run} ; {len(tours)} tours poussés un par un, "
+          "évaluation par condition, résumé présent")
++    # correctif 0019 (cl1, M1) : une seconde machine neuve, sous une branche neuve, sur le même étalonnage : refus, rien ne part
++    assert f"refs/heads/essai/iib-course-engagee-{run}" in git(m["origine"], "for-each-ref", "--format=%(refname)").split()
++    inst2 = t / "instance-course-2"
++    inst2.mkdir()
++    r2 = subprocess.run(["bash", str(amorce)], env={**env, "RACINE_AMORCE": str(inst2), "BRANCHE": "essai/iib-explo-v7"}, capture_output=True, text=True,
++                        timeout=600)
++    assert r2.returncode == 2 and "course déjà engagée sur cet étalonnage" in r2.stdout and not (inst2 / "iib-fin-normale").exists(), r2.stdout[-800:]
++    assert "essai/iib-explo-v7" not in git(m["origine"], "for-each-ref", "--format=%(refname)")
++    dire("seconde machine sur le même étalonnage : refus (« course déjà engagée »), aucune branche poussée")
+     reponse = d / "creation-brute-essai1.json"
+     reponse.write_text(json.dumps({"success": True, "new_contract": int(ID)}), encoding="utf-8")
+     assert f"CRÉÉE : instance {ID}" in session(m2, "apres-creation", reponse, 0, d, **sup)
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index 6d35f7c9b..d3016be1d 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -388,6 +388,7 @@ def phase_conditions(config: dict, racine, dossier) -> dict:
+ # C. Course
+ # ------------------------------------------------------------------------------------------------------------------------------
+ SORTIES_DE_LA_COURSE = ("course", "oracle_course", "ids_course", "temoins", "evaluation", "ids_evaluation")
++ENGAGEMENT = "course-engagee-iib-v5.json"   # correctif 0019 (contre-lecture cl1, M1) : témoin scellé et poussé avant le premier tour
+ 
+ 
+ def _fichiers_scelles(*chemins) -> list[Path]:
+@@ -398,14 +399,14 @@ def exiger_course_non_jouee(dossier_abs: Path) -> None:
+     """Aucune sortie de course dans le dossier de l'étalonnage (ni résumé, ni tour, ni évaluation) : sinon refus, avant le premier
+     tour (sans cette garde, un second passage jouait tous ses tours avant de buter sur un fichier existant)."""
+     deja = [NOMS[k] for k in SORTIES_DE_LA_COURSE if (Path(dossier_abs) / NOMS[k]).exists()] + [
+-        d for d in ("tours", "evaluation") if (Path(dossier_abs) / d).exists()]
++        d for d in ("tours", "evaluation", ENGAGEMENT) if (Path(dossier_abs) / d).exists()]
+     if deja:
+         raise GardeArret(f"course déjà jouée dans ce dossier ({', '.join(deja)}) : toute reprise est une course neuve, sous devis neuf "
+                          "(refus avant le premier tour)")
+ 
+ 
+ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None, environnement: dict | None = None, carte=None,
+-                 versement: vs.Versement | None = None) -> dict:
++                 versement: vs.Versement | None = None, run: str | None = None) -> dict:
+     """`config` : configuration de l'étalonnage ; la configuration de course est dérivée ici du résultat scellé de la
+     désignation. `dossier` : chemin relatif à `racine` du dossier de l'étalonnage et de la course. `versement` : poussée de
+     chaque tour, puis des témoins, de la distillation et de chaque condition de l'évaluation, dès que scellés (exigée en mode
+@@ -463,6 +464,13 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
+                                                                 course, validite)
+         return [{"episode": e["episode"], "tache": e["tache"], "sorties": e["oracle"][oracle]} for e in eps]
+     sorties = {}
++    # correctif 0019 (M1) : toutes les gardes d'avant le premier tour ont passé ; la course est engagée, et c'est scellé et poussé
++    # avant le premier épisode : tout second passage (même disque, ou machine neuve qui clone ce dossier) est refusé
++    from datetime import datetime, timezone
++
++    sorties[ENGAGEMENT] = _ecrire(dossier_abs, ENGAGEMENT, {"run": run, "instant_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
++                                                           "oracle_de_la_regle": oracle, "tours_prevus": R})
++    verser("course engagee", _fichiers_scelles(dossier_abs / ENGAGEMENT))
+     progres(etape="course", phase="debut", tours_prevus=R, oracle=oracle)
+     res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument,
+                               apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"], replis=len(replis_de(modele))))
+@@ -717,6 +725,26 @@ def exiger_configuration_de_l_etalonnage(config: dict, racine, etalonnage: str)
+     return m["config_sha256"]
+ 
+ 
++def exiger_identifiants_de_l_etalonnage(racine, etalonnage: str, mode: str) -> list[Path]:
++    """Fichiers des identifiants d'actions de l'étalonnage, un par lot (`donnees/<étalonnage>/lots/ids-lot-*.json`). Correctif
++    0019 (contre-lecture cl1, m1) : en mode réel, refus s'il n'y en a aucun, ou si leur nombre diffère des lots que le résumé
++    scellé de l'étalonnage déclare (`diag/<étalonnage>/resume.json`) ; sans eux, les faux positifs des motifs ne seraient pas
++    calculés. En mode jouet : rendus tels quels."""
++    from ..scellement import verifier as _verifier
++
++    ids = sorted((Path(racine) / "donnees" / etalonnage / "lots").glob("ids-lot-*.json"))
++    if mode != "reel":
++        return ids
++    chemin = Path(racine) / "diag" / etalonnage / "resume.json"
++    if not chemin.is_file():
++        raise GardeArret(f"course : résumé de l'étalonnage {chemin} absent (refus)")
++    _verifier(chemin)
++    lots = json.loads(chemin.read_text(encoding="utf-8")).get("resultat", {}).get("lots")
++    if not ids or lots != len(ids):
++        raise GardeArret(f"course : {len(ids)} fichier(s) d'identifiants de l'étalonnage pour {lots!r} lots déclarés par son résumé (refus)")
++    return ids
++
++
+ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, monde, distillateur, environnement: dict,
+                      autoriser_depot_sale: bool, carte) -> dict:
+     from ..gardes import motif_d_arret
+@@ -730,6 +758,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+     if not (racine / dossier / NOMS["designation"]).is_file():
+         raise GardeArret("pas de course sans résultat de conditions scellé « part » : la désignation n'a pas été jouée (refus)")
+     exiger_course_non_jouee(racine / dossier)
++    ids = exiger_identifiants_de_l_etalonnage(racine, etalonnage, config["mode"])
+     versement = vs.Versement(racine, environnement, config["mode"], progres)
+     chemin_m, _ = creer_manifeste(racine, run_id, config, [dg.prefixe_de_la_course(config) + "iib/v5/manifeste"], entropie=int(config["entropie"]),
+                                   decisif=False, prereg=None, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+@@ -747,7 +776,6 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         else:
+             modele = modele if modele is not None else modele_v5.construire_modele(config)
+             monde = monde if monde is not None else MondeReel(config, racine)
+-        ids = sorted((racine / "donnees" / etalonnage / "lots").glob("ids-lot-*.json"))
+         if distillateur is None:
+             if config["mode"] == "reel":
+                 distillateur = dv.distillateur_du_mode_reel(modele, racine, racine / dossier, progres=progres, ids_etalonnage=ids)
+@@ -755,7 +783,7 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+                 distillateur = dv.Distillateur(modele, MoteurJouet(modele), racine, racine / dossier, motifs=MOTIFS_JOUET, progres=progres,
+                                                ids_etalonnage=ids)
+         etat["etape"] = "course"
+-        r = phase_course(config, racine, str(dossier), distillateur.modele, monde, distillateur, environnement, carte, versement)
++        r = phase_course(config, racine, str(dossier), distillateur.modele, monde, distillateur, environnement, carte, versement, run_id)
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
+                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
+                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
+diff --git a/src/controle_ia/iib/versement_v5.py b/src/controle_ia/iib/versement_v5.py
+index 66a88750f..869bd84b1 100644
+--- a/src/controle_ia/iib/versement_v5.py
++++ b/src/controle_ia/iib/versement_v5.py
+@@ -19,7 +19,7 @@ from ..gardes import GardeArret
+ 
+ CONSIGNER = "IIB_CONSIGNER"          # chemin du script de consignation écrit par l'amorce (`$R/iib-consigner.sh`)
+ REFUS_CONSECUTIFS_MAX = 3            # trois poussées refusées de suite : arrêt (lots scellés sur le disque, machine arrêtée par l'amorce)
+-DELAI_CONSIGNATION_S = 3000          # verrou (1 500 s au plus) et trois poussées (600 s au plus chacune) du script de l'amorce
++DELAI_CONSIGNATION_S = 3600          # verrou (1 500 s) et trois poussées (600 s chacune) et leurs attentes (15 + 60 s) : 3 375 s au pire (cl1, m2)
+ 
+ 
+ class Versement:
+diff --git a/tests/test_iib_distillation_bout_en_bout_v5.py b/tests/test_iib_distillation_bout_en_bout_v5.py
+index df2ca90d9..671560cd2 100644
+--- a/tests/test_iib_distillation_bout_en_bout_v5.py
++++ b/tests/test_iib_distillation_bout_en_bout_v5.py
+@@ -299,8 +299,7 @@ def test_prefixe_de_la_course_artefacts(course, monkeypatch):
+     with pytest.raises(GardeArret, match="préfixe propre"):
+         dg.prefixe_de_la_course({"prefixe_graines": "essai/"})
+     monkeypatch.undo()
+-    if course["conditions"]["issue"] not in ("N", "P"):
+-        pytest.skip("la course jouet n'est pas partie")
++    assert course["conditions"]["issue"] in ("N", "P"), "la course jouet devait partir"          # cl1, m3 : jamais un saut
+     vraie = dg.configuration_de_course
+ 
+     def sans_prefixe_propre(c, racine, chemin):                                         # artefact : la course reprend le préfixe de l'étalonnage
+@@ -314,3 +313,64 @@ def test_prefixe_de_la_course_artefacts(course, monkeypatch):
+     with pytest.raises(GardeArret, match="préfixe propre de la course"):
+         la.phase_course(course["config"], racine, "course", d.modele, course["monde"], d, carte=False)
+     assert not (racine / "course" / "tours").exists()
++
++
++# ------------------------------------------------------------------------------------------------------------------------------
++# Correctif 0019 : contre-lecture cl1 du code de la course (M1, m1)
++# ------------------------------------------------------------------------------------------------------------------------------
++def test_course_engagee_scellee_et_poussee_avant_le_premier_tour(point_d_entree):
++    """M1 : le témoin d'engagement est scellé et poussé avant le premier tour (son commit précède celui du tour 1), sur la
++    branche distante ; une machine neuve qui clone la branche le trouve et refuse un second passage."""
++    import subprocess
++
++    from test_iib_versement_v5 import BRANCHE, git
++
++    d, origine = point_d_entree["d"], point_d_entree["origine"]
++    f = d / "diag" / RUN_E / la.ENGAGEMENT
++    e = json.loads(f.read_text(encoding="utf-8"))
++    assert verifier(f) and e["run"] == RUN_C and e["oracle_de_la_regle"] in ("N", "P")
++    messages = git(origine, "log", "--reverse", "--format=%s", BRANCHE).splitlines()
++    i_e = next(i for i, m in enumerate(messages) if "(versement course engagee)" in m)
++    i_t = next(i for i, m in enumerate(messages) if "(versement tour 001)" in m)
++    assert i_e < i_t
++    neuve = point_d_entree["r"].parent / "machine-neuve"
++    subprocess.run(["git", "clone", "-q", "--branch", BRANCHE, str(origine), str(neuve)], check=True, capture_output=True)
++    with pytest.raises(GardeArret, match="course-engagee-iib-v5.json"):
++        la.exiger_course_non_jouee(neuve / "diag" / RUN_E)
++
++
++def test_course_morte_avant_son_premier_tour_ne_se_relance_pas(tmp_path):
++    """M1, artefact : seul le témoin d'engagement existe (course morte avant d'écrire un tour) : refus ; cas sain : dossier
++    d'étalonnage sans aucune sortie de course : permis."""
++    d = tmp_path / "diag" / RUN_E
++    d.mkdir(parents=True)
++    la.exiger_course_non_jouee(d)
++    (d / la.ENGAGEMENT).write_text("{}\n", encoding="utf-8")
++    with pytest.raises(GardeArret, match="course déjà jouée"):
++        la.exiger_course_non_jouee(d)
++
++
++def test_identifiants_de_l_etalonnage_exiges_en_mode_reel(tmp_path):
++    """m1 : en mode réel, autant de fichiers d'identifiants que de lots déclarés par le résumé scellé de l'étalonnage, et au
++    moins un ; sinon refus. Mode jouet : rendus tels quels."""
++    from controle_ia.scellement import sceller
++
++    lots = tmp_path / "donnees" / RUN_E / "lots"
++    lots.mkdir(parents=True)
++    r = tmp_path / "diag" / RUN_E / "resume.json"
++    r.parent.mkdir(parents=True)
++    r.write_text(json.dumps({"resultat": {"lots": 3}}) + "\n", encoding="utf-8")
++    sceller(r)
++    with pytest.raises(GardeArret, match="0 fichier"):
++        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")
++    assert la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "jouet") == []
++    for k in (1, 2):
++        (lots / f"ids-lot-00{k}-etalonnage-honnete.json").write_text("{}\n", encoding="utf-8")
++        sceller(lots / f"ids-lot-00{k}-etalonnage-honnete.json")
++    with pytest.raises(GardeArret, match="2 fichier.*pour 3 lots"):
++        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")
++    (lots / "ids-lot-003-etalonnage-plante.json").write_text("{}\n", encoding="utf-8")
++    assert len(la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")) == 3                # cas sain
++    r.unlink()
++    with pytest.raises(GardeArret, match="résumé de l'étalonnage"):
++        la.exiger_identifiants_de_l_etalonnage(tmp_path, RUN_E, "reel")
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 9e9dfa619..7f545752d 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -601,7 +601,10 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
+     code = [l for l in d if not l[1:].lstrip().startswith("#")]
+     moins = [l[1:] for l in code if l[0] == "-"]
+     plus = [l[1:] for l in code if l[0] == "+"]
+-    assert len(moins) == 5 and len(plus) == 8, (moins, plus)
++    # correctif 0019 (c6) : dix lignes de plus, les neuf de `engager_course` et son appel (`ENGAGEE=` est sur la ligne de RUN_ETAL)
++    assert len(moins) == 5 and len(plus) == 18, (moins, plus)
++    corps = c.split("# --- (c6) engagement de la course\n", 1)[1].split("# --- fin (c6)\n", 1)[0]
++    assert len([l for l in corps.splitlines() if not l.lstrip().startswith("#")]) == 9 and plus.count('engager_course "$ENGAGEE"') == 1
+     assert all(any(m in l for m in ("LISTE_TESTS=", 'RUN="$(date', 'journal "run : $RUN', "lanceur_v5 --phase etalonnage", 'ajouter "runs/$RUN"')) for l in moins)
+     assert sum(l.startswith(("DES=", "{ [ -n \"$DES\" ]", "RUN_ETAL=")) for l in plus) == 3
+     vivantes = [l for l in c.splitlines() if "controle_ia.iib.lanceur_v5 --phase" in l and not l.lstrip().startswith("#")]
+@@ -622,3 +625,30 @@ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choi
+     assert r.returncode == 2 and "ni l'amorce de l'étalonnage ni celle de la course" in r.stdout + r.stderr
+     v3 = (s / "lancer_iib_v3.sh").read_text(encoding="utf-8")
+     assert "scripts/amorce_instance_iib_course_v5.sh) A=\"$IIB_AMORCE\"" in v3 and "A=scripts/amorce_instance_iib_v5.sh" in v3
++
++
++def test_amorce_de_la_course_engagement_unique_par_etalonnage(tmp_path):
++    """Correctif 0019 (cl1, M1) : la fonction `engager_course` de l'amorce de la course, jouée telle qu'écrite contre une origine
++    nue locale. Cas sain : référence absente, poussée. Artefact : référence présente (une course déjà engagée sur cet
++    étalonnage, depuis une autre machine) : refus, rien n'est poussé de plus."""
++    import re
++    import subprocess
++
++    texte = (DEPOT / "scripts" / "amorce_instance_iib_course_v5.sh").read_text(encoding="utf-8")
++    bloc = re.search(r"# --- \(c6\) engagement de la course\n(.*?)# --- fin \(c6\)\n", texte, re.S).group(1)
++    assert 'engager_course "$ENGAGEE"' in texte and 'ENGAGEE="refs/heads/essai/iib-course-engagee-$RUN_ETAL"' in texte
++    origine, d = tmp_path / "o.git", tmp_path / "d"
++    subprocess.run(["git", "init", "-q", "--bare", str(origine)], check=True)
++    subprocess.run(["git", "init", "-q", str(d)], check=True)
++    for a in (("config", "user.email", "t@x.invalid"), ("config", "user.name", "t"), ("commit", "-q", "--allow-empty", "-m", "c"),
++              ("remote", "add", "origin", str(origine))):
++        subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
++    script = tmp_path / "e.sh"
++    script.write_text("T=$1; cd $2\nrefus() { echo \"REFUS : $1\"; exit 2; }\njournal() { echo \"$*\"; }\n" + bloc +
++                      'engager_course "refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"\necho FIN\n', encoding="utf-8")
++    sain = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
++    assert sain.returncode == 0 and "course engagée" in sain.stdout and "FIN" in sain.stdout, sain.stdout + sain.stderr
++    refs = subprocess.run(["git", "-C", str(origine), "for-each-ref", "--format=%(refname)"], capture_output=True, text=True).stdout.split()
++    assert refs == ["refs/heads/essai/iib-course-engagee-20991231-000020-iib-jouet"]
++    deux = subprocess.run(["bash", str(script), str(tmp_path), str(d)], capture_output=True, text=True, timeout=120)
++    assert deux.returncode == 2 and "course déjà engagée sur cet étalonnage" in deux.stdout and "FIN" not in deux.stdout
+-- 
+2.43.0
+

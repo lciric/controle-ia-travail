@@ -1,0 +1,18 @@
+# Mandat — rédacteur Fable : relecture du brouillon 3 et brouillon 4 de l'additif et du devis de la voie (A) — v1
+
+Pièce de travail (classe C). Exécutante neuve du saboteur à budget (session_013QMaym1QE4UyYr1H8KU8Rf), 2026-11-22, sous GO-2026-11-22-94. Rédacteur : Claude Fable 5.2. Suite de `mandat-fable-brouillon3-voie-A-v1.md` (f1bfb4bd…, branche `claude/iib-executante-v6`), dont les interdits restent en vigueur. Urgence : course au plus tard le 25 novembre au matin.
+
+## 1. Ce que tu fais
+1. **Relis le brouillon 3**, rédigé par Opus 5.5 en ton absence (limite atteinte) : branche `claude/iib-executante-v5-fable-additif-c`, commit `6eb0ab65f66f5dce86b3aae134b4c5b26c8ed340`, dossier `brouillons/ii-b-saboteur-budget-v5/additif-course-v1/`. Tu en prends la responsabilité de rédacteur : corrige ce que tu n'aurais pas écrit ainsi.
+2. **Rédige le brouillon 4** (R12 : le 3 reste intact), qui porte toutes les corrections de la vérification du brouillon 3 : `registres/iib-executante/contre-lecture-voie-A-v1/note-verification-brouillon3-voie-A-cl2.md` sur `origin/claude/iib-executante-v6` (b96d839e…, verdict « scellable après corrections » : quatre majeurs, trois mineurs, table des champs). Retire la mention « À REVOIR PAR FABLE » ; écris ce que ta relecture a changé dans la note des différences 3 vers 4.
+
+## 2. Faits neufs
+- **Correctif 0024** (corrections de la contre-lecture du 0023 : plafond total écrit exact, refus sans « 60.0 », libellé de surveillance) : commit `9780b7e38d6544fed62d5b8fa50aca2a50e8233a`, arbre `475631a8e6340012701ebe2463f77f2449d2ba0a` ; contre-lecture du 0023 et vérification : `registres/iib-executante/p1-code-course-v1/contre-lecture-0023-cl1.md` et `note-verification-0023-cl1.md` (verdict « autorisable »), sur `origin/claude/iib-executante-v6`. Réserve écrite : aucun essai ne prouve le chemin sans numpy (le Python du poste a numpy ; vérifié par le contre-lecteur en bloquant numpy).
+- **Correctif 0022** : contre-lecture en cours ; garde le champ `<<VERIFICATION_DU_CORRECTIF_0022>>`. Comptes collectés par le contre-lecteur du 0023 : 311 (liste v7 de l'étalonnage) et 313 (liste v2 de la course), inchangés par 0023 et 0024.
+- **Exécutante** : session_013QMaym1QE4UyYr1H8KU8Rf (GO-2026-11-22-94, échéance 2026-11-25).
+- **GO-2026-11-22-93** prolonge GO-2026-11-22-75 au 31 décembre, plafond inchangé, à citer par tout emploi (`registres/go.md` de `main`).
+- Code de la voie : `<<COMMIT_CODE_REVU_VOIE_A>>` et `<<ARBRE_CODE_VOIE_A>>` restent des champs ; l'arbre attendu est `475631a8…` si la contre-lecture du 0022 ne demande rien.
+- Vérification des gardes : rejoue-la sous un nom neuf (`verifier-gardes-du-lanceur-v4.sh` et sa sortie) au commit `9780b7e3` (fais ton worktree : `git -C /home/user/controle-ia-travail worktree add <dossier> 9780b7e38d6544fed62d5b8fa50aca2a50e8233a` ; Python : `/tmp/claude-0/-home-user-controle-ia-travail/7aecb6e8-82ef-5d3e-813e-5cb037afe20b/scratchpad/venv/bin/python`, `PYTHONPATH=src`). Disque du poste serré : supprime ton worktree à la fin (`git worktree remove`).
+
+## 3. Rendu
+Worktree `/tmp/claude-0/-home-user-controle-ia-travail/7aecb6e8-82ef-5d3e-813e-5cb037afe20b/scratchpad/fable` (branche locale `fable-b3-local` = 6eb0ab65). Dans le même dossier : `additif-ordre-course-voie-A-v1-brouillon4.md`, `devis-voie-A-v1-brouillon4.md`, `differences-voie-A-brouillon3-vers-4-v1.md`, et, si l'arithmétique change, `calcul-devis-voie-A-v4.py` et sa sortie ; chacun avec son compagnon `.sha256`. Un commit local, pas de poussée. Réponds en 10 lignes : chemins, empreintes, commit, ce que ta relecture a changé, points non portés et pourquoi.

@@ -1,0 +1,193 @@
+From 239c6af495d2776ce252cb6ba78c143bc69e3de6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 11:53:39 +0000
+Subject: [PATCH 16/17] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20?=
+ =?UTF-8?q?=C3=A0=20budget,=20code=20en=20version=205=20:=20correctif=2000?=
+ =?UTF-8?q?16,=20replis=20de=20la=20forme=20du=20lot=20des=20suites=20?=
+ =?UTF-8?q?=C3=A9crits=20(la=20version=205=20n'=C3=A9crivait=20nulle=20par?=
+ =?UTF-8?q?t=20`modele.replis`=20:=20un=20repli=20de=20`cache=5Fduplique`?=
+ =?UTF-8?q?=20vers=20`prerempli=5Fpar=5Fsuite`=20aurait=20=C3=A9t=C3=A9=20?=
+ =?UTF-8?q?silencieux=20;=20=C3=A9crits=20au=20r=C3=A9sum=C3=A9=20et=20?=
+ =?UTF-8?q?=C3=A0=20l'arr=C3=AAt=20de=20l'=C3=A9talonnage=20et=20de=20la?=
+ =?UTF-8?q?=20course,=20aux=20rapport=C3=A9s=20de=20l'=C3=A9talonnage,=20?=
+ =?UTF-8?q?=C3=A0=20la=20course=20et=20=C3=A0=20l'=C3=A9valuation=20;=20co?=
+ =?UTF-8?q?mpt=C3=A9s=20dans=20chaque=20marque=20de=20progr=C3=A8s=20de=20?=
+ =?UTF-8?q?lot=20et=20de=20tour=20;=20essais=20:=20artefact=20plant=C3=A9,?=
+ =?UTF-8?q?=20cas=20sain,=20mod=C3=A8le=20sans=20liste)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ src/controle_ia/iib/lanceur_v5.py             | 29 ++++++++++++++-----
+ .../test_iib_distillation_bout_en_bout_v5.py  |  4 +++
+ tests/test_iib_lanceur_v5.py                  | 23 +++++++++++++++
+ 3 files changed, 49 insertions(+), 7 deletions(-)
+
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index 36dad8213..c3dce6835 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -163,6 +163,13 @@ def _manifeste(dossier: Path, phase: str, config: dict, graines, sorties: dict,
+         "sorties": dict(sorted(sorties.items()))})
+ 
+ 
++def replis_de(modele) -> list[dict]:
++    """Replis de la forme du lot des suites consignés par le modèle réel (`modele_v1.ModeleTorch.replis` : `cache_duplique` vers
++    `prerempli_par_suite`) ; [] pour un modèle qui n'en tient pas (jouet). Correctif 0016 : la version 5 ne les écrivait nulle
++    part, si bien qu'un repli aurait été silencieux (note de lecture du 22 novembre, point 3 (b))."""
++    return [dict(r) for r in (getattr(modele, "replis", None) or [])]
++
++
+ def reglages_de_l_agent(config: dict) -> dict:
+     """Réglages de tirage de l'agent tels que la génération les emploie : la température de la génération, rien d'autre."""
+     return {**config["tirage"], "temperature": float(config["generation"]["temperature"])}
+@@ -271,7 +278,8 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+             "ids": _ids(episodes), "multiplications": {f"{ep['phase']}/{ep['episode']}": ep["consignes"] for ep in episodes if "consignes" in ep}})
+         par_phase[phase].extend(episodes)
+         tous.extend(episodes)
+-        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0))
++        progres(etape="etalonnage", phase=phase, lot=n_lot[0], episodes=len(tous), actions_oracle=chrono.get("actions_oracle", 0),
++                replis=len(replis_de(modele)))
+         if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
+             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
+                                                      for p in (f, Path(str(f) + ".sha256"))])
+@@ -325,13 +333,15 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+                  "lecture_de_la_troisieme_donnee": rp.lecture_de_la_troisieme_donnee(_lignes(honnetes, "N"), _lignes(honnetes, "P"),
+                                                                                     graines.generateur("iib/rapportes/troisieme-donnee")),
+                  "durees": durees, "duree_d_une_action_d_oracle_par_oracle_h": oracle_h["par_oracle_h"],
++                 "replis_forme_lot_suites": replis_de(modele),
+                  "depense": {"usd": depense, "depuis": "création de la machine" if debut_utc_s is not None else "début de la phase (instant de création non fourni)"},
+                  "chrono": chrono}
+     sorties[NOMS["rapportes_etalonnage"]] = _ecrire(dossier, NOMS["rapportes_etalonnage"], rapportes)
+     sorties["graines-etalonnage-iib-v5.json"] = _ecrire(dossier, "graines-etalonnage-iib-v5.json", {"entropie": str(graines.entropie), "prefixe": graines.prefixe,
+                                                                              "graines": graines.employees})
+     progres(etape="etalonnage", phase="fin", episodes=len(tous), lots=n_lot[0])
+-    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0]}
++    return {"sorties": sorties, "validite_du_controle_du_premier_cout": validite, "durees": durees, "lots": n_lot[0],
++            "replis_forme_lot_suites": replis_de(modele)}
+ 
+ 
+ def lire_entrees(config: dict, racine) -> dict | None:
+@@ -453,7 +463,7 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
+     sorties = {}
+     progres(etape="course", phase="debut", tours_prevus=R, oracle=oracle)
+     res = tv.boucle_des_tours(jouer_tour, R, course, oracle, honnetes, etal["taches"], graines, k_instrument,
+-                              apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"]))
++                              apres_tour=lambda r, t: progres(etape="course", tour=r, episodes=t["episodes"], replis=len(replis_de(modele))))
+     premiers["cumul à la fin"] = pc.controle([e["oracle"][oracle][0] for e in joues], "le maître, cumul à la fin", course, validite)
+     par_nom = {e["episode"]: e for e in joues}
+     acceptes = [par_nom[e["episode"]] for e in res["episodes"] if e["decision"]["accepte"]]
+@@ -482,7 +492,8 @@ def phase_course(config: dict, racine, dossier, modele, monde, distillateur=None
+               "controle_premier_cout": premiers,
+               "rapportes": {"maitre/" + oracle: rp.rapportes(_lignes(joues, oracle)),
+                             **({"acceptes/" + autre: rp.rapportes(_lignes(acceptes, autre))} if res["arret"] is None and acceptes else {})},
+-              "configuration_de_course": {"oracle_de_la_regle": course["oracle_de_la_regle"]}, "chrono": chrono}
++              "configuration_de_course": {"oracle_de_la_regle": course["oracle_de_la_regle"]}, "chrono": chrono,
++              "replis_forme_lot_suites": replis_de(modele)}
+     sorties[NOMS["course"]] = _ecrire(dossier_abs, NOMS["course"], resume)
+     verser("tours finis", _fichiers_scelles(*(dossier_abs / NOMS[k] for k in ("course", "oracle_course", "ids_course")
+                                               if (dossier_abs / NOMS[k]).exists()),
+@@ -544,7 +555,7 @@ def evaluer(course: dict, racine, dossier: Path, modele, monde, distillateur, gr
+     sorties |= {NOMS["evaluation"]: _ecrire(dossier, NOMS["evaluation"], {
+         "oracle_de_la_regle": oracle, "lignes": [l for o in ("P", "N") for l in _lignes(episodes, o)], "controle_premier_cout": premiers,
+         "rapportes": {f"{c}/{o}": rp.rapportes([l for e in episodes if e["condition_evaluation"] == c for l in e["oracle"][o]])
+-                      for c in CONDITIONS_EVALUATION for o in ("P", "N")}}),
++                      for c in CONDITIONS_EVALUATION for o in ("P", "N")}, "replis_forme_lot_suites": replis_de(modele)}),
+                NOMS["ids_evaluation"]: _ecrire(dossier, NOMS["ids_evaluation"], {"ids": _ids(episodes)})}
+     return {"sorties": sorties, "resume": {"episodes": len(episodes), "controle_premier_cout": {c: p["phrase"] for c, p in premiers.items()}}}
+ 
+@@ -671,6 +682,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "etalonnage", "arret": None, "empreintes": dict(sorted(r["sorties"].items())),
+                   "lots": r["lots"], "durees": r["durees"], "validite_du_controle_du_premier_cout": r["validite_du_controle_du_premier_cout"],
+                   "duree_s": round(time.perf_counter() - debut, 1), "aucune_activation": True, "versements": versement.journal,
++                  "replis_forme_lot_suites": r["replis_forme_lot_suites"],
+                   "suite": "conditions de départ et désignation : à jouer une fois, sur processeur, sur ces sorties scellées"}
+         ecrire_resultat(racine, chemin_m, "resume", resume)
+         return resume
+@@ -679,6 +691,7 @@ def executer(phase: str, config: dict, racine, run_id: str, modele=None, monde=N
+         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": phase, "etape": etat["etape"],
+                                                      "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+                                                      "duree_s": round(time.perf_counter() - debut, 1), "versements": versement.journal,
++                                                     "replis_forme_lot_suites": replis_de(modele),
+                                                      "issue": "aucune : étalonnage interrompu, rien n'est désigné ; toute reprise est une course neuve"})
+         progres(etape="arret", phase=phase, fichiers_ecrits=len(ecrits))
+         raise
+@@ -744,7 +757,8 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         resume = {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage, "configuration_sha256": sha_config,
+                   "arret": r["arret"], "oracle_de_la_regle": r["oracle_de_la_regle"], "acceptes": r["acceptes"], "phrase": r["phrase"],
+                   "evaluation": r["evaluation"], "reste": r["reste"], "empreintes": dict(sorted(r["sorties"].items())),
+-                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
++                  "identifiants_de_l_etalonnage": len(ids), "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
++                  "duree_s": round(time.perf_counter() - debut, 1),
+                   "aucune_activation": True}
+         ecrire_resultat(racine, chemin_m, "resume", resume)
+         return resume
+@@ -754,7 +768,8 @@ def _executer_course(config, racine: Path, run_id: str, etalonnage, modele, mond
+         ecrits += sorted(str((racine / dossier / NOMS[k]).relative_to(racine)) for k in SORTIES_DE_LA_COURSE if (racine / dossier / NOMS[k]).exists())
+         ecrire_resultat(racine, chemin_m, "arret", {"avertissement": cf.AVERTISSEMENT, "phase": "course", "etalonnage": etalonnage,
+                                                      "etape": etat["etape"], "motif": motif_d_arret(e), "ecrits_avant_l_arret": ecrits,
+-                                                     "versements": versement.journal, "duree_s": round(time.perf_counter() - debut, 1),
++                                                     "versements": versement.journal, "replis_forme_lot_suites": replis_de(modele),
++                                                     "duree_s": round(time.perf_counter() - debut, 1),
+                                                      "issue": "course interrompue : ce qui est écrit est scellé et versé ; toute reprise est une course neuve"})
+         progres(etape="arret", phase="course", fichiers_ecrits=len(ecrits))
+         raise
+diff --git a/tests/test_iib_distillation_bout_en_bout_v5.py b/tests/test_iib_distillation_bout_en_bout_v5.py
+index d2a8ee4b4..806d1de5b 100644
+--- a/tests/test_iib_distillation_bout_en_bout_v5.py
++++ b/tests/test_iib_distillation_bout_en_bout_v5.py
+@@ -193,6 +193,9 @@ def test_point_d_entree_de_la_course_versee_par_tour_poussee_et_resumee(point_d_
+     tours = sorted((dossier / "tours").glob("tour-*-maitre.json"))
+     course = json.loads((dossier / la.NOMS["course"]).read_text(encoding="utf-8"))
+     assert len(tours) == len(course["tours"]) >= 1
++    # correctif 0016 : replis de la forme du lot des suites écrits (aucun sur le jouet), au résumé, à la course, à l'évaluation
++    assert resume["replis_forme_lot_suites"] == course["replis_forme_lot_suites"] == []
++    assert json.loads((dossier / la.NOMS["evaluation"]).read_text(encoding="utf-8"))["replis_forme_lot_suites"] == []
+     # chaque tour est sur la branche distante, dans un commit à lui (« versement tour NNN »), avant la fin de la course
+     distant = set(git(point_d_entree["origine"], "ls-tree", "-r", "--name-only", BRANCHE).splitlines())
+     messages = git(point_d_entree["origine"], "log", "--format=%s", BRANCHE).splitlines()
+@@ -212,6 +215,7 @@ def test_point_d_entree_de_la_course_versee_par_tour_poussee_et_resumee(point_d_
+     assert sorted(map(json.dumps, par)) == sorted(map(json.dumps, ev["lignes"]))
+     progres = [l for l in r.stderr.splitlines() if l.startswith("PROGRES ")]
+     assert sum("etape=course" in l and " tour=" in l for l in progres) == len(tours)
++    assert all(l.endswith(" replis=0") for l in progres if "etape=course" in l and " tour=" in l)
+     assert not any("acceptes=" in l for l in progres if "etape=course" in l)      # marque neutre : aucun compte d'acceptés
+     for f in tours:
+         brut = f.read_text(encoding="utf-8")
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index c4e8ddb36..ff5fdc423 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -560,3 +560,26 @@ def test_surveillance_hors_etalonnage_la_regle_ne_joue_pas_et_phase_illisible_ar
+     # phase illisible (amorce absente du dossier de la session) : arrêt, aucun repli silencieux
+     code, sortie, texte, appels, d = _surveiller(tmp_path / "illisible", None, 1.0)
+     assert code == 3 and "règle de coupure de l'étalonnage illisible" in sortie and "phase illisible" in texte
++
++
++def test_replis_de_la_forme_du_lot_des_suites_ecrits_jamais_silencieux(tmp_path, capfd):
++    """Correctif 0016 : un repli consigné par le modèle (`modele_v1` : `cache_duplique` vers `prerempli_par_suite`) est écrit
++    au résumé et aux rapportés de l'étalonnage, et compté dans chaque marque de progrès de lot ; cas sain : modèle sans repli,
++    liste vide et « replis=0 » ; un modèle qui ne tient pas de liste (jouet) rend une liste vide, jamais une erreur avalée."""
++    config, _ = _depot_jouet(tmp_path)
++    modele = ModeleJouetDeLangue()
++    assert la.replis_de(modele) == [] and la.replis_de(None) == []
++    modele.replis = [{"de": "cache_duplique", "vers": "prerempli_par_suite", "motif": "RuntimeError: essai (artefact planté)"}]
++    r = la.executer("etalonnage", config, tmp_path, "20991231-000030-iib-jouet", modele, la.MondeJouet(), {}, carte=False)
++    assert r["replis_forme_lot_suites"] == modele.replis
++    d = tmp_path / "diag" / "20991231-000030-iib-jouet"
++    assert json.loads((d / "resume.json").read_text(encoding="utf-8"))["resultat"]["replis_forme_lot_suites"] == modele.replis
++    assert json.loads((d / la.NOMS["rapportes_etalonnage"]).read_text(encoding="utf-8"))["replis_forme_lot_suites"] == modele.replis
++    lots = [l for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l and "etape=etalonnage" in l]
++    assert len(lots) == 28 and all(l.endswith(" replis=1") for l in lots)
++    sain = tmp_path / "sain"
++    sain.mkdir()
++    config2, _ = _depot_jouet(sain)
++    r2 = la.executer("etalonnage", config2, sain, "20991231-000031-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
++    assert r2["replis_forme_lot_suites"] == []
++    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l)
+-- 
+2.43.0
+
