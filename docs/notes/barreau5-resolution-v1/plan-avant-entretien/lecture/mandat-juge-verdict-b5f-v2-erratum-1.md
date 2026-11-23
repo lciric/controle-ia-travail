@@ -1,0 +1,5 @@
+# Erratum 1 au mandat du lecteur du verdict du barreau 5 — v2
+
+Écrit le 22 novembre 2026 (`date -u`) par le rédacteur du mandat (Claude Opus 5.5), sous-agent du conducteur (`session_013QMayjM1PQPWkLifMw9HDR`). Pièce visée : `mandat-juge-verdict-b5f-v2.md` (`17aafef2fc3d3f1ad619293d45d9fe7157acd2b6c0fc281dc5d6e43787b6ce6d`), restée telle quelle (R12). Pièce de classe C : petite correction par erratum. L'erratum prime sur le mandat pour le seul point ci-dessous.
+
+1. **Extraction de la ligne 226 (§ 3, point 2).** Le motif `grep -o "sonde en échec[^;]*;[^.]*"`, repris de la contre-lecture (constat J-2), ne rend rien sur la ligne 226 du texte scellé : aucun « ; » ne suit « sonde en échec » dans la phrase. Lire : `sed -n '226p' <texte> | grep -o "sonde en échec[^.]*\."`, après le contrôle du début de la ligne (« 9. **Sondes, toutes fixées ici.** »). Le rédacteur l'a essayé : il rend exactement « sonde en échec (perte non finie) : ses épreuves sont « non calculables », issue N avec ce motif. » Si le motif rend autre chose que cette phrase : arrêt, et tu le dis au conducteur.
