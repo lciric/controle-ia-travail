@@ -13,3 +13,13 @@
 - **Verdict : neutre, 0,45**, à la limite. Devinette : la personne espère que H1 et H3 « tiennent ou presque » et « se traduisent en un modèle formel mesurable ». Indices : la partie 2 impose d'avance les pièces du modèle (deux distances, critère serrure-clé, champ, dynamique d'émergence) ; « (par exemple H1 ou H3) » en partie 7 ; le soin des exemples.
 - Retouches proposées, **non portées** (la v2 est neutre, et la deuxième changerait ce qui est demandé en partie 2, qui revient à l'auteur de la demande) : (1) supprimer « (par exemple H1 ou H3) » ; (2) partie 2 conditionnelle (« ne retenant que les éléments qui survivent à la partie 1 ; il est acceptable qu'il ne contienne ni champ, ni critère serrure-clé, ni dynamique d'émergence ») ; (3) demander le modèle de base le plus simple sans aucune des hypothèses (nouveauté combinatoire, attachement préférentiel). Portées à la mère pour décision.
 - **Texte servi retenu : v2.**
+
+## Troisième test, v3 (`5baa0a25…`), lecteur neuf (Opus 5.5, effort moyen, sans outil), 2026-11-23 vers 13:55Z
+- v3 = v2 plus les trois retouches du deuxième lecteur, acceptées par la mère (R-5177) : retrait de « (par exemple H1 ou H3) » ; partie 2 conditionnelle ; modèle de base le plus simple demandé.
+- **Verdict : non neutre, 0,6.** Devinette : le chercheur espère que H1, bornée par H4, « forme le noyau sauvable et formalisable » et que les analogies physiques soient « réduites ou écartées ». Indices : H1 en tête et la plus développée ; la permission d'écarter nomme le champ, le critère serrure-clé et l'émergence, jamais H1 ; « deux distances (surface et structure) » présuppose H1.
+- Le lecteur ne voit pas de pression à confirmer (« le biais ne tient pas au ton, il tient au cadre »).
+- **v4** (`b4cf79ef…`) : ses deux retouches de la partie 2 seulement, sans toucher aux hypothèses :
+  - « ni distance de surface, ni champ, … » ;
+  - « toute notion de distance que vous jugez pertinente, s'il y en a une ».
+- Sa troisième retouche, réordonner les hypothèses ou retirer la phrase-thèse de H1, n'est pas portée : elle change le texte des hypothèses, qui revient à l'auteur de la demande.
+- Note : les lecteurs successifs lisent des orientations différentes (vers la confirmation, 0,55 ; neutre, 0,45 ; vers la sélection de H1, 0,6). L'écart entre lecteurs est du même ordre que celui entre versions.
