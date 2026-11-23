@@ -1,0 +1,1 @@
+PYTHONPATH=src /usr/bin/python3 brouillons/t08-texte-complet-fable-v1/finaliser-t08-scellement-v1.py --entree "$1" --commit-code 0123456789abcdef0123456789abcdef01234567 --empreintes-code emp.md --contre-lecture-code cl.md --ligne-gardes R-9999 --ligne-depense "2026-11-26 : engagement, T0.8, GO-2026-11-10-12" $2
