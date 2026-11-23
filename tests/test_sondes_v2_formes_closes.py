@@ -11,7 +11,7 @@ from threadpoolctl import threadpool_limits
 
 from controle_ia.gardes import GardeArret
 from controle_ia.harnais.sondes import score_action
-from controle_ia.sondes.familles import SondeLineaireJetons
+from controle_ia.sondes_v2.reemploi_v1 import SondeLineaireJetons
 from controle_ia.sondes_v2 import formes_closes_v1 as fc
 
 D = 32
@@ -35,7 +35,7 @@ def _donnees(graine=0, n=40, d=D, signal=1.5):
 
 
 def _aire(s, y):
-    from controle_ia.sondes.evaluation import aire_sous_courbe
+    from controle_ia.sondes_v2.reemploi_v1 import aire_sous_courbe
     return aire_sous_courbe(s, y)
 
 

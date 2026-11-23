@@ -97,7 +97,7 @@ def test_compter_et_passage():
 def test_programme_complet(tmp_path):
     kw = dict(mode="complet", cas=[(8, 8, 3)], repliques=1, n_nul=39, n_tirages=200, seuils=SEUILS, d=32,
               entropie=20261122, mondes=["trace_forte", "interaction_contraire", "decalage_de_chemin", "fuite_de_pli"],
-              k_externes=3)
+              k_externes=3, n_nul_identite=19, autoriser_depot_sale=True)
     c1 = prog.executer(tmp_path / "a", **kw)
     r = json.loads(c1.read_text())["cases"]["8,8,3"]
     crit = {(m, k["lecture"]): k for m, v in r.items() for k in v["criteres"]}
@@ -117,7 +117,11 @@ def test_programme_complet(tmp_path):
 
 def test_programme_etalon_grille(tmp_path):
     c = prog.executer(tmp_path, "etalon", [(7, 1, 8, 2), (4, 2, 8, 1)], 2, 9, 100, SEUILS, 16, 5,
-                      mondes=["trace_forte", "identite_seule", "etiquettes_permutees"])
+                      mondes=["trace_forte", "identite_seule", "etiquettes_permutees"], n_nul_identite=9,
+                      autoriser_depot_sale=True)
+    man = json.loads(c.read_text())["manifeste"]
+    assert len(man["commit"]) == 40 and man["config"]["cas"] == [[7, 1, 8, 2], [4, 2, 8, 1]]  # défaut 1 (R9)
+    assert man["config"]["nul_identite"] == 9 and "depot_propre" in man
     r = json.loads(c.read_text())["cases"]
     tf = {k["lecture"]: k for k in r["7,1,8,2"]["trace_forte"]["criteres"]}
     assert tf["transport"]["part_admise"] == 1.0 and tf["transport"]["essais"] == 2
@@ -128,7 +132,8 @@ def test_programme_etalon_grille(tmp_path):
 
 def test_ligne_de_commande(tmp_path, capsys):
     assert prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--repliques", "1", "--nul", "5",
-                      "--tirages", "20", "--d", "16", "--entropie", "3", "--mondes", "trace_faible"]) == 0
+                      "--tirages", "20", "--d", "16", "--entropie", "3", "--mondes", "trace_faible",
+                      "--nul-identite", "5", "--autoriser-depot-sale"]) == 0
     assert capsys.readouterr().out.strip().endswith(".json")
     with pytest.raises(GardeArret):
         prog._entiers("5,5", 3)
@@ -137,7 +142,18 @@ def test_ligne_de_commande(tmp_path, capsys):
 @pytest.mark.skipif(os.environ.get("SONDES_V2_LENT") != "1", reason="essai lent : SONDES_V2_LENT=1")
 def test_lent_dimension_4096(tmp_path):
     c = prog.executer(tmp_path, "etalon", [(8, 1, 8, 3)], 1, 19, 200, SEUILS, 4096, 4096,
-                      mondes=["trace_forte", "identite_seule"])
+                      mondes=["trace_forte", "identite_seule"], n_nul_identite=19, autoriser_depot_sale=True)
     r = json.loads(c.read_text())["cases"]["8,1,8,3"]
     assert {k["lecture"]: k["part_admise"] for k in r["identite_seule"]["criteres"]}["identite"] == 1.0
     assert {k["lecture"]: k["part_admise"] for k in r["trace_forte"]["criteres"]}["transport"] == 1.0
+
+
+def test_depot_sale_refuse_et_critere_manquant(tmp_path, monkeypatch):
+    """Défaut 1 : arbre sale refusé sans autorisation ; défaut 4 : un critère engagé jamais lu arrête."""
+    monkeypatch.setattr(prog, "etat_git", lambda racine: {"commit": "0" * 40, "propre": False, "statut": "?? x"})
+    with pytest.raises(GardeArret, match="non propre"):
+        prog.executer(tmp_path / "a", "etalon", [(7, 1, 8, 1)], 1, 3, 10, SEUILS, 8, 1, mondes=["trace_forte"])
+    monkeypatch.setattr(prog.mp, "lire_etalon", lambda *a, **k: {"transport_controle": ["fort"]})
+    with pytest.raises(GardeArret, match="jamais lu"):
+        prog.executer(tmp_path / "b", "etalon", [(7, 1, 8, 1)], 1, 3, 10, SEUILS, 8, 1, mondes=["trace_forte"],
+                      autoriser_depot_sale=True)

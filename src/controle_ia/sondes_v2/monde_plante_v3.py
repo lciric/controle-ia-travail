@@ -250,15 +250,19 @@ def lire_etalon(p: Parametres, rngs: dict, seuils: dict, n_tirages: int, n_nul: 
 
 def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul: int, n_tirages: int,
                famille: str = "difference_moyennes_appariee", k_externes: int = 5,
-               minimums: dict = st.MINIMUMS_DEFAUT) -> dict:
+               minimums: dict = st.MINIMUMS_DEFAUT, n_nul_identite: int = 200) -> dict:
     """Mode « complet » (une famille) : toutes les lignes ; chaque lecture est une liste d'un élément."""
     alpha = seuils["alpha"]
     if p.n_familles != 1:
         raise GardeArret("mode complet : une famille")
     if p.fuite_de_pli:
         monde = generer(replace(p, fuite_de_pli=False), rngs["epreuve_plantee"])
-        try:
-            lc.plis_externes(jeu_principal(monde), k_externes, rngs["plis"], {"unites_tenues_a_l_ecart": ["u0_0"]})
+        jeu = jeu_principal(monde)
+        # cas sain jumeau (défaut 3) : unité et tâche tenues à l'écart ensemble, le pli doit passer
+        lc.plis_externes(jeu, k_externes, rngs["plis"], {"unites_tenues_a_l_ecart": ["u0_0"],
+                                                         "taches_tenues_a_l_ecart": ["t0"]})
+        try:  # artefact : unité seule, tâches partagées des deux côtés
+            lc.plis_externes(jeu, k_externes, rngs["plis"], {"unites_tenues_a_l_ecart": ["u0_0"]})
         except GardeArret:  # issue attendue de ce monde-artefact (R5) : consignée, jamais poursuivie
             return {"fuite": ["garde arrêtée"]}
         return {"fuite": ["garde muette"]}
@@ -286,7 +290,7 @@ def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul
     corrigee = rj["doses"].get("1", {}).get("corrigee", {}).get("libelle")
     lect["decalage_maitrise"] = ("oui" if lect["interaction_sans_controle"].startswith("non interprétable") or
                                  corrigee == "non établie à cette puissance" else "non")
-    et = lire_etalon(p, rngs, seuils, n_tirages, n_nul, True, monde)
+    et = lire_etalon(p, rngs, seuils, n_tirages, n_nul_identite, True, monde)
     lect["transport"], lect["transport_controle"], lect["identite"] = (et["transport"][0], et["transport_controle"][0],
                                                                        et["identite"][0])
     lignes_t = _lignes(monde, [j for _, j in monde["paires"]] + ["N"], unite=False)

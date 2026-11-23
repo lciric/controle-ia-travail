@@ -24,7 +24,7 @@ import sys
 import time
 from pathlib import Path
 
-from ..gardes import GardeArret
+from ..gardes import GardeArret, etat_git
 from ..manifeste import graines
 from ..scellement import sceller
 from . import lecture_v1 as lc
@@ -44,7 +44,7 @@ def _entiers(texte: str, n: int) -> tuple:
 
 def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_tirages: int, seuils: dict, d: int,
              entropie: int | None, mondes=None, k_externes: int = 5, famille: str = "difference_moyennes_appariee",
-             journal_progres=None) -> Path:
+             journal_progres=None, n_nul_identite: int = 200, autoriser_depot_sale: bool = False) -> Path:
     """`cas` : en mode « complet », (paires, tâches, actions) ; en mode « étalon », (paires, familles, tâches,
     actions)."""
     if mode not in ("complet", "etalon"):
@@ -56,6 +56,14 @@ def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_
             raise GardeArret(f"monde {m!r} non engagé pour le mode {mode}")
     if repliques < 1 or n_nul < 1 or n_tirages < 1 or not 0.0 < seuils["alpha"] < 1.0:
         raise GardeArret("répliques, nul et tirages ≥ 1 ; 0 < α < 1")
+    # R9 (défaut 1 de la contre-lecture) : commit et état du dépôt du code qui tourne ; dépôt sale refusé sauf
+    # autorisation explicite, alors consignée en réserve
+    git = etat_git(Path(__file__).resolve().parents[3])
+    reserves = []
+    if not git["propre"]:
+        if not autoriser_depot_sale:
+            raise GardeArret("arbre de travail non propre : committer avant le run, ou autoriser explicitement")
+        reserves.append("arbre de travail non propre au lancement (autorisé explicitement)")
     racine = graines(["racine"], entropie)["racine"]
     ent = int(racine["entropie"])
     sortie = Path(sortie)
@@ -67,11 +75,14 @@ def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_
     rapport = {"format": "rapport-monde-plante-v3", "mode": mode, "verites_sha256": sha,
                "arguments": {"cas": [list(x) for x in cas], "repliques": repliques, "nul": n_nul,
                              "tirages": n_tirages, "seuils": seuils, "d": d, "mondes": noms,
-                             "k_externes": k_externes, "famille": famille},
+                             "k_externes": k_externes, "famille": famille, "nul_identite": n_nul_identite},
                "graines": {"entropie_racine": str(ent), "schema": "manifeste.graines([f'{mode}/{cas}/{monde}/{r}/{nom}'],"
                            " entropie_racine), nom dans statistiques_v1.GRAINES_NOMMEES"},
-               "manifeste": lc.manifeste_lecture({"programme": "programme_monde_plante_v3"}, {"racine": racine}),
                "cases": {}}
+    rapport["manifeste"] = lc.manifeste_lecture({"programme": "programme_monde_plante_v3", "mode": mode,
+                                                 "verites_sha256": sha, **rapport["arguments"]},
+                                                {"racine": racine}, git["commit"])
+    rapport["manifeste"].update(depot_propre=git["propre"], reserves=reserves)
     debut = time.time()
     for c in cas:
         cle_c = ",".join(map(str, c))
@@ -90,16 +101,20 @@ def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_
                 _, rngs = st.generateurs_nommes(ent, f"{mode}/{cle_c}/{m}/{r}/")
                 if mode == "complet":
                     lectures.append(mp.lire_monde(p, rngs, journal, f"{cle_c}/{m}/{r}", seuils, n_nul, n_tirages,
-                                                  famille, k_externes))
+                                                  famille, k_externes, n_nul_identite=n_nul_identite))
                 else:
-                    lectures.append(mp.lire_etalon(p, rngs, seuils, n_tirages, n_nul, avec_id))
+                    lectures.append(mp.lire_etalon(p, rngs, seuils, n_tirages, n_nul_identite, avec_id))
                 if journal_progres is not None:
                     journal_progres(f"{mode} {cle_c} {m} réplique {r + 1}/{repliques}")
             sortie_c = []
-            for k in criteres:
-                if k["lecture"] == "fuite" or all(k["lecture"] in l for l in lectures):
-                    oui, n = mp.compter(lectures, k)
-                    sortie_c.append({**k, **mp.passage(oui, n, k)})
+            for k in criteres:  # défaut 4 : un critère engagé dont la lecture manque arrête (aucune omission)
+                lues = [l for l in lectures if k["lecture"] in l]
+                if not lues:
+                    raise GardeArret(f"monde {m} : critère engagé « {k['lecture']} » jamais lu")
+                if len(lues) != len(lectures) and k["lecture"] != "fuite" and m != "fuite_de_pli":
+                    raise GardeArret(f"monde {m} : critère « {k['lecture']} » manquant dans une réplique")
+                oui, n = mp.compter(lues, k)
+                sortie_c.append({**k, **mp.passage(oui, n, k)})
             table = {}
             for crit in mp.CRITERES:
                 vals = [mp.base_libelle(str(v)) for l in lectures for v in l.get(crit, [])]
@@ -132,6 +147,8 @@ def main(argv=None) -> int:
     ap.add_argument("--entropie", type=int, default=None)
     ap.add_argument("--mondes", default=None)
     ap.add_argument("--k-externes", type=int, default=5)
+    ap.add_argument("--nul-identite", type=int, default=200)
+    ap.add_argument("--autoriser-depot-sale", action="store_true")
     a = ap.parse_args(argv)
     v, _ = mp.charger_verites()
     df = v["defauts"]
@@ -145,7 +162,8 @@ def main(argv=None) -> int:
         cas = a.cas or list(itertools.product(gr["paires"], gr["familles"], gr["taches"], gr["actions"]))
     chemin = executer(a.sortie, mode, cas, df["repliques"] if a.repliques is None else a.repliques, a.nul,
                       a.tirages, seuils, a.d, a.entropie, None if a.mondes is None else a.mondes.split(","),
-                      a.k_externes, journal_progres=lambda m: print(m, file=sys.stderr, flush=True))
+                      a.k_externes, journal_progres=lambda m: print(m, file=sys.stderr, flush=True),
+                      n_nul_identite=a.nul_identite, autoriser_depot_sale=a.autoriser_depot_sale)
     print(chemin)
     return 0
 

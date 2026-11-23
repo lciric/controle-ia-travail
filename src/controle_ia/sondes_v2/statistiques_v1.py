@@ -19,7 +19,7 @@ import numpy as np
 
 from ..gardes import GardeArret
 from ..manifeste import generateur, graines
-from ..sondes.evaluation import aire_sous_courbe, plancher_apparie
+from .reemploi_v1 import aire_sous_courbe, plancher_apparie
 from . import lecture_v1 as lc
 
 GRAINES_NOMMEES = ("couples", "plis", "nul", "reechantillonnage", "signes", "plancher_aleatoire", "epreuve_plantee")
@@ -365,19 +365,20 @@ def sonde_identite(jumeaux: dict, rngs: dict, n_tirages: int = 2000, n_nul: int 
         aire, aires_plis, hors = _identite_couple(jumeaux[a], jumeaux[b], cles, plis)
         # intervalle : tâches tirées avec remise, sans réapprentissage
         taches = sorted({jumeaux[a][c][0] for c in cles})
-        vals, pli_manquant = [], 0
+        vals, pli_manquant = [], 0  # nombre de tirages où au moins un pli manque (défaut 5)
         for _ in range(int(n_tirages)):
             tirees = rngs["reechantillonnage"].choice(len(taches), size=len(taches), replace=True)
             compte = np.bincount(tirees, minlength=len(taches))
             poids_t = {taches[i]: int(compte[i]) for i in range(len(taches))}
-            aires_t = []
+            aires_t, manque = [], False
             for h in hors:
                 rep = np.array([poids_t[t] for t in h["taches"]])
                 if rep.sum() == 0:
-                    pli_manquant += 1
+                    manque = True
                     continue
                 sa, sb = np.repeat(h["sa"], rep), np.repeat(h["sb"], rep)
                 aires_t.append(aire_sous_courbe(np.r_[sa, sb], np.r_[np.ones(sa.size), np.zeros(sb.size)]))
+            pli_manquant += manque
             if aires_t:
                 vals.append(float(np.mean(aires_t)))
         # nul : échanges action par action, apprentissage compris
@@ -512,6 +513,8 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
             if autre is not None:
                 ecarts.setdefault(r["tache"], []).append((r["score"] - autre["score"]) / sd.get(r["pli"], np.nan))
         if ecarts:
+            # [provisoire (E-8)] écart de chemin = moyenne sur les tâches des moyennes par tâche (une constante par
+            # dose), retirée deux fois de chaque interaction par tâche
             ecart = float(np.mean([np.mean(v) for v in ecarts.values()]))
             corrige = {t: v - 2.0 * ecart for t, v in par_tache.items()}
             res["controle_chemin"] = {"ecart": ecart, "taches": len(ecarts)}

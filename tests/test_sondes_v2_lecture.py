@@ -8,7 +8,7 @@ import pytest
 
 from controle_ia.gardes import GardeArret
 from controle_ia.scellement import sceller
-from controle_ia.sondes.evaluation import intervalle_blocs
+from controle_ia.sondes_v2.reemploi_v1 import intervalle_blocs
 from controle_ia.sondes_v2 import formes_closes_v1 as fc
 from controle_ia.sondes_v2 import lecture_v1 as lc
 
@@ -419,3 +419,49 @@ def test_ligne_non_calculable_par_tirages_degeneres(tmp_path):
     sain = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee"), lc.construire_jeu(*_lignes()),
                          np.random.default_rng(0), tmp_path / "k.jsonl", "y")
     assert sain["etat"] == "calculée" and sain["intervalle_taches"]["etat"] == "calculé"
+
+
+def _jeu_series(unites, etiquettes_par_serie, graine=0):
+    rng = np.random.default_rng(graine)
+    lignes, et = [], {}
+    for s, lab in etiquettes_par_serie.items():
+        for t in range(4):
+            for k in range(3):
+                lignes.append({"serie": s, "cle": f"t{t}-k{k}", "tache": f"t{t}", "unite": unites.get(s),
+                               "source": None, "sequence": rng.standard_normal((2, 3)), "pas": 0,
+                               "valeur_declaree": None})
+                et[f"{s}/t{t}-k{k}"] = lab if lab is not None else (k + (s == "B")) % 2  # ni texte ni série
+    return lc.construire_jeu(lignes, et)
+
+
+def test_nul_par_bloc_de_serie_sans_paires():
+    """Défaut 2 : étiquette du jeu de poids, sans paires : permutation des séries d'un bloc."""
+    jeu = _jeu_series({}, {"A": 1, "B": 0, "C": 1, "D": 0})
+    assert lc.paires_structurelles(jeu) is None
+    vus = set()
+    for g in range(20):
+        y = lc.permuter_etiquettes(jeu, np.random.default_rng(g))
+        for s in "ABCD":
+            assert len(set(y[jeu.series == s].tolist())) == 1  # chaque série d'un bloc
+        assert y.sum() == jeu.y.sum()
+        vus.add(tuple(int(y[jeu.series == s][0]) for s in "ABCD"))
+    assert len(vus) > 1
+
+
+def test_nul_refus_nomme_si_unite_echangeable_inconnue():
+    """Défaut 2 : jeu à unités, étiquette ni du texte ni du jeu de poids, sans paires : arrêt nommé."""
+    jeu = _jeu_series({"A": "u0", "B": "u1"}, {"A": None, "B": None})
+    with pytest.raises(GardeArret, match="unité échangeable inconnue"):
+        lc.permuter_etiquettes(jeu, np.random.default_rng(0))
+
+
+def test_nul_paires_structurelles_quelle_que_soit_la_famille(tmp_path):
+    """Défaut 2 : sous la logistique (sans appariement), le nul échange quand même la paire de poids d'un bloc."""
+    from controle_ia.sondes_v2 import monde_plante_v3 as mp
+    jeu = mp.jeu_principal(mp.generer(mp.Parametres(d=8, n_paires=4, n_taches=3, actions_par_tache=2),
+                                      np.random.default_rng(0)))
+    pa = lc.paires_structurelles(jeu)
+    assert pa is not None and pa == lc.paires_du_jeu(jeu)
+    y = lc.permuter_etiquettes(jeu, np.random.default_rng(1), pa)
+    for u in set(jeu.unites):
+        assert len({int(y[i]) for i, _ in pa if jeu.unites[i] == u}) == 1

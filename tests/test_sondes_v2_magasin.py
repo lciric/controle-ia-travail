@@ -400,3 +400,20 @@ def test_avant_champ_facultatif(tmp_path):
     assert mg.Serie(tmp_path / "s2").manifeste["couches"]["avant_champ"] == []
     with pytest.raises(GardeArret, match="sous-ensemble"):
         mg.EcrivainSerie(tmp_path / "s3", "s3", POIDS_NU, "t", {"type": "toutes"}, D, CHEMIN, (9,))
+
+
+def test_garde_meme_source_de_textes(tmp_path):
+    """Défaut 10 : deux séries de sources de textes différentes ne se comparent pas, sauf par le diagnostic nommé."""
+    acts = _actions()
+    _ecrire(tmp_path / "a", "serie-a", actions=acts)
+    e = mg.EcrivainSerie(tmp_path / "b", "serie-b", POIDS_AD, "autres-textes", {"type": "toutes"}, D, CHEMIN)
+    rng = np.random.default_rng(0)
+    for a in acts:
+        e.ajouter(a, rng.standard_normal((a.n_jetons, D)),
+                  {c: rng.standard_normal(D) for c in mg.COUCHES_AVANT_CHAMP} if a.a_un_champ else None)
+    e.clore()
+    a, b = mg.Serie(tmp_path / "a"), mg.Serie(tmp_path / "b")
+    with pytest.raises(GardeArret, match="sources de textes"):
+        mg.intersection_cles(a, b)
+    _, eff = mg.diagnostic_intersection_chemins_melanges(a, b)
+    assert eff["melange_de_sources"]["serie-b"] == "autres-textes"

@@ -40,7 +40,7 @@ from sklearn.linear_model import LogisticRegression
 from threadpoolctl import ThreadpoolController
 
 from ..gardes import GardeArret
-from ..sondes.familles import SondeLineaireJetons, _verifier_donnees
+from .reemploi_v1 import SondeLineaireJetons, _verifier_donnees
 
 RETRECISSEMENTS = (0.9, 0.5, 0.1)            # ordre de simplicité : le plus rétréci d'abord [Q6, provisoire]
 INVERSES_PENALITE = (0.001, 0.01, 0.1, 1.0)  # le plus pénalisé d'abord [Q6, provisoire]

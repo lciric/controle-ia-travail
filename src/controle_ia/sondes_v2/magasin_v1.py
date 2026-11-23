@@ -26,6 +26,7 @@ description de format fournie par la mère.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import math
 import re
@@ -366,8 +367,7 @@ class Serie:
             octets = f.read()
         if hashlib.sha256(octets).hexdigest() != attendue:
             raise GardeArret(f"{chemin} : empreinte fausse")
-        with open(chemin, "rb") as f:
-            a = np.load(f, allow_pickle=False)
+        a = np.load(io.BytesIO(octets), allow_pickle=False)  # les octets vérifiés sont ceux chargés (défaut 9)
         if a.dtype != np.float16 or a.shape != forme:
             raise GardeArret(f"{chemin} : {a.dtype} {a.shape} au lieu de float16 {forme}")
         return a.astype(np.float32)
@@ -396,14 +396,18 @@ def intersection_cles(*series: Serie) -> tuple[list[str], dict]:
     chemins = {json.dumps(s.chemin_de_calcul, sort_keys=True, ensure_ascii=False) for s in series}
     if len(chemins) > 1:
         raise GardeArret(f"comparaison de séries de chemins de calcul différents : {sorted(chemins)}")
+    sources = {s.manifeste["source_textes"] for s in series}
+    if len(sources) > 1:  # défaut 10 : « une même source de textes » (texte scellé, plan d'analyse)
+        raise GardeArret(f"comparaison de séries de sources de textes différentes : {sorted(sources)}")
     return _intersection(*series)
 
 
 def diagnostic_intersection_chemins_melanges(*series: Serie) -> tuple[list[str], dict]:
-    """DIAGNOSTIC SEULEMENT : intersection permise entre chemins de calcul différents ; le mélange est écrit dans
-    les effectifs rendus (`melange_de_chemins`), à recopier dans toute sortie."""
+    """DIAGNOSTIC SEULEMENT : intersection permise entre chemins de calcul ou sources de textes différents ; le mélange
+    est écrit dans les effectifs rendus (`melange_de_chemins`, `melange_de_sources`), à recopier dans toute sortie."""
     cles, eff = _intersection(*series)
     eff["melange_de_chemins"] = {s.identifiant: s.chemin_de_calcul for s in series}
+    eff["melange_de_sources"] = {s.identifiant: s.manifeste["source_textes"] for s in series}
     return cles, eff
 
 

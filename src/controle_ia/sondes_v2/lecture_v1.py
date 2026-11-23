@@ -20,8 +20,8 @@ et le choix du réglage ne reçoivent que la partie d'apprentissage. `Epreuve.ou
 tableaux non modifiables, dont l'empreinte a été écrite dans le journal des gels sur disque avant l'appel ; sinon arrêt
 « épreuve ouverte avant le gel ». Une épreuve ne s'ouvre qu'une fois, pour une seule sonde gelée.
 
-**Statistiques.** Réemployées : `aire_sous_courbe`, `intervalle_blocs`, `plancher_apparie` (sondes.evaluation),
-`difference_aires_appariee` (sondes.temoins). Neuves : `changement_signe` ;
+**Statistiques.** Réemployées : `aire_sous_courbe`, `intervalle_blocs` (copies sans torch de sondes.evaluation, dans
+`reemploi_v1`) ; `difference_aires_appariee` n'est pas employée. Neuves : `changement_signe` ;
 `nul_reetiquetage` (rejoue toute la sélection, boucle interne comprise) ; capacité de mémorisation (aire
 d'apprentissage, rapportée, jamais décisive) ; `contraste_apparie` [provisoire (Q13), confirmé par la mère]. L'étalon de
 transport, la sonde d'identité et le rejeu croisé (interaction) sont redéfinis par l'erratum 1 : `statistiques_v1`.
@@ -48,8 +48,7 @@ import numpy as np
 from ..gardes import GardeArret
 from ..manifeste import generateur, graines as deriver_graines, versions
 from ..scellement import sceller, verifier
-from ..sondes.evaluation import aire_sous_courbe, intervalle_blocs
-from ..sondes.familles import SondeLineaireJetons
+from .reemploi_v1 import SondeLineaireJetons, aire_sous_courbe, intervalle_blocs
 from . import formes_closes_v1 as fc
 
 TOLERANCE_EX_AEQUO = 0.005
@@ -582,6 +581,7 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
         r = {"nom": nom, "etat": "non calculable", "motif": "aucun pli d'épreuve avec les deux classes",
              "plis": sortie_plis}
         return (r, gels) if rendre_gels else r
+    plis_sans_deux_classes = sum(p["aire_epreuve"] is None for p in sortie_plis)  # défaut 7 (a)
     aire = float(np.mean(aires))
     intervalle = None
     if garder_scores:
@@ -597,9 +597,10 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
     sep_triv = {}
     for k in PREDICTEURS_TRIVIAUX:
         vals = triviaux_plis[k]
-        sep_triv[k] = None if any(v is None for v in vals) else float(np.mean(vals))
-    non_interp = [k for k, v in sep_triv.items() if v is not None and v >= aire]
+        sep_triv[k] = "prédicteur non évalué" if any(v is None for v in vals) else float(np.mean(vals))  # défaut 7 (b)
+    non_interp = [k for k, v in sep_triv.items() if isinstance(v, float) and v >= aire]
     r = {"nom": nom, "etat": "calculée", "famille": conf.famille, "aire": aire, "aires_plis": aires,
+         "plis_sans_deux_classes": plis_sans_deux_classes, "effectifs_plan": jeu.effectifs(), "n_plis": len(plis),
          "intervalle_taches": intervalle, "memorisation": float(np.mean([p["aire_apprentissage"] for p in sortie_plis])),
          "triviaux": sep_triv, "non_interpretable": bool(non_interp), "triviaux_qui_separent": non_interp,
          "plis": sortie_plis, "scores_epreuve": scores if garder_scores else None,
@@ -614,7 +615,10 @@ def permuter_etiquettes(jeu: Jeu, rng: np.random.Generator, paires=None) -> np.n
     - des paires couvrent le jeu sans cette structure : échange dans chaque paire d'actions avec probabilité 1/2 ;
     - sinon, si l'étiquette est une propriété du texte (constante sur toutes les lignes d'une même clé) : permutation
       des étiquettes **entre clés** à l'intérieur de chaque tâche, toutes les lectures d'une clé gardant la même ;
-    - sinon : permutation des lignes à l'intérieur de chaque tâche."""
+    - sinon, si l'étiquette est une propriété du jeu de poids (constante sur chaque série) : permutation des étiquettes
+      **entre séries**, chaque série d'un bloc (défaut 2 de la contre-lecture) ;
+    - sinon, sans unités : permutation des lignes à l'intérieur de chaque tâche (l'étiquette est propre à la ligne) ;
+    - sinon : arrêt nommé, l'unité échangeable n'est pas connue (aucun repli silencieux)."""
     y = jeu.y.copy()
     if paires is not None:
         if jeu.unites is not None and _etiquette_de_serie(jeu):
@@ -644,10 +648,32 @@ def permuter_etiquettes(jeu: Jeu, rng: np.random.Generator, paires=None) -> np.n
             for c, e in zip(cles_t, et):
                 y[par_cle[c]] = e
         return y
+    if _etiquette_de_serie(jeu):
+        noms = sorted(np.unique(jeu.series))
+        et = np.array([int(jeu.y[jeu.series == n][0]) for n in noms])
+        et = et[rng.permutation(et.size)]
+        for n, e in zip(noms, et):
+            y[jeu.series == n] = e
+        return y
+    if jeu.unites is not None:
+        raise GardeArret("réétiquetage : étiquette ni du texte, ni du jeu de poids, ni appariée, sur un jeu à unités : "
+                         "unité échangeable inconnue, arrêt")
     for t in sorted(np.unique(jeu.taches)):
         idx = np.flatnonzero(jeu.taches == t)
         y[idx] = y[idx[rng.permutation(idx.size)]]
     return y
+
+
+def paires_structurelles(jeu: Jeu) -> list[tuple[int, int]] | None:
+    """Paires du jeu, lues sur sa structure seule (même clé, unité et source, étiquettes opposées), quelle que soit la
+    famille de sonde ; None si le jeu n'est pas entièrement fait de telles paires (sans arrêt)."""
+    groupes: dict = {}
+    for i in range(len(jeu)):
+        k = (jeu.cles[i], None if jeu.unites is None else jeu.unites[i], None if jeu.sources is None else jeu.sources[i])
+        groupes.setdefault(k, []).append(i)
+    if not all(len(m) == 2 and {int(jeu.y[i]) for i in m} == {0, 1} for m in groupes.values()):
+        return None
+    return paires_du_jeu(jeu)
 
 
 def _etiquette_de_serie(jeu: Jeu) -> bool:
@@ -661,7 +687,7 @@ def nul_reetiquetage(conf: Configuration, jeu: Jeu, aire_observee: float, n_repl
     Rend la distribution des aires de ligne, p = (1 + #{nul ≥ observé})/(1 + R), et les aires d'apprentissage des
     répliques (capacité de mémorisation, rapportée, jamais décisive). Une réplique non calculable compte comme
     dégénérée ; plus de 1 % : le nul est « non calculable »."""
-    paires = paires_du_jeu(jeu) if conf.apparier else None
+    paires = paires_structurelles(jeu)  # défaut 2 : la structure décide, non la famille de sonde
     aires, memo, degeneres = [], [], 0
     for r in range(int(n_repliques)):
         jr = jeu.avec_etiquettes(permuter_etiquettes(jeu, rng, paires))
@@ -753,6 +779,8 @@ def ecrire_lecture(dossier, nom: str, resultat: dict, manifeste: dict) -> Path:
 
 
 CLES_RESUME = ("nom", "famille", "effectifs", "plis", "statistiques_calculees")
+STATISTIQUES_RESUME = ("ligne", "nul", "identite", "etalon", "rejeu", "contraste", "interaction", "memorisation",
+                       "triviaux", "intervalle_taches")
 
 
 def resume_sans_nombre(chemin_lecture) -> dict:
@@ -764,12 +792,14 @@ def resume_sans_nombre(chemin_lecture) -> dict:
     r = corps["resultat"]
     res = {"nom": corps["nom"], "fichier_sha256": sha, "famille": r.get("famille"),
            "effectifs": r.get("effectifs_plan"), "plis": r.get("n_plis"),
-           "statistiques_calculees": sorted(k for k in r if k not in ("famille", "effectifs_plan", "n_plis"))}
+           # liste fermée (défaut 8 c) : seules ces clés, si présentes, sont nommées ; aucune autre clé n'est révélée
+           "statistiques_calculees": sorted(k for k in r if k in STATISTIQUES_RESUME)}
     exiger_sans_resultat(res)
     return res
 
 
-MOTS_ISSUE = ("établie", "contraire", "interprétable", "calculable", "au-dessus", "au_dessus")
+MOTS_ISSUE = ("etabli", "contraire", "interpretable", "calculable", "au-dessus", "au_dessus", "testable", "fort",
+              "faible", "insuffisant")
 
 
 def exiger_sans_resultat(resume: dict) -> None:
@@ -778,8 +808,10 @@ def exiger_sans_resultat(resume: dict) -> None:
         if isinstance(x, float):
             raise GardeArret(f"{chemin} : nombre flottant dans le résumé sans nombre")
         if isinstance(x, str):
+            sans = "".join(c for c in __import__("unicodedata").normalize("NFKD", x.lower())
+                           if not __import__("unicodedata").combining(c))  # comparaison sans accents (défaut 8 b)
             for m in MOTS_ISSUE:
-                if m in x:
+                if m in sans:
                     raise GardeArret(f"{chemin} : mot d'issue « {m} » dans le résumé sans nombre")
         if isinstance(x, dict):
             for k, v in x.items():

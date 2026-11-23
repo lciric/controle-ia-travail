@@ -273,3 +273,16 @@ def test_u_par_lot_egal_au_calcul_un_a_un():
     lot = st._u_par_lot(G, ech, iS, iJ)
     un = [st._u_rho_gram(G, np.where(e, iJ, iS), np.where(e, iS, iJ))[0] for e in ech]
     np.testing.assert_array_equal(lot, un)
+
+
+def test_holm_des_familles_egal_a_holm():
+    """Défaut 13 : le pas à pas de `etalon_familles` rend les mêmes rejets que `holm()` au niveau α."""
+    rng = np.random.default_rng(0)
+    for _ in range(200):
+        m = int(rng.integers(1, 5))
+        ps = rng.uniform(0, 0.08, size=m)
+        r = {f"f{i}": {"etat": "calculé", "P": 9, "U": 0.95, "p_bilaterale": float(p)} for i, p in enumerate(ps)}
+        e = st.etalon_familles(r)
+        adj = st.holm(ps)
+        for i in range(m):
+            assert (e["libelles"][f"f{i}"] == "fort") == (adj[i] <= 0.05)

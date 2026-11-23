@@ -55,8 +55,8 @@ fichier ne porte aucun résultat.
 
 ```
 python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements-cpu.txt
-PYTHONPATH=src python -m pytest -q tests/test_sondes_v2_*.py            # moins d'une minute
-SONDES_V2_LENT=1 PYTHONPATH=src python -m pytest -q tests/test_sondes_v2_monde_plante.py -k lent   # essai lent
+PYTHONPATH=src python -m pytest -q tests/test_sondes_v2_*.py            # de 30 s à 2 min selon la charge
+SONDES_V2_LENT=1 PYTHONPATH=src python -m pytest -q tests/test_sondes_v2_monde_plante_v3.py -k lent   # essai lent
 PYTHONPATH=src python -m controle_ia.sondes_v2.programme_monde_plante_v3 --sortie DOSSIER --taille 8,8,3 --entropie N
 PYTHONPATH=src python -m controle_ia.sondes_v2.programme_monde_plante_v3 --sortie DOSSIER --grille --entropie N
 ```
@@ -76,8 +76,9 @@ partir de 8 tâches et 40 actions (défauts de l'erratum, en arguments).
 
 ## Conventions
 
-- Aucun module du paquet n'importe torch lui-même. Les statistiques réemployées passent par `sondes.familles`, qui
-  importe torch (question Q1 à la mère).
+- Le paquet ne charge pas torch : les fonctions réemployées des sondes v0 (`SondeLineaireJetons`, `aire_sous_courbe`,
+  `intervalle_blocs`, `plancher_apparie`) sont recopiées à l'identique dans `reemploi_v1.py`, et un essai compare leurs
+  sorties octet pour octet aux originaux (défaut 12 de la contre-lecture, question Q1).
 - Double précision. Calcul linéaire sur une seule tâche, par `threadpoolctl` : mêmes octets d'une exécution à l'autre.
   Tolérances déclarées entre machines : `formes_closes_v1.TOLERANCE_ENTRE_MACHINES`, éprouvées en changeant le nombre
   de tâches de calcul et l'ordre des actions.
@@ -94,7 +95,7 @@ partir de 8 tâches et 40 actions (défauts de l'erratum, en arguments).
 
 ## Choix provisoires
 
-Q1 à Q13 : confirmés par la mère à titre provisoire, à revoir par le concepteur. E-1 à E-5 : lectures du développeur
+Q1 à Q13 : confirmés par la mère à titre provisoire, à revoir par le concepteur. E-1 à E-8 : lectures du développeur
 là où l'erratum laisse un détail ouvert. Tous sont marqués dans le code.
 
 - E-1 : libellés « fort », « faible » et « contraire » de l'étalon.
@@ -105,8 +106,10 @@ là où l'erratum laisse un détail ouvert. Tous sont marqués dans le code.
   apprentissage. La lecture « contraste » repose donc sur le nul réétiqueté par paire de poids, échangée d'un bloc.
 - E-6 : direction de la trace commune à toutes les familles.
 - E-7 : étiquettes permutées « à cinq points du taux nominal », lu comme une borne haute ≤ 0,10 pour chaque ligne.
+- E-8 : contrôle du chemin : l'écart retiré est une constante par dose (moyenne sur les tâches des moyennes par
+  tâche), et non un écart propre à chaque tâche.
 
-- Q1 : import de torch par le réemploi.
+- Q1 : réemploi des sondes v0 (copies sans torch dans `reemploi_v1.py`).
 - Q2 : moyenne par paire.
 - Q3 : poids 1/n par action dans la régression logistique.
 - Q4 : grille et choix d'alpha de la régression ridge.
