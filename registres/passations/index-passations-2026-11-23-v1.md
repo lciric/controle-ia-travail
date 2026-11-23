@@ -45,3 +45,5 @@
 - rédacteur des devis de carte du bras A : relance-bras-a/devis-carte-v3 e2279e4b, 2026-11-23-0709-redacteur-devis-carte-bras-a.md (d99b3546…) ; 22 pièces versées
 - rédacteur G1 brouillon 7 (Fable, remplacé) : prep/g1-brouillon7-fable-v1 63422e33, 2026-11-23-2026-11-23-0709-redacteur-g1-brouillon7.md (ca199129…, nom doublé gardé, R12)
 - juge Fable H-1 papier C : juge/papier-c-h1-fable-v1 bbb95e36, 2026-11-23-0710-juge-fable-noeud-h1-papier-c.md (ec5e22b3…) ; décision (a), 0,80
+- rédacteur du texte de T0.8 (Fable, désormais Sonnet) : prep/t08-passation-redacteur-v2 7540dcde, passation redacteur-t08-texte-et-pieces-de-course (841d339d…) ; tout est dans main
+- rédacteur du préenregistrement du papier C (Fable) : prep/papier-c-prereg-fable-v1 a0b98bf1, 2026-11-23-0705-papier-c-prereg-fable.md (6b97256b…) ; 46 fichiers versés
