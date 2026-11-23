@@ -25,3 +25,4 @@
 - développeur sondes v2 : sondes-v2/code-v1 716a5471, 2026-11-23-0638-developpeur-sondes-v2.md (ccd66618…) ; 23 fichiers versés
 - tiers d'extraction G1 : g1/extraits-tiers-v1 77af010c, 2026-11-23-0640-tiers-extraction-g1.md (aac61025…) ; versé cloisonné sur g1/extraits-tiers-v1-atelier-reserve 4fc54af8 (90 fichiers)
 - concepteur sondes v2 (Opus) : prep/sondes-v2-concepteur-opus-v1 7a6681547, 2026-11-23-0625-sondes-v2-concepteur-opus-reprise.md (56ce0261…) ; tâche trig_01SDzQ2AidKeNEPt7voBMrRg (PR n° 81, 06:47Z)
+- garde de calcul : garde/go-rang-trois-chiffres-v1 0c2b0d7d, 2026-11-23-0627-garde-go-rang-trois-chiffres.md (9d561ff9…) ; 13 fichiers versés ; fusionné sur main (PR 82)
