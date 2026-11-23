@@ -31,3 +31,9 @@
 - renvois par l'interface : claude/renvois-api-classifieur-v1 17e520ad (a0071f8b…) ; 50 fichiers d'essais versés ; sorties en quarantaine prep/quarantaine-renvois-api-v1
 - lecteur repreneur lentilles B bis : lecture/lentilles-sondes-bbis-v1 abf4a299a, 2026-11-23-0640-lecteur-repreneur-lentilles-bbis.md (fb1afaf1…) — cloisonné
 - passation collective par la mère (18 sessions non essentielles) : registres/passations/2026-11-23-0645-passation-collective-par-la-mere.md
+- avis Carbon, Astra, Neon : claude/avis-carbon-astra-v1 e979243a9, 2026-11-23-0640-avis-carbon-astra-neon.md (5fc879fd…)
+- session de lecture du barreau 5 : lecture-b5f/plan-de-marche-v1 c5ec5f2e, 2026-11-23-0625-session-lecture-b5f.md (deab1d69…) ; 214 fichiers versés ; 62096662 continue
+- juge Opus exposition du rédacteur G1 : juge/exposition-redacteur-g1-v1 0779a2c9, 2026-11-23-0653-juge-exposition-redacteur-g1.md (2e98e8a9…)
+- développeur alignement T0.8 : prep/t08-code-aligne-v1 e37b375e, 2026-11-23-0639-developpeur-alignement-t08.md (7da4c077…) ; 43 fichiers versés
+- veille de cap : main 8c0e0dd0, 2026-11-23-0654-veille-de-cap.md (d039a632…) ; tâche trig_01QUfWQYwZPdsJ2KMdfzdqbY (18:41Z)
+- veille des machines sans modèle (mère) : script /home/user/veille-machines/veille.sh, relevé toutes les 10 min, remparts d'arrêt par identifiant (62094628 le 24 à 11:41Z, 62096662 le 23 à 15:50Z, 62105206 le 28 à 05:55Z), alertes et journal poussés sur veille/machines-v1 ; meurt avec le conteneur de la mère (relancé une fois à 07:02Z)
