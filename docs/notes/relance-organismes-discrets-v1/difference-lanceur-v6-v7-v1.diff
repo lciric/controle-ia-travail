@@ -1,0 +1,63 @@
+1c1,6
+< """Lanceur de la course du bras A des organismes discrets, **version 6** (23 novembre 2026, session de relance) : seule
+---
+> """Lanceur de la course du bras A des organismes discrets, **version 7** (23 novembre 2026, session de relance) : seules
+> différences avec la version 6 (`28dac2b5…`, contre-lue « bon pour le départ », `246352a7…`) : (1) le chemin du lanceur
+> que la configuration doit nommer est celui de cette version (les v5 et v6 gardaient par erreur celui de la v4), et ce
+> chemin est confronté au fichier joué ; (2) m-1 de la contre-lecture de la v6 : « ligne 1 » suivi d'une autre ligne
+> (« et 2 », « à 3 », « , 2 », « et suivantes ») et « bras a » collé à une lettre (« bras AB ») sont refusés.
+> Version 6 : seule
+97c102
+< CHEMIN_DU_LANCEUR = "src/controle_ia/organismes_discrets/lanceur_bras_a_v4.py"
+---
+> CHEMIN_DU_LANCEUR = "src/controle_ia/organismes_discrets/lanceur_bras_a_v7.py"
+129c134,137
+< MOTS_D_UNE_AUTRE_LIGNE = ("moniteur", "seconde", "bras b", "bras c")
+---
+> MOTS_D_UNE_AUTRE_LIGNE = ("moniteur", "seconde", "bras b", "bras c", "suivant")
+> # v7 (m-1) : « ligne 1 » suivi d'une autre ligne, et « bras a » collé à une lettre
+> _LIGNE_1_ET_AUTRE = re.compile(r"(?<![\w-])ligne 1\s*(?:et|à|a|,|-|/|&|\+)\s*\d")
+> _BRAS_A_COLLE = re.compile(r"(?<![\w-])bras a\w")
+200a209,210
+>     if Path(__file__).resolve().as_posix().endswith("/" + CHEMIN_DU_LANCEUR) is False:
+>         raise GardeArret(f"lanceur joué {Path(__file__)!s} : ce n'est pas {CHEMIN_DU_LANCEUR} — refusé")
+338a349
+>     interdits += [m.group(0) for r in (_LIGNE_1_ET_AUTRE, _BRAS_A_COLLE) for m in r.finditer(norme)]
+17c17
+< from controle_ia.organismes_discrets import lanceur_bras_a_v6 as la
+---
+> from controle_ia.organismes_discrets import lanceur_bras_a_v7 as la
+1051c1051,1052
+<     with pytest.raises(GardeArret, match="nomme aussi"):
+---
+>     # v7 : refusé désormais dès le mot « suivant » (m-1), avant la règle du pluriel ; le refus reste, le message change
+>     with pytest.raises(GardeArret, match="nomme"):
+1053a1055,1057
+>     with pytest.raises(GardeArret, match="nomme aussi"):
+>         la.exiger_ligne_de_go("GO-2026-11-23-150", _registre(SAINE.replace(
+>             "ligne 1 du bras A", "ligne 1 du bras A ; lignes 1")), AUJOURD_HUI)
+1120a1125,1148
+> 
+> 
+> # --- v7 ----------------------------------------------------------------------------------------------------------------
+> def test_v7_chemin_du_lanceur_est_le_fichier_joue():
+>     assert la.CHEMIN_DU_LANCEUR.endswith("lanceur_bras_a_v7.py")
+>     assert Path(la.__file__).resolve().as_posix().endswith("/" + la.CHEMIN_DU_LANCEUR)
+> 
+> 
+> def test_v7_configuration_nommant_la_v4_refusee():
+>     with pytest.raises(la.GardeArret):
+>         la._exiger_lanceur({"chemin": "src/controle_ia/organismes_discrets/lanceur_bras_a_v4.py",
+>                             "sha256": _sha(Path(la.__file__))})
+> 
+> 
+> @pytest.mark.parametrize("perimetre", ["bras A, ligne 1 et 2", "bras A, ligne 1 à 3", "bras A, ligne 1, 2",
+>                                        "bras A, ligne 1 et suivantes", "bras A et bras AB ligne 1", "bras Ab, bras A, ligne 1"])
+> def test_v7_faux_accords_de_la_v6_refuses(perimetre):
+>     with pytest.raises(la.GardeArret):
+>         la.exiger_perimetre_de_la_ligne_1("GO-2026-11-22-148", perimetre)
+> 
+> 
+> @pytest.mark.parametrize("perimetre", ["ligne 1 du bras A", "bras A, ligne 1 de carte (fabrication et rejeu honnête, 128 épisodes)"])
+> def test_v7_sains_toujours_acceptes(perimetre):
+>     assert la.exiger_perimetre_de_la_ligne_1("GO-2026-11-22-148", perimetre) == perimetre
