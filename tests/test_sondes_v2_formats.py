@@ -4,6 +4,7 @@ import copy
 import csv
 import json
 
+import numpy as np
 import pytest
 
 from controle_ia.gardes import GardeArret
@@ -65,8 +66,21 @@ def _note_md(tmp_path, n, nom="note.md"):
 
 def test_note_cas_sain(tmp_path):
     r = fm.charger_note_effectifs(_note_md(tmp_path, _note()))
-    assert r["doses_holm"] == 2 and r["controle_du_chemin"] == "contrôle absent" and len(r["sha256"]) == 64
+    assert r["doses_holm"] == 2 and r["cas_mixte"] == "contrôle absent"
+    assert r["controle_du_chemin"] == "contrôle absent" and len(r["sha256"]) == 64
+    assert r["cas_mixte_par_dose"] == {"1": "contrôle absent", "2": "contrôle absent"}
     assert fm.arrondi_moitie_bas(2.5) == 2 and fm.arrondi_moitie_bas(2.6) == 3 and fm.arrondi_moitie_bas(3.5) == 3
+
+
+def _note_petite_dose1():
+    n = _note()
+    # dose 1 à 10 tâches et 1 action par case (20 actions appariées < 40) -> non atteints
+    for p in n["scores_bbis"]["doses"][0]["plis"]:
+        p["taches_tenues"] = 5
+        p["actions"] = {c: 5 for c in fm.CASES}
+    n["cases_de_l_epreuve_plantee"]["complet"].update(taches=10, actions=1)
+    n["minimums"]["rejeu_par_dose"]["1"] = "non atteints"
+    return n
 
 
 @pytest.mark.parametrize("abimer,motif", [
@@ -82,6 +96,27 @@ def test_note_cas_sain(tmp_path):
     (lambda n: n["cases_de_l_epreuve_plantee"]["etalon"].update(actions=3), "étalon"),
     (lambda n: n["cases_de_l_epreuve_plantee"]["complet"].update(taches=12), "minimum"),
     (lambda n: n["aveuglement"].update(scores="ouverts"), "non ouvert"),
+    # M1 : cohérence de la case complète (actions et paires == 8)
+    (lambda n: n["cases_de_l_epreuve_plantee"]["complet"].update(actions=2), "actions de la case complète"),
+    (lambda n: n["cases_de_l_epreuve_plantee"]["complet"].update(paires=6), "paires de la case complète"),
+    # m4 : contrôles de valeur de la note
+    (lambda n: n["minimums"].update(cles_communes="oui"), "atteints"),
+    (lambda n: n["minimums"].update(cles_communes="non atteints"), "contredit la règle"),
+    (lambda n: n["minimums"]["rejeu_par_dose"].pop("2"), "manquants"),
+    (lambda n: n["minimums"]["rejeu_par_dose"].update({"1": "non atteints"}), "contredit les effectifs"),
+    (lambda n: n["activations"]["chemin_de_calcul"].update(source="devinette"), "source"),
+    (lambda n: n["activations"]["chemin_de_calcul"].update(identique_pour_toutes_les_series="oui"), "booléen"),
+    (lambda n: n["activations"]["chemin_de_calcul"].update(identique_pour_toutes_les_series=False), "sans réserve"),
+    (lambda n: n["activations"].update(nu_relit_les_cles_communes="oui"), "booléen"),
+    (lambda n: n["activations"].update(nu_relit_les_cles_communes=False), "sans réserve"),
+    (lambda n: n["activations"]["series"].append({"nom": "nu-bis", "categorie": "nu", "cles": 50}), "une série « nu »"),
+    (lambda n: n["scores_bbis"]["doses"][1].update(dose="1"), "dose en double"),
+    (lambda n: n["scores_bbis"]["doses"][0]["plis"][0].update(actions_en_origine_et_en_relu=3, taches_avec_controle_du_chemin=0), "incohérence"),
+    (lambda n: n["scores_bbis"]["doses"][0]["plis"][0].update(actions_en_origine_et_en_relu=0, taches_avec_controle_du_chemin=1), "incohérence"),
+    # m9 : empreinte hexadécimale mal formée et nombre_de_doses différent du nombre de doses listées
+    (lambda n: n["activations"].update(inventaire_sha256="zz" * 32), "64 hexadécimaux"),
+    (lambda n: n["scores_bbis"].update(nombre_de_doses=3), "nombre de doses listées"),
+    (lambda n: n["activations"]["cles_communes"]["taches_par_nombre_d_actions"].update({"1": 1}), "somme de taches_par_nombre_d_actions"),
 ])
 def test_note_artefacts(tmp_path, abimer, motif):
     n = _note()
@@ -95,15 +130,33 @@ def test_note_compagnon_faux_et_cas_mixte(tmp_path):
     c.write_text(c.read_text(encoding="utf-8").replace("Réserves : aucune.", "Réserves : une."), encoding="utf-8")
     with pytest.raises(GardeArret, match="empreinte"):
         fm.charger_note_effectifs(c)
+    # cas sain avec minimums non atteints sur la dose 1
+    assert fm.charger_note_effectifs(_note_md(tmp_path, _note_petite_dose1(), "petite.md"))["note"]["minimums"]["rejeu_par_dose"]["1"] == "non atteints"
+    # m5 : dose 1 entièrement contrôlée et dose 2 sans contrôle -> pas de cas mixte (E-8 se lit par dose)
+    n_pures = _note()
+    for p in n_pures["scores_bbis"]["doses"][0]["plis"]:
+        p.update(actions_en_origine_et_en_relu=2, taches_avec_controle_du_chemin=p["taches_tenues"])
+    res_pures = fm.charger_note_effectifs(_note_md(tmp_path, n_pures, "pures.md"))
+    assert res_pures["cas_mixte"] == "par dose : contrôle absent ou toutes les tâches contrôlées (aucun cas mixte)"
+    assert res_pures["cas_mixte_par_dose"] == {"1": "toutes les tâches contrôlées", "2": "contrôle absent"}
+    # Cas mixte véritable dans une dose
     n = _note()
     n["scores_bbis"]["doses"][0]["plis"][0].update(actions_en_origine_et_en_relu=4, taches_avec_controle_du_chemin=2)
-    assert fm.charger_note_effectifs(_note_md(tmp_path, n, "m.md"))["controle_du_chemin"].startswith("cas mixte")
+    res_m = fm.charger_note_effectifs(_note_md(tmp_path, n, "m.md"))
+    assert res_m["cas_mixte"].startswith("cas mixte")
+    assert res_m["cas_mixte_par_dose"]["1"].startswith("cas mixte")
+    assert res_m["cas_mixte_par_dose"]["2"] == "contrôle absent"
     n = _note()
     for d in n["scores_bbis"]["doses"]:
         for p in d["plis"]:
             p.update(actions_en_origine_et_en_relu=1, taches_avec_controle_du_chemin=p["taches_tenues"])
-    assert fm.charger_note_effectifs(_note_md(tmp_path, n, "t.md"))["controle_du_chemin"] == \
+    assert fm.charger_note_effectifs(_note_md(tmp_path, n, "t.md"))["cas_mixte"] == \
         "toutes les tâches contrôlées"
+    # m4 : identique_pour_toutes_les_series faux avec réserve inscrite passe
+    n_res = _note()
+    n_res["activations"]["chemin_de_calcul"]["identique_pour_toutes_les_series"] = False
+    n_res["reserves"].append("a1 a un chemin différent")
+    assert fm.charger_note_effectifs(_note_md(tmp_path, n_res, "res.md"))["cas_mixte"] == "contrôle absent"
     deux = _ecrire(tmp_path / "deux.md", "```json\n{}\n```\n```json\n{}\n```\n")
     with pytest.raises(GardeArret, match="blocs JSON"):
         fm.charger_note_effectifs(deux)
@@ -184,6 +237,21 @@ def test_bbis_cas_sain(tmp_path, fmt):
     assert r["motif"] == "aucun" and r["controle_chemin"] == st.CONTROLE_ABSENT
 
 
+def test_bbis_valeur_declaree_presente_avec_vides(tmp_path):
+    l = _lignes_brutes()
+    for i, r in enumerate(l):
+        r["vd"] = "" if i % 2 == 0 else float(i)
+    t, c = _fichiers(tmp_path, l, corr=lambda sha: _corr(sha, colonnes={
+        **_corr(sha)["colonnes"], "valeur_declaree": "vd"}))
+    lignes, meta = fm.charger_table_bbis(t, c)
+    assert meta["variables_absentes"] == [] and any(np.isnan(x["valeur_declaree"]) for x in lignes)
+    l[0]["vd"] = "nan_txt"
+    t2, c2 = _fichiers(tmp_path, l, corr=lambda sha: _corr(sha, colonnes={
+        **_corr(sha)["colonnes"], "valeur_declaree": "vd"}))
+    with pytest.raises(GardeArret, match="non numérique"):
+        fm.charger_table_bbis(t2, c2)
+
+
 def test_bbis_artefacts(tmp_path):
     t, c = _fichiers(tmp_path, _lignes_brutes())
     t.write_text(t.read_text() + "\n", encoding="utf-8")
@@ -208,7 +276,40 @@ def test_bbis_artefacts(tmp_path):
         fm.charger_table_bbis(t, c)
     t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, colonnes={
         **_corr(sha)["colonnes"], "score": {"absente": True}}))
+    with pytest.raises(GardeArret, match="demande une colonne"):
+        fm.charger_table_bbis(t, c)
+    # m3 : valeurs non finies ou non numériques pour longueur, pas, score
+    for champ, val in (("len", float("nan")), ("len", float("inf")), ("len", "abc"), ("step", "xyz"), ("s", "nan_txt")):
+        l = _lignes_brutes()
+        l[0][champ] = val
+        t, c = _fichiers(tmp_path, l)
+        with pytest.raises(GardeArret, match="non finie|non numérique"):
+            fm.charger_table_bbis(t, c)
+    # m6 : sélection vide et clés en trop/manquantes dans valeurs
+    t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, selection={"probe": "absente"}))
+    with pytest.raises(GardeArret, match="aucune ligne retenue"):
+        fm.charger_table_bbis(t, c)
+    t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, valeurs={
+        **_corr(sha)["valeurs"], "inconnue": {"x": "y"}}))
+    with pytest.raises(GardeArret, match="en trop"):
+        fm.charger_table_bbis(t, c)
+    # m9 : recodage hors valeurs admises, champ qui demande une colonne, valeur vide de longueur
+    t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, valeurs={
+        **_corr(sha)["valeurs"], "source": {"S": "autre", "H": "honnete"}}))
+    with pytest.raises(GardeArret, match="hors de"):
+        fm.charger_table_bbis(t, c)
+    t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, colonnes={
+        **_corr(sha)["colonnes"], "score": {"constante": True}}))
+    with pytest.raises(GardeArret, match="demande une colonne"):
+        fm.charger_table_bbis(t, c)
+    t, c = _fichiers(tmp_path, _lignes_brutes(), corr=lambda sha: _corr(sha, colonnes={
+        **_corr(sha)["colonnes"], "longueur": {"constante": True}}))
     with pytest.raises(GardeArret, match="non permise"):
+        fm.charger_table_bbis(t, c)
+    l = _lignes_brutes()
+    l[0]["len"] = ""
+    t, c = _fichiers(tmp_path, l)
+    with pytest.raises(GardeArret, match="valeur vide pour longueur"):
         fm.charger_table_bbis(t, c)
 
 
@@ -255,10 +356,15 @@ def _fichiers_ouvreur(tmp_path, abimer=None, series_garde=None):
     return _ecrire(tmp_path / "ouvreur.json", json.dumps(o)), g
 
 
-def test_ouvreur_cas_sain(tmp_path):
-    t, g = _fichiers_ouvreur(tmp_path)
+def _registre_sain(tmp_path):
     reg = tmp_path / "registre.md"
     reg.write_text("… R-4242 : verdict scellé …", encoding="utf-8")
+    return reg
+
+
+def test_ouvreur_cas_sain(tmp_path):
+    t, g = _fichiers_ouvreur(tmp_path)
+    reg = _registre_sain(tmp_path)
     r = fm.charger_table_ouvreur(t, g, reg)
     assert r["P"] == {"f1": 4, "f2": 7} and r["F"] == 2 and r["cases_etalon"] == {"f1": (4, 2), "f2": (7, 2)}
     assert r["hors_paire"] == 1 and r["propres"] == 1 and r["cases_hors_grille"] == []
@@ -276,26 +382,77 @@ def test_ouvreur_cas_sain(tmp_path):
     (lambda o: o["series"].pop("a3"), "manquantes"),
     (lambda o: o["series"].update({"a99": dict(o["series"]["a0"])}), "en trop"),
     (lambda o: o["series"]["a1"].update(paire=None), "sans paire"),
+    # m9 : gardes non encore éprouvées de l'ouvreur
+    (lambda o: o["series"]["nu"].update(type="adaptateur"), "type « nu »"),
+    (lambda o: o["series"]["a2"].update(famille="f3", recette="r1", dose=0.5), "partagent le couple"),
+    (lambda o: o["series"]["a3"].update(famille="f3", recette="r3", dose=0.5), "à cheval"),
+    (lambda o: o["series"]["propre-a0"].update(producteur="inexistant"), "producteur"),
+    (lambda o: o["series"]["a0"].update(dose="0.5"), "dose numérique"),
+    (lambda o: o["series"]["a0"].update(dose=True), "dose numérique"),
+    (lambda o: o["series"]["a0"].update(empreinte_adaptateur="zz"), "64 hexadécimaux"),
+    # m10 : unicité de empreinte_adaptateur
+    (lambda o: o["series"]["a1"].update(empreinte_adaptateur=o["series"]["a0"]["empreinte_adaptateur"]), "empreinte_adaptateur en double"),
 ])
 def test_ouvreur_artefacts(tmp_path, abimer, motif):
     t, g = _fichiers_ouvreur(tmp_path, abimer)
+    reg = _registre_sain(tmp_path)
     with pytest.raises(GardeArret, match=motif):
-        fm.charger_table_ouvreur(t, g)
+        fm.charger_table_ouvreur(t, g, reg)
+
+
+def test_ouvreur_propre_sans_prefixe_et_couple_partage(tmp_path):
+    # m9 : deux familles complètes partagent (recette, dose)
+    o = _ouvreur("0" * 64, familles=(("f1", "r1", 0.5, 4), ("f2", "r1", 0.5, 4)))
+    d1 = tmp_path / "d1"
+    d1.mkdir()
+    g = _garde(d1, sorted(o["series"]))
+    o["sources"]["garde_des_activations"]["sha256"] = (d1 / "garde-activations.json.sha256").read_text().split()[0]
+    t = _ecrire(d1 / "o.json", json.dumps(o))
+    reg = _registre_sain(d1)
+    with pytest.raises(GardeArret, match="partagent le couple"):
+        fm.charger_table_ouvreur(t, g, reg)
+    # m10 : série propre sans préfixe « propre- » et adaptateur avec préfixe « propre- »
+    d2 = tmp_path / "d2"
+    d2.mkdir()
+    o2 = _ouvreur("0" * 64)
+    o2["series"]["sans_prefixe"] = o2["series"].pop("propre-a0")
+    g2 = _garde(d2, sorted(o2["series"]))
+    o2["sources"]["garde_des_activations"]["sha256"] = (d2 / "garde-activations.json.sha256").read_text().split()[0]
+    t2 = _ecrire(d2 / "o2.json", json.dumps(o2))
+    with pytest.raises(GardeArret, match="préfixe « propre- »"):
+        fm.charger_table_ouvreur(t2, g2, reg)
+    d3 = tmp_path / "d3"
+    d3.mkdir()
+    o3 = _ouvreur("0" * 64)
+    o3["series"]["propre-adaptateur"] = o3["series"].pop("a1")
+    g3 = _garde(d3, sorted(o3["series"]))
+    o3["sources"]["garde_des_activations"]["sha256"] = (d3 / "garde-activations.json.sha256").read_text().split()[0]
+    t3 = _ecrire(d3 / "o3.json", json.dumps(o3))
+    with pytest.raises(GardeArret, match="adaptateur ne peut pas"):
+        fm.charger_table_ouvreur(t3, g3, reg)
 
 
 def test_ouvreur_empreinte_et_registre(tmp_path):
     t, g = _fichiers_ouvreur(tmp_path)
+    reg = _registre_sain(tmp_path)
+    # M3 : registre obligatoire (None et fichier absent)
+    with pytest.raises(GardeArret, match="registre obligatoire"):
+        fm.charger_table_ouvreur(t, g, None)
+    with pytest.raises(GardeArret, match="registre absent"):
+        fm.charger_table_ouvreur(t, g, tmp_path / "registre_inexistant.md")
+    with pytest.raises(TypeError):
+        fm.charger_table_ouvreur(t, g)  # sans argument registre
     t.write_text(t.read_text().replace("R-4242", "R-4243"), encoding="utf-8")
     with pytest.raises(GardeArret, match="empreinte"):
-        fm.charger_table_ouvreur(t, g)
-    t, g = _fichiers_ouvreur(tmp_path)
-    reg = tmp_path / "registre.md"
-    reg.write_text("R-42420 seulement", encoding="utf-8")
-    with pytest.raises(GardeArret, match="absent"):
         fm.charger_table_ouvreur(t, g, reg)
+    t, g = _fichiers_ouvreur(tmp_path)
+    reg2 = tmp_path / "registre2.md"
+    reg2.write_text("R-42420 seulement", encoding="utf-8")
+    with pytest.raises(GardeArret, match="absent"):
+        fm.charger_table_ouvreur(t, g, reg2)
     o = json.loads(t.read_text())
     o2 = copy.deepcopy(o)
     o2["sources"]["garde_des_activations"]["sha256"] = "c" * 64
     t2 = _ecrire(tmp_path / "o2.json", json.dumps(o2))
     with pytest.raises(GardeArret, match="garde des activations"):
-        fm.charger_table_ouvreur(t2, g)
+        fm.charger_table_ouvreur(t2, g, reg)

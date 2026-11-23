@@ -130,10 +130,11 @@ def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul
     if ligne["etat"] != "calculée":
         return {c: ["non calculable"] for c in CRITERES if c != "fuite"} | {"fuite": ["sans objet"]}
     npr = lc.nul_reetiquetage(conf, jeu, ligne["aire"], n_nul, rngs["nul"], journal, f"{nom}/principal")
+    r_eff = int(npr["repliques"]) if npr["etat"] == "calculé" else n_nul
     lect["contraste"] = ("non calculable" if npr["etat"] != "calculé" else
-                         lc.lecture_contraste(npr["p"], p.n_paires, n_nul, alpha))
+                         lc.lecture_contraste(npr["p"], p.n_paires, r_eff, alpha))
     lect["nul_principal"] = ("non calculable" if npr["etat"] != "calculé" else
-                             "non testable à cet effectif" if not lc.contraste_testable(p.n_paires, n_nul, alpha) else
+                             "non testable à cet effectif" if not lc.contraste_testable(p.n_paires, r_eff, alpha) else
                              "au-dessus" if npr["p"] <= alpha else "non")
     corr = {c: c for c in st.CHAMPS_TABLE}
     t1, _ = st.charger_table_scores(table_rejeu(monde, ligne, gels, jeu, p.ecart_chemin, True), corr)
@@ -161,7 +162,10 @@ def lire_monde(p: Parametres, rngs: dict, journal, nom: str, seuils: dict, n_nul
     lect["texte"] = ("non calculable" if nt["etat"] != "calculé" else "établi" if nt["p"] <= alpha else "non établi")
     out = {k: [v] for k, v in lect.items()}
     out[GRANDEURS] = {"interaction_brute": [_grandeur(rj, "brute")], "interaction_corrigee": [_grandeur(rj, "corrigee")],
-                      "aire_principale": [float(ligne["aire"])], **et[GRANDEURS]}
+                      "aire_principale": [float(ligne["aire"])],
+                      "contraste_rejeux_demandes": [int(n_nul)],
+                      "contraste_rejeux_effectifs": [int(npr["repliques"]) if npr["etat"] == "calculé" else float("nan")],
+                      **et[GRANDEURS]}
     return out
 
 

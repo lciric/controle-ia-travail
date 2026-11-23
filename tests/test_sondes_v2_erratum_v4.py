@@ -169,12 +169,45 @@ def test_residuelle_variables_absentes_ou_constantes():
     r = st.rejeu_croise(_charger(l), _rngs(), SEUILS, n_tirages=50)["doses"]["1"]
     assert r["triviaux"]["difference_longueur"] == "variable absente"
     assert all(v == ["pas"] for v in r["residuelle"]["variables_par_pli"].values())
+    assert all(s.get("longueur") == "variable absente" for s in r["residuelle"]["variables_sorties_par_pli"].values())
     assert r["libelle"] == "établie"
     l = _table(inter=1.0)
     for x in l:
         x["pas"] = 0
     r = st.rejeu_croise(_charger(l), _rngs(), SEUILS, n_tirages=50)["doses"]["1"]
     assert all(v == ["longueur"] for v in r["residuelle"]["variables_par_pli"].values())
+    assert all(s.get("pas") == "constante sur les textes honnêtes"
+               for s in r["residuelle"]["variables_sorties_par_pli"].values())
+
+
+def test_m2_constance_sur_honnetes_seuls_et_m3_non_finies():
+    # m2 : variable constante chez les honnêtes, mais variable chez les saboteurs -> doit être sortie
+    l = _table(inter=1.0)
+    for x in l:
+        if x["source"] == "honnete":
+            x["pas"] = 0
+        else:
+            x["pas"] = 1 if x["cle"].endswith("-0") else 2
+    t = _charger(l)
+    r = st.rejeu_croise(t, _rngs(), SEUILS, n_tirages=50)["doses"]["1"]
+    assert all(v == ["longueur"] for v in r["residuelle"]["variables_par_pli"].values())
+    assert all(s.get("pas") == "constante sur les textes honnêtes"
+               for s in r["residuelle"]["variables_sorties_par_pli"].values())
+    # m3 : valeur infinie ou texte non numérique dans charger_table_scores -> GardeArret (R5)
+    for champ, mauvais in (("longueur", float("inf")), ("pas", "abc"), ("score", "pas_nombre"), ("score", float("nan"))):
+        l_bad = _table(inter=1.0)
+        l_bad[0][champ] = mauvais
+        with pytest.raises(GardeArret):
+            st.charger_table_scores(l_bad, CORR)
+    # m3 : valeur infinie dans rejeu_croise direct sur longueur, et valeur NaN partielle sur colonne présente
+    l_inf = _table(inter=1.0)
+    l_inf[0]["longueur"] = float("inf")
+    with pytest.raises(GardeArret, match="infinie"):
+        st.rejeu_croise(l_inf, _rngs(), SEUILS, n_tirages=50)
+    l_part = _table(inter=1.0)
+    l_part[0]["longueur"] = float("nan")
+    with pytest.raises(GardeArret, match="partielle"):
+        st.rejeu_croise(l_part, _rngs(), SEUILS, n_tirages=50)
 
 
 # ------------------------------------------------------------------------------------------- monde planté v4
@@ -203,18 +236,31 @@ def _lire(nom, n_paires=8, doses=1, **kw):
                          doses_rejeu=doses, **kw)
 
 
-def test_lire_monde_v4(tmp_path):
+def test_lire_monde_v4(tmp_path, monkeypatch):
     j = tmp_path / "j.jsonl"
     r = _lire("decalage_de_chemin", journal=j, doses=4)
     for c in ("interaction_holm", "interaction_brute_holm", "contraste", "nul_principal", "texte"):
         assert c in r and len(r[c]) == 1
     g = r[mp.GRANDEURS]
-    assert set(g) >= {"interaction_brute", "interaction_corrigee", "aire_principale", "U", "rho"}
+    assert set(g) >= {"interaction_brute", "interaction_corrigee", "aire_principale", "U", "rho",
+                      "contraste_rejeux_demandes", "contraste_rejeux_effectifs"}
     assert g["interaction_brute"][0] > g["interaction_corrigee"][0]
+    assert g["contraste_rejeux_demandes"] == [39] and g["contraste_rejeux_effectifs"] == [39]
     r5 = _lire("trace_forte", n_paires=5, journal=j)
     assert r5["contraste"] == ["non testable à cet effectif"] and r5["nul_principal"] == ["non testable à cet effectif"]
     with pytest.raises(GardeArret, match="entier"):
         _lire("trace_forte", journal=j, doses=0)
+    # m1 : avec 19 rejeux demandés mais 18 effectifs (1 réplique dégénérée) à alpha = 0.05, testabilité lue sur R_eff
+    vrai_nul = mp.lc.nul_reetiquetage
+    monkeypatch.setattr(
+        mp.lc,
+        "nul_reetiquetage",
+        lambda *a, **k: {**vrai_nul(*a, **k), "repliques": 18, "degeneres": 1},
+    )
+    r_eff = _lire("trace_forte", n_paires=8, journal=j)
+    assert r_eff["contraste"] == ["non testable à cet effectif"]
+    assert r_eff[mp.GRANDEURS]["contraste_rejeux_demandes"] == [39]
+    assert r_eff[mp.GRANDEURS]["contraste_rejeux_effectifs"] == [18]
 
 
 def test_programme_v4_plages_egales_a_un_processus(tmp_path):
@@ -227,6 +273,13 @@ def test_programme_v4_plages_egales_a_un_processus(tmp_path):
     assert "synthese" not in json.loads(a.read_text())
     fus = prog.fusionner([b, a])
     assert prog._canon(fus) == prog._canon(un["synthese"])
+    # M2 : écriture et scellement de la synthèse fusionnée avec les empreintes des rapports
+    syn_chemin = prog.ecrire_synthese_fusionnee([a, b], tmp_path / "synthese-fusionnee.json")
+    assert (tmp_path / "synthese-fusionnee.json.sha256").is_file()
+    syn_corps = json.loads(syn_chemin.read_text())
+    assert len(syn_corps["rapports"]) == 2 and prog._canon(syn_corps["synthese"]) == prog._canon(un["synthese"])
+    with pytest.raises(GardeArret, match="R12"):
+        prog.ecrire_synthese_fusionnee([a, b], syn_chemin)
     with pytest.raises(GardeArret, match="couvrent"):
         prog.fusionner([a])
     with pytest.raises(GardeArret, match="contiguës"):
@@ -234,11 +287,62 @@ def test_programme_v4_plages_egales_a_un_processus(tmp_path):
     c = prog.executer(tmp_path / "c", **{**kw, "doses_rejeu": 3}, plage=(1, 2))
     with pytest.raises(GardeArret, match="exécutions différentes"):
         prog.fusionner([a, c])
+    # m9 : entropies différentes et vérités différentes dans fusionner
+    d_ent = prog.executer(tmp_path / "d_ent", **{**kw, "entropie": 20261124}, plage=(1, 2))
+    with pytest.raises(GardeArret, match="entropies racines différentes"):
+        prog.fusionner([a, d_ent])
+    b_ver = tmp_path / "b_ver.json"
+    ver_mod = json.loads(b.read_text())
+    ver_mod["verites_sha256"] = "0" * 64
+    b_ver.write_bytes(prog._canon(ver_mod))
+    prog.sceller(b_ver)
+    with pytest.raises(GardeArret, match="verites_sha256"):
+        prog.fusionner([a, b_ver])
+    # M2 : commits, propreté ou réserves différents refusés à la fusion
+    b_com = tmp_path / "b_com.json"
+    com_mod = json.loads(b.read_text())
+    com_mod["manifeste"]["commit"] = "0" * 40
+    b_com.write_bytes(prog._canon(com_mod))
+    prog.sceller(b_com)
+    with pytest.raises(GardeArret, match="commits différents"):
+        prog.fusionner([a, b_com])
+    b_sale = tmp_path / "b_sale.json"
+    sale_mod = json.loads(b.read_text())
+    sale_mod["manifeste"]["depot_propre"] = not sale_mod["manifeste"]["depot_propre"]
+    b_sale.write_bytes(prog._canon(sale_mod))
+    prog.sceller(b_sale)
+    with pytest.raises(GardeArret, match="propreté"):
+        prog.fusionner([a, b_sale])
     with pytest.raises(GardeArret, match="plage"):
         prog.executer(tmp_path / "d", **kw, plage=(1, 3))
     s = un["synthese"]["cases"]["8,8,3"]
     assert s["decalage_de_chemin"]["grandeurs_realisees"]["interaction_brute"]["n"] == 2
     assert s["interaction"]["contraste"]["rejeux"] == 19 and s["interaction"]["contraste"]["testable"] is True
+    assert s["interaction"]["contraste"]["rejeux_demandes"] == 19
+    assert s["interaction"]["contraste"]["rejeux_effectifs_min"] == 19
+
+
+def test_synthese_etalon_par_famille_et_manquantes_m7():
+    v, _ = mp.charger_verites()
+    lect = {
+        "0": {"transport": ["fort", "faible"], "grandeurs": {"U": [0.95, 0.72], "rho": [2.0, 0.8], "U_controle": [0.9, 0.6], "rho_controle": [1.5, float("nan")]}},
+        "1": {"transport": ["fort", "faible"], "grandeurs": {"U": [0.91], "rho": [1.8], "U_controle": [0.85], "rho_controle": [float("nan")]}},
+    }
+    s = prog.synthese(v, "etalon", {"8,2,8,1": {"trace_forte": lect}}, 2, 19, SEUILS)["cases"]["8,2,8,1"]["trace_forte"]
+    g = s["grandeurs_realisees"]
+    assert set(g["U"]) == {"0", "1"}
+    assert g["U"]["0"]["n"] == 2 and g["U"]["0"]["non_finies"] == 0
+    assert g["U"]["1"]["n"] == 2 and g["U"]["1"]["non_finies"] == 1
+    assert g["rho_controle"]["0"]["n"] == 2 and g["rho_controle"]["0"]["non_finies"] == 1
+    assert g["rho_controle"]["1"]["n"] == 2 and g["rho_controle"]["1"]["non_finies"] == 2
+    # m7 en mode complet : une réplique sans grandeurs est comptée dans non_finies
+    lect_c = {
+        "0": {"interaction": ["établie"], "interaction_holm": ["établie"], "grandeurs": {"interaction_brute": [1.2]}},
+        "1": {"interaction": ["non calculable"], "interaction_holm": ["non calculable"]},
+    }
+    sc = prog.synthese(v, "complet", {"8,8,3": {"interaction": lect_c}}, 2, 19, SEUILS)["cases"]["8,8,3"]["interaction"]
+    assert sc["grandeurs_realisees"]["interaction_brute"]["n"] == 2
+    assert sc["grandeurs_realisees"]["interaction_brute"]["non_finies"] == 1
 
 
 def test_synthese_gardes_non_passees():
@@ -254,8 +358,9 @@ def test_synthese_gardes_non_passees():
         prog.synthese(v, "complet", {"8,8,3": {"interaction": {"0": lect["0"]}}}, 2, 39, SEUILS)
 
 
-def test_ligne_de_commande_v4(tmp_path, capsys):
-    assert prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--repliques", "2", "--repliques-de", "0",
+def test_ligne_de_commande_v4_et_gardes_m8_m11(tmp_path, capsys):
+    from test_sondes_v2_formats import _note, _note_md
+    assert prog.main(["--sortie", str(tmp_path / "run_ok"), "--cas", "7,1,8,1", "--repliques", "2", "--repliques-de", "0",
                       "--repliques-a", "1", "--nul", "5", "--tirages", "20", "--d", "16", "--entropie", "3",
                       "--mondes", "trace_faible", "--nul-identite", "5", "--autoriser-depot-sale"]) == 0
     assert capsys.readouterr().out.strip().endswith("-r0-1.json")
@@ -263,3 +368,46 @@ def test_ligne_de_commande_v4(tmp_path, capsys):
         prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--repliques-de", "0"])
     with pytest.raises(GardeArret, match="--mode"):
         prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--mode", "etalon"])
+    # m8 : --doses-rejeu refusé en mode étalon
+    with pytest.raises(GardeArret, match="refusé en mode étalon"):
+        prog.main(["--sortie", str(tmp_path), "--cas", "7,1,8,1", "--doses-rejeu", "2"])
+    note_ok = _note_md(tmp_path, _note(), "note_ok.md")
+    with pytest.raises(GardeArret, match="refusé en mode étalon"):
+        prog.main(["--sortie", str(tmp_path), "--note-effectifs", str(note_ok), "--mode", "etalon", "--doses-rejeu", "2"])
+    # m8 : extension de grille exige --go-extension
+    n_ext = _note()
+    n_ext["activations"]["cles_communes"]["distinctes_des_cles_propres"] = False
+    n_ext["cases_de_l_epreuve_plantee"]["extension_taches_actions"] = True
+    note_ext = _note_md(tmp_path, n_ext, "note_ext.md")
+    gr = mp.charger_verites()[0]["grille_etalon"]
+    with pytest.raises(GardeArret, match="--go-extension"):
+        prog.cas_depuis_note(n_ext, "etalon", gr)
+    cas_ext, _ = prog.cas_depuis_note(n_ext, "etalon", gr, go_extension="GO-2026-11-23-99")
+    assert len(cas_ext) == 416
+    with pytest.raises(GardeArret, match="--go-extension"):
+        prog.main(["--sortie", str(tmp_path), "--note-effectifs", str(note_ext), "--mode", "etalon"])
+    # m11 : --regle-cas-mixte exige --additif-cas-mixte scellé citant la règle, et est lié à l'état de la note
+    additif = tmp_path / "additif.md"
+    additif.write_text("# Additif\nRègle retenue : taches_controlees_seules.\n", encoding="utf-8")
+    prog.sceller(additif)
+    with pytest.raises(GardeArret, match="--additif-cas-mixte"):
+        prog.main(["--sortie", str(tmp_path), "--taille", "8,8,3", "--regle-cas-mixte", "taches_controlees_seules"])
+    with pytest.raises(GardeArret, match="ne mentionne pas"):
+        prog.main(["--sortie", str(tmp_path), "--taille", "8,8,3", "--regle-cas-mixte", "constante_par_dose",
+                   "--additif-cas-mixte", str(additif)])
+    # note sans cas mixte -> règle refusée
+    with pytest.raises(GardeArret, match="refusé hors cas mixte"):
+        prog.main(["--sortie", str(tmp_path), "--note-effectifs", str(note_ok), "--mode", "complet",
+                   "--regle-cas-mixte", "taches_controlees_seules", "--additif-cas-mixte", str(additif)])
+    # note avec cas mixte -> bloque sans règle
+    n_mixte = _note()
+    n_mixte["scores_bbis"]["doses"][0]["plis"][0].update(actions_en_origine_et_en_relu=4, taches_avec_controle_du_chemin=2)
+    note_mixte = _note_md(tmp_path, n_mixte, "note_mixte.md")
+    with pytest.raises(GardeArret, match="cas mixte détecté"):
+        prog.main(["--sortie", str(tmp_path), "--note-effectifs", str(note_mixte), "--mode", "complet"])
+    # cas mixte avec règle + additif scellé valide passe jusqu'à l'exécution
+    assert prog.main(["--sortie", str(tmp_path / "run_mixte"), "--note-effectifs", str(note_mixte), "--mode", "complet",
+                      "--repliques", "1", "--nul", "5", "--tirages", "20", "--d", "16", "--entropie", "3",
+                      "--mondes", "trace_faible", "--nul-identite", "5", "--autoriser-depot-sale",
+                      "--regle-cas-mixte", "taches_controlees_seules", "--additif-cas-mixte", str(additif)]) == 0
+

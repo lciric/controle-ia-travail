@@ -29,12 +29,13 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import re
 import sys
 import time
 from pathlib import Path
 
 from ..gardes import GardeArret, etat_git
-from ..manifeste import graines
+from ..manifeste import config_canonique, graines
 from ..scellement import sceller, verifier
 from . import formats_v1 as fm
 from . import lecture_v2 as lc
@@ -42,6 +43,7 @@ from . import monde_plante_v4 as mp
 from . import statistiques_v2 as st
 
 FORMAT_RAPPORT = "rapport-monde-plante-v4"
+FORMAT_SYNTHESE_FUSIONNEE = "synthese-fusionnee-monde-plante-v4"
 CONSEQUENCE_GARDE_REJEU = "ligne du rejeu croisé : non testable à cet effectif"
 
 
@@ -75,6 +77,7 @@ def synthese(verites: dict, mode: str, lectures_par_case: dict, repliques: int, 
     cases = {}
     for cle_c, par_monde in lectures_par_case.items():
         n_p = int(cle_c.split(",")[0])
+        n_f = int(cle_c.split(",")[1]) if mode == "etalon" else 1
         sortie_m = {}
         for m, par_r in par_monde.items():
             if sorted(par_r, key=int) != [str(r) for r in range(repliques)]:
@@ -102,25 +105,71 @@ def synthese(verites: dict, mode: str, lectures_par_case: dict, repliques: int, 
                 if vals:
                     table[crit] = {x: vals.count(x) for x in sorted(set(vals))}
             noms_g = sorted({g for l in lectures for g in l.get(mp.GRANDEURS, {})})
-            grandeurs = {g: mp.resume_grandeurs([float("nan") if x is None else x for l in lectures
-                                                 for x in l.get(mp.GRANDEURS, {}).get(g, [])]) for g in noms_g}
+            grandeurs = {}
+            for g in noms_g:
+                if mode == "etalon" and g in ("U", "rho", "U_controle", "rho_controle"):
+                    par_famille = {}
+                    for fi in range(n_f):
+                        vals_f = []
+                        for l in lectures:
+                            gv = l.get(mp.GRANDEURS, {}).get(g, [])
+                            vals_f.append(float("nan") if fi >= len(gv) or gv[fi] is None else gv[fi])
+                        par_famille[str(fi)] = mp.resume_grandeurs(vals_f)
+                    grandeurs[g] = par_famille
+                else:
+                    vals_g = []
+                    for l in lectures:
+                        gv = l.get(mp.GRANDEURS, {}).get(g, [])
+                        if not gv:
+                            vals_g.append(float("nan"))
+                        else:
+                            vals_g.extend(float("nan") if x is None else x for x in gv)
+                    grandeurs[g] = mp.resume_grandeurs(vals_g)
             sortie_m[m] = {"criteres": sortie_c, "table_des_lectures": table, "grandeurs_realisees": grandeurs,
                            "gardes_non_passees": gardes}
             if mode == "complet":
-                sortie_m[m]["contraste"] = lc.plafond_puissance_contraste(n_p, n_nul, seuils["alpha"])
+                r_eff_liste = [
+                    x for l in lectures
+                    for x in l.get(mp.GRANDEURS, {}).get("contraste_rejeux_effectifs", [])
+                    if x is not None and x == x
+                ]
+                r_eff_min = int(min(r_eff_liste)) if r_eff_liste else n_nul
+                r_eff_max = int(max(r_eff_liste)) if r_eff_liste else n_nul
+                c_info = lc.plafond_puissance_contraste(n_p, r_eff_min, seuils["alpha"])
+                c_info["rejeux_demandes"] = int(n_nul)
+                c_info["rejeux_effectifs_min"] = r_eff_min
+                c_info["rejeux_effectifs_max"] = r_eff_max
+                c_info["plafond_demande"] = lc.plafond_puissance_contraste(n_p, n_nul, seuils["alpha"])
+                sortie_m[m]["contraste"] = c_info
         cases[cle_c] = sortie_m
     return {"cases": cases}
+
+
+def _verifier_additif_cas_mixte(additif_chemin, regle_cas_mixte: str) -> dict:
+    """Vérifie le compagnon de l'additif scellé et s'assure qu'il mentionne la règle retenue (m11)."""
+    if additif_chemin is None:
+        raise GardeArret("cas mixte : --additif-cas-mixte CHEMIN obligatoire dès qu'une règle est passée")
+    sha = verifier(additif_chemin)
+    texte = Path(additif_chemin).read_text(encoding="utf-8")
+    if regle_cas_mixte not in texte:
+        raise GardeArret(f"cas mixte : l'additif scellé {additif_chemin} ne mentionne pas la règle {regle_cas_mixte!r}")
+    return {"chemin": str(additif_chemin), "sha256": sha, "regle": regle_cas_mixte}
 
 
 def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_tirages: int, seuils: dict, d: int,
              entropie: int | None, mondes=None, k_externes: int = 5, famille: str = "difference_moyennes_appariee",
              journal_progres=None, n_nul_identite: int = 200, autoriser_depot_sale: bool = False,
              doses_rejeu: int = 1, plage: tuple[int, int] | None = None, regle_cas_mixte: str | None = None,
-             note_effectifs: dict | None = None) -> Path:
+             note_effectifs: dict | None = None, additif_cas_mixte: dict | None = None,
+             go_extension: str | None = None) -> Path:
     """`cas` : en mode « complet », (paires, tâches, actions) ; en mode « étalon », (paires, familles, tâches,
     actions). `plage` : (de, à), à exclu ; par défaut toutes les répliques."""
     if mode not in ("complet", "etalon"):
         raise GardeArret(f"mode {mode!r}")
+    if mode == "etalon" and regle_cas_mixte is not None:
+        raise GardeArret("cas mixte : --regle-cas-mixte refusé en mode étalon")
+    if regle_cas_mixte is not None and additif_cas_mixte is None:
+        raise GardeArret("cas mixte : règle passée sans additif scellé (m11)")
     verites, sha = mp.charger_verites()
     noms = [m for m, v in verites["mondes"].items() if mode in v["modes"]] if mondes is None else list(mondes)
     for m in noms:
@@ -151,7 +200,8 @@ def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_
     arguments = {"cas": [list(x) for x in cas], "repliques": repliques, "nul": n_nul, "tirages": n_tirages,
                  "seuils": seuils, "d": d, "mondes": noms, "k_externes": k_externes, "famille": famille,
                  "nul_identite": n_nul_identite, "doses_rejeu": doses_rejeu, "regle_cas_mixte": regle_cas_mixte,
-                 "note_effectifs": note_effectifs}
+                 "note_effectifs": note_effectifs, "additif_cas_mixte": additif_cas_mixte,
+                 "go_extension": go_extension}
     rapport = {"format": FORMAT_RAPPORT, "mode": mode, "verites_sha256": sha, "arguments": arguments,
                "plage": [de, a],
                "graines": {"entropie_racine": str(ent), "schema": "manifeste.graines([f'{mode}/{cas}/{monde}/{r}/{nom}'],"
@@ -196,10 +246,19 @@ def executer(sortie, mode: str, cas: list[tuple], repliques: int, n_nul: int, n_
     return chemin
 
 
+def _config_sha_hors_plage(rapport: dict) -> str:
+    import hashlib
+    cfg = dict(rapport["manifeste"]["config"])
+    if hashlib.sha256(config_canonique(cfg)).hexdigest() != rapport["manifeste"]["config_sha256"]:
+        raise GardeArret("fusion : config_sha256 interne du manifeste incohérent")
+    cfg.pop("plage", None)
+    return hashlib.sha256(config_canonique(cfg)).hexdigest()
+
+
 def fusionner(chemins: list) -> dict:
-    """Réunit des rapports de plages disjointes d'une même exécution (mêmes vérités, mode, arguments et entropie
-    racine ; plages qui couvrent toutes les répliques) ; rend la synthèse, identique à l'octet à celle d'un seul
-    processus. Empreinte de chaque rapport vérifiée."""
+    """Réunit des rapports de plages disjointes d'une même exécution (mêmes vérités, mode, arguments, commit, propreté,
+    réserves, configuration hors plage et entropie racine ; plages qui couvrent toutes les répliques) ; rend la
+    synthèse, identique à l'octet à celle d'un seul processus. Empreinte de chaque rapport vérifiée."""
     rapports = []
     for c in chemins:
         verifier(c)
@@ -207,6 +266,10 @@ def fusionner(chemins: list) -> dict:
     if not rapports:
         raise GardeArret("fusion : aucun rapport")
     ref = rapports[0]
+    if ref["format"] != FORMAT_RAPPORT:
+        raise GardeArret(f"fusion : format {ref['format']!r}")
+    ref_cfg_sha = _config_sha_hors_plage(ref)
+    ref_man = ref["manifeste"]
     cles = ("format", "mode", "verites_sha256", "arguments")
     for r in rapports[1:]:
         for k in cles:
@@ -214,8 +277,15 @@ def fusionner(chemins: list) -> dict:
                 raise GardeArret(f"fusion : rapports d'exécutions différentes (champ {k})")
         if r["graines"]["entropie_racine"] != ref["graines"]["entropie_racine"]:
             raise GardeArret("fusion : entropies racines différentes")
-    if ref["format"] != FORMAT_RAPPORT:
-        raise GardeArret(f"fusion : format {ref['format']!r}")
+        man = r["manifeste"]
+        if man["commit"] != ref_man["commit"]:
+            raise GardeArret("fusion : commits différents entre plages")
+        if man["depot_propre"] != ref_man["depot_propre"]:
+            raise GardeArret("fusion : état de propreté du dépôt différent entre plages")
+        if man["reserves"] != ref_man["reserves"]:
+            raise GardeArret("fusion : réserves différentes entre plages")
+        if _config_sha_hors_plage(r) != ref_cfg_sha:
+            raise GardeArret("fusion : config_sha256 hors plage différent entre plages")
     plages = sorted(tuple(r["plage"]) for r in rapports)
     n = ref["arguments"]["repliques"]
     bout = 0
@@ -237,13 +307,47 @@ def fusionner(chemins: list) -> dict:
     return synthese(verites, ref["mode"], lect, n, a["nul"], a["seuils"])
 
 
-def cas_depuis_note(note: dict, mode: str, grille: dict) -> tuple[list[tuple], int]:
-    """Cases de l'épreuve et D lus dans la note des effectifs (spécification v2, § 3)."""
+def ecrire_synthese_fusionnee(chemins: list, chemin_sortie) -> Path:
+    """Écrit et scelle la synthèse fusionnée de rapports de plages disjointes avec les empreintes de chaque rapport
+    réuni (M2) ; n'écrase jamais un fichier existant (R12)."""
+    chemin_sortie = Path(chemin_sortie)
+    if chemin_sortie.exists():
+        raise GardeArret(f"{chemin_sortie} existe déjà (R12)")
+    syn = fusionner(chemins)
+    rapports_meta = []
+    for c in sorted(chemins, key=str):
+        sha_c = verifier(c)
+        r = json.loads(Path(c).read_text(encoding="utf-8"))
+        rapports_meta.append({"chemin": str(c), "sha256": sha_c, "plage": r["plage"]})
+    ref = json.loads(Path(chemins[0]).read_text(encoding="utf-8"))
+    corps = {
+        "format": FORMAT_SYNTHESE_FUSIONNEE,
+        "mode": ref["mode"],
+        "verites_sha256": ref["verites_sha256"],
+        "arguments": ref["arguments"],
+        "commit": ref["manifeste"]["commit"],
+        "depot_propre": ref["manifeste"]["depot_propre"],
+        "reserves": ref["manifeste"]["reserves"],
+        "entropie_racine": ref["graines"]["entropie_racine"],
+        "rapports": rapports_meta,
+        "synthese": syn,
+    }
+    chemin_sortie.parent.mkdir(parents=True, exist_ok=True)
+    chemin_sortie.write_bytes(_canon(corps))
+    sceller(chemin_sortie)
+    return chemin_sortie
+
+
+def cas_depuis_note(note: dict, mode: str, grille: dict, go_extension: str | None = None) -> tuple[list[tuple], int]:
+    """Cases de l'épreuve et D lus dans la note des effectifs (spécification v2, § 3). L'extension de grille (416
+    cases) exige `go_extension` explicite citant un GO (m8)."""
     ce = note["cases_de_l_epreuve_plantee"]
     if mode == "complet":
         c = ce["complet"]
         return [(c["paires"], c["taches"], c["actions"])], c["doses_holm"]
     if ce["extension_taches_actions"]:
+        if not go_extension or not re.fullmatch(r"GO-\d{4}-\d{2}-\d{2}-\d+", go_extension):
+            raise GardeArret("extension de grille (416 cases) : --go-extension GO-AAAA-MM-JJ-NN exigé (devis neuf et GO neuf)")
         return list(itertools.product(grille["paires"], grille["familles"], grille["taches"], grille["actions"])), 1
     e = ce["etalon"]
     return list(itertools.product(grille["paires"], grille["familles"], [e["taches"]], [e["actions"]])), 1
@@ -259,6 +363,7 @@ def main(argv=None) -> int:
     g.add_argument("--note-effectifs", default=None)
     ap.add_argument("--mode", choices=("complet", "etalon"), default=None)
     ap.add_argument("--doses-rejeu", type=int, default=None)
+    ap.add_argument("--go-extension", default=None)
     ap.add_argument("--repliques", type=int, default=None)
     ap.add_argument("--repliques-de", type=int, default=None)
     ap.add_argument("--repliques-a", type=int, default=None)
@@ -272,6 +377,7 @@ def main(argv=None) -> int:
     ap.add_argument("--k-externes", type=int, default=5)
     ap.add_argument("--nul-identite", type=int, default=200)
     ap.add_argument("--regle-cas-mixte", choices=st.REGLES_CAS_MIXTE, default=None)
+    ap.add_argument("--additif-cas-mixte", default=None)
     ap.add_argument("--autoriser-depot-sale", action="store_true")
     a = ap.parse_args(argv)
     v, _ = mp.charger_verites()
@@ -279,11 +385,29 @@ def main(argv=None) -> int:
     seuils = {"alpha": df["alpha"] if a.alpha is None else a.alpha, "u_fort": df["u_fort"] if a.u_fort is None
               else a.u_fort}
     note = None
+    additif_meta = None
+    if a.additif_cas_mixte is not None and a.regle_cas_mixte is None:
+        raise GardeArret("--additif-cas-mixte demande --regle-cas-mixte")
+    if a.regle_cas_mixte is not None:
+        additif_meta = _verifier_additif_cas_mixte(a.additif_cas_mixte, a.regle_cas_mixte)
     if a.note_effectifs:
         if a.mode is None:
             raise GardeArret("--note-effectifs demande --mode complet ou --mode etalon")
+        if a.mode == "etalon" and a.doses_rejeu is not None:
+            raise GardeArret("--doses-rejeu est refusé en mode étalon (m8)")
+        if a.mode == "etalon" and a.regle_cas_mixte is not None:
+            raise GardeArret("--regle-cas-mixte est refusé en mode étalon")
         note_lue = fm.charger_note_effectifs(a.note_effectifs)
-        cas, d_note = cas_depuis_note(note_lue["note"], a.mode, v["grille_etalon"])
+        if a.go_extension is not None and not (a.mode == "etalon" and note_lue["note"]["cases_de_l_epreuve_plantee"]["extension_taches_actions"]):
+            raise GardeArret("--go-extension ne s'emploie qu'en mode étalon lorsque l'extension est déclenchée")
+        etat_mixte = note_lue["cas_mixte"]
+        if a.mode == "complet":
+            if etat_mixte.startswith("cas mixte") and a.regle_cas_mixte is None:
+                raise GardeArret("note des effectifs : cas mixte détecté, --regle-cas-mixte et --additif-cas-mixte "
+                                 "exigés avant le lancement")
+            if not etat_mixte.startswith("cas mixte") and a.regle_cas_mixte is not None:
+                raise GardeArret(f"note des effectifs : état « {etat_mixte} », --regle-cas-mixte refusé hors cas mixte")
+        cas, d_note = cas_depuis_note(note_lue["note"], a.mode, v["grille_etalon"], a.go_extension)
         if a.mode == "complet" and a.doses_rejeu is not None and a.doses_rejeu != d_note:
             raise GardeArret(f"--doses-rejeu {a.doses_rejeu} contredit la note des effectifs (D = {d_note})")
         mode, doses = a.mode, d_note
@@ -291,12 +415,18 @@ def main(argv=None) -> int:
     else:
         if a.mode is not None:
             raise GardeArret("--mode ne s'emploie qu'avec --note-effectifs")
-        doses = 1 if a.doses_rejeu is None else a.doses_rejeu
+        if a.go_extension is not None:
+            raise GardeArret("--go-extension ne s'emploie qu'avec --note-effectifs")
         if a.taille:
             mode, cas = "complet", a.taille
+            doses = 1 if a.doses_rejeu is None else a.doses_rejeu
         else:
+            if a.doses_rejeu is not None:
+                raise GardeArret("--doses-rejeu est refusé en mode étalon (m8)")
+            if a.regle_cas_mixte is not None:
+                raise GardeArret("--regle-cas-mixte est refusé en mode étalon")
             gr = v["grille_etalon"]
-            mode = "etalon"
+            mode, doses = "etalon", 1
             cas = a.cas or list(itertools.product(gr["paires"], gr["familles"], gr["taches"], gr["actions"]))
     n_rep = df["repliques"] if a.repliques is None else a.repliques
     if (a.repliques_de is None) != (a.repliques_a is None):
@@ -306,7 +436,8 @@ def main(argv=None) -> int:
                       None if a.mondes is None else a.mondes.split(","), a.k_externes,
                       journal_progres=lambda m: print(m, file=sys.stderr, flush=True),
                       n_nul_identite=a.nul_identite, autoriser_depot_sale=a.autoriser_depot_sale,
-                      doses_rejeu=doses, plage=plage, regle_cas_mixte=a.regle_cas_mixte, note_effectifs=note)
+                      doses_rejeu=doses, plage=plage, regle_cas_mixte=a.regle_cas_mixte, note_effectifs=note,
+                      additif_cas_mixte=additif_meta, go_extension=a.go_extension)
     print(chemin)
     return 0
 

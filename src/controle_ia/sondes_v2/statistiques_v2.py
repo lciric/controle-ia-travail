@@ -49,6 +49,52 @@ def _dose_non_calculable(motif: str) -> dict:
             "controle_chemin": "non calculable", "residuelle": {"libelle": "non calculable"}}
 
 
+def charger_table_scores(lignes, correspondance: dict) -> tuple[list[dict] | None, str | None]:
+    """Chargeur de tables de scores (§ 4) : garde les contrôles de `statistiques_v1.charger_table_scores`, et convertit
+    les `ValueError` sur les champs numériques (score, longueur, pas, valeur_declaree) en `GardeArret` (R5, m3),
+    en refusant toute valeur infinie sur une colonne présente."""
+    manque = [c for c in CHAMPS_TABLE if c not in correspondance]
+    if manque:
+        return None, f"champ absent de la correspondance : {manque}"
+    normalises = []
+    for i, l in enumerate(lignes):
+        absents = [c for c in CHAMPS_TABLE if correspondance[c] not in l]
+        if absents:
+            return None, f"ligne {i} : champ absent {absents}"
+        r = dict(l)
+        sc_brut = l[correspondance["score"]]
+        if sc_brut is None or sc_brut == "" or isinstance(sc_brut, bool):
+            raise GardeArret(f"ligne {i} : score vide ou non numérique ({sc_brut!r})")
+        try:
+            sc = float(sc_brut)
+        except (TypeError, ValueError):
+            raise GardeArret(f"ligne {i} : score non numérique ({sc_brut!r})") from None
+        if not np.isfinite(sc):
+            raise GardeArret(f"ligne {i} : score non fini ({sc_brut!r})")
+        for champ in ("longueur", "pas"):
+            val = l[correspondance[champ]]
+            if val is None or val == "" or isinstance(val, bool):
+                raise GardeArret(f"ligne {i} : {champ} vide ou non numérique ({val!r})")
+            try:
+                fv = float(val)
+            except (TypeError, ValueError):
+                raise GardeArret(f"ligne {i} : {champ} non numérique ({val!r})") from None
+            if np.isinf(fv):
+                raise GardeArret(f"ligne {i} : {champ} non fini ({val!r})")
+        vd = l[correspondance["valeur_declaree"]]
+        if vd is not None:
+            if isinstance(vd, bool):
+                raise GardeArret(f"ligne {i} : valeur_declaree non numérique ({vd!r})")
+            try:
+                fvd = float(vd)
+            except (TypeError, ValueError):
+                raise GardeArret(f"ligne {i} : valeur_declaree non numérique ({vd!r})") from None
+            if np.isinf(fvd):
+                raise GardeArret(f"ligne {i} : valeur_declaree non finie ({vd!r})")
+        normalises.append(r)
+    return _v1.charger_table_scores(normalises, correspondance)
+
+
 def _chemins_des_cases(L: list[dict], dose) -> tuple[dict | None, str | None]:
     """E-2 : chemin retenu par case ; (None, motif) si la dose est « non calculable » ; arrêt sur un chemin impossible."""
     choix = {}
@@ -139,19 +185,35 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
                                                 minimums, n_tirages, actions)
         triv = {}
         for nom in ("longueur", "pas"):
-            if not all(np.isfinite(float(r[nom])) for r, _ in actions):
+            vals_triv = []
+            for r, _ in actions:
+                val = r[nom]
+                if val is None or isinstance(val, bool):
+                    raise GardeArret(f"rejeu croisé : dose {dose}, clé {r.get('cle')} : valeur vide ou invalide pour {nom} ({val!r})")
+                try:
+                    fv = float(val)
+                except (TypeError, ValueError):
+                    raise GardeArret(f"rejeu croisé : dose {dose}, clé {r.get('cle')} : valeur non numérique pour {nom} ({val!r})") from None
+                if np.isinf(fv):
+                    raise GardeArret(f"rejeu croisé : dose {dose}, clé {r.get('cle')} : valeur infinie pour {nom} ({val!r})")
+                vals_triv.append(fv)
+            nans_triv = [np.isnan(fv) for fv in vals_triv]
+            if all(nans_triv):
                 triv[f"difference_{nom}"] = "variable absente"
                 continue
+            if any(nans_triv):
+                raise GardeArret(f"rejeu croisé : dose {dose} : valeur non finie partielle sur colonne présente {nom}")
             dic = {}
             for t in par_tache:
                 rs = [r for r, _ in actions if r["tache"] == t]
-                dic[t] = float(np.mean([r[nom] for r in rs if r["source"] == "saboteur"]) -
-                               np.mean([r[nom] for r in rs if r["source"] == "honnete"]))
+                dic[t] = float(np.mean([float(r[nom]) for r in rs if r["source"] == "saboteur"]) -
+                               np.mean([float(r[nom]) for r in rs if r["source"] == "honnete"]))
             triv[f"difference_{nom}"] = dic
         res["triviaux"] = triv
-        resid, cols = interaction_residuelle(actions)
+        resid, cols, sorties_c = interaction_residuelle(actions, rendre_constantes=True)
         res["residuelle"] = _test_libelle(resid, rngs, seuils, regime, n_tirages)
         res["residuelle"]["variables_par_pli"] = cols
+        res["residuelle"]["variables_sorties_par_pli"] = sorties_c
         sorties[str(dose)] = res
     # Holm sur les doses calculées (valeurs p ajustées, indépendantes du seuil)
     testees = [k for k, v in sorties.items() if "test" in v["brute"]]
@@ -164,27 +226,66 @@ def rejeu_croise(table: list[dict], rngs: dict, seuils: dict, minimums: dict = M
     return libeller_rejeu(out, seuils)
 
 
-def interaction_residuelle(actions) -> tuple[dict, dict]:
+def interaction_residuelle(actions, rendre_constantes: bool = False):
     """Déplacements résiduels après régression linéaire, par pli, apprise sur les seuls textes honnêtes, sur les
     variables présentes : longueur, rang et valeur déclarée, chacune gardée si elle est finie sur tout le pli et non
-    constante (une colonne constante est colinéaire à la constante ; une variable absente sort, et la sortie la nomme) ;
-    puis interaction par tâche. Rend (interaction par tâche, variables retenues par pli)."""
-    disp, retenues = {}, {}
+    constante sur les textes honnêtes (une colonne constante chez les honnêtes est colinéaire à la constante dans X[h] ;
+    une variable absente ou constante chez les honnêtes sort, et la sortie la nomme). Rend (interaction par tâche,
+    variables retenues par pli) ou avec `rendre_constantes=True` (interaction, variables retenues, sorties nommées)."""
+    disp, retenues, sorties_par_pli = {}, {}, {}
     for pli in sorted({r["pli"] for r, _ in actions}, key=str):
         A = [(r, d) for r, d in actions if r["pli"] == pli]
-        cols = []
+        h = np.array([r["source"] == "honnete" for r, _ in A])
+        if not np.any(h):
+            raise GardeArret(f"interaction résiduelle : pli {pli}, aucune action honnête")
+        cols, sorties_pli = [], {}
         for c in ("longueur", "pas", "valeur_declaree"):
-            v = np.array([float(r[c]) for r, _ in A])
-            if np.all(np.isfinite(v)) and np.ptp(v) > 0:
-                cols.append(c)
+            bruts = [r[c] for r, _ in A]
+            if c == "valeur_declaree":
+                if any(x is None for x in bruts):
+                    sorties_pli[c] = "variable absente"
+                    continue
+                if any(isinstance(x, bool) for x in bruts):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur non numérique pour {c}")
+                try:
+                    v = np.array([float(x) for x in bruts], dtype=np.float64)
+                except (TypeError, ValueError):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur non numérique pour {c}") from None
+                if np.any(np.isinf(v)):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur infinie pour {c}")
+                if not np.all(np.isfinite(v)):
+                    sorties_pli[c] = "variable absente"
+                    continue
+            else:
+                if any(x is None or isinstance(x, bool) for x in bruts):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur vide ou invalide pour {c}")
+                try:
+                    v = np.array([float(x) for x in bruts], dtype=np.float64)
+                except (TypeError, ValueError):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur non numérique pour {c}") from None
+                if np.any(np.isinf(v)):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur infinie pour {c}")
+                nans = np.isnan(v)
+                if np.all(nans):
+                    sorties_pli[c] = "variable absente"
+                    continue
+                if np.any(nans):
+                    raise GardeArret(f"interaction résiduelle : pli {pli}, valeur non finie partielle sur colonne présente {c}")
+            if np.ptp(v[h]) == 0:
+                sorties_pli[c] = "constante sur les textes honnêtes"
+                continue
+            cols.append(c)
         retenues[str(pli)] = cols
+        sorties_par_pli[str(pli)] = sorties_pli
         X = np.array([[1.0] + [float(r[c]) for c in cols] for r, _ in A])
         y = np.array([d for _, d in A])
-        h = np.array([r["source"] == "honnete" for r, _ in A])
         beta = np.linalg.lstsq(X[h], y[h], rcond=None)[0]
         for (r, _), e in zip(A, y - X @ beta):
             disp.setdefault(r["tache"], {}).setdefault(r["source"], []).append(float(e))
-    return _interaction_par_tache(disp)[0], retenues
+    inter = _interaction_par_tache(disp)[0]
+    if rendre_constantes:
+        return inter, retenues, sorties_par_pli
+    return inter, retenues
 
 
 def _cas_mixte(res, par_tache, ecarts, controlees, regle, rngs, seuils, minimums, n_tirages, actions) -> dict:
