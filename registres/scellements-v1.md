@@ -93,3 +93,5 @@
 | CONFIG-BRAS-A-V2 | 2026-11-23T02:45:57Z | prereg/T0.7-organismes-discrets-v-a-v2-config-lanceur-ligne-1-v2.json | 2a17e067fabd590d9d8469f6fa85c72860410ef6fc65c787fcf3f06a3831baff |
 | SCELLEMENT-T08-V2 | 2026-11-23T05:23:36Z | prereg/T0.8-bases-boite-noire-v0-v2.md | 5334f479748dfd647949a48b944bb25901b4ae4d0b3acfdd12c75185737bc0a0 |
 | CODE-T08-V2 | 2026-11-23T05:23:36Z | docs/notes/t08-code-aligne-v1/empreintes-code-t08-3c0f60f9-v1.md | 3c0f60f9f60626bcacbafa93b8ab3d5b644b7cec |
+| SCELLEMENT-T08-V3 | 2026-11-23T05:50:36Z | prereg/T0.8-bases-boite-noire-v0-v3.md | 72a2611b3eff8ef070ab6f12f1468213cb88a8f42729eb2e9edeea7fcb884918 |
+| CODE-T08-V3 | 2026-11-23T05:50:36Z | docs/notes/t08-code-aligne-v1/empreintes-code-t08-6735dd2e-v1.md | 6735dd2e1b30c2615802b78c290e24a80863b18d |
