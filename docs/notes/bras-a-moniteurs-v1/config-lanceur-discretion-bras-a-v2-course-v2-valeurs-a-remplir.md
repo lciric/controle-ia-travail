@@ -1,0 +1,13 @@
+# Configuration de course v2 du lanceur de discrétion du bras A — les cinq valeurs restées vides — v1
+
+Pièce habilitée, compagnon de `config-lanceur-discretion-bras-a-v2-course-v2.json` (même dossier). Écrite le 2026-11-23 par le lecteur habilité (Opus 5.5). La configuration est un objet aux clés fermées : ces lignes ne peuvent pas y être écrites. Tant que l'une de ces cinq valeurs est vide, le lanceur refuse la configuration (essai `test_v2_refusee_tant_que_cinq_valeurs_manquent`). Les remplir donne une version neuve (v3), scellée, contre-lue avant usage ; la v2 est gardée (R12).
+
+Fixées dans la v2 : texte scellé (`prereg/T0.7-organismes-discrets-v-a-v2.md`, `b4fbfb4e6cddfdc4775119a3e42a61045460ce8cee18a341834155ef1367a0cd`, `main` au commit `68b2aa636`) ; statistique de l'agrégateur, `moyenne` (texte, ligne 933, 6.10) ; réglages de la lecture, les cinq de la ligne 925 (6.10) ; dossier des scores par unité inchangé.
+
+| clé | à quelle étape | par qui | source au texte scellé |
+|---|---|---|---|
+| `registre_des_accords_fige` | avant le tirage de la table des identifiants opaques, donc avant la sous-commande `discretion` : état du registre des accords de la branche principale au commit où la ligne de l'écart à R9 (GO-2026-11-19-97) est inscrite, copié avec son compagnon ; chemin, empreinte et commit | la session qui lance le tirage (session principale, instance habilitée) | 13.2, case « lignes de GO » |
+| `rejeu` | après l'étape (i) de 6.3 (seconde ligne de carte : rejeu des sept conditions sur les seize tâches de vérification), fichier des épisodes rejoués versé et scellé ; chemin et empreinte | la session de relance, qui joue et verse la course ; cité par la session principale | 6.3 (i) ; non fixé par le texte |
+| `configuration_du_bras` | étape (a) de 6.3, avant toute dépense : configuration du bras scellée (entropie, coupe des tâches, doses) ; chemin et empreinte | la session de relance | 6.3 (a) ; non fixée par le texte |
+| `taches` | avant la sous-commande `discretion` : fichier des énoncés des tâches (questions par identifiant), versé et scellé ; chemin et empreinte | la session de relance, qui tient les tâches ; cité par la session principale | 6.1 fixe l'ensemble des tâches, pas le fichier |
+| `fins_moniteur_boite_noire` | sur la machine de calcul, avant `discretion` : sous-commande `relever-fins` du lanceur, sur une configuration de relevé (seule valeur admise nulle), puis liste écrite dans la version neuve ; le lanceur la recontrôle au chargement | la session qui lance le lanceur (session principale, instance habilitée) | 6.10, ligne 926 : relevés par le lanceur, écrits dans la configuration scellée |
