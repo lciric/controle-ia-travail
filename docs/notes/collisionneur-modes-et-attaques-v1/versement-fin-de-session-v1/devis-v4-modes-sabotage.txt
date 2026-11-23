@@ -1,0 +1,40 @@
+A = argon (gemini-4-argon) : prix 4 / 20 USD par million, sortie 65536 (relance 65536), provision 16384, budget envoyé None, niveau de réflexion envoyé high, 2.5 caractères par jeton, délai 3600 s
+B = astra (gpt-6.2-astra) : prix 10 / 50 USD par million, sortie 8000 (relance 32000), provision 0, budget envoyé None, niveau de réflexion envoyé None, 2.5 caractères par jeton, délai 3600 s
+C = carbon (gemini-4-carbon) : prix 4 / 20 USD par million, sortie 65536 (relance 65536), provision 49152, budget envoyé None, niveau de réflexion envoyé high, 2.5 caractères par jeton, délai 5400 s
+D = fable51 (claude-fable-5-1) : prix 10 / 50 USD par million, sortie 49000 (relance 64000), provision 0, budget envoyé None, niveau de réflexion envoyé None, 2.5 caractères par jeton, délai 3600 s, effort high
+E1-T1-meta-A             gemini-4-argon     pire cas  1.66 USD
+E1-T1-meta-B             gpt-6.2-astra      pire cas  0.46 USD
+E1-T1-meta-C             gemini-4-carbon    pire cas  2.32 USD
+E1-T1-meta-D             claude-fable-5-1   pire cas  2.51 USD
+E1-T2-critique-meta-A    gemini-4-argon     pire cas  1.80 USD
+E1-T2-critique-meta-B    gpt-6.2-astra      pire cas  0.79 USD
+E1-T2-critique-meta-C    gemini-4-carbon    pire cas  2.45 USD
+E1-T2-critique-meta-D    claude-fable-5-1   pire cas  2.84 USD
+  étage 1 : 8 cellules, 14.82 USD au pire cas, sans relance
+E2-T1-prog-maths-A       gemini-4-argon     pire cas  1.84 USD
+E2-T1-prog-maths-B       gpt-6.2-astra      pire cas  0.90 USD
+E2-T1-prog-maths-C       gemini-4-carbon    pire cas  2.50 USD
+E2-T1-prog-maths-D       claude-fable-5-1   pire cas  2.95 USD
+E2-T2-critique-croisee-A gemini-4-argon     pire cas  1.76 USD
+E2-T2-critique-croisee-B gpt-6.2-astra      pire cas  0.71 USD
+E2-T2-critique-croisee-C gemini-4-carbon    pire cas  2.42 USD
+E2-T2-critique-croisee-D claude-fable-5-1   pire cas  2.76 USD
+E2-T3-reponse-A          gemini-4-argon     pire cas  1.82 USD
+E2-T3-reponse-B          gpt-6.2-astra      pire cas  0.85 USD
+E2-T3-reponse-C          gemini-4-carbon    pire cas  2.47 USD
+E2-T3-reponse-D          claude-fable-5-1   pire cas  2.90 USD
+  étage 2 : 12 cellules, 23.88 USD au pire cas, sans relance
+E3-T1-conception-A       gemini-4-argon     pire cas  1.67 USD
+E3-T1-conception-B       gpt-6.2-astra      pire cas  0.49 USD
+E3-T1-conception-C       gemini-4-carbon    pire cas  2.33 USD
+E3-T1-conception-D       claude-fable-5-1   pire cas  2.54 USD
+E3-T2-critique-croisee-A gemini-4-argon     pire cas  1.77 USD
+E3-T2-critique-croisee-B gpt-6.2-astra      pire cas  0.74 USD
+E3-T2-critique-croisee-C gemini-4-carbon    pire cas  2.43 USD
+E3-T2-critique-croisee-D claude-fable-5-1   pire cas  2.79 USD
+E3-T3-reponse-A          gemini-4-argon     pire cas  1.83 USD
+E3-T3-reponse-B          gpt-6.2-astra      pire cas  0.88 USD
+E3-T3-reponse-C          gemini-4-carbon    pire cas  2.49 USD
+E3-T3-reponse-D          claude-fable-5-1   pire cas  2.93 USD
+  étage 3 : 12 cellules, 22.89 USD au pire cas, sans relance
+La dépense réelle dépend de la longueur de la réflexion ; chaque relance (sortie vide ou coupée) ajoute au plus le pire cas de sa cellule au plafond de relance ; une cellule de Google à plafonds égaux en a deux (relance identique, puis dernier recours), les autres une. Le plafond vaut pour tout le dossier de run, et le script le vérifie avant chaque appel.
