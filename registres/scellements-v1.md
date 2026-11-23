@@ -90,3 +90,4 @@
 | SCELLEMENT-T08 | 2026-11-22T22:27:03Z | prereg/T0.8-bases-boite-noire-v0-v1.md | 0855ae06d8253ef7609f2418cef4c46c34626b07161317f0b182604b1532adad |
 | CODE-T08 | 2026-11-22T22:27:05Z | docs/notes/t08-code-aligne-v1/empreintes-code-t08-bd32f9a5-v1.md | bd32f9a5c3edede9ac2fad36946750b322303687 |
 | SCELLEMENT-ORGANISMES-VA-V2 | 2026-11-23T00:04:38Z | prereg/T0.7-organismes-discrets-v-a-v2.md | b4fbfb4e6cddfdc4775119a3e42a61045460ce8cee18a341834155ef1367a0cd |
+| CONFIG-BRAS-A-V2 | 2026-11-23T02:45:57Z | prereg/T0.7-organismes-discrets-v-a-v2-config-lanceur-ligne-1-v2.json | 2a17e067fabd590d9d8469f6fa85c72860410ef6fc65c787fcf3f06a3831baff |
