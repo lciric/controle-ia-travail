@@ -82,7 +82,7 @@ try:
 - Source : brouillon 56, `{ATTENDUE}`.
 - Texte obtenu : `{os.path.basename(SORTIE)}`, `{h}` (empreinte des octets écrits).
 - Différence avec le brouillon 56, vérifiée par programme avant le tirage : lignes {[c + 1 for c in changees]} seulement — titre (« BROUILLON 56 » retiré), statut, et la case « entropie » (entier inscrit, marque retirée).
-- Chaîne de lecture : contre-lecture 11 (`45d76769…`) et sa vérification (`a96a4d9d…`) ; contre-lectures des cases remplies des brouillons 54 (`c68b20de…`) et 55 (`b0c9960b…`) ; contre-lecture du brouillon 56 (§CL56§) ; vérification habilitée (R-5032).
+- Chaîne de lecture : contre-lecture 11 (`45d76769…`) et sa vérification (`a96a4d9d…`) ; contre-lectures des cases remplies des brouillons 54 (`c68b20de…`) et 55 (`b0c9960b…`) ; contre-lecture du brouillon 56 (`6300ff2c…`, « scellable », trois mineurs) ; vérification habilitée (R-5032).
 - Aucun programme de la course, aucun essai ni aucune simulation n'a tourné avec cet entier ; les essais du programme ont pris une entropie fictive, déclarée telle.
 """
     for chemin, contenu in ((NOTE, note.encode("utf-8")), (SORTIE, neuf)):
