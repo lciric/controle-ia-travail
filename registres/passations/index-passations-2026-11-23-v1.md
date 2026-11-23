@@ -17,3 +17,4 @@
 - bras A (complément) : claude/pensive-bardeen-1fv7hw 4decfae90, journaux des agents versés (43 .jsonl, 86 .json, inventaire scellé) sur mot tapé par Lazar dans la session ; complément 2 de passation (77e2b0f2…) ; GO-2026-11-23-10
 - classement des échecs d'essais : essais/classement-echecs-v1 1f2bcb038, 2026-11-23-0635-classement-echecs-essais.md (1e2eb36a…) ; 90 fichiers versés
 - conseiller activations barreau 5 (Fable) : conseiller-activations-b5/passation-v1 05cec997, 2026-11-23-0635-conseiller-activations-b5.md (47adc28f…) ; rien d'autre à verser
+- contre-lecteur T0.8 (brouillon 11) : prep/t08-texte-complet-fable-v1 86efe3e8, 2026-11-23-0625-contre-lecteur-t08.md (d9bf5d27…) ; 25 fichiers versés
