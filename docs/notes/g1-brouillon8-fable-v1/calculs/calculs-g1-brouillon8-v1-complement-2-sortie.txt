@@ -1,0 +1,43 @@
+Calculs de méthode, brouillon 8 de la porte G1 — complément 2 (critère contre le véhicule)
+Lois supposées (modèle binormal à variances égales) ; aucune donnée du programme ; aucun tirage.
+
+§ 1 — Rappel d'un même moniteur selon son taux d'alerte sur le témoin
+  rappel à 1 % ; décalage d ; rappel à 2 % ; à 3 % ; à 5 % ; gain de rappel de 1 % à 5 % ; dont au-delà des alertes en plus (gain moins 0,04)
+    0.10 ; 1.045 ; 0.156 ; 0.202 ; 0.274 ; +0.174 ; +0.134
+    0.20 ; 1.485 ; 0.285 ; 0.346 ; 0.436 ; +0.236 ; +0.196
+    0.30 ; 1.802 ; 0.401 ; 0.469 ; 0.562 ; +0.262 ; +0.222
+    0.40 ; 2.073 ; 0.508 ; 0.576 ; 0.666 ; +0.266 ; +0.226
+    0.50 ; 2.326 ; 0.607 ; 0.672 ; 0.752 ; +0.252 ; +0.212
+    0.60 ; 2.580 ; 0.701 ; 0.758 ; 0.825 ; +0.225 ; +0.185
+    0.80 ; 3.168 ; 0.867 ; 0.901 ; 0.936 ; +0.136 ; +0.096
+  lecture : un moniteur qui sonne sur 5 % des épisodes du témoin au lieu de 1 % affiche, à pouvoir de
+  détection égal, le rappel de la colonne « à 5 % » ; l'écart de planification du texte de la porte est 0,10.
+
+§ 2 — Bruit d'un seuil recalibré à 1 % sur K épisodes indépendants, traduit en rappel
+  cas de la conception du pari : rappel 0,40 à 1 %, décalage 2.073, pente 14.50 (conception : 14,5)
+  K ; écart-type du taux d'alerte réel (points) ; écart-type du rappel d'un moniteur (points) ; écart-type de l'écart de rappel entre deux moniteurs de même loi, seuils indépendants (points)
+       300 ; 0.574 ; 8.33 ; 11.78
+       450 ; 0.469 ; 6.80 ; 9.62
+      1000 ; 0.315 ; 4.56 ; 6.45
+      2000 ; 0.222 ; 3.23 ; 4.56
+      4000 ; 0.157 ; 2.28 ; 3.23
+     10000 ; 0.099 ; 1.44 ; 2.04
+     40000 ; 0.050 ; 0.72 ; 1.02
+     60000 ; 0.041 ; 0.59 ; 0.83
+  contrôle : à K = 450 (45 unités de dix épisodes), la conception écrit 9,6 points pour l'écart entre deux moniteurs.
+  même calcul pour d'autres rappels à 1 % (pente ; écart-type de l'écart entre deux moniteurs à K = 300, puis à K = 60 000, en points) :
+    rappel 0.10 : pente 6.58 ; 5.35 ; 0.38
+    rappel 0.20 : pente 10.50 ; 8.53 ; 0.60
+    rappel 0.40 : pente 14.50 ; 11.78 ; 0.83
+    rappel 0.60 : pente 14.50 ; 11.78 ; 0.83
+
+§ 3 — Devis du calibrage sur le témoin (modèle de coût du brouillon 6, estimation centrale)
+  contrôle : 92800 épisodes sans témoin ; 4870 USD (brouillon 6 : 92 800 ; 4 870)
+  variante ; épisodes du témoin par tâche ; épisodes en tout ; USD central ; central x 1,3 ; sous un plafond de 7 600
+    évaluation seule : 10 exécutions dans les deux cellules de la porte, 1 dans les quatre autres ; 24 ; 102400 ; 5374 ; 6986 ; oui
+    300 épisodes de calibrage par cellule (six cellules) + évaluation 10 et 1 ; 28.5 ; 104200 ; 5468 ; 7109 ; oui
+    calibrage à 10 fois les unités sabotées (100 par tâche) dans les deux cellules de la porte + évaluation 10 et 1 ; 224 ; 182400 ; 9572 ; 12443 ; non
+    calibrage à 15 fois (150 par tâche, échelle de l'honnête) dans les deux cellules de la porte + évaluation 10 et 1 ; 324 ; 222400 ; 11671 ; 15172 ; non
+    calibrage à 15 fois dans les deux cellules de la porte + évaluation 10 et 3 (hypothèse du rédacteur précédent ; calcul v1, § 5) ; 339 ; 228400 ; 11986 ; 15582 ; non
+
+versions : python 3.13.18 ; scipy 1.17.1
