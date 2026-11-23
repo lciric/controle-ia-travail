@@ -40,3 +40,4 @@
 - mathématiques nouvelles : claude/mathematiques-nouvelles-v1 3ea5b83a, 2026-11-23-0625-mathematiques-nouvelles.md (6f7e7087…) ; déclencheur de reprise de 08:00Z actif
 - juge Fable seuil 0,75 : claude/avis-carbon-astra-v1 f8129e6e0, 2026-11-23-0705-juge-fable-max.md (725d4c61…)
 - cloisonnée modes et attaques : runs/cloisonnee-modes-attaques-questions-v4 6a5ae92da, 2026-11-23-0653-cloisonnee-modes-attaques.md (4258b6da…) ; coffre/modes-tenus-a-l-ecart-collisionneur-v1 ba593e54 — cloisonné
+- contre-lecteur grille de repli papier C : papier-c/contre-lecture-grille-v2 6ec9ccc5, 2026-11-23-0703-contre-lecteur-grille-clause-de-repli-v2.md (7ddd609b…) ; PR 77 brouillon
