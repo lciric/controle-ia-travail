@@ -270,6 +270,34 @@ def test_d_prime_artefacts(cas):
         cl3.commit_v3_epingle(_reg(*lignes))
 
 
+@pytest.mark.parametrize("variante", ["accent_decompose", "espace_insecable", "barre_verticale"])
+def test_d_prime_ligne_saine_plus_une_variante_normalisee_deux_candidates(variante):
+    """Constat 1 de la contre-lecture du code : une ligne saine, plus une copie que seule la normalisation des candidates
+    reconnaît (forme décomposée, espace insécable, « | » en tête) : deux candidates, refus « une et une seule »."""
+    sain = epinglage("3" * 40)
+    autre = {"accent_decompose": unicodedata.normalize("NFD", sain),
+             "espace_insecable": sain.replace("(barreau 5) :", "(barreau 5)\u00a0:"),
+             "barre_verticale": "| " + sain}[variante]
+    assert autre != sain and cl3.commit_v3_epingle(_reg(sain)) == "3" * 40
+    with pytest.raises(GardeArret, match="une et une seule"):
+        cl3.commit_v3_epingle(_reg(sain, autre))
+    with pytest.raises(GardeArret, match="une et une seule"):
+        cl3.commit_v3_epingle(_reg(autre, sain))
+
+
+def test_amorce_embarquee_sha256_deux_segments_base64_refus():
+    """Constat 2 de la contre-lecture du code : une commande à deux segments « base64 -d », dont l'un vise un autre
+    fichier : refus (C12) ; le témoin à un seul segment rend l'empreinte corrigée."""
+    corrigee = base64.b64encode(cl3.amorce_corrigee((RACINE / rv.AMORCE).read_bytes())).decode()
+    sain = f'x --args -c "echo {corrigee} | base64 -d > /root/amorce_b5f_lecture_v1.sh && bash /root/amorce_b5f_lecture_v1.sh"'
+    assert cl3.amorce_embarquee_sha256(sain) == CORRIGEE
+    for deux in (sain + " && echo eA== | base64 -d > /root/autre.sh",
+                 f'x --args -c "echo eA== | base64 -d > /root/autre.sh && echo {corrigee} | base64 -d > '
+                 '/root/amorce_b5f_lecture_v1.sh"'):
+        with pytest.raises(GardeArret, match="un et un seul segment"):
+            cl3.amorce_embarquee_sha256(deux)
+
+
 # --- le montage complet : cas sain, différence fermée ---------------------------------------------------------------------
 
 def test_montage_complet_cas_sain_et_les_verifications_une_a_une(monde3):
@@ -589,7 +617,7 @@ def test_lanceur_v3_refus(monde3):
     assert r.returncode == 2 and "joué depuis un autre arbre" in r.stderr and r.stdout == ""
 
 
-@pytest.mark.parametrize("segment", ["figee", "illisible", "deux"])
+@pytest.mark.parametrize("segment", ["figee", "illisible", "deux", "deux_lignes"])
 def test_lanceur_v3_condition_d_arret_c12_segment_qui_n_est_pas_l_amorce_corrigee(tmp_path, segment):
     """C12 : quel que soit ce que rend le module, le lanceur ne laisse sortir aucune commande dont le segment base64 décodé
     n'a pas l'empreinte `0adb6efb…` (faux interpréteur qui rend une commande de la version 2, l'amorce figée)."""
@@ -597,9 +625,11 @@ def test_lanceur_v3_condition_d_arret_c12_segment_qui_n_est_pas_l_amorce_corrige
     corrigee = base64.b64encode(cl3.amorce_corrigee((RACINE / rv.AMORCE).read_bytes())).decode()
     s = {"figee": f"echo {figee} | base64 -d > /root/amorce_b5f_lecture_v1.sh",
          "illisible": "echo !!! | base64 -d > /root/amorce_b5f_lecture_v1.sh",
-         "deux": f"echo {corrigee} | base64 -d > /root/a.sh && echo {figee} | base64 -d > /root/amorce_b5f_lecture_v1.sh"}[segment]
+         "deux": f"echo {corrigee} | base64 -d > /root/a.sh && echo {figee} | base64 -d > /root/amorce_b5f_lecture_v1.sh",
+         "deux_lignes": f"echo {corrigee} | base64 -d > /root/amorce_b5f_lecture_v1.sh"}[segment]
     faux = tmp_path / "faux-python"
-    faux.write_text(f"#!/usr/bin/env bash\necho 'GO_ID=GO-2026-11-24-01 vastai create instance 1 --args -c \"{s}\"'\n")
+    faux.write_text(f"#!/usr/bin/env bash\necho 'GO_ID=GO-2026-11-24-01 vastai create instance 1 --args -c \"{s}\"'\n"
+                    + ("echo 'seconde ligne'\n" if segment == "deux_lignes" else ""))
     faux.chmod(0o755)
     r = _jouer(RACINE, "commande", "decisif", *["a"] * 9, env={"GO_ID": GO_LECTURE, "PYTHON_B5F": str(faux)})
     assert r.returncode == 2 and "amorce embarquée" in r.stderr and "vastai" not in r.stdout, (r.stdout, r.stderr)
