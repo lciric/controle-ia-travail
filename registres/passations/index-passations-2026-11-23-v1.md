@@ -43,3 +43,16 @@
 - contre-lecteur grille de repli papier C : papier-c/contre-lecture-grille-v2 6ec9ccc5, 2026-11-23-0703-contre-lecteur-grille-clause-de-repli-v2.md (7ddd609b…) ; PR 77 brouillon
 - juge Opus seuil 0,75 : claude/avis-carbon-astra-v1 c19093ad, 2026-11-23-0710-juge-opus-max.md (cbe42309…)
 - rédacteur des devis de carte du bras A : relance-bras-a/devis-carte-v3 e2279e4b, 2026-11-23-0709-redacteur-devis-carte-bras-a.md (d99b3546…) ; 22 pièces versées
+- rédacteur G1 brouillon 7 (Fable, remplacé) : prep/g1-brouillon7-fable-v1 63422e33, 2026-11-23-2026-11-23-0709-redacteur-g1-brouillon7.md (ca199129…, nom doublé gardé, R12)
+- juge Fable H-1 papier C : juge/papier-c-h1-fable-v1 bbb95e36, 2026-11-23-0710-juge-fable-noeud-h1-papier-c.md (ec5e22b3…) ; décision (a), 0,80
+- rédacteur du texte de T0.8 (Fable, désormais Sonnet) : prep/t08-passation-redacteur-v2 7540dcde, passation redacteur-t08-texte-et-pieces-de-course (841d339d…) ; tout est dans main
+- rédacteur du préenregistrement du papier C (Fable) : prep/papier-c-prereg-fable-v1 a0b98bf1, 2026-11-23-0705-papier-c-prereg-fable.md (6b97256b…) ; 46 fichiers versés
+- rédacteur successeur G1 (brouillon 8) : prep/g1-brouillon8-fable-v1 0d005040, 2026-11-23-0715-g1-redacteur-successeur.md (b5bfe597…) ; réveil trig_01HGfcuMhRvwVRoABQnRomUg à 08:00Z (fiche « porte au moindre coût »)
+- conception des sondes (Fable max) : prep/conception-sondes-boite-blanche-fable-v1 932e23a5, 2026-11-23-0715-conception-sondes-boite-blanche.md (e4f362cc…) ; reprise prévue à 08:00Z
+- exécutante collisionneur v8, passation v2 : service/collisionneur-modes-v8-sorties-v1 95bf8fe4, 2026-11-23-0711-executante-collisionneur-modes-v8-v2.md (9b2d7d36…) — cloisonné ; 14,50 sur 26 comptés
+- rédacteur Fable bras A, arrêt d'office : relance-bras-a/arret-office-generiques-v1 0b420bf5, 2026-11-23-0715-redacteur-fable-arret-office.md (0d118605…)
+- bibliothécaire : bibliotheque/compilation-2026-11-23-v1 265ffa42f, 2026-11-23-0711-bibliothecaire.md (d368e896…) ; compilation 639e9c7c0 (867 branches, 87 cloisonnées par noms seuls, 114 décisions, sept index, programme compiler_v1.py) ; mise à jour vers 10:15Z
+- collisionneurs « conscience et anesthésie » : runs/collisionneurs-reprise-v8d-v1 ad0e082e, 2026-11-23-0711-collisionneurs.md (2b43610c…) ; notes de sortie du billet drapeau et du lot en quarantaine restent sur cette branche (versement sur main en attente)
+- conseiller aveugle Fable G1 énoncé : avis/g1-enonce-fable-v1 3c7b33c2, 2026-11-23-0713-conseiller-aveugle-g1-enonce.md (3da67773…) ; modèle changé après redémarrage, signalé
+- collisionneurs, passation complémentaire : runs/collisionneurs-reprise-v8d-v1, 2026-11-23-0808-collisionneurs-conscience-anesthesie-suite.md (f73331d7…) ; mots de Lazar sur la suite « conscience et anesthésie » (lentille J, pistes, données humaines publiques, programme « émergence, allumage, transition de phase ») ; rien lancé, devis et GO à venir
+- mathématiques nouvelles, passation de reprise : claude/mathematiques-nouvelles-v1 2529494e, 2026-11-23-0815-mathematiques-nouvelles.md (4a03dc5a…) ; v4 sur l'autre compte (R-5154)

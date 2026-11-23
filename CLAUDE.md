@@ -81,6 +81,14 @@ La conception du saboteur et de tout ce qui est délicat est faite par Claude Fa
 ## Économie de Fable (mot de Lazar du 21 novembre, GO-2026-11-21-75)
 Le quota de Fable est rare : Fable 5.2 est réservé aux pièces décisives — préenregistrements et leurs additifs, textes de lecture, verdicts, devis, et les conceptions délicates de la règle précédente (organismes, oracles, épreuves, critères de décision). Opus 5.5 fait les vérifications, les contre-lectures et le code (mot de Lazar : « parfait inscris cette règle pour les sessions futures », sur « je réserverai Fable aux pièces décisives : préenregistrements, additifs, verdicts et devis ; Opus prendra les vérifications et le code »). Toute session vérifie, avant de confier un travail à Fable, qu'il entre dans cette liste.
 
+## Dosage du modèle et de l'effort (mot de Lazar du 23 novembre, GO-2026-11-23-14)
+« reserve fable en effort max aux taches les plus delicates, dose le modele et son effort en fonction de la crucialite portee et complexite de la tache/noeud ». Avant tout envoi, la session qui confie un travail choisit modèle et effort selon trois critères : crucialité (une erreur fausse-t-elle une porte, un verdict, une revendication ou une dépense ?), portée (combien de pièces en dépendent ?), complexité (raisonnement neuf ou application d'un cadre fixé ?). Repères :
+- Fable 5.2, effort maximal : les plus délicates seulement — préenregistrements décisifs et leurs critères gelés, verdicts de porte, conceptions d'organismes, d'oracles et d'épreuves, nœuds où une erreur se propage.
+- Fable 5.2, effort élevé ou moyen : pièces décisives de forme fixée (additifs courts, compléments de devis, errata de pièces décisives, textes de lecture sur un cadre déjà scellé).
+- Opus 5.5, effort maximal ou élevé : contre-lectures et vérifications de pièces décisives, code délicat.
+- Opus 5.5, effort moyen, ou modèle plus léger : routine (relevés, versements, registres, inventaires, surveillance).
+Le choix et sa raison tiennent en une ligne au registre quand il porte sur une pièce de classe A.
+
 ## Hiérarchie de décision
 - Routine (tu décides, tu consignes dans `registres/decisions.md`) : code, bibliothèques, tests, lectures, fichiers, tout travail sur processeur.
 - Proposer avec recommandation (défaut appliqué après 48 heures) : couches et concepts de sondes, portage des environnements, périmètre interne d'une phase, D1, D2, D3.
