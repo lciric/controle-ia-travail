@@ -26,6 +26,9 @@ from .magasin_v1 import _CHEMIN_B5
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 CASES = ("adaptateur|saboteur", "nu|saboteur", "adaptateur|honnete", "nu|honnete")
 MOTS_DE_ROLE = ("saboteur", "jumeau", "paire", "famille")
+SERIES_PUBLIQUES = ("propre", "ancre", "autres_a_nom_public")
+ATTESTATION_SERIES_PUBLIQUES = ("aucune série comptée dans series_publiques n'est membre d'une paire opaque du test "
+                                "sur les adaptateurs jumeaux ; leurs noms ne sont pas écrits")
 MINIMUM_TACHES_NOTE = 8
 MINIMUM_ACTIONS_NOTE = 40
 PAIRES_MODE_COMPLET = 8
@@ -106,7 +109,18 @@ def charger_note_effectifs(chemin) -> dict:
     a = n["activations"]
     _sans_mot_de_role(a, "note.activations")
     _cles_exactes(a, ("dossier_run", "inventaire_sha256", "garde_sha256", "regle_garde", "couches_gardees",
-                      "chemin_de_calcul", "series", "cles_communes", "nu_relit_les_cles_communes"), "note.activations")
+                      "chemin_de_calcul", "series", "series_publiques", "attestation_series_publiques", "cles_communes",
+                      "nu_relit_les_cles_communes"), "note.activations")
+    # Option A du diagnostic de la garde des mots de rôle (mot de la mère, 2026-11-23, 23:50Z) : les séries à nom
+    # public (séries propres et ancres du format du barreau 5, et toute autre série dont le nom porte un rôle public)
+    # sont comptées, jamais nommées ; la note atteste qu'aucune n'est membre d'une paire opaque du test. La garde des
+    # noms reste entière sur `series`.
+    _cles_exactes(a["series_publiques"], SERIES_PUBLIQUES, "note.activations.series_publiques")
+    for c in SERIES_PUBLIQUES:
+        _entier(a["series_publiques"][c], f"note.activations.series_publiques.{c}")
+    if a["attestation_series_publiques"] != ATTESTATION_SERIES_PUBLIQUES:
+        raise GardeArret("note.activations.attestation_series_publiques : phrase d'attestation attendue mot pour mot "
+                         f"(« {ATTESTATION_SERIES_PUBLIQUES} »)")
     _hex(a["inventaire_sha256"], "note.activations.inventaire_sha256")
     _hex(a["garde_sha256"], "note.activations.garde_sha256")
     cc = a["chemin_de_calcul"]
@@ -550,4 +564,5 @@ def charger_table_ouvreur(chemin, chemin_garde, chemin_registre, alpha: float = 
 
 
 __all__ = ["charger_note_effectifs", "charger_table_bbis", "charger_table_ouvreur", "arrondi_moitie_bas", "CASES",
-           "MOTS_DE_ROLE", "MINIMUM_TACHES_NOTE", "MINIMUM_ACTIONS_NOTE", "PAIRES_MODE_COMPLET"]
+           "MOTS_DE_ROLE", "SERIES_PUBLIQUES", "ATTESTATION_SERIES_PUBLIQUES", "MINIMUM_TACHES_NOTE",
+           "MINIMUM_ACTIONS_NOTE", "PAIRES_MODE_COMPLET"]
