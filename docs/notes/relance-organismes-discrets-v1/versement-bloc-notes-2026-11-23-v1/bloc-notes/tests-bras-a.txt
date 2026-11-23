@@ -1,0 +1,553 @@
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+...........F............................................................ [ 15%]
+............................................................F........... [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+....................F................................................... [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+.............................................................F.......... [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 29%]
+.......................................F................................ [ 30%]
+........................................................................ [ 31%]
+...............................................F........................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........F............................................................... [ 36%]
+........................................................................ [ 38%]
+....................................................F................... [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+.......................................F................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+..............................F......................................... [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+.............................F.......................................... [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+.................................................F...................... [ 54%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+...............................F........................................ [ 59%]
+.....................F.................................................. [ 61%]
+...........F............................................................ [ 62%]
+.F............................F......................................... [ 63%]
+..F....................................................F................ [ 65%]
+.........................................F.............................. [ 66%]
+.............................F.......................................... [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v1.Monde object at 0x7f5c811e40d0>
+banc = <function banc.<locals>.fabriquer at 0x7f5c812837e0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v1.py:838: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v10.Monde object at 0x7f5bc5193450>
+banc = <function banc.<locals>.fabriquer at 0x7f5c8144cfe0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v10.py:1002: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v11.Monde object at 0x7f5c8136a650>
+banc = <function banc.<locals>.fabriquer at 0x7f5c812ce8e0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v11.py:1005: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v12.Monde object at 0x7f5bbc25a050>
+banc = <function banc.<locals>.fabriquer at 0x7f5bc496cea0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v12.py:1006: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v2.Monde object at 0x7f5bbc2255d0>
+banc = <function banc.<locals>.fabriquer at 0x7f5c813ecae0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v2.py:871: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v3.Monde object at 0x7f5c81344350>
+banc = <function banc.<locals>.fabriquer at 0x7f5c813c4720>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v3.py:974: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v4.Monde object at 0x7f5bc4f18350>
+banc = <function banc.<locals>.fabriquer at 0x7f5bbc233e20>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v4.py:975: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v5.Monde object at 0x7f5bbc23c4d0>
+banc = <function banc.<locals>.fabriquer at 0x7f5bc46d13a0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v5.py:982: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v6.Monde object at 0x7f5bc41dd0d0>
+banc = <function banc.<locals>.fabriquer at 0x7f5bc41e3420>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v6.py:983: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v7.Monde object at 0x7f5bc42e7e50>
+banc = <function banc.<locals>.fabriquer at 0x7f5bc42d0360>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v7.py:984: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v8.Monde object at 0x7f5bc4cb4dd0>
+banc = <function banc.<locals>.fabriquer at 0x7f5bc4bf9bc0>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v8.py:999: AssertionError
+____________ test_garde_7_les_relais_tiennent_la_cle_et_elle_seule _____________
+
+monde = <test_chef_essais_admission_bras_a_v9.Monde object at 0x7f5bc4be5550>
+banc = <function banc.<locals>.fabriquer at 0x7f5bbc595760>
+
+    def test_garde_7_les_relais_tiennent_la_cle_et_elle_seule(monde, banc):
+        """Le relais efface sa variable, ne rend jamais la clé, retire toute clé reçue du client, et tient sa borne
+        d'appels ; celui de Mistral tient de plus son plafond en dollars (seconde barrière, devis 6.4)."""
+        g = banc("verification-google-cle-1")
+        g.faux.programmer(faux.reponse_google("OK"), faux.reponse_google("OK"), faux.reponse_google("OK"))
+        corps = json.dumps(chef.construire_corps("google", monde.config["fournisseurs"]["google"], "t", 32768, orthographe="XHIGH")).encode()
+        en_tetes = {**chef.en_tetes_de_l_envoi("e1"), "x-goog-api-key": "cle-glissee-par-le-client", "Authorization": "Bearer du-client"}
+        for _ in range(3):
+            assert chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)["code"] == 200
+        recu = g.faux.appels()[0]["en_tetes"]
+        assert recu["x-goog-api-key"] == "valeur-factice-du-relais" and "authorization" not in recu and "x-envoi" not in recu
+        quatrieme = chef.envoyer(g.url, "POST", chef.chemin_de_l_appel("google"), en_tetes, corps, False, 2, 2)
+        assert quatrieme["code"] == 429 and chef.origine_du_retour(quatrieme)[0] == "relais" and len(g.faux.appels()) == 3
+        etat = chef.etat_relais(g.url)
+>       assert etat["appels"] == 3 and etat["max_appels"] == 3 and etat["refus"] == 1 and etat["cle_dans_l_environnement"] is False
+E       assert (3 == 3 and 3 == 3 and 1 == 1 and True is False)
+
+tests/test_chef_essais_admission_bras_a_v9.py:1001: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 247 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v11.py, ligne 1 : nom réservé `lire_fichier_des_rangs` écrit dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v10.py:429: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 157 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v12.py, ligne 1 : fragment du nom du fichier des rangs par unité dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v11.py:433: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 64 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v13.py, ligne 1 : fragment du nom du fichier des rangs par unité dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v12.py:438: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control...s une chaîne'] == []
+E         
+E         Left contains 5 more items, first extra item: 'src/controle_ia/organismes_discrets/lots_bras_a_v2.py, ligne 663 : `_inscrire` hors du module des graines — un tirage à clé ne se fabrique que par ses fabriques'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v13.py:440: AssertionError
+_____________ test_le_code_de_la_relance_respecte_le_cloisonnement _____________
+
+    def test_le_code_de_la_relance_respecte_le_cloisonnement():
+        """Sur le code de la relance tel qu'il est : aucun module, hors le programme de l'aire conditionnelle (et ses
+        versions antérieures, laissées telles quelles), ne nomme le fichier, ne touche les noms réservés, ni n'atteint
+        l'analyse par un détour. Seuls les programmes du paquet des organismes discrets sont parcourus ici, un à un (les
+        chemins du côté habilité sont exclus, et rien d'eux n'est lu) ; l'enchaînement de l'analyse donnera à la garde
+        `src/` et `scripts/` entiers."""
+        programmes = sorted(p for p in PAQUET.glob("*.py"))
+        assert {"verdicts_bras_a_v5.py", "mesures_bras_a_v5.py", "graines_bras_a_v5.py", "permutation_etiquettes_bras_a_v5.py",
+                "reponses_lecteurs_v5.py", "attentes_bras_a_v5.py", "instrument_appariement_v4.py",
+                "epreuves_couverture_bras_a_v3.py"} <= {p.name for p in programmes}
+>       assert cl.violations_du_cloisonnement(programmes) == []
+E       AssertionError: assert ['/home/user/... chaîne', ...] == []
+E         
+E         Left contains 302 more items, first extra item: '/home/user/controle-ia-travail/src/controle_ia/organismes_discrets/analyse_bras_a_v10.py, ligne 1 : nom réservé `lire_fichier_des_rangs` écrit dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v5.py:145: AssertionError
+_______________ test_la_garde_passee_sur_src_et_scripts_du_depot _______________
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot():
+        """Contre-lecture du code de la version 5, M-7 : aucun essai ne passait la garde sur `src/` et `scripts/` entiers.
+        Ici elle y passe (hors des chemins interdits à la relance) : aucune violation — pas d'arrêt à tort sur le code
+        réel, et les programmes autorisés répondent à leur empreinte compagnon. Les lectures de dossiers sont listées, sans
+        arrêt."""
+        fichiers = _programmes_du_depot_hors_des_chemins_interdits_a_la_relance()
+        assert len(fichiers) > 500 and PAQUET + "analyse_bras_a_v6.py" in fichiers and PAQUET + "verdicts_bras_a_v6.py" in fichiers
+>       assert cl.violations_de_la_garde_statique(DEPOT, fichiers) == []
+E       AssertionError: assert ['scripts/che... chaîne', ...] == []
+E         
+E         Left contains 535 more items, first extra item: 'scripts/chef_essais_admission_bras_a_v2.py, ligne 508 : fragment du nom du fichier des rangs par unité dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v6.py:222: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 511 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v10.py, ligne 1 : nom réservé `lire_fichier_des_rangs` écrit dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v7.py:378: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 427 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v10.py, ligne 1 : nom réservé `lire_fichier_des_rangs` écrit dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v8.py:396: AssertionError
+_ test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut _
+
+    def test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut():
+        """Contre-lecture du code de la version 5, M-7, et vérification du code de la version 6, C-3. La garde passe sur
+        `src/` et `scripts/` du dépôt **telle que l'enchaînement l'appelle, sans aucun élagage fait par l'essai** : aucune
+        violation — pas d'arrêt à tort sur le code réel —, et les programmes autorisés répondent à leur empreinte compagnon.
+        Le crochet d'audit, armé d'une barrière écrite indépendamment, **refuserait** toute ouverture d'un chemin cloisonné
+        avant qu'elle ait lieu : aucune n'est tentée. Les lectures de dossiers sont listées, sans arrêt."""
+        with surveillance(DEPOT, barriere=CLOISONNE_SELON_L_ESSAI) as vus:
+            trouve = cl.violations_de_la_garde_statique(DEPOT)
+            signales = cl.listages_a_relire(DEPOT)
+            elagues = cl.chemins_elagues(DEPOT)
+>       assert trouve == []
+E       AssertionError: assert ['src/control... chaîne', ...] == []
+E         
+E         Left contains 337 more items, first extra item: 'src/controle_ia/organismes_discrets/analyse_bras_a_v10.py, ligne 1 : nom réservé `lire_fichier_des_rangs` écrit dans une chaîne'
+E         Use -v to get more diff
+
+tests/test_cloisonnement_bras_a_v9.py:425: AssertionError
+============================= slowest 5 durations ==============================
+25.16s call     tests/test_cloisonnement_bras_a_v12.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+25.13s call     tests/test_cloisonnement_bras_a_v13.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+25.10s call     tests/test_cloisonnement_bras_a_v10.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+24.98s call     tests/test_cloisonnement_bras_a_v8.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+24.52s call     tests/test_cloisonnement_bras_a_v9.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+=========================== short test summary info ============================
+FAILED tests/test_chef_essais_admission_bras_a_v1.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v10.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v11.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v12.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v2.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v3.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v4.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v5.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v6.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v7.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v8.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_chef_essais_admission_bras_a_v9.py::test_garde_7_les_relais_tiennent_la_cle_et_elle_seule
+FAILED tests/test_cloisonnement_bras_a_v10.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v11.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v12.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v13.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v5.py::test_le_code_de_la_relance_respecte_le_cloisonnement
+FAILED tests/test_cloisonnement_bras_a_v6.py::test_la_garde_passee_sur_src_et_scripts_du_depot
+FAILED tests/test_cloisonnement_bras_a_v7.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v8.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+FAILED tests/test_cloisonnement_bras_a_v9.py::test_la_garde_passee_sur_src_et_scripts_du_depot_avec_ses_valeurs_par_defaut
+21 failed, 5627 passed in 1953.11s (0:32:33)
