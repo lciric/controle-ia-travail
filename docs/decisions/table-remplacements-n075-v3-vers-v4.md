@@ -1,0 +1,52 @@
+# Table exacte des remplacements appliqués sur la version 3 de la décision N-075 pour produire la version 4
+
+- Source exacte : `docs/decisions/decision-N-075-issue-plancher-et-deux-regards-v3.md` (`5aed4bab1172b18148c086d90e63611bdd769d9ea7fb4a043e9e9d3178c947b5`), 359 lignes, 86245 octets.
+- Sortie produite : `decision-N-075-issue-plancher-et-deux-regards-v4.md` (`e4039549b5675ac0ab42bfcf3c869c2711a8522c4f43bd5e11b392b22eb6dd23`), 362 lignes, 95279 octets.
+- Nombre total de remplacements uniques vérifiés par programme : 44.
+
+| identifiant | extrait remplacé (début) | extrait nouveau (début) |
+|---|---|---|
+| H-1 (titre, l. 1) | `# Décision — N-075 : mesurer l'issue et corriger ; un plancher d'audit au hasard contre le` | `# Décision — N-075 : mesurer l'issue et corriger ; un plancher d'audit au hasard contre le` |
+| H-2 (ligne Décision de Lazar, l. 3) | `- **Décision de Lazar** : mots directs dans la session mère `session_01QPDgKgejkqwnuaJHJ31` | `- **Décision de Lazar** : mots directs dans la session mère `session_01QPDgKgejkqwnuaJHJ31` |
+| H-3 (ligne Statut, l. 4) | `- **Statut : v3, à vérifier une dernière fois puis à sceller par la mère.** La v1 (`f1b77e` | `- **Statut : v4, rédigée par script reproductible à partir de la v3 exacte, à contre-lire ` |
+| H-4 (ligne Sources, complément lecture des 16 papiers, l. 6) | `La seconde n'est **pas contre-lue**.` | `La seconde n'est **pas contre-lue**. S'y ajoutent, pour les quatre corrections de la v4 : ` |
+| H-5 (ajout aux Marques pour les quatre fiches, l. 9) | `que je n'ai pas rejouée.` | `que je n'ai pas rejouée. Pour les quatre corrections de la v4 : [PDF, p.] désigne aussi la` |
+| R-4 (section 0, l. 31) | `**Un écart à la lettre, proposé et non appliqué.**` | `**Un écart à la lettre, accordé par Lazar.**` |
+| R-5 (section 0, l. 31) | `La lettre change seulement sur le mot de Lazar (section 11, point 8).` | `La lettre change : le mot est donné à `GO-2026-11-21-61` (point 8 (a)), et la forme réécri` |
+| A-1 (section 1, ajout après Passage obligé, l. 41) | `- **Passage obligé** : ce que tout sabotage délibéré doit calculer quel que soit son mode,` | `- **Passage obligé** : ce que tout sabotage délibéré doit calculer quel que soit son mode,` |
+| R-15 bis (section 2, l. 45) | `pour toute politique d'attaque dont l'oracle voit le dommage` | `pour toute politique d'attaque dont le dommage tombe dans une strate où la reconnaissance ` |
+| R-15 (section 2, l. 45) | `oracle exogène au sens de la section 1 ; et, dès que l'honnête` | `oracle exogène au sens de la section 1, dont la probabilité q de reconnaître un dommage qu` |
+| R-14 (section 2, l. 48) | `(comment ce q se connaît est une option ouverte, section 11, point 11)` | `(q se mesure par des dommages plantés, strate par strate, et une strate non mesurée compte` |
+| A-2 (section 2, alinéa ajouté après l. 49) | `ce qui passe sous l'excès toléré sur cet horizon est le dommage que la borne accepte.` | `ce qui passe sous l'excès toléré sur cet horizon est le dommage que la borne accepte. ↵  ↵` |
+| R-16 (section 2, l. 59) | `rien hors de la couverture de l'oracle ; un saboteur qui reste sous l'excès toléré` | `rien hors de la couverture de l'oracle ; rien dans une strate de dommage où q n'est pas me` |
+| R-6 (section 4, l. 112) | `**Énoncé proposé, réécrit (en attente du mot de Lazar, section 11, point 8).**` | `**Énoncé retenu, réécrit (`GO-2026-11-21-61`, point 8 (a)).**` |
+| R-7 (section 4, l. 114, alinéa entier) | `**Écart à la lettre du mot de Lazar, proposé.** Dans la forme proposée, « nouveauté seule ` | `**Écart à la lettre du mot de Lazar, accordé** (`GO-2026-11-21-61`, point 8 (a)). « Nouvea` |
+| Erratum 3 § 1 point 8 suite 2 (section 4, l. 117 : signal -> motif) | `deux issues écrites d'avance et rapportées, « alerte » (signal et preuve de dommage au mêm` | `deux issues écrites d'avance et rapportées, « alerte » (motif et preuve de dommage au même` |
+| R-8 (section 4, l. 117) | `« audit prioritaire » dans le tronc commun, et ce que le mot de Lazar fixera pour le reste` | `« audit prioritaire » : l'épisode monte dans la file d'audit, ou le moniteur s'abstient ; ` |
+| C-3 puis R-11 (section 7, point 1, l. 184) | `validité sous dépendance : L3 et suivants de N-004).` | `validité sous dépendance : L3 et suivants de N-004). C'était la lecture de `GO-2026-11-21-` |
+| R-1 (section 7, point 4, l. 187) | `Savoir si la veille dégelée compte parmi les trois chantiers actifs est renvoyé à Lazar (s` | `La veille dégelée vit à côté des trois chantiers actifs, comme la levée partielle de `GO-2` |
+| R-12 (section 7, Risque à dire, l. 191) | `resserrer la revendication à ce reste, ou replier le lemme, est un nœud (section 11, point` | `Lazar resserre la revendication à ce reste (`GO-2026-11-21-61`, point 10 (a)) ; le reste l` |
+| R-9 (section 8, Ne pas écrire, l. 219) | `« nouveauté seule = mise à jour des témoins » sans dire que les témoins ne se refont que s` | `« nouveauté seule = mise à jour des témoins » comme règle du programme ; « alerte = nouvea` |
+| A-3 (section 8, Ne pas écrire, ajout en fin d'alinéa, l. 219) | `le plancher d'audit au hasard comme apport ou idée du programme.` | `le plancher d'audit au hasard comme apport ou idée du programme ; une borne chiffrée du pl` |
+| R-2 (section 9, l. 227) | `la place de la veille dégelée est en section 11, point 7.` | `la veille dégelée vit à côté d'eux (`GO-2026-11-21-61`, point 7 (a)).` |
+| C-1 (section 10, § 1 Positionnement, l. 233) | `sous plafond de dommage par épisode (limites au § 4) ; les moniteurs en sont l'accélérateu` | `sous plafond de dommage par épisode (limites au § 4) ; ce plancher est publié et n'est pas` |
+| R-13 (section 10, § 3, l. 234) | `Le lemme n'est revendiqué que dans sa lecture valide à tout instant, sur des scores de son` | `Le lemme n'est revendiqué que dans ce reste : une borne inférieure de la probabilité d'ala` |
+| R-17 (section 10, § 4, l. 235) | `aucune borne contre un coup unique, hors de la couverture de l'oracle, sous l'excès toléré` | `la borne porte le minimum, sur les strates de dommage mesurées, de la probabilité que l'or` |
+| R-10 (section 10, § 8.4 Deux regards, l. 236) | `la règle à deux clés dans la forme que fixera le mot de Lazar (N-075, section 11, point 8)` | `la règle à deux clés (motif reconnu par un regard et preuve de dommage au même endroit : a` |
+| C-2 (section 10, § 8.3 base hors des deux boîtes, l. 237) | `publié (Zhu, Zuo, Sun, « Blindfold » ; Gans et Holden) ».` | `publié (Zhu, Zuo, Sun, « Blindfold » ; Gans et Holden ; Podkopaev et Ramdas) ».` |
+| R-3 (section 10, § 16 Veille active, l. 240) | `sa place parmi les chantiers suit le mot de Lazar (N-075, section 11, point 7).` | `elle vit à côté des trois chantiers actifs, au service d'abord des lectures d'antériorité ` |
+| E3-v1 Lecture d'ensemble (section 11, point 4, l. 249) | `son effet est la réécriture proposée en section 4 (point 8 ci-dessous).` | `son effet a été la réécriture de la section 4, désormais retenue au point 8 (option a, `GO` |
+| R-18 (section 11, l. 252) | `**Les points 7 à 11 attendent un choix de Lazar. Ils sont écrits en options ; cette note n` | `**Les points 7, 8, 10 et 11 sont tranchés par Lazar à `GO-2026-11-21-61` : 7 (a), 8 (a), 1` |
+| Trouvaille de côté vérification erratum 3 v1 (section 11, point 11, l. 258) | ``python3 -c "print(0.95**59, 0.95**58)"` rend 0,0485 et 0,0511).` | ``python3 -c "print(0.95**59, 0.95**58)"` rend 0,0485 et 0,0510).` |
+| R-20 (section 12, titre et ligne CLAUDE.md, l. 262-266) | `À ajouter à la fin de la liste « Décisions de Lazar », par la mère, après la vérification ` | `Mise à jour de la ligne dans « Décisions de Lazar » de `CLAUDE.md` (proposition séparée co` |
+| E3-v1 Lecture d'ensemble (Relevé de méthode, l. 301) | `Ce qui juge cette pièce : le contre-lecteur Opus 5.5, qui a vérifié la v2 et vérifie la v3` | `Ce qui juge cette pièce (v4) : un sous-agent neuf contre-lecteur puis la mère (les points ` |
+| R-19 et lecture d'ensemble (section 14, l. 345 et lignes V6, V8, V9, V10, 11) | `Numéros de ligne de ce fichier, calculés par programme sur un passage unique à chaque fois` | `Numéros de ligne de la version 3 d'origine, calculés par programme lors de son établisseme` |
+| PDF-1a (Xu et al., 2602.00986 v2, section 3, l. 97) | `- La réussite attendue lue dans les états internes et sa calibration : Xu, Yuksekgonul, Zo` | `- La réussite attendue lue dans les états internes et son pouvoir de séparation (aire sous` |
+| PDF-1b (Xu et al., 2602.00986 v2, retrait de « À vérifier sur PDF », section 3, l. 104 ; mise à jour Arnold et al. lue en entier) | `Fischl-Lanzoni et al. et Aremu et al. en entier ; Xu et al. au-delà des pages 5 à 7 ; une ` | `Fischl-Lanzoni et al. et Aremu et al. en entier (Xu, Yuksekgonul et Zou, 2602.00986 v2, dé` |
+| PDF-1c (Xu et al., 2602.00986 v2, tableau section 8, l. 212) | `\| point 2 \| Xu, Yuksekgonul, Zou, 2602.00986 v2 ; Bailey et al., 2412.09565 v2 \| déjà a` | `\| point 2 \| Xu, Yuksekgonul, Zou, 2602.00986 v2 ; Bailey et al., 2412.09565 v2 \| déjà a` |
+| PDF-2a (Ge-Wang et al., 2606.06529 v1, section 2, l. 74) | `Ge-Wang et al. (2606.06529 v1, page 1 seule) : un attaquant qui choisit quand attaquer aba` | `Ge-Wang et al. (2606.06529 v1, lu en entier, 19 pages, fiche `fiche-2606.06529-v1.md`, `50` |
+| PDF-2b (Ge-Wang et al., 2606.06529 v1, section 8 À citer, l. 217) | `Ge-Wang et al. (2606.06529 v1) ;` | `Ge-Wang et al. (2606.06529 v1, [PDF, p. 1, 5, 11] : sous audit des plus suspects ; une seu` |
+| PDF-3a (Zhong et Raghunathan, 2508.00161 v3, section 4, l. 110) | `Un moniteur publié qui élargit sa plage normale à chaque entrée signalée accepte un écart ` | `Un moniteur publié qui élargit sa plage normale à chaque entrée signalée accepte en silenc` |
+| PDF-3b (Zhong et Raghunathan, 2508.00161 v3, tableau section 8, l. 214) | `\| point 3 \| Aickelin, Cayzer, arXiv 0801.3549 v3 ; Zhong, Raghunathan, 2508.00161 v3 (co` | `\| point 3 \| Aickelin, Cayzer, arXiv 0801.3549 v3 ; Zhong, Raghunathan, 2508.00161 v3 (co` |
+| PDF-4a (McKenzie et al., 2506.24068 v3, section 3, l. 96) | `une chaîne de garde-fous se défait étage par étage (McKenzie et al., 2506.24068 v3, [PDF, ` | `une chaîne de garde-fous d'entrée et de sortie sans sonde sur activations se défait étage ` |
+| PDF-4b (McKenzie et al., 2506.24068 v3, section 8 À citer, l. 217) | `McKenzie et al. (2506.24068 v3) ;` | `McKenzie et al. (2506.24068 v3, `3e08b7cc…`, [PDF, p. 1, 3, 10] : suppose que l'attaquant ` |
