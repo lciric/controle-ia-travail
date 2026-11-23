@@ -423,8 +423,12 @@ def exiger_instance_sans_interdits(racine, run_7b: str) -> dict:
     objets = None
     if (racine / ".git").exists():
         # chemins lus en octets et décodés sans perte (CA-11) ; `core.quotePath=false` : aucun guillemet ni échappement
-        r = subprocess.run(["git", "-c", "core.quotePath=false", "-C", str(racine), "rev-list", "--all", "--objects"],
-                           capture_output=True)
+        # `--missing=allow-promisor` (tentative 1 de la course, 23 novembre) : dans le clone partiel de l'instance, un blob
+        # absent n'est pas dans la copie ; sans ce drapeau, git va le chercher, un par un, chez le dépôt distant (délai
+        # de 900 s dépassé sur l'instance). Son chemin reste lu par la passe des chemins des commits ci-dessous, qui ne
+        # lit que les arbres. Un objet manquant qui n'est pas promis par le dépôt distant arrête toujours.
+        r = subprocess.run(["git", "-c", "core.quotePath=false", "-C", str(racine), "rev-list", "--all", "--objects",
+                            "--missing=allow-promisor"], capture_output=True)
         if r.returncode != 0:
             raise GardeArret(f"objets git illisibles : {r.stderr.decode('utf-8', 'replace').strip()}")
         objets = 0
