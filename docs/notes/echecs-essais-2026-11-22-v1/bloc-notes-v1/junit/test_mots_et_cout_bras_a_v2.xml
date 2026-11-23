@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.672" timestamp="2026-11-22T19:07:45.916611+00:00" hostname="vm"><testcase classname="tests.test_mots_et_cout_bras_a_v2" name="test_point10_cles_de_registre_neuves" time="0.002"><failure message="AssertionError: assert '| CODE-MOTS...OUT-BRAS-A |' not in '# Registre ...8780028f |\n'&#10;  &#10;  '| CODE-MOTS-ET-COUT-BRAS-A |' is contained here:&#10;    cc7cf05 |&#10;    | CODE-MOTS-ET-COUT-BRAS-A | 2026-11-19T09:13:20Z | registres/code-mots-et-cout-bras-a/CODE-MOTS-ET-COUT-BRAS-A-v2.json | 606a9a9f0693f3146c77a8ce4e4b43cb4285033ef5e22597e0274b90e5278d7a |&#10;  ? ++++++++++++++++++++++++++++&#10;    | CRITERE-IDENTITE-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/critere-identite-reajustement-lentilles-v8.md | 541bb86b15088c5cea5a291a294cccdd1067fe39be995b7f9014661f96cb3940 |&#10;    | DEVIS-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes...&#10;  &#10;  ...Full output truncated (66 lines hidden), use '-vv' to show">def test_point10_cles_de_registre_neuves():
+        assert mc.CLES_LIGNES["code"] == "CODE-MOTS-ET-COUT-BRAS-A" and mc.CLES_LIGNES["lecture"] == "LECTURE-MOTS-ET-COUT-BRAS-A"
+        assert mc.CLES_LIGNES["issue"] == "ISSUE-MOTS-ET-COUT-BRAS-A" and mc.DOSSIER_CODE == "registres/code-mots-et-cout-bras-a/"
+        assert not set(mc.CLES_LIGNES.values()) &amp; set(mc.CLES_7B_JAMAIS_REUTILISEES)
+        assert set(mc.CLES_7B_JAMAIS_REUTILISEES) == {v3.CLES_LIGNES[k] for k in ("run", "code", "lecture", "issue")}
+        reel = (RACINE / REGISTRE).read_text(encoding="utf-8")                # registre vivant : noms de clés seulement
+        for k in ("code", "lecture", "issue"):
+&gt;           assert f"| {mc.CLES_LIGNES[k]} |" not in reel
+E           AssertionError: assert '| CODE-MOTS...OUT-BRAS-A |' not in '# Registre ...8780028f |\n'
+E             
+E             '| CODE-MOTS-ET-COUT-BRAS-A |' is contained here:
+E               cc7cf05 |
+E               | CODE-MOTS-ET-COUT-BRAS-A | 2026-11-19T09:13:20Z | registres/code-mots-et-cout-bras-a/CODE-MOTS-ET-COUT-BRAS-A-v2.json | 606a9a9f0693f3146c77a8ce4e4b43cb4285033ef5e22597e0274b90e5278d7a |
+E             ? ++++++++++++++++++++++++++++
+E               | CRITERE-IDENTITE-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes/neuron-lens-v1/devis-reajustement/critere-identite-reajustement-lentilles-v8.md | 541bb86b15088c5cea5a291a294cccdd1067fe39be995b7f9014661f96cb3940 |
+E               | DEVIS-REAJUSTEMENT-LENTILLES | 2026-11-19T13:03:14Z | docs/notes...
+E             
+E             ...Full output truncated (66 lines hidden), use '-vv' to show
+
+tests/test_mots_et_cout_bras_a_v2.py:850: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.167" timestamp="2026-11-22T19:06:55.412731+00:00" hostname="vm"><testcase classname="tests.test_chaine_bbis_v6_v1" name="test_fiche_sur_l_arbre_jamais_plus_severe_que_la_marche_sur_l_arbre_reel" time="0.018"><failure message="FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scratchpad/wt/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json'">tmp_path = PosixPath('/tmp/pytest-of-root/pytest-23/test_fiche_sur_l_arbre_jamais_0')
+
+    def test_fiche_sur_l_arbre_jamais_plus_severe_que_la_marche_sur_l_arbre_reel(tmp_path):
+        """Sur la fiche et le registre en vigueur du dépôt (copie des seuls fichiers cités), le contrôle avancé passe."""
+        d = tmp_path / "arbre"
+        fiche = json.loads(FICHE_EN_VIGUEUR.read_text(encoding="utf-8"))["fichiers"]
+        reg = (RACINE / "registres/t07-etape-b-bis-v1.md").read_text(encoding="utf-8")
+        cites = [c[3].strip() for c in (l.split("|") for l in reg.splitlines()) if len(c) &gt;= 6 and "/" in c[3]]
+        for p in list(fiche) + cites + [c + ".sha256" for c in cites]:
+&gt;           ad.ecrire(d, p, "").write_bytes((RACINE / p).read_bytes())
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_chaine_bbis_v6_v1.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scratchpad/wt/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json')
+
+    def read_bytes(self):
+        """
+        Open the file in bytes mode, read it, and close the file.
+        """
+&gt;       with self.open(mode='rb') as f:
+             ^^^^^^^^^^^^^^^^^^^^
+
+/usr/local/lib/python3.13/pathlib/_abc.py:625: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scratchpad/wt/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scratchpad/wt/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError</failure></testcase></testsuite></testsuites>

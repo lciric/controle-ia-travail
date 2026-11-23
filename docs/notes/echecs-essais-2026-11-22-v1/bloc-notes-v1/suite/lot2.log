@@ -1,0 +1,121 @@
+........................................................................ [  1%]
+..............x......................................................... [  3%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+....................................x..x................................ [ 11%]
+.........................................x.............................. [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+.................................................F...................... [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+...............s........................................................ [ 24%]
+..............................................F.....F..............F.... [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+.......................x................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 77%]
+...........................................F............................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+...............................................................F........ [ 85%]
+............................................................xxxxxx.x..x. [ 87%]
+.....................................................x.................. [ 89%]
+......xxxxxxxx...xxxxxxx..xxxxxxxxx.x...............xxxxxxx............. [ 91%]
+..........................x............................................. [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+............................................                             [100%]
+=================================== FAILURES ===================================
+________ test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main _________
+tests/test_hote_durable_a1_v3_v4.py:65: in test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main
+    assert v4.verifier_go_exact(reel, GARDE, v4.GO_MACHINE, v4.GO_MACHINE, 35, JOUR)["lignes"] == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/hote_durable_a1_v3_v4.py:168: in verifier_go_exact
+    raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+______________ test_go_des_appels_exact_200_sain_et_registre_reel ______________
+tests/test_lanceur_durable_v5_a1v4.py:186: in test_go_des_appels_exact_200_sain_et_registre_reel
+    assert v5.verifier_go_course(reel, GARDE, v5.GO_COURSE, JOUR)["lignes"] == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/hote_durable_a1_v4_v5.py:129: in verifier_go_course
+    return v4.verifier_go_exact(chemin_registre, chemin_garde, go_id, GO_COURSE, MONTANT_GO_COURSE_USD, aujourd_hui)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/hote_durable_a1_v3_v4.py:168: in verifier_go_exact
+    raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+_________ test_go_de_la_machine_lu_sur_la_ligne_sain_et_registre_reel __________
+tests/test_lanceur_durable_v5_a1v4.py:205: in test_go_de_la_machine_lu_sur_la_ligne_sain_et_registre_reel
+    g = v5.verifier_go_machine(reel, GARDE, GO_M, JOUR)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/hote_durable_a1_v4_v5.py:147: in verifier_go_machine
+    raise h.Refus(f"garde de main ({go_id}) : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main (GO-2026-11-08-12) : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+_______ test_go_de_la_machine_registre_reel_refuse_dose_reponse_et_a1_v3 _______
+tests/test_lanceur_durable_v5_a1v4.py:236: in test_go_de_la_machine_registre_reel_refuse_dose_reponse_et_a1_v3
+    with pytest.raises(h.Refus, match="périmètre sans"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'périmètre sans'
+E     Actual message: 'garde de main (GO-2026-11-08-11) : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles'
+_______________________ test_go_v9_cas_sain_et_artefacts _______________________
+tests/test_sonde_hote_durable_a1_v3_v10.py:862: in test_go_v9_cas_sain_et_artefacts
+    assert s.verifier_go_sonde(RACINE / "registres" / "go.md", GARDE, "GO-2026-11-05-01", JOUR)["echeance"] == "2026-11-06"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/sonde_hote_durable_a1_v3_v10.py:167: in verifier_go_sonde
+    raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+_______________________ test_go_v9_cas_sain_et_artefacts _______________________
+tests/test_sonde_hote_durable_a1_v3_v9.py:847: in test_go_v9_cas_sain_et_artefacts
+    assert s.verifier_go_sonde(RACINE / "registres" / "go.md", GARDE, "GO-2026-11-05-01", JOUR)["echeance"] == "2026-11-06"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/sonde_hote_durable_a1_v3_v9.py:156: in verifier_go_sonde
+    raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+=============================== warnings summary ===============================
+tests/test_neuron_lens_b_beta_lancer_v1.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/controles_b_beta_v1.py:183: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(float(num / den) if den > 0 else float("nan"))
+
+tests/test_neuron_lens_b_beta_lancer_v1.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/b_beta_lancer_v1.py:483: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(np.linalg.norm(a / n0 - b / n1) / np.linalg.norm((a + b) / (n0 + n1)))
+
+tests/test_t07_plancher_v3_notation_v1.py::test_refus_et_cas_sains
+  /home/user/controle-ia-travail/src/controle_ia/t07/plancher_v3.py:139: RuntimeWarning: invalid value encountered in matmul
+    S = A @ m["W"] + m["b"]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main
+FAILED tests/test_lanceur_durable_v5_a1v4.py::test_go_des_appels_exact_200_sain_et_registre_reel
+FAILED tests/test_lanceur_durable_v5_a1v4.py::test_go_de_la_machine_lu_sur_la_ligne_sain_et_registre_reel
+FAILED tests/test_lanceur_durable_v5_a1v4.py::test_go_de_la_machine_registre_reel_refuse_dose_reponse_et_a1_v3
+FAILED tests/test_sonde_hote_durable_a1_v3_v10.py::test_go_v9_cas_sain_et_artefacts
+FAILED tests/test_sonde_hote_durable_a1_v3_v9.py::test_go_v9_cas_sain_et_artefacts
+6 failed, 3734 passed, 1 skipped, 47 xfailed, 3 warnings in 4218.57s (1:10:18)

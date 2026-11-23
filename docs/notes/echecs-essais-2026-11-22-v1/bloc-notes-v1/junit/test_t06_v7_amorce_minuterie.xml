@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="12" time="2.137" timestamp="2026-11-22T19:08:30.359432+00:00" hostname="vm"><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_demarrage_apres_la_depense_epuisee_la_destruction_gagne_sur_l_arret[v6]" time="0.100"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969&#10;  AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_demarrage_apres_la_depens0'), 'source': PosixPath('/tmp/pytes...st_demarrage_apres_la_depens0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_demarrage_apres_la_depens0')
+
+    def test_demarrage_apres_la_depense_epuisee_la_destruction_gagne_sur_l_arret(bac, amorce, tmp_path):
+        """Scénario d'E2 : premier run complet (essai local), puis redémarrage HORS essai local alors que l'heure de dépense épuisée est passée et que le marqueur manque.
+        v6 : la minuterie envoie `PUT stopped` (défaut) ; v7 : seul le `DELETE` part."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969
+E         AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:42: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_demarrage_apres_la_depense_epuisee_la_destruction_gagne_sur_l_arret[v7]" time="0.123"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969&#10;  AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_demarrage_apres_la_depens1'), 'source': PosixPath('/tmp/pytes...st_demarrage_apres_la_depens1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_demarrage_apres_la_depens1')
+
+    def test_demarrage_apres_la_depense_epuisee_la_destruction_gagne_sur_l_arret(bac, amorce, tmp_path):
+        """Scénario d'E2 : premier run complet (essai local), puis redémarrage HORS essai local alors que l'heure de dépense épuisée est passée et que le marqueur manque.
+        v6 : la minuterie envoie `PUT stopped` (défaut) ; v7 : seul le `DELETE` part."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969
+E         AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:42: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_echeance_pendant_la_poussee_finale_v7_ajoute_un_seul_commit_de_journal_apres_les_autres[v6]" time="0.148"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969&#10;  AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_echeance_pendant_la_pouss0'), 'source': PosixPath('/tmp/pytes...st_echeance_pendant_la_pouss0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+
+    def test_echeance_pendant_la_poussee_finale_v7_ajoute_un_seul_commit_de_journal_apres_les_autres(bac, amorce):
+        """Version v7 du cas C-V4-1 (la minuterie lance la consignation pendant la poussée finale) : rien n'est perdu ni croisé ; v6 : quatre commits ; v7 : les quatre mêmes,
+        dans le même ordre, puis le seul commit de journal de la consignation d'échéance (R-1692)."""
+        hook = """#!/usr/bin/env bash
+    if [ ! -e "$RACINE_AMORCE/hook-lance" ]; then : &gt; "$RACINE_AMORCE/hook-lance"
+      setsid bash "$RACINE_AMORCE/t06-consigner.sh" "échéance" &lt; /dev/null &gt; "$RACINE_AMORCE/concurrent.log" 2&gt;&amp;1 &amp;
+      sleep 3
+    fi
+    exit 0
+    """
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "mn", {"FAUX_PRECOMMIT": hook})
+&gt;       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969
+E         AMORCE 2026-11-22T19:08:30Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:149: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_echeance_pendant_la_poussee_finale_v7_ajoute_un_seul_commit_de_journal_apres_les_autres[v7]" time="0.190"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_echeance_pendant_la_pouss1'), 'source': PosixPath('/tmp/pytes...st_echeance_pendant_la_pouss1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+
+    def test_echeance_pendant_la_poussee_finale_v7_ajoute_un_seul_commit_de_journal_apres_les_autres(bac, amorce):
+        """Version v7 du cas C-V4-1 (la minuterie lance la consignation pendant la poussée finale) : rien n'est perdu ni croisé ; v6 : quatre commits ; v7 : les quatre mêmes,
+        dans le même ordre, puis le seul commit de journal de la consignation d'échéance (R-1692)."""
+        hook = """#!/usr/bin/env bash
+    if [ ! -e "$RACINE_AMORCE/hook-lance" ]; then : &gt; "$RACINE_AMORCE/hook-lance"
+      setsid bash "$RACINE_AMORCE/t06-consigner.sh" "échéance" &lt; /dev/null &gt; "$RACINE_AMORCE/concurrent.log" 2&gt;&amp;1 &amp;
+      sleep 3
+    fi
+    exit 0
+    """
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "mn", {"FAUX_PRECOMMIT": hook})
+&gt;       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:30Z, machine ?, commit 7806e7d22e16909fd94f3f48244c2a767bf31969
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:149: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_echeance_sans_resultat_depose_le_journal_sur_la_branche[v6]" time="0.158"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_echeance_sans_resultat_de0'), 'source': PosixPath('/tmp/pytes...st_echeance_sans_resultat_de0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+
+    def test_echeance_sans_resultat_depose_le_journal_sur_la_branche(bac, amorce):
+        """Cas sain (v7) : la consignation lancée par la minuterie (`t06-consigner.sh "échéance"`) sans aucun résultat neuf pousse un commit de journal
+        (`traces/consignation-…/journal-consignation.txt` : motif, heure, dernière ligne, 400 dernières lignes) ; artefact (v6) : aucun commit, rien sur la branche."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:104: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_echeance_sans_resultat_depose_le_journal_sur_la_branche[v7]" time="0.102"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_echeance_sans_resultat_de1'), 'source': PosixPath('/tmp/pytes...st_echeance_sans_resultat_de1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+
+    def test_echeance_sans_resultat_depose_le_journal_sur_la_branche(bac, amorce):
+        """Cas sain (v7) : la consignation lancée par la minuterie (`t06-consigner.sh "échéance"`) sans aucun résultat neuf pousse un commit de journal
+        (`traces/consignation-…/journal-consignation.txt` : motif, heure, dernière ligne, 400 dernières lignes) ; artefact (v6) : aucun commit, rien sur la branche."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:104: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_fin_de_run_normale_ne_cree_aucun_commit_de_journal_en_plus[v6]" time="0.200"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_fin_de_run_normale_ne_cre0'), 'source': PosixPath('/tmp/pytes...st_fin_de_run_normale_ne_cre0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+
+    def test_fin_de_run_normale_ne_cree_aucun_commit_de_journal_en_plus(bac, amorce):
+        """Aucun commit artificiel : le chemin de fin de run (sans la ligne de commande de consignation) n'écrit jamais `traces/consignation-…` ; le nombre de commits
+        de la branche d'un run complet est identique en v6 et en v7."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:130: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_fin_de_run_normale_ne_cree_aucun_commit_de_journal_en_plus[v7]" time="0.248"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_fin_de_run_normale_ne_cre1'), 'source': PosixPath('/tmp/pytes...st_fin_de_run_normale_ne_cre1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+
+    def test_fin_de_run_normale_ne_cree_aucun_commit_de_journal_en_plus(bac, amorce):
+        """Aucun commit artificiel : le chemin de fin de run (sans la ligne de commande de consignation) n'écrit jamais `traces/consignation-…` ; le nombre de commits
+        de la branche d'un run complet est identique en v6 et en v7."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:130: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche[v6]" time="0.218"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b&#10;  AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_a_l_echeance_de0'), 'source': PosixPath('/tmp/pytes...st_minuterie_a_l_echeance_de0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_a_l_echeance_de0')
+
+    def test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche(bac, amorce, tmp_path):
+        """Chemin réel de E2-6 : la MINUTERIE (curl factice) atteint l'échéance ; la ligne « ÉCHÉANCE … atteinte (C14) » (écrite par elle) et le journal de l'instance
+        arrivent sur la branche avant le DELETE. v6 : rien (défaut) ; v7 : commit « journal de l'instance (échéance) » avec les deux fichiers."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:31Z, machine ?, commit c1bbeea4e1dfd5eee820cb6ef876371d6a96e26b
+E         AMORCE 2026-11-22T19:08:31Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:168: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche[v7]" time="0.209"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22&#10;  AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_a_l_echeance_de1'), 'source': PosixPath('/tmp/pytes...st_minuterie_a_l_echeance_de1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_a_l_echeance_de1')
+
+    def test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche(bac, amorce, tmp_path):
+        """Chemin réel de E2-6 : la MINUTERIE (curl factice) atteint l'échéance ; la ligne « ÉCHÉANCE … atteinte (C14) » (écrite par elle) et le journal de l'instance
+        arrivent sur la branche avant le DELETE. v6 : rien (défaut) ; v7 : commit « journal de l'instance (échéance) » avec les deux fichiers."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22
+E         AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:168: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_stopped[v6]" time="0.171"><failure message="AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22&#10;  AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_ordre_de_destru0'), 'source': PosixPath('/tmp/pytes...st_minuterie_ordre_de_destru0/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v6'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_ordre_de_destru0')
+
+    def test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_stopped(bac, amorce, tmp_path):
+        """Minuterie seule : à l'heure de dépense épuisée elle consigne ; si l'amorce pose `t06-detruire` pendant la consignation, le `PUT stopped` n'est pas envoyé
+        (v6 : il part). Cas sain : sans ordre de destruction, `PUT stopped` puis `DELETE` à l'échéance."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v6 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22
+E         AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:65: AssertionError</failure></testcase><testcase classname="tests.test_t06_v7_amorce_minuterie" name="test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_stopped[v7]" time="0.130"><failure message="AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22&#10;  AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_ordre_de_destru1'), 'source': PosixPath('/tmp/pytes...st_minuterie_ordre_de_destru1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-34/test_minuterie_ordre_de_destru1')
+
+    def test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_stopped(bac, amorce, tmp_path):
+        """Minuterie seule : à l'heure de dépense épuisée elle consigne ; si l'amorce pose `t06-detruire` pendant la consignation, le `PUT stopped` n'est pas envoyé
+        (v6 : il part). Cas sain : sans ordre de destruction, `PUT stopped` puis `DELETE` à l'échéance."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-1500:]
+E       AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:08:32Z, machine ?, commit 1639291730fa1296596fa69b08c61c7b2cef3e22
+E         AMORCE 2026-11-22T19:08:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v7_amorce_minuterie.py:65: AssertionError</failure></testcase></testsuite></testsuites>

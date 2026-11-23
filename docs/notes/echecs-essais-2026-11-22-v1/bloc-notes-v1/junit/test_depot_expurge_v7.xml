@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.139" timestamp="2026-11-22T19:07:35.399469+00:00" hostname="vm"><testcase classname="tests.test_depot_expurge_v7" name="test_v7_noms_du_depot_reel_tous_vises_ou_nommes" time="0.059"><failure message="AssertionError: assert ['runs/course....sha256', ...] == []&#10;  &#10;  Left contains 36 more items, first extra item: 'runs/course-ideation-regard-ou-raisons-v1/20261114-100746-course-ideation-regard-ou-raisons-v1-g1/copies/sortie--doublons-par-juge.json'&#10;  Use -v to get more diff">def test_v7_noms_du_depot_reel_tous_vises_ou_nommes():
+        """Dans le dépôt réel, tout chemin suivi qui porte un nom retiré est retiré par nom, sous embargo, ou nommé dans
+        GARDES_SIGNALES : sinon la copie s'arrêterait (cet essai le dit avant)."""
+        suivis = subprocess.run(["git", "-C", str(RACINE), "ls-files"], capture_output=True, text=True,
+                                check=True).stdout.split("\n")
+        portes = [f for f in suivis if f and any(x in f.lower() for x in de.FRAGMENTS_PAR_NOM)]
+        assert len([f for f in portes if f.startswith("brouillons/pain-axis-")]) &gt;= 104
+        hors = [f for f in portes if not de.retire_par_nom(f) and not de.sous_embargo(f) and f not in de.GARDES_SIGNALES
+                and not any(de.correspond(f, m) for m, _ in de.RETRAITS)]
+&gt;       assert hors == []
+E       AssertionError: assert ['runs/course....sha256', ...] == []
+E         
+E         Left contains 36 more items, first extra item: 'runs/course-ideation-regard-ou-raisons-v1/20261114-100746-course-ideation-regard-ou-raisons-v1-g1/copies/sortie--doublons-par-juge.json'
+E         Use -v to get more diff
+
+tests/test_depot_expurge_v7.py:489: AssertionError</failure></testcase></testsuite></testsuites>

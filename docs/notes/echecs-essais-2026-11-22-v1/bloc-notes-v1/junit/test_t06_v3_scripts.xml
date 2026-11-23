@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="16" skipped="0" tests="19" time="3.605" timestamp="2026-11-22T19:08:04.469854+00:00" hostname="vm"><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu" time="0.140"><failure message="assert (2 == 1)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_arret_consigne_run0'), 'source': PosixPath('/tmp/pytes...st_amorce_arret_consigne_run0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "a", {"FAUX_RUN": "arret"})
+&gt;       assert code == 1 and "arrêt pendant run (code 1) : résultats et données légères committés" in journal and "RUN MORT" not in sortie
+E       assert (2 == 1)
+
+tests/test_t06_v3_scripts.py:298: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage" time="0.140"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:04Z, machine ?, commit acb04aaa02b8113d0d7294bc7a9609c806385db9&#10;  AMORCE 2026-11-22T19:08:04Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_cas_sain_deux_comm0'), 'source': PosixPath('/tmp/pytes...st_amorce_cas_sain_deux_comm0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant)
+&gt;       assert code == 0, sortie[-3000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:04Z, machine ?, commit acb04aaa02b8113d0d7294bc7a9609c806385db9
+E         AMORCE 2026-11-22T19:08:04Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v3_scripts.py:163: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_configuration_sans_calendrier_refusee" time="0.209"><failure message="assert (2 == 2 and 'calendrier de la configuration non conforme' in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 9bcb7f1910727477c24daa66c0da60a67a170a6c\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_configuration_sans0'), 'source': PosixPath('/tmp/pytes...st_amorce_configuration_sans0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_configuration_sans_calendrier_refusee(bac):
+        src = bac["source"]
+        (src / CONFIG).write_text("{}", encoding="utf-8")
+        (src / (CONFIG + ".sha256")).unlink()
+        sceller(src / CONFIG)
+        _commit_source(bac, "config sans calendrier")
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "c")
+&gt;       assert code == 2 and "calendrier de la configuration non conforme" in sortie and "sans calendrier" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'calendrier de la configuration non conforme' in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 9bcb7f1910727477c24daa66c0da60a67a170a6c\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:292: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_fichier_trop_gros_refuse_avant_le_commit" time="0.148"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45&#10;  AMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_fichier_trop_gros_0'), 'source': PosixPath('/tmp/pytes...st_amorce_fichier_trop_gros_0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_fichier_trop_gros_refuse_avant_le_commit(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "g", {"FAUX_GROS": "1"})
+&gt;       assert code == 0, sortie[-3000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45
+E         AMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v3_scripts.py:236: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage" time="0.138"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45&#10;  AMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 1">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_poussee_finale_ref0'), 'source': PosixPath('/tmp/pytes...st_amorce_poussee_finale_ref0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage(bac):
+        distant = _distant(bac, REFUS_MISES_A_JOUR)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "pf")
+&gt;       assert code == 1, sortie[-3000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45
+E         AMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 1
+
+tests/test_t06_v3_scripts.py:256: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_poussee_initiale_refusee" time="0.186"><failure message="assert (2 == 2 and 'poussée initiale de la branche calcul/t06-jouet-v3 refusée' in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_poussee_initiale_r0'), 'source': PosixPath('/tmp/pytes...st_amorce_poussee_initiale_r0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_poussee_initiale_refusee(bac):
+        distant = _distant(bac, REFUS_TOUT)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "pi")
+&gt;       assert code == 2 and "poussée initiale de la branche calcul/t06-jouet-v3 refusée" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'poussée initiale de la branche calcul/t06-jouet-v3 refusée' in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:249: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run" time="0.187"><failure message="assert (2 == 2 and &quot;démarrage après l'heure de dépense épuisée (C08) : aucun calcul&quot; in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_premier_demarrage_0'), 'source': PosixPath('/tmp/pytes...st_amorce_premier_demarrage_0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run(bac):
+        """Cas sain des contrôles d'heure gardés : sans dépôt extrait, un démarrage après l'heure de dépense épuisée détruit
+        sans rien cloner ni lancer (C08), comme en v2."""
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "d1", {"DEPENSE_EPUISEE_UTC_S": str(int(time.time()) - 60)})
+&gt;       assert code == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:229: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_refus_go_et_branche_presente" time="0.205"><failure message="assert (2 == 2 and 'déjà présente' in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_refus_go_et_branch0'), 'source': PosixPath('/tmp/pytes...st_amorce_refus_go_et_branch0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+
+    def test_amorce_refus_go_et_branche_presente(bac):
+        distant = _distant(bac)
+        subprocess.run(["git", "-C", str(bac["source"]), "push", "-q", str(distant), "HEAD:refs/heads/calcul/t06-jouet-v3"], check=True)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "b")
+&gt;       assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'déjà présente' in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:05Z, machine ?, commit 8fa0e1bd343c1283954d155b84396e51489f4d45\nAMORCE 2026-11-22T19:08:05Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:316: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[heure_passee]" time="0.181"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db&#10;  AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert (2 == 0)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_second_demarrage_a0'), 'source': PosixPath('/tmp/pytes...st_amorce_second_demarrage_a0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+cas = 'heure_passee'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+&gt;       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db
+E         AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v3_scripts.py:206: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[marqueur]" time="0.183"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db&#10;  AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert (2 == 0)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_second_demarrage_a1'), 'source': PosixPath('/tmp/pytes...st_amorce_second_demarrage_a1/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+cas = 'marqueur'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+&gt;       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db
+E         AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v3_scripts.py:206: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[echeance_passee]" time="0.173"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db&#10;  AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert (2 == 0)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_second_demarrage_a2'), 'source': PosixPath('/tmp/pytes...st_amorce_second_demarrage_a2/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+cas = 'echeance_passee'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+&gt;       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:06Z, machine ?, commit 80eb69050c7c4a9a8d28f8726e3b7c0a4f5490db
+E         AMORCE 2026-11-22T19:08:06Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v3_scripts.py:206: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup0-FIN_GO_UTC_S absente]" time="0.147" /><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup1-FIN_GO_UTC_S absente ou non enti\xe8re]" time="0.158" /><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup2-DEPENSE_EPUISEE_UTC_S absente]" time="0.164" /><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e]" time="0.168"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1&#10;  AMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert (2 == 2 and &quot;après l'heure de dépense épuisée&quot; in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1\nAMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_variables_de_calen3'), 'source': PosixPath('/tmp/pytes...st_amorce_variables_de_calen3/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+env_sup = {'DEPENSE_EPUISEE_UTC_S': '1'}
+motif = "après l'heure de dépense épuisée"
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+            assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+        else:
+&gt;           assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E           AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1
+E             AMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E             
+E           assert (2 == 2 and "après l'heure de dépense épuisée" in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1\nAMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:281: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc]" time="0.148"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1&#10;  AMORCE T06 : échéance ramenée à la fin du GO (1794873500)&#10;  AMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert (2 == 2 and 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc' in &quot;AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1\nAMORCE ...n du GO (1794873500)\nAMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n&quot;)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_variables_de_calen4'), 'source': PosixPath('/tmp/pytes...st_amorce_variables_de_calen4/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+env_sup = {'FIN_GO_UTC_S': '1794873500'}
+motif = 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc'
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+            assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+        else:
+&gt;           assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E           AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1
+E             AMORCE T06 : échéance ramenée à la fin du GO (1794873500)
+E             AMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E             
+E           assert (2 == 2 and 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc' in "AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:07Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1\nAMORCE ...n du GO (1794873500)\nAMORCE 2026-11-22T19:08:07Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v3_scripts.py:281: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e]" time="0.140"><failure message="assert (2 == 0)">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_amorce_variables_de_calen5'), 'source': PosixPath('/tmp/pytes...st_amorce_variables_de_calen5/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+env_sup = {'ECHEANCE_UTC_S': '1794873700'}, motif = 'ramenée'
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+&gt;           assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+E           assert (2 == 0)
+
+tests/test_t06_v3_scripts.py:279: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_controles_disque_simule_et_commande_de_creation" time="0.371"><failure message="AssertionError: calendrier (L11) au jour de la création : GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création&#10;  &#10;assert 3 == 0&#10; +  where 3 = CompletedProcess(args=['bash', '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scra...-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création\n', stderr='').returncode">depot_session = PosixPath('/tmp/pytest-of-root/pytest-30/test_controles_disque_simule_e0/source')
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-30/test_controles_disque_simule_e0')
+
+    def test_controles_disque_simule_et_commande_de_creation(depot_session, tmp_path):
+        src = depot_session
+        d = tmp_path / "controles"
+        # C10 : place disque simulée par un `df` factice : 2,5 Go libres → refus ; 5 Go → conforme (jamais le disque de l'hôte)
+        r = subprocess.run(["bash", str(LANCEUR), "controles", str(tmp_path / "c0"), "2026-11-05"], env=_env_session(src, tmp_path, FAUX_DF_LIBRE_KO="2500000"),
+                           capture_output=True, text=True, timeout=120)
+        assert r.returncode == 2 and "place disque : 2500000 ko libres" in r.stdout
+        r = subprocess.run(["bash", str(LANCEUR), "controles", str(d), "2026-11-05"], env=_env_session(src, tmp_path), capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "CONTRÔLES CONFORMES" in r.stdout and "GO-2026-11-02-28 conforme" in r.stdout and "fin_go_utc_s=1794873600 dernier_jour_creation=2026-11-15" in r.stdout
+        lancement = (d / "lancement.txt").read_text(encoding="utf-8")
+        assert lancement.count("commit ") == 1 and f"config {CONFIG}" in lancement and (d / "config.json").exists()
+        # C12, C15 : offre relue par l'outil, prix lus dans l'offre, instances inventoriées, dépense antérieure cumulée, heure d'épuisement
+        r = _creer(src, tmp_path, d, "9999", "course", "20")
+&gt;       assert r.returncode == 0, r.stdout + r.stderr
+E       AssertionError: calendrier (L11) au jour de la création : GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création
+E         
+E       assert 3 == 0
+E        +  where 3 = CompletedProcess(args=['bash', '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scra...-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création\n', stderr='').returncode
+
+tests/test_t06_v3_scripts.py:482: AssertionError</failure></testcase><testcase classname="tests.test_t06_v3_scripts" name="test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent" time="0.150"><failure message="AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:08Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1&#10;  AMORCE 2026-11-22T19:08:08Z : destruction demandée (démarrage après l'échéance : aucun calcul)&#10;  &#10;assert 2 == 0">bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-30/test_minuterie_depense_epuisee0'), 'source': PosixPath('/tmp/pytes...st_minuterie_depense_epuisee0/venv'), 'amorce_sha': '16a03b8dfa1b1fc4e6331adc02b004b71e17b8f2c46044f5145085fb21e8cd8e'}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-30/test_minuterie_depense_epuisee0')
+
+    def test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent(bac, tmp_path):
+        """C08 et C14 : la minuterie (bash seul, `curl` factice) consigne et pousse à l'heure de dépense épuisée (puis demande
+        « stopped »), puis consigne et pousse à l'échéance avant le DELETE."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant, "mi")
+&gt;       assert code == 0, sortie[-2000:]
+E       AssertionError: AMORCE T06 v3 DEMARRAGE 1 : 2026-11-22T19:08:08Z, machine ?, commit a11a4df2d49a32cf8b5eb317301c06a9a5363ec1
+E         AMORCE 2026-11-22T19:08:08Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v3_scripts.py:338: AssertionError</failure></testcase></testsuite></testsuites>

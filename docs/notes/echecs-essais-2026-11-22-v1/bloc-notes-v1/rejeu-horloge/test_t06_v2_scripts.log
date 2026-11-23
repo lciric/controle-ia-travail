@@ -1,0 +1,86 @@
+FFFFFFF...FFFFF                                                          [100%]
+=================================== FAILURES ===================================
+________ test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu _________
+tests/test_t06_v2_scripts.py:256: in test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu
+    assert code == 1 and "arrêt pendant run (code 1) : résultats et données légères committés" in journal and "RUN MORT" not in sortie
+E   assert (2 == 1)
+________ test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage ________
+tests/test_t06_v2_scripts.py:163: in test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage
+    assert code == 0, sortie[-3000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:36Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE 2026-11-22T19:05:36Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+______________ test_amorce_configuration_sans_calendrier_refusee _______________
+tests/test_t06_v2_scripts.py:250: in test_amorce_configuration_sans_calendrier_refusee
+    assert code == 2 and "calendrier de la configuration non conforme" in sortie and "sans calendrier" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'calendrier de la configuration non conforme' in "AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 4f05bdf57dfe8a979045b5efdeb0a68cca4a25da\nAMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_____________ test_amorce_fichier_trop_gros_refuse_avant_le_commit _____________
+tests/test_t06_v2_scripts.py:194: in test_amorce_fichier_trop_gros_refuse_avant_le_commit
+    assert code == 0, sortie[-3000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_____ test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage ______
+tests/test_t06_v2_scripts.py:214: in test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage
+    assert code == 1, sortie[-3000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 1
+_____________________ test_amorce_poussee_initiale_refusee _____________________
+tests/test_t06_v2_scripts.py:207: in test_amorce_poussee_initiale_refusee
+    assert code == 2 and "poussée initiale de la branche calcul/t06-jouet-v2 refusée" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'poussée initiale de la branche calcul/t06-jouet-v2 refusée' in "AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0\nAMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+___________________ test_amorce_refus_go_et_branche_presente ___________________
+tests/test_t06_v2_scripts.py:274: in test_amorce_refus_go_et_branche_presente
+    assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'déjà présente' in "AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0\nAMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e] _
+tests/test_t06_v2_scripts.py:239: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and "après l'heure de dépense épuisée" in "AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:37Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0\nAMORCE 2026-11-22T19:05:37Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc] _
+tests/test_t06_v2_scripts.py:239: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:38Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE T06 : échéance ramenée à la fin du GO (1794873500)
+E     AMORCE 2026-11-22T19:05:38Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc' in "AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:38Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0\nAMORCE ...n du GO (1794873500)\nAMORCE 2026-11-22T19:05:38Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+____ test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e] ____
+tests/test_t06_v2_scripts.py:237: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+E   assert (2 == 0)
+_____________ test_controles_disque_simule_et_commande_de_creation _____________
+tests/test_t06_v2_scripts.py:434: in test_controles_disque_simule_et_commande_de_creation
+    assert r.returncode == 0, r.stdout + r.stderr
+E   AssertionError: calendrier (L11) au jour de la création : GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création
+E     
+E   assert 3 == 0
+E    +  where 3 = CompletedProcess(args=['bash', '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scra...-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22 : nœud, pas de création\n', stderr='').returncode
+_____ test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent ______
+tests/test_t06_v2_scripts.py:296: in test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent
+    assert code == 0, sortie[-2000:]
+E   AssertionError: AMORCE T06 v2 DEMARRAGE 1 : 2026-11-22T19:05:38Z, machine ?, commit 0bf1d8c078fd4fccceadc2967c7f5d5d64b190f0
+E     AMORCE 2026-11-22T19:05:38Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+=========================== short test summary info ============================
+FAILED tests/test_t06_v2_scripts.py::test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu
+FAILED tests/test_t06_v2_scripts.py::test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage
+FAILED tests/test_t06_v2_scripts.py::test_amorce_configuration_sans_calendrier_refusee
+FAILED tests/test_t06_v2_scripts.py::test_amorce_fichier_trop_gros_refuse_avant_le_commit
+FAILED tests/test_t06_v2_scripts.py::test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage
+FAILED tests/test_t06_v2_scripts.py::test_amorce_poussee_initiale_refusee - a...
+FAILED tests/test_t06_v2_scripts.py::test_amorce_refus_go_et_branche_presente
+FAILED tests/test_t06_v2_scripts.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e]
+FAILED tests/test_t06_v2_scripts.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc]
+FAILED tests/test_t06_v2_scripts.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e]
+FAILED tests/test_t06_v2_scripts.py::test_controles_disque_simule_et_commande_de_creation
+FAILED tests/test_t06_v2_scripts.py::test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent
+12 failed, 3 passed in 2.50s

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.116" timestamp="2026-11-22T19:07:36.656016+00:00" hostname="vm"><testcase classname="tests.test_lancer_course_ideation_bassins_etroits_v3" name="test_run_reel_du_v2_reconnu" time="0.002"><failure message="AssertionError: assert {'run': '2026...': False, ...} == {'run': '2026...e': True, ...}&#10;  &#10;  Omitting 2 identical items, use -vv to show&#10;  Differing items:&#10;  {'lecture': 'course : processus mort sans fin propre, ou en marche : plafond entier compté ; bras : aucun bras'} != {'lecture': 'course : tentatives de contrôle scellées (course non partie) ; bras : aucun bras'}&#10;  {'course_lisible': False} != {'course_lisible': True}&#10;  {'course_usd': 20.0} != {'course_usd': 0.275477}&#10;  Use -v to get more diff">def test_run_reel_du_v2_reconnu():
+        """Le dépôt réel : le run du v2 (génération 1, défaut au contrôle) est la première tentative, 0,275477 USD."""
+        r = lc.Reglages.production()
+        nom = "20261113-152926-course-ideation-bassins-etroits-v2-g1"
+        if not (RACINE / "runs" / lc.ANTERIEURS[0][0] / nom).is_dir():
+            pytest.skip("run du v2 absent du dépôt")
+        runs = [x for x in lc.runs_du_lanceur(r) if x["generation"] == 1]
+        v2 = [x for x in runs if x["nom"] == nom]
+        assert len(v2) == 1, "le run du v2 présent sur disque doit être lu par le v3"
+&gt;       assert lc.depense_run(v2[0]) == {"run": v2[0]["nom"], "course_usd": 0.275477, "bras_usd": 0.0, "course_lisible": True,
+                                         "lecture": "course : tentatives de contrôle scellées (course non partie) ; bras : aucun bras"}
+E       AssertionError: assert {'run': '2026...': False, ...} == {'run': '2026...e': True, ...}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'lecture': 'course : processus mort sans fin propre, ou en marche : plafond entier compté ; bras : aucun bras'} != {'lecture': 'course : tentatives de contrôle scellées (course non partie) ; bras : aucun bras'}
+E         {'course_lisible': False} != {'course_lisible': True}
+E         {'course_usd': 20.0} != {'course_usd': 0.275477}
+E         Use -v to get more diff
+
+tests/test_lancer_course_ideation_bassins_etroits_v3.py:827: AssertionError</failure></testcase></testsuite></testsuites>

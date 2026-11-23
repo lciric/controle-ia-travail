@@ -1,0 +1,75 @@
+FFFFFF.FF                                                                [100%]
+=================================== FAILURES ===================================
+____________________ test_amorce_arret_consigne_et_run_mort ____________________
+tests/test_t06_scripts.py:157: in test_amorce_arret_consigne_et_run_mort
+    assert code == 1 and "ARRÊT pendant run" in journal and "RUN MORT" not in sortie and " : fin, code 1" in sortie
+E   assert (2 == 1)
+_________________________ test_amorce_branche_presente _________________________
+tests/test_t06_scripts.py:208: in test_amorce_branche_presente
+    assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E   AssertionError: assert (2 == 2 and 'déjà présente' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 2b5eac8beb1523f691b24da863b616105bf13be2\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+_____________ test_amorce_cas_sain_run_complet_et_donnees_poussees _____________
+tests/test_t06_scripts.py:140: in test_amorce_cas_sain_run_complet_et_donnees_poussees
+    assert code == 0, sortie[-3000:]
+E   AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 2b5eac8beb1523f691b24da863b616105bf13be2
+E     AMORCE 2026-11-22T19:04:26Z : commit 2b5eac8beb1523f691b24da863b616105bf13be2
+E     2026-11-22T19:04:26Z début : MODE=jouet COMMIT=2b5eac8beb1523f691b24da863b616105bf13be2 BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E     AMORCE 2026-11-22T19:04:26Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E     AMORCE 2026-11-22T19:04:26Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E     warning: --filter is ignored in local clones; use file:// instead.
+E     
+E   assert 2 == 0
+____ test_amorce_lecture_precoce_artefacts[doublon-cit\xe9 plusieurs fois] _____
+tests/test_t06_scripts.py:200: in test_amorce_lecture_precoce_artefacts
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 7afd50aa0b34977c892f8d98d80858efe1823637
+E     AMORCE 2026-11-22T19:04:26Z : commit 7afd50aa0b34977c892f8d98d80858efe1823637
+E     2026-11-22T19:04:26Z début : MODE=jouet COMMIT=7afd50aa0b34977c892f8d98d80858efe1823637 BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E     AMORCE 2026-11-22T19:04:26Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E     AMORCE 2026-11-22T19:04:26Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E     warning: --filter is ignored in local clones; use file:// instead.
+E     
+E   assert (2 == 2 and 'cité plusieurs fois' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 7afd50aa0b34977c892f8d98d80858efe1823637\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+_____ test_amorce_lecture_precoce_artefacts[sceau-faux-sceau non conforme] _____
+tests/test_t06_scripts.py:200: in test_amorce_lecture_precoce_artefacts
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 91f07ca8200243c62d4cb3c58d02547c4cd0292d
+E     AMORCE 2026-11-22T19:04:26Z : commit 91f07ca8200243c62d4cb3c58d02547c4cd0292d
+E     2026-11-22T19:04:26Z début : MODE=jouet COMMIT=91f07ca8200243c62d4cb3c58d02547c4cd0292d BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E     AMORCE 2026-11-22T19:04:26Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E     AMORCE 2026-11-22T19:04:26Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E     warning: --filter is ignored in local clones; use file:// instead.
+E     
+E   assert (2 == 2 and 'sceau non conforme' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 91f07ca8200243c62d4cb3c58d02547c4cd0292d\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+____ test_amorce_lecture_precoce_artefacts[prereg-absent-absent au commit] _____
+tests/test_t06_scripts.py:200: in test_amorce_lecture_precoce_artefacts
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 8756b1ff0eca1ccffa4105fb747b505e1af508c1
+E     AMORCE 2026-11-22T19:04:26Z : commit 8756b1ff0eca1ccffa4105fb747b505e1af508c1
+E     2026-11-22T19:04:27Z début : MODE=jouet COMMIT=8756b1ff0eca1ccffa4105fb747b505e1af508c1 BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E     AMORCE 2026-11-22T19:04:27Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E     AMORCE 2026-11-22T19:04:27Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E     warning: --filter is ignored in local clones; use file:// instead.
+E     
+E   assert (2 == 2 and 'absent au commit' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T19:04:26Z, machine ?, commit 8756b1ff0eca1ccffa4105fb747b505e1af508c1\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+_________________ test_amorce_redemarrage_et_refus_detruisent __________________
+tests/test_t06_scripts.py:169: in test_amorce_redemarrage_et_refus_detruisent
+    assert code == 0
+E   assert 2 == 0
+____________________ test_controles_et_commande_de_creation ____________________
+tests/test_t06_scripts.py:301: in test_controles_et_commande_de_creation
+    assert r.returncode == 0, r.stdout + r.stderr
+E   AssertionError: échéance 1794873599 hors de ]maintenant, fin du GO]
+E     
+E   assert 2 == 0
+E    +  where 2 = CompletedProcess(args=['bash', '/tmp/claude-0/-home-user-controle-ia-travail/cdf47db0-465c-5a9f-bc6b-2488e9a59218/scra...e_0/controles', '1794873599'], returncode=2, stdout='échéance 1794873599 hors de ]maintenant, fin du GO]\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED tests/test_t06_scripts.py::test_amorce_arret_consigne_et_run_mort - as...
+FAILED tests/test_t06_scripts.py::test_amorce_branche_presente - AssertionErr...
+FAILED tests/test_t06_scripts.py::test_amorce_cas_sain_run_complet_et_donnees_poussees
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[doublon-cit\xe9 plusieurs fois]
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[sceau-faux-sceau non conforme]
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[prereg-absent-absent au commit]
+FAILED tests/test_t06_scripts.py::test_amorce_redemarrage_et_refus_detruisent
+FAILED tests/test_t06_scripts.py::test_controles_et_commande_de_creation - As...
+8 failed, 1 passed in 1.62s

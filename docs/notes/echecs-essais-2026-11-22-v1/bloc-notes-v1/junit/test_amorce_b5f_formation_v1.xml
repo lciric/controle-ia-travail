@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="4.614" timestamp="2026-11-22T19:06:50.212087+00:00" hostname="vm"><testcase classname="tests.test_amorce_b5f_formation_v1" name="test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet" time="3.162"><failure message="AssertionError: (814, 'artefact&#10;  tests/test_barreau5_familles_sondes_v1.py::test_apprentissage_sans_les_deux_classes_ou_serie_absente_...s_ecrase&#10;  tests/test_barreau5_familles_sondes_v1.py::test_cles_des_graines_du_texte&#10;  &#10;  814 tests collected in 2.60s&#10;  ')&#10;assert 235 == 814&#10; +  where 235 = int('235')&#10; +    where '235' = _constante('MIN_ESSAIS')">def test_texte_plancher_d_essais_egal_au_nombre_d_essais_du_paquet():
+        """Le plancher MIN_ESSAIS de la porte des essais égale le nombre d'essais de `tests/test_barreau5_familles_*.py`
+        (remesuré sur l'arbre extrait des fichiers corrigés)."""
+        fichiers = sorted(str(p.relative_to(RACINE_DEPOT)) for p in (RACINE_DEPOT / "tests").glob("test_barreau5_familles_*.py"))
+        p = subprocess.run([sys.executable, "-B", "-m", "pytest", "-q", "--collect-only", "-p", "no:cacheprovider", *fichiers],
+                           cwd=RACINE_DEPOT, capture_output=True, text=True, timeout=300,
+                           env={**os.environ, "PYTHONPATH": str(RACINE_DEPOT / "src")})
+        n = int(re.search(r"(\d+) tests? collected", p.stdout).group(1))
+&gt;       assert int(_constante("MIN_ESSAIS")) == n, (n, p.stdout[-300:])
+E       AssertionError: (814, 'artefact
+E         tests/test_barreau5_familles_sondes_v1.py::test_apprentissage_sans_les_deux_classes_ou_serie_absente_...s_ecrase
+E         tests/test_barreau5_familles_sondes_v1.py::test_cles_des_graines_du_texte
+E         
+E         814 tests collected in 2.60s
+E         ')
+E       assert 235 == 814
+E        +  where 235 = int('235')
+E        +    where '235' = _constante('MIN_ESSAIS')
+
+tests/test_amorce_b5f_formation_v1.py:418: AssertionError</failure></testcase></testsuite></testsuites>

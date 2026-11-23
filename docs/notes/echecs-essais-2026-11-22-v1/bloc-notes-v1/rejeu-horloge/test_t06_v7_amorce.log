@@ -1,0 +1,269 @@
+FFFFFFFFFFF...FFFFFFFFFFFFFFFFFFFFFFFFF                                  [100%]
+=================================== FAILURES ===================================
+________ test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu _________
+tests/test_t06_v7_amorce.py:303: in test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu
+    assert code == 1 and "arrêt pendant run (code 1) : résultats et données légères committés" in journal and "RUN MORT" not in sortie
+E   assert (2 == 1)
+________ test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage ________
+tests/test_t06_v7_amorce.py:167: in test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage
+    assert code == 0, sortie[-3000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:56Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:56Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+______________ test_amorce_configuration_sans_calendrier_refusee _______________
+tests/test_t06_v7_amorce.py:297: in test_amorce_configuration_sans_calendrier_refusee
+    assert code == 2 and "calendrier de la configuration non conforme" in sortie and "sans calendrier" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'calendrier de la configuration non conforme' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:56Z, machine ?, commit c70aafde8411b705fa3be14ab16b19d733c12972\nAMORCE 2026-11-22T19:05:56Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_____________ test_amorce_fichier_trop_gros_refuse_avant_le_commit _____________
+tests/test_t06_v7_amorce.py:240: in test_amorce_fichier_trop_gros_refuse_avant_le_commit
+    assert code == 1 and (racine / "t06-fin-anormale").exists() and not (racine / "t06-fin-normale").exists(), sortie[-3000:]     # C-V4-1 : fin anormale
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:56Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:56Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 1)
+_____ test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage ______
+tests/test_t06_v7_amorce.py:261: in test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage
+    assert code == 1, sortie[-3000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:56Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:56Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 1
+_____________________ test_amorce_poussee_initiale_refusee _____________________
+tests/test_t06_v7_amorce.py:254: in test_amorce_poussee_initiale_refusee
+    assert code == 2 and "poussée initiale de la branche calcul/t06-jouet-v4 refusée" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'poussée initiale de la branche calcul/t06-jouet-v4 refusée' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_____ test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run _____
+tests/test_t06_v7_amorce.py:233: in test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run
+    assert code == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+___________________ test_amorce_refus_go_et_branche_presente ___________________
+tests/test_t06_v7_amorce.py:322: in test_amorce_refus_go_et_branche_presente
+    assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E   assert (2 == 2 and 'déjà présente' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[heure_passee] _
+tests/test_t06_v7_amorce.py:210: in test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit
+    assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 0)
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[marqueur] _
+tests/test_t06_v7_amorce.py:210: in test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit
+    assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 0)
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[echeance_passee] _
+tests/test_t06_v7_amorce.py:210: in test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit
+    assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:57Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:57Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 0)
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e] _
+tests/test_t06_v7_amorce.py:286: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:58Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:58Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and "après l'heure de dépense épuisée" in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:58Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:05:58Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc] _
+tests/test_t06_v7_amorce.py:286: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:58Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE T06 : échéance ramenée à la fin du GO (1794873500)
+E     AMORCE 2026-11-22T19:05:58Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:58Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE ...n du GO (1794873500)\nAMORCE 2026-11-22T19:05:58Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+____ test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e] ____
+tests/test_t06_v7_amorce.py:284: in test_amorce_variables_de_calendrier_et_de_depense
+    assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+E   assert (2 == 0)
+__________________ test_c_v4_1_arret_consigne_sous_le_verrou ___________________
+tests/test_t06_v7_amorce.py:533: in test_c_v4_1_arret_consigne_sous_le_verrou
+    assert code == 1 and "arrêt pendant run (code 1)" in journal
+E   assert (2 == 1)
+_ test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre _
+tests/test_t06_v7_amorce.py:521: in test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:58Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:58Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+___ test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse ___
+tests/test_t06_v7_amorce.py:562: in test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:59Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:59Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_ test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine _
+tests/test_t06_v7_amorce.py:861: in test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine
+    assert code == 0
+E   assert 2 == 0
+_______________ test_c_v4_1_fichier_non_rattrapable_fin_anormale _______________
+tests/test_t06_v7_amorce.py:661: in test_c_v4_1_fichier_non_rattrapable_fin_anormale
+    assert code == 1, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:59Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:59Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 1
+_ test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale _
+tests/test_t06_v7_amorce.py:551: in test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale
+    assert code == 1, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:59Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:59Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 1
+_ test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde _
+tests/test_t06_v7_amorce.py:620: in test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:59Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:59Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_______________ test_c_v4_1_rien_a_committer_n_est_pas_un_echec ________________
+tests/test_t06_v7_amorce.py:542: in test_c_v4_1_rien_a_committer_n_est_pas_un_echec
+    assert code == 0 and "aucun morceau à committer" in journal and (racine / "t06-fin-normale").exists()
+E   assert (2 == 0)
+_ test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale __
+tests/test_t06_v7_amorce.py:584: in test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:05:59Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:05:59Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+____________ test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee ____________
+tests/test_t06_v7_amorce.py:603: in test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee
+    assert code == 1, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:00Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 1
+____________ test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance ____________
+tests/test_t06_v7_amorce.py:638: in test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance
+    assert code == code_attendu and (racine / "t06-arret-demande").exists(), (nom, sortie[-1500:])
+E   AssertionError: ('v1', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:00Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert (2 == 0)
+____________ test_c_v4_3_amorce_epreuve_artefacts[go_de_la_course] _____________
+tests/test_t06_v7_amorce.py:840: in test_c_v4_3_amorce_epreuve_artefacts
+    assert motif in sortie, (cas, sortie[-1500:])
+E   AssertionError: ('go_de_la_course', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f
+E     AMORCE 2026-11-22T19:06:00Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert 'seul GO-2026-11-06-01 est une épreuve à blanc' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f\nAMORCE 2026-11-22T19:06:00Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+_____________ test_c_v4_3_amorce_epreuve_artefacts[branche_calcul] _____________
+tests/test_t06_v7_amorce.py:840: in test_c_v4_3_amorce_epreuve_artefacts
+    assert motif in sortie, (cas, sortie[-1500:])
+E   AssertionError: ('branche_calcul', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert 'doit commencer par essai/' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:00Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+___________ test_c_v4_3_amorce_epreuve_artefacts[sans_prereg_absent] ___________
+tests/test_t06_v7_amorce.py:840: in test_c_v4_3_amorce_epreuve_artefacts
+    assert motif in sortie, (cas, sortie[-1500:])
+E   AssertionError: ('sans_prereg_absent', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert 'PREREG_ABSENT=1 exigé' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+___________ test_c_v4_3_amorce_epreuve_artefacts[reel_sans_epreuve] ____________
+tests/test_t06_v7_amorce.py:840: in test_c_v4_3_amorce_epreuve_artefacts
+    assert motif in sortie, (cas, sortie[-1500:])
+E   AssertionError: ('reel_sans_epreuve', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert "n'est permis qu'en mode jouet (R1)" in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+_______________ test_c_v4_3_amorce_epreuve_artefacts[go_expire] ________________
+tests/test_t06_v7_amorce.py:840: in test_c_v4_3_amorce_epreuve_artefacts
+    assert motif in sortie, (cas, sortie[-1500:])
+E   AssertionError: ('go_expire', "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     ")
+E   assert 'fin du GO reçue' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit 78a93787d923987f784520cbe9e7c5345906847f\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+______________ test_c_v4_3_materiel_et_virgules_des_essais_joues _______________
+tests/test_t06_v7_amorce.py:848: in test_c_v4_3_materiel_et_virgules_des_essais_joues
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_ test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[set-set] _
+tests/test_t06_v7_amorce.py:934: in test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git
+    assert code == 2 and f"refus : extraction partielle impossible (sparse-checkout {motif}) : message de git : sparse-checkout {etape} refusé (factice)" in sortie, sortie[-1500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and 'refus : extraction partielle impossible (sparse-checkout set) : message de git : sparse-checkout set refusé (factice)' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+_ test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[init-init] _
+tests/test_t06_v7_amorce.py:934: in test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git
+    assert code == 2 and f"refus : extraction partielle impossible (sparse-checkout {motif}) : message de git : sparse-checkout {etape} refusé (factice)" in sortie, sortie[-1500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert (2 == 2 and 'refus : extraction partielle impossible (sparse-checkout init) : message de git : sparse-checkout init refusé (factice)' in "AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:01Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2\nAMORCE 2026-11-22T19:06:01Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+______ test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins ______
+tests/test_t06_v7_amorce.py:909: in test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins
+    assert code == 0, sortie[-2500:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:02Z, machine ?, commit fccbb325bbe547d0ff62aa3abb48525b4e773462
+E     AMORCE 2026-11-22T19:06:02Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_____ test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent ______
+tests/test_t06_v7_amorce.py:344: in test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent
+    assert code == 0, sortie[-2000:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:02Z, machine ?, commit ceb362a45933c41412b810564aebe8c95be7cea2
+E     AMORCE 2026-11-22T19:06:02Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert 2 == 0
+_______ test_refus_annonce_puis_attend_avant_de_demander_la_destruction ________
+tests/test_t06_v7_amorce.py:942: in test_refus_annonce_puis_attend_avant_de_demander_la_destruction
+    assert time.time() - t0 >= 2 and code == 2, sortie[-1200:]
+E   AssertionError: AMORCE T06 v7 DEMARRAGE 1 : 2026-11-22T19:06:02Z, machine ?, commit abcdef
+E     AMORCE 2026-11-22T19:06:02Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E     
+E   assert ((1794304806.591703 - 1794304806.5768101) >= 2)
+E    +  where 1794304806.591703 = <built-in function time>()
+E    +    where <built-in function time> = time.time
+=========================== short test summary info ============================
+FAILED tests/test_t06_v7_amorce.py::test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu
+FAILED tests/test_t06_v7_amorce.py::test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage
+FAILED tests/test_t06_v7_amorce.py::test_amorce_configuration_sans_calendrier_refusee
+FAILED tests/test_t06_v7_amorce.py::test_amorce_fichier_trop_gros_refuse_avant_le_commit
+FAILED tests/test_t06_v7_amorce.py::test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage
+FAILED tests/test_t06_v7_amorce.py::test_amorce_poussee_initiale_refusee - as...
+FAILED tests/test_t06_v7_amorce.py::test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run
+FAILED tests/test_t06_v7_amorce.py::test_amorce_refus_go_et_branche_presente
+FAILED tests/test_t06_v7_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[heure_passee]
+FAILED tests/test_t06_v7_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[marqueur]
+FAILED tests/test_t06_v7_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[echeance_passee]
+FAILED tests/test_t06_v7_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e]
+FAILED tests/test_t06_v7_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc]
+FAILED tests/test_t06_v7_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_arret_consigne_sous_le_verrou
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_fichier_non_rattrapable_fin_anormale
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_rien_a_committer_n_est_pas_un_echec
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[go_de_la_course]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[branche_calcul]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[sans_prereg_absent]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[reel_sans_epreuve]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[go_expire]
+FAILED tests/test_t06_v7_amorce.py::test_c_v4_3_materiel_et_virgules_des_essais_joues
+FAILED tests/test_t06_v7_amorce.py::test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[set-set]
+FAILED tests/test_t06_v7_amorce.py::test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[init-init]
+FAILED tests/test_t06_v7_amorce.py::test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins
+FAILED tests/test_t06_v7_amorce.py::test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent
+FAILED tests/test_t06_v7_amorce.py::test_refus_annonce_puis_attend_avant_de_demander_la_destruction
+36 failed, 3 passed in 6.66s

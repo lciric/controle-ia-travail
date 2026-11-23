@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="8.893" timestamp="2026-11-22T19:07:17.281194+00:00" hostname="vm"><testcase classname="tests.test_depot_expurge_v10" name="test_v10_depot_reel_copies_par_identifiant" time="8.792"><failure message="AssertionError: (7, 0)&#10;assert (['docs/notes/...6v3.pdf', ...] == []&#10;  &#10;  Left contains 7 more items, first extra item: 'docs/notes/percee-apres-blindfold-v1/opus-max-v1/sources/2609.38262v1.pdf'&#10;  Use -v to get more diff)">def test_v10_depot_reel_copies_par_identifiant():
+        """Arbre réel (noms et identifiants seulement) : aucune copie qui arrête, aucun retrait explicite sans objet ; le
+        compagnon nommé dans `RETRAITS_PAR_IDENTIFIANT_EXPLICITES` est une copie d'un fichier retiré à titre permanent, et
+        est retiré comme copie."""
+        entrees = de._entrees("HEAD")
+        classes = de.classes_d_identifiants(entrees)
+        retirees, arrets, sans_objet = de.copies_par_identifiant(entrees, classes)
+&gt;       assert arrets == [] and sans_objet == [], (len(arrets), len(sans_objet))
+E       AssertionError: (7, 0)
+E       assert (['docs/notes/...6v3.pdf', ...] == []
+E         
+E         Left contains 7 more items, first extra item: 'docs/notes/percee-apres-blindfold-v1/opus-max-v1/sources/2609.38262v1.pdf'
+E         Use -v to get more diff)
+
+tests/test_depot_expurge_v10.py:1075: AssertionError</failure></testcase></testsuite></testsuites>

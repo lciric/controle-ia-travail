@@ -1,0 +1,111 @@
+........................................................................ [  1%]
+.........s.............................................................. [  3%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+...........................x...........x....x........................... [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+.................x...................................................... [ 16%]
+....x................................................................... [ 18%]
+........................................................................ [ 20%]
+..........................................F............................. [ 22%]
+.....................................F.................................. [ 24%]
+........................................................................ [ 25%]
+.............................ss...................................x..... [ 27%]
+..............................................................s......... [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 33%]
+...........................s...............ss....................s...... [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+.....................F.................................................. [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+....................xxxx...xxxxxxx.x.......................xxxxxxxxxxxx. [ 94%]
+........................................................................ [ 96%]
+........................x..........s.........................x.......... [ 97%]
+........................................................................ [ 99%]
+.........                                                                [100%]
+=================================== FAILURES ===================================
+______ test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0 _______
+.claude/hooks/garde_calcul.py:95: in lire_go
+    echeance_d = None if (echeance == "—" and typ != "calcul") else date.fromisoformat(echeance)
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ValueError: Invalid isoformat string: 'réinitialisation hebdomadaire'
+
+During handling of the above exception, another exception occurred:
+tests/test_garde_calcul.py:128: in test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0
+    go = g.lire_go(HOOK.parents[2] / "registres" / "go.md")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.claude/hooks/garde_calcul.py:97: in lire_go
+    bloquer(f"registre GO mal formé ligne {n} : dates illisibles")
+.claude/hooks/garde_calcul.py:76: in bloquer
+    sys.exit(2)
+E   SystemExit: 2
+----------------------------- Captured stderr call -----------------------------
+GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+________ test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main _________
+tests/test_hote_durable_a1_v3_v2.py:62: in test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main
+    assert v2.verifier_go_exact(reel, GARDE, v2.GO_MACHINE, v2.GO_MACHINE, 35, JOUR)["lignes"] == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/controle_ia/hote_durable_a1_v3_v2.py:97: in verifier_go_exact
+    raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+E   controle_ia.hote_durable_a1_v3.Refus: garde de main : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 785 : dates illisibles
+_ test_l_outil_de_fabrique_rejoue_rend_le_lanceur_v2_ses_jouets_et_ses_essais_a_l_octet_pres _
+tests/test_lentilles_sondes_bbis_seconde_passe_corrections_v1.py:909: in test_l_outil_de_fabrique_rejoue_rend_le_lanceur_v2_ses_jouets_et_ses_essais_a_l_octet_pres
+    assert (essais / copie).read_bytes() == (ESSAIS / copie).read_bytes(), copie
+E   AssertionError: test_lentilles_sondes_bbis_seconde_passe_lanceur_v2.py
+E   assert b'"""Essais d...S).exists()\n' == b'"""Essais d...S).exists()\n'
+E     
+E     At index 25093 diff: b'#' != b'w'
+E     Use -v to get more diff
+=============================== warnings summary ===============================
+tests/test_dopamine_exploratoire_generation_etats_v1.py::test_float16_garde_le_debordement
+  /home/user/controle-ia-travail/src/controle_ia/dopamine_exploratoire/etats_v1.py:98: RuntimeWarning: overflow encountered in cast
+    b = a.astype(np.float16)
+
+tests/test_neuron_lens_b_beta_lancer_v3.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/controles_b_beta_v2.py:208: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(float(num / den) if den > 0 else float("nan"))
+
+tests/test_neuron_lens_b_beta_lancer_v3.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/b_beta_lancer_v3.py:511: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(np.linalg.norm(a / n0 - b / n1) / np.linalg.norm((a + b) / (n0 + n1)))
+
+tests/test_organisme_idees_juge_execution_v2.py: 14 warnings
+  /usr/local/lib/python3.13/multiprocessing/popen_fork.py:73: DeprecationWarning: This process (pid=5462) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_garde_calcul.py::test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0
+FAILED tests/test_hote_durable_a1_v3_v2.py::test_go_de_la_machine_cas_sains_dont_le_registre_reel_de_main
+FAILED tests/test_lentilles_sondes_bbis_seconde_passe_corrections_v1.py::test_l_outil_de_fabrique_rejoue_rend_le_lanceur_v2_ses_jouets_et_ses_essais_a_l_octet_pres
+3 failed, 3853 passed, 9 skipped, 32 xfailed, 17 warnings in 3676.93s (1:01:16)
