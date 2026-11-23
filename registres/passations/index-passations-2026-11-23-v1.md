@@ -37,3 +37,6 @@
 - développeur alignement T0.8 : prep/t08-code-aligne-v1 e37b375e, 2026-11-23-0639-developpeur-alignement-t08.md (7da4c077…) ; 43 fichiers versés
 - veille de cap : main 8c0e0dd0, 2026-11-23-0654-veille-de-cap.md (d039a632…) ; tâche trig_01QUfWQYwZPdsJ2KMdfzdqbY (18:41Z)
 - veille des machines sans modèle (mère) : script /home/user/veille-machines/veille.sh, relevé toutes les 10 min, remparts d'arrêt par identifiant (62094628 le 24 à 11:41Z, 62096662 le 23 à 15:50Z, 62105206 le 28 à 05:55Z), alertes et journal poussés sur veille/machines-v1 ; meurt avec le conteneur de la mère (relancé une fois à 07:02Z)
+- mathématiques nouvelles : claude/mathematiques-nouvelles-v1 3ea5b83a, 2026-11-23-0625-mathematiques-nouvelles.md (6f7e7087…) ; déclencheur de reprise de 08:00Z actif
+- juge Fable seuil 0,75 : claude/avis-carbon-astra-v1 f8129e6e0, 2026-11-23-0705-juge-fable-max.md (725d4c61…)
+- cloisonnée modes et attaques : runs/cloisonnee-modes-attaques-questions-v4 6a5ae92da, 2026-11-23-0653-cloisonnee-modes-attaques.md (4258b6da…) ; coffre/modes-tenus-a-l-ecart-collisionneur-v1 ba593e54 — cloisonné
