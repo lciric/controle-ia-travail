@@ -1,0 +1,96 @@
+--- src/controle_ia/organismes_discrets/lanceur_bras_a_v7.py	2026-11-23 00:39:31.643983736 +0000
++++ src/controle_ia/organismes_discrets/lanceur_bras_a_v8.py	2026-11-23 01:20:46.675760838 +0000
+@@ -1,4 +1,12 @@
+-"""Lanceur de la course du bras A des organismes discrets, **version 7** (23 novembre 2026, session de relance) : seules
++"""Lanceur de la course du bras A des organismes discrets, **version 8** (23 novembre 2026, session de relance) : seules
++différences avec la version 7 (`82672d3a…`, contre-lue « bon pour le départ ») : (1) la configuration porte une clé
++`guide`, le guide d'invite de l'agent dans les épisodes honnêtes, choisi par la chaîne de décision (le texte scellé est
++muet ; choix consigné et rapporté) : « H1-classification », aux clés fermées `identifiant`, `fichier`, `sha256`,
++`index`, `index_sha256`, chacune exigée égale aux constantes de ce module (`exiger_guide`, à la lecture de la
++configuration, sans toucher aux fichiers) ; (2) la vérification des octets des deux fichiers du guide, empreinte sur
++disque, est une fonction à part (`verifier_les_octets_du_guide`), appelée par le programme de l'instance avant de
++charger le guide, jamais à la lecture de la configuration ; (3) `CHEMIN_DU_LANCEUR` nomme cette version. Rien d'autre.
++Version 7 : seules
+ différences avec la version 6 (`28dac2b5…`, contre-lue « bon pour le départ », `246352a7…`) : (1) le chemin du lanceur
+ que la configuration doit nommer est celui de cette version (les v5 et v6 gardaient par erreur celui de la v4), et ce
+ chemin est confronté au fichier joué ; (2) m-1 de la contre-lecture de la v6 : « ligne 1 » suivi d'une autre ligne
+@@ -99,7 +107,13 @@
+ EMPREINTE_TEXTE_ARCHIVE = "06ab6a2f6e173bb1258f45ffeded7a419b05ecc2f59920666cea91aafcc7cf05"   # 8.4, ligne 1163
+ CHEMIN_CONFIGURATION_DE_REFERENCE = "prereg/T0.6-organismes-config-7b-v1.json"
+ EMPREINTE_CONFIGURATION_DE_REFERENCE = "b7a5c1baeee13f7589b296fb166180515422ebc8c7eff703994bb5b6835ae527"  # texte, l. 276
+-CHEMIN_DU_LANCEUR = "src/controle_ia/organismes_discrets/lanceur_bras_a_v7.py"
++CHEMIN_DU_LANCEUR = "src/controle_ia/organismes_discrets/lanceur_bras_a_v8.py"
++# v8 : guide d'invite de l'agent dans les épisodes honnêtes (choix de la chaîne de décision, le texte scellé est muet)
++IDENTIFIANT_DU_GUIDE = "H1-classification"
++CHEMIN_DU_GUIDE = "docs/sources/invites-2606.08892-v1/invites/H1-classification.txt"
++EMPREINTE_DU_GUIDE = "69d50fb972f3255c94430205ab09c4f21054185d7def25b061c7255d71cc5540"
++CHEMIN_DE_L_INDEX_DU_GUIDE = "docs/sources/invites-2606.08892-v1/index.json"
++EMPREINTE_DE_L_INDEX_DU_GUIDE = "adb4b8bca7788baf2c4714df96dcdcc2c5043e8f1943542d0fbe1863491ae2d9"
+ 
+ N_AGENTS, PAS = 1, 10                                   # 13.2 : « un seul agent et dix pas »
+ LOT, EPISODES_PAR_TACHE, MAX_NOUVEAUX = 8, 8, 400        # configuration de référence ; 6.1 ; devis v5, section 2
+@@ -119,7 +133,8 @@
+ NOMS_DES_ADAPTATEURS = tuple(n for n, _, _ in PLAN_DES_ADAPTATEURS)
+ 
+ CLES_DE_LA_CONFIGURATION = ("lanceur", "texte", "configuration_de_reference", "entropie", "entropie_fictive",
+-                            "reglages_instrument", "ligne_1")
++                            "reglages_instrument", "ligne_1", "guide")
++CLES_DU_GUIDE = ("identifiant", "fichier", "sha256", "index", "index_sha256")
+ CLES_DE_LA_LIGNE_1 = ("plafond_usd", "marge_de_credit_usd")
+ _SHA = re.compile(r"[0-9a-f]{64}")
+ # m-3 : règle stricte, alignée sur la garde de calcul du dépôt corrigée (`origin/main`, `.claude/hooks/garde_calcul.py`,
+@@ -246,6 +261,42 @@
+     return entropie
+ 
+ 
++# --- v8 : guide d'invite de l'agent dans les épisodes honnêtes -----------------------------------------------------------
++
++def guide_attendu() -> dict:
++    """Le guide que cette version exige, lu des constantes du module au moment de l'appel."""
++    return {"identifiant": IDENTIFIANT_DU_GUIDE, "fichier": CHEMIN_DU_GUIDE, "sha256": EMPREINTE_DU_GUIDE,
++            "index": CHEMIN_DE_L_INDEX_DU_GUIDE, "index_sha256": EMPREINTE_DE_L_INDEX_DU_GUIDE}
++
++
++def exiger_guide(guide: object) -> dict:
++    """Clé `guide` de la configuration : clés fermées, identifiant, chemins et empreintes exacts. Ne touche à aucun
++    fichier (les octets sont vérifiés par `verifier_les_octets_du_guide`, sur l'instance, avant le chargement)."""
++    if not isinstance(guide, Mapping) or sorted(guide) != sorted(CLES_DU_GUIDE):
++        raise GardeArret(f"configuration : `guide` aux clés {sorted(CLES_DU_GUIDE)} exigé, aucune de plus")
++    attendu = guide_attendu()
++    if guide["identifiant"] != attendu["identifiant"]:
++        raise GardeArret(f"configuration : guide {guide['identifiant']!r} ; seul {attendu['identifiant']!r} est admis")
++    for cle in ("sha256", "index_sha256"):
++        _exiger_empreinte(guide[cle], f"empreinte `guide.{cle}`")
++    for cle in ("fichier", "sha256", "index", "index_sha256"):
++        if guide[cle] != attendu[cle]:
++            raise GardeArret(f"configuration : `guide.{cle}` {guide[cle]!r} ; {attendu[cle]!r} exigé")
++    return dict(guide)
++
++
++def verifier_les_octets_du_guide(guide: Mapping, racine=".") -> dict:
++    """Empreinte sur disque des deux fichiers du guide (invite et index), confrontée à la configuration et aux
++    constantes. Appelée par le programme de l'instance avant de charger le guide ; tout écart arrête (R5, R11)."""
++    g = exiger_guide(guide)
++    racine = Path(racine)
++    for cle_chemin, cle_sha, nom in (("fichier", "sha256", "fichier du guide"), ("index", "index_sha256", "index du guide")):
++        p = _fichier_sous(racine, g[cle_chemin], nom)
++        if _sha_du_fichier(p) != g[cle_sha]:
++            raise GardeArret(f"{nom} {g[cle_chemin]} : empreinte sur disque différente de {g[cle_sha]} — refusé")
++    return g
++
++
+ def lire_la_configuration(chemin_configuration, racine=".", *, essai: bool = False) -> dict:
+     """Lit et vérifie la configuration scellée du lanceur. `essai=False` (départ réel) refuse une entropie fictive."""
+     racine = Path(racine)
+@@ -267,9 +318,10 @@
+         raise GardeArret(f"configuration : `ligne_1` aux clés {sorted(CLES_DE_LA_LIGNE_1)} exigé")
+     if l1["plafond_usd"] != PLAFOND_LIGNE_1_USD or l1["marge_de_credit_usd"] != MARGE_DE_CREDIT_USD:
+         raise GardeArret("configuration : plafond de 18 USD et marge de crédit de 2 USD exigés (devis v5)")
++    guide = exiger_guide(c["guide"])                          # v8 : syntaxe seule ; octets vérifiés sur l'instance
+     return {"chemin": str(chemin_configuration), "sha256": sha_configuration, "brute": c, "texte_sha256": sha_texte,
+             "lanceur_sha256": sha_lanceur, "reference": ref, "entropie": entropie, "entropie_fictive": c["entropie_fictive"],
+-            "reglages": reglages, "racine": racine}
++            "reglages": reglages, "racine": racine, "guide": guide}
+ 
+ 
+ def reglages_du_jeu(configuration: Mapping) -> dict:
