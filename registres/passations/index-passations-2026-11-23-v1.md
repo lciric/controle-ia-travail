@@ -18,3 +18,4 @@
 - classement des échecs d'essais : essais/classement-echecs-v1 1f2bcb038, 2026-11-23-0635-classement-echecs-essais.md (1e2eb36a…) ; 90 fichiers versés
 - conseiller activations barreau 5 (Fable) : conseiller-activations-b5/passation-v1 05cec997, 2026-11-23-0635-conseiller-activations-b5.md (47adc28f…) ; rien d'autre à verser
 - contre-lecteur T0.8 (brouillon 11) : prep/t08-texte-complet-fable-v1 86efe3e8, 2026-11-23-0625-contre-lecteur-t08.md (d9bf5d27…) ; 25 fichiers versés
+- contre-lecteur de la chaîne T0.8 : t08/contre-lecture-chaine-v1 1582d8b21, 2026-11-23-0626-contre-lecteur-chaine-t08.md (9a3881f0…) ; versement contre-lecteur-versement-v1/ (arbres d'essai factices non versés, refaisables)
