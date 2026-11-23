@@ -1,0 +1,58 @@
+1c1,6
+< """Lanceur de la course du bras A des organismes discrets, **version 4** (nom neuf, R12 : `lanceur_bras_a_v1.py`,
+---
+> """Lanceur de la course du bras A des organismes discrets, **version 5** (23 novembre 2026, session de relance) : seule
+> différence avec la version 4 (`5409a50e…`), la règle du périmètre de la ligne de GO (`exiger_perimetre_de_la_ligne_1`,
+> B-1 de `contre-lecture-lanceur-bras-a-v4-v1.md`, `dddcaf00…`) : la v4 refusait le GO réellement accordé pour la ligne 1,
+> GO-2026-11-22-148 (« bras A, ligne 1 de carte »). Ce qui suit décrit la version 4.
+> 
+> Version 4 (nom neuf, R12 : `lanceur_bras_a_v1.py`,
+116a122,125
+> # v5 (B-1) : règle par mots isolés, qui accepte le périmètre réel de GO-2026-11-22-148
+> _BRAS_A = re.compile(r"(?<![\w-])bras a(?![\w-])")
+> _LIGNE_1 = re.compile(r"(?<![\w-])ligne 1(?![\w-]|[.,]\d)")
+> MOTS_D_UNE_AUTRE_LIGNE = ("moniteur", "seconde", "bras b", "bras c")
+315,316c324,328
+<     """m-3 : le périmètre de la ligne de GO nomme la ligne jouée, « ligne 1 du bras A » (casse et blancs indifférents),
+<     et aucune autre ligne (toute mention « ligne(s) N » y vaut 1). Règle du rédacteur, plus stricte que le texte."""
+---
+>     """v5 (B-1 de la contre-lecture de la v4) : le périmètre de la ligne de GO nomme la ligne jouée et elle seule. Après
+>     normalisation des blancs et de la casse, il faut ensemble : « bras a » isolé ; « ligne 1 » isolé (ni « ligne 10 »,
+>     ni « ligne 1.5 ») ; toute mention « ligne(s) N » vaut « ligne 1 » au singulier ; aucun des mots « moniteur »,
+>     « seconde », « bras b », « bras c ». Accepte le périmètre réel de GO-2026-11-22-148 (« bras A, ligne 1 de carte »)
+>     comme « ligne 1 du bras A ». Règle du rédacteur, plus stricte que le texte."""
+318,319c330,334
+<     if re.search(r"(?<![\w-])" + re.escape(PERIMETRE_LIGNE_1.lower()) + r"(?![\w-])", norme) is None:
+<         raise GardeArret(f"{go_id} : périmètre {perimetre!r} ne nomme pas « {PERIMETRE_LIGNE_1} », la ligne jouée — refusé")
+---
+>     if _BRAS_A.search(norme) is None or _LIGNE_1.search(norme) is None:
+>         raise GardeArret(f"{go_id} : périmètre {perimetre!r} ne nomme pas la ligne 1 du bras A, la ligne jouée — refusé")
+>     interdits = [m for m in MOTS_D_UNE_AUTRE_LIGNE if m in norme]
+>     if interdits:
+>         raise GardeArret(f"{go_id} : périmètre {perimetre!r} nomme {interdits} — un GO pour la seule ligne jouée exigé")
+17c17
+< from controle_ia.organismes_discrets import lanceur_bras_a_v4 as la
+---
+> from controle_ia.organismes_discrets import lanceur_bras_a_v5 as la
+1080a1081,1101
+> 
+> 
+> # --- v5 (B-1) : le périmètre réel de GO-2026-11-22-148, à la lettre, et ses voisins refusés -------------------------
+> LIGNE_GO_148 = ("| GO-2026-11-22-148 | 2026-11-22 | calcul | Même mot (GO-2026-11-22-147) : bras A, ligne 1 de carte "
+>                 "(fabrication et rejeu honnête, 128 épisodes), devis docs/notes/relance-organismes-discrets-v1/"
+>                 "devis-bras-a-v5.md (40b999f8…), plafond 18 USD ; départ seulement après les préalables de 13.2 tenus, "
+>                 "texte v2 scellé, lanceur prêt et contre-lu, et crédit suffisant. | 18 USD | 2026-11-30 | Lazar | mot direct |")
+> 
+> 
+> def test_v5_go_148_reel_accepte():
+>     ligne = la.exiger_ligne_de_go("GO-2026-11-22-148", _registre(LIGNE_GO_148), AUJOURD_HUI)
+>     assert ligne["perimetre"].startswith("Même mot (GO-2026-11-22-147) : bras A, ligne 1 de carte")
+> 
+> 
+> @pytest.mark.parametrize("perimetre", ["bras A, ligne 2 de carte", "bras A, lignes 1 et 2 de carte", "bras A, ligne 10",
+>                                        "bras A, ligne 1.5", "bras A, ligne 1, moniteurs", "bras B, ligne 1",
+>                                        "bras A, seconde ligne et ligne 1", "course du bras A", "bras AB, ligne 1",
+>                                        "bras A, ligne 1 et bras C"])
+> def test_v5_voisins_de_go_148_refuses(perimetre):
+>     with pytest.raises(la.GardeArret):
+>         la.exiger_perimetre_de_la_ligne_1("GO-2026-11-22-148", perimetre)
