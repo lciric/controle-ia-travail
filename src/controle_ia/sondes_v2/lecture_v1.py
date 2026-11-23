@@ -578,8 +578,7 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
                             "empreinte_sonde": gel.empreinte, "aire_apprentissage": aire_app,
                             "aire_epreuve": a, "triviaux": tr})
     if not aires:
-        r = {"nom": nom, "etat": "non calculable", "motif": "aucun pli d'épreuve avec les deux classes",
-             "plis": sortie_plis}
+        r = _non_calculable(nom, conf, jeu, plis, sortie_plis, "aucun pli d'épreuve avec les deux classes")
         return (r, gels) if rendre_gels else r
     plis_sans_deux_classes = sum(p["aire_epreuve"] is None for p in sortie_plis)  # défaut 7 (a)
     aire = float(np.mean(aires))
@@ -591,21 +590,31 @@ def lire_ligne(conf: Configuration, jeu: Jeu, rng: np.random.Generator, journal,
                                                   jeu.taches[idx_epr], conf.n_tirages_blocs,
                                                   entier_de_graine(rng))
         if intervalle["etat"] != "calculé":
-            r = {"nom": nom, "etat": "non calculable", "motif": f"intervalle par tâches : {intervalle['motif']}",
-                 "plis": sortie_plis, "intervalle_taches": intervalle}
+            r = _non_calculable(nom, conf, jeu, plis, sortie_plis, f"intervalle par tâches : {intervalle['motif']}",
+                                intervalle)
             return (r, gels) if rendre_gels else r
     sep_triv = {}
     for k in PREDICTEURS_TRIVIAUX:
         vals = triviaux_plis[k]
         sep_triv[k] = "prédicteur non évalué" if any(v is None for v in vals) else float(np.mean(vals))  # défaut 7 (b)
     non_interp = [k for k, v in sep_triv.items() if isinstance(v, float) and v >= aire]
-    r = {"nom": nom, "etat": "calculée", "famille": conf.famille, "aire": aire, "aires_plis": aires,
+    r = {"nom": nom, "etat": "calculée", "motif": "aucun", "famille": conf.famille, "aire": aire, "aires_plis": aires,
          "plis_sans_deux_classes": plis_sans_deux_classes, "effectifs_plan": jeu.effectifs(), "n_plis": len(plis),
          "intervalle_taches": intervalle, "memorisation": float(np.mean([p["aire_apprentissage"] for p in sortie_plis])),
          "triviaux": sep_triv, "non_interpretable": bool(non_interp), "triviaux_qui_separent": non_interp,
          "plis": sortie_plis, "scores_epreuve": scores if garder_scores else None,
          "plis_ids": {p["nom"]: [jeu.ids[i] for i in p["epr"]] for p in plis} if garder_scores else None}
     return (r, gels) if rendre_gels else r
+
+
+def _non_calculable(nom, conf, jeu, plis, sortie_plis, motif, intervalle=None) -> dict:
+    """Ligne « non calculable » portant les mêmes clés de premier niveau qu'une ligne calculée (valeurs nulles nommées),
+    pour que le résumé sans nombre ne trahisse pas l'issue (réserve 8 c de la vérification des corrections)."""
+    return {"nom": nom, "etat": "non calculable", "motif": motif, "famille": conf.famille, "aire": "non calculée",
+            "aires_plis": "non calculées", "plis_sans_deux_classes": "non calculé", "effectifs_plan": jeu.effectifs(),
+            "n_plis": len(plis), "intervalle_taches": intervalle if intervalle is not None else "non calculé",
+            "memorisation": "non calculée", "triviaux": "non calculés", "non_interpretable": "non calculé",
+            "triviaux_qui_separent": "non calculés", "plis": sortie_plis, "scores_epreuve": None, "plis_ids": None}
 
 
 def permuter_etiquettes(jeu: Jeu, rng: np.random.Generator, paires=None) -> np.ndarray:

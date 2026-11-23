@@ -465,3 +465,24 @@ def test_nul_paires_structurelles_quelle_que_soit_la_famille(tmp_path):
     y = lc.permuter_etiquettes(jeu, np.random.default_rng(1), pa)
     for u in set(jeu.unites):
         assert len({int(y[i]) for i, _ in pa if jeu.unites[i] == u}) == 1
+
+
+def test_resume_aveugle_identique_calculee_ou_non(tmp_path):
+    """Réserve 8 c : le résumé sans nombre d'une ligne « non calculable » ne se distingue pas de celui d'une ligne
+    calculée (mêmes clés, mêmes effectifs de plan)."""
+    lignes, et = _lignes(n_taches=12, par_tache=4, signal=3.0)
+    sain = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee", k_externes=2), lc.construire_jeu(lignes, et),
+                         np.random.default_rng(0), tmp_path / "a.jsonl", "a")
+    for k in et:
+        et[k] = int(k.startswith("s/t0-") and k.endswith(("a1", "a3"))) or int(k.startswith("s/t1-") and k.endswith("a1"))
+    nc = lc.lire_ligne(lc.Configuration("difference_moyennes_appariee", k_externes=2), lc.construire_jeu(lignes, et),
+                       np.random.default_rng(0), tmp_path / "b.jsonl", "b")
+    assert nc["etat"] == "non calculable" and set(nc) == set(sain)
+    m = lc.manifeste_lecture({}, {})
+    ra = lc.resume_sans_nombre(lc.ecrire_lecture(tmp_path, "a", sain, m))
+    rb = lc.resume_sans_nombre(lc.ecrire_lecture(tmp_path, "b", nc, m))
+    # les effectifs diffèrent ici par construction (étiquettes de l'artefact) ; la structure et la liste des
+    # statistiques, elles, ne trahissent pas l'issue
+    assert set(ra) == set(rb) and set(ra["effectifs"]) == set(rb["effectifs"])
+    for k in ("famille", "plis", "statistiques_calculees"):
+        assert ra[k] == rb[k]
