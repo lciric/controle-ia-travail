@@ -43,3 +43,4 @@
 - contre-lecteur grille de repli papier C : papier-c/contre-lecture-grille-v2 6ec9ccc5, 2026-11-23-0703-contre-lecteur-grille-clause-de-repli-v2.md (7ddd609b…) ; PR 77 brouillon
 - juge Opus seuil 0,75 : claude/avis-carbon-astra-v1 c19093ad, 2026-11-23-0710-juge-opus-max.md (cbe42309…)
 - rédacteur des devis de carte du bras A : relance-bras-a/devis-carte-v3 e2279e4b, 2026-11-23-0709-redacteur-devis-carte-bras-a.md (d99b3546…) ; 22 pièces versées
+- rédacteur G1 brouillon 7 (Fable, remplacé) : prep/g1-brouillon7-fable-v1 63422e33, 2026-11-23-2026-11-23-0709-redacteur-g1-brouillon7.md (ca199129…, nom doublé gardé, R12)
