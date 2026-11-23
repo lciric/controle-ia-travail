@@ -13,3 +13,4 @@
 - lecteur des renvois : lecture/renvois-api-v1 b3c07cf45, 2026-11-23-0625-lecteur-renvois-api.md (3d77642f…) — cloisonné
 - avis Carbon et Neon G1 : avis/g1-carbon-neon-v1 cb7bafc4, 2026-11-23-0624-avis-g1-carbon-neon.md (b26a1e2a…)
 - mère : main a39c95bd1, 2026-11-23-0626-mere-013QMayjbm.md
+- exécutante T0.8 : t08/journal-executante-course-v1 5b4497af, 2026-11-23-0624-executante-t08.md (b688c0ca…) ; 112 fichiers versés ; inventaires bruts du loueur non versés (variables d'autres tâches non masquées), cités par empreinte ; 62105206 continue
