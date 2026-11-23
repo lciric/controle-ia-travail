@@ -23,3 +23,8 @@
   - « toute notion de distance que vous jugez pertinente, s'il y en a une ».
 - Sa troisième retouche, réordonner les hypothèses ou retirer la phrase-thèse de H1, n'est pas portée : elle change le texte des hypothèses, qui revient à l'auteur de la demande.
 - Note : les lecteurs successifs lisent des orientations différentes (vers la confirmation, 0,55 ; neutre, 0,45 ; vers la sélection de H1, 0,6). L'écart entre lecteurs est du même ordre que celui entre versions.
+
+## Quatrième test, v4 (`b4cf79ef…`), lecteur neuf (Opus 5.5, effort moyen, sans outil)
+- **Verdict : neutre, 0,45.** Devinette : noyau H1 et H3 formalisable, analogies physiques écartées, plusieurs hypothèses jugées banales. Le lecteur note un risque inverse : une sévérité convenue (« tout est métaphore »).
+- Retouches proposées, non portées (question neutre ; deux toucheraient le texte des hypothèses ou la symétrie des permissions, à l'auteur de la demande) : formule générale au lieu de la liste nommée en partie 2 ; longueurs égales des hypothèses ; « il est aussi acceptable de conclure que des hypothèses jugées métaphoriques ont un contenu testable ».
+- **Texte servi retenu : v4.**
