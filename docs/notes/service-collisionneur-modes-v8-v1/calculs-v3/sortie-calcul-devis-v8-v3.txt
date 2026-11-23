@@ -1,0 +1,241 @@
+
+### (a) cinq espèces maintenant, Opus par l'abonnement, --sortie-max
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-opus-5-5 (abonnement) | 30206 | 20722 | 28181 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 2.67
+E3-T1-conception-B | gemini-4-argon | 19302 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-C | gpt-6.2-astra | 17750 | 2963 | 3662 | 0.33 | 0.36 | 6.68 | 13.37 | 0.00 | 6.68
+E3-T1-conception-D | gemini-4-carbon | 19299 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-E | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-opus-5-5 (abonnement) | 84244 | 20871 | 25616 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 2.95
+E3-T2-critique-croisee-B | gemini-4-argon | 48836 | 31842 | 40259 | 0.83 | 1.04 | 1.97 | 5.92 | 0.16 | 1.97
+E3-T2-critique-croisee-C | gpt-6.2-astra | 55680 | 4007 | 4200 | 0.76 | 0.92 | 7.44 | 14.87 | 0.00 | 7.44
+E3-T2-critique-croisee-D | gemini-4-carbon | 50114 | 43090 | 50275 | 1.06 | 1.26 | 2.66 | 7.97 | 0.33 | 2.66
+E3-T2-critique-croisee-E | gemini-4-neon | 49989 | 42520 | 46942 | 0.79 | 0.90 | 1.76 | 5.27 | 0.07 | 1.76
+E3-T3-reponse-A | claude-opus-5-5 (abonnement) | 108047 | 25526 | 32150 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 2.98
+E3-T3-reponse-B | gemini-4-argon | 64665 | 21848 | 27438 | 0.70 | 0.87 | 2.06 | 6.19 | 0.17 | 2.06
+E3-T3-reponse-C | gpt-6.2-astra | 66199 | 4191 | 4305 | 0.87 | 0.98 | 7.42 | 14.84 | 0.00 | 7.42
+E3-T3-reponse-D | gemini-4-carbon | 65392 | 34491 | 40024 | 0.95 | 1.11 | 2.71 | 8.12 | 0.34 | 2.71
+E3-T3-reponse-E | gemini-4-neon | 67468 | 37488 | 41430 | 0.76 | 0.85 | 1.78 | 5.33 | 0.07 | 1.78
+TOTAUX {"att": 8.94, "haut": 10.46, "pire": 40.19, "pire_avec": 99.03, "panne": 1.63, "marge_max": 7.44, "attendu_avec_pannes": 10.58, "haut_avec_pannes": 12.09, "haut_pannes_22_novembre": 15.52, "pointe_22_novembre": 19.99, "plafond_formule_v1": 25, "plafond_formule_v2": 26, "coupures_carbon_de_plus_tolerees": {"21": 0, "25": 1, "26": 2, "28": 2, "33": 4}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 2.67 | 2.67
+  E3-T1-conception-B | 0.00 | 1.75 | 1.75
+  E3-T1-conception-C | 0.66 | 6.68 | 7.35
+  E3-T1-conception-D (coupure) | 1.02 | 2.41 | 3.43
+  E3-T1-conception-D | 3.43 | 2.41 | 5.84
+  E3-T1-conception-E | 4.25 | 1.56 | 5.81
+  E3-T2-critique-croisee-A | 4.94 | 2.95 | 7.89
+  E3-T2-critique-croisee-B | 4.94 | 1.97 | 6.91
+  E3-T2-critique-croisee-C | 5.97 | 7.44 | 13.41
+  E3-T2-critique-croisee-D (coupure) | 6.90 | 2.66 | 9.55
+  E3-T2-critique-croisee-D | 9.55 | 2.66 | 12.21
+  E3-T2-critique-croisee-E | 10.81 | 1.76 | 12.57
+  E3-T3-reponse-A | 11.71 | 2.98 | 14.69
+  E3-T3-reponse-B | 11.71 | 2.06 | 13.77
+  E3-T3-reponse-C | 12.58 | 7.42 | 19.99
+  E3-T3-reponse-D | 13.56 | 2.71 | 16.27
+  E3-T3-reponse-E | 14.67 | 1.78 | 16.44
+  pointe : E3-T3-reponse-C à 19.99 ; coupure de Carbon comptée au plus 2.71 ; coupures de plus tolérées avant la pointe : {21: 0, 25: 1, 26: 2, 28: 2, 33: 4}
+EMPIRIQUE (dossiers du 22 novembre ramenés à la v8 servie) : [{"dossier": "collisionneur-protocole-x-conscience-anesthesie-neutre-abonnement-v1-20261122-153110", "depense": 12.5, "surcroit_entree": 0.86, "ramene_a_la_v8": 13.36}, {"dossier": "collisionneur-protocole-x-conscience-anesthesie-v3-reserve-abonnement-v1-20261122-153110", "depense": 12.59, "surcroit_entree": 1.02, "ramene_a_la_v8": 13.62}]
+
+### (a) sans --sortie-max
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-opus-5-5 (abonnement) | 30206 | 20722 | 28181 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.39
+E3-T1-conception-B | gemini-4-argon | 19302 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-C | gpt-6.2-astra | 17750 | 2963 | 3662 | 0.33 | 0.36 | 0.68 | 2.57 | 0.00 | 1.88
+E3-T1-conception-D | gemini-4-carbon | 19299 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-E | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-opus-5-5 (abonnement) | 84244 | 20871 | 25616 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.67
+E3-T2-critique-croisee-B | gemini-4-argon | 48836 | 31842 | 40259 | 0.83 | 1.04 | 1.97 | 5.92 | 0.16 | 1.97
+E3-T2-critique-croisee-C | gpt-6.2-astra | 55680 | 4007 | 4200 | 0.76 | 0.92 | 1.44 | 4.07 | 0.00 | 2.63
+E3-T2-critique-croisee-D | gemini-4-carbon | 50114 | 43090 | 50275 | 1.06 | 1.26 | 2.66 | 7.97 | 0.33 | 2.66
+E3-T2-critique-croisee-E | gemini-4-neon | 49989 | 42520 | 46942 | 0.79 | 0.90 | 1.76 | 5.27 | 0.07 | 1.76
+E3-T3-reponse-A | claude-opus-5-5 (abonnement) | 108047 | 25526 | 32150 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.70
+E3-T3-reponse-B | gemini-4-argon | 64665 | 21848 | 27438 | 0.70 | 0.87 | 2.06 | 6.19 | 0.17 | 2.06
+E3-T3-reponse-C | gpt-6.2-astra | 66199 | 4191 | 4305 | 0.87 | 0.98 | 1.42 | 4.04 | 0.00 | 2.62
+E3-T3-reponse-D | gemini-4-carbon | 65392 | 34491 | 40024 | 0.95 | 1.11 | 2.71 | 8.12 | 0.34 | 2.71
+E3-T3-reponse-E | gemini-4-neon | 67468 | 37488 | 41430 | 0.76 | 0.85 | 1.78 | 5.33 | 0.07 | 1.78
+TOTAUX {"att": 8.94, "haut": 10.46, "pire": 22.19, "pire_avec": 66.63, "panne": 1.63, "marge_max": 2.71, "attendu_avec_pannes": 10.58, "haut_avec_pannes": 12.09, "haut_pannes_22_novembre": 15.52, "pointe_22_novembre": 16.44, "plafond_formule_v1": 21, "plafond_formule_v2": 22, "coupures_carbon_de_plus_tolerees": {"21": 1, "25": 3, "26": 3, "28": 4, "33": 6}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 1.39 | 1.39
+  E3-T1-conception-B | 0.00 | 1.75 | 1.75
+  E3-T1-conception-C | 0.66 | 1.88 | 2.55
+  E3-T1-conception-D (coupure) | 1.02 | 2.41 | 3.43
+  E3-T1-conception-D | 3.43 | 2.41 | 5.84
+  E3-T1-conception-E | 4.25 | 1.56 | 5.81
+  E3-T2-critique-croisee-A | 4.94 | 1.67 | 6.61
+  E3-T2-critique-croisee-B | 4.94 | 1.97 | 6.91
+  E3-T2-critique-croisee-C | 5.97 | 2.63 | 8.61
+  E3-T2-critique-croisee-D (coupure) | 6.90 | 2.66 | 9.55
+  E3-T2-critique-croisee-D | 9.55 | 2.66 | 12.21
+  E3-T2-critique-croisee-E | 10.81 | 1.76 | 12.57
+  E3-T3-reponse-A | 11.71 | 1.70 | 13.41
+  E3-T3-reponse-B | 11.71 | 2.06 | 13.77
+  E3-T3-reponse-C | 12.58 | 2.62 | 15.19
+  E3-T3-reponse-D | 13.56 | 2.71 | 16.27
+  E3-T3-reponse-E | 14.67 | 1.78 | 16.44
+  pointe : E3-T3-reponse-E à 16.44 ; coupure de Carbon comptée au plus 2.71 ; coupures de plus tolérées avant la pointe : {21: 1, 25: 3, 26: 3, 28: 4, 33: 6}
+
+### (b′) cinq espèces après le 29, Fable seul par l'abonnement, --sortie-max
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-fable-5-2 (abonnement) | 30206 | 22108 | 26292 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 6.68
+E3-T1-conception-B | gemini-4-argon | 19302 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-C | gpt-6.2-astra | 17750 | 2963 | 3662 | 0.33 | 0.36 | 6.68 | 13.37 | 0.00 | 6.68
+E3-T1-conception-D | gemini-4-carbon | 19299 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-E | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-fable-5-2 (abonnement) | 84331 | 27420 | 33755 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 7.38
+E3-T2-critique-croisee-B | gemini-4-argon | 48040 | 31842 | 40259 | 0.83 | 1.03 | 1.96 | 5.89 | 0.16 | 1.96
+E3-T2-critique-croisee-C | gpt-6.2-astra | 54893 | 4007 | 4200 | 0.75 | 0.91 | 7.41 | 14.82 | 0.00 | 7.41
+E3-T2-critique-croisee-D | gemini-4-carbon | 49322 | 43090 | 50275 | 1.06 | 1.25 | 2.65 | 7.94 | 0.33 | 2.65
+E3-T2-critique-croisee-E | gemini-4-neon | 49194 | 42520 | 46942 | 0.79 | 0.90 | 1.75 | 5.25 | 0.07 | 1.75
+E3-T3-reponse-A | claude-fable-5-2 (abonnement) | 107307 | 24039 | 29461 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 7.42
+E3-T3-reponse-B | gemini-4-argon | 64928 | 21848 | 27438 | 0.70 | 0.86 | 2.06 | 6.18 | 0.17 | 2.06
+E3-T3-reponse-C | gpt-6.2-astra | 66464 | 4191 | 4305 | 0.87 | 0.97 | 7.41 | 14.82 | 0.00 | 7.41
+E3-T3-reponse-D | gemini-4-carbon | 65653 | 34491 | 40024 | 0.95 | 1.10 | 2.70 | 8.11 | 0.34 | 2.70
+E3-T3-reponse-E | gemini-4-neon | 67736 | 37488 | 41430 | 0.77 | 0.85 | 1.77 | 5.32 | 0.07 | 1.77
+TOTAUX {"att": 8.93, "haut": 10.4, "pire": 40.11, "pire_avec": 98.84, "panne": 1.63, "marge_max": 7.42, "attendu_avec_pannes": 10.56, "haut_avec_pannes": 12.03, "haut_pannes_22_novembre": 15.45, "pointe_22_novembre": 19.93, "plafond_formule_v1": 25, "plafond_formule_v2": 26, "coupures_carbon_de_plus_tolerees": {"21": 0, "25": 1, "26": 2, "28": 2, "33": 4}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 6.68 | 6.68
+  E3-T1-conception-B | 0.00 | 1.75 | 1.75
+  E3-T1-conception-C | 0.66 | 6.68 | 7.35
+  E3-T1-conception-D (coupure) | 1.02 | 2.41 | 3.43
+  E3-T1-conception-D | 3.43 | 2.41 | 5.84
+  E3-T1-conception-E | 4.25 | 1.56 | 5.81
+  E3-T2-critique-croisee-A | 4.94 | 7.38 | 12.31
+  E3-T2-critique-croisee-B | 4.94 | 1.96 | 6.90
+  E3-T2-critique-croisee-C | 5.97 | 7.41 | 13.38
+  E3-T2-critique-croisee-D (coupure) | 6.87 | 2.65 | 9.52
+  E3-T2-critique-croisee-D | 9.52 | 2.65 | 12.16
+  E3-T2-critique-croisee-E | 10.77 | 1.75 | 12.52
+  E3-T3-reponse-A | 11.66 | 7.42 | 19.08
+  E3-T3-reponse-B | 11.66 | 2.06 | 13.72
+  E3-T3-reponse-C | 12.53 | 7.41 | 19.93
+  E3-T3-reponse-D | 13.50 | 2.70 | 16.20
+  E3-T3-reponse-E | 14.61 | 1.77 | 16.38
+  pointe : E3-T3-reponse-C à 19.93 ; coupure de Carbon comptée au plus 2.70 ; coupures de plus tolérées avant la pointe : {21: 0, 25: 1, 26: 2, 28: 2, 33: 4}
+
+### (b) six espèces après le 29, Fable et Opus par l'abonnement, --sortie-max
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-fable-5-2 (abonnement) | 30207 | 22108 | 26292 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 6.68
+E3-T1-conception-B | claude-opus-5-5 (abonnement) | 30207 | 20722 | 28181 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 2.67
+E3-T1-conception-C | gemini-4-argon | 19303 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-D | gpt-6.2-astra | 17751 | 2963 | 3662 | 0.33 | 0.36 | 6.68 | 13.37 | 0.00 | 6.68
+E3-T1-conception-E | gemini-4-carbon | 19300 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-F | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-fable-5-2 (abonnement) | 94897 | 27420 | 33755 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 7.50
+E3-T2-critique-croisee-B | claude-opus-5-5 (abonnement) | 93536 | 20871 | 25616 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 2.99
+E3-T2-critique-croisee-C | gemini-4-argon | 54696 | 31842 | 40259 | 0.86 | 1.07 | 2.01 | 6.04 | 0.16 | 2.01
+E3-T2-critique-croisee-D | gpt-6.2-astra | 61471 | 4007 | 4200 | 0.82 | 0.99 | 7.54 | 15.08 | 0.00 | 7.54
+E3-T2-critique-croisee-E | gemini-4-carbon | 55943 | 43090 | 50275 | 1.09 | 1.28 | 2.70 | 8.09 | 0.34 | 2.70
+E3-T2-critique-croisee-F | gemini-4-neon | 55837 | 42520 | 46942 | 0.81 | 0.92 | 1.79 | 5.37 | 0.07 | 1.79
+E3-T3-reponse-A | claude-fable-5-2 (abonnement) | 116775 | 24039 | 29461 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 7.52
+E3-T3-reponse-B | claude-opus-5-5 (abonnement) | 117879 | 25526 | 32150 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 3.01
+E3-T3-reponse-C | gemini-4-argon | 70834 | 21848 | 27438 | 0.72 | 0.89 | 2.10 | 6.30 | 0.17 | 2.10
+E3-T3-reponse-D | gpt-6.2-astra | 72416 | 4191 | 4305 | 0.93 | 1.05 | 7.51 | 15.02 | 0.00 | 7.51
+E3-T3-reponse-E | gemini-4-carbon | 71524 | 34491 | 40024 | 0.98 | 1.13 | 2.74 | 8.23 | 0.34 | 2.74
+E3-T3-reponse-F | gemini-4-neon | 73744 | 37488 | 41430 | 0.78 | 0.87 | 1.80 | 5.41 | 0.07 | 1.80
+TOTAUX {"att": 9.2, "haut": 10.75, "pire": 40.6, "pire_avec": 100.06, "panne": 1.65, "marge_max": 7.54, "attendu_avec_pannes": 10.85, "haut_avec_pannes": 12.4, "haut_pannes_22_novembre": 15.85, "pointe_22_novembre": 20.3, "plafond_formule_v1": 26, "plafond_formule_v2": 26, "coupures_carbon_de_plus_tolerees": {"21": 0, "25": 1, "26": 2, "28": 2, "33": 4}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 6.68 | 6.68
+  E3-T1-conception-B | 0.00 | 2.67 | 2.67
+  E3-T1-conception-C | 0.00 | 1.75 | 1.75
+  E3-T1-conception-D | 0.66 | 6.68 | 7.35
+  E3-T1-conception-E (coupure) | 1.02 | 2.41 | 3.43
+  E3-T1-conception-E | 3.43 | 2.41 | 5.84
+  E3-T1-conception-F | 4.25 | 1.56 | 5.81
+  E3-T2-critique-croisee-A | 4.94 | 7.50 | 12.44
+  E3-T2-critique-croisee-B | 4.94 | 2.99 | 7.93
+  E3-T2-critique-croisee-C | 4.94 | 2.01 | 6.95
+  E3-T2-critique-croisee-D | 6.00 | 7.54 | 13.54
+  E3-T2-critique-croisee-E (coupure) | 7.00 | 2.70 | 9.69
+  E3-T2-critique-croisee-E | 9.69 | 2.70 | 12.39
+  E3-T2-critique-croisee-F | 10.98 | 1.79 | 12.77
+  E3-T3-reponse-A | 11.90 | 7.52 | 19.42
+  E3-T3-reponse-B | 11.90 | 3.01 | 14.92
+  E3-T3-reponse-C | 11.90 | 2.10 | 14.00
+  E3-T3-reponse-D | 12.80 | 7.51 | 20.30
+  E3-T3-reponse-E | 13.84 | 2.74 | 16.59
+  E3-T3-reponse-F | 14.98 | 1.80 | 16.78
+  pointe : E3-T3-reponse-D à 20.30 ; coupure de Carbon comptée au plus 2.74 ; coupures de plus tolérées avant la pointe : {21: 0, 25: 1, 26: 2, 28: 2, 33: 4}
+
+### (c) moteur v8d tel quel, cinq espèces par l'interface
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-opus-5-5 | 30206 | 20722 | 28181 | 0.54 | 0.68 | 1.39 | 2.79 | 0.05 | 1.39
+E3-T1-conception-B | gemini-4-argon | 19302 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-C | gpt-6.2-astra | 17750 | 2963 | 3662 | 0.33 | 0.36 | 0.68 | 2.57 | 0.00 | 1.88
+E3-T1-conception-D | gemini-4-carbon | 19299 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-E | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-opus-5-5 | 84244 | 20871 | 25616 | 0.75 | 0.94 | 1.67 | 3.34 | 0.06 | 1.67
+E3-T2-critique-croisee-B | gemini-4-argon | 48836 | 31842 | 40259 | 0.83 | 1.04 | 1.97 | 5.92 | 0.16 | 1.97
+E3-T2-critique-croisee-C | gpt-6.2-astra | 55680 | 4007 | 4200 | 0.76 | 0.92 | 1.44 | 4.07 | 0.00 | 2.63
+E3-T2-critique-croisee-D | gemini-4-carbon | 50114 | 43090 | 50275 | 1.06 | 1.26 | 2.66 | 7.97 | 0.33 | 2.66
+E3-T2-critique-croisee-E | gemini-4-neon | 49989 | 42520 | 46942 | 0.79 | 0.90 | 1.76 | 5.27 | 0.07 | 1.76
+E3-T3-reponse-A | claude-opus-5-5 | 108047 | 25526 | 32150 | 0.94 | 1.14 | 1.70 | 3.40 | 0.07 | 1.70
+E3-T3-reponse-B | gemini-4-argon | 64665 | 21848 | 27438 | 0.70 | 0.87 | 2.06 | 6.19 | 0.17 | 2.06
+E3-T3-reponse-C | gpt-6.2-astra | 66199 | 4191 | 4305 | 0.87 | 0.98 | 1.42 | 4.04 | 0.00 | 2.62
+E3-T3-reponse-D | gemini-4-carbon | 65392 | 34491 | 40024 | 0.95 | 1.11 | 2.71 | 8.12 | 0.34 | 2.71
+E3-T3-reponse-E | gemini-4-neon | 67468 | 37488 | 41430 | 0.76 | 0.85 | 1.78 | 5.33 | 0.07 | 1.78
+TOTAUX {"att": 11.17, "haut": 13.22, "pire": 26.95, "pire_avec": 76.15, "panne": 1.82, "marge_max": 2.71, "attendu_avec_pannes": 12.99, "haut_avec_pannes": 15.04, "haut_pannes_22_novembre": 18.29, "pointe_22_novembre": 19.21, "plafond_formule_v1": 24, "plafond_formule_v2": 25, "coupures_carbon_de_plus_tolerees": {"21": 0, "25": 2, "26": 2, "28": 3, "33": 5}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 1.39 | 1.39
+  E3-T1-conception-B | 0.68 | 1.75 | 2.44
+  E3-T1-conception-C | 1.35 | 1.88 | 3.23
+  E3-T1-conception-D (coupure) | 1.71 | 2.41 | 4.12
+  E3-T1-conception-D | 4.12 | 2.41 | 6.52
+  E3-T1-conception-E | 4.94 | 1.56 | 6.50
+  E3-T2-critique-croisee-A | 5.62 | 1.67 | 7.29
+  E3-T2-critique-croisee-B | 6.56 | 1.97 | 8.54
+  E3-T2-critique-croisee-C | 7.60 | 2.63 | 10.24
+  E3-T2-critique-croisee-D (coupure) | 8.53 | 2.66 | 11.18
+  E3-T2-critique-croisee-D | 11.18 | 2.66 | 13.84
+  E3-T2-critique-croisee-E | 12.44 | 1.76 | 14.20
+  E3-T3-reponse-A | 13.34 | 1.70 | 15.04
+  E3-T3-reponse-B | 14.48 | 2.06 | 16.54
+  E3-T3-reponse-C | 15.34 | 2.62 | 17.96
+  E3-T3-reponse-D | 16.33 | 2.71 | 19.03
+  E3-T3-reponse-E | 17.43 | 1.78 | 19.21
+  pointe : E3-T3-reponse-E à 19.21 ; coupure de Carbon comptée au plus 2.71 ; coupures de plus tolérées avant la pointe : {21: 0, 25: 2, 26: 2, 28: 3, 33: 5}
+
+### (c) moteur v8d tel quel, six espèces par l'interface
+cellule | modèle | entrée attendue | sortie médiane | sortie 90e centile | attendu | haut | pire sans relance | pire avec relances | espérance de panne | marge avant l'envoi
+E3-T1-conception-A | claude-fable-5-2 | 30207 | 22108 | 26292 | 1.41 | 1.62 | 2.73 | 6.22 | 0.09 | 3.48
+E3-T1-conception-B | claude-opus-5-5 | 30207 | 20722 | 28181 | 0.54 | 0.68 | 1.39 | 2.79 | 0.05 | 1.39
+E3-T1-conception-C | gemini-4-argon | 19303 | 24203 | 29342 | 0.56 | 0.66 | 1.75 | 5.25 | 0.14 | 1.75
+E3-T1-conception-D | gpt-6.2-astra | 17751 | 2963 | 3662 | 0.33 | 0.36 | 0.68 | 2.57 | 0.00 | 1.88
+E3-T1-conception-E | gemini-4-carbon | 19300 | 33819 | 37234 | 0.75 | 0.82 | 2.41 | 7.22 | 0.30 | 2.41
+E3-T1-conception-F | gemini-4-neon | 19609 | 34709 | 41581 | 0.58 | 0.68 | 1.56 | 4.68 | 0.06 | 1.56
+E3-T2-critique-croisee-A | claude-fable-5-2 | 94897 | 27420 | 33755 | 2.32 | 2.91 | 3.55 | 7.86 | 0.11 | 4.30
+E3-T2-critique-croisee-B | claude-opus-5-5 | 93536 | 20871 | 25616 | 0.79 | 0.99 | 1.71 | 3.42 | 0.07 | 1.71
+E3-T2-critique-croisee-C | gemini-4-argon | 54696 | 31842 | 40259 | 0.86 | 1.07 | 2.01 | 6.04 | 0.16 | 2.01
+E3-T2-critique-croisee-D | gpt-6.2-astra | 61471 | 4007 | 4200 | 0.82 | 0.99 | 1.54 | 4.28 | 0.00 | 2.74
+E3-T2-critique-croisee-E | gemini-4-carbon | 55943 | 43090 | 50275 | 1.09 | 1.28 | 2.70 | 8.09 | 0.34 | 2.70
+E3-T2-critique-croisee-F | gemini-4-neon | 55837 | 42520 | 46942 | 0.81 | 0.92 | 1.79 | 5.37 | 0.07 | 1.79
+E3-T3-reponse-A | claude-fable-5-2 | 116775 | 24039 | 29461 | 2.37 | 2.81 | 3.57 | 7.89 | 0.12 | 4.32
+E3-T3-reponse-B | claude-opus-5-5 | 117879 | 25526 | 32150 | 0.98 | 1.18 | 1.73 | 3.47 | 0.07 | 1.73
+E3-T3-reponse-C | gemini-4-argon | 70834 | 21848 | 27438 | 0.72 | 0.89 | 2.10 | 6.30 | 0.17 | 2.10
+E3-T3-reponse-D | gpt-6.2-astra | 72416 | 4191 | 4305 | 0.93 | 1.05 | 1.51 | 4.22 | 0.00 | 2.71
+E3-T3-reponse-E | gemini-4-carbon | 71524 | 34491 | 40024 | 0.98 | 1.13 | 2.74 | 8.23 | 0.34 | 2.74
+E3-T3-reponse-F | gemini-4-neon | 73744 | 37488 | 41430 | 0.78 | 0.87 | 1.80 | 5.41 | 0.07 | 1.80
+TOTAUX {"att": 17.6, "haut": 20.95, "pire": 37.29, "pire_avec": 99.3, "panne": 2.16, "marge_max": 4.32, "attendu_avec_pannes": 19.76, "haut_avec_pannes": 23.1, "haut_pannes_22_novembre": 26.05, "pointe_22_novembre": 26.98, "plafond_formule_v1": 33, "plafond_formule_v2": 33, "coupures_carbon_de_plus_tolerees": {"21": -3, "25": -1, "26": -1, "28": 0, "33": 2}}
+SCÉNARIO 22 NOVEMBRE (chemin haut ; envoi | dépense comptée avant | marge | somme) :
+  E3-T1-conception-A | 0.00 | 3.48 | 3.48
+  E3-T1-conception-B | 1.62 | 1.39 | 3.01
+  E3-T1-conception-C | 2.30 | 1.75 | 4.05
+  E3-T1-conception-D | 2.97 | 1.88 | 4.85
+  E3-T1-conception-E (coupure) | 3.33 | 2.41 | 5.73
+  E3-T1-conception-E | 5.73 | 2.41 | 8.14
+  E3-T1-conception-F | 6.55 | 1.56 | 8.11
+  E3-T2-critique-croisee-A | 7.24 | 4.30 | 11.54
+  E3-T2-critique-croisee-B | 10.15 | 1.71 | 11.86
+  E3-T2-critique-croisee-C | 11.14 | 2.01 | 13.15
+  E3-T2-critique-croisee-D | 12.20 | 2.74 | 14.94
+  E3-T2-critique-croisee-E (coupure) | 13.20 | 2.70 | 15.89
+  E3-T2-critique-croisee-E | 15.89 | 2.70 | 18.59
+  E3-T2-critique-croisee-F | 17.18 | 1.79 | 18.97
+  E3-T3-reponse-A | 18.10 | 4.32 | 22.42
+  E3-T3-reponse-B | 20.92 | 1.73 | 22.65
+  E3-T3-reponse-C | 22.10 | 2.10 | 24.20
+  E3-T3-reponse-D | 22.99 | 2.71 | 25.70
+  E3-T3-reponse-E | 24.04 | 2.74 | 26.79
+  E3-T3-reponse-F | 25.18 | 1.80 | 26.98
+  pointe : E3-T3-reponse-F à 26.98 ; coupure de Carbon comptée au plus 2.74 ; coupures de plus tolérées avant la pointe : {21: -3, 25: -1, 26: -1, 28: 0, 33: 2}
