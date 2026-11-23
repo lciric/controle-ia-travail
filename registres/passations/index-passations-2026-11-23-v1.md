@@ -21,3 +21,7 @@
 - contre-lecteur de la chaîne T0.8 : t08/contre-lecture-chaine-v1 1582d8b21, 2026-11-23-0626-contre-lecteur-chaine-t08.md (9a3881f0…) ; versement contre-lecteur-versement-v1/ (arbres d'essai factices non versés, refaisables)
 - versements sur main en retard : main bd472b89c, 2026-11-23-0638-versement-branches-cloture.md (1c5f32a2…) ; listes d'entrée versées
 - conseiller Opus garde des activations b5 : avis/garde-activations-b5f-opus-v1 7ac71a57, 2026-11-23-0628-conseiller-garde-activations-b5f-opus.md (a42636ed…)
+- dossier de l'entretien et billets : main c1c0defc, 2026-11-23-0625-dossier-entretien-billets.md (e4dedf62…) ; 19 fichiers versés
+- développeur sondes v2 : sondes-v2/code-v1 716a5471, 2026-11-23-0638-developpeur-sondes-v2.md (ccd66618…) ; 23 fichiers versés
+- tiers d'extraction G1 : g1/extraits-tiers-v1 77af010c, 2026-11-23-0640-tiers-extraction-g1.md (aac61025…) ; versé cloisonné sur g1/extraits-tiers-v1-atelier-reserve 4fc54af8 (90 fichiers)
+- concepteur sondes v2 (Opus) : prep/sondes-v2-concepteur-opus-v1 7a6681547, 2026-11-23-0625-sondes-v2-concepteur-opus-reprise.md (56ce0261…) ; tâche trig_01SDzQ2AidKeNEPt7voBMrRg (PR n° 81, 06:47Z)
