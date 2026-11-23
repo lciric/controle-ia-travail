@@ -1,0 +1,47 @@
+1c1,5
+< """Lanceur de la course du bras A des organismes discrets, **version 5** (23 novembre 2026, session de relance) : seule
+---
+> """Lanceur de la course du bras A des organismes discrets, **version 6** (23 novembre 2026, session de relance) : seule
+> différence avec la version 5 (`fba9ed1b…`), la lecture du registre des GO (`_cellules_du_registre`) : le registre réel
+> porte deux lignes de sous-postes d'enveloppe, `GO-2026-10-30-17-P2` et `-P3`, que la v5 prenait pour des identifiants
+> mal formés et sur lesquelles elle arrêtait ; la forme `GO-AAAA-MM-JJ-NN-P<n>` est admise comme identifiant d'une autre
+> ligne (jamais comme GO de la ligne jouée) ; toute autre forme arrête toujours. Version 5 : seule
+125a130,131
+> # v6 : sous-poste d'une enveloppe de GO (registre réel, lignes `GO-2026-10-30-17-P2` et `-P3`)
+> _SOUS_POSTE = re.compile(r"GO-\d{4}-\d{2}-\d{2}-\d{2,3}-P\d{1,2}")
+343,344c349,351
+<     """Lignes du registre qui commencent par `| GO-` ; une telle ligne dont l'identifiant n'a pas la forme stricte
+<     arrête (R5 : aucune ligne sautée en silence — une révocation mal lue ne doit pas passer pour absente)."""
+---
+>     """Lignes du registre qui commencent par `| GO-` ; une telle ligne dont l'identifiant n'a ni la forme stricte ni
+>     celle d'un sous-poste d'enveloppe (`GO-AAAA-MM-JJ-NN-P<n>`, v6) arrête (R5 : aucune ligne sautée en silence — une
+>     révocation mal lue ne doit pas passer pour absente)."""
+352c359,360
+<         exiger_identifiant_de_go(cellules[0], f"registre des GO, ligne {n} : identifiant")
+---
+>         if _SOUS_POSTE.fullmatch(cellules[0]) is None:
+>             exiger_identifiant_de_go(cellules[0], f"registre des GO, ligne {n} : identifiant")
+17c17
+< from controle_ia.organismes_discrets import lanceur_bras_a_v5 as la
+---
+> from controle_ia.organismes_discrets import lanceur_bras_a_v6 as la
+1101a1102,1120
+> 
+> 
+> # --- v6 : sous-postes d'enveloppe admis comme autres lignes ; toute autre forme arrête toujours --------------------
+> SOUS_POSTE = "| GO-2026-10-30-17-P2 | 2026-10-31 | calcul | devis du poste 2 | 5 USD | 2026-11-30 | Lazar | mot |"
+> 
+> 
+> def test_v6_sous_poste_admis_comme_autre_ligne():
+>     assert la.exiger_ligne_de_go("GO-2026-11-22-148", _registre(SOUS_POSTE, LIGNE_GO_148), AUJOURD_HUI)
+> 
+> 
+> def test_v6_sous_poste_jamais_go_de_la_ligne_jouee():
+>     with pytest.raises(la.GardeArret):
+>         la.exiger_ligne_de_go("GO-2026-10-30-17-P2", _registre(SOUS_POSTE, LIGNE_GO_148), AUJOURD_HUI)
+> 
+> 
+> @pytest.mark.parametrize("ident", ["GO-2026-10-30-17-X2", "GO-2026-10-30-17-P", "GO-2026-10-30-17-P2-bis", "GO-2026-10-30-1"])
+> def test_v6_autre_forme_arrete_toujours(ident):
+>     with pytest.raises(la.GardeArret):
+>         la.exiger_ligne_de_go("GO-2026-11-22-148", _registre(SOUS_POSTE.replace("GO-2026-10-30-17-P2", ident), LIGNE_GO_148), AUJOURD_HUI)
