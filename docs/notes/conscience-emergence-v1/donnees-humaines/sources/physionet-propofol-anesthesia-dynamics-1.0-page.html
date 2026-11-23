@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Behavioral and autonomic dynamics during propofol-induced unconsciousness v1.0</title>
+    
+  <!-- wfdb-python: <p>Version: 1.0</p> -->
+  
+    <meta name="description" content="Multimodal point process indices for heart rate variability and electrodermal activity for 9 subjects who are undergoing a controlled propofol sedation experiment where the concentration was increased and then decreased in stages.">
+  
+  
+    <meta name="citation_title" content="Behavioral and autonomic dynamics during propofol-induced unconsciousness">
+
+  <meta name="citation_author" content="Subramanian, Sandya">
+
+  <meta name="citation_author" content="Purdon, Patrick">
+
+  <meta name="citation_author" content="Barbieri, Riccardo">
+
+  <meta name="citation_author" content="Brown, Emery">
+
+<meta name="citation_publication_date" content="2021/7/30">
+
+  <meta name="citation_doi" content="10.13026/2rbc-1r03">
+
+<meta name="citation_technical_report_institution" content="PhysioNet">
+
+  
+
+    
+<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css"/>
+<link rel="stylesheet" type="text/css" href="/static/font-awesome/css/all.css"/>
+<link rel="stylesheet" type="text/css" href="/static/custom/css/physionet.css?v=2"/>
+    
+  <link rel="stylesheet" type="text/css" href="/static/project/css/project-content.css?v=3"/>
+  <link rel="stylesheet" type="text/css" href="/static/highlight/css/default.min.css"/>
+
+    
+<script src="/static/jquery/jquery.min.js"></script>
+<script src="/static/popper/popper.min.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-87592301-7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-87592301-7');
+</script>
+    
+  <script src="/static/mathjax/MathJax.js?config=MML_HTMLorMML"></script>
+  <script src="/static/highlight/js/highlight.min.js"></script>
+  <script src="/static/custom/js/copy-to-clipboard.js"></script>
+
+    <link rel="shortcut icon" type="image/png" href="/static/favicon.ico"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/bootstrap/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/fonts/inter-local.css">
+    <link rel="stylesheet" type="text/css" href="/static/custom/css/style.css?v=2">
+  </head>
+
+  
+  <body class="modern-ui flexbody">
+    
+
+
+
+
+<div class="modern-ui nav-wrapper">
+  <nav class="nav">
+    <div class="container my-0 h-100 d-flex justify-content-between align-items-center">
+      <button type="button" class="nav__hamburger circle-button mr-2"
+              popovertarget="nav__hamburger_popup"
+              title="Menu">
+        <i class="nav__hamburger__list bi bi-list"></i>
+        <i class="nav__hamburger__x bi bi-x"></i>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <a href="/">
+        
+          <img src="/static/images/physionet-logo.svg" width="200px" alt="PhysioNet">
+        
+      </a>
+      <div class="nav__links align-items-center">
+        
+          
+            <a href="/about/publish/" class="nav-link">Share</a>
+          
+        
+          
+            <a href="/about/" class="nav-link">About</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            <a href="/about/faqs/" class="nav-link">FAQs</a>
+          
+        
+          
+        
+          
+        
+
+        <div>
+          <button type="button" class="nav-link nav-link--expandable"
+                  popovertarget="nav__explore_popup">
+            Explore <i class="bi bi-chevron-down ml-2"></i>
+          </button>
+          <dialog class="nav-link__popup" id="nav__explore_popup" popover
+                  aria-label="Explore">
+            <div class="nav-sublinks">
+              
+                <a class="nav-sublink" href="/about/database/">
+                  <div class="nav-sublink__icon">
+                    
+                      <img src="/static/images/icons/data.png" alt="" height="32px">
+                    
+                  </div>
+                  <div class="nav-sublink__text">
+                    <span class="nav-sublink__title">Data</span>
+                    <span class="nav-sublink__description">View datasets</span>
+                  </div>
+                </a>
+              
+                <a class="nav-sublink" href="/about/software/">
+                  <div class="nav-sublink__icon">
+                    
+                      <img src="/static/images/icons/software.png" alt="" height="32px">
+                    
+                  </div>
+                  <div class="nav-sublink__text">
+                    <span class="nav-sublink__title">Software</span>
+                    <span class="nav-sublink__description">View software</span>
+                  </div>
+                </a>
+              
+                <a class="nav-sublink" href="/about/challenge/">
+                  <div class="nav-sublink__icon">
+                    
+                      <img src="/static/images/icons/challenges.png" alt="" height="32px">
+                    
+                  </div>
+                  <div class="nav-sublink__text">
+                    <span class="nav-sublink__title">Challenges</span>
+                    <span class="nav-sublink__description">View challenges</span>
+                  </div>
+                </a>
+              
+                <a class="nav-sublink" href="/about/tutorial/">
+                  <div class="nav-sublink__icon">
+                    
+                      <img src="/static/images/icons/tutorials.png" alt="" height="32px">
+                    
+                  </div>
+                  <div class="nav-sublink__text">
+                    <span class="nav-sublink__title">Tutorials</span>
+                    <span class="nav-sublink__description">View tutorials</span>
+                  </div>
+                </a>
+              
+              </div>
+          </dialog>
+        </div>
+      </div>
+      <div class="nav__actions d-flex ml-md-4">
+        <form action="/content/" class="mr-2">
+          <div class="nav__search">
+            <input type="text" name="topic" placeholder="Search for anything...">
+            <div class="nav__search__actions">
+              <button type="button" class="nav__search__close mr-2"
+                      title="Cancel">
+                <i class="bi bi-x"></i>
+                <span class="visually-hidden">Cancel</span>
+              </button>
+              <button type="submit" class="circle-button">Search</button>
+            </div>
+          </div>
+        </form>
+        <button type="button" class="nav__search__open circle-button mr-md-2"
+                title="Search PhysioNet">
+          <i class="bi bi-search"></i>
+          <span class="visually-hidden">Search PhysioNet</span>
+        </button>
+        
+          <a class="nav__user" href="/login/"
+             title="Log in">
+            <i class="bi bi-person"></i>
+            <span class="visually-hidden">Log in</span>
+          </a>
+        
+      </div>
+    </div>
+
+    <dialog class="nav__mobile" id="nav__hamburger_popup" popover
+            aria-label="Menu">
+      
+        
+          <a href="/about/publish/" class="nav-link">Share</a>
+        
+      
+        
+          <a href="/about/" class="nav-link">About</a>
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          <a href="/about/faqs/" class="nav-link">FAQs</a>
+        
+      
+        
+      
+        
+      
+      <hr>
+      <div class="nav-sublinks">
+        
+          <a class="nav-sublink" href="/about/database/">
+            <div class="nav-sublink__icon">
+              
+                <img src="/static/images/icons/data.png" alt="" height="32px">
+              
+              </div>
+            <div class="nav-sublink__text">
+              <span class="nav-sublink__title">Data</span>
+              <span class="nav-sublink__description">View datasets</span>
+            </div>
+          </a>
+        
+          <a class="nav-sublink" href="/about/software/">
+            <div class="nav-sublink__icon">
+              
+                <img src="/static/images/icons/software.png" alt="" height="32px">
+              
+              </div>
+            <div class="nav-sublink__text">
+              <span class="nav-sublink__title">Software</span>
+              <span class="nav-sublink__description">View software</span>
+            </div>
+          </a>
+        
+          <a class="nav-sublink" href="/about/challenge/">
+            <div class="nav-sublink__icon">
+              
+                <img src="/static/images/icons/challenges.png" alt="" height="32px">
+              
+              </div>
+            <div class="nav-sublink__text">
+              <span class="nav-sublink__title">Challenges</span>
+              <span class="nav-sublink__description">View challenges</span>
+            </div>
+          </a>
+        
+          <a class="nav-sublink" href="/about/tutorial/">
+            <div class="nav-sublink__icon">
+              
+                <img src="/static/images/icons/tutorials.png" alt="" height="32px">
+              
+              </div>
+            <div class="nav-sublink__text">
+              <span class="nav-sublink__title">Tutorials</span>
+              <span class="nav-sublink__description">View tutorials</span>
+            </div>
+          </a>
+        
+      </div>
+    </dialog>
+  </nav>
+</div>
+
+    <div class="nav-spacer"></div>
+
+    <main>
+  <div class="container">
+    
+
+    <div class="project-header">
+      <div class="mb-2">
+        <span class="badge badge-dark"><i class="fa fa-database"></i> Database</span>
+        <span class="badge badge-success"><i class="fas fa-lock-open"></i> Open Access</span>
+        <a href="/content/propofol-anesthesia-dynamics/metrics/1.0/" class="badge badge-dataset-index" title="Dataset Index (2026) from Scholar Data"><span class="badge-dataset-index-label"><i class="fas fa-chart-line"></i> Dataset Index</span><span class="badge-dataset-index-value">1</span></a>
+      </div>
+      <h1>Behavioral and autonomic dynamics during propofol-induced unconsciousness</h1>
+      <p class="project-authors">
+        
+          <button type="button" class="author-popover-trigger" data-toggle="popover" data-placement="bottom" data-html="true" data-content="&lt;p&gt;&lt;strong&gt;Affiliations&lt;/strong&gt;&lt;br&gt;Harvard-MIT Health Sciences and Technology, Cambridge, MA, USA&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Profile&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;/users/sandya/&quot; target=&quot;_blank&quot;&gt;sandya&lt;/a&gt;&lt;/p&gt;" aria-label="Sandya Subramanian: show author information" aria-expanded="false">Sandya Subramanian<i class="fas fa-caret-down" aria-hidden="true"></i></button>,&nbsp;
+        
+          <button type="button" class="author-popover-trigger" data-toggle="popover" data-placement="bottom" data-html="true" data-content="&lt;p&gt;&lt;strong&gt;Affiliations&lt;/strong&gt;&lt;br&gt;Harvard Medical School, Boston, Massachusetts&lt;br&gt;Department of Anesthesia, Critical Care and Pain Medicine, Massachusetts General Hospital&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Profile&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;/users/ppurdon/&quot; target=&quot;_blank&quot;&gt;ppurdon&lt;/a&gt;&lt;/p&gt;" aria-label="Patrick Purdon: show author information" aria-expanded="false">Patrick Purdon<i class="fas fa-caret-down" aria-hidden="true"></i></button>,&nbsp;
+        
+          <button type="button" class="author-popover-trigger" data-toggle="popover" data-placement="bottom" data-html="true" data-content="&lt;p&gt;&lt;strong&gt;Affiliations&lt;/strong&gt;&lt;br&gt;Politecnico di Milano&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Profile&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;/users/riccardo/&quot; target=&quot;_blank&quot;&gt;riccardo&lt;/a&gt;&lt;/p&gt;" aria-label="Riccardo Barbieri: show author information" aria-expanded="false">Riccardo Barbieri<i class="fas fa-caret-down" aria-hidden="true"></i></button>,&nbsp;
+        
+          <button type="button" class="author-popover-trigger" data-toggle="popover" data-placement="bottom" data-html="true" data-content="&lt;p&gt;&lt;strong&gt;Affiliations&lt;/strong&gt;&lt;br&gt;Massachusetts General Hospital/Massachusetts Institute of Technology&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Profile&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;/users/enbrown1/&quot; target=&quot;_blank&quot;&gt;enbrown1&lt;/a&gt;&lt;/p&gt;" aria-label="Emery Brown: show author information" aria-expanded="false">Emery Brown<i class="fas fa-caret-down" aria-hidden="true"></i></button>
+        
+      </p>
+      <div class="project-meta">
+        <span>Published July 30, 2021</span>
+        <span class="project-meta-sep">&middot;</span>
+        <span>Version 1.0</span>
+      </div>
+    </div>
+
+    
+
+    
+
+    <!-- Latest news and announcements -->
+    
+
+    <div class="row">
+      <!-- Main column -->
+      <div class="col-md-8">
+        
+        
+        
+          <div class="citation-box">
+
+  
+    <div class="citation-section">
+      <span class="citation-label">When using this resource, please cite:</span>
+      <span class="citation-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#citationModal" title="View citation formats"><i class="bi bi-quote"></i> Cite</button>
+        
+          <button type="button" class="btn btn-sm btn-outline-secondary ml-1 btn-copy-bibtex" title="Copy BibTeX" data-clipboard-target="bibtex-data"><i class="bi bi-clipboard"></i> Copy BibTeX</button>
+        
+      </span>
+      <p class="citation-text">Subramanian, S., Purdon, P., Barbieri, R., &amp; Brown, E. (2021). Behavioral and autonomic dynamics during propofol-induced unconsciousness (version 1.0). <i>PhysioNet</i>. RRID:SCR_007345. <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></p>
+      <textarea id="bibtex-data" style="display:none;">@article{PhysioNet-propofol-anesthesia-dynamics-1.0,
+  author = {Subramanian, Sandya and Purdon, Patrick and Barbieri, Riccardo and Brown, Emery},
+  title = {{Behavioral and autonomic dynamics during propofol-induced unconsciousness}},
+  journal = {{PhysioNet}},
+  year = {2021},
+  month = jul,
+  note = {Version 1.0},
+  doi = {10.13026/2rbc-1r03},
+  url = {https://doi.org/10.13026/2rbc-1r03}
+}</textarea>
+    </div>
+
+    <div class="modal fade" id="citationModal">
+  <div class="modal-dialog citation" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+    <table><tbody>
+      
+        
+        <tr>
+          <th>MLA</th>
+          <td>Subramanian, Sandya, et al. "Behavioral and autonomic dynamics during propofol-induced unconsciousness" (version 1.0). <i>PhysioNet</i> (2021). RRID:SCR_007345. <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></td>
+        </tr>
+        
+      
+        
+        <tr>
+          <th>APA</th>
+          <td>Subramanian, S., Purdon, P., Barbieri, R., &amp; Brown, E. (2021). Behavioral and autonomic dynamics during propofol-induced unconsciousness (version 1.0). <i>PhysioNet</i>. RRID:SCR_007345. <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></td>
+        </tr>
+        
+      
+        
+        <tr>
+          <th>Chicago</th>
+          <td>Subramanian, Sandya, Purdon, Patrick, Barbieri, Riccardo, and Emery Brown. "Behavioral and autonomic dynamics during propofol-induced unconsciousness" (version 1.0). <i>PhysioNet</i> (2021). RRID:SCR_007345. <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></td>
+        </tr>
+        
+      
+        
+        <tr>
+          <th>Harvard</th>
+          <td>Subramanian, S., Purdon, P., Barbieri, R., and Brown, E. (2021) 'Behavioral and autonomic dynamics during propofol-induced unconsciousness' (version 1.0), <i>PhysioNet</i>. RRID:SCR_007345. Available at: <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></td>
+        </tr>
+        
+      
+        
+        <tr>
+          <th>Vancouver</th>
+          <td>Subramanian S, Purdon P, Barbieri R, Brown E. Behavioral and autonomic dynamics during propofol-induced unconsciousness (version 1.0). PhysioNet. 2021. RRID:SCR_007345. Available from: <a href="https://doi.org/10.13026/2rbc-1r03" rel="nofollow">https://doi.org/10.13026/2rbc-1r03</a></td>
+        </tr>
+        
+      
+        
+      
+    </tbody></table>
+    
+    <div class="mt-3">
+      <strong>BibTeX</strong>
+      <button class="btn btn-sm btn-outline-secondary ml-2 btn-copy-bibtex btn-copy-bibtex-modal" data-clipboard-target="bibtex-data">Copy</button>
+      <pre class="mt-2 p-2 border rounded" style="white-space: pre-wrap; background-color: #f8f9fa;">@article{PhysioNet-propofol-anesthesia-dynamics-1.0,
+  author = {Subramanian, Sandya and Purdon, Patrick and Barbieri, Riccardo and Brown, Emery},
+  title = {{Behavioral and autonomic dynamics during propofol-induced unconsciousness}},
+  journal = {{PhysioNet}},
+  year = {2021},
+  month = jul,
+  note = {Version 1.0},
+  doi = {10.13026/2rbc-1r03},
+  url = {https://doi.org/10.13026/2rbc-1r03}
+}</pre>
+    </div>
+    
+          </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+
+  
+    <div class="citation-section">
+      <span class="citation-label">Please include the standard citation for PhysioNet:</span>
+      <span class="citation-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#citationModalPlatform" title="View citation formats"><i class="bi bi-quote"></i> Cite</button>
+        
+          <button type="button" class="btn btn-sm btn-outline-secondary ml-1 btn-copy-bibtex" title="Copy BibTeX" data-clipboard-target="bibtex-data-platform"><i class="bi bi-clipboard"></i> Copy BibTeX</button>
+        
+      </span>
+      <p class="citation-text">Pollard, T., Moody, B. E., Lehman, L., Gow, B., Fernandes, C., Xie, C., Johnson, A., Mark, R. G., &amp; Heldt, T. (2026). PhysioNet as a global platform for biomedical research. Nature Health. <a href="https://doi.org/10.1038/s44360-026-00096-z" rel="nofollow">https://doi.org/10.1038/s44360-026-00096-z</a>. Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></p>
+      <textarea id="bibtex-data-platform" style="display:none;">@article{pollard_physionet_2026, title = {{PhysioNet} as a global platform for biomedical research}, volume = {1}, issn = {3005-0693}, url = {https://doi.org/10.1038/s44360-026-00096-z}, doi = {10.1038/s44360-026-00096-z}, abstract = {Twenty-five years after its first public repository was established, the PhysioNet resource for biomedical and clinical data has enabled tens of thousands of research papers. Further efforts are ongoing to advance secure data sharing, community engagement and scalable research infrastructure.}, number = {8}, journal = {Nature Health}, author = {Pollard, Tom and Moody, Benjamin E. and Lehman, Li-wei H. and Gow, Brian J. and Fernandes, Chrystinne and Xie, Chen and Johnson, Alistair and Mark, Roger G. and Heldt, Thomas}, month = aug, year = {2026}, pages = {792--795},}</textarea>
+    </div>
+  
+
+  <div class="modal fade" id="citationModalPlatform">
+  <div class="modal-dialog citation" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+  <table><tbody>
+    
+      
+        <tr>
+          <th>APA</th>
+          <td>Pollard, T., Moody, B. E., Lehman, L., Gow, B., Fernandes, C., Xie, C., Johnson, A., Mark, R. G., &amp; Heldt, T. (2026). PhysioNet as a global platform for biomedical research. Nature Health. <a href="https://doi.org/10.1038/s44360-026-00096-z" rel="nofollow">https://doi.org/10.1038/s44360-026-00096-z</a>. Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></td>
+        </tr>
+      
+    
+      
+        <tr>
+          <th>MLA</th>
+          <td>Pollard, Tom, et al. “PhysioNet as a Global Platform for Biomedical Research.” Nature Health, 2026, <a href="https://doi.org/10.1038/s44360-026-00096-z" rel="nofollow">https://doi.org/10.1038/s44360-026-00096-z</a>. Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></td>
+        </tr>
+      
+    
+      
+        <tr>
+          <th>CHICAGO</th>
+          <td>Pollard, Tom, Benjamin E. Moody, Li-wei Lehman, Brian Gow, Chrystinne Fernandes, Chen Xie, Alistair Johnson, Roger G. Mark, and Thomas Heldt. “PhysioNet as a Global Platform for Biomedical Research.” Nature Health (2026). <a href="https://doi.org/10.1038/s44360-026-00096-z.i" rel="nofollow">https://doi.org/10.1038/s44360-026-00096-z.i</a> Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></td>
+        </tr>
+      
+    
+      
+        <tr>
+          <th>HARVARD</th>
+          <td>Pollard, T., Moody, B.E., Lehman, L., Gow, B., Fernandes, C., Xie, C., Johnson, A., Mark, R.G. and Heldt, T., 2026. PhysioNet as a global platform for biomedical research. Nature Health. Available at: <a href="https://doi.org/10.1038/s44360-026-00096-z" rel="nofollow">https://doi.org/10.1038/s44360-026-00096-z</a>. Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></td>
+        </tr>
+      
+    
+      
+        <tr>
+          <th>VANCOUVER</th>
+          <td>Pollard T, Moody BE, Lehman L, Gow B, Fernandes C, Xie C, et al. PhysioNet as a global platform for biomedical research. Nature Health. 2026. doi:10.1038/s44360-026-00096-z. Available from: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/" rel="nofollow">https://pmc.ncbi.nlm.nih.gov/articles/PMC13641116/</a></td>
+        </tr>
+      
+    
+      
+    
+  </tbody></table>
+  
+  <div class="mt-3">
+    <strong>BibTeX</strong>
+    <button class="btn btn-sm btn-outline-secondary ml-2 btn-copy-bibtex btn-copy-bibtex-modal" data-clipboard-target="bibtex-data-platform">Copy</button>
+    <pre class="mt-2 p-2 border rounded" style="white-space: pre-wrap; background-color: #f8f9fa;">@article{pollard_physionet_2026, title = {{PhysioNet} as a global platform for biomedical research}, volume = {1}, issn = {3005-0693}, url = {https://doi.org/10.1038/s44360-026-00096-z}, doi = {10.1038/s44360-026-00096-z}, abstract = {Twenty-five years after its first public repository was established, the PhysioNet resource for biomedical and clinical data has enabled tens of thousands of research papers. Further efforts are ongoing to advance secure data sharing, community engagement and scalable research infrastructure.}, number = {8}, journal = {Nature Health}, author = {Pollard, Tom and Moody, Benjamin E. and Lehman, Li-wei H. and Gow, Brian J. and Fernandes, Chrystinne and Xie, Chen and Johnson, Alistair and Mark, Roger G. and Heldt, Thomas}, month = aug, year = {2026}, pages = {792--795},}</pre>
+  </div>
+  
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+        
+        
+          
+
+  
+    <h2 id="abstract">Abstract</h2>
+    <p>During general anesthesia, both behavioral and autonomic changes are caused by the administration of anesthetics such as propofol. Propofol produces unconsciousness by creating highly structured oscillations in brain circuits. The anesthetic also has autonomic effects due to its actions as a vasodilator and myocardial depressant. Understanding how autonomic dynamics change in relation to propofol-induced unconsciousness is an important scientific and clinical question since anesthesiologists often infer changes in level of unconsciousness from changes in autonomic dynamics.</p>
+
+<p>Therefore, we present a dataset combining physiology-based indices for heart rate variability and electrodermal activity with a robust statistical tool to compare behavioral and multimodal autonomic changes before, during, and after propofol-induced unconsciousness. This dataset was recorded from nine healthy volunteers during computer-controlled administration of propofol.&nbsp;</p>
+    <hr>
+  
+
+  
+    <h2 id="background">Background</h2>
+    <p>During general anesthesia, both behavioral and autonomic changes are caused by the administration of anesthetics. Therefore, it is reasonable to hypothesize that the brain circuits affecting behavior and autonomic activity are invoked in parallel, causing observable effects in parallel. However, the neural circuitry governing autonomic activity and behavioral changes, while complex and interconnected, is separate [1-2]. Understanding this relationship between autonomic dynamics and behavior before, during, and after anesthesia has real implications for clinical practice.</p>
+
+<p>For example, during surgery, consciousness is most often directly assessed through behavioral markers. Autonomic markers present a valuable additional source of information, but they cannot be assumed to be direct equivalents to behavioral markers. Once the patient is administered a muscle relaxant, anesthesiologists who are not using the EEG or EEG-based indices infer changes in level of unconsciousness by tracking changes in autonomic dynamics, namely heart rate and blood pressure. This is provided that there are no overt changes in respiratory or cardiovascular state due to surgical or non-anesthetic pharmacological causes such as vasopressor or vasodilators. Therefore, a systematic exploration of the relationship between autonomic dynamics and consciousness in anesthesia is a highly relevant scientific and clinical question.</p>
+
+<p>Propofol, one of the most common anesthetics, affects the brain to produce unconsciousness by acting primarily on GABAergic circuits to broadly inhibit neuronal firing in the cortex, thalamus, and brainstem [1-2]. In addition to the behavioral changes associated with unconsciousness, propofol has a variety of autonomic effects. It is also a vasodilator, which leads to a decrease in blood pressure. Due to the baroreflex, while there may be a transient increase in heart rate, over time, propofol is a myocardial depressant, and thus, decreases heart rate [1-2]. Finally, experiments have shown that propofol and many other anesthetics reduce baseline filling levels of sweat glands and increase thresholds for spontaneous and evoked sweating activity [3]. Advances in non-invasive sensing modalities and statistical signal processing methods have created the opportunity for detailed study of the interplay between behavioral and autonomic dynamics during propofol-induced unconsciousness.</p>
+
+<p>In this dataset, we characterize autonomic state using a multimodal model that considers both heart rate variability (HRV) and electrodermal activity (EDA) to capture sympathetic and parasympathetic activity and their slow and fast dynamics. Our work has been documented in [4-6].</p>
+    <hr>
+  
+
+  
+    <h2 id="methods">Methods</h2>
+    <p>Data was collected from nine healthy volunteers during a study of propofol-induced unconsciousness, collected under protocol approved by the Massachusetts General Hospital (MGH) Human Research Committee [7]. All subjects provided written informed consent. For all subjects, approximately 3 hours of data were recorded while using target-controlled infusion protocol. Further details of the&nbsp;data collection process are&nbsp;described in [7].</p>
+
+<p>The infusion rate was increased and then decreased in a total of ten stages of roughly equal lengths (approximately 15 minutes each) to achieve target propofol concentrations of: 0 mg/kg/hr, 1, 2, 3, 4, 5, 3.75, 2.5, 1.25, 0. The two stages of 0 mg/kg/hr are hereby referred to as baselines before and after anesthesia respectively. Continuous electrocardiogram (ECG) and EDA were collected. LOC and ROC times were annotated based on lack of response to a button-pressing task. There were other interventions included in the study for patient safety, such as administering phenylephrine (a vasopressor). All data were analyzed using Matlab R2020b.</p>
+
+<p>Multimodal autonomic indices were computed for heart rate variability (HRV) and electrodermal activity (EDA) using the point process methods developed and described in [6, 8-13].</p>
+    <hr>
+  
+
+  
+    <h2 id="description">Data Description</h2>
+    <p>The&nbsp;<code>Data</code> folder contains the following files:</p>
+
+<ul>
+	<li><code>EDA_temp_amp_#.csv</code>: Matrix of 5 EDA covariates for each subject. In order, EDA tonic, mean pulse rate, standard deviation of pulse rate, mean pulse amplitude, standard deviation of pulse amplitude.</li>
+	<li><code>LOC_ROC.csv</code>: Times of loss of consciousness and recovery of consciousness in seconds for each subject as a table. LOC is the first column, ROC the second.</li>
+	<li><code>S#_eda_tonic.csv</code>: Tonic component of EDA</li>
+	<li><code>S#_events</code>: Timestamps of the beginning of the stages of the propofol experiment. There are 6 increasing stages and 4 decreasing stages.</li>
+	<li><code>S#_LF.csv</code> and <code>S#_HF.csv</code>: LF (low frequency) and HF (high frequency) heart rate variability. LF is thought to relate to both sympathetic and parasympathetic activity and HF to parasympathetic alone.</li>
+	<li><code>S#_LFnu.csv</code> and <code>S#_HFnu.csv</code>: Normalized forms of LF and HF respectively.</li>
+	<li><code>S#_LOC.csv</code> and <code>S#_ROC.csv</code>: Times of loss and recovery of consciousness respectively.</li>
+	<li><code>S#_muRR.csv</code> and <code>S#_sigmaRR.csv</code>: Mean and standard deviation of the RR interval respectively.</li>
+	<li><code>S#_muHR.csv</code> and <code>S#_sigmaHR.csv</code>: Mean and standard deviation of the heart rate respectively.</li>
+	<li><code>S#_pow_tot.csv</code>: Total power for HRV.</li>
+	<li><code>S#_ratio.csv</code>: LF/HF for HRV.</li>
+	<li><code>S#_muPR.csv</code> and <code>S#_sigmaPR.csv</code>: Mean and standard deviation of the EDA pulse rate respectively.</li>
+	<li><code>S#_mu_amp.csv</code> and <code>S#_sigma_amp.csv</code>: Mean and standard deviation of the EDA pulse amplitude respectively.</li>
+	<li><code>S#_t_EDA_tonic</code>: Timestamps to accompany tonic EDA.</li>
+	<li><code>S#_t_EDA</code>: Timestamps to accompany muPR, sigmaPR, mu_amp, and sigma_amp.</li>
+	<li><code>S#_t_HRV</code>: Timestamps to accompany muRR, sigmaRR, muHR, sigmaHR, pow_tot, ratio, LF, HF, LFnu, and HFnu</li>
+</ul>
+
+<h3>Code</h3>
+
+<p>Code has been provided to reproduce the analysis in our associated study [6]. To run a regression with the project data:</p>
+
+<ol>
+	<li>Open <code>LogReg_propofol_regression_MAIN.m</code></li>
+	<li>Change the parameters in the first section to reflect the conditions you want to use (history or not, mean or median within each window, which question - see below, which covariates - multimodal or unimodal, window length in seconds, amount of history in seconds)</li>
+	<li>Run the script. The script is designed to input a 1x1 Matlab struct for each subject, with fields eda_tonic, events, HF, LF, HFnu (normalized HF), LFnu (normalized LF), LOC, ROC, mu_amp, sigma_amp, muHR, sigmaHR, muPR, sigmaPR, muRR, sigmaRR, pow_tot, ratio, t_HRV, t_EDA, t_EDA_tonic taken from the respective csv files.</li>
+</ol>
+
+<p>To recreate the EDA specific figures for each subject in Subramanian <em>et al</em>. [6]:</p>
+
+<ol>
+	<li>Open <code>EDA_deepdive_viz.m</code></li>
+	<li>Run the script. The script is designed to input a Matlab struct that is 1x9, each with field X that is from <code>EDA_temp_amp_#.csv</code>. It will generate figures for all 9 subjects in order from 1-9 showing the different EDA point process indices, temporal and amplitude related.</li>
+</ol>
+    <hr>
+  
+
+  
+    <h2 id="usage-notes">Usage Notes</h2>
+    <p>These data and code have been used to explore relationships between behavioral and autonomic dynamics before during and after changes in consciousness in [4-6]. Those interested in experimenting with machine learning models using these indices or in exploring the dynamics of these indices with changing depth&nbsp;of sedation can do so. One limitation of these data is that they only contain HRV and EDA related information and do not contain EEG or blood pressure, for example. Those further interested in the point process indices themselves can check out [12-13] for the HRV point process model and [8-11] for development of the EDA point process model. Related datasets on PhysioNet [14-15] also have EDA data that can be used to experiment with the point process model properties.</p>
+    <hr>
+  
+
+  
+    <h2 id="release-notes">Release Notes</h2>
+    <p>Version 1.0</p>
+    <hr>
+  
+
+  
+
+  
+
+  
+    <h2 id="conflicts-of-interest">Conflicts of Interest</h2>
+    <p>A utility patent application titled &ldquo;Tracking Nociception under Anesthesia using a Multimodal Metric&rdquo; was filed with S.S., R.B., and E.N.B. on July 15, 2020 (Application No. PCT/US2020/042031). Some of the methods used to create this database&nbsp;were included in the patent application.</p>
+    <hr>
+  
+
+
+
+  <h2 id="references">References</h2>
+  <ol>
+  
+    <li id="ref-1">Brown EN, Lydic R, Schiff ND. General anesthesia, sleep, and coma. N Engl J Med. 2010;363(27):2638-50.</li>
+  
+    <li id="ref-2">Brown EN, Purdon PL, Van Dort CJ. General anesthesia and altered states of arousal: a systems neuroscience analysis. Annu Rev Neurosci. 2011;34: 601-628.</li>
+  
+    <li id="ref-3">Kunimoto M et al. Neuroeffector characteristics of sweat glands in the human hand activated by regular neural stimuli. Journal of Physiology. 1991 Oct;442(1):391-411.</li>
+  
+    <li id="ref-4">Subramanian S, Barbieri R, Purdon PL, Brown EN. Detecting loss and regain of consciousness during propofol anesthesia using multimodal indices of autonomic state.  Proc. 42nd IEEE International Conf on Eng in Biol and Med (EMBC). 2020 Jul.</li>
+  
+    <li id="ref-5">Subramanian S, Barbieri R, Purdon PL, Brown EN (2020). Analyzing transitions in anesthesia by multimodal characterization of autonomic state. Proc. 11th Conf. of the European Study Group on Cardiovascular Oscillations (ESGCO). 2020 Apr.</li>
+  
+    <li id="ref-6">Subramanian S, Purdon PL, Barbieri R, Brown EN (2020). Quantitative Assessment of the Relationship between Behavioral and Autonomic Dynamics during Propofol-Induced Unconsciousness. bioRxiv doi: 10.1101/2020.11.03.367607</li>
+  
+    <li id="ref-7">Purdon PL et al. Electroencephalogram Signatures of Loss and Recovery of Consciousness from Propofol. PNAS. 2013;110: E1142-1151.</li>
+  
+    <li id="ref-8">Subramanian S, Barbieri R, Brown EN. A systematic method for preprocessing and analyzing electrodermal activity. Proc. 41st IEEE International Conf on Eng in Biol and Med (EMBC). 2019 Jul.</li>
+  
+    <li id="ref-9">Subramanian S, Barbieri R, Brown EN. A point process characterization of electrodermal activity. Proc. 40th IEEE International Conf on Eng in Biol and Med (EMBC). 2018 Jul.</li>
+  
+    <li id="ref-10">Subramanian S, Barbieri R, Brown EN. Point process temporal structure characterizes electrodermal activity. PNAS. 2020 Oct;117(42):26422-26428. DOI: 10.1073/pnas.2004403117.</li>
+  
+    <li id="ref-11">Subramanian S, Purdon PL, Barbieri R, Brown EN. A model-based approach for pulse selection from electrodermal activity. IEEE Trans Biomed Eng. 2021 Apr 6. doi: 10.1109/TBME.2021.3071366.</li>
+  
+    <li id="ref-12">Point Process Models of Human Heart Beat Interval Dynamics [Internet]. Available from: <a href="http://users.neurostat.mit.edu/barbieri/pphrv">http://users.neurostat.mit.edu/barbieri/pphrv</a></li>
+  
+    <li id="ref-13">Barbieri R, Matten EC, Alabi AA, Brown EN. A point-process model of human heartbeat intervals: new definitions of heart rate and heart rate variability. Am. J. Physiol. Heart Circ. Physiol. 2005 Jan;288(1):H424–435.</li>
+  
+    <li id="ref-14">Subramanian, S., Barbieri, R., &amp; Brown, E. (2020). Electrodermal Activity of Healthy Volunteers while Awake and at Rest (version 1.0). PhysioNet. <a href="https://doi.org/10.13026/arty-2540.">https://doi.org/10.13026/arty-2540.</a></li>
+  
+    <li id="ref-15">Subramanian, S., Purdon, P., Barbieri, R., &amp; Brown, E. (2021). Pulse Amplitudes from electrodermal activity collected from healthy volunteer subjects at rest and under controlled sedation (version 1.0). PhysioNet. <a href="https://doi.org/10.13026/r9p1-bk90.">https://doi.org/10.13026/r9p1-bk90.</a></li>
+  
+</ol>
+
+  <hr>
+
+
+        
+        
+  <h2 id="cited-by">Cited by</h2>
+  <p>
+    2 publications cite this project.
+    The most recent are listed below.
+  </p>
+  
+<ul class="list-unstyled citing-works">
+  
+    <li class="mb-3">
+      <a href="https://doi.org/10.21605/cukurovaumfd.1777100" rel="noopener">Kalp Hızı Değişkenliği ve Elektrodermal Aktivite Verilerinden Anestezi Durumlarının Makine Öğrenmesi Tabanlı Sınıflandırılması</a><br>
+      <small class="text-muted">
+        Nesrin Altuntaş, Buse Nur Demir, Demet Yeşilbaş et al.
+        <em>Çukurova Üniversitesi Mühendislik Fakültesi Dergisi</em>,
+        2026.
+        
+      </small>
+    </li>
+  
+    <li class="mb-3">
+      <a href="https://doi.org/10.1007/978-3-032-24045-3_56" rel="noopener">Electrodermal Activity as a Predictor of Emergence Time from General Anaesthesia</a><br>
+      <small class="text-muted">
+        Radu-Gabriel Zinca, Ioana-Raluca Adochiei, Florin-Ciprian Argatu et al.
+        <em>World Congress on Medical Physics and Biomedical Engineering, September 7 - 12, 2009, Munich, Germany</em>,
+        2026.
+        
+      </small>
+    </li>
+  
+</ul>
+
+  <p>
+    <a href="/content/propofol-anesthesia-dynamics/citations/1.0/">View all 2 publications</a>
+  </p>
+  <p><small class="text-muted">Citation data from <a href="https://openalex.org" rel="noopener">OpenAlex</a>. Papers that use the project without citing it may be missing.</small></p>
+  <hr>
+
+
+        
+      </div>
+      <!-- /.main column -->
+
+      <!-- Sidebar Column -->
+      <div class="col-md-4">
+        
+        
+        
+        <div class="card mb-3">
+          <div class="card-body sidebar-info contents-nav">
+            <h6 class="sidebar-heading">Contents</h6>
+            <ul>
+              
+                
+                  <li><a href="#abstract" >Abstract</a></li>
+                
+              
+                
+                  <li><a href="#background" >Background</a></li>
+                
+              
+                
+                  <li><a href="#methods" >Methods</a></li>
+                
+              
+                
+                  <li><a href="#description" >Data Description</a></li>
+                
+              
+                
+                  <li><a href="#usage-notes" >Usage Notes</a></li>
+                
+              
+                
+                  <li><a href="#release-notes" >Release Notes</a></li>
+                
+              
+                
+              
+                
+              
+                
+                  <li><a href="#conflicts-of-interest" >Conflicts of Interest</a></li>
+                
+              
+              
+                <li><a href="#references" >References</a></li>
+              
+              
+                <li><a href="#cited-by" >Cited by</a></li>
+              
+              <li><a href="#files" >Files</a></li>
+              
+            </ul>
+          </div>
+        </div>
+        
+
+        
+
+        <div class="card mb-3">
+          <div class="card-body sidebar-info">
+            <h6 class="sidebar-heading">Share</h6>
+            <div class="d-flex flex-wrap" style="gap: 8px;">
+              <a class="sharebtn"
+                href="mailto:?subject=Behavioral%20and%20autonomic%20dynamics%20during%20propofol-induced%20unconsciousness&body=https://physionet.org/content/propofol-anesthesia-dynamics/1.0/"
+                title="Share with email"><i class="far fa-envelope"></i> Email</a>
+              <a class="sharebtn"
+                href="https://www.linkedin.com/shareArticle?url=https://physionet.org/content/propofol-anesthesia-dynamics/1.0/"
+                title="Share on LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a>
+              <a class="sharebtn"
+                href="https://www.reddit.com/submit?url=https://physionet.org/content/propofol-anesthesia-dynamics/1.0/&title=Behavioral%20and%20autonomic%20dynamics%20during%20propofol-induced%20unconsciousness"
+                title="Share on Reddit"><i class="fab fa-reddit"></i> Reddit</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body sidebar-info">
+            <h6 class="sidebar-heading">Access</h6>
+            <dl class="sidebar-dl">
+              <dt>Access Policy</dt>
+              <dd>Anyone can access the files, as long as they conform to the terms of the specified license.</dd>
+              <dt>License</dt>
+              <dd><a href="/content/propofol-anesthesia-dynamics/view-license/1.0/">PhysioNet Contributor Review Health Data License 1.5.0</a></dd>
+              
+              <dt>Data Use Agreement</dt>
+              <dd><a href="/content/propofol-anesthesia-dynamics/view-dua/1.0/">PhysioNet Contributor Review Health Data Use Agreement 1.5.0</a></dd>
+              
+              
+            </dl>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body sidebar-info">
+            <h6 class="sidebar-heading">Discovery</h6>
+            <dl class="sidebar-dl">
+              
+              <dt>DOI (v1.0)</dt>
+              <dd><a href="https://doi.org/10.13026/2rbc-1r03">10.13026/2rbc-1r03</a></dd>
+              
+              
+              <dt>DOI (latest)</dt>
+              <dd><a href="https://doi.org/10.13026/gmav-2367">10.13026/gmav-2367</a></dd>
+              
+              
+              
+              <dt>Topics</dt>
+              <dd><a href="/content/?topic=autonomic+nervous+system"><span class="badge badge-pn">autonomic nervous system</span></a> <a href="/content/?topic=propofol"><span class="badge badge-pn">propofol</span></a> <a href="/content/?topic=anesthesia"><span class="badge badge-pn">anesthesia</span></a> <a href="/content/?topic=electrodermal+activity"><span class="badge badge-pn">electrodermal activity</span></a> <a href="/content/?topic=heart+rate+variability"><span class="badge badge-pn">heart rate variability</span></a> </dd>
+              
+              
+              <dt>Cited by</dt>
+              <dd><a href="/content/propofol-anesthesia-dynamics/citations/1.0/">2 publications</a></dd>
+              
+              
+            </dl>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body sidebar-info">
+            <h6 class="sidebar-heading">Project Views</h6>
+            <dl class="sidebar-dl">
+              <dt>Current Version</dt>
+              <dd>488</dd>
+              <dt>All Versions</dt>
+              <dd>488</dd>
+            </dl>
+            <div class="mt-2">
+              <a href="/content/propofol-anesthesia-dynamics/metrics/1.0/" class="btn btn-sm btn-outline-secondary">View Details</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body sidebar-info">
+            <h6 class="sidebar-heading">Corresponding Author</h6>
+            
+              <em>You must be logged in to view the contact information.</em>
+            
+          </div>
+        </div>
+
+        <div class="card mb-3">
+  <div class="card-body sidebar-info">
+    <h6 class="sidebar-heading">Versions</h6>
+    <ul class="list-group list-group-flush project-version-list">
+      
+        <li class="list-group-item px-0">
+          <a href="/content/propofol-anesthesia-dynamics/1.0/">
+            <span class="project-version">1.0</span>
+            <time datetime="2021-07-30">
+              July 30, 2021
+            </time>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+</div>
+
+      </div>
+      <!-- /.sidebar -->
+    </div>
+    <h2 id="files">Files</h2>
+    
+      
+        
+          
+            <p>Total uncompressed size: 6.6 GB.</p>
+          
+        
+        <h5>Access the files</h5>
+        
+
+        <ul>
+          
+            <li><a href="/content/propofol-anesthesia-dynamics/get-zip/1.0/">Download
+              the ZIP file</a> (1.3 GB)
+            </li>
+          
+          
+            
+          
+           
+
+          
+            
+              <li>
+                Download with the <a href="https://github.com/MIT-LCP/physionet#installation">PhysioNet Python package</a>:
+                <pre class="shell-command">physionet download propofol-anesthesia-dynamics --version 1.0</pre>
+                
+              </li>
+            
+            <li>
+              Download the files using your terminal:
+              <pre class="shell-command">wget -r -N -c -np https://physionet.org/files/propofol-anesthesia-dynamics/1.0/</pre>
+            </li>
+          
+
+          
+            
+              <li>
+                To download the files using AWS command line tools, first
+                <a href="/settings/cloud/">configure your AWS credentials</a>.
+              </li>
+            
+          
+
+        </ul>
+        
+
+        
+          
+        
+
+        <div id="files-panel" class="card">
+          
+<div class="card-header"
+     data-dfp-panel-url="/content/propofol-anesthesia-dynamics/files-panel/1.0/"
+     data-dfp-cur-dir="">
+  Folder Navigation:
+  <span class="dir-breadcrumbs"><span class="dir-breadcrumb-self">&lt;base&gt;</span></span>
+</div>
+
+  
+<table class="files-panel">
+  <col class="files-panel-name"></col>
+  <col class="files-panel-size"></col>
+  <col class="files-panel-date"></col>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Size</th>
+      <th>Modified</th>
+    </tr>
+  </thead>
+  <tbody>
+  
+  
+    <tr class="subdir">
+      <td><a href="Data/#files-panel" data-dfp-dir="Data">Data</a></td>
+      <td></td>
+      <td></td>
+    </tr>
+  
+  
+    <tr>
+      <td><a href="EDA_deepdive_viz.m">EDA_deepdive_viz.m</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/EDA_deepdive_viz.m?download"
+           title="Download EDA_deepdive_viz.m">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>2.6 KB</td>
+      <td>2021-06-30</td>
+    </tr>
+  
+    <tr>
+      <td><a href="LICENSE.txt">LICENSE.txt</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/LICENSE.txt?download"
+           title="Download LICENSE.txt">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>14.4 KB</td>
+      <td>2021-07-30</td>
+    </tr>
+  
+    <tr>
+      <td><a href="LogReg_propofol_regression_MAIN.m">LogReg_propofol_regression_MAIN.m</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/LogReg_propofol_regression_MAIN.m?download"
+           title="Download LogReg_propofol_regression_MAIN.m">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>9.9 KB</td>
+      <td>2021-06-30</td>
+    </tr>
+  
+    <tr>
+      <td><a href="README.txt">README.txt</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/README.txt?download"
+           title="Download README.txt">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>448 B</td>
+      <td>2021-07-01</td>
+    </tr>
+  
+    <tr>
+      <td><a href="SHA256SUMS.txt">SHA256SUMS.txt</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/SHA256SUMS.txt?download"
+           title="Download SHA256SUMS.txt">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>16.7 KB</td>
+      <td>2021-07-30</td>
+    </tr>
+  
+    <tr>
+      <td><a href="return_y_vec_prop.m">return_y_vec_prop.m</a>
+        <a class="download" href="/files/propofol-anesthesia-dynamics/1.0/return_y_vec_prop.m?download"
+           title="Download return_y_vec_prop.m">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>985 B</td>
+      <td>2021-06-30</td>
+    </tr>
+  
+  </tbody>
+</table>
+
+
+        </div>
+      
+
+      
+    
+    <br>
+    
+</div>
+
+
+
+</main>
+
+    
+<link rel="stylesheet" type="text/css" href="/static/custom/css/footer.css"/>
+
+<div class="modern-ui">
+  <footer class="footer w-100 secondary-bg py-5">
+    <div class="container my-0 py-0 py-md-5">
+      
+        <img src="/static/images/physionet-logo-white.svg" width="180px" alt="PhysioNet" class="pb-2" />
+      
+      <div class="footer__columns light-text">
+        <div>
+          
+            <p class="dark-light-text mb-2">Maintained by the MIT Laboratory for Computational Physiology</p>
+          
+          
+            <p class="dark-light-text mb-2">Supported by the National Institute of Biomedical Imaging and Bioengineering (NIBIB), National Heart Lung and Blood Institute (NHLBI), and NIH Office of the Director under NIH grant numbers U24EB037545 and R01EB030362</p>
+          
+        </div>
+        <div class="d-flex flex-column pl-0 pl-md-5 pt-4 pt-md-0">
+          <h2 class="text-white font-weight-bold">Navigation</h2>
+          <a href="/content" class="pb-3 dark-light-text">Discover Data</a>
+          <a href="/about/publish" class="pb-3 dark-light-text">Share Data</a>
+          <a href="/about" class="pb-3 dark-light-text">About</a>
+          <a href="/news" class="pb-3 dark-light-text">News</a>
+        </div>
+        <div class="d-flex flex-column pt-4 pt-md-0">
+          <h2 class="text-white font-weight-bold">Explore</h2>
+          
+            <a href="/about/database/" class="pb-3 dark-light-text">Data</a>
+          
+            <a href="/about/software/" class="pb-3 dark-light-text">Software</a>
+          
+            <a href="/about/challenge/" class="pb-3 dark-light-text">Challenges</a>
+          
+            <a href="/about/tutorial/" class="pb-3 dark-light-text">Tutorials</a>
+          
+        </div>
+        <!-- <div class="d-flex flex-column flex-grow">
+          <h2 class="text-white font-weight-bold">Subscribe to our Newsletter</h2>
+          <input type="email" class="form-control mb-2" placeholder="Your email">
+          <button type="button" class="primary-button">Subscribe Now</button>
+        </div> -->
+      </div>
+      <hr >
+      <div class="d-flex flex-column align-items-center justify-content-between flex-md-row">
+        <div class="d-flex pt-2 pt-md-0">
+          
+            <a class="mr-3" href="https://github.com/MIT-LCP/physionet-build/"><img src="/static/images/icons/github.png" height="18px"></a>
+          
+          
+          
+            <a class="mr-3" href="http://linkedin.com/company/physionet"><img src="/static/images/icons/linkedin.png" height="18px"></a>
+          
+          
+        </div>
+        <div class="pt-4 pt-md-0">
+          
+          
+          
+             <a class="dark-light-text" href="https://accessibility.mit.edu/">Accessibility</a>
+          
+        </div>
+      </div>
+      
+      <p class="footer__software-credit dark-light-text text-center mt-4 mb-0">
+        Built with <a class="dark-light-text" href="https://github.com/MIT-LCP/physionet-build">PhysioNet software</a>
+        from the MIT Laboratory for Computational Physiology, supported by NIH grant U24EB037545.
+      </p>
+    </div>
+  </footer>
+</div>
+
+
+    
+<script src="/static/bootstrap/js/bootstrap.min.js"></script>
+<script src="/static/bootstrap/js/ie10-viewport-bug-workaround.js"></script>
+<script src="/static/custom/js/navbar.js"></script>
+
+    
+  <script src="/static/project/js/dynamic-files-panel.js"></script>
+  <script src="/static/custom/js/enable-popover.js?v=3"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+    
+  <!-- https://schema.org/ metadata for discovery -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Dataset",
+  "name": "Behavioral and autonomic dynamics during propofol\u002Dinduced unconsciousness",
+  "description": "During general anesthesia, both behavioral and autonomic changes are caused by the administration of anesthetics such as propofol. Propofol produces unconsciousness by creating highly structured oscillations in brain circuits. The anesthetic also has autonomic effects due to its actions as a vasodilator and myocardial depressant. Understanding how autonomic dynamics change in relation to propofol\u002Dinduced unconsciousness is an important scientific and clinical question since anesthesiologists often infer changes in level of unconsciousness from changes in autonomic dynamics.\u000A\u000ATherefore, we present a dataset combining physiology\u002Dbased indices for heart rate variability and electrodermal activity with a robust statistical tool to compare behavioral and multimodal autonomic changes before, during, and after propofol\u002Dinduced unconsciousness. This dataset was recorded from nine healthy volunteers during computer\u002Dcontrolled administration of propofol. ",
+  "version": "1.0",
+  "license": "https://github.com/MIT\u002DLCP/license\u002Dand\u002Ddua/tree/master/drafts",
+  "datePublished" : "July 30, 2021",
+  "url": "https://physionet.org/content/propofol-anesthesia-dynamics/1.0/",
+  
+  "identifier": "https://doi.org/10.13026/2rbc\u002D1r03",
+  
+  
+  
+  "citation": [{"@type": "CreativeWork", "name": "Brown EN, Lydic R, Schiff ND. General anesthesia, sleep, and coma. N Engl J Med. 2010;363(27):2638-50."}, {"@type": "CreativeWork", "name": "Brown EN, Purdon PL, Van Dort CJ. General anesthesia and altered states of arousal: a systems neuroscience analysis. Annu Rev Neurosci. 2011;34: 601-628."}, {"@type": "CreativeWork", "name": "Kunimoto M et al. Neuroeffector characteristics of sweat glands in the human hand activated by regular neural stimuli. Journal of Physiology. 1991 Oct;442(1):391-411."}, {"@type": "CreativeWork", "name": "Subramanian S, Barbieri R, Purdon PL, Brown EN. Detecting loss and regain of consciousness during propofol anesthesia using multimodal indices of autonomic state.  Proc. 42nd IEEE International Conf on Eng in Biol and Med (EMBC). 2020 Jul."}, {"@type": "CreativeWork", "name": "Subramanian S, Barbieri R, Purdon PL, Brown EN (2020). Analyzing transitions in anesthesia by multimodal characterization of autonomic state. Proc. 11th Conf. of the European Study Group on Cardiovascular Oscillations (ESGCO). 2020 Apr."}, {"@type": "CreativeWork", "name": "Subramanian S, Purdon PL, Barbieri R, Brown EN (2020). Quantitative Assessment of the Relationship between Behavioral and Autonomic Dynamics during Propofol-Induced Unconsciousness. bioRxiv doi: 10.1101/2020.11.03.367607"}, {"@type": "CreativeWork", "name": "Purdon PL et al. Electroencephalogram Signatures of Loss and Recovery of Consciousness from Propofol. PNAS. 2013;110: E1142-1151."}, {"@type": "CreativeWork", "name": "Subramanian S, Barbieri R, Brown EN. A systematic method for preprocessing and analyzing electrodermal activity. Proc. 41st IEEE International Conf on Eng in Biol and Med (EMBC). 2019 Jul."}, {"@type": "CreativeWork", "name": "Subramanian S, Barbieri R, Brown EN. A point process characterization of electrodermal activity. Proc. 40th IEEE International Conf on Eng in Biol and Med (EMBC). 2018 Jul."}, {"@type": "CreativeWork", "name": "Subramanian S, Barbieri R, Brown EN. Point process temporal structure characterizes electrodermal activity. PNAS. 2020 Oct;117(42):26422-26428. DOI: 10.1073/pnas.2004403117."}, {"@type": "CreativeWork", "name": "Subramanian S, Purdon PL, Barbieri R, Brown EN. A model-based approach for pulse selection from electrodermal activity. IEEE Trans Biomed Eng. 2021 Apr 6. doi: 10.1109/TBME.2021.3071366."}, {"@type": "CreativeWork", "name": "Point Process Models of Human Heart Beat Interval Dynamics [Internet]. Available from: http://users.neurostat.mit.edu/barbieri/pphrv", "url": "http://users.neurostat.mit.edu/barbieri/pphrv"}, {"@type": "CreativeWork", "name": "Barbieri R, Matten EC, Alabi AA, Brown EN. A point-process model of human heartbeat intervals: new definitions of heart rate and heart rate variability. Am. J. Physiol. Heart Circ. Physiol. 2005 Jan;288(1):H424\u2013435."}, {"@type": "CreativeWork", "name": "Subramanian, S., Barbieri, R., \u0026 Brown, E. (2020). Electrodermal Activity of Healthy Volunteers while Awake and at Rest (version 1.0). PhysioNet. https://doi.org/10.13026/arty-2540.", "url": "https://doi.org/10.13026/arty-2540."}, {"@type": "CreativeWork", "name": "Subramanian, S., Purdon, P., Barbieri, R., \u0026 Brown, E. (2021). Pulse Amplitudes from electrodermal activity collected from healthy volunteer subjects at rest and under controlled sedation (version 1.0). PhysioNet. https://doi.org/10.13026/r9p1-bk90.", "url": "https://doi.org/10.13026/r9p1-bk90."}],
+  
+  "creator": [
+  
+    {
+      "@type": "Person",
+      "givenName": "Sandya",
+      "familyName": "Subramanian",
+      "name": "Sandya Subramanian"
+    },
+  
+    {
+      "@type": "Person",
+      "givenName": "Patrick",
+      "familyName": "Purdon",
+      "name": "Patrick Purdon"
+    },
+  
+    {
+      "@type": "Person",
+      "givenName": "Riccardo",
+      "familyName": "Barbieri",
+      "name": "Riccardo Barbieri"
+    },
+  
+    {
+      "@type": "Person",
+      "givenName": "Emery",
+      "familyName": "Brown",
+      "name": "Emery Brown"
+    }
+  
+    ],
+  "includedInDataCatalog":{
+     "@type": "DataCatalog",
+     "name": "physionet.org"
+  },
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "contentUrl": "https://physionet.org/content/propofol-anesthesia-dynamics/1.0/#files"
+    }
+  ]
+}
+</script>
+
+  </body>
+  
+</html>
