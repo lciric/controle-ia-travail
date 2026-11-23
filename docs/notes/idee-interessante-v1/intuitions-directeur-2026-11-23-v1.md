@@ -42,3 +42,19 @@ donc le champ d'interaction auglenterait au fur et a mesure qu'on se rapproche d
 ## Message 5 (vers 13:40Z)
 
 le champ d'interactio doit tenir compte des invarinat autant que de posssibilites potentialites probabilites de rencontres donc de la densite du reseau et de comment une transformation par invariance rapproche deux reseaux jusqu a les collsiionner
+
+## Message 6 (vers 13:45Z, après lecture des réponses de Google ; extraits de fond, les accords de dépense sont au registre des GO)
+
+« oui c'est exactement ce que je voulais dire » (sur : le champ est la direction dans laquelle un nouveau cadre rend deux réseaux comparables, même espace de description, et non celle où l'invariance apparaît évidente).
+
+« invariant conservé sous l'application qui aligne les deux réseaux, qui est déjà la systématicité de Gentner » : « qui les rapproche en tout cas ».
+
+Sur la circularité du champ (« il faut une mesure du champ indépendante de l'issue ») : « et pourquoi ne pas mesurer tout simplement les invariances par collision et rapprochement des structures mathématiques sous-jacentes ou des réseaux sous-tendant les idées ? »
+
+Sur « un réseau de concepts est discret, orienté et dépourvu de dynamique hamiltonienne ou lagrangienne canonique ; l'équivalent mathématique rigoureux est l'homomorphisme de graphes typés (ou l'équivariance d'opérateurs discrets) » : « intéressant, creusons ça avec gemini et fable et toi opus ».
+
+Sur Galison (2003), la synchronisation des horloges comme substrat commun à Einstein et Poincaré : « oui mais comment modéliser ça mathématiquement ? »
+
+Sur Burt (2004), les trous structuraux entre réseaux denses : « ouiiiiiiii ».
+
+Sur Tshitoyan et al. (2019), plongements de résumés de science des matériaux qui retrouvent le tableau périodique et prédisent des matériaux thermoélectriques : « incroyable, qu'est-ce que cela implique pour le langage ? il posséderait une structure mathématique qui miroiterait celle de l'univers ? donc en étudiant les liens cachés dans le langage, des vrais liens mathématiques pas des métaphores, on pourrait faire des découvertes ? comment s'y prendre et combiner cela avec le reste ? lance le protocole X dessus. »
