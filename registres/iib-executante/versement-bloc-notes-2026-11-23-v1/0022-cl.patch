@@ -1,0 +1,241 @@
+From 4f538eefab759318f42f3a2c049465a91a3465d7 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 22 Nov 2026 15:24:06 +0000
+Subject: [PATCH] =?UTF-8?q?Organisme=20retenu=20du=20saboteur=20=C3=A0=20b?=
+ =?UTF-8?q?udget,=20code=20en=20version=205=20:=20correctif=200022,=20vite?=
+ =?UTF-8?q?sse=20mesur=C3=A9e=20en=20marche=20sur=20le=20premier=20lot=20e?=
+ =?UTF-8?q?t=20liste=20fig=C3=A9e=20de=20l'=C3=A9talonnage=20v7=20(d=C3=A8?=
+ =?UTF-8?q?s=20la=20fin=20du=20premier=20lot,=20`vitesse-premier-lot-iib-v?=
+ =?UTF-8?q?5.json`=20scell=C3=A9=20et=20pouss=C3=A9=20:=20dur=C3=A9e=20de?=
+ =?UTF-8?q?=20g=C3=A9n=C3=A9ration=20par=20=C3=A9pisode,=20dur=C3=A9e=20pa?=
+ =?UTF-8?q?r=20action=20de=20chaque=20oracle,=20comptes=20et=20m=C3=A9thod?=
+ =?UTF-8?q?e=20de=20tirage,=20aucun=20texte,=20aucun=20jeton,=20aucune=20s?=
+ =?UTF-8?q?ortie=20d'oracle=20;=20une=20marque=20de=20progr=C3=A8s=20les?=
+ =?UTF-8?q?=20dit=20;=20dur=C3=A9e=20non=20mesur=C3=A9e=20:=20refus=20;=20?=
+ =?UTF-8?q?liste=20de=20l'=C3=A9talonnage=20v7=20=3D=20v6=20+=20l'essai=20?=
+ =?UTF-8?q?du=20tirage=20sur=20la=20carte,=20cit=C3=A9e=20par=20l'amorce?=
+ =?UTF-8?q?=20de=20l'=C3=A9talonnage=20;=20297=20essais=20pour=20la=20v6,?=
+ =?UTF-8?q?=20311=20pour=20la=20v7=20sur=20une=20machine=20=C3=A0=20carte)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01XJ6MgqUTEVCed6a2f6rWmC
+---
+ scripts/amorce_instance_iib_v5.sh   |  4 +++-
+ scripts/repetition_locale_iib_v5.py |  5 +++--
+ scripts/tests-cibles-iib-v5-v7.txt  | 26 +++++++++++++++++++++++
+ src/controle_ia/iib/lanceur_v5.py   | 23 +++++++++++++++++++++
+ tests/test_iib_lanceur_v5.py        | 32 +++++++++++++++++++++++++++--
+ tests/test_iib_versement_v5.py      |  8 ++++++--
+ 6 files changed, 91 insertions(+), 7 deletions(-)
+ create mode 100644 scripts/tests-cibles-iib-v5-v7.txt
+
+diff --git a/scripts/amorce_instance_iib_v5.sh b/scripts/amorce_instance_iib_v5.sh
+index a817a5397..3f7dd1bc3 100644
+--- a/scripts/amorce_instance_iib_v5.sh
++++ b/scripts/amorce_instance_iib_v5.sh
+@@ -16,6 +16,8 @@
+ #  (g) correctif 0014, poussée par lot : le lanceur reçoit `IIB_CONSIGNER` (ce script de consignation) et l'appelle après chaque
+ #      lot scellé, motif « versement … » (sans trace de journal par lot), puis vérifie lui-même la branche distante ; avant ce
+ #      correctif, rien n'était poussé entre la poussée initiale et la fin du run (constat de l'étalonnage, branche essai/iib-explo-v6) ;
++#  (i) correctif 0022 : la suite ciblée figée passe en v7 (`scripts/tests-cibles-iib-v5-v7.txt`) = v6 + `tests/test_tirage_carte_v1.py`,
++#      dont l'essai de déterminisme sur la carte (sauté sur processeur, joué sur la machine) ; TESTS_ATTENDUS en tient compte ;
+ #  (h) correctif 0021 : le tirage des jetons vient de l'ordre (`IIB_TIRAGE`, « processeur » par défaut, ou « carte ») et passe au
+ #      lanceur par `--tirage` ; toute autre valeur est un refus.
+ # --- en-tête d'origine de la v1 :
+@@ -389,7 +391,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
+     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
+ fi
+ # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
+-LISTE_TESTS="scripts/tests-cibles-iib-v5-v6.txt"; LISTE_SHA256="f78384553e789e0cd37a803fabacfaf145057be6c6a61b877b54b7e1de7c490d"; FICHIERS_TESTS=""
++LISTE_TESTS="scripts/tests-cibles-iib-v5-v7.txt"; LISTE_SHA256="81e2f75ac9cab360324485f4d76b326d97e7297a0aeaf5af70a52f515e8f21b8"; FICHIERS_TESTS=""
+ if [ -z "${TESTS_ARGS:-}" ]; then
+     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
+     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
+diff --git a/scripts/repetition_locale_iib_v5.py b/scripts/repetition_locale_iib_v5.py
+index 4db679c59..679ba0d60 100644
+--- a/scripts/repetition_locale_iib_v5.py
++++ b/scripts/repetition_locale_iib_v5.py
+@@ -34,7 +34,7 @@ from test_t06_v12_amorce import CONFIG_E2, DF_FACTICE, _dates_epreuve  # noqa: E
+ from test_t06_v12_scripts import OFFRES  # noqa: E402
+ 
+ ID, AUTRE = "61414494", 58936096
+-ATTENDUS = 296        # liste figée v6 : 275 ; poussée (0014) 8 ; course (0015 à 0017) 5 ; préfixe (0018) 2 ; cl1 (0019) 4 ; tirage (0020) 1 ; même tirage (0021) 1
++ATTENDUS = 297        # fichiers de la liste v6 : 296 et la vitesse du premier lot (0022) ; la liste v7 de l’amorce y ajoute l’essai du tirage (14 sur une machine à carte ; sans torch, 1 fichier sauté : `--liste-figee` ne passe que sur la machine)
+ CONFIG = "prereg/config-iib-v5-jouet.json"
+ RECHERCHE = '''"search offers")
+     case "$3" in id=*) echo '[]'; exit 0;; esac
+@@ -197,7 +197,8 @@ def main(argv: list[str]) -> int:
+     # correctif 0014 : chaque lot est parti sur la branche dès qu'il a été scellé (un commit « versement lot … » par lot, poussé)
+     par_lot = [s for s in git(m["origine"], "log", "--format=%s", branche).splitlines() if "(versement lot " in s]
+     poussees = [l for l in progres if "etape=versement" in l]
+-    assert len(par_lot) == 28 and len(poussees) == 28 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])
++    assert len(par_lot) == 28 and len(poussees) == 29 and all("poussee=faite" in l for l in poussees), (len(par_lot), poussees[-3:])   # + vitesse (0022)
++    assert sum("etape=vitesse" in l for l in progres) == 1 and f"diag/{run}/vitesse-premier-lot-iib-v5.json" in fichiers
+     dire(f"\nbranche {branche} poussée sur l'origine locale : run {run} ; {len(lots)} lots d'oracle, {len(ids)} lots d'identifiants, résumé et étalonnage présents ; "
+          f"{len(par_lot)} poussées par lot, toutes vérifiées par le lanceur")
+     # 3. lanceur de session : après-création, surveillance, destruction (faux outil)
+diff --git a/scripts/tests-cibles-iib-v5-v7.txt b/scripts/tests-cibles-iib-v5-v7.txt
+new file mode 100644
+index 000000000..030855f49
+--- /dev/null
++++ b/scripts/tests-cibles-iib-v5-v7.txt
+@@ -0,0 +1,26 @@
++tests/test_iib_artefacts_centrage_v5.py
++tests/test_iib_bout_en_bout_nul_v5.py
++tests/test_iib_branches_v5.py
++tests/test_iib_configuration_distillation_v5.py
++tests/test_iib_configuration_v5.py
++tests/test_iib_controle_premier_cout_v5.py
++tests/test_iib_couplage_v5.py
++tests/test_iib_designation_v5.py
++tests/test_iib_distillation_bout_en_bout_v5.py
++tests/test_iib_distillation_v5.py
++tests/test_iib_environnement_machine_v5.py
++tests/test_iib_epreuve_centrage_v5.py
++tests/test_iib_epreuves_v5.py
++tests/test_iib_fuite_v5.py
++tests/test_iib_jumeau_v5.py
++tests/test_iib_lanceur_v5.py
++tests/test_iib_lecture_cout_v5.py
++tests/test_iib_oracle_v5.py
++tests/test_iib_rapportes_v5.py
++tests/test_iib_reecriture_v5.py
++tests/test_iib_regenere_v5.py
++tests/test_iib_regle_v5.py
++tests/test_iib_temoin_jumeau_v5.py
++tests/test_iib_tours_v5.py
++tests/test_iib_versement_v5.py
++tests/test_tirage_carte_v1.py
+diff --git a/src/controle_ia/iib/lanceur_v5.py b/src/controle_ia/iib/lanceur_v5.py
+index afa86c046..8db830088 100644
+--- a/src/controle_ia/iib/lanceur_v5.py
++++ b/src/controle_ia/iib/lanceur_v5.py
+@@ -240,6 +240,23 @@ def duree_d_une_action_d_oracle(chrono: dict) -> dict:
+     return {"par_oracle_h": par, "retenue_h": max(par.values())}
+ 
+ 
++VITESSE = "vitesse-premier-lot-iib-v5.json"
++
++
++def vitesse_du_premier_lot(chrono: dict, modele) -> dict:
++    """Correctif 0022 : durées mesurées sur le premier lot (honnêtes : génération, puis les deux oracles), en secondes, par
++    épisode généré et par action d'oracle de chaque oracle ; méthode de tirage du modèle. Aucun texte, aucun jeton, aucune sortie
++    d'oracle : seulement des durées et des comptes. Une durée non mesurée est un refus (jamais un zéro inventé)."""
++    def par(s, n):
++        if not chrono.get(n):
++            raise GardeArret(f"vitesse du premier lot : {n} nul ou absent (aucune durée inventée)")
++        return round(float(chrono[s]) / float(chrono[n]), 4)
++    return {"lot": 1, "episodes_generes": int(chrono.get("episodes_generes", 0)), "generation_s_par_episode": par("generation_s", "episodes_generes"),
++            "oracle_P_actions": int(chrono.get("oracle_P_actions", 0)), "oracle_P_s_par_action": par("oracle_P_s", "oracle_P_actions"),
++            "oracle_N_actions": int(chrono.get("oracle_N_actions", 0)), "oracle_N_s_par_action": par("oracle_N_s", "oracle_N_actions"),
++            "tirage": getattr(modele, "tirage", None) or "processeur (multinomial ligne par ligne, générateur processeur)"}
++
++
+ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement: dict | None = None, donnees=None,
+                      debut_utc_s: float | None = None, carte=None, versement: vs.Versement | None = None) -> dict:
+     """Étalonnage, **versé par lot** (contre-lecture, M1) : après chaque lot d'épisodes, ses sorties d'oracle et les identifiants de
+@@ -283,6 +300,12 @@ def phase_etalonnage(config: dict, racine, dossier, modele, monde, environnement
+         if versement is not None:                           # correctif 0014 : le lot scellé part sur la branche, aussitôt
+             versement(f"lot {n_lot[0]:03d} {phase}", [p for f in (dossier / "lots" / nom, donnees / "lots" / f"ids-{nom}")
+                                                      for p in (f, Path(str(f) + ".sha256"))])
++        if n_lot[0] == 1:                                    # correctif 0022 : vitesse mesurée en marche, dès le premier lot
++            v = vitesse_du_premier_lot(chrono, modele)
++            sorties[VITESSE] = _ecrire(dossier, VITESSE, v)
++            progres(etape="vitesse", lot=1, **{k: v[k] for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action")})
++            if versement is not None:
++                versement("vitesse du premier lot", _fichiers_scelles(dossier / VITESSE))
+     plan_h = [{"phase": "etalonnage-honnete", "episode": f"{t}/e{k}", "tache": t, "condition": "honnete", "cle": f"iib/etalonnage/honnete/{t}/e{k}"}
+               for t in reserve for k in range(e["honnetes_par_tache"])]
+     plan_f = [{"phase": "etalonnage-flagrant", "episode": t if k == 0 else f"{t}/e{k}", "tache": t, "condition": "flagrant",
+diff --git a/tests/test_iib_lanceur_v5.py b/tests/test_iib_lanceur_v5.py
+index 5204125e8..3c4266554 100644
+--- a/tests/test_iib_lanceur_v5.py
++++ b/tests/test_iib_lanceur_v5.py
+@@ -409,7 +409,9 @@ def test_amorce_v5_et_lanceur_de_session_v3_differences_bornees_aux_changements_
+         assert subprocess.run(["bash", "-n", str(s / f)], capture_output=True).returncode == 0, f
+     amorce = (s / "amorce_instance_iib_v5.sh").read_text(encoding="utf-8")
+     liste = s / "tests-cibles-iib-v5-v6.txt"                     # version 6 de la liste : poussée par lot (correctif 0014)
+-    assert f'LISTE_TESTS="scripts/{liste.name}"; LISTE_SHA256="{hashlib.sha256(liste.read_bytes()).hexdigest()}"' in amorce
++    v7 = s / "tests-cibles-iib-v5-v7.txt"                        # correctif 0022 : l'amorce cite la v7 = v6 + l'essai du tirage sur la carte
++    assert f'LISTE_TESTS="scripts/{v7.name}"; LISTE_SHA256="{hashlib.sha256(v7.read_bytes()).hexdigest()}"' in amorce
++    assert v7.read_text(encoding="utf-8").split() == sorted(liste.read_text(encoding="utf-8").split() + ["tests/test_tirage_carte_v1.py"])
+     fichiers = liste.read_text(encoding="utf-8").split()
+     # tous les fichiers d'essais en version 5, distillateur compris, sauf celui du tokeniseur réel et celui du moteur à torch du
+     # distillateur (sautés sans leurs dépendances : « N passed, 1 skipped » ne passerait pas le contrôle du nombre de tests
+@@ -585,7 +587,8 @@ def test_replis_de_la_forme_du_lot_des_suites_ecrits_jamais_silencieux(tmp_path,
+     config2, _ = _depot_jouet(sain)
+     r2 = la.executer("etalonnage", config2, sain, "20991231-000031-iib-jouet", ModeleJouetDeLangue(), la.MondeJouet(), {}, carte=False)
+     assert r2["replis_forme_lot_suites"] == []
+-    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l)
++    assert all(l.endswith(" replis=0") for l in capfd.readouterr().err.splitlines() if l.startswith("PROGRES ") and " lot=" in l
++               and "etape=etalonnage" in l)
+ 
+ 
+ def test_amorce_de_la_course_differences_bornees_a_celle_de_l_etalonnage_et_choix_par_le_lanceur_de_session(tmp_path):
+@@ -706,3 +709,28 @@ def test_meme_tirage_a_l_etalonnage_et_a_la_course_et_variable_de_l_ordre(tmp_pa
+     env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "IIB_DEPOT": str(DEPOT)}
+     mauvais = subprocess.run(["bash", str(s / "lancer_iib_v3.sh"), "outil"], env={**env, "IIB_TIRAGE": "gpu"}, capture_output=True, text=True, timeout=60)
+     assert mauvais.returncode == 2 and "IIB_TIRAGE=gpu" in mauvais.stdout
++
++
++def test_vitesse_du_premier_lot_scellee_sans_texte(course, capfd):
++    """Correctif 0022 : dès la fin du premier lot, la durée de génération par épisode et la durée par action d'oracle de chaque
++    oracle sont écrites et scellées (aucun texte, aucun jeton, aucune sortie d'oracle), et dites par une marque de progrès.
++    Artefact : une durée non mesurée est un refus, jamais un zéro."""
++    import re
++
++    f = course["racine"] / "course" / la.VITESSE
++    v = json.loads(f.read_text(encoding="utf-8"))
++    assert verifier(f) and v["lot"] == 1 and v["episodes_generes"] == 8 and v["oracle_P_actions"] > 0 and v["oracle_N_actions"] > 0
++    assert set(v) == {"avertissement", "lot", "episodes_generes", "generation_s_par_episode", "oracle_P_actions", "oracle_P_s_par_action",
++                      "oracle_N_actions", "oracle_N_s_par_action", "tirage"}
++    assert all(isinstance(v[k], float) and v[k] > 0 for k in ("generation_s_par_episode", "oracle_P_s_par_action", "oracle_N_s_par_action"))
++    brut = f.read_text(encoding="utf-8")
++    assert "COST" not in brut and '"ids"' not in brut and '"lignes"' not in brut and SIGNAL_MAITRE not in brut
++    with pytest.raises(GardeArret, match="aucune durée inventée"):
++        la.vitesse_du_premier_lot({"generation_s": 1.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 0}, None)
++    m = la.vitesse_du_premier_lot({"generation_s": 4.0, "episodes_generes": 8, "oracle_P_s": 2.0, "oracle_P_actions": 80, "oracle_N_s": 3.0,
++                                   "oracle_N_actions": 80}, type("M", (), {"tirage": "carte-x"})())
++    assert m["generation_s_par_episode"] == 0.5 and m["oracle_P_s_par_action"] == 0.025 and m["tirage"] == "carte-x"
++    la.progres(etape="vitesse", lot=1, generation_s_par_episode=0.5, oracle_P_s_par_action=0.025, oracle_N_s_par_action=0.0375)
++    ligne = capfd.readouterr().err.strip().splitlines()[-1]
++    assert re.fullmatch(r"PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+", ligne)
++    assert not re.search(r"au-dessus|interpr|échec|echec|aire=|bas=|haut=|ligne_|table_|plancher", ligne, re.I)
+diff --git a/tests/test_iib_versement_v5.py b/tests/test_iib_versement_v5.py
+index cf2c24279..d9cbf2a02 100644
+--- a/tests/test_iib_versement_v5.py
++++ b/tests/test_iib_versement_v5.py
+@@ -89,8 +89,10 @@ def sain(tmp_path_factory):
+ 
+ def test_cas_sain_chaque_lot_scelle_est_sur_la_branche_distante_aussitot(sain):
+     v, res = sain["v"], sain["res"]
+-    assert res["lots"] == 28 and len(v.journal) == 28
++    assert res["lots"] == 28 and len(v.journal) == 29                   # 28 lots, et la vitesse du premier lot (correctif 0022)
+     assert all(e["poussee"] == "faite" and e["code"] == 0 and e["cause"] is None for e in v.journal)
++    assert [e["motif"] for e in v.journal][:2] == ["lot 001 etalonnage-honnete", "vitesse du premier lot"]
++    assert f"diag/{RUN}/vitesse-premier-lot-iib-v5.json" in sur_l_origine(sain)
+     distant = sur_l_origine(sain)
+     for k in range(1, 29):
+         lot = [n for n in distant if re.fullmatch(rf"diag/{RUN}/lots/lot-{k:03d}-etalonnage-[a-z]+\.json", n)]
+@@ -127,12 +129,14 @@ def test_artefact_origine_qui_refuse_trois_fois_de_suite_arret_lots_scelles_sur_
+     with pytest.raises(GardeArret, match="refusée 3 fois de suite"):
+         etalonner(p, v)
+     assert [e["poussee"] for e in v.journal] == ["refusee"] * 3 and all(e["cause"] == "script_code_1" for e in v.journal)
++    assert [e["motif"] for e in v.journal][1] == "vitesse du premier lot"      # correctif 0022 : la vitesse aussi, refusée de même
+     err = capfd.readouterr().err
+     refus = [l for l in err.splitlines() if l.startswith("PROGRES ") and "etape=versement" in l]
+     assert len(refus) == 3 and all("poussee=refusee" in l for l in refus) and "refus_de_suite=3" in refus[-1]
+     assert err.count("VERSEMENT REFUSÉ") == 3                                    # visible hors des marques de progrès aussi
+     lots = sorted((p["d"] / "diag" / RUN / "lots").glob("lot-*.json"))
+-    assert len(lots) == 3 and all(verifier(f) for f in lots)                     # rien de perdu : scellés sur le disque
++    assert len(lots) == 2 and all(verifier(f) for f in lots)                     # rien de perdu : scellés sur le disque (lot 1, vitesse, lot 2)
++    assert verifier(p["d"] / "diag" / RUN / "vitesse-premier-lot-iib-v5.json")
+     assert not any(n.startswith("diag/") for n in sur_l_origine(p))              # rien n'est passé, et c'est dit
+     journal = (p["t"] / "journal.txt").read_text(encoding="utf-8")
+     assert journal.count("poussée : tentative 3 refusée") == 3 and "poussée impossible (versement lot 001" in journal
+-- 
+2.43.0
+
