@@ -10,7 +10,7 @@
 
 ## (a) Ce que le papier établit
 
-Les premiers vecteurs singuliers de la différence de poids entre modèle affiné et modèle d'origine portent les comportements acquis ; on surveille les activations le long de ces directions, sans donnée d'affinage (p. 1). Le moniteur garde, par direction, le minimum et le maximum vus ; une entrée hors de cette plage est signalée, **et la plage est élargie** (p. 4, 5). Le taux de fausses alertes après n − 1 épisodes ordinaires est borné par 2t/n + O(1/n²) pour t directions (p. 5), preuve sous tirages indépendants et échangeables (p. 17). Portes dérobées : 93 % à 100 % des réponses signalées dès la première fois, moins de 1 % de fausses alertes (p. 2, 7) ; un cas à déclencheurs multiples ne signale que 27,27 % des invites (p. 8). Limites : « not adversarially robust », poids d'origine requis (p. 16).
+Les premiers vecteurs singuliers de la différence de poids entre modèle affiné et modèle d'origine portent les comportements acquis ; on surveille les activations le long de ces directions, sans donnée d'affinage (p. 1). Le moniteur garde, par direction, le minimum et le maximum vus ; une entrée hors de cette plage est signalée, **et la plage est élargie** (p. 4, 5). Après n − 1 épisodes ordinaires, le taux de fausses alertes est borné par 2t/n + O(1/n²) pour t directions (p. 5), preuve sous tirages indépendants et échangeables (p. 17). Portes dérobées : 93 % à 100 % des réponses signalées dès la première fois, moins de 1 % de fausses alertes (p. 2, 7) ; un cas à déclencheurs multiples ne signale que 27,27 % des invites (p. 8). Limites : « not adversarially robust », poids d'origine requis (p. 16).
 
 ## (b) Ce que la décision voulait, et si le papier le permet
 
@@ -22,4 +22,4 @@ Il prévient l'objection « pourquoi des sondes supervisées, quand une surveill
 
 ## (d) Plus petite action
 
-À la v4 de N-075, récrire la phrase de la l. 110 : « une alerte par extrême neuf ; la répétition d'un écart déjà signalé ne sonne plus (p. 5) ; borne sous échangeabilité (p. 17) ». Coût : dix minutes de session, aucune dépense. Si la base « lecture des poids » est mesurée sur la famille affinée, il faut un devis et un GO.
+À la v4 de N-075, récrire la phrase de la l. 110 : « une alerte par extrême neuf ; la répétition d'un écart déjà signalé ne sonne plus (p. 5) ; borne sous échangeabilité (p. 17) ». Dix minutes, aucune dépense. Mesurer la base « lecture des poids » demanderait un devis et un GO.

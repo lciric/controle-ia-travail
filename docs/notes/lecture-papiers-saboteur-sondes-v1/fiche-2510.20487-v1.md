@@ -22,4 +22,4 @@ Il prévient l'objection « vos saboteurs sont instruits, la sonde lit la consig
 
 ## (d) Plus petite action
 
-Une ligne au registre des décisions : N-053 est en vigueur ; « léger » est remplacé par l'ordre de grandeur de la p. 5 dans le futur devis de cette famille ; Wang et al. 2025c est à identifier et à verser. Coût : quinze minutes, aucune dépense. Tout affinage demande un devis et un GO.
+Une ligne au registre des décisions : N-053 est en vigueur ; « léger » est remplacé par l'ordre de grandeur de la p. 5 dans le futur devis de cette famille ; Wang et al. 2025c est à identifier et à verser. Quinze minutes, aucune dépense ; tout affinage, devis et GO.

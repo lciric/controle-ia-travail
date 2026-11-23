@@ -14,7 +14,7 @@ Deux groupes épars de neurones, trouvés par sonde : « de valeur », qui préd
 
 ## (b) Ce que la décision voulait, et si le papier le permet
 
-Le GO voulait un moniteur boîte blanche. La N-075 (v3, l. 97) range parmi les acquis pris par ce papier « la réussite attendue lue dans les états internes et sa calibration ». **Le permet en partie.** La lecture de la réussite attendue est bien établie. **La calibration, non** : le papier ne rapporte que du pouvoir de séparation, et le mot « calibration » n'y figure pas. Le dilemme visé par la décision, une réussite attendue haute alors que l'issue calculée échoue, n'y est pas testé : aucun sous-rendement délibéré, aucun saboteur. L'usage survit en v3, au point 1 (bras « papier dopamine ») et au point 2.
+Le GO voulait un moniteur boîte blanche ; la N-075 (v3, l. 97) attribue à ce papier « la réussite attendue lue dans les états internes et sa calibration ». **Le permet en partie.** La lecture de la réussite attendue est bien établie. **La calibration, non** : le papier ne rapporte que du pouvoir de séparation, et le mot « calibration » n'y figure pas. Le dilemme visé (réussite attendue haute, issue calculée en échec) n'y est pas testé : aucun saboteur. L'usage survit en v3, au point 1 (bras « papier dopamine ») et au point 2.
 
 ## (c) Usage pour l'entretien et le billet
 
@@ -22,4 +22,4 @@ Objection « sur une tâche floue, pas de récompense » : concéder, leur page 
 
 ## (d) Plus petite action
 
-Deux corrections à la v4 de N-075. Remplacer « et sa calibration » par « et son pouvoir de séparation (aire sous la courbe, p. 8) ». Ajouter « longueur de la question » aux bases du bras, à vérifier dans son plan exploratoire. Au registre des papiers : du code exploratoire est écrit, non lancé. Coût : quinze minutes, aucune dépense.
+Deux corrections à la v4 de N-075. Remplacer « et sa calibration » par « et son pouvoir de séparation (aire sous la courbe, p. 8) ». Ajouter « longueur de la question » aux bases du bras, à vérifier dans son plan exploratoire. Au registre des papiers : du code exploratoire est écrit, non lancé. Quinze minutes, aucune dépense.

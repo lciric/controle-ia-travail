@@ -10,7 +10,7 @@
 
 ## (a) Ce que le papier établit
 
-L'attaquant décide quand attaquer (politique de départ) et quand abandonner (politique d'arrêt), sans gagner en capacité (p. 1). L'audit relit **les trajectoires les plus suspectes** selon un moniteur de confiance (1 % du budget, p. 1). Au budget de 1 %, le résumé annonce −20 points de sûreté au départ et −20 à −28 points à l'arrêt (p. 1). Mais **un seul** de ces résultats a un intervalle de confiance qui exclut zéro : l'arrêt sur LinuxArena, de 0,36 à 0,09, soit −28 points, intervalle [−37, −8], 23 trajectoires (p. 5). Les deux baisses au départ à 1 % ont des intervalles qui franchissent zéro de 3 points au plus (p. 5). Seuils réglés de façon adverse, arrêt appliqué après coup (p. 5, 7) : C'est une « heuristic upper bound » (p. 11), conditionnelle à une tentative, non la sûreté en service (p. 3, 7).
+L'attaquant décide quand attaquer (politique de départ) et quand abandonner (politique d'arrêt), sans gagner en capacité (p. 1). L'audit relit **les trajectoires les plus suspectes** selon un moniteur de confiance (1 % du budget, p. 1). Au budget de 1 %, le résumé annonce −20 points de sûreté au départ et −20 à −28 points à l'arrêt (p. 1). Mais **un seul** de ces résultats a un intervalle de confiance qui exclut zéro : l'arrêt sur LinuxArena, de 0,36 à 0,09, soit −28 points, intervalle [−37, −8], 23 trajectoires (p. 5). Les deux baisses au départ à 1 % ont des intervalles qui franchissent zéro de 3 points au plus (p. 5). Seuils réglés de façon adverse, arrêt appliqué après coup (p. 5, 7) : c'est une « heuristic upper bound » (p. 11), conditionnelle à une tentative, non la sûreté en service (p. 3, 7).
 
 ## (b) Ce que la décision voulait, et si le papier le permet
 
