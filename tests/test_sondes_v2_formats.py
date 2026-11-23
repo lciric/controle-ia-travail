@@ -100,6 +100,12 @@ def _note_petite_dose1():
     (lambda n: n["activations"]["series_publiques"].update(propre_a1_saboteur=1), "rôle"),
     (lambda n: n["activations"]["series_publiques"].pop("ancre"), "manquants"),
     (lambda n: n["activations"].update(attestation_series_publiques="oui"), "attestation"),
+    (lambda n: n["activations"]["series_publiques"].update(autres=1), "en trop"),
+    (lambda n: n["activations"]["series_publiques"].update(propre=-1), "entier"),
+    (lambda n: n["activations"]["series_publiques"].update(ancre=True), "entier"),
+    (lambda n: n["activations"].pop("attestation_series_publiques"), "manquants"),
+    (lambda n: n["activations"]["cles_communes"].update(definition="clés du saboteur"), "valeur textuelle"),
+    (lambda n: n["activations"]["chemin_de_calcul"].update(gabarit="gabarit-jumeau"), "valeur textuelle"),
     (lambda n: n["scores_bbis"]["doses"][0]["plis"][0]["chemins"].update({"nu|saboteur": "autre"}), "origine"),
     (lambda n: n["cases_de_l_epreuve_plantee"].update(extension_taches_actions=True), "extension"),
     (lambda n: n["cases_de_l_epreuve_plantee"]["complet"].update(doses_holm=1), "doses"),
@@ -366,6 +372,19 @@ def _fichiers_ouvreur(tmp_path, abimer=None, series_garde=None):
     return _ecrire(tmp_path / "ouvreur.json", json.dumps(o)), g
 
 
+def _note_de_garde(g, retirer=(), publiques=None, sha=None):
+    """Note des effectifs fabriquée qui nomme les séries de la garde `g` (nu, adaptateurs, propres) ; `retirer` : séries
+    non nommées, comptées dans `publiques`."""
+    series = sorted(fm._series_de_la_garde(g))
+    n = _note()
+    n["activations"]["garde_sha256"] = sha or (g.parent / (g.name + ".sha256")).read_text().split()[0]
+    n["activations"]["series"] = [{"nom": x, "categorie": "nu" if x == "nu" else "propre" if x.startswith("propre-")
+                                   else "adaptateur", "cles": 50} for x in series if x not in retirer]
+    n["activations"]["series_publiques"] = publiques or {"propre": 0, "ancre": 0, "autres_a_nom_public": 0}
+    k = len(list(g.parent.glob("note-garde-*.md")))
+    return _note_md(g.parent, n, f"note-garde-{k}.md")
+
+
 def _registre_sain(tmp_path):
     reg = tmp_path / "registre.md"
     reg.write_text("… R-4242 : verdict scellé …", encoding="utf-8")
@@ -375,7 +394,7 @@ def _registre_sain(tmp_path):
 def test_ouvreur_cas_sain(tmp_path):
     t, g = _fichiers_ouvreur(tmp_path)
     reg = _registre_sain(tmp_path)
-    r = fm.charger_table_ouvreur(t, g, reg)
+    r = fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g))
     assert r["P"] == {"f1": 4, "f2": 7} and r["F"] == 2 and r["cases_etalon"] == {"f1": (4, 2), "f2": (7, 2)}
     assert r["hors_paire"] == 1 and r["propres"] == 1 and r["cases_hors_grille"] == []
     assert r["familles"]["f1"][0] == ("a0", "a1") and r["poids_par_serie"]["nu"] == {"type": "nu"}
@@ -407,7 +426,7 @@ def test_ouvreur_artefacts(tmp_path, abimer, motif):
     t, g = _fichiers_ouvreur(tmp_path, abimer)
     reg = _registre_sain(tmp_path)
     with pytest.raises(GardeArret, match=motif):
-        fm.charger_table_ouvreur(t, g, reg)
+        fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g))
 
 
 def test_ouvreur_propre_sans_prefixe_et_couple_partage(tmp_path):
@@ -420,7 +439,7 @@ def test_ouvreur_propre_sans_prefixe_et_couple_partage(tmp_path):
     t = _ecrire(d1 / "o.json", json.dumps(o))
     reg = _registre_sain(d1)
     with pytest.raises(GardeArret, match="partagent le couple"):
-        fm.charger_table_ouvreur(t, g, reg)
+        fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g))
     # m10 : série propre sans préfixe « propre- » et adaptateur avec préfixe « propre- »
     d2 = tmp_path / "d2"
     d2.mkdir()
@@ -430,7 +449,7 @@ def test_ouvreur_propre_sans_prefixe_et_couple_partage(tmp_path):
     o2["sources"]["garde_des_activations"]["sha256"] = (d2 / "garde-activations.json.sha256").read_text().split()[0]
     t2 = _ecrire(d2 / "o2.json", json.dumps(o2))
     with pytest.raises(GardeArret, match="préfixe « propre- »"):
-        fm.charger_table_ouvreur(t2, g2, reg)
+        fm.charger_table_ouvreur(t2, g2, reg, _note_de_garde(g2))
     d3 = tmp_path / "d3"
     d3.mkdir()
     o3 = _ouvreur("0" * 64)
@@ -439,7 +458,7 @@ def test_ouvreur_propre_sans_prefixe_et_couple_partage(tmp_path):
     o3["sources"]["garde_des_activations"]["sha256"] = (d3 / "garde-activations.json.sha256").read_text().split()[0]
     t3 = _ecrire(d3 / "o3.json", json.dumps(o3))
     with pytest.raises(GardeArret, match="adaptateur ne peut pas"):
-        fm.charger_table_ouvreur(t3, g3, reg)
+        fm.charger_table_ouvreur(t3, g3, reg, _note_de_garde(g3))
 
 
 def test_ouvreur_empreinte_et_registre(tmp_path):
@@ -447,22 +466,57 @@ def test_ouvreur_empreinte_et_registre(tmp_path):
     reg = _registre_sain(tmp_path)
     # M3 : registre obligatoire (None et fichier absent)
     with pytest.raises(GardeArret, match="registre obligatoire"):
-        fm.charger_table_ouvreur(t, g, None)
+        fm.charger_table_ouvreur(t, g, None, _note_de_garde(g))
     with pytest.raises(GardeArret, match="registre absent"):
-        fm.charger_table_ouvreur(t, g, tmp_path / "registre_inexistant.md")
+        fm.charger_table_ouvreur(t, g, tmp_path / "registre_inexistant.md", _note_de_garde(g))
     with pytest.raises(TypeError):
         fm.charger_table_ouvreur(t, g)  # sans argument registre
     t.write_text(t.read_text().replace("R-4242", "R-4243"), encoding="utf-8")
     with pytest.raises(GardeArret, match="empreinte"):
-        fm.charger_table_ouvreur(t, g, reg)
+        fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g))
     t, g = _fichiers_ouvreur(tmp_path)
     reg2 = tmp_path / "registre2.md"
     reg2.write_text("R-42420 seulement", encoding="utf-8")
     with pytest.raises(GardeArret, match="absent"):
-        fm.charger_table_ouvreur(t, g, reg2)
+        fm.charger_table_ouvreur(t, g, reg2, _note_de_garde(g))
     o = json.loads(t.read_text())
     o2 = copy.deepcopy(o)
     o2["sources"]["garde_des_activations"]["sha256"] = "c" * 64
     t2 = _ecrire(tmp_path / "o2.json", json.dumps(o2))
     with pytest.raises(GardeArret, match="garde des activations"):
-        fm.charger_table_ouvreur(t2, g, reg)
+        fm.charger_table_ouvreur(t2, g, reg, _note_de_garde(g))
+
+
+def test_couverture_de_la_note(tmp_path):
+    t, g = _fichiers_ouvreur(tmp_path)
+    nl = fm.charger_note_effectifs(_note_de_garde(g))
+    r = fm.verifier_couverture_note(nl, g)
+    assert r["comptees"] == 0 and r["nommees"] == r["garde"]
+    pub = {"propre": 1, "ancre": 0, "autres_a_nom_public": 0}
+    nl = fm.charger_note_effectifs(_note_de_garde(g, retirer=("propre-a0",), publiques=pub))
+    assert fm.verifier_couverture_note(nl, g)["comptees"] == 1  # série publique comptée, non nommée : sain
+    nl = fm.charger_note_effectifs(_note_de_garde(g, retirer=("propre-a0",)))
+    with pytest.raises(GardeArret, match="nommées"):  # omise
+        fm.verifier_couverture_note(nl, g)
+    nl = fm.charger_note_effectifs(_note_de_garde(g, publiques=pub))
+    with pytest.raises(GardeArret, match="nommées"):  # nommée et comptée
+        fm.verifier_couverture_note(nl, g)
+    nl = fm.charger_note_effectifs(_note_de_garde(g, sha="d" * 64))
+    with pytest.raises(GardeArret, match="empreinte de la garde"):
+        fm.verifier_couverture_note(nl, g)
+    nl = fm.charger_note_effectifs(_note_de_garde(g))
+    nl["note"]["activations"]["series"].append({"nom": "intrus", "categorie": "adaptateur", "cles": 50})
+    with pytest.raises(GardeArret, match="absente"):
+        fm.verifier_couverture_note(nl, g)
+
+
+def test_ouvreur_couverture_des_paires(tmp_path):
+    t, g = _fichiers_ouvreur(tmp_path)
+    reg = _registre_sain(tmp_path)
+    pub = {"propre": 0, "ancre": 0, "autres_a_nom_public": 1}
+    with pytest.raises(GardeArret, match="couverture des paires"):  # un membre caché parmi les séries publiques
+        fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g, retirer=("a1",), publiques=pub))
+    with pytest.raises(GardeArret, match="autre garde"):
+        fm.charger_table_ouvreur(t, g, reg, _note_de_garde(g, sha="e" * 64))
+    with pytest.raises(GardeArret, match="note des effectifs obligatoire"):
+        fm.charger_table_ouvreur(t, g, reg, None)

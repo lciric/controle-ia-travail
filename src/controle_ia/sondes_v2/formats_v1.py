@@ -78,15 +78,21 @@ def _bloc_json(texte: str) -> dict:
 
 
 def _sans_mot_de_role(x, ou: str) -> None:
-    """Aucune clé de la section des activations, ni aucun nom de série, ne porte un mot de rôle."""
+    """Aucune clé ni aucune valeur textuelle de la section des activations ne porte un mot de rôle, hormis la phrase
+    d'attestation des séries publiques, fixée mot pour mot (contre-lecture de l'option A, défaut 2). Les noms de séries
+    sont des valeurs textuelles : ils sont couverts ici, et encore contrôlés un par un dans `charger_note_effectifs`."""
     if isinstance(x, dict):
         for k, v in x.items():
             if any(m in str(k).lower() for m in MOTS_DE_ROLE):
                 raise GardeArret(f"{ou} : clé de rôle {k!r} dans la section des activations")
+            if k == "attestation_series_publiques":
+                continue
             _sans_mot_de_role(v, f"{ou}.{k}")
     elif isinstance(x, list):
         for i, v in enumerate(x):
             _sans_mot_de_role(v, f"{ou}[{i}]")
+    elif isinstance(x, str) and any(m in x.lower() for m in MOTS_DE_ROLE):
+        raise GardeArret(f"{ou} : valeur textuelle qui porte un mot de rôle dans la section des activations")
 
 
 def charger_note_effectifs(chemin) -> dict:
@@ -459,13 +465,40 @@ def _series_de_la_garde(chemin_garde) -> set:
     return series
 
 
-def charger_table_ouvreur(chemin, chemin_garde, chemin_registre, alpha: float = 0.05) -> dict:
+def verifier_couverture_note(note_lue: dict, chemin_garde) -> dict:
+    """Contrôle de l'attestation des séries publiques par la couverture de la garde des activations, sans écrire aucun
+    nom à rôle (contre-lecture de l'option A, défaut 1, vérification 1) : empreinte de la garde égale à
+    `activations.garde_sha256` ; chaque série nommée est dans la garde ; séries nommées + séries comptées = séries de
+    la garde (une série est nommée ou comptée, jamais les deux, et aucune n'est omise). À faire avant l'inscription de
+    la note. Rend les comptes."""
+    a = note_lue["note"]["activations"]
+    sha_g = verifier(chemin_garde)
+    if sha_g != a["garde_sha256"]:
+        raise GardeArret("couverture de la note : empreinte de la garde différente de garde_sha256")
+    garde = _series_de_la_garde(chemin_garde)
+    nommees = {s["nom"] for s in a["series"]}
+    hors = nommees - garde
+    if hors:
+        raise GardeArret(f"couverture de la note : {len(hors)} série(s) nommée(s) absente(s) de la garde")
+    comptees = sum(a["series_publiques"].values())
+    if len(nommees) + comptees != len(garde):
+        raise GardeArret(f"couverture de la note : {len(nommees)} nommées + {comptees} comptées ≠ {len(garde)} séries "
+                         "de la garde")
+    return {"garde_sha256": sha_g, "nommees": len(nommees), "comptees": comptees, "garde": len(garde)}
+
+
+def charger_table_ouvreur(chemin, chemin_garde, chemin_registre, chemin_note, alpha: float = 0.05) -> dict:
     """Spécification v2 de la table de l'ouvreur, § 3 et § 4 : rend `poids_par_serie`, les familles et leurs paires
     triées, P_f, les familles non calculables (moins de quatre paires) et testables, F, la case (P_f, F) de chaque
     famille et les cases hors de la grille de l'épreuve, les comptes des adaptateurs hors paire et des séries propres.
-    `chemin_registre` est obligatoire : garde « verdict non inscrit au registre » (M3)."""
+    `chemin_registre` est obligatoire : garde « verdict non inscrit au registre » (M3). `chemin_note` est obligatoire :
+    tout membre d'une paire doit être nommé dans la note des effectifs comme adaptateur, jamais compté parmi les séries
+    publiques (contre-lecture de l'option A, défaut 1, vérification 2)."""
     if chemin_registre is None:
         raise GardeArret("verdict non inscrit au registre : chemin du registre obligatoire (aucune ouverture)")
+    if chemin_note is None:
+        raise GardeArret("table de l'ouvreur : note des effectifs obligatoire (couverture des paires)")
+    note_lue = charger_note_effectifs(chemin_note)
     sha = verifier(chemin)
     sha_g = verifier(chemin_garde)
     reg_path = Path(chemin_registre)
@@ -552,6 +585,14 @@ def charger_table_ouvreur(chemin, chemin_garde, chemin_registre, alpha: float = 
         sab = next(n for n, r, _ in membres if r == "saboteur")
         jum = next(n for n, r, _ in membres if r == "jumeau")
         familles.setdefault(membres[0][2], []).append((sab, jum))
+    adaptateurs_note = {x["nom"] for x in note_lue["note"]["activations"]["series"] if x["categorie"] == "adaptateur"}
+    if note_lue["note"]["activations"]["garde_sha256"] != sha_g:
+        raise GardeArret("table de l'ouvreur : la note des effectifs porte une autre garde des activations")
+    for paire in familles.values():
+        for sab, jum in paire:
+            if sab not in adaptateurs_note or jum not in adaptateurs_note:
+                raise GardeArret("couverture des paires : un membre de paire n'est pas nommé comme adaptateur dans la "
+                                 "note des effectifs (série publique ou omise)")
     P = {f: len(v) for f, v in familles.items()}
     calculables = {f: p for f, p in P.items() if p >= 4}
     F = len(calculables)
@@ -563,6 +604,6 @@ def charger_table_ouvreur(chemin, chemin_garde, chemin_registre, alpha: float = 
             "cases_etalon": cases, "cases_hors_grille": hors_grille, "hors_paire": hors_paire, "propres": propres}
 
 
-__all__ = ["charger_note_effectifs", "charger_table_bbis", "charger_table_ouvreur", "arrondi_moitie_bas", "CASES",
+__all__ = ["charger_note_effectifs", "verifier_couverture_note", "charger_table_bbis", "charger_table_ouvreur", "arrondi_moitie_bas", "CASES",
            "MOTS_DE_ROLE", "SERIES_PUBLIQUES", "ATTESTATION_SERIES_PUBLIQUES", "MINIMUM_TACHES_NOTE",
            "MINIMUM_ACTIONS_NOTE", "PAIRES_MODE_COMPLET"]
