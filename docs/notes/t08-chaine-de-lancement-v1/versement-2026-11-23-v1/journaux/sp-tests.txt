@@ -1,0 +1,27 @@
+........................................................................ [ 28%]
+........................................................F............... [ 57%]
+........................................................................ [ 86%]
+.................................                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_amorce_instance_clone_de_l_arbre_aligne _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-28/test_amorce_instance_clone_de_0')
+
+    def test_amorce_instance_clone_de_l_arbre_aligne(tmp_path):
+        """Décision de la session mère (option (a)) : un clone d'une seule branche, profondeur 1, de l'arbre du dépôt, qui
+        porte des `resume.json` de runs jouets et de notes (aucun de 7b), est accepté ; le même clone plus un commit qui
+        verse le `resume.json` du run de 7b est arrêté."""
+        depot = Path(__file__).resolve().parents[1]
+        clone = tmp_path / "clone"                       # branche courante du dépôt, une seule, profondeur 1
+        _git(tmp_path, "clone", "-q", "--depth", "1", "--single-branch", "--no-checkout", f"file://{depot}", str(clone))
+        etrangers = [l for l in subprocess.run(["git", "-C", str(clone), "ls-tree", "-r", "--name-only", "HEAD"],
+                                               capture_output=True, text=True, check=True).stdout.splitlines()
+                     if l.endswith("/resume.json")]
+>       assert etrangers, "l'arbre ne porte plus de resume.json étranger : essai sans objet"
+E       AssertionError: l'arbre ne porte plus de resume.json étranger : essai sans objet
+E       assert []
+
+tests/test_t08_entrees_rendu_v1.py:263: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_t08_entrees_rendu_v1.py::test_amorce_instance_clone_de_l_arbre_aligne
+1 failed, 248 passed in 154.93s (0:02:34)
