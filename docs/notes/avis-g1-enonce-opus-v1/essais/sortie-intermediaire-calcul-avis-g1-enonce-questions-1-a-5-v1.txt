@@ -1,0 +1,36 @@
+== 1. Garde de Clopper-Pearson, n = 300 ==
+plus grand compte d'alertes qui passe (borne haute unilatérale 95 % < 5 %) : 8 sur 300 (borne 0.0476 ; à 9 : 0.0518)
+  indépendants, taux vrai 0.01 : P(passe) = 0.9964
+  indépendants, taux vrai 0.02 : P(passe) = 0.8493
+  indépendants, taux vrai 0.03 : P(passe) = 0.4536
+  indépendants, taux vrai 0.04 : P(passe) = 0.1497
+  indépendants, taux vrai 0.05 : P(passe) = 0.0341
+  30 tâches x 10, corrélation 0,3, taux vrai 0.01 : P(passe) = 0.9253
+  30 tâches x 10, corrélation 0,3, taux vrai 0.05 : P(passe) = 0.1912
+== 2. Bruit d'un seuil à 1 % fixé sur K épisodes ==
+  tau 0.01, K    300 : taux vrai moyenne 0.0100, écart-type 0.0057, P(>= 2 tau) 0.060 ; rappel vrai 0.2 -> 5e/50e/95e centiles 0.098/0.188/0.290 (pente 10.5)
+  tau 0.01, K    300 : taux vrai moyenne 0.0100, écart-type 0.0057, P(>= 2 tau) 0.060 ; rappel vrai 0.4 -> 5e/50e/95e centiles 0.240/0.383/0.514 (pente 14.5)
+  tau 0.01, K    150 : taux vrai moyenne 0.0066, écart-type 0.0066, P(>= 2 tau) 0.048 ; rappel vrai 0.2 -> 5e/50e/95e centiles 0.028/0.132/0.283 (pente 10.5)
+  tau 0.01, K    150 : taux vrai moyenne 0.0066, écart-type 0.0066, P(>= 2 tau) 0.048 ; rappel vrai 0.4 -> 5e/50e/95e centiles 0.093/0.298/0.506 (pente 14.5)
+  tau 0.01, K   3000 : taux vrai moyenne 0.0100, écart-type 0.0018, P(>= 2 tau) 0.000 ; rappel vrai 0.2 -> 5e/50e/95e centiles 0.168/0.199/0.231 (pente 10.5)
+  tau 0.01, K   3000 : taux vrai moyenne 0.0100, écart-type 0.0018, P(>= 2 tau) 0.000 ; rappel vrai 0.4 -> 5e/50e/95e centiles 0.354/0.398/0.441 (pente 14.5)
+  tau 0.01, K  60000 : taux vrai moyenne 0.0100, écart-type 0.0004, P(>= 2 tau) 0.000 ; rappel vrai 0.2 -> 5e/50e/95e centiles 0.193/0.200/0.207 (pente 10.5)
+  tau 0.01, K  60000 : taux vrai moyenne 0.0100, écart-type 0.0004, P(>= 2 tau) 0.000 ; rappel vrai 0.4 -> 5e/50e/95e centiles 0.390/0.400/0.410 (pente 14.5)
+  tau 0.05, K    300 : taux vrai moyenne 0.0498, écart-type 0.0125, P(>= 2 tau) 0.001 ; rappel vrai 0.2 -> 5e/50e/95e centiles 0.144/0.197/0.255 (pente 2.7)
+  tau 0.05, K    300 : taux vrai moyenne 0.0498, écart-type 0.0125, P(>= 2 tau) 0.001 ; rappel vrai 0.4 -> 5e/50e/95e centiles 0.318/0.396/0.472 (pente 3.7)
+== 3. Contraste contre le témoin, A et k à rappel égal (0,30), seuils sur K épisodes du témoin ==
+  K =    300 : P(A promu contre k, aucun avantage vrai) = 0.347 (1000 répétitions)
+  K =   3000 : P(A promu contre k, aucun avantage vrai) = 0.179 (1000 répétitions)
+  K =  60000 : P(A promu contre k, aucun avantage vrai) = 0.005 (1000 répétitions)
+== 4. Garde seule, véhicule qui décale A ; A et k à rappel égal (0,30) hors véhicule ==
+  alertes de A sur le témoin 0.010 : rappel de A 0.300 contre 0,300 ; P(garde passe) 0.996 ; P(contraste existant promu) 0.000 ; produit 0.000
+  alertes de A sur le témoin 0.015 : rappel de A 0.356 contre 0,300 ; P(garde passe) 0.961 ; P(contraste existant promu) 0.998 ; produit 0.959
+  alertes de A sur le témoin 0.020 : rappel de A 0.401 contre 0,300 ; P(garde passe) 0.849 ; P(contraste existant promu) 1.000 ; produit 0.849
+  alertes de A sur le témoin 0.030 : rappel de A 0.469 contre 0,300 ; P(garde passe) 0.454 ; P(contraste existant promu) 1.000 ; produit 0.454
+== 5. Ce que chaque garde laisse passer, en points de rappel (modèle de décalage, rappel vrai 0,30) ==
+  garde sur la queue (300 épisodes) : alertes du témoin 0.015 (décalage 0.156 écart-type) passe avec probabilité 0.961 ; rappel gonflé de +0.056
+  garde sur la queue (300 épisodes) : alertes du témoin 0.020 (décalage 0.273 écart-type) passe avec probabilité 0.849 ; rappel gonflé de +0.101
+  garde sur la queue (300 épisodes) : alertes du témoin 0.030 (décalage 0.446 écart-type) passe avec probabilité 0.454 ; rappel gonflé de +0.169
+  garde sur l'ensemble (aire témoin contre honnête, 300 épisodes) : marge 0.555, décalage admis 0.195 écart-type, alertes du témoin 0.0165, rappel gonflé de +0.071
+  garde sur l'ensemble (aire témoin contre honnête, 400 épisodes) : marge 0.547, décalage admis 0.169 écart-type, alertes du témoin 0.0155, rappel gonflé de +0.061
+  garde sur l'ensemble (aire témoin contre honnête, 1000 épisodes) : marge 0.530, décalage admis 0.107 écart-type, alertes du témoin 0.0132, rappel gonflé de +0.038
