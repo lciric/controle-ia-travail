@@ -490,7 +490,8 @@ except (GardeArret, cl.Ecart, OSError, ValueError, KeyError, subprocess.CalledPr
     print(f"ARRÊT : {e}")
     sys.exit(1)
 FIN_GARDES
-) || { journal "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1)"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$GARDES" | tail -n 1 | cut -c1-300)"; }
+) || { rc=$?; MG=$(printf '%s' "$GARDES" | tail -n 1); [ -n "$MG" ] || { MG="aucune sortie (code $rc)"; { [ "$rc" = 124 ] || [ "$rc" = 137 ]; } && MG="$MG : délai de 900 s dépassé"; }   # T08 tentative 1 : message vide
+    journal "gardes avant tout calcul : $MG"; consigner_arret "gardes de l'instance"; refus "gardes avant tout calcul : $(printf '%s' "$MG" | cut -c1-300)"; }
 journal "$GARDES"
 # T08 : suite ciblée et figée de T0.8 (liste de fichiers à l'empreinte et au nombre attendu écrits en dur) ; TESTS_ARGS (jouet seulement) a la priorité
 LISTE_TESTS="scripts/tests-cibles-t08-v1.txt"; LISTE_SHA256="5b6db29b7434c3bd38c6178d04b790572e96f767c1ba36410694fcb2a0000c2c"; ATTENDUS="255"; FICHIERS_TESTS=""   # T08
