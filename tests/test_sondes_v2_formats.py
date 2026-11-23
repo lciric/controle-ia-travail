@@ -48,7 +48,8 @@ def _note():
                               "distinctes_des_cles_propres": True},
             "nu_relit_les_cles_communes": True,
             "series_publiques": {"propre": 3, "ancre": 2, "autres_a_nom_public": 0},
-            "attestation_series_publiques": fm.ATTESTATION_SERIES_PUBLIQUES},
+            "attestation_series_publiques": fm.ATTESTATION_SERIES_PUBLIQUES,
+            "non_propres_aux_cles_communes": True},
         "scores_bbis": {"table": {"chemin": "t.jsonl", "sha256": H, "ligne_registre": "SCORES-BBIS 1"},
                         "colonnes": ["dose", "pli"],
                         "doses": [{"dose": "1", "plis": [_pli("0", 6), _pli("1", 6)]},
@@ -101,6 +102,9 @@ def _note_petite_dose1():
     (lambda n: n["activations"]["series_publiques"].pop("ancre"), "manquants"),
     (lambda n: n["activations"].update(attestation_series_publiques="oui"), "attestation"),
     (lambda n: n["activations"]["series_publiques"].update(autres=1), "en trop"),
+    (lambda n: n["activations"].update(non_propres_aux_cles_communes="oui"), "booléen"),
+    (lambda n: n["activations"].update(non_propres_aux_cles_communes=False), "sans réserve"),
+    (lambda n: n["activations"].pop("non_propres_aux_cles_communes"), "manquants"),
     (lambda n: n["activations"]["series_publiques"].update(propre=-1), "entier"),
     (lambda n: n["activations"]["series_publiques"].update(ancre=True), "entier"),
     (lambda n: n["activations"].pop("attestation_series_publiques"), "manquants"),
@@ -485,6 +489,13 @@ def test_ouvreur_empreinte_et_registre(tmp_path):
     t2 = _ecrire(tmp_path / "o2.json", json.dumps(o2))
     with pytest.raises(GardeArret, match="garde des activations"):
         fm.charger_table_ouvreur(t2, g, reg, _note_de_garde(g))
+
+
+def test_non_propres_faux_avec_reserve(tmp_path):
+    n = _note()
+    n["activations"]["non_propres_aux_cles_communes"] = False
+    n["reserves"] = ["ancre n° 1 hors des clés communes"]
+    assert fm.charger_note_effectifs(_note_md(tmp_path, n))["sha256"]
 
 
 def test_couverture_de_la_note(tmp_path):

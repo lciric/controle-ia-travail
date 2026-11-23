@@ -116,7 +116,11 @@ def charger_note_effectifs(chemin) -> dict:
     _sans_mot_de_role(a, "note.activations")
     _cles_exactes(a, ("dossier_run", "inventaire_sha256", "garde_sha256", "regle_garde", "couches_gardees",
                       "chemin_de_calcul", "series", "series_publiques", "attestation_series_publiques", "cles_communes",
-                      "nu_relit_les_cles_communes"), "note.activations")
+                      "nu_relit_les_cles_communes", "non_propres_aux_cles_communes"), "note.activations")
+    # mot de la mère (2026-11-24) : ancres et séries « autres » portent-elles les clés communes ? réserve exigée si non
+    _booleen(a["non_propres_aux_cles_communes"], "note.activations.non_propres_aux_cles_communes")
+    if not a["non_propres_aux_cles_communes"] and not n["reserves"]:
+        raise GardeArret("note : non_propres_aux_cles_communes faux sans réserve inscrite")
     # Option A du diagnostic de la garde des mots de rôle (mot de la mère, 2026-11-23, 23:50Z) : les séries à nom
     # public (séries propres et ancres du format du barreau 5, et toute autre série dont le nom porte un rôle public)
     # sont comptées, jamais nommées ; la note atteste qu'aucune n'est membre d'une paire opaque du test. La garde des
