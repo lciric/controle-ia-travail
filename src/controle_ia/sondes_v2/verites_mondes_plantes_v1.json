@@ -1,0 +1,54 @@
+{
+ "format": "verites-mondes-plantes-v1",
+ "ecrit_par": "développeur du code des sondes v2 (session_013QMaykMZAR8jYKempS4coQ), avant toute exécution d'un monde",
+ "note": "Composantes : arguments de monde_plante_v1.Parametres (les autres à leur défaut, nuls). Tailles (unités, tâches, actions par tâche), dimension, seuil α et seuil de la sonde d'identité : arguments du programme. Choix provisoires du développeur (Q10, Q12, Q13) en attente de la mère ; une réponse contraire donnera un fichier v2, jamais une réécriture.",
+ "alpha_par_defaut": 0.05,
+ "seuil_identite_haute_par_defaut": 0.9,
+ "mondes": {
+  "identite_seule": {
+   "composantes": {"identite": 3.0},
+   "lecture_attendue": {
+    "identite": {"admises": ["haute"], "nature": "puissance"},
+    "transport": {"admises": ["non établie", "contraire"], "nature": "fausse_lecture"},
+    "contraste": {"admises": ["non établie", "contraire"], "nature": "fausse_lecture"}
+   }
+  },
+  "trace_commune": {
+   "composantes": {"identite": 3.0, "trace": 1.5},
+   "lecture_attendue": {
+    "contraste": {"admises": ["établie"], "nature": "puissance"}
+   }
+  },
+  "texte_seul": {
+   "composantes": {"texte": 4.0},
+   "lecture_attendue": {
+    "texte": {"admises": ["établi"], "nature": "puissance"},
+    "interaction": {"admises": ["non établie"], "nature": "fausse_lecture"}
+   }
+  },
+  "interaction": {
+   "composantes": {"interaction": 4.0},
+   "lecture_attendue": {
+    "interaction": {"admises": ["établie"], "nature": "puissance"}
+   }
+  },
+  "interaction_contraire": {
+   "composantes": {"trace": 1.5, "interaction": -1.5, "interaction_sur_trace": true},
+   "lecture_attendue": {
+    "interaction": {"admises": ["contraire"], "nature": "puissance"}
+   }
+  },
+  "etiquettes_permutees": {
+   "composantes": {"permuter_etiquettes": true},
+   "lecture_attendue": {
+    "nul_principal": {"admises": ["non"], "nature": "fausse_lecture"}
+   }
+  },
+  "fuite_de_pli": {
+   "composantes": {"fuite_de_pli": true},
+   "lecture_attendue": {
+    "fuite": {"admises": ["garde arrêtée"], "nature": "garde"}
+   }
+  }
+ }
+}
