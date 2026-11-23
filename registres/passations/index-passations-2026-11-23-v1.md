@@ -42,3 +42,4 @@
 - cloisonnée modes et attaques : runs/cloisonnee-modes-attaques-questions-v4 6a5ae92da, 2026-11-23-0653-cloisonnee-modes-attaques.md (4258b6da…) ; coffre/modes-tenus-a-l-ecart-collisionneur-v1 ba593e54 — cloisonné
 - contre-lecteur grille de repli papier C : papier-c/contre-lecture-grille-v2 6ec9ccc5, 2026-11-23-0703-contre-lecteur-grille-clause-de-repli-v2.md (7ddd609b…) ; PR 77 brouillon
 - juge Opus seuil 0,75 : claude/avis-carbon-astra-v1 c19093ad, 2026-11-23-0710-juge-opus-max.md (cbe42309…)
+- rédacteur des devis de carte du bras A : relance-bras-a/devis-carte-v3 e2279e4b, 2026-11-23-0709-redacteur-devis-carte-bras-a.md (d99b3546…) ; 22 pièces versées
