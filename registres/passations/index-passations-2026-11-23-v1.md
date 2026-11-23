@@ -48,3 +48,6 @@
 - rédacteur du texte de T0.8 (Fable, désormais Sonnet) : prep/t08-passation-redacteur-v2 7540dcde, passation redacteur-t08-texte-et-pieces-de-course (841d339d…) ; tout est dans main
 - rédacteur du préenregistrement du papier C (Fable) : prep/papier-c-prereg-fable-v1 a0b98bf1, 2026-11-23-0705-papier-c-prereg-fable.md (6b97256b…) ; 46 fichiers versés
 - rédacteur successeur G1 (brouillon 8) : prep/g1-brouillon8-fable-v1 0d005040, 2026-11-23-0715-g1-redacteur-successeur.md (b5bfe597…) ; réveil trig_01HGfcuMhRvwVRoABQnRomUg à 08:00Z (fiche « porte au moindre coût »)
+- conception des sondes (Fable max) : prep/conception-sondes-boite-blanche-fable-v1 932e23a5, 2026-11-23-0715-conception-sondes-boite-blanche.md (e4f362cc…) ; reprise prévue à 08:00Z
+- exécutante collisionneur v8, passation v2 : service/collisionneur-modes-v8-sorties-v1 95bf8fe4, 2026-11-23-0711-executante-collisionneur-modes-v8-v2.md (9b2d7d36…) — cloisonné ; 14,50 sur 26 comptés
+- rédacteur Fable bras A, arrêt d'office : relance-bras-a/arret-office-generiques-v1 0b420bf5, 2026-11-23-0715-redacteur-fable-arret-office.md (0d118605…)
