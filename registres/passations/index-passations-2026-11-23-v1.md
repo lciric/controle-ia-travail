@@ -47,3 +47,4 @@
 - juge Fable H-1 papier C : juge/papier-c-h1-fable-v1 bbb95e36, 2026-11-23-0710-juge-fable-noeud-h1-papier-c.md (ec5e22b3…) ; décision (a), 0,80
 - rédacteur du texte de T0.8 (Fable, désormais Sonnet) : prep/t08-passation-redacteur-v2 7540dcde, passation redacteur-t08-texte-et-pieces-de-course (841d339d…) ; tout est dans main
 - rédacteur du préenregistrement du papier C (Fable) : prep/papier-c-prereg-fable-v1 a0b98bf1, 2026-11-23-0705-papier-c-prereg-fable.md (6b97256b…) ; 46 fichiers versés
+- rédacteur successeur G1 (brouillon 8) : prep/g1-brouillon8-fable-v1 0d005040, 2026-11-23-0715-g1-redacteur-successeur.md (b5bfe597…) ; réveil trig_01HGfcuMhRvwVRoABQnRomUg à 08:00Z (fiche « porte au moindre coût »)
