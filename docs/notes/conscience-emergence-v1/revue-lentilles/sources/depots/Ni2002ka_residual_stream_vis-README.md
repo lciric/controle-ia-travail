@@ -1,0 +1,241 @@
+# residual-stream-vis
+
+Type a prompt and watch it move through a language model. A local page shows the
+model's residual stream as a grid, one column per token and one row per layer,
+and lets you read, trace and edit any cell.
+
+```bash
+residual-stream-vis gpt2                    # or google/gemma-3-1b-pt
+```
+
+The page opens at http://127.0.0.1:8000 and runs on your machine only.
+
+Note: GPT2 is much smaller than Gemma, and often get answers wrong.
+
+
+## Install
+
+macOS / Linux:
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -e .
+.venv/bin/residual-stream-vis gpt2
+```
+
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.venv\Scripts\pip install -e .
+.venv\Scripts\residual-stream-vis gpt2
+```
+
+The first run downloads the model and its J-lens from the Hugging Face Hub.
+After that, `HF_HUB_OFFLINE=1` skips the network checks (PowerShell:
+`$env:HF_HUB_OFFLINE = "1"`).
+
+### NVIDIA GPU on Windows (and Linux)
+
+On Windows, `pip install torch` gives a CPU-only build, so the CUDA GPU goes
+unused. Swap in a CUDA build from PyTorch's index, choosing the CUDA tag your
+driver supports (`nvidia-smi` shows it; see [pytorch.org](https://pytorch.org/get-started/locally/)):
+
+```powershell
+.venv\Scripts\pip install --force-reinstall --no-deps torch --index-url https://download.pytorch.org/whl/cu130
+.venv\Scripts\python -c "import torch; print(torch.cuda.is_available())"   # True
+```
+
+Re-running `pip install -e .` keeps the CUDA build, since it already satisfies
+the requirement. The device is picked automatically (CUDA, then Apple GPU, then
+CPU); `--device cpu` overrides it. An 8 GB card runs Gemma-3-1B comfortably.
+
+## What the page shows
+
+**The grid.** Columns are tokens, rows are layers: the input embedding at the
+bottom, the model's output at the top. Each cell is the residual stream vector
+for that token after that layer, labeled with the word a lens reads from it:
+*if the model had to say the next word from this vector, which word would it
+pick?* Switch between two lenses:
+
+- **Logit lens:** decode the cell with the model's own final norm and
+  unembedding, as if it were already at the top.
+- **J-lens:** first multiply by `J`, the average Jacobian from that layer to the
+  top (measured once on web text), then decode. It estimates what the layers
+  above would do to the cell, so it often reads an idea earlier.
+
+At the top layer both lenses show the model's real prediction. At the bottom
+there is no prediction yet, so the readouts are junk; the page explains why.
+
+**Click a cell** to see both lenses' top words, how the block changed it
+(kept from below, attention write, MLP write), which earlier tokens and heads
+the attention write came from, and three views of the flow:
+
+- **Into this cell:** what one block pulled in. Curved lines are attention
+  from earlier tokens, weighted by how much each source actually passes on;
+  the straight line is what the token kept from itself.
+- **Trace back / forward:** chain those shares block by block to follow the
+  cell's information back to the input, or one cell's information forward to
+  the output. An approximation (a norm-weighted attention rollout); it tends
+  to pile onto the first tokens, and "Ignore the first token" drops that
+  attention sink.
+
+**Edit a cell and rerun.** Change the selected cell, let every layer above it
+recompute, and compare before and after:
+
+- **Push toward a word:** add the word's direction, scaled by the cell's size.
+- **Swap one word for another:** remove one word's direction and add another's.
+- **Copy from another prompt:** replace the cell with a donor prompt's cell
+  at the same layer (activation patching).
+- **Add a difference:** add the difference between two prompts' cells (a
+  steering vector).
+
+Word edits can use either the **logit-lens direction** (the word's unembedding
+row) or the **J-lens direction** (that row pulled back through `J`). They're
+good at different things:
+
+| edit | logit-lens direction | J-lens direction |
+| --- | --- | --- |
+| push the last token of "The Eiffel Tower is located in the city of" toward ` London`, Gemma-3-1B, layer 8 | **London 100%** | 0% |
+| swap the animal at its own token in "How many legs does a … have?", Gemma-3-1B, 24 pairs, layer 8 | 0 / 24 | **5 / 24** answer with the new animal's count |
+
+To make a token *output* a word, use the logit-lens direction: the residual
+connections carry it straight to the top. To change a concept that *later
+tokens read*, use the J-lens direction: `J` adds up a cell's effect at its own
+position and every later one. Try the built-in leg-count example on Gemma:
+swap spider → ant at the ` spider` token, layer 8, and the answer goes from
+8 to 6 with J-lens directions but stays 8 with logit-lens ones.
+
+**What changed** shades every cell by how much it moved: only the edited cell
+and cells above and to the right of it can change.
+
+**Chain of thought.** With an instruction-tuned model, **Generate a response**
+lets the model answer step by step (using its chat template); the grid then
+covers your message and its response. **Track a word** colors every cell by
+how highly a lens ranks one word, so you can see whether the answer is already
+there before the model writes its reasoning:
+
+```bash
+residual-stream-vis google/gemma-3-4b-it      # ~8 GB download; needs a GPU
+```
+
+On Gemma-3-4B-it, for "The Eiffel Tower is in a country. What is the capital of
+that country? Think step by step.", both lenses rank ` Paris` #1 at the newline
+that closes the question (layer 26 of 34), before any of the written steps. The
+same holds for the built-in aunt and ball-in-box questions, but not for "who is
+the shortest?". Track one-token words: Gemma writes numbers digit by digit.
+
+## Models
+
+Blocks are found automatically for GPT-2, Llama, Mistral, Qwen, Gemma and most
+decoder-only models. The J-lens loads automatically for models with a lens
+published by Neuronpedia (`rsv.PRETRAINED_LENSES`: GPT-2 and Gemma 3); others
+get the logit lens only, or fit their own:
+
+```python
+lens = rsv.fit_lens(model, tok, texts)   # ~100+ texts of ~128 tokens
+lens.save("my_lens.pt")
+```
+
+```bash
+residual-stream-vis my/model --lens my_lens.pt
+```
+
+### Baby Dragon Hatchling (BDH)
+
+[BDH](https://arxiv.org/abs/2509.26507) (Pathway, 2025) swaps the Transformer
+block for a layer of sparse, positive neurons and linear attention, with one
+set of weights shared by every layer. No trained weights are published, so
+train one; the J-lens is fitted at the end and saved beside the checkpoint.
+For word-level cells, comparable with GPT-2, train on WikiText-103 with GPT-2's
+tokenizer (needs `pip install -e ".[train]"`; about 2.5 hours on an M2 Pro):
+
+```bash
+python -m residual_stream_vis.bdh --data wikitext --tokenizer gpt2 --iters 5000
+residual-stream-vis checkpoints/bdh-wikitext-gpt2.pt
+```
+
+The reference setup, bytes on tiny Shakespeare, is the default
+(`python -m residual_stream_vis.bdh --iters 2000`, about an hour). Its cells
+are single letters, so the lenses and word edits work on letters too.
+`--lens-only` refits a checkpoint's J-lens without training.
+
+The page works as it does for GPT-2 and Gemma, with these differences in what
+the cells mean (details in `residual_stream_vis/bdh.py`):
+
+- **Attention** is BDH's unnormalized linear attention. A token never attends
+  to itself, so the first column never changes, and each query's shares are
+  its `|scores|` scaled to sum to 1.
+- **A block's update** is `ln(x + y)`. It splits exactly into the
+  **neuron write** `y` (neurons that fire both for this token and for what
+  attention read, so the only part that moves information between tokens)
+  and the **norm rescale** of `x` by the layer norm, shown where the MLP would be.
+- **Neurons.** A BDH-only card lists the neurons that wrote the selected
+  cell's update (its share of all firing there), the words each one's output
+  raises most, and the words whose embedding excites it most. It also says
+  what fraction of the layer's neurons fired: they're sparse. Click a neuron
+  to shade the grid by where it fires across the prompt, to check whether it
+  means one thing.
+
+The model is the reference `bdh.py` laid out so the viewer can hook into it
+(the tests check that its logits match exactly). Weights saved from
+Pathway's `train.py` load too, with `rsv.bdh.from_reference_state_dict`.
+
+A prompt is one forward pass plus a lens readout of every cell. On an Apple
+GPU (picked automatically; CUDA GPUs are too) Gemma-3-1B takes about 3 seconds; on CPU the readout
+against its 262k-word vocabulary takes minutes, so use a GPU for Gemma.
+
+Command-line options: `--port`, `--host`, `--device`, `--lens auto|none|PATH`,
+`--no-browser`, and extra arguments become one-click example prompts.
+
+## From Python
+
+```python
+import residual_stream_vis as rsv
+
+rsv.serve("gpt2")                                        # the same page
+
+model, tok = rsv.load_model("gpt2")
+lens = rsv.JacobianLens.from_pretrained("gpt2")
+data = rsv.trace(model, tok, "The Eiffel Tower is located in the city of", lens)
+rsv.flow_html(data, "flow.html")                         # a static page, no server needed
+
+prompt = "The Eiffel Tower is located in the city of"
+d = rsv.word_direction(model, tok, " London", layer=8, kind="unembed")
+r = rsv.steer(model, tok, prompt, d * rsv.cell(model, tok, prompt, 8).norm(), layer=8)
+r.prob(" London")                                        # (before, after)
+```
+
+`rsv.patch`, `rsv.swap` and `rsv.steering_vector` cover the other edits;
+`rsv.Edit` with the `rsv.editing(model, edits)` context manager applies edits
+to any forward pass. Layers are residual stream indices (0 = embeddings, *i* =
+output of block *i − 1*). Positions skip special tokens such as `<bos>` unless
+`skip_special_tokens=False`.
+
+## How it works
+
+One forward pass with hooks records each block's input and output, what
+attention wrote (`attention + MLP = output − input`, checked against the
+MLP's own output in the tests), every head's attention weights, and the size of
+what each token passes on through each head. Attention shares are attention
+weight × that size, as in Kobayashi et al.'s norm-based analysis. The J-lens
+estimator follows Anthropic's [reference implementation](https://github.com/anthropics/jacobian-lens),
+so fitted and published lenses are interchangeable. The method is from
+[*Verbalizable Representations Form a Global Workspace in Language Models*](https://transformer-circuits.pub/2026/workspace/index.html)
+(Anthropic, 2026).
+
+## Development
+
+```bash
+.venv/bin/pip install -e ".[dev]"       # Windows: .venv\Scripts\pip install -e ".[dev]"
+.venv/bin/pytest                        # Windows: .venv\Scripts\pytest
+```
+
+The tests build tiny random GPT-2, Llama, Gemma-3 and BDH models, so they run
+offline in seconds.
+
+
+## TLDR good resources:
+* https://www.neuronpedia.org/gemma-3-1b/jlens
+* https://huggingface.co/neuronpedia/jacobian-lens
+* https://huggingface.co/blog/dlouapre/j-space
