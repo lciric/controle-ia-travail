@@ -267,8 +267,13 @@ def projeter_base_a(obj: dict) -> dict:
 
 _LIGNE = re.compile(r"^\|\s*([A-Za-z0-9-]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{64})\s*\|\s*$")
 CODE_T08 = "CODE-T08"
-# ligne `CODE-T08` dont la quatrième cellule est le commit (40 caractères) : seule autre forme lue (VCT8-03, déclarée)
-_LIGNE_CODE_COMMIT = re.compile(r"^\|\s*(" + CODE_T08 + r")\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{40})\s*\|\s*$")
+SCELLEMENT_T08 = "SCELLEMENT-T08"
+# familles de clés (R-5131, tentative 1 de la course) : `SCELLEMENT-T08` et `SCELLEMENT-T08-V<n>`, `CODE-T08` et
+# `CODE-T08-V<n>` (n entier ≥ 1, sans zéro de tête) ; une clé de la famille commence par la base, ou par la base suivie
+# de « -V » ; une clé qui commence par « <base>-V » sans la forme exacte arrête (clé mal formée)
+_FAMILLE = re.compile(r"^(SCELLEMENT-T08|CODE-T08)(?:-V([1-9][0-9]*))?$")
+# ligne de la famille `CODE-T08` dont la quatrième cellule est le commit (40 caractères) : seule autre forme lue (VCT8-03)
+_LIGNE_CODE_COMMIT = re.compile(r"^\|\s*(" + CODE_T08 + r"(?:-V[1-9][0-9]*)?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([0-9a-f]{40})\s*\|\s*$")
 _HEX40 = re.compile(r"^[0-9a-f]{40}$")
 _SEPARATEUR = re.compile(r"^\|[\s:|-]*$")
 _CLE = re.compile(r"^[A-Za-z0-9-]+$")
@@ -328,12 +333,48 @@ def lire_registre_scellements(chemin) -> dict:
             continue
         if cle in lues:
             raise GardeArret(f"registre : clé {cle} inscrite deux fois")
-        if cle == CODE_T08 and _HEX40.match(sha):
+        if _HEX40.match(sha) and _dans_famille(cle, CODE_T08):
             lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": None, "commit": sha}
         else:
             lues[cle] = {"date": date_utc(date).isoformat(), "chemin": ch, "sha256": sha}
     return {"lignes": lues, "ignorees": ignorees, "mal_formees": mal,
             "mal_formees_lues": [m for m in mal if _lue(m["cle"])]}
+
+
+def _dans_famille(cle: str, base: str) -> bool:
+    return cle == base or cle.startswith(base + "-V")
+
+
+def lignes_famille(reg: dict, base: str) -> dict[str, dict]:
+    """Lignes du registre lu (`lire_registre_scellements`) de la famille `base` (`SCELLEMENT-T08` ou `CODE-T08`) :
+    la clé `base` et les clés `base-V<n>`. Une clé qui commence par `base-V` sans cette forme exacte (« -VX », « -V0 »,
+    « -V02 ») arrête ; aucune ligne de la famille : arrêt. Les autres clés (`SCELLEMENT-T08-BASE-A`…) n'en sont pas."""
+    if base not in (SCELLEMENT_T08, CODE_T08):
+        raise GardeArret(f"famille {base!r} inconnue")
+    out = {}
+    for cle, ligne in reg["lignes"].items():
+        if not _dans_famille(cle, base):
+            continue
+        m = _FAMILLE.match(cle)
+        if not m or m.group(1) != base:
+            raise GardeArret(f"registre : clé {cle} mal formée dans la famille {base} ({base} ou {base}-V<n> attendu) : arrêt")
+        out[cle] = ligne
+    if not out:
+        raise GardeArret(f"ligne {base} absente du registre : entrée manquante (ni {base}, ni {base}-V<n>)")
+    return out
+
+
+def exiger_ligne_famille(reg: dict, base: str, correspond, quoi: str, aucune: str) -> tuple[str, dict]:
+    """La seule ligne de la famille `base` pour laquelle `correspond(ligne)` est vrai, avec sa clé ; zéro (motif
+    `aucune`) ou deux : arrêt (R-5131 : une seule ligne de la famille porte l'empreinte du texte passé, ou cite le commit
+    du marqueur)."""
+    fam = lignes_famille(reg, base)
+    bonnes = sorted(c for c, l in fam.items() if correspond(l))
+    if not bonnes:
+        raise GardeArret(f"famille {base} ({sorted(fam)}) : {aucune} : arrêt")
+    if len(bonnes) > 1:
+        raise GardeArret(f"famille {base} : {len(bonnes)} lignes {quoi} ({bonnes}), une seule attendue : arrêt")
+    return bonnes[0], fam[bonnes[0]]
 
 
 def ligne_cite_commit(ligne: dict, commit: str) -> bool:

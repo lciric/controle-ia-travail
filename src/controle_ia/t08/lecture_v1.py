@@ -114,23 +114,27 @@ def controles_texte_et_registre(prereg, marqueurs: dict, reg: dict, bornes: dict
     `COMMIT_CODE_T08` (40 caractères, dans l'une de ses cellules) ; l'une et l'autre sont strictement antérieures à
     chaque borne de `bornes` (nom → instant UTC) : en lecture, la ligne `COURSE-T08` et la création du manifeste de la
     course ; au passage à blanc, l'heure de la machine (l. 9 : code « cité par la ligne `CODE-T08` du registre des
-    scellements avant toute exécution » ; R1 : texte scellé avant la course). Sinon arrêt."""
+    scellements avant toute exécution » ; R1 : texte scellé avant la course). Sinon arrêt.
+    Familles de clés (R-5131) : `SCELLEMENT-T08` et `SCELLEMENT-T08-V<n>`, `CODE-T08` et `CODE-T08-V<n>` ; une seule
+    ligne de chaque famille correspond (empreinte du texte passé ; commit du marqueur), ni zéro ni deux ; une clé
+    `…-V` mal formée arrête ; les règles d'antériorité portent sur les deux lignes retenues (`cle` rendue avec elles)."""
     if prereg is None:
         raise GardeArret("lecture réelle sans préenregistrement scellé : R1 interdit")
     if not bornes:
         raise GardeArret("antériorité du texte et du code : aucune borne donnée : arrêt")
     texte = cf.exiger_marqueurs_au_texte(prereg, marqueurs)
-    scel = en.exiger_ligne(reg, "SCELLEMENT-T08")
-    if scel["sha256"] != texte["sha256"]:
-        raise GardeArret(f"ligne SCELLEMENT-T08 ({str(scel['sha256'])[:12]}…) ≠ empreinte du préenregistrement passé "
-                         f"({texte['sha256'][:12]}…) : autre texte scellé, arrêt")
-    code = en.exiger_ligne(reg, en.CODE_T08)
+    # R-5131 : familles `SCELLEMENT-T08[-V<n>]` et `CODE-T08[-V<n>]` ; une seule ligne de chacune correspond, ni zéro ni deux
+    cle_scel, scel = en.exiger_ligne_famille(
+        reg, en.SCELLEMENT_T08, lambda l: l.get("sha256") == texte["sha256"],
+        f"à l'empreinte du préenregistrement passé ({texte['sha256'][:12]}…)",
+        f"aucune ligne à l'empreinte du préenregistrement passé ({texte['sha256'][:12]}…) : autre texte scellé")
     commit = marqueurs["COMMIT_CODE_T08"]
-    if not en.ligne_cite_commit(code, commit):
-        raise GardeArret(f"ligne CODE-T08 (chemin {code['chemin']!r}, quatrième cellule "
-                         f"{code.get('commit') or code.get('sha256')!r}) ne cite pas le commit {commit} du marqueur "
-                         "COMMIT_CODE_T08 (40 caractères, dans l'une de ses cellules) : arrêt")
-    for nom, ligne in (("SCELLEMENT-T08", scel), (en.CODE_T08, code)):
+    cle_code, code = en.exiger_ligne_famille(
+        reg, en.CODE_T08, lambda l: en.ligne_cite_commit(l, commit), f"qui citent le commit {commit}",
+        f"aucune ligne ne cite le commit {commit} du marqueur COMMIT_CODE_T08 (40 caractères, dans l'une de ses "
+        "cellules) ; la ligne ne cite pas le commit")
+    scel, code = {**scel, "cle": cle_scel}, {**code, "cle": cle_code}
+    for nom, ligne in ((cle_scel, scel), (cle_code, code)):
         date = en.date_utc(ligne["date"])
         for quoi, borne in bornes.items():
             if borne.tzinfo is None:
