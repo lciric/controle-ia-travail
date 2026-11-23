@@ -16,3 +16,4 @@
 - exécutante T0.8 : t08/journal-executante-course-v1 5b4497af, 2026-11-23-0624-executante-t08.md (b688c0ca…) ; 112 fichiers versés ; inventaires bruts du loueur non versés (variables d'autres tâches non masquées), cités par empreinte ; 62105206 continue
 - bras A (complément) : claude/pensive-bardeen-1fv7hw 4decfae90, journaux des agents versés (43 .jsonl, 86 .json, inventaire scellé) sur mot tapé par Lazar dans la session ; complément 2 de passation (77e2b0f2…) ; GO-2026-11-23-10
 - classement des échecs d'essais : essais/classement-echecs-v1 1f2bcb038, 2026-11-23-0635-classement-echecs-essais.md (1e2eb36a…) ; 90 fichiers versés
+- conseiller activations barreau 5 (Fable) : conseiller-activations-b5/passation-v1 05cec997, 2026-11-23-0635-conseiller-activations-b5.md (47adc28f…) ; rien d'autre à verser
