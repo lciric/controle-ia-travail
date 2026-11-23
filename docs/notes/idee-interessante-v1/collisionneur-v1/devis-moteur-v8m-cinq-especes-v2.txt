@@ -1,0 +1,49 @@
+A = fable (claude-fable-5-2) : prix 10 / 50 USD par million, sortie 49000 (relance 64000), provision 0, budget envoyé None, niveau de réflexion envoyé None, 2.5 caractères par jeton, délai 3600 s, effort high
+B = opus (claude-opus-5-5) : prix 4 / 20 USD par million, sortie 64000 (relance 64000), provision 0, budget envoyé None, niveau de réflexion envoyé None, 2.5 caractères par jeton, délai 3600 s, effort high
+C = argon (gemini-4-argon) : prix 4 / 20 USD par million, sortie 65536 (relance 65536), provision 16384, budget envoyé None, niveau de réflexion envoyé high, 2.5 caractères par jeton, délai 3600 s
+D = carbon (gemini-4-carbon) : prix 4 / 20 USD par million, sortie 65536 (relance 65536), provision 49152, budget envoyé None, niveau de réflexion envoyé high, 2.5 caractères par jeton, délai 5400 s
+E = neon (gemini-4-neon) : prix 3 / 15 USD par million, sortie 65536 (relance 65536), provision 32768, budget envoyé None, niveau de réflexion envoyé xhigh, 2.5 caractères par jeton, délai 5400 s
+E1-T1-meta-A             claude-fable-5-2   pire cas  2.50 USD
+E1-T1-meta-B             claude-opus-5-5    pire cas  1.30 USD
+E1-T1-meta-C             gemini-4-argon     pire cas  1.66 USD
+E1-T1-meta-D             gemini-4-carbon    pire cas  2.31 USD
+E1-T1-meta-E             gemini-4-neon      pire cas  1.49 USD
+E1-T2-critique-meta-A    claude-fable-5-2   pire cas  2.92 USD
+E1-T2-critique-meta-B    claude-opus-5-5    pire cas  1.47 USD
+E1-T2-critique-meta-C    gemini-4-argon     pire cas  1.82 USD
+E1-T2-critique-meta-D    gemini-4-carbon    pire cas  2.48 USD
+E1-T2-critique-meta-E    gemini-4-neon      pire cas  1.61 USD
+  étage 1 : 10 cellules, 19.55 USD au pire cas, sans relance
+E2-T1-prog-maths-A       claude-fable-5-2   pire cas  3.06 USD
+E2-T1-prog-maths-B       claude-opus-5-5    pire cas  1.52 USD
+E2-T1-prog-maths-C       gemini-4-argon     pire cas  1.88 USD
+E2-T1-prog-maths-D       gemini-4-carbon    pire cas  2.54 USD
+E2-T1-prog-maths-E       gemini-4-neon      pire cas  1.66 USD
+E2-T2-critique-croisee-A claude-fable-5-2   pire cas  2.83 USD
+E2-T2-critique-croisee-B claude-opus-5-5    pire cas  1.43 USD
+E2-T2-critique-croisee-C gemini-4-argon     pire cas  1.79 USD
+E2-T2-critique-croisee-D gemini-4-carbon    pire cas  2.45 USD
+E2-T2-critique-croisee-E gemini-4-neon      pire cas  1.59 USD
+E2-T3-reponse-A          claude-fable-5-2   pire cas  2.99 USD
+E2-T3-reponse-B          claude-opus-5-5    pire cas  1.49 USD
+E2-T3-reponse-C          gemini-4-argon     pire cas  1.85 USD
+E2-T3-reponse-D          gemini-4-carbon    pire cas  2.51 USD
+E2-T3-reponse-E          gemini-4-neon      pire cas  1.64 USD
+  étage 2 : 15 cellules, 31.22 USD au pire cas, sans relance
+E3-T1-conception-A       claude-fable-5-2   pire cas  2.52 USD
+E3-T1-conception-B       claude-opus-5-5    pire cas  1.31 USD
+E3-T1-conception-C       gemini-4-argon     pire cas  1.67 USD
+E3-T1-conception-D       gemini-4-carbon    pire cas  2.32 USD
+E3-T1-conception-E       gemini-4-neon      pire cas  1.49 USD
+E3-T2-critique-croisee-A claude-fable-5-2   pire cas  2.85 USD
+E3-T2-critique-croisee-B claude-opus-5-5    pire cas  1.44 USD
+E3-T2-critique-croisee-C gemini-4-argon     pire cas  1.80 USD
+E3-T2-critique-croisee-D gemini-4-carbon    pire cas  2.46 USD
+E3-T2-critique-croisee-E gemini-4-neon      pire cas  1.60 USD
+E3-T3-reponse-A          claude-fable-5-2   pire cas  3.01 USD
+E3-T3-reponse-B          claude-opus-5-5    pire cas  1.50 USD
+E3-T3-reponse-C          gemini-4-argon     pire cas  1.86 USD
+E3-T3-reponse-D          gemini-4-carbon    pire cas  2.52 USD
+E3-T3-reponse-E          gemini-4-neon      pire cas  1.64 USD
+  étage 3 : 15 cellules, 29.98 USD au pire cas, sans relance
+La dépense réelle dépend de la longueur de la réflexion ; chaque relance (sortie vide ou coupée) ajoute au plus le pire cas de sa cellule au plafond de relance ; une cellule de Google à plafonds égaux en a deux (relance identique, puis dernier recours), les autres une. Le plafond vaut pour tout le dossier de run, et le script le vérifie avant chaque appel.
