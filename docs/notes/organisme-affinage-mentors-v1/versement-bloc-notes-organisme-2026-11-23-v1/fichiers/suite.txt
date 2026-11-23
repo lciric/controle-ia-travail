@@ -1,0 +1,397 @@
+...................................s.........................s.......s.. [ 21%]
+.......s................................................................ [ 43%]
+..............................FFFFFFFFF.FFFF............................ [ 65%]
+.......s.........................s.......s.........s.................... [ 86%]
+........................................F.FF                             [100%]
+=================================== FAILURES ===================================
+_________________ test_sonde_cas_sain_passe_et_rapport_scelle __________________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_cas_sain_passe_et_r0/commande_astra_v1.py'), 'relais'...ain_passe_et_r0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_cas_sain_passe_et_r0')}
+
+    def test_sonde_cas_sain_passe_et_rapport_scelle(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont, reserve=0.01)
+        try:
+>           assert _sonder(pieces, relais, amont) == 0
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:198: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+_______ test_sonde_artefact_reserve_trop_haute_echec_rapporte_sans_appel _______
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_artefact_reserve_tr0/commande_astra_v1.py'), 'relais'...act_reserve_tr0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_artefact_reserve_tr0')}
+
+    def test_sonde_artefact_reserve_trop_haute_echec_rapporte_sans_appel(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont)                                  # réserve par défaut 0,40 > plafond 0,05
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:218: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+________ test_sonde_autres_defauts_de_configuration_rapportes[plafond] _________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c0/commande_astra_v1.py'), 'relais'...s_defauts_de_c0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c0')}
+defaut = 'plafond'
+
+    @pytest.mark.parametrize("defaut", ["plafond", "prix", "max_appels"])
+    def test_sonde_autres_defauts_de_configuration_rapportes(pieces, defaut):
+        amont = FauxAmont()
+        kw = {"plafond": {"plafond": 0.10}, "prix": {"prix": (5, 50, 1)}, "max_appels": {"max_appels": 3}}[defaut]
+        relais = RelaisFactice(amont, **dict({"reserve": 0.01}, **kw))
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+__________ test_sonde_autres_defauts_de_configuration_rapportes[prix] __________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c1/commande_astra_v1.py'), 'relais'...s_defauts_de_c1/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c1')}
+defaut = 'prix'
+
+    @pytest.mark.parametrize("defaut", ["plafond", "prix", "max_appels"])
+    def test_sonde_autres_defauts_de_configuration_rapportes(pieces, defaut):
+        amont = FauxAmont()
+        kw = {"plafond": {"plafond": 0.10}, "prix": {"prix": (5, 50, 1)}, "max_appels": {"max_appels": 3}}[defaut]
+        relais = RelaisFactice(amont, **dict({"reserve": 0.01}, **kw))
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+_______ test_sonde_autres_defauts_de_configuration_rapportes[max_appels] _______
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c2/commande_astra_v1.py'), 'relais'...s_defauts_de_c2/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_autres_defauts_de_c2')}
+defaut = 'max_appels'
+
+    @pytest.mark.parametrize("defaut", ["plafond", "prix", "max_appels"])
+    def test_sonde_autres_defauts_de_configuration_rapportes(pieces, defaut):
+        amont = FauxAmont()
+        kw = {"plafond": {"plafond": 0.10}, "prix": {"prix": (5, 50, 1)}, "max_appels": {"max_appels": 3}}[defaut]
+        relais = RelaisFactice(amont, **dict({"reserve": 0.01}, **kw))
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+__________ test_sonde_refuse_un_relais_non_neuf_ou_un_port_de_course ___________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_refuse_un_relais_no0/commande_astra_v1.py'), 'relais'...e_un_relais_no0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_refuse_un_relais_no0')}
+
+    def test_sonde_refuse_un_relais_non_neuf_ou_un_port_de_course(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont, reserve=0.01, max_appels=2)
+        try:
+            code, _ = commande(pieces["commande"], relais.url, {"PLAFOND_SESSION_USD": "0.05"}, ARGS_SONDE_V2)
+            assert code == 0 and relais.compteur.appels == 1           # relais déjà servi : plus neuf
+>           with pytest.raises(S.Refus, match="non neuf"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'non neuf'
+E             Actual message: "sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…"
+
+tests/test_sonde_astra_courses_v2.py:248: AssertionError
+_____________________ test_sonde_refuse_identites_fausses ______________________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_refuse_identites_fa0/commande_astra_v1.py'), 'relais'...e_identites_fa0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_refuse_identites_fa0')}
+
+    def test_sonde_refuse_identites_fausses(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont, reserve=0.01)
+        t = pieces["tmp"]
+        try:
+            autre = t / "autre_relais" / "relais_kimi_v4.py"
+            autre.parent.mkdir()
+            autre.write_text("# autre relais\n")
+            mauvais = {"programme": [sys.executable, str(autre), "--port", str(relais.port)],
+                       "port": [sys.executable, str(pieces["relais"]), "--port", "1"]}
+            for motif, cmdline in mauvais.items():
+                with pytest.raises(S.Refus):
+                    S.sonder(pieces["commande"], relais.url, os.getpid(), t / f"s-{motif}.json", t / f"v2-{motif}.json",
+                             lire_cmd=lambda pid, c=cmdline: c, amont=amont.url, horodatage=lambda: "2026-11-22T11:00:00Z")
+>           with pytest.raises(S.Refus, match="pid"):                  # PID d'un autre processus que le relais
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'pid'
+E             Actual message: "sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…"
+
+tests/test_sonde_astra_courses_v2.py:273: AssertionError
+______________________ test_sonde_rapport_existant_refuse ______________________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_rapport_existant_re0/commande_astra_v1.py'), 'relais'...rt_existant_re0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_rapport_existant_re0')}
+
+    def test_sonde_rapport_existant_refuse(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont, reserve=0.01)
+        try:
+            (pieces["tmp"] / "sonde-a.json").write_text("{}")
+>           with pytest.raises(S.Refus, match="R12"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'R12'
+E             Actual message: "sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…"
+
+tests/test_sonde_astra_courses_v2.py:294: AssertionError
+_________________ test_sonde_modele_servi_autre_echec_rapporte _________________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_modele_servi_autre_0/commande_astra_v1.py'), 'relais'...e_servi_autre_0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_modele_servi_autre_0')}
+
+    def test_sonde_modele_servi_autre_echec_rapporte(pieces):
+        amont = FauxAmont(modele="gpt-autre")
+        relais = RelaisFactice(amont, reserve=0.01)
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+_________ test_v2_relais_jete_aux_prix_de_la_v1_echec_de_configuration _________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_relais_jete_aux_prix_d0/commande_astra_v1.py'), 'relais'...ete_aux_prix_d0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_relais_jete_aux_prix_d0')}
+
+    def test_v2_relais_jete_aux_prix_de_la_v1_echec_de_configuration(pieces):
+        amont = FauxAmont()
+        relais = RelaisFactice(amont, reserve=0.01, prix=(10, 50, 1))     # prix de l'ancien modèle : plus ceux de gpt-6.2-astra
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+_________ test_v2_relais_jete_qui_ne_permet_que_l_ancien_modele_refuse _________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_relais_jete_qui_ne_per0/commande_astra_v1.py'), 'relais'...ete_qui_ne_per0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_relais_jete_qui_ne_per0')}
+
+    def test_v2_relais_jete_qui_ne_permet_que_l_ancien_modele_refuse(pieces):
+        amont = FauxAmont(modele=ANCIEN)
+        relais = RelaisFactice(amont, reserve=0.01, modeles=(ANCIEN,))
+        try:
+>           with pytest.raises(S.Refus, match="modeles_permis"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'modeles_permis'
+E             Actual message: "sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…"
+
+tests/test_sonde_astra_courses_v2.py:334: AssertionError
+____________ test_v2_ancien_modele_servi_par_l_amont_echec_rapporte ____________
+
+pieces = {'commande': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_ancien_modele_servi_pa0/commande_astra_v1.py'), 'relais'...odele_servi_pa0/relais_kimi_v4.py'), 'tmp': PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_ancien_modele_servi_pa0')}
+
+    def test_v2_ancien_modele_servi_par_l_amont_echec_rapporte(pieces):
+        amont = FauxAmont(modele=ANCIEN)                                  # l'amont sert l'ancien modèle : pas « ok »
+        relais = RelaisFactice(amont, reserve=0.01)
+        try:
+>           assert _sonder(pieces, relais, amont) == 1
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:345: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_sonde_astra_courses_v2.py:185: in _sonder
+    return S.sonder(pieces["commande"], url or relais.url, os.getpid(), t / f"sonde-{nom}.json", t / f"sonde-v2-{nom}.json",
+scripts/sonde_astra_courses_v2.py:168: in sonder
+    v2 = charger_sonde_v2(sonde_v2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+_____________ test_v2_sonde_appelee_d_une_autre_empreinte_refusee ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-13/test_v2_sonde_appelee_d_une_au0')
+
+    def test_v2_sonde_appelee_d_une_autre_empreinte_refusee(tmp_path):
+        faux = tmp_path / "sonde_astra_affinage_v3.py"
+        faux.write_bytes((RACINE / "scripts" / "sonde_astra_affinage_v3.py").read_bytes() + b"\n")
+        with pytest.raises(S.Refus, match="sonde v3"):
+            S.charger_sonde_v2(faux)
+        with pytest.raises(S.Refus, match="sonde v3"):                     # l'ancienne sonde (v2) : refusée aussi
+            S.charger_sonde_v2(RACINE / "scripts" / "sonde_astra_affinage_v2.py")
+>       m = S.charger_sonde_v2()
+            ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sonde_astra_courses_v2.py:359: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chemin = PosixPath('/home/user/wt-organisme/scripts/sonde_astra_affinage_v3.py')
+
+    def charger_sonde_v2(chemin: Path = SONDE_V2):
+        if not chemin.is_file() or sha256_fichier(chemin) != EMPREINTE_SONDE_V2:
+>           raise Refus(f"sonde v3 absente ou d'une autre empreinte que {EMPREINTE_SONDE_V2[:12]}…")
+E           sonde_astra_courses_v2.Refus: sonde v3 absente ou d'une autre empreinte que 433fd39e9d7e…
+
+scripts/sonde_astra_courses_v2.py:81: Refus
+___________________ test_bout_en_bout_avec_la_sonde_commune ____________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-13/test_bout_en_bout_avec_la_sond0/depot'), orchestrateurs=...a_sond0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-13/test_bout_en_bout_avec_la_sond0/orchestrateur'), ...}
+
+    def test_bout_en_bout_avec_la_sonde_commune(monde):
+        assert sonde_commune_v2(monde) == 0
+        _ecrire_tout(monde, declaration_remplie(monde))
+>       assert T.lancer(monde["r"]) == 0
+E       AssertionError: assert 2 == 0
+E        +  where 2 = <function lancer at 0x7f16fef27240>(Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-13/test_bout_en_bout_avec_la_sond0/depot'), orchestrateurs=(Posix...6ff57ed40>, lire_etat_relais=<function monde.<locals>.<lambda> at 0x7f16ff57ec00>, ref_registre=None, verifier_go=True))
+E        +    where <function lancer at 0x7f16fef27240> = T.lancer
+
+tests/test_astra_carbon_declares_affinage_v6b.py:109: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"sonde": "/tmp/pytest-of-root/pytest-13/test_bout_en_bout_avec_la_sond0/depot/docs/notes/organisme-affinage-mentors-v1/course-v6/sonde-astra-course-affinage-v6.json", "ok": true, "cout_usd": 0.00218}
+----------------------------- Captured stderr call -----------------------------
+{"refus": "relevé des crédits du '2026-11-18T07:00:00Z' : un relevé du jour (2026-11-22) est exigé"}
+________________ test_sonde_sur_le_relais_de_la_course_refusee _________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_sur_le_relais_de_la0/depot'), orchestrateurs=..._de_la0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-13/test_sonde_sur_le_relais_de_la0/orchestrateur'), ...}
+capsys = <_pytest.capture.CaptureFixture object at 0x7f16ff80b710>
+
+    def test_sonde_sur_le_relais_de_la_course_refusee(monde, capsys):
+        assert sonde_commune_v2(monde) == 0
+        decl = declaration_remplie(monde)
+        v2 = json.loads((monde["depot"] / L.SONDE_ASTRA).read_text())
+        decl["fournisseurs"]["astra"]["pid_relais"] = v2["relais_pid"]   # le relais de la course serait celui de la sonde
+        monde["cmdlines"][v2["relais_pid"]] = monde["cmdlines"][T.PID_ASTRA]
+        _ecrire_tout(monde, decl)
+        assert T.lancer(monde["r"]) == 2
+>       assert "relais de la course" in capsys.readouterr().err
+E       assert 'relais de la course' in '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n'
+E        +  where '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n' = CaptureResult(out='{"sonde": "/tmp/pytest-of-root/pytest-13/test_sonde_sur_le_relais_de_la0/depot/docs/notes/organisme...18}\n', err='{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n').err
+E        +    where CaptureResult(out='{"sonde": "/tmp/pytest-of-root/pytest-13/test_sonde_sur_le_relais_de_la0/depot/docs/notes/organisme...18}\n', err='{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n') = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x7f16ff80b710>.readouterr
+
+tests/test_astra_carbon_declares_affinage_v6b.py:132: AssertionError
+________________ test_relais_de_course_d_astra_non_neuf_refuse _________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-13/test_relais_de_course_d_astra_0/depot'), orchestrateurs=...astra_0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-13/test_relais_de_course_d_astra_0/orchestrateur'), ...}
+capsys = <_pytest.capture.CaptureFixture object at 0x7f16ff59a6d0>
+
+    def test_relais_de_course_d_astra_non_neuf_refuse(monde, capsys):
+        assert sonde_commune_v2(monde) == 0
+        _ecrire_tout(monde, declaration_remplie(monde))
+        monde["etats"]["8790"]["appels"] = 1
+        assert T.lancer(monde["r"]) == 2
+        err = capsys.readouterr().err
+>       assert "astra" in err and "neuf" in err, err
+E       AssertionError: {"refus": "relevé des crédits du '2026-11-18T07:00:00Z' : un relevé du jour (2026-11-22) est exigé"}
+E         
+E       assert ('astra' in '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n')
+
+tests/test_astra_carbon_declares_affinage_v6b.py:141: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v8.py:674: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v8.py:954: orchestrateur épinglé absent
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v6.py:624: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v6.py:901: orchestrateur épinglé absent
+16 failed, 308 passed, 8 skipped in 319.27s (0:05:19)

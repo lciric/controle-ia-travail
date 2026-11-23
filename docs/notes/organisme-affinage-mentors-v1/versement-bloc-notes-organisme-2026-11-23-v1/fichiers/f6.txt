@@ -1,0 +1,64 @@
+...................................s.........................s.......s.. [ 50%]
+.......s............................................................F.FF [100%]
+=================================== FAILURES ===================================
+___________________ test_bout_en_bout_avec_la_sonde_commune ____________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-43/test_bout_en_bout_avec_la_sond0/depot'), orchestrateurs=...a_sond0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-43/test_bout_en_bout_avec_la_sond0/orchestrateur'), ...}
+
+    def test_bout_en_bout_avec_la_sonde_commune(monde):
+        assert sonde_commune_v2(monde) == 0
+        _ecrire_tout(monde, declaration_remplie(monde))
+>       assert T.lancer(monde["r"]) == 0
+E       AssertionError: assert 2 == 0
+E        +  where 2 = <function lancer at 0x7f41bf52e660>(Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-43/test_bout_en_bout_avec_la_sond0/depot'), orchestrateurs=(Posix...1c00c0400>, lire_etat_relais=<function monde.<locals>.<lambda> at 0x7f41c00c0220>, ref_registre=None, verifier_go=True))
+E        +    where <function lancer at 0x7f41bf52e660> = T.lancer
+
+tests/test_astra_carbon_declares_affinage_v6b.py:109: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"sonde": "/tmp/pytest-of-root/pytest-43/test_bout_en_bout_avec_la_sond0/depot/docs/notes/organisme-affinage-mentors-v1/course-v6/sonde-astra-course-affinage-v6.json", "ok": true, "cout_usd": 0.00218}
+----------------------------- Captured stderr call -----------------------------
+{"refus": "relevé des crédits du '2026-11-18T07:00:00Z' : un relevé du jour (2026-11-22) est exigé"}
+________________ test_sonde_sur_le_relais_de_la_course_refusee _________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-43/test_sonde_sur_le_relais_de_la0/depot'), orchestrateurs=..._de_la0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-43/test_sonde_sur_le_relais_de_la0/orchestrateur'), ...}
+capsys = <_pytest.capture.CaptureFixture object at 0x7f41bf46a850>
+
+    def test_sonde_sur_le_relais_de_la_course_refusee(monde, capsys):
+        assert sonde_commune_v2(monde) == 0
+        decl = declaration_remplie(monde)
+        v2 = json.loads((monde["depot"] / L.SONDE_ASTRA).read_text())
+        decl["fournisseurs"]["astra"]["pid_relais"] = v2["relais_pid"]   # le relais de la course serait celui de la sonde
+        monde["cmdlines"][v2["relais_pid"]] = monde["cmdlines"][T.PID_ASTRA]
+        _ecrire_tout(monde, decl)
+        assert T.lancer(monde["r"]) == 2
+>       assert "relais de la course" in capsys.readouterr().err
+E       assert 'relais de la course' in '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n'
+E        +  where '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n' = CaptureResult(out='{"sonde": "/tmp/pytest-of-root/pytest-43/test_sonde_sur_le_relais_de_la0/depot/docs/notes/organisme...18}\n', err='{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n').err
+E        +    where CaptureResult(out='{"sonde": "/tmp/pytest-of-root/pytest-43/test_sonde_sur_le_relais_de_la0/depot/docs/notes/organisme...18}\n', err='{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n') = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x7f41bf46a850>.readouterr
+
+tests/test_astra_carbon_declares_affinage_v6b.py:132: AssertionError
+________________ test_relais_de_course_d_astra_non_neuf_refuse _________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-43/test_relais_de_course_d_astra_0/depot'), orchestrateurs=...astra_0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-43/test_relais_de_course_d_astra_0/orchestrateur'), ...}
+capsys = <_pytest.capture.CaptureFixture object at 0x7f41c00b6650>
+
+    def test_relais_de_course_d_astra_non_neuf_refuse(monde, capsys):
+        assert sonde_commune_v2(monde) == 0
+        _ecrire_tout(monde, declaration_remplie(monde))
+        monde["etats"]["8790"]["appels"] = 1
+        assert T.lancer(monde["r"]) == 2
+        err = capsys.readouterr().err
+>       assert "astra" in err and "neuf" in err, err
+E       AssertionError: {"refus": "relevé des crédits du '2026-11-18T07:00:00Z' : un relevé du jour (2026-11-22) est exigé"}
+E         
+E       assert ('astra' in '{"refus": "relevé des crédits du \'2026-11-18T07:00:00Z\' : un relevé du jour (2026-11-22) est exigé"}\n')
+
+tests/test_astra_carbon_declares_affinage_v6b.py:141: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_astra_carbon_declares_affinage_v6b.py::test_bout_en_bout_avec_la_sonde_commune
+FAILED tests/test_astra_carbon_declares_affinage_v6b.py::test_sonde_sur_le_relais_de_la_course_refusee
+FAILED tests/test_astra_carbon_declares_affinage_v6b.py::test_relais_de_course_d_astra_non_neuf_refuse
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v6.py:624: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v6.py:901: orchestrateur épinglé absent
+3 failed, 137 passed, 4 skipped in 126.74s (0:02:06)

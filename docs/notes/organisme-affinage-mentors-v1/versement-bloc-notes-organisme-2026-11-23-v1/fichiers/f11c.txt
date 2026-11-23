@@ -1,0 +1,42 @@
+...................................s.......................s.......s.... [ 22%]
+.....s.................................................................. [ 44%]
+....................................F................................... [ 66%]
+...................................F.................................... [ 88%]
+.......................................                                  [100%]
+=================================== FAILURES ===================================
+____________ test_v11_mutation_constante_du_plafond_relevee_refusee ____________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/36fde007-6e24-5f5e-9ddf-72d92bdede76/scra...l/36fde007-6e24-5f5e-9ddf-72d92bdede76/scratchpad/pt-v11c-complet/test_v11_mutation_constante_du0/orchestrateur'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fbc097d8440>
+capsys = <_pytest.capture.CaptureFixture object at 0x7fbc09ce7350>
+
+    def test_v11_mutation_constante_du_plafond_relevee_refusee(monde, monkeypatch, capsys):
+        monkeypatch.setattr(L, "PLAFOND_PART_CLAUDE_USD", 60.0)
+        assert lancer(monde["r"]) == 2
+>       assert "45 USD exigés" in capsys.readouterr().err
+E       assert '45 USD exigés' in '{"refus": "GO-2026-11-22-124 : le périmètre doit nommer GO-2026-11-22-107 (prolongée) et le plafond, « part Claude 45 USD » (lu : \'part Claude 45 USD\')"}\n'
+E        +  where '{"refus": "GO-2026-11-22-124 : le périmètre doit nommer GO-2026-11-22-107 (prolongée) et le plafond, « part Claude 45 USD » (lu : \'part Claude 45 USD\')"}\n' = CaptureResult(out='', err='{"refus": "GO-2026-11-22-124 : le périmètre doit nommer GO-2026-11-22-107 (prolongée) et le plafond, « part Claude 45 USD » (lu : \'part Claude 45 USD\')"}\n').err
+E        +    where CaptureResult(out='', err='{"refus": "GO-2026-11-22-124 : le périmètre doit nommer GO-2026-11-22-107 (prolongée) et le plafond, « part Claude 45 USD » (lu : \'part Claude 45 USD\')"}\n') = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x7fbc09ce7350>.readouterr
+
+tests/test_lancer_course_affinage_mentors_v11c.py:2290: AssertionError
+____________ test_v11_argon_juge_servi_au_plafond_de_l_emplacement _____________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/36fde007-6e24-5f5e-9ddf-72d92bdede76/scra...l/36fde007-6e24-5f5e-9ddf-72d92bdede76/scratchpad/pt-v11c-complet/test_v11_argon_juge_servi_au_p0/orchestrateur'), ...}
+
+    def test_v11_argon_juge_servi_au_plafond_de_l_emplacement(monde):
+        assert lancer(monde["r"]) == 0
+        run = un_run(monde["r"])
+        conf = json.loads((run / "configuration-orchestrateur.json").read_text())
+>       assert conf["plafonds_session"]["juge"] == 2.0 and "argon_v11" not in conf
+E       assert (1.0 == 2.0)
+
+tests/test_lancer_course_affinage_mentors_v11c.py:2815: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"manifeste_depart": "/tmp/claude-0/-home-user-controle-ia-travail/36fde007-6e24-5f5e-9ddf-72d92bdede76/scratchpad/pt-v11c-complet/test_v11_argon_juge_servi_au_p0/depot/runs/20261122-225907-098882-course-affinage-mentors-v11/manifeste-lanceur-depart.json", "sha256": "541d94a0d79975a08d1e370afee1421b7288e88afeecabd0da3b476d08aee600"}
+{"manifeste_fin": "/tmp/claude-0/-home-user-controle-ia-travail/36fde007-6e24-5f5e-9ddf-72d92bdede76/scratchpad/pt-v11c-complet/test_v11_argon_juge_servi_au_p0/depot/runs/20261122-225907-098882-course-affinage-mentors-v11/manifeste-lanceur-fin.json", "sha256": "2924ec2ca82ec39e167d65d52f84d8c437ba0a5e4cf86ab4fb1f85b13921b893", "code": 0, "code_du_lanceur": 0, "cout_reel_usd": 25.0, "alertes_apres": []}
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v11c.py:724: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v11c.py:995: orchestrateur épinglé absent
+2 failed, 321 passed, 4 skipped in 1150.31s (0:19:10)
+fini

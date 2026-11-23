@@ -1,0 +1,22 @@
+...................................s.......................s.......sF... [ 25%]
+.....s.................................................................. [ 51%]
+........................................................................ [ 77%]
+..............................................................           [100%]
+=================================== FAILURES ===================================
+__________________ test_revocation_incluse_au_registre_derive __________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-50/test_revocation_incluse_au_reg0/depot'), orchestrateurs=...au_reg0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-50/test_revocation_incluse_au_reg0/orchestrateur'), ...}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-50/test_revocation_incluse_au_reg0')
+
+    def test_revocation_incluse_au_registre_derive(monde, tmp_path):
+        _registre(monde, ligne_go() + f"| GO-2026-11-19-01 | 2026-11-19 | révocation | révoque {L.GO_ID} | — | — | Lazar | R-9 |\n")
+        d = L.ecrire_registre_derive(monde["r"].registre_go, tmp_path / "derive.md")
+>       assert d["nombre_de_lignes"] == 2
+E       assert 3 == 2
+
+tests/test_lancer_course_affinage_mentors_v11b.py:1129: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v11b.py:723: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v11b.py:994: orchestrateur épinglé absent
+1 failed, 273 passed, 4 skipped in 1164.70s (0:19:24)
+fini

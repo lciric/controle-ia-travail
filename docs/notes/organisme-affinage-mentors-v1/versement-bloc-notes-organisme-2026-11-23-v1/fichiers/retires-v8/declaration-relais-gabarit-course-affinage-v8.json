@@ -1,0 +1,77 @@
+{
+ "gabarit": "v8 (les gabarits v6 et v6b restent en place, R12) — clé Claude LUC (GO-2026-11-22-107) ; Astra gpt-6.2-astra sur OPENAI_API_KEY_2, déclarée seulement si la sonde commune v2 du jour a réussi ; Carbon NON déclaré : sa commande par lot ne passe pas la garde des appels à Google (règle gelée, GO-2026-11-21-71 ; motif dans absences.carbon) ; Kimi non déclaré. À recopier sous course-v8/declaration-relais-course-affinage-mentors-v8.json ; remplir les PID et la liste des modèles Claude de la configuration v8 ; retirer cette clé ; sceller. ATTENTION : en l'état, Argon (juge et lecteur, obligatoire) ne passe pas non plus la garde Google : le lanceur v8 refuse le départ réel tant que son chemin n'est pas conforme (rapport du développeur, point ouvert 1).",
+ "version": "declaration-relais-course-affinage-mentors-v8",
+ "redige_utc": "(date -u)",
+ "fondement": "GO-2026-11-22-107 (clé LUC, exception à GO-2026-11-22-70), GO-2026-11-22-110 (clé vérifiée), GO-2026-11-22-111 (recharge automatique ; Astra sur OPENAI_API_KEY_2) ; Astra = gpt-6.2-astra (commit 9fb4cdc60), prix 8 / 40 (R-4905)",
+ "fournisseurs": {
+  "claude": {
+   "type": "claude_sdk",
+   "url_relais": "http://127.0.0.1:8787",
+   "nom_cle": "RR_ANTHROPIC_API_KEY_LUC",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "commande",
+    "delai_s": 30,
+    "commande": [
+     "/usr/local/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/scripts/porte_plafond_relais_v1.py",
+     "--url",
+     "http://127.0.0.1:8787",
+     "--modeles-permis",
+     "(modèles Claude de la configuration v8, séparés par une virgule)",
+     "--plafond-ligne",
+     "150"
+    ]
+   }
+  },
+  "argon": {
+   "type": "commande_externe",
+   "commande": [
+    "bash",
+    "/home/user/controle-ia-travail/rapports/fille-ideation-1-v1/appel-argon-v5.sh"
+   ],
+   "nom_cle": "GEMINI_API_KEY",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  },
+  "astra": {
+   "type": "commande_externe",
+   "commande": [
+    "/usr/local/bin/python3",
+    "-I",
+    "-B",
+    "/home/user/pieces-affinage-v8/commande_astra_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8790",
+    "--modele",
+    "gpt-6.2-astra",
+    "--prix-entree",
+    "8",
+    "--prix-sortie",
+    "40",
+    "--max-sortie-jetons",
+    "32768",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1500"
+   ],
+   "modele_propose": "gpt-6.2-astra",
+   "nom_cle": "OPENAI_API_KEY_2",
+   "pid_relais": 0,
+   "porte_plafond": {
+    "type": "environnement"
+   }
+  }
+ },
+ "absences": {
+  "carbon": "commande par lot (commande_gemini_lot_v1.py, 9484dce0…) refusée par la garde des appels à Google : thinkingBudget au lieu de thinkingLevel, includeThoughts absent ; aucun chemin conforme épinglé (rapport du développeur v8)",
+  "kimi": "R-3279 : non déclaré"
+ },
+ "compter_limite_de_debit_comme_soupcon": false,
+ "compter_limite_de_debit_comme_soupcon_choix": "R-3279, nœud (2) tranché par la mère, option (b) : un message de quota qui porte « per minute » ou « rate limit » n'est pas compté comme soupçon de manque de crédit ; tout autre message de quota ou de facturation reste un soupçon"
+}

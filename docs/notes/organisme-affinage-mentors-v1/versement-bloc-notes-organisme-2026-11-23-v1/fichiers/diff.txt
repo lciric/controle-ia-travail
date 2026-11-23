@@ -1,0 +1,1138 @@
+2c2,62
+< """Lanceur de la course d'affinage des idées des mentors par l'organisme d'idéation — version 10.
+---
+> """Lanceur v11b (dérivé du lanceur v11, `bdca413c…`, par remplacements exacts ; le v11 reste en place, R12).
+> 
+> Ce qui change en v11b (décision de la mère sur le point ouvert 11 du rapport v11, routine, étage 1) :
+> 1. le GO de la course (`GO_ID`, passé à l'orchestrateur et cité par la commande de lancement) est **GO-2026-11-22-80**,
+>    prolongation de GO-2026-11-18-14 (calcul, Lazar, 150 USD, échéance 15 décembre) : l'orchestrateur épinglé (`a41b7b50`,
+>    `configuration_v55.verifier_go_v55`) ne lit que la période de la ligne `GO_ID` ; avec GO-14, il refusait après le 25 ;
+> 2. GO-80 est exigé (refus s'il est absent, révoqué, hors période, s'il n'est pas de Lazar ou ne dit pas prolonger
+>    GO-2026-11-18-14) ; la ligne de GO-2026-11-18-14 est exigée aussi (calcul, Lazar, non révoquée ; sa propre échéance ne
+>    borne plus) ; son plafond est lu « 150 USD » (le renvoi entre parenthèses au GO prolongé est admis, sans autre nombre) ;
+> 3. registre dérivé : ligne de GO-80, ligne de GO-14 (traçabilité) et les révocations qui visent l'une ou l'autre ;
+> 4. configuration v11b (`changements_v11.go_course` = GO-2026-11-22-80, exigé égal à `GO_ID`).
+> 
+> Lanceur de la course d'affinage des idées des mentors par l'organisme d'idéation — version 11 (clé Claude LUC et son
+> plafond propre, Astra gpt-6.2-astra, Carbon en flux sous la garde des appels à Google).
+> 
+> Version 11 (R12). Base : le lanceur **v10** de la branche `prep/affinage-v10-compte-organisme-v1` (`b0829025…`, contre-lu
+> « Scellable. », jamais joué ; les v7 à v10 vivent sur les branches `prep/affinage-v7…v10-compte-organisme-v1`, et les noms v8
+> de la branche du compte organisme sont pris : d'où le numéro 11, ordre de la mère du 22 novembre). Accords : GO-2026-11-22-107
+> (« go luc », exception déclarée à la règle « Claude par l'abonnement », GO-2026-11-22-70), GO-2026-11-22-110 (clé LUC
+> vérifiée), GO-2026-11-22-111 (recharge automatique au plus 40 euros ; Astra sur `OPENAI_API_KEY_2`), R-4995 (plafond propre
+> de LUC). Ce que la v11 change, et rien d'autre :
+> 1. **clé Claude** : tous les appels Claude (deux proposeurs, aiguilleur, premier juge) passent par
+>    `RR_ANTHROPIC_API_KEY_LUC` ; `RR_ANTHROPIC_API_KEY_MINUIT` (sans crédit, R-4833) rejoint Rigaud parmi les clés exclues ;
+>    la ligne GO-2026-11-22-107 est lue au registre (`verifier_go_exception_cle`) ; configuration **v11** (copie de la v9 : clés,
+>    notes, plafond de LUC) ;
+> 2. **part Claude sur LUC** (GO-2026-11-22-124, mots de Lazar, qui simplifie GO-2026-11-22-111) : le solde de LUC n'est pas lu
+>    et n'est pas une condition de départ (recharge automatique) ; aucun plancher ni couverture déclarée ; la règle « Minuit
+>    compté au prix relevé » est retirée ; **plafond propre de la part Claude : 45 USD** (R-4995), paramètre nommé
+>    `changements_v11.plafond_part_claude_usd` de la configuration v11, égal à la constante du lanceur (sinon refus : un plafond
+>    retiré ou relevé ne part pas) ; le relais Claude est lancé à ce plafond exactement ; GO-2026-11-22-124 est lu au registre et
+>    prolonge l'exception GO-2026-11-22-107 au 15 décembre ;
+> 3. **arrêt au fil de l'eau** : l'état du relais Claude et son journal (statuts seulement, jamais de texte) sont relus toutes
+>    les `intervalle_surveillance_s` secondes ; au **premier refus de l'interface** (tout statut 4xx autre que 429 au journal :
+>    un refus faute de crédit est un 400, R-4833), au premier refus du relais (état `refus` > 0, son 402 à 45 USD), à une part
+>    engagée (dépense + montants réservés des appels en vol) qui atteint 45 USD, ou à un état ou un journal illisible trois fois
+>    de suite : arrêt propre de l'orchestrateur par son PID, alerte scellée `alerte-arret-part-claude.json` (le statut, pas la
+>    cause), **code 5**, sans relance ; le plafond d'arrêt de 150 USD ne change pas ;
+> 4. **Astra** : `gpt-6.2-astra`, prix 8 / 40 USD par million (R-4905), clé `OPENAI_API_KEY_2` exigée par son nom ; sonde v3 par
+>    la sonde commune v2 (rapports du jour sous `course-v11/`) ; modèle servi relu ; entrée la plus longue sous le palier de
+>    272 000 jetons ;
+> 5. **Carbon en flux** : commande neuve `scripts/commande_gemini_flux_v1.py` (épinglée) par le relais Gemini v3 en flux de
+>    `main` (`relais_gemini_v3.py`, `2cf6bc6d…`, port 8791) ; niveau de réflexion « high », provision 28 672, sortie 65 536
+>    (limite en flux ; texte 36 864 ≥ 16 000 et > 2 cartes × 9 000 caractères), délai 1 500 + 60 s ; pire cas d'un appel sous le plafond de
+>    session (3,00 USD, configuration v9) écrit au manifeste ; relais : `--max-appels` ≥ 40, `--delai-silence-s` ≤ 240,
+>    `--delai-amont-s` ≥ délai de la commande, tous explicites ; les gardes de la commande par lot (lots, relevés) sont retirées ;
+> 6. **garde des appels à Google** (règle gelée, GO-2026-11-21-71) : chaque commande Google déclarée (Argon, Carbon) est jouée
+>    hors ligne devant un faux amont local qui capture le corps de génération (rien ne part) ; le corps passe
+>    `garde_google_v3.verifier_reglages_google` (pièce de `main`, `923679b5…`) et la limite de l'invite d'un proposeur ; tout
+>    problème refuse le départ réel (écrit au manifeste en moteur simulé) ;
+> 7. devis interne : Carbon à 0,4805 USD par appel (même pensée et réponse que le devis v8, prix 4 / 20 de R-5018, sans remise
+>    de lot) ; Argon et Carbon déclarés à 4 / 20 USD par million, réflexion comprise (R-5018) ;
+> 8. noms propres à la version (chemins `course-v11/`, sorties, suffixe des runs ; une seule course de v1 à v11).
+> Codes : 0, 2, 3, 4, 6 comme la v10 ; **5** : arrêt par la garde de crédit d'un relais dispensé (v10) **ou** arrêt propre sur la
+> part Claude (premier 4xx de l'interface autre que 429 au journal du relais Claude, 402 du relais à 45 USD, part engagée au
+> plafond, état ou journal illisible), sans relance ; l'alerte scellée dit le statut, pas la cause.
+> Argon : emplacement `argon_v11.plafond_session_juge_usd` de la configuration (vide : en attente du mot de la mère) ; rempli, il
+> remplace le plafond de session des juges dans la configuration servie (la garde Google juge ensuite le chemin d'Argon).
+> 
+> Texte de la v10 :
+> 
+> Lanceur de la course d'affinage des idées des mentors par l'organisme d'idéation — version 10.
+184c244
+<     GO_ID=GO-2026-11-18-14 /usr/local/bin/python3 -I -B scripts/lancer_course_affinage_mentors_v1.py
+---
+>     GO_ID=GO-2026-11-22-80 /usr/local/bin/python3 -I -B scripts/lancer_course_affinage_mentors_v11b.py
+218a279,283
+> import importlib.util
+> import shlex
+> import threading
+> import time
+> from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+231,232c296,301
+< VERSION = "lancer_course_affinage_mentors_v10"
+< GO_ID = "GO-2026-11-18-14"
+---
+> VERSION = "lancer_course_affinage_mentors_v11b"
+> GO_ID = "GO-2026-11-22-80"          # v11b : GO de la course (prolongation de GO-2026-11-18-14)
+> GO_COURSE_INITIAL = "GO-2026-11-18-14"  # v11b : GO prolongé, exigé au registre et gardé au registre dérivé
+> GO_EXCEPTION_CLE = "GO-2026-11-22-107"  # exception déclarée à la règle « Claude par l'abonnement »
+> REGLE_ABONNEMENT = "GO-2026-11-22-70"
+> GO_PRECISIONS_CLE = ("GO-2026-11-22-110", "GO-2026-11-22-111", "R-4995")  # cités au manifeste, non lus
+243c312,313
+< COURSE = "docs/notes/organisme-affinage-mentors-v1/course-v10"
+---
+> COURSE_V10 = "docs/notes/organisme-affinage-mentors-v1/course-v10"
+> COURSE = "docs/notes/organisme-affinage-mentors-v1/course-v11"
+248c318
+< MAX_SORTIE_CARBON = 32768                     # v9 : la sortie maximale compte la pensée (documentation du fournisseur)
+---
+> MAX_SORTIE_CARBON = 65536                     # v11 (flux) : limite en flux ; texte 36 864 au-delà de la provision 28 672
+252c322
+< DELAI_CARBON_S = 1620                         # délai de lot relevé (1 500 en v7), borné par l'orchestrateur épinglé
+---
+> DELAI_CARBON_S = 1500                         # v11 (flux) : délai de la génération ; + 60 s du compte de jetons, sous 1 800
+259,260c329,335
+< OPTIONS_CARBON_EXIGEES = ("--prix-entree", "--prix-sortie", "--facteur-lot", "--max-sortie-jetons", "--sortie-min-jetons",
+<                           "--provision-pensee-jetons", "--intervalle-s", "--delai-s", "--delai-requete-s")
+---
+> OPTIONS_CARBON_EXIGEES = ("--prix-entree", "--prix-sortie", "--max-sortie-jetons", "--provision-pensee-jetons", "--delai-s",
+>                           "--delai-requete-s")  # v11 : options numériques de la commande en flux
+> NIVEAU_REFLEXION_CARBON = "high"              # v11 : le plus haut admis pour Carbon (garde Google v3)
+> TEXTE_MIN_GOOGLE = 16000                      # règle gelée : réflexion + 16 000 jetons de texte au moins
+> CARACTERES_PAR_CARTE_MAX = 9000               # consigne du proposeur, point 6 (une carte, 9 000 caractères au plus)
+> DELAI_SILENCE_RELAIS_MAX_S = 240.0            # relais v3 : sous la coupure à 300 s des connexions muettes
+> PORT_CARBON = 8791                            # relais Gemini v3 en flux (procédure neutre, § 2.4)
+285c360
+< RELEVE_PRIX = f"{COURSE}/releve-prix-claude-course-affinage-v10.json"
+---
+> RELEVE_PRIX = f"{COURSE}/releve-prix-claude-course-affinage-v11.json"
+291,301c366,372
+< SONDE_ASTRA = f"{COURSE_V6}/sonde-astra-course-affinage-v6.json"
+< SONDES_ASTRA_V2 = (f"{COURSE}/sonde-astra-course-affinage-v10-{{jour}}.json",
+<                    f"{COURSE_V9}/sonde-astra-course-affinage-v9-{{jour}}.json",
+<                    f"{COURSE_V8}/sonde-astra-course-affinage-v8-{{jour}}.json",
+<                    f"{COURSE_V7}/sonde-astra-course-affinage-v7-{{jour}}.json", SONDE_ASTRA)
+< SONDES_ASTRA_COMMUNES = (f"{COURSE}/sonde-astra-commune-{{jour}}-v1.json",
+<                          f"{COURSE_V9}/sonde-astra-commune-{{jour}}-v1.json",
+<                          f"{COURSE_V8}/sonde-astra-commune-{{jour}}-v1.json",
+<                          f"{COURSE_V7}/sonde-astra-commune-{{jour}}-v1.json",
+<                          "docs/notes/organisme-auto-conception-v1/course-v2/sonde-astra-commune-{jour}-v1.json",
+<                          f"{COURSE_V6}/sonde-astra-commune-{{jour}}-v1.json")
+---
+> # v11 : sonde v3 (gpt-6.2-astra, 8 / 40) jouée par la sonde commune v2, rapports du jour sous `course-v11/` seulement (les
+> # rapports des versions précédentes sont d'un autre modèle).
+> SONDE_ASTRA = f"{COURSE}/sonde-astra-course-affinage-v11.json"
+> SONDES_ASTRA_V2 = (f"{COURSE}/sonde-astra-course-affinage-v11-{{jour}}.json", SONDE_ASTRA)
+> SONDES_ASTRA_COMMUNES = (f"{COURSE}/sonde-astra-commune-{{jour}}-v2.json",)
+> VERSION_SONDE_ASTRA = "sonde_astra_affinage_v3"
+> VERSION_SONDE_COMMUNE = "sonde_astra_courses_v2"
+309,312c380,387
+<                      "argon": ("relais_gemini_v2.py", "2b0043bcab8b3922c65a4008e719408c52781d7544064b5a29a23d7ef60c1aeb"),
+<                      "carbon": ("relais_gemini_v4.py", "543e728d90e809c661fdc26f1e1b1a32b2e23128a7d09e3b5d16f851408a35b4")}
+< MODELES_RELAIS = {"kimi": ["kimi-k3.1-pro"], "astra": ["gpt-6-astra"], "argon": ["gemini-4-argon"], "carbon": ["gemini-4-carbon"]}
+< PORT_ARGON = 8788  # l'enveloppe d'Argon v5 (épinglée) parle à 127.0.0.1:8788
+---
+>                      "argon": ("relais_gemini_v3.py", "2cf6bc6df83f8847e75911c8cc0b6153c4467b36ce69273de649b5cbdc7e2378"),  # v11
+>                      "carbon": ("relais_gemini_v3.py", "2cf6bc6df83f8847e75911c8cc0b6153c4467b36ce69273de649b5cbdc7e2378")}  # v11 : en flux
+> MODELES_RELAIS = {"kimi": ["kimi-k3.1-pro"], "astra": ["gpt-6.2-astra"], "argon": ["gemini-4-argon"], "carbon": ["gemini-4-carbon"]}
+> # Astra (R-4905) : USD par million, palier jusqu'à 272 000 jetons d'entrée (16 / 60 au-delà, jamais admis ici).
+> PRIX_ASTRA = (8.0, 40.0)
+> PALIER_ASTRA_JETONS = 272000
+> CLE_ASTRA = "OPENAI_API_KEY_2"  # GO-2026-11-22-111
+> PORT_ARGON = 8788  # v11 : relais Gemini v3 d'Argon (en flux) ; l'enveloppe v5 n'est plus déclarée
+317c392,401
+<     "carbon": {"commande_gemini_lot_v1.py": "9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75"}}
+---
+>     "carbon": {"commande_gemini_flux_v1.py": "6aaf235df31eccd7199c0bcea1e8b68009d56d03c66a01427d05ae8137fdbf55"}}  # v11 : commande en flux (dépôt de travail)
+> GARDE_GOOGLE_PRODUCTION = "/home/user/controle-ia-travail/src/controle_ia/garde_google_v3.py"
+> COMMANDES_EPINGLEES["argon"] = dict(COMMANDES_EPINGLEES["carbon"])  # v11 : Argon par la même commande en flux
+> # v11 (décision de la mère) : Argon proposeur et second juge sous la garde Google, par la commande en flux et un relais Gemini v3
+> # (port 8788, modèle gemini-4-argon). Réglages : niveau « high », provision 24 576, sortie 45 056 (texte 20 480 ≥ 16 000 et
+> # > 2 × 9 000 caractères) ; prix 4 / 20 USD par million, réflexion comprise (R-5018) ; la commande compte la réflexion dans la
+> # sortie maximale : pire cas d'un juge = entrée + 45 056 × 20 / 10⁶ ≈ 0,92 USD ; la provision est une HYPOTHÈSE (aucune pensée
+> # d'Argon au niveau « high » n'est relevée dans les pièces lues).
+> PROVISION_PENSEE_ARGON = 24576
+> MAX_SORTIE_ARGON = 45056
+323,328c407,417
+<     "carbon": ["--modele", "gemini-4-carbon", "--url-base", "http://127.0.0.1:8792/v1beta", "--prix-entree", "8.3",
+<                "--prix-sortie", "41.5", "--facteur-lot", "0.5", "--max-sortie-jetons", str(MAX_SORTIE_CARBON),
+<                "--sortie-min-jetons", str(SORTIE_MIN_CARBON), "--provision-pensee-jetons", str(PROVISION_PENSEE_CARBON),
+<                "--intervalle-s", str(INTERVALLE_CARBON_S), "--delai-s", str(DELAI_CARBON_S),
+<                "--delai-requete-s", str(DELAI_REQUETE_CARBON_S), "--roles", "proposeur_ideation"],
+<     "astra": ["--url-relais", "http://127.0.0.1:8790", "--modele", "gpt-6-astra", "--prix-entree", "10", "--prix-sortie", "50",
+---
+>     "carbon": ["--espece", "carbon", "--modele", "gemini-4-carbon", "--url-base", f"http://127.0.0.1:{PORT_CARBON}/v1beta",
+>                "--prix-entree", "4", "--prix-sortie", "20", "--niveau-reflexion", NIVEAU_REFLEXION_CARBON,
+>                "--provision-pensee-jetons", str(PROVISION_PENSEE_CARBON), "--max-sortie-jetons", str(MAX_SORTIE_CARBON),
+>                "--delai-s", str(DELAI_CARBON_S), "--delai-requete-s", str(DELAI_REQUETE_CARBON_S), "--roles", "proposeur_ideation",
+>                "--garde", GARDE_GOOGLE_PRODUCTION],
+>     "argon": ["--espece", "argon", "--modele", "gemini-4-argon", "--url-base", f"http://127.0.0.1:{PORT_ARGON}/v1beta",
+>               "--prix-entree", "4", "--prix-sortie", "20", "--niveau-reflexion", "high",
+>               "--provision-pensee-jetons", str(PROVISION_PENSEE_ARGON), "--max-sortie-jetons", str(MAX_SORTIE_ARGON),
+>               "--delai-s", str(DELAI_CARBON_S), "--delai-requete-s", str(DELAI_REQUETE_CARBON_S),
+>               "--roles", "proposeur_ideation,juge_ideation", "--garde", GARDE_GOOGLE_PRODUCTION],
+>     "astra": ["--url-relais", "http://127.0.0.1:8790", "--modele", "gpt-6.2-astra", "--prix-entree", "8", "--prix-sortie", "40",
+331c420
+< SORTIES_COURSES = tuple(Path(f"/home/user/sorties-course-affinage-mentors-v{k}") for k in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+---
+> SORTIES_COURSES = tuple(Path(f"/home/user/sorties-course-affinage-mentors-v{k}") for k in range(1, 12))
+333,334c422,423
+< CLE_CLAUDE = "RR_ANTHROPIC_API_KEY_MINUIT"
+< CLES_INTERDITES = ("RR_ANTHROPIC_API_KEY_RIGAUD",)
+---
+> CLE_CLAUDE = "RR_ANTHROPIC_API_KEY_LUC"  # GO-2026-11-22-107
+> CLES_INTERDITES = ("RR_ANTHROPIC_API_KEY_RIGAUD", "RR_ANTHROPIC_API_KEY_MINUIT")  # Minuit : sans crédit (R-4833)
+336c425,432
+< CREDIT_DECLARE_CLE_CLAUDE_USD = 200.0  # R-3228, mot de Lazar
+---
+> # v11 : part Claude estimée et haut du devis v10 (deux proposeurs, aiguilleur, premier juge ; marge comprise ; table du § 4) :
+> # écrits au manifeste pour information ; GO-2026-11-22-124 : aucune condition de départ sur le solde de LUC.
+> PART_CLAUDE_ESTIMEE_USD = 20.65
+> PART_CLAUDE_HAUT_USD = 74.62
+> PLAFOND_PART_CLAUDE_USD = 45.0   # R-4995 : plafond propre de LUC ; égal à celui de la configuration v11, sinon refus
+> RESERVE_APPEL_CLAUDE_USD = 0.40  # réserve par appel par défaut du relais Claude (procédure neutre, § 2.1)
+> INTERVALLE_SURVEILLANCE_S = 10.0
+> LECTURES_ILLISIBLES_MAX = 3
+339,343c435,439
+< PREREG = f"{COURSE}/preenregistrement-course-affinage-mentors-v10.md"
+< PREREG_SHA256 = "7fc71712136cf20d86f3603eb581bc61dd6bc35fcfe0650b230cf659674a3856"
+< CONTRE_LECTURE = f"{COURSE}/contre-lecture-preenregistrement-course-affinage-mentors-v10.md"
+< DECLARATION_RELAIS = f"{COURSE}/declaration-relais-course-affinage-mentors-v10.json"
+< RELEVE_CREDITS = f"{COURSE}/releve-credits-avant-course-affinage-mentors-v10.json"
+---
+> PREREG = f"{COURSE}/preenregistrement-course-affinage-mentors-v11.md"
+> PREREG_SHA256 = ""  # à poser quand le préenregistrement v11 sera écrit et scellé : d'ici là, aucun lancement (refus nommé)
+> CONTRE_LECTURE = f"{COURSE}/contre-lecture-preenregistrement-course-affinage-mentors-v11.md"
+> DECLARATION_RELAIS = f"{COURSE}/declaration-relais-course-affinage-mentors-v11.json"
+> RELEVE_CREDITS = f"{COURSE}/releve-credits-avant-course-affinage-mentors-v11.json"
+346,348c442,447
+<     "configuration": (f"{COURSE_V9}/configuration-course-affinage-mentors-v9.json", "e7378f89ae39eacd169ff912526a8e998e4f01f0aba235eeaa0bf12e4b195d5d"),  # v9 : proposeur 3,00
+<     "sonde_astra": ("scripts/sonde_astra_affinage_v2.py", "1799449269e15661b92f2a45eaab95a22e3a766a1fdf10ec9a4648bbe92aebf7"),
+<     "sonde_commune": ("scripts/sonde_astra_courses_v1.py", "d374d1071f4ef70b3604d97dc62e2f14103c440a166342b330d7a576d8b4c777"),
+---
+>     "configuration": (f"{COURSE}/configuration-course-affinage-mentors-v11b.json", "c69620daa06a9c39b129038788ebdfd7f6530123d9726674ee14a3244f4795f2"),  # v9 + LUC + plafond de LUC
+>     "sonde_astra": ("scripts/sonde_astra_affinage_v3.py", "32366123751ba1d1620cadf4dd4cfda039c0bf35af614a75b49e2d9c04dad7ff"),
+>     "sonde_commune": ("scripts/sonde_astra_courses_v2.py", "80074c82c8ea79d059c9f74b3ae89f7f50635283672a4bd26f1c2e77c27d6704"),
+>     "commande_carbon": ("scripts/commande_gemini_flux_v1.py", "6aaf235df31eccd7199c0bcea1e8b68009d56d03c66a01427d05ae8137fdbf55"),
+>     # garde commune des appels à Google (règle gelée, GO-2026-11-21-71), pièce de `main` : présente dans le dépôt de travail
+>     "garde_google": ("src/controle_ia/garde_google_v3.py", "923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91"),
+405c504,508
+<                       "prop-carbon": 0.4985, "aiguilleur": 0.031, "juge-opus": 0.037, "juge-argon": 0.0347}
+---
+>                       "prop-carbon": 0.4805, "aiguilleur": 0.031, "juge-opus": 0.037, "juge-argon": 0.0347}
+> # v11 : Carbon en flux, sans remise de lot : 2 618 × 8,3 + (20 000 + 3 500) × 41,5, par million = 0,996979, arrondi 0,997 ;
+> # R-5018 (4 / 20 USD par million, réflexion comprise) : un appel estimé 2 618 × 4 + (20 000 + 3 500) × 20, par million =
+> # 0,480472, arrondi 0,4805 ; pire cas : 2 618 × 4 + 65 536 × 20, par million = 1,321192 USD (la commande compte la réflexion
+> # dans la sortie maximale) ; 1,894632 si la réflexion était facturée en plus de la sortie maximale ; sous 3,00 dans les deux cas.
+409c512
+< DEVIS_V5_TOTAL = {"cinq_especes": 41.136, "six_especes": 48.8384}
+---
+> DEVIS_V5_TOTAL = {"cinq_especes": 40.848, "six_especes": 48.5504}  # v11 (R-5018) : + 16 × (0,4805 − 0,4985) = − 0,288
+411,413c514,516
+< DOSSIER_SORTIES = Path("/home/user/sorties-course-affinage-mentors-v10")
+< SUFFIXE_RUN = "-course-affinage-mentors-v10"
+< SUFFIXES_DEJA_LANCEE = tuple(f"-course-affinage-mentors-v{k}" for k in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10))  # une seule course, quelle que soit la version
+---
+> DOSSIER_SORTIES = Path("/home/user/sorties-course-affinage-mentors-v11")
+> SUFFIXE_RUN = "-course-affinage-mentors-v11"
+> SUFFIXES_DEJA_LANCEE = tuple(f"-course-affinage-mentors-v{k}" for k in range(1, 12))  # une seule course, quelle que soit la version
+525a629,630
+>     controler_google: object = None          # v11 : None = la garde réelle (commandes jouées hors ligne devant un faux amont)
+>     intervalle_surveillance_s: float = INTERVALLE_SURVEILLANCE_S
+545c650
+< def verifier_go(registre: Path, aujourd_hui: _dt.date, go_id: str = GO_ID) -> dict:
+---
+> def verifier_go(registre: Path, aujourd_hui: _dt.date, go_id: str = GO_ID, prolongation: str | None = None) -> dict:
+549c654
+<     ligne_go = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2})\s*\|")
+---
+>     ligne_go = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|")
+575,576c680,683
+<     if not d_acc <= aujourd_hui <= d_ech:
+<         raise Refus(f"{go_id} hors de sa période de validité ({d_acc} → {d_ech}, aujourd'hui {aujourd_hui})")
+---
+>     fin = max(d_ech, _dt.date.fromisoformat(prolongation)) if prolongation else d_ech  # v11 : prolongée par GO-2026-11-22-80
+>     if not d_acc <= aujourd_hui <= fin:
+>         raise Refus(f"{go_id} hors de sa période de validité ({d_acc} → {fin}, aujourd'hui {aujourd_hui}) ; prolongation "
+>                     f"valide : {prolongation or 'aucune'}")
+582c689,690
+<     m_plafond = re.match(r"^\s*(\d+(?:[.,]\d+)?)\s*(?:USD|usd)\s*$", plafond)
+---
+>     m_plafond = re.match(r"^\s*(\d+(?:[.,]\d+)?)\s*(?:USD|usd)\s*(?:\([^()0-9]*\))?\s*$",
+>                          re.sub(r"GO-\d{4}-\d{2}-\d{2}-\d{2,3}", "GO", plafond))  # v11b : renvoi au GO prolongé admis
+591a700,910
+> def verifier_go_exception_cle(registre: Path, aujourd_hui: _dt.date, go_id: str = GO_EXCEPTION_CLE,
+>                               prolongation: str | None = None) -> dict:
+>     """v11 : la ligne de l'exception déclarée (GO-2026-11-22-107) : une seule ligne, type « calcul », accordée par Lazar, en
+>     période, non révoquée, dont le périmètre nomme la clé Claude de la course, la règle « Claude par l'abonnement »
+>     (GO-2026-11-22-70) et la course (« mentors » ou « affinage ») ; son plafond, en mots, renvoie au GO de la course."""
+>     if not registre.is_file():
+>         raise Refus(f"registre des GO absent : {registre}")
+>     ligne_go = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|")
+>     trouvees, revocations = [], []
+>     for ligne in registre.read_text(encoding="utf-8").splitlines():
+>         m = ligne_go.match(ligne)
+>         if not m:
+>             continue
+>         cellules = [c.strip() for c in ligne.strip().strip("|").split("|")]
+>         if m.group(1) == go_id:
+>             trouvees.append(cellules)
+>         elif _est_revocation(cellules, go_id):
+>             revocations.append(m.group(1))
+>     if len(trouvees) != 1 or len(trouvees[0]) != 8:
+>         raise Refus(f"{go_id} : {len(trouvees)} ligne(s) dans {registre.name} (une ligne de 8 colonnes exigée) — exception de clé "
+>                     f"non trouvée : aucun appel Claude par l'interface")
+>     ident, accorde, typ, perimetre, plafond, echeance, par, _ref = trouvees[0]
+>     if typ != "calcul" or par != "Lazar":
+>         raise Refus(f"{go_id} : type {typ!r} accordé par {par!r} (« calcul », Lazar exigés)")
+>     try:
+>         d_acc, d_ech = _dt.date.fromisoformat(accorde), _dt.date.fromisoformat(echeance)
+>     except ValueError:
+>         raise Refus(f"{go_id} : dates illisibles ({accorde!r}, {echeance!r})") from None
+>     fin = max(d_ech, _dt.date.fromisoformat(prolongation)) if prolongation else d_ech  # v11 : prolongée par GO-2026-11-22-124
+>     if not d_acc <= aujourd_hui <= fin:
+>         raise Refus(f"{go_id} hors de sa période de validité ({d_acc} → {fin}, aujourd'hui {aujourd_hui})")
+>     if revocations:
+>         raise Refus(f"{go_id} révoqué par {', '.join(sorted(revocations))}")
+>     p = _normaliser(perimetre)
+>     if CLE_CLAUDE not in perimetre or REGLE_ABONNEMENT not in perimetre or not ("mentors" in p or "affinage" in p):
+>         raise Refus(f"{go_id} : le périmètre doit nommer {CLE_CLAUDE}, la règle {REGLE_ABONNEMENT} et la course d'affinage")
+>     if GO_COURSE_INITIAL not in plafond:
+>         raise Refus(f"{go_id} : le plafond doit renvoyer au plafond d'arrêt de {GO_COURSE_INITIAL}")
+>     return {"id": ident, "accorde": accorde, "echeance": echeance, "par": par, "regle_exceptee": REGLE_ABONNEMENT,
+>             "precisions_citees": list(GO_PRECISIONS_CLE),
+>             "ligne_sha256": hashlib.sha256(("|".join(trouvees[0])).encode("utf-8")).hexdigest()}
+> 
+> 
+> GO_SIMPLIFICATION_CLE = "GO-2026-11-22-124"
+> 
+> 
+> def verifier_go_simplification(registre: Path, aujourd_hui: _dt.date, go_id: str = GO_SIMPLIFICATION_CLE) -> dict:
+>     """v11 : la ligne GO-2026-11-22-124 (mots de Lazar) : une ligne, accordée par Lazar, en période, non révoquée, qui nomme
+>     GO-2026-11-22-107 (prolongée) ; rend son échéance (prolongation de l'exception de clé)."""
+>     if not registre.is_file():
+>         raise Refus(f"registre des GO absent : {registre}")
+>     ligne_go = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|")
+>     trouvees, revocations = [], []
+>     for ligne in registre.read_text(encoding="utf-8").splitlines():
+>         m = ligne_go.match(ligne)
+>         if not m:
+>             continue
+>         cellules = [c.strip() for c in ligne.strip().strip("|").split("|")]
+>         if m.group(1) == go_id:
+>             trouvees.append(cellules)
+>         elif _est_revocation(cellules, go_id):
+>             revocations.append(m.group(1))
+>     if len(trouvees) != 1 or len(trouvees[0]) != 8:
+>         raise Refus(f"{go_id} : {len(trouvees)} ligne(s) (une ligne de 8 colonnes exigée) : règle de la clé Claude non trouvée")
+>     ident, accorde, typ, perimetre, plafond, echeance, par, _ref = trouvees[0]
+>     if par != "Lazar" or typ not in ("calcul", "décision"):
+>         raise Refus(f"{go_id} : type {typ!r} accordé par {par!r} (Lazar exigé)")
+>     try:
+>         d_acc, d_ech = _dt.date.fromisoformat(accorde), _dt.date.fromisoformat(echeance)
+>     except ValueError:
+>         raise Refus(f"{go_id} : dates illisibles ({accorde!r}, {echeance!r})") from None
+>     if not d_acc <= aujourd_hui <= d_ech:
+>         raise Refus(f"{go_id} hors de sa période de validité ({d_acc} → {d_ech}, aujourd'hui {aujourd_hui})")
+>     if revocations:
+>         raise Refus(f"{go_id} révoqué par {', '.join(sorted(revocations))}")
+>     if GO_EXCEPTION_CLE not in perimetre or "45" not in plafond + perimetre:
+>         raise Refus(f"{go_id} : le périmètre doit nommer {GO_EXCEPTION_CLE} (prolongée) et le plafond de la part Claude (45 USD)")
+>     return {"id": ident, "accorde": accorde, "echeance": echeance, "par": par,
+>             "ligne_sha256": hashlib.sha256(("|".join(trouvees[0])).encode("utf-8")).hexdigest()}
+> 
+> 
+> GO_PROLONGATION_COURSE = "GO-2026-11-22-80"   # prolonge GO-2026-11-18-14 au 15 décembre
+> assert GO_PROLONGATION_COURSE == GO_ID          # v11b : la prolongation est le GO de la course
+> 
+> 
+> def verifier_go_initial(registre: Path) -> dict:
+>     """v11b : la ligne de GO-2026-11-18-14 (prolongé par GO-80) est exigée : une seule, de type « calcul », accordée par Lazar,
+>     non révoquée ; sa propre échéance ne borne plus (la période est celle de GO-80)."""
+>     c, rev = lire_ligne_go(registre, GO_COURSE_INITIAL)
+>     if c is None:
+>         raise Refus(f"{GO_COURSE_INITIAL} (GO prolongé par {GO_ID}) : ligne absente ou mal formée")
+>     ident, accorde, typ, _perimetre, _plafond, echeance, par, _ref = c
+>     if typ != "calcul" or par != "Lazar":
+>         raise Refus(f"{GO_COURSE_INITIAL} : type {typ!r} accordé par {par!r} (« calcul », Lazar exigés)")
+>     if rev:
+>         raise Refus(f"{GO_COURSE_INITIAL} (prolongé par {GO_ID}) révoqué par {', '.join(sorted(rev))}")
+>     return {"id": ident, "accorde": accorde, "echeance": echeance, "par": par,
+>             "ligne_sha256": hashlib.sha256(("|".join(c)).encode("utf-8")).hexdigest()}
+> 
+> 
+> def lire_ligne_go(registre: Path, go_id: str) -> tuple:
+>     """(cellules de la ligne unique de `go_id` ou None, révocations qui la visent)."""
+>     ligne_go = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|")
+>     trouvees, revocations = [], []
+>     for ligne in registre.read_text(encoding="utf-8").splitlines():
+>         m = ligne_go.match(ligne)
+>         if not m:
+>             continue
+>         cellules = [c.strip() for c in ligne.strip().strip("|").split("|")]
+>         if m.group(1) == go_id:
+>             trouvees.append(cellules)
+>         elif _est_revocation(cellules, go_id):
+>             revocations.append(m.group(1))
+>     return (trouvees[0] if len(trouvees) == 1 and len(trouvees[0]) == 8 else None), revocations
+> 
+> 
+> def lire_prolongation(registre: Path, aujourd_hui: _dt.date, go_id: str, go_vise: str, mot: str = "prolong") -> dict:
+>     """Une ligne de prolongation : accordée par Lazar, non révoquée, en période, qui nomme le GO visé et dit « prolong… ».
+>     Rend {valide, echeance, motif} ; une ligne absente ou invalide n'est jamais tue : le motif est écrit au manifeste, et le GO
+>     visé garde sa propre échéance (au-delà, refus)."""
+>     c, rev = lire_ligne_go(registre, go_id) if registre.is_file() else (None, [])
+>     if c is None:
+>         return {"id": go_id, "valide": False, "motif": "ligne absente ou mal formée"}
+>     ident, accorde, typ, perimetre, plafond, echeance, par, _ref = c
+>     try:
+>         d_acc, d_ech = _dt.date.fromisoformat(accorde), _dt.date.fromisoformat(echeance)
+>     except ValueError:
+>         return {"id": go_id, "valide": False, "motif": "dates illisibles"}
+>     motifs = []
+>     if par != "Lazar":
+>         motifs.append(f"accordée par {par!r}")
+>     if rev:
+>         motifs.append(f"révoquée par {', '.join(sorted(rev))}")
+>     if go_vise not in perimetre or mot not in _normaliser(perimetre):
+>         motifs.append(f"ne dit pas prolonger {go_vise}")
+>     if not d_acc <= aujourd_hui <= d_ech:
+>         motifs.append(f"hors période ({d_acc} → {d_ech})")
+>     if motifs:
+>         return {"id": go_id, "valide": False, "motif": " ; ".join(motifs)}
+>     return {"id": ident, "valide": True, "echeance": echeance, "go_vise": go_vise,
+>             "ligne_sha256": hashlib.sha256(("|".join(c)).encode("utf-8")).hexdigest()}
+> 
+> 
+> def verifier_confirmation_107(registre: Path, aujourd_hui: _dt.date, fixe: dict) -> dict:
+>     """GO-2026-11-22-124 dit la prolongation de GO-2026-11-22-107 « à confirmer par Lazar » : elle ne vaut que si la ligne de
+>     confirmation est **nommée** dans la configuration (`changements_v11.confirmation_prolongation_go_107`) et **inscrite** au
+>     registre (Lazar, non révoquée, en période, qui nomme GO-2026-11-22-107). Non nommée : aucune prolongation (au-delà du
+>     25 novembre, refus). Nommée mais absente ou invalide : refus."""
+>     nom = (fixe.get("changements_v11") or {}).get("confirmation_prolongation_go_107", "absente")
+>     if nom == "absente":
+>         raise Refus("configuration : emplacement changements_v11.confirmation_prolongation_go_107 absent (null s'il n'y a pas "
+>                     "de confirmation)")
+>     if nom is None:
+>         return {"nommee": None, "valide": False, "motif": "aucune confirmation nommée dans la configuration"}
+>     if not isinstance(nom, str) or not re.fullmatch(r"GO-\d{4}-\d{2}-\d{2}-\d{2,3}", nom):
+>         raise Refus(f"configuration : confirmation_prolongation_go_107 = {nom!r} : identifiant de GO exigé")
+>     o = lire_prolongation(registre, aujourd_hui, nom, GO_EXCEPTION_CLE, mot="")
+>     if not o["valide"]:
+>         raise Refus(f"confirmation de la prolongation de {GO_EXCEPTION_CLE} nommée ({nom}) mais non valide au registre : {o['motif']}")
+>     return dict(o, nommee=nom)
+> 
+> 
+> def verifier_les_go(registre: Path, aujourd_hui: _dt.date, fixe: dict) -> dict:
+>     """v11 : GO de la course (GO-2026-11-18-14, prolongé par GO-2026-11-22-80 s'il est valide), règle de la clé
+>     (GO-2026-11-22-124), exception de clé (GO-2026-11-22-107, prolongée à l'échéance de GO-124 seulement sous confirmation)."""
+>     go_conf = (fixe.get("changements_v11") or {}).get("go_course")
+>     if go_conf != GO_ID:
+>         raise Refus(f"configuration : changements_v11.go_course = {go_conf!r}, {GO_ID} exigé (GO de la course, v11b)")
+>     if not registre.is_file():
+>         raise Refus(f"registre des GO absent : {registre}")
+>     p80 = lire_prolongation(registre, aujourd_hui, GO_PROLONGATION_COURSE, GO_COURSE_INITIAL)
+>     if not p80["valide"]:  # v11b : GO-80 est le GO de la course ; absent ou invalide, la course ne part pas
+>         raise Refus(f"{GO_PROLONGATION_COURSE} (GO de la course, prolongation de {GO_COURSE_INITIAL}) non valide : {p80['motif']}")
+>     go = verifier_go(registre, aujourd_hui)
+>     p80 = dict(p80, go_initial=verifier_go_initial(registre))
+>     simpl = verifier_go_simplification(registre, aujourd_hui)
+>     conf = verifier_confirmation_107(registre, aujourd_hui, fixe)
+>     cle = verifier_go_exception_cle(registre, aujourd_hui, prolongation=simpl["echeance"] if conf["valide"] else None)
+>     return {"go": go, "prolongation_course": p80, "simplification": simpl, "confirmation_107": conf, "exception_cle": cle}
+> 
+> 
+> def verifier_plafond_luc(fixe: dict) -> float:
+>     """v11 (R-4995) : plafond propre de LUC lu dans la configuration et égal à la constante du lanceur ; ni retiré, ni relevé,
+>     au plus le plafond d'arrêt de la course."""
+>     bloc = fixe.get("changements_v11") or {}
+>     lu, part = bloc.get("plafond_part_claude_usd"), bloc.get("part_de_la_couverture")
+>     if not _nombre(lu) or float(lu) != PLAFOND_PART_CLAUDE_USD or not 0 < PLAFOND_PART_CLAUDE_USD <= PLAFOND_ARRET_USD:
+>         raise Refus(f"plafond propre de {CLE_CLAUDE} : configuration {lu!r}, lanceur {PLAFOND_PART_CLAUDE_USD!r} ; 45 USD exigés "
+>                     "aux deux (R-4995) : un plafond retiré ou relevé ne part pas")
+>     if part is not None:  # GO-2026-11-22-124 : plus de part de la couverture ; sa présence est un reste d'une règle retirée
+>         raise Refus("configuration : changements_v11.part_de_la_couverture présent alors que GO-2026-11-22-124 l'a retiré")
+>     return float(lu)
+> 
+> 
+> def appliquer_emplacement_argon(fixe: dict) -> dict:
+>     """v11 (brouillon 1 du préenregistrement v11, point 4) : `argon_v11.plafond_session_juge_usd` de la configuration ; vide
+>     (null) : en attente du mot de la mère, plafond des juges inchangé ; rempli : réel dans ]0 ; 3,00] qui remplace
+>     `plafonds_session.juge` (les deux juges : l'orchestrateur n'a qu'un plafond par rôle) ; toute autre valeur : refus."""
+>     bloc = fixe.get("argon_v11")
+>     if not isinstance(bloc, dict) or "plafond_session_juge_usd" not in bloc:
+>         raise Refus("configuration : emplacement argon_v11.plafond_session_juge_usd absent (v11)")
+>     v = bloc["plafond_session_juge_usd"]
+>     avant = fixe["plafonds_session"]["juge"]
+>     if v is None:
+>         return {"plafond_session_juge_usd": avant, "emplacement": None, "statut": "en attente du mot de la mère"}
+>     if not _nombre(v) or not 0 < float(v) <= float(fixe["plafonds_session"]["proposeur"]):
+>         raise Refus(f"configuration : argon_v11.plafond_session_juge_usd = {v!r} : réel dans ]0 ; plafond d'un proposeur] exigé")
+>     fixe["plafonds_session"]["juge"] = float(v)
+>     return {"plafond_session_juge_usd": float(v), "emplacement": float(v), "avant": avant, "statut": "rempli"}
+> 
+> 
+747c1066,1067
+<             raise Refus(f"fournisseurs.{nom}.nom_cle = {nom_cle} : clé exclue de cette course (R-3228, elle garde son reste)")
+---
+>             raise Refus(f"fournisseurs.{nom}.nom_cle = {nom_cle} : clé exclue de cette course (Rigaud garde son reste ; Minuit "
+>                         f"est sans crédit, R-4833)")
+749c1069,1071
+<             raise Refus(f"fournisseurs.claude.nom_cle = {nom_cle} : tous les appels Claude passent par {CLE_CLAUDE} (R-3228)")
+---
+>             raise Refus(f"fournisseurs.claude.nom_cle = {nom_cle} : tous les appels Claude passent par {CLE_CLAUDE} ({GO_EXCEPTION_CLE})")
+>         if nom == "astra" and nom_cle != CLE_ASTRA:
+>             raise Refus(f"fournisseurs.astra.nom_cle = {nom_cle} : Astra passe par {CLE_ASTRA} (GO-2026-11-22-111)")
+765,768c1087,1095
+<         if nom == "argon":
+<             attendue = ["bash", str(r.depot / PIECES["enveloppe_argon"][0])]
+<             if b.get("commande") != attendue:
+<                 raise Refus(f"fournisseurs.argon.commande : {attendue} exigée (enveloppe épinglée)")
+---
+>         if nom == "argon":  # v11 : la commande en flux épinglée, aux arguments épinglés (garde Google) ; l'enveloppe v5 est refusée
+>             c = b.get("commande") if isinstance(b.get("commande"), list) else []
+>             ep = COMMANDES_EPINGLEES["argon"]
+>             if len(c) < 4 or not os.path.isabs(c[0]) or c[1:3] != ["-I", "-B"] or os.path.basename(c[3]) not in ep \
+>                     or not os.path.isfile(c[3]) or sha256_fichier(Path(c[3])) != ep[os.path.basename(c[3])]:
+>                 raise Refus(f"fournisseurs.argon.commande : « python -I -B <commande en flux épinglée> » exigé ({sorted(ep)}) ; "
+>                             "l'enveloppe v5 (commande_argon_v3d, hors garde Google) est refusée")
+>             if c[4:] != ARGUMENTS_COMMANDES["argon"]:
+>                 raise Refus(f"fournisseurs.argon.commande : arguments différents des arguments épinglés {ARGUMENTS_COMMANDES['argon']}")
+783a1111,1113
+>                 if _valeur_arg(c[4:], "--niveau-reflexion") != NIVEAU_REFLEXION_CARBON:  # v11 : réflexion explicite, la plus haute
+>                     raise Refus(f"fournisseurs.carbon.commande : --niveau-reflexion {_valeur_arg(c[4:], '--niveau-reflexion')!r}, "
+>                                 f"{NIVEAU_REFLEXION_CARBON!r} exigé (règle des appels à Google)")
+875,876c1205,1206
+<         raise Refus(f"fournisseurs.carbon.commande : options {manquantes} absentes (v8 : provision de pensée, sortie, délais "
+<                     "exigés explicitement ; le défaut de la commande — 8 192 jetons de pensée, 1 500 s — est refusé)")
+---
+>         raise Refus(f"fournisseurs.carbon.commande : options {manquantes} absentes (provision de pensée, sortie, délais exigés "
+>                     "explicitement)")
+905c1235
+<     duree_max = lues["--delai-s"] + lues["--intervalle-s"] + 2 * lues["--delai-requete-s"]
+---
+>     duree_max = lues["--delai-s"] + lues["--delai-requete-s"]  # v11 (flux) : compte de jetons, puis une génération
+911,912c1241,1242
+<         raise Refus(f"fournisseurs.carbon.commande : --delai-s {lues['--delai-s']:g} < {DELAI_CARBON_S} (v8 : délai de lot relevé ; "
+<                     "un lot a dépassé 1 500 s dans la course d'auto-conception v4)")
+---
+>         raise Refus(f"fournisseurs.carbon.commande : --delai-s {lues['--delai-s']:g} < {DELAI_CARBON_S} (v11 : délai de la "
+>                     "génération en flux)")
+929,937c1259,1264
+<     """v8 : arithmétique de la garde avant envoi de la commande de Carbon (`commande_gemini_lot_v1.py`, l. 167-173), au prix
+<     plein, sur l'entrée **la plus longue** de la course (consigne servie et fil expurgé, caractères / 3 × 1,05) et le plafond de
+<     session d'un proposeur (1,50 USD en v8, 3,00 USD en v9) :
+<     - chaque appel doit pouvoir partir : entrée × prix d'entrée + (sortie minimale + provision) × prix de sortie ≤ plafond (sinon
+<       la commande rend le code 4 à chaque appel, rien envoyé : Carbon serait absente de fait) ;
+<     - pire cas d'un appel = entrée × prix d'entrée + (min(sortie maximale, ce que le plafond paie) + provision) × prix de sortie,
+<       ≤ plafond par construction ; écrit au manifeste avec la sortie effectivement demandée et la borne au prix du lot.
+<     - v9 : la sortie retenue (que la commande demande au fournisseur) est au moins 24 500 jetons sur les deux entrées extrêmes ;
+<     Rend None si Carbon n'est pas active."""
+---
+>     """v11 (flux, `commande_gemini_flux_v1.py`) : la commande ne baisse jamais sa sortie ; elle refuse (code 4) si l'entrée
+>     gardée × prix d'entrée + sortie maximale × prix de sortie dépasse le plafond de session. Sur l'entrée **la plus longue** de
+>     la course (consigne servie et fil expurgé, caractères / 3 × 1,05) et l'entrée la plus courte : pire cas d'un appel ≤ plafond
+>     de session (sinon Carbon serait absente de fait) ; texte = sortie − provision ≥ 16 000 (règle gelée) et > cartes × 9 000
+>     caractères (limite de l'invite, un jeton au plus par caractère) ; sortie ≥ pensée et réponse observées (24 500). Rend None si
+>     Carbon n'est pas active."""
+947c1274,1281
+<     p, smax, smin = lues["--provision-pensee-jetons"], lues["--max-sortie-jetons"], lues["--sortie-min-jetons"]
+---
+>     p, smax = lues["--provision-pensee-jetons"], lues["--max-sortie-jetons"]
+>     texte = smax - p
+>     limite_invite = int(fixe.get("cartes_par_appel") or 1) * CARACTERES_PAR_CARTE_MAX
+>     if texte < TEXTE_MIN_GOOGLE or texte <= limite_invite:
+>         raise Refus(f"fournisseurs.carbon.commande : texte {texte:g} jetons (sortie {smax:g} − provision {p:g}) : au moins "
+>                     f"{TEXTE_MIN_GOOGLE} et plus que la limite de l'invite ({limite_invite} caractères) exigés (règle des appels à Google)")
+>     if smax < SORTIE_RETENUE_MIN_CARBON:
+>         raise Refus(f"fournisseurs.carbon.commande : sortie {smax:g} < {SORTIE_RETENUE_MIN_CARBON} (pensée et réponse observées)")
+951,962c1285
+<         minimal = e * pe + (smin + p) * ps
+<         if minimal > plafond + 1e-12:
+<             raise Refus(f"fournisseurs.carbon.commande : pire cas minimal {minimal:.4f} USD (entrée gardée {e}, sortie minimale "
+<                         f"{smin:g}, provision {p:g}) > plafond de session {plafond} USD : la commande refuserait chaque appel "
+<                         "(code 4, rien envoyé)")
+<         demandee = int(min(smax, math.floor((plafond - e * pe) / ps - p)))
+<         if demandee < SORTIE_RETENUE_MIN_CARBON:  # v9 : la sortie maximale compte la pensée (documentation du fournisseur)
+<             raise Refus(f"fournisseurs.carbon.commande : sortie retenue par la commande {demandee} jetons < "
+<                         f"{SORTIE_RETENUE_MIN_CARBON} ({nom_cas}, entrée gardée {e}, plafond de session {plafond} USD) : la "
+<                         f"sortie maximale compte la pensée ({PENSEE_OBSERVEE_MAX_JETONS} observés) et la réponse "
+<                         f"({REPONSE_OBSERVEE_MAX_JETONS}) ; la réponse serait coupée (code 5)")
+<         pire = e * pe + (demandee + p) * ps
+---
+>         pire = e * pe + smax * ps
+964,968c1287,1292
+<             raise Refus(f"fournisseurs.carbon.commande : pire cas d'un appel {pire:.6f} USD > plafond de session {plafond} USD")
+<         sortie[nom_cas] = {"caracteres": n, "entree_gardee_jetons": e, "sortie_demandee_jetons": demandee,
+<                            "pire_cas_minimal_usd": round(minimal, 6), "pire_cas_appel_usd_prix_plein": round(pire, 6),
+<                            "pire_cas_appel_usd_prix_du_lot": round(pire * lues["--facteur-lot"], 6)}
+<     return {"reglages": {k: lues[k] for k in OPTIONS_CARBON_EXIGEES}, "plafond_session_usd": plafond, "delai": delai,
+---
+>             raise Refus(f"fournisseurs.carbon.commande : pire cas d'un appel {pire:.6f} USD (entrée gardée {e}, sortie {smax:g}) > "
+>                         f"plafond de session {plafond} USD : la commande refuserait chaque appel (code 4, rien envoyé)")
+>         sortie[nom_cas] = {"caracteres": n, "entree_gardee_jetons": e, "sortie_demandee_jetons": int(smax),
+>                            "pire_cas_appel_usd": round(pire, 6), "marge_sous_le_plafond_usd": round(plafond - pire, 6)}
+>     return {"reglages": {k: lues[k] for k in OPTIONS_CARBON_EXIGEES}, "niveau_reflexion": NIVEAU_REFLEXION_CARBON,
+>             "texte_jetons": texte, "limite_invite_caracteres": limite_invite, "plafond_session_usd": plafond, "delai": delai,
+970,971c1294,1329
+<             "note": "pire cas au prix plein (garde de la commande) ; une pensée au-delà de la provision rend le code 7, coût compté "
+<                     "au pire cas ; la provision n'est pas tenue par le fournisseur en lot (diagnostic, § 3)"}
+---
+>             "note": "flux, prix plein, aucune remise ; la sortie maximale compte la pensée ; une sortie coupée (MAX_TOKENS) ou "
+>                     "sans pensée est un défaut de la commande (garde Google après réponse), jamais une réponse"}
+> 
+> 
+> def controler_pire_cas_argon(decl: dict, fixe: dict, liste: dict, pieces: dict) -> dict | None:
+>     """v11 : Argon sous la garde Google (commande en flux, sortie jamais abaissée) : pour chaque rôle (proposeur, juge), pire cas
+>     d'un appel = entrée gardée (caractères / 3 × 1,05) × prix d'entrée + sortie × prix de sortie ≤ plafond de session du rôle ;
+>     sinon refus, avec le plafond minimal qui le paierait (à fixer par le devis v11 dans `argon_v11.plafond_session_juge_usd`).
+>     Entrée d'un juge : consigne du juge + une carte de 9 000 caractères au plus + 1 000 caractères de marge (SUPPOSÉ)."""
+>     b = decl["fournisseurs"].get("argon")
+>     if b is None or (b.get("commande") or [None])[0] == "bash":
+>         return None
+>     a = b["commande"][4:]
+>     pe, ps = float(_valeur_arg(a, "--prix-entree")) / 1e6, float(_valeur_arg(a, "--prix-sortie")) / 1e6
+>     p, smax = float(_valeur_arg(a, "--provision-pensee-jetons")), float(_valeur_arg(a, "--max-sortie-jetons"))
+>     texte = smax - p
+>     limite_invite = int(fixe.get("cartes_par_appel") or 1) * CARACTERES_PAR_CARTE_MAX
+>     if texte < TEXTE_MIN_GOOGLE or texte <= limite_invite:
+>         raise Refus(f"fournisseurs.argon.commande : texte {texte:g} jetons : au moins {TEXTE_MIN_GOOGLE} et plus que {limite_invite} exigés")
+>     consigne_p = Path(pieces["consigne_proposeur"]["absolu"]).read_text(encoding="utf-8")
+>     consigne_j = Path(pieces["consigne_juge"]["absolu"]).read_text(encoding="utf-8")
+>     caracteres = {"proposeur": max(len(consigne_servie_proposeur(consigne_p, expurger(texte_de_case(f))[0])) for f in liste["fils"]),
+>                   "juge": len(consigne_j) + CARACTERES_PAR_CARTE_MAX + 1000}
+>     out = {}
+>     for role, n in caracteres.items():
+>         e = math.ceil(n / CARACTERES_PAR_JETON_CARBON * (1 + MARGE_ENTREE_CARBON))
+>         pire = e * pe + smax * ps
+>         plafond = float(fixe["plafonds_session"][role])
+>         minimal = math.ceil(pire * 100) / 100
+>         if pire > plafond + 1e-12:
+>             raise Refus(f"fournisseurs.argon.commande : pire cas d'un appel de {role} {pire:.6f} USD > plafond de session {plafond} "
+>                         f"USD : la commande refuserait chaque appel (code 4) ; plafond minimal {minimal} USD "
+>                         "(argon_v11.plafond_session_juge_usd pour les juges, fixé par le devis v11)")
+>         out[role] = {"caracteres": n, "entree_gardee_jetons": e, "sortie_jetons": int(smax), "pire_cas_appel_usd": round(pire, 6),
+>                      "plafond_session_usd": plafond, "plafond_minimal_usd": minimal}
+>     return {"roles": out, "texte_jetons": texte, "provision_jetons": p, "note": "provision d'Argon SUPPOSÉE (devis v11)"}
+1003c1361,1364
+<     - Non lisible : Minuit compté au prix relevé (v2) ; Argon, Astra, Carbon seulement sous la dispense écrite de la mère
+---
+>     - v11 (GO-2026-11-22-124) : clé Claude (LUC) : aucune condition (solde non lu, recharge automatique) ; la ligne du relevé,
+>       si elle est écrite, est recopiée pour information ; la part Claude est tenue par le plafond propre et l'arrêt au premier
+>       refus de l'interface (`SurveillanceCleClaude`).
+>     - Non lisible : Argon, Astra, Carbon seulement sous la dispense écrite de la mère
+1026,1031c1387,1394
+<         if nom == CLE_CLAUDE and isinstance(x, dict) and x.get("non_lisible") is True:
+<             anterieure = x.get("depense_anterieure_usd")
+<             if not _reel_positif(anterieure):
+<                 raise Refus(f"crédit de {nom} non lisible : depense_anterieure_usd (≥ 0) exigée pour le compter au prix relevé")
+<             x = {"credit_usd": CREDIT_DECLARE_CLE_CLAUDE_USD, "reste_usd": max(0.0, CREDIT_DECLARE_CLE_CLAUDE_USD - anterieure),
+<                  "source": "compté au prix relevé : crédit déclaré 200 USD (R-3228) moins la dépense antérieure déclarée"}
+---
+>         if nom == CLE_CLAUDE:  # v11 (GO-2026-11-22-124) : solde non lu, aucune condition de départ sur la clé Claude
+>             sortie[nom] = {"fournisseur": fournisseur, "relais": fours, "parts_par_relais": dict(zip(fours, parts_k)),
+>                            "lisible": False, "condition_de_depart": None, "ligne_du_releve": x if isinstance(x, dict) else None,
+>                            "part_au_pire_usd": part, "plafond_part_claude_usd": PLAFOND_PART_CLAUDE_USD,
+>                            "regle": "GO-2026-11-22-124 : solde non lu (recharge automatique) ; plafond propre de la part Claude "
+>                                     f"{PLAFOND_PART_CLAUDE_USD} USD (relais Claude lancé à ce plafond) ; arrêt propre au premier "
+>                                     "refus de l'interface ou du relais (code 5)"}
+>             continue
+1244a1608,1612
+>     if nom == "claude":  # v11 (GO-2026-11-22-124) : le journal du relais dit chaque statut de l'interface (jamais le texte)
+>         journal = _valeur_arg(args, "--journal")
+>         if not journal or not os.path.isabs(journal):
+>             raise Refus("relais claude : --journal (chemin absolu) exigé : l'arrêt au premier refus de l'interface le lit")
+>         out["journal"] = journal
+1253,1258c1621,1635
+<         if nom == "carbon":
+<             max_lots = _entier_arg(args, "--max-lots", nom)
+<             if max_lots < MIN_LOTS_CARBON:
+<                 raise Refus(f"relais carbon : --max-lots {max_lots} < {MIN_LOTS_CARBON} (16 propositions + marge de "
+<                             f"{MARGE_APPELS_PROPOSEUR})")
+<             out["max_lots"] = egal_a_l_etat["max_lots"] = max_lots
+---
+>         if nom in GEMINI:  # v11 : relais Gemini v3 en flux (Carbon et Argon) ; délais explicites (aucun défaut supposé)
+>             for option in ("--delai-silence-s", "--delai-amont-s"):
+>                 if _valeur_arg(args, option) is None:
+>                     raise Refus(f"relais {nom} : {option} absent des arguments lus par PID (explicite exigé)")
+>             try:
+>                 silence, amont = float(_valeur_arg(args, "--delai-silence-s")), float(_valeur_arg(args, "--delai-amont-s"))
+>             except ValueError:
+>                 raise Refus(f"relais {nom} : --delai-silence-s ou --delai-amont-s illisible") from None
+>             if not 0 < silence <= DELAI_SILENCE_RELAIS_MAX_S:
+>                 raise Refus(f"relais {nom} : --delai-silence-s {silence:g} hors de ]0, {DELAI_SILENCE_RELAIS_MAX_S:g}] (coupure à 300 s)")
+>             if amont < DELAI_CARBON_S:
+>                 raise Refus(f"relais {nom} : --delai-amont-s {amont:g} < délai de la commande {DELAI_CARBON_S} (relais ≥ commande)")
+>             if "--sans-pensees-amont" in args:
+>                 raise Refus(f"relais {nom} : --sans-pensees-amont refusé (les pensées doivent être demandées à l'amont)")
+>             out["delai_silence_s"], out["delai_amont_s"] = silence, amont
+1264,1265c1641,1644
+<         if not _nombre(plafond) or plafond <= 0 or plafond > PLAFOND_ARRET_USD or (nom == "claude" and plafond != PLAFOND_ARRET_USD):
+<             raise Refus(f"relais {nom} : plafond {plafond} hors règle (≤ 150 ; Claude : 150, relais de ligne entière)")
+---
+>         exige_claude = ((parts or {}).get("claude") or {}).get("plafond_relais_exige_usd", PLAFOND_PART_CLAUDE_USD)  # v11 : 45
+>         if not _nombre(plafond) or plafond <= 0 or plafond > PLAFOND_ARRET_USD or (nom == "claude" and abs(plafond - exige_claude) > 1e-9):
+>             raise Refus(f"relais {nom} : plafond {plafond} hors règle (≤ 150 ; Claude : égal au plafond de la part Claude du relevé, "
+>                         f"{exige_claude} USD, v11)")
+1289,1290c1668
+<     champs = ("appels",) + (("depense_usd", "engage_usd") if nom in RELAIS_A_DOLLARS else ()) \
+<         + (("lots_crees", "releves") if nom == "carbon" else ())  # v8 : « releves » nul exigé aussi pour Carbon
+---
+>     champs = ("appels",) + (("depense_usd", "engage_usd") if nom in RELAIS_A_DOLLARS else ())  # v11 : plus de lots pour Carbon
+1303,1308d1680
+<     if nom == "carbon":  # v8 : délai de lot relevé, donc plus de relevés par lot ; le relais les borne à part (--max-releves)
+<         restants = etat.get("releves_restants")
+<         if not _nombre(restants) or restants < MIN_RELEVES_CARBON:
+<             raise Refus(f"relais carbon : releves_restants {restants!r} < {MIN_RELEVES_CARBON} (20 lots × (⌈{DELAI_CARBON_S} / "
+<                         f"{INTERVALLE_CARBON_S}⌉ + 2)) : les derniers lots ne seraient plus relevés (429) — v8")
+<         out["releves_restants"] = restants
+1372c1744,1745
+< def ecrire_registre_derive(registre: Path, chemin: Path, go_id: str = GO_ID, commit: str | None = None) -> dict:
+---
+> def ecrire_registre_derive(registre: Path, chemin: Path, go_id: str = GO_ID, commit: str | None = None,
+>                            go_traces: tuple = (GO_COURSE_INITIAL,)) -> dict:
+1377c1750
+<         m = re.match(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2})\s*\|", ligne)
+---
+>         m = re.match(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2,3})\s*\|", ligne)
+1381c1754,1755
+<         if m.group(1) == go_id and not (len(cellules) == 8 and cellules[3].lower().startswith("extension")):
+---
+>         vises = (go_id,) + tuple(go_traces)  # v11b : GO de la course et GO prolongé (traçabilité)
+>         if m.group(1) in vises and not (len(cellules) == 8 and cellules[3].lower().startswith("extension")):
+1383c1757
+<         elif len(cellules) == 8 and cellules[2] == "révocation" and go_id in (cellules[3] + cellules[7]):
+---
+>         elif len(cellules) == 8 and cellules[2] == "révocation" and any(g in (cellules[3] + cellules[7]) for g in vises):
+1424c1798
+<                     "(un seul exigé, R-3273) ; un autre jour : sonde neuve, rapports sous course-v10/")
+---
+>                     "(un seul exigé, R-3273) ; un autre jour : sonde neuve, rapports sous course-v11/")
+1430c1804
+<     if c.get("version") != "sonde_astra_courses_v1":
+---
+>     if c.get("version") != VERSION_SONDE_COMMUNE:
+1465,1466c1839,1844
+<     if o.get("version") != "sonde_astra_affinage_v2":
+<         raise Refus("sonde d'Astra : fichier non écrit par la sonde épinglée (scripts/sonde_astra_affinage_v2.py)")
+---
+>     if o.get("version") != VERSION_SONDE_ASTRA:
+>         raise Refus("sonde d'Astra : fichier non écrit par la sonde épinglée (scripts/sonde_astra_affinage_v3.py)")
+>     servi = o.get("modele_servi")
+>     attendu = MODELES_RELAIS["astra"][0]
+>     if not (isinstance(servi, str) and re.fullmatch(re.escape(attendu) + r"(-\d{4}-?\d{2}-?\d{2})?", servi)):
+>         raise Refus(f"sonde d'Astra : modèle servi {servi!r}, {attendu} exigé")
+1483c1861
+<     ("nom de personne interne", re.compile(r"\b(Lazar|Ciric|lciric|Rigaud|Minuit|Heimersheim|Kirchner|Ibrahim|Scheurer|Colognese|"
+---
+>     ("nom de personne interne", re.compile(r"\b(Lazar|Ciric|lciric|Rigaud|Minuit|Luc|Heimersheim|Kirchner|Ibrahim|Scheurer|Colognese|"
+1515a1894,2147
+> # --- v11 : garde des appels à Google (règle gelée de CLAUDE.md, GO-2026-11-21-71) -----------------------------------------------
+> 
+> 
+> ROLES_GOOGLE = {"carbon": (("proposeur_ideation", "proposeur", "consigne_proposeur"),),
+>                 "argon": (("proposeur_ideation", "proposeur", "consigne_proposeur"), ("juge_ideation", "juge", "consigne_juge"))}
+> MOTIF_CAPTURE = "capture du lanceur v11 : rien n'est envoyé"
+> 
+> 
+> class FauxAmontGoogle:
+>     """Faux amont local de l'interface de Google : `countTokens` rend un compte (octets / 4), toute génération
+>     (`generateContent`, `streamGenerateContent`, `batchGenerateContent`) est **capturée** et reçoit un 503. Aucun réseau."""
+> 
+>     def __init__(self):
+>         self.captures = []
+>         moi = self
+> 
+>         class H(BaseHTTPRequestHandler):
+>             def do_POST(self):
+>                 n = int(self.headers.get("Content-Length") or 0)
+>                 brut = self.rfile.read(n)
+>                 try:
+>                     objet = json.loads(brut or b"{}")
+>                 except ValueError:
+>                     objet = None
+>                 if self.path.split("?")[0].endswith(":countTokens"):
+>                     code, rep = 200, {"totalTokens": max(1, len(brut) // 4)}
+>                 else:
+>                     moi.captures.append({"chemin": self.path, "corps": objet})
+>                     code, rep = 503, {"error": {"code": 503, "message": MOTIF_CAPTURE}}
+>                 donnees = json.dumps(rep).encode("utf-8")
+>                 self.send_response(code)
+>                 self.send_header("Content-Type", "application/json")
+>                 self.send_header("Content-Length", str(len(donnees)))
+>                 self.end_headers()
+>                 self.wfile.write(donnees)
+> 
+>             def do_GET(self):
+>                 self.send_response(404)
+>                 self.end_headers()
+> 
+>             def log_message(self, *a):
+>                 pass
+> 
+>         self.serveur = ThreadingHTTPServer(("127.0.0.1", 0), H)
+>         self.serveur.daemon_threads = True
+>         threading.Thread(target=self.serveur.serve_forever, daemon=True).start()
+>         self.url = f"http://127.0.0.1:{self.serveur.server_address[1]}"
+> 
+>     def fermer(self):
+>         self.serveur.shutdown()
+>         self.serveur.server_close()
+> 
+> 
+> def charger_garde_google(chemin: Path, attendu: str):
+>     if not chemin.is_file() or sha256_fichier(chemin) != attendu:
+>         raise Refus(f"garde des appels à Google absente ou d'une autre empreinte que {attendu[:12]}… ({chemin})")
+>     spec = importlib.util.spec_from_file_location("garde_google_pour_lanceur_affinage_v11", chemin)
+>     m = importlib.util.module_from_spec(spec)
+>     spec.loader.exec_module(m)
+>     return m
+> 
+> 
+> def arguments_enveloppe_argon(enveloppe: Path) -> list:
+>     """Arguments que l'enveloppe d'Argon (épinglée) passe à sa commande : ceux de sa ligne `exec` (lignes continuées
+>     jointes), après `"$COMMANDE"`, `"$@"` retiré (l'orchestrateur n'en passe aucun)."""
+>     texte = enveloppe.read_text(encoding="utf-8").replace("\\\n", " ")
+>     lignes = [l for l in texte.splitlines() if l.strip().startswith("exec ")]
+>     if len(lignes) != 1:
+>         raise Refus(f"enveloppe d'Argon : {len(lignes)} ligne(s) « exec » (une exigée)")
+>     jetons = shlex.split(lignes[0])
+>     if "$COMMANDE" not in jetons:
+>         raise Refus("enveloppe d'Argon : « $COMMANDE » absent de la ligne exec")
+>     return [j for j in jetons[jetons.index("$COMMANDE") + 1:] if j != "$@"]
+> 
+> 
+> def _remplacer_option(args: list, option: str, valeur: str) -> list:
+>     if option not in args:
+>         return list(args) + [option, valeur]
+>     out = list(args)
+>     for k, a in enumerate(out[:-1]):
+>         if a == option:
+>             out[k + 1] = valeur
+>     return out
+> 
+> 
+> def capturer_corps_google(python: str, commande: Path, args: list, env_plus: dict, consigne: str) -> dict:
+>     """Joue la commande épinglée hors ligne devant le faux amont ; rend {code, captures}."""
+>     amont = FauxAmontGoogle()
+>     try:
+>         env = {"PATH": os.environ.get("PATH", os.defpath), "LANG": "C.UTF-8", **env_plus}
+>         p = subprocess.run([python, "-I", "-B", str(commande)] + _remplacer_option(args, "--url-base", amont.url + "/v1beta"),
+>                            input=consigne.encode("utf-8"), env=env, capture_output=True, timeout=180)
+>     except (OSError, subprocess.SubprocessError) as e:
+>         raise Refus(f"garde Google : commande {commande.name} non jouée hors ligne ({type(e).__name__})") from None
+>     finally:
+>         amont.fermer()
+>     return {"code": p.returncode, "captures": amont.captures}
+> 
+> 
+> def corps_de_generation(capture: dict) -> tuple:
+>     """(corps de génération, mode de la garde) : lot → la requête unique du lot ; flux ou synchrone → le corps lui-même. Le
+>     relais v3 passe un `generateContent` à l'amont en flux : une commande qui parle au port de Carbon est en mode « flux »."""
+>     chemin, corps = capture["chemin"].split("?")[0], capture["corps"]
+>     if not isinstance(corps, dict):
+>         return None, None
+>     if chemin.endswith(":batchGenerateContent"):
+>         try:
+>             return corps["batch"]["input_config"]["requests"]["requests"][0]["request"], "non_diffuse"
+>         except (KeyError, IndexError, TypeError):
+>             return None, "non_diffuse"
+>     return corps, ("flux" if chemin.endswith(":streamGenerateContent") else "non_diffuse")
+> 
+> 
+> def _provision(args: list, corps: dict):
+>     v = _valeur_arg(args, "--provision-pensee-jetons")
+>     if v is not None:
+>         try:
+>             return int(float(v))
+>         except ValueError:
+>             return None
+>     pensee = ((corps or {}).get("generationConfig") or {}).get("thinkingConfig") or {}
+>     return pensee.get("thinkingBudget")
+> 
+> 
+> def controler_chemins_google(r: "Reglages", decl: dict, pieces: dict, fixe: dict, liste: dict) -> dict:
+>     """Pour chaque commande Google déclarée (Argon, Carbon) et chaque rôle qu'elle tient : corps réel capturé hors ligne,
+>     `verifier_reglages_google` de la garde épinglée (mode « flux » pour Carbon, que le relais v3 sert en flux ; « non diffusé »
+>     pour Argon et le lot), limite de l'invite d'un proposeur (cartes × 9 000 caractères, un jeton au plus par caractère) sous
+>     le plafond de texte. Rend {espèce: {conforme, roles}} ; aucune consigne n'y est écrite."""
+>     garde_chemin = Path(pieces["garde_google"]["absolu"])
+>     garde = charger_garde_google(garde_chemin, pieces["garde_google"]["sha256"])
+>     plus_long = max((texte_de_case(f) for f in liste["fils"]), key=len)
+>     out = {"garde": {"chemin": pieces["garde_google"]["chemin"], "sha256": pieces["garde_google"]["sha256"],
+>                      "version": getattr(garde, "VERSION_GARDE", None)}}
+>     for nom in ("argon", "carbon"):
+>         b = decl["fournisseurs"].get(nom)
+>         if b is None:
+>             continue
+>         c = b.get("commande") or []
+>         if len(c) >= 4 and c[0] != "bash":  # v11 : commande déclarée (en flux) ; --garde remplacé par la pièce vérifiée
+>             commande, args, env_cle = Path(c[3]), (_remplacer_option(list(c[4:]), "--garde", str(garde_chemin)) if "--garde" in c[4:] else list(c[4:])), {}
+>         else:  # enveloppe v5 d'Argon (hors garde) : jouée telle quelle pour dire ce qu'elle enverrait
+>             commande = Path(pieces["commande_argon"]["absolu"])
+>             args = arguments_enveloppe_argon(Path(pieces["enveloppe_argon"]["absolu"]))
+>             env_cle = {"GEMINI_API_KEY": "factice-relais"}  # comme l'enveloppe : jeton factice, la vraie clé reste au relais
+>         roles = []
+>         for role_pole, role_plafond, consigne_piece in ROLES_GOOGLE[nom]:
+>             consigne = consigne_servie_proposeur(Path(pieces[consigne_piece]["absolu"]).read_text(encoding="utf-8"), plus_long)
+>             env = dict(env_cle, PLAFOND_SESSION_USD=str(fixe["plafonds_session"][role_plafond]), ROLE_POLE=role_pole)
+>             jeu = capturer_corps_google(r.python, commande, args, env, consigne)
+>             problemes, reglages = [], None
+>             gens = [corps_de_generation(x) for x in jeu["captures"]]
+>             if len(gens) != 1 or gens[0][0] is None:
+>                 problemes.append(f"aucun corps de génération capturé (code {jeu['code']}, {len(gens)} capture(s)) : la "
+>                                  "commande n'a pas atteint l'envoi, rien ne peut être vérifié")
+>             else:
+>                 corps, mode = gens[0]
+>                 if "--niveau-reflexion" in args:  # commande en flux (relais v3 : amont lu en flux)
+>                     mode = "flux"
+>                 provision = _provision(args, corps)
+>                 problemes += list(garde.verifier_reglages_google(nom, corps, provision=provision, mots=None, mode=mode))
+>                 config = corps.get("generationConfig") if isinstance(corps.get("generationConfig"), dict) else {}
+>                 reglages = {"mode": mode, "provision": provision, "maxOutputTokens": config.get("maxOutputTokens"),
+>                             "thinkingConfig": config.get("thinkingConfig")}
+>                 plafond = config.get("maxOutputTokens")
+>                 if role_plafond == "proposeur" and isinstance(plafond, int) and isinstance(provision, int):
+>                     limite = int(fixe.get("cartes_par_appel") or 1) * CARACTERES_PAR_CARTE_MAX
+>                     if limite >= plafond - provision:
+>                         problemes.append(f"limite de l'invite : {limite} caractères (≤ {limite} jetons) ≥ plafond de texte "
+>                                          f"{plafond - provision}")
+>             roles.append({"role": role_pole, "plafond_session_usd": fixe["plafonds_session"][role_plafond],
+>                           "code_commande": jeu["code"], "reglages_captures": reglages, "problemes": problemes})
+>         out[nom] = {"commande": str(commande), "commande_sha256": sha256_fichier(commande), "roles": roles,
+>                     "conforme": all(not x["problemes"] for x in roles)}
+>     return out
+> 
+> 
+> def verifier_palier_astra(pieces: dict, liste: dict) -> dict:
+>     """v11 : prix d'Astra à palier (R-4905) : l'entrée la plus longue servie (consigne servie en octets, plus les 1 024 octets
+>     de marge de la commande d'Astra ; un jeton au plus par octet) reste sous 272 000 jetons."""
+>     consigne = Path(pieces["consigne_proposeur"]["absolu"]).read_text(encoding="utf-8")
+>     borne = max(len(consigne_servie_proposeur(consigne, expurger(texte_de_case(f))[0]).encode("utf-8")) for f in liste["fils"]) + 1024
+>     if borne >= PALIER_ASTRA_JETONS:
+>         raise Refus(f"Astra : entrée bornée à {borne} jetons ≥ palier {PALIER_ASTRA_JETONS} : prix 16 / 60, hors devis")
+>     return {"borne_entree_jetons": borne, "palier_jetons": PALIER_ASTRA_JETONS, "prix_usd_par_million": list(PRIX_ASTRA)}
+> 
+> 
+> # --- v11 : part Claude sur LUC, comptée au fil de l'eau (GO-2026-11-22-124 ; plafond propre, R-4995) -------------------------
+> 
+> 
+> STATUT_NON_REFUS = 429  # v11 : tout statut 4xx de l'interface autre que 429 (limite de débit) est un refus (crédit : 400, R-4833)
+> 
+> 
+> def est_refus_interface(statut) -> bool:
+>     return isinstance(statut, int) and not isinstance(statut, bool) and 400 <= statut < 500 and statut != STATUT_NON_REFUS
+> 
+> 
+> class SurveillanceCleClaude:
+>     """GO-2026-11-22-124. Relit l'état du relais Claude et son journal (statuts seulement) ; `depasse()` rend {code: 5, motif}
+>     ou None : premier refus du relais (état `refus` > 0 : 402, plafond atteint), premier statut de refus de l'interface au journal
+>     (tout 4xx autre que 429 : crédit insuffisant, clé, plafond), part engagée (dépense + réservé des appels en vol) au plafond propre,
+>     ou état ou journal illisible trois fois de suite. Une lecture manquée isolée est comptée, jamais tue."""
+> 
+>     def __init__(self, r: "Reglages", url: str, plafond_part: float, journal: str | None = None):
+>         self.r, self.url, self.plafond_part, self.journal = r, url, plafond_part, journal
+>         self.illisibles, self.lectures, self.derniere, self.refus, self.vu = 0, 0, None, None, 0
+> 
+>     def _refus_au_journal(self):
+>         if not self.journal:
+>             return None
+>         p = Path(self.journal)
+>         if not p.exists():
+>             return None  # aucun appel encore : le relais crée son journal au premier appel
+>         lignes = p.read_text(encoding="utf-8", errors="replace").splitlines()
+>         for ligne in lignes[self.vu:]:
+>             if not ligne.strip():
+>                 continue
+>             o = json.loads(ligne)  # une ligne illisible lève : comptée comme lecture manquée
+>             if est_refus_interface(o.get("statut")):
+>                 return o.get("statut"), None
+>         self.vu = len(lignes)
+>         return None
+> 
+>     def depasse(self):
+>         try:
+>             etat = (self.r.lire_etat_relais or _etat_relais)(self.url)
+>             engagee = float(etat.get("depense_usd") or 0.0) + float(etat.get("engage_usd") or 0.0)
+>             refus = etat.get("refus", 0) or 0
+>             if not (math.isfinite(engagee) and _nombre(refus)):
+>                 raise ValueError("non fini")
+>             interface = self._refus_au_journal()
+>         except Exception as e:  # noqa: BLE001
+>             self.illisibles += 1
+>             if self.illisibles >= LECTURES_ILLISIBLES_MAX:
+>                 return {"code": 5, "motif": f"état ou journal du relais Claude illisible {self.illisibles} fois de suite "
+>                                             f"({type(e).__name__}) : part Claude non comptable"}
+>             return None
+>         self.illisibles, self.lectures = 0, self.lectures + 1
+>         self.derniere, self.refus = round(engagee, 6), refus
+>         if interface:
+>             return {"code": 5, "motif": f"premier refus de l'interface lu au journal du relais Claude : statut {interface[0]} ; "
+>                                         f"part engagée {self.derniere} USD"}
+>         if refus > 0:
+>             return {"code": 5, "motif": f"premier refus du relais Claude ({refus} refus : statut 402, plafond de la part Claude "
+>                                         f"{self.plafond_part} USD atteint) ; part engagée {self.derniere} USD"}
+>         if engagee >= self.plafond_part - 1e-9:
+>             return {"code": 5, "motif": f"part Claude engagée {self.derniere} USD ≥ plafond de la part Claude {self.plafond_part} USD"}
+>         return None
+> 
+>     def bilan(self) -> dict:
+>         return {"plafond_part_claude_usd": self.plafond_part, "lectures": self.lectures, "derniere_part_engagee_usd": self.derniere,
+>                 "refus_du_relais": self.refus, "illisibles_de_suite": self.illisibles, "journal": self.journal}
+> 
+> 
+1559c2191
+<                                                        "risques_v6")}
+---
+>                                                        "risques_v6", "changements_v11", "argon_v11")}
+1587c2219
+<     """v2 : la configuration fixe nomme Minuit pour Claude, exclut Rigaud, et chaque espèce Claude porte Minuit."""
+---
+>     """v11 : la configuration fixe nomme LUC pour Claude, exclut Rigaud et Minuit, et chaque espèce Claude porte LUC."""
+1591c2223
+<         raise Refus("configuration : la clé Rigaud doit figurer dans cles_interdites")
+---
+>         raise Refus(f"configuration : les clés {list(CLES_INTERDITES)} doivent figurer dans cles_interdites")
+1781c2413
+<         raise Refus(f"variable {CLE_CLAUDE} absente ou vide dans l'environnement du lanceur : arrêt au départ (R-3228)")
+---
+>         raise Refus(f"variable {CLE_CLAUDE} absente ou vide dans l'environnement du lanceur : arrêt au départ ({GO_EXCEPTION_CLE})")
+1783c2415
+<     go = verifier_go(r.registre_go, aujourd_hui) if (reel and r.verifier_go) else {"go": "sans objet (moteur simulé, aucune dépense)"}
+---
+>     go = go_simpl = go_cle = {"go": "sans objet (moteur simulé, aucune dépense)"}  # v11 : lus après la configuration
+1788a2421,2425
+>     argon_v11 = appliquer_emplacement_argon(fixe)  # v11 : plafond de session des juges (devis v11)
+>     if reel and r.verifier_go:  # v11 : prolongations (GO-80, GO-124 sous confirmation) ; la confirmation est nommée en configuration
+>         les_go = verifier_les_go(r.registre_go, aujourd_hui, fixe)
+>         go, go_simpl, go_cle = dict(les_go["go"], prolongation=les_go["prolongation_course"]), les_go["simplification"], \
+>             dict(les_go["exception_cle"], confirmation=les_go["confirmation_107"])
+1792a2430,2441
+>     plafond_luc = verifier_plafond_luc(fixe)
+>     google = (r.controler_google or controler_chemins_google)(r, decl, pieces, fixe, liste)
+>     non_conformes = {n: [p for x in v["roles"] for p in x["problemes"]] for n, v in google.items()
+>                      if isinstance(v, dict) and v.get("conforme") is False}
+>     if non_conformes:
+>         if reel:
+>             raise Refus("garde des appels à Google (règle gelée, GO-2026-11-21-71) : " + json.dumps(non_conformes, ensure_ascii=False)
+>                         + " — retirer l'espèce de la déclaration (motif dans « absences ») ou lui donner un chemin conforme")
+>         print(json.dumps({"avertissement_garde_google": non_conformes, "moteur": "simulé : refus en moteur réel"},
+>                          ensure_ascii=False), file=sys.stderr)
+>         google["refus_en_moteur_reel"] = sorted(non_conformes)
+>     palier_astra = verifier_palier_astra(pieces, liste) if "astra" in decl["fournisseurs"] else {"astra": "non déclarée"}
+1798a2448
+>     reglages_argon = controler_pire_cas_argon(decl, fixe, liste, pieces)  # v11 : Argon sous la garde Google
+1801c2451,2453
+<                                r.dossier_runs / (ident.replace(SUFFIXE_RUN, "") + "-alerte-credits-affinage-mentors-v10"), parts)
+---
+>                                r.dossier_runs / (ident.replace(SUFFIXE_RUN, "") + "-alerte-credits-affinage-mentors-v11"), parts)
+>     # v11 : le relais Claude doit être lancé au plafond de la part Claude, calculé sur le relevé (le relevé précède le relais)
+>     parts["claude"] = dict(parts.get("claude") or {}, plafond_relais_exige_usd=plafond_luc)  # GO-124 : 45 USD exactement
+1855c2507,2508
+<         "carbon": decl["carbon"], "cles_employees": decl["cles"],
+---
+>         "carbon": decl["carbon"], "cles_employees": decl["cles"], "go_exception_cle": go_cle, "go_simplification_cle": go_simpl, "garde_google": google,
+>         "palier_astra": palier_astra,
+1865c2518,2523
+<                        "cles_exclues": list(CLES_INTERDITES)},
+---
+>                        "cles_exclues": list(CLES_INTERDITES), "exception": GO_EXCEPTION_CLE,
+>                        "regle": "GO-2026-11-22-124", "plafond_propre_usd": plafond_luc,
+>                        "part_estimee_usd": PART_CLAUDE_ESTIMEE_USD, "part_haut_usd": PART_CLAUDE_HAUT_USD,
+>                        "surveillance": ("au fil de l'eau, toutes les " + str(r.intervalle_surveillance_s) + " s") if reel else "moteur simulé : aucune",
+>                        "plafond_part_claude_usd": plafond_luc},
+>         "argon_v11": argon_v11, "reglages_argon_v11_flux": reglages_argon,
+1878c2536
+<         "reglages_carbon_v8": reglages_carbon if reglages_carbon is not None else {"carbon": "non active"},
+---
+>         "reglages_carbon_v11_flux": reglages_carbon if reglages_carbon is not None else {"carbon": "non active"},
+1881c2539,2542
+<                             "6": "course partie : orchestrateur à code non nul ou erreur du lanceur après le départ"},
+---
+>                             "6": "course partie : orchestrateur à code non nul ou erreur du lanceur après le départ",
+>                             "5 (v11)": "ou arrêt propre sur la part Claude : premier refus de l'interface (4xx sauf 429) ou du "
+>                                        "relais (402, plafond de 45 USD), part engagée au plafond, état ou journal illisible "
+>                                        "(alerte-arret-part-claude.json)"},
+1888a2550,2553
+>     surveillance, arret_luc = None, None
+>     if reel:
+>         journal_claude = ((procedure.get("relais_vivants") or {}).get("claude") or {}).get("journal")
+>         surveillance = SurveillanceCleClaude(r, decl["fournisseurs"]["claude"]["url_relais"], plafond_luc, journal_claude)
+1901a2567
+>                 prochaine = 0.0
+1902a2569,2578
+>                     if surveillance is not None and arret_luc is None and time.monotonic() >= prochaine:
+>                         prochaine = time.monotonic() + float(r.intervalle_surveillance_s)
+>                         arret_luc = surveillance.depasse()
+>                         if arret_luc:  # R-4995 et GO-2026-11-22-111 : arrêt propre par PID (R10), message écrit, jamais muet
+>                             print(json.dumps({"arret_cle_claude": arret_luc, "pid": enfant.pid}, ensure_ascii=False),
+>                                   file=sys.stderr, flush=True)
+>                             try:
+>                                 enfant.send_signal(signal.SIGTERM)
+>                             except ProcessLookupError:
+>                                 pass
+1904c2580
+<                         code = enfant.wait(timeout=1.0)
+---
+>                         code = enfant.wait(timeout=min(1.0, float(r.intervalle_surveillance_s)))
+1921c2597,2598
+<                                                for x in sorted(dossier_arrets.glob("soupcon-credit-*.json"))]}
+---
+>                                                for x in sorted(dossier_arrets.glob("soupcon-credit-*.json"))],
+>              "cle_claude_au_fil_de_l_eau": dict(surveillance.bilan(), arret=arret_luc) if surveillance else {"moteur": "simulé"}}
+1940a2618,2624
+>     if arret_luc:
+>         ecrire_scelle(dossier_run / "alerte-arret-part-claude.json",
+>                       {"alerte": f"course arrêtée proprement sur la part Claude ({CLE_CLAUDE}) : premier refus du relais, plafond de "
+>                                  "la part atteint, ou part non comptable ; sans relance",
+>                        "code": arret_luc["code"], "motif": arret_luc["motif"], "bilan": surveillance.bilan(),
+>                        "relance": "aucune (une relance est une nouvelle version et un mot de la mère)",
+>                        "pour": "la mère, qui prévient Lazar"})
+1945c2629,2630
+<     sortie_lanceur = code_de_sortie(depasse, bool(bilan.get("arret_au_premier_refus_pour_credit")), echec, code)
+---
+>     sortie_lanceur = code_de_sortie(depasse, bool(bilan.get("arret_au_premier_refus_pour_credit")), echec, code,
+>                                     arret_luc["code"] if arret_luc else None)
+1957c2642
+< def code_de_sortie(depasse: bool, arret_credit: bool, echec, code_orchestrateur) -> int:
+---
+> def code_de_sortie(depasse: bool, arret_credit: bool, echec, code_orchestrateur, arret_luc: int | None = None) -> int:
+1962a2648,2649
+>     if arret_luc == 5:  # v11 : arrêt propre au premier refus de l'interface (4xx sauf 429) ou du relais Claude (402)
+>         return 5
+1974,1975c2661
+<     "carbon": "docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_gemini_lot_v1.py",
+<     "astra": "docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py"}
+---
+>     "astra": "docs/notes/ideation-organisme-v1/relais-kimi-v1/commande_astra_v1.py"}  # v11 : Carbon par la commande du dépôt
+2005c2691,2692
+<                                essai / os.path.basename(CHEMINS_MAIN_COMMANDES[n])) for n in ("carbon", "astra")}
+---
+>                                essai / os.path.basename(CHEMINS_MAIN_COMMANDES[n])) for n in ("astra",)}
+>     cmd["carbon"] = r.depot / PIECES["commande_carbon"][0]
+2011c2698
+<                   "modele_propose": "gpt-6-astra", "nom_cle": "CLE_FACTICE_ASTRA", "porte_plafond": {"type": "environnement"}},
+---
+>                   "modele_propose": "gpt-6.2-astra", "nom_cle": CLE_ASTRA, "porte_plafond": {"type": "environnement"}},
+2014c2701
+<         "argon": {"type": "commande_externe", "commande": ["bash", str(r.depot / PIECES["enveloppe_argon"][0])],
+---
+>         "argon": {"type": "commande_externe", "commande": [sys.executable, "-I", "-B", str(cmd["carbon"])] + ARGUMENTS_COMMANDES["argon"],
+2022,2024c2709,2711
+<                             for n in ("CLE_FACTICE_ARGON", "CLE_FACTICE_ASTRA")},
+<                            **{CLE_CLAUDE: {"non_lisible": True, "motif": "essai à blanc : compté au prix relevé",
+<                                            "depense_anterieure_usd": 0.0}}),
+---
+>                             for n in ("CLE_FACTICE_ARGON", CLE_ASTRA)},
+>                            **{CLE_CLAUDE: {"solde_console_usd": 0.0, "source": "essai à blanc : aucune lecture réelle",
+>                                            "recharge_declaree_usd": 100.0, "recharge_source": "essai à blanc : valeur factice"}}),
+2026c2713
+<                            "cles": ["CLE_FACTICE_ARGON", "CLE_FACTICE_ASTRA"]}}
+---
+>                            "cles": ["CLE_FACTICE_ARGON", CLE_ASTRA]}}
+2032a2720
+>     r.ref_registre = None

@@ -1,0 +1,139 @@
+# Inventaire du bloc-notes de session_013QMaymD1EsQJ68Qivpubes au 2026-11-23T06:24:02Z
+## Versé dans fichiers/ (générateurs du développeur, journaux d'essais, listes, métadonnées sans secret)
+f4cc8813a4ed912a250764056c7a5fbfe75bba4643fe277fb006fbe5f106824a  ./ab/essai_ab.py
+986cf71efcac285899e76dd9b1d1c11bccbfd71dd7ae91b8bf3a4372567d7c71  ./ab/t1/a-blanc/pieces-d-essai/commande_astra_v1.py
+e71c48406b6c8c1ca29bd940de111d28e48f0c011255e4b9c8056d42ea154df7  ./ab/t1/a-blanc/pieces-d-essai/contre-lecture-d-essai.md
+14ab8cdc902fbcb5e301d56dbef257d994907e065ba29fc38bce79b87b3e5ac3  ./ab/t1/a-blanc/pieces-d-essai/contre-lecture-d-essai.md.sha256
+9991632d54e96f5f8583e30f380a77db8acedecf2c2f52ed9241cb8320cbe7cd  ./ab/t1/a-blanc/pieces-d-essai/declaration-relais-d-essai.json
+693fae289a109150d41bf3ddad99db15619d093753ceb830ddf5e73136a38bbb  ./ab/t1/a-blanc/pieces-d-essai/declaration-relais-d-essai.json.sha256
+72e8d8209528081a55ab25ac3316958995a96ec13ed9fd6ede39fe7b923d9640  ./ab/t1/a-blanc/pieces-d-essai/releve-credits-d-essai.json
+be0b8c501a7beffbae1f124b91b87610337726cc2a2a849d3ea214b5b684795d  ./ab/t1/a-blanc/pieces-d-essai/releve-credits-d-essai.json.sha256
+46c91df41b77a6d4cb7f5141993fda4a894118b5dd4ad1e5ba21a17dc2d67e46  ./ab/t1/depot/docs/notes/ideation-organisme-v1/argon-recherche-v1/commande_argon_v3d.py
+903318d7659db07819cbe9a7f89cbdbd292f59e14c32bb8811d8f8cb35dd955b  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v1/consigne-aiguilleur-course-affinage-mentors-v1.md
+a32583b14845343a613514cdcba3c24831a274b48ecc95fe0d884f017d27d346  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v1/consigne-juge-course-affinage-mentors-v1.md
+1ac9791b6aea1c97f534e32980f1f837cca425806ce8235b1064d98ce261dcbf  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v1/consigne-passe-tableau-course-affinage-mentors-v1.md
+d36ba0a01c1c190d55d0ed63b053c951b5a767a9310013321d797e3e203d8c4f  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v1/consigne-proposeur-course-affinage-mentors-v1.md
+c30928c88feffc16d3aa1119efe2a54ba2d70cf135b8068855190a21470a56bb  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v1/fils-servis-et-retraits-course-affinage-mentors-v1.json
+7615a31c8a5ea7a569368847323812685ce33abb929770e4a3f100355a84cb36  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v11/configuration-course-affinage-mentors-v11c.json
+875fbed07d01632096505f8b3cfe595da0c95e77679bff13a336b2f2c24652fd  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v11/preenregistrement-course-affinage-mentors-v11.md
+d1ba1ab203be7bab570872dc0acdadb4e5a2d16dd9242715cae52b059510cbcb  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v11/preenregistrement-course-affinage-mentors-v11.md.sha256
+d97594dbc2263cd4200113d44dd4fd3fc8562bef617d3e182f6a382bf95ec792  ./ab/t1/depot/docs/notes/organisme-affinage-mentors-v1/course-v3/procedure-relais-persistants-course-affinage-v3.json
+0ca9cf5daa190135f8f26175f2639e4c9c4b22b01c551ab30ff8f7bb0d085148  ./ab/t1/depot/docs/procedures/relais-persistants-v1.md
+37c0205e26f83cbdcdf5ad7f1e4094a21c7dcc70afb72d15ef0d260a770a132a  ./ab/t1/depot/rapports/fille-ideation-1-v1/appel-argon-v5.sh
+13b968eb440279eb77cd9858cefacfb54bc87b11cbf5fc47cf4476044f8e6a50  ./ab/t1/depot/scripts/commande_gemini_flux_v2.py
+1d9882f71b01491c3282d24b963d14e8ad4339c855ec969f85b420c463c60fff  ./ab/t1/depot/scripts/garde_credit_relais_v6.py
+d365affcb0303283a71ac7d5e67e24a5b6060e3b13c2a9e83ea592e48d4b3c82  ./ab/t1/depot/scripts/lancer_relais_local_v1.py
+fab5fe2e924c47799d968663baddfecb85dd6f74e9f859d9047b185eb36382b1  ./ab/t1/depot/scripts/porte_plafond_relais_v1.py
+32366123751ba1d1620cadf4dd4cfda039c0bf35af614a75b49e2d9c04dad7ff  ./ab/t1/depot/scripts/sonde_astra_affinage_v3.py
+d02971f0cbe6f15e5be1f58a5050ff86ca48bd9b6a059e478285315fda5c729e  ./ab/t1/depot/scripts/sonde_astra_courses_v3.py
+6372011d956965f48be9b34af944750ac0a642e009a5f0c66e3362766b7494db  ./ab/t1/depot/src/controle_ia/__pycache__/garde_google_v3.cpython-313.pyc
+923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91  ./ab/t1/depot/src/controle_ia/garde_google_v3.py
+2f6111d363119525d61542bb480f7fb5af42ff83a662e9d9a6e6f77fe0c3ebc5  ./batches.json
+cf316ba4db4005e2d64a114f4f4aea93187ebfa372a3bf072594e5513f8cd0e6  ./calcul-devis-v11b.py
+1bf66a8d2bca84ae9a13274fb0bf2d3d154399ee1c2f0da8f1f1408cab4e4150  ./diff.txt
+7f289eb2b8d140cc2a0b0580b648435d80cc66f68204578130f7df7da817e5ce  ./echecs.txt
+c58125cae99d314595f504fd4cee4ee24bf2626e8b74e39b74a16aa9f28bf322  ./emp-v11d.txt
+1a3988c6435650b8686e447074d1b2285b3c701bc15accc8ebd6415963b6217c  ./empreintes-essai-final.txt
+f1f45ef7053cde59e75637058bc93af5298d2a4f801915e496e64fd63d731808  ./empreintes-v11c-essai.txt
+6a3a3ebcf674679bd3f19615da8c03dd06520afef71e98f8e1d52e6036859cd4  ./empreintes-v11c-final.txt
+81586025ba0a99d9822f4525250e886e96f655bfb73221a225548ed5ef8918df  ./essai/__pycache__/garde_google_v3.cpython-313.pyc
+9484dce066514185dc1155d5c8dcff44b256fdf835b371b59ebdffa1d50bad75  ./essai/commande_gemini_lot_v1.py
+923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91  ./essai/garde_google_v3.py
+9330642904ce43e0a13a27649b119b75ff6fd179036c2368a88b2971ad4e8d52  ./f11.txt
+2e75cf249a2c1bd56d711fcfe86533489ce22de62644e951494c5cccbe2cb396  ./f11b-complet.txt
+4a6068d0eac96bff89108f3010ca677387261fcb2ff44001276075e47bad5d85  ./f11b-final.txt
+043cfc610a119c1114f5cd4c6b7be14cb7c8b91111b0a53372fabea4ec2850a2  ./f11b.txt
+584d4b7be07a8b5484785cfdd176bff633cc220a76ba207536c3f84cae01906b  ./f11c-final.txt
+fc97f8dd2e1accd7c8dbf4cdd4be507f7033b8a581ba4ba6ceef6f8b797ef1d0  ./f11c-reprise.txt
+9d3501fd80c77277a57b6c0b8ab70c19ca518f075b678b21b866add36de45348  ./f11c.txt
+65152049b0922072a8671f95d2785621ad9f27246d6ea451ff3a2e2211af602e  ./f11d-b.txt
+d99aefbafb00b1aaa2e2aaf81ce1eca92bd8c1de4b7b0bb78b3b88aedfa33b35  ./f11d.txt
+3f9cbedb88d5eb26a46ccbc93c434bf7a3e481ca2bcf691f5ada5ed65db54a1e  ./f6.txt
+5ab6812bf7a581884e6b505bf02c45bc833c657250dcb640c7854c223618b444  ./faire_commande_v2.py
+6f66a90850cc3545fabca0587199555a01c7f34560383b5aed54bac5321f9e05  ./faire_lanceur_v11.py
+7896535ff5a5198e875725ef5bca29461b92a5c32ea7d5975b0040d059610ce4  ./faire_lanceur_v8.py
+292021848db66073459c94904cadc3cc51530d65f59ea2c5346ea75addb50f43  ./faire_sonde_v3.py
+f59b7751d7b8a816180c3194d4600bd697bd857be5175d3736c8684f5b38cb5a  ./faire_test_sonde_v2.py
+319b78d1d0e15206f5136b004c9b634d96cbf6c4bf437e21f911284e9440d9df  ./faire_tests_v11.py
+c0ab8c5480ee5e9f0bafe0b155005a696cc0fc33a13d4dd74f46913202f2a423  ./faire_tests_v11b.py
+e7a4dc598bed2f4e302f57aa3a466f9365d052c994e1d429ca1f0ebf54536b03  ./faire_tests_v11c.py
+03dd7dd7a83465afd6659af9f9fad555ad9b234741c6b24a2d01496a3d6e096c  ./faire_tests_v11d.py
+a7b96899719eb68645658b679c616c34571d2e7076eab76ee33257d000c48add  ./faire_tests_v8.py
+2f66c2fdec03112ff07c5112c47b28d8c762d661cb5eff37037222356532be21  ./faire_v11b.py
+9a58f73a81d2c8f32f29444c75a58bc2464e144e7580d9069121bbd6e6372661  ./faire_v11c.py
+71a7acc2458aee7bcd94241fec2e28adf42651e862363168b91fcbb916301ff6  ./faire_v11d.py
+ec03cd427a0043a2b8ec8fe69f4dcb0dc58fc8e2edebe1176ff1c73554f05477  ./fautres.txt
+b60846c1de430098b6385237ae1678fe180faba9c736a3bd0d492d70b0902b0f  ./final.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  ./fix.txt
+0d265d28100a9fecd488f663cdb1798755e58cd8115067396598b65424f80bf9  ./garde-essai/essai_garde.py
+3ca00800dbc55355d0eb00a0c49b58adc89de664606bdc3c0404abe84eb249d7  ./garde-essai/go-main.md
+92b021bec7a69f54454fccd95fc48212bc1585a84fe94045ddfce466c79af661  ./garde-essai/go-sans-785.md
+923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91  ./garde-verif.py
+fb38408d242a846b6c81e82eb3aa1cc03f1c1c674d93a2caa606257841e561d8  ./lot_aa
+f8d384befd66c34daafaeb92023da212483fba737292088e4f66df512405dca2  ./lot_aa.log
+92a9fc9c04bad7a6a567b5236660435acbf78adaf5335e7886e20b9b7557a308  ./lot_ab
+21208b4d256dfe7ba80e22a8410197eeab8b0eb60d72632eafa93e768467cc4c  ./lot_ab.log
+58c675e855bd1e12cefe2eeac8266ae9054ccd71fa0c79c3d3757aa3376e0959  ./lot_ac
+b7387eee35a06e7f2aa00e6be230a4f0c7b8a95b039a8094480979a56533791f  ./lot_ac.log
+2c1559934077b2ebe65a44e7f816114920b3a7fe8e20d1b440a972233314a4b7  ./lot_ad
+8a4904cb9b06e632714f0f0b34a3f311a9ee8f2626312c86b3ad90c1711f90f9  ./lot_ad.log
+6c152005c1c31e232f815ce301697c2c48f2f36f6c3fec1877ac21eba8e32218  ./luc.json
+1bf7b0c55e95e06205c305564d77c0a60ffbe3dffd6bf2c23f4dead3781491de  ./neuf_v11.py
+9653eccca5c565ec20c3067b20040dec4c30eee8d22ff846bf792a5b833bbace  ./patch1.py
+7c7a601f0a59af79fe707f9710debe056bef269abe9fc60afd84c6d93482e2d9  ./post2_v11.py
+ad60b6654157af87e414c7cf5308b9cc99f60a633d8960ad3096630a47acae9b  ./post3_v11.py
+447f02c68644b88bc6e923509610fb5378fd84c0783a733eed7ae371819a3cc9  ./post4_v11.py
+0b025dadeff72c4588f21524f565641e5084d3a500f9ff262d139d1cdafe848e  ./post5_v11.py
+62e9fbd478f8a7d1564bd29f3f74a60c68f22715f5f12aa01a43a4ea39793161  ./post6_v11.py
+dc633f1d488f8eaf5a0c60c69dee8645f7f227fefa345324f47fdbee34fa1b80  ./post_v11.py
+31407d9d2a6088600cb57c9bfec3fc1571684b9a01e370befb79223bf3e671de  ./pytest.log
+ddece37b6636a3b73fcd6178346d13b7100830a772d8bfbf04c71bd0ea1a24e3  ./pytest2.log
+c1a478f7ab6916103203fe197adacb17748950c6c9553d3f7935295177a6cc9a  ./r10.txt
+630949ad725e189be2cbb8633c14f1290f127efb3b776536241dc4a9fbf6b999  ./r11.txt
+98d7a50227a4e133ae15d7041f030dc619bf31f1a1fc98992ec77761cfb0f204  ./r11b.txt
+758eb96427b2b11799954878e59da0853c7c0f1487433be6055f58a06ae46963  ./r11c.txt
+33944641450f0e5ac6efee296041bf82a586ec38c02b2ee6e06896ecf8658b9e  ./r11d.txt
+1f4b9d0d0ed22a0d79223529031774c011c1c54f2b6b6cb480c93bf46f42bf8d  ./remplacements_v11.py
+a8497d9d918a0cca35f6221ec8876073efd70fcbc5b6f5ce1bb075618f2961bb  ./remplacements_v8.py
+6171b05dddb1c70165ab0aa5a99732cbb205a4d380c4d029d79aad2220c3c2c2  ./retires-v8/configuration-course-affinage-mentors-v8.json
+63f062971dd6dda760df9c35a229b293079dc23260ae5c5ed1840aa8997c0060  ./retires-v8/declaration-relais-gabarit-course-affinage-v8.json
+0f624e6bda5678e813dda4575f2c8b6352991afabeb638d3740a1135c4ef7df3  ./retires-v8/lancer_course_affinage_mentors_v8.py
+38adc7ce35c7d730ad54b4554332b11cada9e172b2df2d089f31400baad2c5fa  ./retires-v8/rapport-developpeur-lanceur-v8.md
+33fbc1e2a89046690e7fe3f197db608ff23d32f7f43c3fad8db66ab9ce7a1fcd  ./retires-v8/test_lancer_course_affinage_mentors_v8.py
+6abb3e20a8f8b148376f0ca678e14161123f45ae3721313b1732492ad16628eb  ./retires_v11.txt
+08f06aa9583180e25a67e25f18ab51a24978fc2562c60a3683afa41efb316710  ./snap.json
+6154137de68d46882142c64577b9bf16d10bd312ba91e94c8e0a90267226d9ec  ./suite.txt
+be1409bd04cf5c3c14f75ce5e64b28f8476c715b844e706f96b10f065dd77a12  ./surveillance_v11c.py
+3603eb6e3663393bf480ff22c087a74b46c9624690ae93015fe484c864992882  ./tests_propres_v11.py
+50daf9bcf02698eff7cb81e208c52807cf5041f9560ae0a0f331ef7f2e33caf3  ./tests_propres_v11b.py
+5cf2dde9abddec9cf26b4124f4b71e8b279ad4aa78e04cb26c93aa9c26646159  ./tests_propres_v11c.py
+13e3579efc6e8124ee12a12f750b8de3b861812fc4c0880dd6d97c539236ad43  ./tests_propres_v11d.py
+53205bc53fd81f101d68081bf7f49a22f459cbaa50b4041ec83fa84b0a28e65d  ./tests_propres_v8.py
+0b1b4e071b4f87b75776feff2e2e7a64523a466c4a8675fe1ee488fb274ce09b  ./verif.py
+## Non versé : copies de pièces du dépôt (retrouvables par leur source)
+e70ce8ed6857224def9202abde48f0c08735e64987193d88ee1739f66679cc55  go.md
+b2ea6e4505b19df5e9b7510ffb2a00156f4502106ebd6559294e2361736c440a  dec.md
+af226efacd7775ab651e10ec9f0e5c25bd60bebcca72094ab5dc8aab4d1927c0  b3.md
+af226efacd7775ab651e10ec9f0e5c25bd60bebcca72094ab5dc8aab4d1927c0  brouillon3.md
+b08290254982744ba7985232ea54a354bfb31ef7f92ada682d32e349d3294577  v10.py
+4e6516695fb086363fdc5fb46c8b609d15f8ea4b728431c841e532e91dc3b992  t10.py
+2cf6bc6df83f8847e75911c8cc0b6153c4467b36ce69273de649b5cbdc7e2378  relais_gemini_v3.py
+1b90b020287e575b5564508f9ba33b87bbc051c1015f4198e6b6e648d50ee153  relais_reel.py
+e7378f89ae39eacd169ff912526a8e998e4f01f0aba235eeaa0bf12e4b195d5d  conf_v9.json
+f43035d2b3f8114d88ae5abb513a9d6f765e4ab7ff7000a06579645db38db316  gab10.json
+## Non versé : dossiers temporaires (copies du dépôt, clones publics, dossiers d'essais pytest, dossiers de travail des contre-lecteurs en cours)
+arbre : 3.2G, 37645 fichiers
+orch : 19M, 569 fichiers
+orch-clone : 6.5M, 237 fichiers
+orch-propre : 6.5M, 231 fichiers
+pt-autres : 5.4M, 165 fichiers
+pt-v11c : 27M, 2933 fichiers
+pt-v11c-complet : 160M, 17477 fichiers
+pt-v11d : 1.9M, 169 fichiers
+pt-v11d-complet : 162M, 17646 fichiers
+cl : 752K, 13 fichiers
+b10 : 108K, 2 fichiers
+b11 : 504K, 9 fichiers
+lan : 688K, 11 fichiers
+run : 380K, 4 fichiers
+ablanc1 : 8.0K, 0 fichiers

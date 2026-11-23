@@ -1,0 +1,295 @@
+F..................................s.......................s.......s.... [ 29%]
+.....s.............................................................F...F [ 58%]
+.................F.......................F..................F........F.. [ 88%]
+......F........FF.........F..                                            [100%]
+=================================== FAILURES ===================================
+________________ test_bout_en_bout_sain_manifestes_couts_ecart _________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-28/test_bout_en_bout_sain_manifes0/depot'), orchestrateurs=...anifes0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-28/test_bout_en_bout_sain_manifes0/orchestrateur'), ...}
+
+    def test_bout_en_bout_sain_manifestes_couts_ecart(monde):
+        r = monde["r"]
+        assert lancer(r) == 0
+        run = un_run(r)
+        for nom in ("manifeste-lanceur-depart.json", "manifeste-lanceur-fin.json", "acte-de-gel.md", "configuration-orchestrateur.json"):
+            assert L.scelle(run / nom), nom
+        dep = json.loads((run / "manifeste-lanceur-depart.json").read_text())
+        fin = json.loads((run / "manifeste-lanceur-fin.json").read_text())
+        # (4) R9 : configuration et empreinte, graines, versions, commit
+        assert dep["configuration"]["sha256"] == L.sha256_fichier(run / "configuration-orchestrateur.json")
+        assert dep["graines"]["racine"] == 2026111814 and "SeedSequence" in dep["graines"]["regle"]
+        assert dep["versions"]["numpy"] and dep["versions"]["python"]
+        assert "commit" in dep["depot_travail"] and dep["orchestrateur"]["commit"] == r.commit_orchestrateur
+        assert dep["preenregistrement"]["sha256"] == PREREG_SHA and dep["go"]["plafond_lu"] == 150.0
+        # espèces : Claude et Argon seuls déclarés → Kimi, Astra absentes ; Carbon non active
+        assert dep["especes_actives"] == ["prop-opus", "prop-fable", "prop-argon"]
+        assert dep["carbon"]["active"] is False
+        # (5) coût réel par relais, écart au devis
+        assert fin["cout_reel"]["par_relais_usd"] == {"claude": 16.0, "argon": 9.0}
+        assert fin["ecart_au_devis"]["par_role"]["prop-opus"]["devis_usd"] == pytest.approx(0.141)
+>       assert fin["releve_credits_apres"]["RR_ANTHROPIC_API_KEY_LUC"]["reste_estime_usd"] == pytest.approx(884.0)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'reste_estime_usd'
+
+tests/test_lancer_course_affinage_mentors_v11.py:392: KeyError
+----------------------------- Captured stdout call -----------------------------
+{"manifeste_depart": "/tmp/pytest-of-root/pytest-28/test_bout_en_bout_sain_manifes0/depot/runs/20261122-191639-686876-course-affinage-mentors-v11/manifeste-lanceur-depart.json", "sha256": "4144ce26d661b0226e25deb05452a0b0755491430d4f43cecde185a2b060dcc0"}
+{"manifeste_fin": "/tmp/pytest-of-root/pytest-28/test_bout_en_bout_sain_manifes0/depot/runs/20261122-191639-686876-course-affinage-mentors-v11/manifeste-lanceur-fin.json", "sha256": "3a48df09c398a0c348544e2526e4ff75f63b82dcfa80862dcc00c6caba7896cb", "code": 0, "code_du_lanceur": 0, "cout_reel_usd": 25.0, "alertes_apres": []}
+___________________ test_v7_etat_vide_refuse[claude-b0-None] ___________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-28/test_v7_etat_vide_refuse_claud0/depot'), orchestrateurs=..._claud0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-28/test_v7_etat_vide_refuse_claud0/orchestrateur'), ...}
+nom = 'claude'
+b = {'pid_relais': 424242, 'nom_cle': 'RR_ANTHROPIC_API_KEY_LUC', 'url_relais': 'http://127.0.0.1:44501'}
+parts = None
+
+    @pytest.mark.parametrize("nom, b, parts", [
+        ("claude", {"pid_relais": PID_CLAUDE, "nom_cle": "RR_ANTHROPIC_API_KEY_LUC"}, None),
+        ("astra", B_ASTRA, PARTS_ASTRA), ("carbon", B_CARBON, None), ("argon", B_ARGON, None)])
+    def test_v7_etat_vide_refuse(monde, nom, b, parts):
+        b = dict(b, url_relais=CONTEXTE["url_claude"]) if nom == "claude" else dict(b)
+>       assert L.controler_relais_vivant(monde["r"], nom, b, FIXE, 5, parts)["etat_neuf"] is True       # sain
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_lancer_course_affinage_mentors_v11.py:1870: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-28/test_v7_etat_vide_refuse_claud0/depot'), orchestrateurs=(Posix...dmises=('R-9001',), controler_google=<function garde_google_factice at 0x7f8e9087e2a0>, intervalle_surveillance_s=0.05)
+nom = 'claude'
+b = {'pid_relais': 424242, 'nom_cle': 'RR_ANTHROPIC_API_KEY_LUC', 'url_relais': 'http://127.0.0.1:44501'}
+fixe = {'version': 'configuration-course-affinage-mentors-v11', 'statut': "v11 (copie de la v9 de la branche prep/affinage-v1...r': 'demonstrations/ideation_v8.py', 'mode': '--course-2 CONFIGURATION SORTIE --generations 1'}, 'generations': 1, ...}
+n_especes = 5, parts = None
+
+    def controler_relais_vivant(r: "Reglages", nom: str, b: dict, fixe: dict | None = None, n_especes: int = 6,
+                                parts: dict | None = None) -> dict:
+        """Arguments du relais lus par PID (jamais son environnement) et état lu sur `/relais/etat` : programme épinglé par la
+        procédure, variable de la clé déclarée, port attendu, modèles permis égaux à ceux de la configuration ; v7 (majeur 1) :
+        bornes basses de **tous** les relais — Claude : plafond 150 ; Astra, Kimi : `--max-appels` ≥ 20, plafond ≥ la part au pire
+        (Astra : égal), réserve par appel ≤ plafond de session d'un proposeur, prix de l'état égaux à ceux de la commande ; Argon :
+        `--max-appels` ≥ 2 × (16 + 32 × espèces) ; Carbon : `--max-lots` ≥ 20, `--max-appels` ≥ 40 ; bornes de l'état égales aux
+        arguments ; variable de clé effacée (relais Gemini, Astra, Kimi) ; v7 (mineur 3) : état neuf **lu** — « appels » présent et
+        nul ; « depense_usd » et « engage_usd » présents et nuls pour les relais à plafond en dollars ; « lots_crees » nul pour
+        Carbon ; un état vide est refusé."""
+        fixe = fixe or {"especes": []}
+        pid = b.get("pid_relais")
+        if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1:
+            raise Refus(f"fournisseurs.{nom}.pid_relais : PID du relais vivant exigé (lancé par le lanceur de relais)")
+        try:
+            args = (r.lire_cmdline or _cmdline)(pid)
+        except (OSError, KeyError):
+            raise Refus(f"relais {nom} : PID {pid} absent") from None
+        nom_prog, attendu = (r.programmes_relais or PROGRAMMES_RELAIS)[nom]
+        progs = [a for a in args if os.path.basename(a) == nom_prog]
+        if len(progs) != 1 or not os.path.isfile(progs[0]) or sha256_fichier(Path(progs[0])) != attendu:
+            raise Refus(f"relais {nom} : programme {nom_prog} absent des arguments ou d'une autre empreinte que celle de la procédure")
+        variable = _valeur_arg(args, "--variable-cle") or ("GEMINI_API_KEY" if nom in GEMINI else None)
+        if variable != b["nom_cle"]:
+            raise Refus(f"relais {nom} : lancé sur la variable {variable!r}, {b['nom_cle']} déclarée")
+        port = _port_du_fournisseur(nom, b)
+        if not port or _valeur_arg(args, "--port") != port:
+            raise Refus(f"relais {nom} : port des arguments ({_valeur_arg(args, '--port')!r}) différent du port attendu ({port})")
+        modeles_attendus = modeles_du_fournisseur(fixe, nom)
+        if nom in GEMINI:
+            modeles_args = sorted(_valeurs_arg(args, "--modele"))
+        else:
+            modeles_args = sorted(x for x in (_valeur_arg(args, "--modeles-permis") or "").split(",") if x)
+        if modeles_args != modeles_attendus:
+            raise Refus(f"relais {nom} : modèles permis des arguments {modeles_args} différents de la configuration (v5, constat 2)")
+        out = {"pid": pid, "programme": progs[0], "programme_sha256": attendu, "variable_cle": variable, "port": port,
+               "modeles": modeles_args}
+        if nom == "claude":  # v11 (GO-2026-11-22-124) : le journal du relais dit chaque statut de l'interface (jamais le texte)
+            journal = _valeur_arg(args, "--journal")
+            if not journal or not os.path.isabs(journal):
+                raise Refus("relais claude : --journal (chemin absolu) exigé : l'arrêt au premier refus de l'interface le lit")
+            out["journal"] = journal
+        egal_a_l_etat: dict = {}  # bornes que /relais/etat doit rendre à l'identique des arguments (v7)
+        if nom in GEMINI:
+            max_appels = _entier_arg(args, "--max-appels", nom)
+            minimum = 2 * (16 + 32 * n_especes) if nom == "argon" else MIN_APPELS_CARBON
+            if max_appels < minimum:
+                raise Refus(f"relais {nom} : --max-appels {max_appels} < {minimum} (comptes de jetons compris ; v7 : marge de "
+                            f"{MARGE_APPELS_PROPOSEUR} lots pour Carbon)")
+            out["max_appels"] = egal_a_l_etat["max_appels"] = max_appels
+            if nom in GEMINI:  # v11 : relais Gemini v3 en flux (Carbon et Argon) ; délais explicites (aucun défaut supposé)
+                for option in ("--delai-silence-s", "--delai-amont-s"):
+                    if _valeur_arg(args, option) is None:
+                        raise Refus(f"relais {nom} : {option} absent des arguments lus par PID (explicite exigé)")
+                try:
+                    silence, amont = float(_valeur_arg(args, "--delai-silence-s")), float(_valeur_arg(args, "--delai-amont-s"))
+                except ValueError:
+                    raise Refus(f"relais {nom} : --delai-silence-s ou --delai-amont-s illisible") from None
+                if not 0 < silence <= DELAI_SILENCE_RELAIS_MAX_S:
+                    raise Refus(f"relais {nom} : --delai-silence-s {silence:g} hors de ]0, {DELAI_SILENCE_RELAIS_MAX_S:g}] (coupure à 300 s)")
+                if amont < DELAI_CARBON_S:
+                    raise Refus(f"relais {nom} : --delai-amont-s {amont:g} < délai de la commande {DELAI_CARBON_S} (relais ≥ commande)")
+                if "--sans-pensees-amont" in args:
+                    raise Refus(f"relais {nom} : --sans-pensees-amont refusé (les pensées doivent être demandées à l'amont)")
+                out["delai_silence_s"], out["delai_amont_s"] = silence, amont
+        else:
+            try:
+                plafond = float(_valeur_arg(args, "--plafond-usd"))
+            except (TypeError, ValueError):
+                raise Refus(f"relais {nom} : --plafond-usd absent des arguments") from None
+            exige_claude = ((parts or {}).get("claude") or {}).get("plafond_relais_exige_usd", PLAFOND_ARRET_USD)  # v11
+            if not _nombre(plafond) or plafond <= 0 or plafond > PLAFOND_ARRET_USD or (nom == "claude" and abs(plafond - exige_claude) > 1e-9):
+>               raise Refus(f"relais {nom} : plafond {plafond} hors règle (≤ 150 ; Claude : égal au plafond de la part Claude du relevé, "
+                            f"{exige_claude} USD, v11)")
+E               lancer_course_affinage_mentors_v11.Refus: relais claude : plafond 45.0 hors règle (≤ 150 ; Claude : égal au plafond de la part Claude du relevé, 150.0 USD, v11)
+
+scripts/lancer_course_affinage_mentors_v11.py:1522: Refus
+__________________ test_v7_etat_sans_depense_ou_engage_refuse __________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-28/test_v7_etat_sans_depense_ou_e0/depot'), orchestrateurs=...e_ou_e0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-28/test_v7_etat_sans_depense_ou_e0/orchestrateur'), ...}
+
+    def test_v7_etat_sans_depense_ou_engage_refuse(monde):
+        b = {"pid_relais": PID_CLAUDE, "nom_cle": "RR_ANTHROPIC_API_KEY_LUC", "url_relais": CONTEXTE["url_claude"]}
+        for champ in ("depense_usd", "engage_usd", "appels"):
+            sauve = monde["etat_claude"].pop(champ)
+>           with pytest.raises(L.Refus, match=champ):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'depense_usd'
+E             Actual message: 'relais claude : plafond 45.0 hors règle (≤ 150 ; Claude : égal au plafond de la part Claude du relevé, 150.0 USD, v11)'
+
+tests/test_lancer_course_affinage_mentors_v11.py:1883: AssertionError
+_______________________ test_mutation_mineur_3_etat_vide _______________________
+
+monde = {'r': Reglages(depot=PosixPath('/tmp/pytest-of-root/pytest-28/test_mutation_mineur_3_etat_vi0/depot'), orchestrateurs=...tat_vi0/depot'), 'orch': PosixPath('/tmp/pytest-of-root/pytest-28/test_mutation_mineur_3_etat_vi0/orchestrateur'), ...}
+
+    def test_mutation_mineur_3_etat_vide(monde):
+        """La lecture de la v6 (champs absents tenus pour nuls) réintroduite : l'essai de l'état vide échoue."""
+        m = _mutant("lanceur_v7_mutant_mineur_3", [
+            ('    champs = ("appels",) + (("depense_usd", "engage_usd") if nom in RELAIS_A_DOLLARS else ())  # v11 : plus de lots pour Carbon\n',
+             "    champs = ()\n")])
+>       with pytest.raises(pytest.fail.Exception):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE Failed
+
+tests/test_lancer_course_affinage_mentors_v11.py:2088: Failed
+___ test_v11_configuration_ne_differe_de_la_v9_que_par_les_cles_et_les_notes ___
+
+    def test_v11_configuration_ne_differe_de_la_v9_que_par_les_cles_et_les_notes():
+        p = subprocess.run(["git", "-C", str(RACINE), "show", "refs/remotes/origin/prep/affinage-v10-compte-organisme-v1:"
+                            "docs/notes/organisme-affinage-mentors-v1/course-v9/configuration-course-affinage-mentors-v9.json"],
+                           capture_output=True)
+        if p.returncode != 0:
+            pytest.skip("branche prep/affinage-v10 non récupérée")
+        v9, v11 = json.loads(p.stdout), json.loads((RACINE / L.PIECES["configuration"][0]).read_text())
+        for k in set(v9) | set(v11):
+            if k not in ("version", "statut", "cles", "cles_interdites", "credit_declare_usd", "especes", "changements_v11"):
+>               assert v9.get(k) == v11.get(k), k
+E               AssertionError: argon_v11
+E               assert None == {'plafond_session_juge_usd': None, 'statut': "emplacement nommé : plafond de session des juges, à fixer par le devis v...au plus juste) ; vide, le lanceur refuse le départ réel (un appel de juge d'Argon au pire ne tient pas sous 0,60 USD)"}
+E                +  where None = <built-in method get of dict object at 0x7f8e9082d980>('argon_v11')
+E                +    where <built-in method get of dict object at 0x7f8e9082d980> = {'version': 'configuration-course-affinage-mentors-v9', 'statut': "partie fixe de la configuration de l'orchestrateur ...r': 'demonstrations/ideation_v8.py', 'mode': '--course-2 CONFIGURATION SORTIE --generations 1'}, 'generations': 1, ...}.get
+E                +  and   {'plafond_session_juge_usd': None, 'statut': "emplacement nommé : plafond de session des juges, à fixer par le devis v...au plus juste) ; vide, le lanceur refuse le départ réel (un appel de juge d'Argon au pire ne tient pas sous 0,60 USD)"} = <built-in method get of dict object at 0x7f8e913bc980>('argon_v11')
+E                +    where <built-in method get of dict object at 0x7f8e913bc980> = {'version': 'configuration-course-affinage-mentors-v11', 'statut': "v11 (copie de la v9 de la branche prep/affinage-v1...r': 'demonstrations/ideation_v8.py', 'mode': '--course-2 CONFIGURATION SORTIE --generations 1'}, 'generations': 1, ...}.get
+
+tests/test_lancer_course_affinage_mentors_v11.py:2316: AssertionError
+_____________ test_v11_carbon_pire_cas_sous_le_plafond_de_session ______________
+
+        assert dep["go_exception_cle"]["confirmation"]["nommee"] is None and dep["go_simplification_cle"]["echeance"] == "2026-12-15"
+    
+    
+>   def test_v11_exception_de_cle_sur_la_vraie_ligne_de_main(tmp_path):
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert (2618 == 2618 and 65536 == 49152)
+
+tests/test_lancer_course_affinage_mentors_v11.py:2439: AssertionError
+____________ test_v11_garde_google_vraie_commande_en_flux_conforme _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-28/test_v11_garde_google_vraie_co0')
+
+        return {k: {"chemin": v[0], "absolu": str(RACINE / v[0]), "sha256": v[1]} for k, v in L.PIECES.items()}
+    
+    
+    def test_v11_carbon_pire_cas_sous_le_plafond_de_session():
+        o = L.controler_pire_cas_carbon(_decl_carbon_reelle(), FIXE, LISTE_V11, _pieces_rel())
+>       cas = o["cas"]["entree_la_plus_longue"]
+E       AssertionError: assert ('flux' == 'flux'
+E         
+E           flux and 65536 == 49152)
+
+tests/test_lancer_course_affinage_mentors_v11.py:2527: AssertionError
+____________ test_v11_garde_google_argon_reel_et_ancien_lot_refuses ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-28/test_v11_garde_google_argon_re0')
+
+        _carbon(monde, monkeypatch, commande=[sys.executable, "-I", "-B", str(sc)] + args)
+        assert lancer(monde["r"]) == 2
+        assert "niveau-reflexion" in capsys.readouterr().err
+    
+    
+    def test_v11_carbon_commande_par_lot_refusee_a_la_declaration(monde, monkeypatch):
+        sc = script_commande(monde["tmp"], "commande_gemini_lot_v1", {"texte": "", "cout_usd": 0.01})
+        _carbon(monde, monkeypatch)
+        d = json.loads(monde["r"].declaration.read_text())
+        d["fournisseurs"]["carbon"]["commande"][3] = str(sc)                  # l'ancienne commande : plus épinglée
+        _decl(monde, d)
+        assert lancer(monde["r"]) == 2
+    
+    
+    # --- 6. garde des appels à Google (règle gelée, GO-2026-11-21-71) ---------------------------------------------------------------
+    
+    
+>   LISTE_V11 = json.loads((RACINE / L.PIECES["liste_fils"][0]).read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert (False)
+E    +  where False = any(<generator object test_v11_garde_google_argon_reel_et_ancien_lot_refuses.<locals>.<genexpr> at 0x7f8e920dbd30>)
+
+tests/test_lancer_course_affinage_mentors_v11.py:2574: AssertionError
+___________ test_v11_argon_plafond_des_juges_au_plus_juste[2.0-sain] ___________
+
+valeur = 2.0, issue = 'sain'
+
+    monkeypatch.setitem(L.COMMANDES_EPINGLEES, "argon", {s.name: hashlib.sha256(s.read_bytes()).hexdigest()})
+    d = declaration(monde["depot"])
+    d["fournisseurs"]["argon"]["commande"][3] = str(s)
+    _decl(monde, d)
+    assert lancer(monde["r"]) == 2
+    err = capsys.readouterr().err
+>   assert "garde des appels à Google" in err and "thinkingLevel absent" in err
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '<=' not supported between instances of 'ApproxScalar' and 'float'
+
+tests/test_lancer_course_affinage_mentors_v11.py:2689: TypeError
+__________ test_v11_argon_plafond_des_juges_au_plus_juste[1.91-sain] ___________
+
+valeur = 1.91, issue = 'sain'
+
+    monkeypatch.setitem(L.COMMANDES_EPINGLEES, "argon", {s.name: hashlib.sha256(s.read_bytes()).hexdigest()})
+    d = declaration(monde["depot"])
+    d["fournisseurs"]["argon"]["commande"][3] = str(s)
+    _decl(monde, d)
+    assert lancer(monde["r"]) == 2
+    err = capsys.readouterr().err
+>   assert "garde des appels à Google" in err and "thinkingLevel absent" in err
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: '<=' not supported between instances of 'ApproxScalar' and 'float'
+
+tests/test_lancer_course_affinage_mentors_v11.py:2689: TypeError
+___________________ test_v11_garde_google_argon_en_flux_sain ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-28/test_v11_garde_google_argon_en0')
+
+    
+    def test_v11_gabarit_de_declaration_accepte_une_fois_rempli(monde, monkeypatch):
+        o = json.loads((RACINE / "docs/notes/organisme-affinage-mentors-v1/course-v11/declaration-relais-gabarit-course-affinage-v11.json").read_text())
+>       del o["gabarit"]
+E       AssertionError: {'garde': {'chemin': 'src/controle_ia/garde_google_v3.py', 'sha256': '923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b4278... 'juge_ideation', 'plafond_session_usd': 0.6, 'code_commande': 4, 'reglages_captures': None, ...}], 'conforme': False}}
+E       assert False is True
+
+tests/test_lancer_course_affinage_mentors_v11.py:2726: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_bout_en_bout_sain_manifestes_couts_ecart
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v7_etat_vide_refuse[claude-b0-None]
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v7_etat_sans_depense_ou_engage_refuse
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_mutation_mineur_3_etat_vide
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_configuration_ne_differe_de_la_v9_que_par_les_cles_et_les_notes
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_carbon_pire_cas_sous_le_plafond_de_session
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_garde_google_vraie_commande_en_flux_conforme
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_garde_google_argon_reel_et_ancien_lot_refuses
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_argon_plafond_des_juges_au_plus_juste[2.0-sain]
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_argon_plafond_des_juges_au_plus_juste[1.91-sain]
+FAILED tests/test_lancer_course_affinage_mentors_v11.py::test_v11_garde_google_argon_en_flux_sain
+11 failed, 230 passed, 4 skipped in 1173.85s (0:19:33)
+fini

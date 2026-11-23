@@ -1,0 +1,1093 @@
+........................................................................ [  1%]
+.........s.............................................................. [  3%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+...........................F...........F....F........................... [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+.................F...................................................... [ 16%]
+....F................................................................... [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+.............................ss...................................F..... [ 26%]
+..............................................................s......... [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+...........................s...............ss........................... [ 33%]
+........................................................................ [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+...........................................F..F......................... [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 87%]
+..................FFFFFF.F..F........................................... [ 89%]
+...........F........................FFFFFFFF...FFFFFFF..FFFFFFFFF.F..... [ 91%]
+..........FFFFFFF.......................................F............... [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_fiche_sur_l_arbre_jamais_plus_severe_que_la_marche_sur_l_arbre_reel ___
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_fiche_sur_l_arbre_jamais_0')
+
+    def test_fiche_sur_l_arbre_jamais_plus_severe_que_la_marche_sur_l_arbre_reel(tmp_path):
+        """Sur la fiche et le registre en vigueur du dépôt (copie des seuls fichiers cités), le contrôle avancé passe."""
+        d = tmp_path / "arbre"
+        fiche = json.loads(FICHE_EN_VIGUEUR.read_text(encoding="utf-8"))["fichiers"]
+        reg = (RACINE / "registres/t07-etape-b-bis-v1.md").read_text(encoding="utf-8")
+        cites = [c[3].strip() for c in (l.split("|") for l in reg.splitlines()) if len(c) >= 6 and "/" in c[3]]
+        for p in list(fiche) + cites + [c + ".sha256" for c in cites]:
+>           ad.ecrire(d, p, "").write_bytes((RACINE / p).read_bytes())
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_chaine_bbis_v6_v1.py:201: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/controle-ia-travail/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/controle-ia-travail/diag/20261118-154143-bbis-t07-v1/sondes-bbis.json'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____________ test_inventaire_tout_constructeur_d_invite_est_examine ____________
+
+sous_la_liste_completee = None
+
+    def test_inventaire_tout_constructeur_d_invite_est_examine(sous_la_liste_completee):
+>       v3.test_inventaire_tout_constructeur_d_invite_est_examine()
+
+tests/test_cibles_invisibles_v4.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def test_inventaire_tout_constructeur_d_invite_est_examine():
+        trouves = _constructeurs()
+        neufs = sorted(set(trouves) - set(REGISTRE))
+>       assert not neufs, ("constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les "
+                           f"couvrir par un collecteur ou les exempter avec raison : {[(k, sorted(trouves[k])) for k in neufs]}")
+E       AssertionError: constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les couvrir par un collecteur ou les exempter avec raison : [('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_etiqueter', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_Couche.calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_calculer', ['{role}']), ('controle_ia/lentilles_sondes_bbis/lanceur_v9.py::_etiqueter', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v1.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v2.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v3.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v4.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v4.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v4.py::relire', ['{role}']), ('controle_ia/relecture_fable_api_v5.py::_ligne_base', ['{role}']), ('controle_ia/relecture_fable_api_v5.py::lire_entree', ['{role}']), ('controle_ia/relecture_fable_api_v5.py::relire', ['{role}'])]
+E       assert not ['controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v1.py::_Couche.calculer', 'controle_ia/lentilles_sondes_bbis...ceur_seconde_passe_v2.py::_calculer', 'controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_etiqueter', ...]
+
+tests/test_cibles_invisibles_v3.py:484: AssertionError
+___________________ test_chaque_ligne_ajoutee_est_necessaire ___________________
+
+liste = {'titre': "Liste figée de l'inventaire des cibles invisibles, version 4 : liste de la version 3 reprise sans changement, complétée par l'erratum 1", 'version': 'v4', 'erratum': 1, 'date_utc': '2026-11-21T18:03:40Z', ...}
+trouves = {'controle_ia/accumulation_b6/lecture_v1.py::calculer': {'{role}'}, 'controle_ia/audit_fuite_r1_v4/bras_b_v1.py::_exec...', 'environnement'}, 'controle_ia/audit_fuite_r1_v4/bras_b_v3.py::_executer': {'charger_invite', 'environnement'}, ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f162e820d70>
+
+    def test_chaque_ligne_ajoutee_est_necessaire(liste, trouves, monkeypatch):
+        """Mutation : retirer une ligne ajoutée, quelle qu'elle soit, laisse exactement cette fonction non examinée ; la
+        retirer d'un lecteur ajouté la rend hors liste. Aucune ligne de trop, aucune ligne qui en cache une autre."""
+        complet = registre(liste)
+>       assert set(trouves) == set(complet)
+E       AssertionError: assert {'controle_ia...planter', ...} == {'controle_ia...planter', ...}
+E         
+E         Extra items in the left set:
+E         'controle_ia/lentilles_sondes_bbis/lanceur_seconde_passe_v2.py::_calculer'
+E         'controle_ia/relecture_fable_api_v2.py::_ligne_base'
+E         'controle_ia/relecture_fable_api_v5.py::lire_entree'
+E         'controle_ia/relecture_fable_api_v3.py::relire'
+E         'controle_ia/relecture_fable_api_v2.py::lire_entree'...
+E         
+E         ...Full output truncated (20 lines hidden), use '-vv' to show
+
+tests/test_cibles_invisibles_v4.py:178: AssertionError
+__________________ test_v10_depot_reel_copies_par_identifiant __________________
+
+    def test_v10_depot_reel_copies_par_identifiant():
+        """Arbre réel (noms et identifiants seulement) : aucune copie qui arrête, aucun retrait explicite sans objet ; le
+        compagnon nommé dans `RETRAITS_PAR_IDENTIFIANT_EXPLICITES` est une copie d'un fichier retiré à titre permanent, et
+        est retiré comme copie."""
+        entrees = de._entrees("HEAD")
+        classes = de.classes_d_identifiants(entrees)
+        retirees, arrets, sans_objet = de.copies_par_identifiant(entrees, classes)
+>       assert arrets == [] and sans_objet == [], (len(arrets), len(sans_objet))
+E       AssertionError: (7, 0)
+E       assert (['docs/notes/...6v3.pdf', ...] == []
+E         
+E         Left contains 7 more items, first extra item: 'docs/notes/percee-apres-blindfold-v1/opus-max-v1/sources/2609.38262v1.pdf'
+E         Use -v to get more diff)
+
+tests/test_depot_expurge_v11.py:1080: AssertionError
+_______________ test_v7_noms_du_depot_reel_tous_vises_ou_nommes ________________
+
+    def test_v7_noms_du_depot_reel_tous_vises_ou_nommes():
+        """Dans le dépôt réel, tout chemin suivi qui porte un nom retiré est retiré par nom, sous embargo, ou nommé dans
+        GARDES_SIGNALES : sinon la copie s'arrêterait (cet essai le dit avant)."""
+        suivis = subprocess.run(["git", "-C", str(RACINE), "ls-files"], capture_output=True, text=True,
+                                check=True).stdout.split("\n")
+        portes = [f for f in suivis if f and any(x in f.lower() for x in de.FRAGMENTS_PAR_NOM)]
+        assert len([f for f in portes if f.startswith("brouillons/pain-axis-")]) >= 104
+        hors = [f for f in portes if not de.retire_par_nom(f) and not de.sous_embargo(f) and f not in de.GARDES_SIGNALES
+                and not any(de.correspond(f, m) for m, _ in de.RETRAITS)]
+>       assert hors == []
+E       AssertionError: assert ['runs/course....sha256', ...] == []
+E         
+E         Left contains 36 more items, first extra item: 'runs/course-ideation-regard-ou-raisons-v1/20261114-100746-course-ideation-regard-ou-raisons-v1-g1/copies/sortie--doublons-par-juge.json'
+E         Use -v to get more diff
+
+tests/test_depot_expurge_v9.py:501: AssertionError
+_________________________ test_run_reel_du_v2_reconnu __________________________
+
+    def test_run_reel_du_v2_reconnu():
+        """Le dépôt réel : le run du v2 (génération 1, défaut au contrôle) est la première tentative, 0,275477 USD."""
+        r = lc.Reglages.production()
+        nom = "20261113-152926-course-ideation-bassins-etroits-v2-g1"
+        if not (RACINE / "runs" / lc.ANTERIEURS[0][0] / nom).is_dir():
+            pytest.skip("run du v2 absent du dépôt")
+        runs = [x for x in lc.runs_du_lanceur(r) if x["generation"] == 1]
+        v2 = [x for x in runs if x["nom"] == nom]
+        assert len(v2) == 1, "le run du v2 présent sur disque doit être lu par le v3"
+>       assert lc.depense_run(v2[0]) == {"run": v2[0]["nom"], "course_usd": 0.275477, "bras_usd": 0.0, "course_lisible": True,
+                                         "lecture": "course : tentatives de contrôle scellées (course non partie) ; bras : aucun bras"}
+E       AssertionError: assert {'run': '2026...': False, ...} == {'run': '2026...e': True, ...}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'course_usd': 20.0} != {'course_usd': 0.275477}
+E         {'course_lisible': False} != {'course_lisible': True}
+E         {'lecture': 'course : processus mort sans fin propre, ou en marche : plafond entier compté ; bras : aucun bras'} != {'lecture': 'course : tentatives de contrôle scellées (course non partie) ; bras : aucun bras'}
+E         Use -v to get more diff
+
+tests/test_lancer_course_ideation_bassins_etroits_v3.py:827: AssertionError
+______________________ test_empreinte_liste_gardee_versee ______________________
+
+    def test_empreinte_liste_gardee_versee():
+>       ids = [int(x) for x in LISTE.read_text().split()]
+                               ^^^^^^^^^^^^^^^^^
+
+tests/test_neuron_lens_controles_b0_v2.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/controle-ia-travail/docs/sources/neuron-lens-v2-addendum-20261114/kept-qwen3-8b.txt')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/controle-ia-travail/docs/sources/neuron-lens-v2-addendum-20261114/kept-qwen3-8b.txt'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_______________________ test_empreinte_doublon_et_ajout ________________________
+
+    def test_empreinte_doublon_et_ajout():
+        import pytest
+>       ids = [int(x) for x in LISTE.read_text().split()]
+                               ^^^^^^^^^^^^^^^^^
+
+tests/test_neuron_lens_controles_b0_v2.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/user/controle-ia-travail/docs/sources/neuron-lens-v2-addendum-20261114/kept-qwen3-8b.txt')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/user/controle-ia-travail/docs/sources/neuron-lens-v2-addendum-20261114/kept-qwen3-8b.txt'
+
+/usr/local/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_____________ test_amorce_cas_sain_run_complet_et_donnees_poussees _____________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_cas_sain_run_compl0'), 'source': PosixPath('/tmp/pytest...st_amorce_cas_sain_run_compl0/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+
+    def test_amorce_cas_sain_run_complet_et_donnees_poussees(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant)
+>       assert code == 0, sortie[-3000:]
+E       AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:48Z, machine ?, commit 6e961f6f7aaae9cc02974889032560715d182e9c
+E         AMORCE 2026-11-22T18:37:48Z : commit 6e961f6f7aaae9cc02974889032560715d182e9c
+E         2026-11-22T18:37:48Z début : MODE=jouet COMMIT=6e961f6f7aaae9cc02974889032560715d182e9c BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E         AMORCE 2026-11-22T18:37:48Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E         AMORCE 2026-11-22T18:37:48Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E         warning: --filter is ignored in local clones; use file:// instead.
+E         
+E       assert 2 == 0
+
+tests/test_t06_scripts.py:140: AssertionError
+____________________ test_amorce_arret_consigne_et_run_mort ____________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_arret_consigne_et_0'), 'source': PosixPath('/tmp/pytest...st_amorce_arret_consigne_et_0/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+
+    def test_amorce_arret_consigne_et_run_mort(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "a", {"FAUX_RUN": "arret"})
+>       assert code == 1 and "ARRÊT pendant run" in journal and "RUN MORT" not in sortie and " : fin, code 1" in sortie
+E       assert (2 == 1)
+
+tests/test_t06_scripts.py:157: AssertionError
+_________________ test_amorce_redemarrage_et_refus_detruisent __________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_redemarrage_et_ref0'), 'source': PosixPath('/tmp/pytest...st_amorce_redemarrage_et_ref0/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+
+    def test_amorce_redemarrage_et_refus_detruisent(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "s")
+>       assert code == 0
+E       assert 2 == 0
+
+tests/test_t06_scripts.py:169: AssertionError
+____ test_amorce_lecture_precoce_artefacts[doublon-cit\xe9 plusieurs fois] _____
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_lecture_precoce_ar0'), 'source': PosixPath('/tmp/pytest...st_amorce_lecture_precoce_ar0/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+artefact = 'doublon', motif = 'cité plusieurs fois'
+
+    @pytest.mark.parametrize("artefact, motif", [
+        ("doublon", "cité plusieurs fois"), ("sceau-faux", "sceau non conforme"), ("prereg-absent", "absent au commit"),
+        ("commit-faux", "introuvable"),
+    ])
+    def test_amorce_lecture_precoce_artefacts(bac, artefact, motif):
+        src = bac["source"]
+        env_sup = {}
+        if artefact == "doublon":
+            (src / PREREG).write_text(_prereg(bac["amorce_sha"], doublon="Chemin des consignes de P3"), encoding="utf-8")
+            (src / (PREREG + ".sha256")).unlink()
+            sceller(src / PREREG)
+        elif artefact == "sceau-faux":
+            (src / CITES["Chemin des tâches d'évaluation de T0.6"]).write_text('{"altere": 1}', encoding="utf-8")
+        elif artefact == "prereg-absent":
+            (src / PREREG).unlink()
+        else:
+            env_sup = {"COMMIT": "0" * 40}
+        if artefact != "commit-faux":
+            _commit_source(bac, artefact)
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "x", env_sup)
+>       assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 90da30b093c13e7661ef25ada5d46a5863b8af69
+E         AMORCE 2026-11-22T18:37:49Z : commit 90da30b093c13e7661ef25ada5d46a5863b8af69
+E         2026-11-22T18:37:49Z début : MODE=jouet COMMIT=90da30b093c13e7661ef25ada5d46a5863b8af69 BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E         AMORCE 2026-11-22T18:37:49Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E         AMORCE 2026-11-22T18:37:49Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E         warning: --filter is ignored in local clones; use file:// instead.
+E         
+E       assert (2 == 2 and 'cité plusieurs fois' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 90da30b093c13e7661ef25ada5d46a5863b8af69\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+
+tests/test_t06_scripts.py:200: AssertionError
+_____ test_amorce_lecture_precoce_artefacts[sceau-faux-sceau non conforme] _____
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_lecture_precoce_ar1'), 'source': PosixPath('/tmp/pytest...st_amorce_lecture_precoce_ar1/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+artefact = 'sceau-faux', motif = 'sceau non conforme'
+
+    @pytest.mark.parametrize("artefact, motif", [
+        ("doublon", "cité plusieurs fois"), ("sceau-faux", "sceau non conforme"), ("prereg-absent", "absent au commit"),
+        ("commit-faux", "introuvable"),
+    ])
+    def test_amorce_lecture_precoce_artefacts(bac, artefact, motif):
+        src = bac["source"]
+        env_sup = {}
+        if artefact == "doublon":
+            (src / PREREG).write_text(_prereg(bac["amorce_sha"], doublon="Chemin des consignes de P3"), encoding="utf-8")
+            (src / (PREREG + ".sha256")).unlink()
+            sceller(src / PREREG)
+        elif artefact == "sceau-faux":
+            (src / CITES["Chemin des tâches d'évaluation de T0.6"]).write_text('{"altere": 1}', encoding="utf-8")
+        elif artefact == "prereg-absent":
+            (src / PREREG).unlink()
+        else:
+            env_sup = {"COMMIT": "0" * 40}
+        if artefact != "commit-faux":
+            _commit_source(bac, artefact)
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "x", env_sup)
+>       assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 98ea6eecddc04b64eb54ac17f8c0db28f387e08b
+E         AMORCE 2026-11-22T18:37:49Z : commit 98ea6eecddc04b64eb54ac17f8c0db28f387e08b
+E         2026-11-22T18:37:49Z début : MODE=jouet COMMIT=98ea6eecddc04b64eb54ac17f8c0db28f387e08b BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E         AMORCE 2026-11-22T18:37:49Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E         AMORCE 2026-11-22T18:37:49Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E         warning: --filter is ignored in local clones; use file:// instead.
+E         
+E       assert (2 == 2 and 'sceau non conforme' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 98ea6eecddc04b64eb54ac17f8c0db28f387e08b\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+
+tests/test_t06_scripts.py:200: AssertionError
+____ test_amorce_lecture_precoce_artefacts[prereg-absent-absent au commit] _____
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_lecture_precoce_ar2'), 'source': PosixPath('/tmp/pytest...st_amorce_lecture_precoce_ar2/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+artefact = 'prereg-absent', motif = 'absent au commit'
+
+    @pytest.mark.parametrize("artefact, motif", [
+        ("doublon", "cité plusieurs fois"), ("sceau-faux", "sceau non conforme"), ("prereg-absent", "absent au commit"),
+        ("commit-faux", "introuvable"),
+    ])
+    def test_amorce_lecture_precoce_artefacts(bac, artefact, motif):
+        src = bac["source"]
+        env_sup = {}
+        if artefact == "doublon":
+            (src / PREREG).write_text(_prereg(bac["amorce_sha"], doublon="Chemin des consignes de P3"), encoding="utf-8")
+            (src / (PREREG + ".sha256")).unlink()
+            sceller(src / PREREG)
+        elif artefact == "sceau-faux":
+            (src / CITES["Chemin des tâches d'évaluation de T0.6"]).write_text('{"altere": 1}', encoding="utf-8")
+        elif artefact == "prereg-absent":
+            (src / PREREG).unlink()
+        else:
+            env_sup = {"COMMIT": "0" * 40}
+        if artefact != "commit-faux":
+            _commit_source(bac, artefact)
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "x", env_sup)
+>       assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 864e28a258bde5e5affca82883479761c52aacf4
+E         AMORCE 2026-11-22T18:37:49Z : commit 864e28a258bde5e5affca82883479761c52aacf4
+E         2026-11-22T18:37:49Z début : MODE=jouet COMMIT=864e28a258bde5e5affca82883479761c52aacf4 BRANCHE=calcul/t06-jouet-v1 PREREG=prereg/T0.6-organismes-v0-v1.md GO=GO-2026-11-02-28
+E         AMORCE 2026-11-22T18:37:49Z : refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22) : rien ne part
+E         AMORCE 2026-11-22T18:37:49Z : destruction demandée (refus : GO-2026-11-02-28 non conforme (GO-2026-11-02-28 hors de sa période de validité (2026-11-02 → 2026-11-16) le 2026-11-22))
+E         warning: --filter is ignored in local clones; use file:// instead.
+E         
+E       assert (2 == 2 and 'absent au commit' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit 864e28a258bde5e5affca82883479761c52aacf4\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+
+tests/test_t06_scripts.py:200: AssertionError
+_________________________ test_amorce_branche_presente _________________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_branche_presente0'), 'source': PosixPath('/tmp/pytest-o...test_amorce_branche_presente0/venv'), 'amorce_sha': '88f059ce58cbaff15b933b5ffbb03b32d0b6f1c723f305f9f836407c3496946f'}
+
+    def test_amorce_branche_presente(bac):
+        distant = _distant(bac)
+        subprocess.run(["git", "-C", str(bac["source"]), "push", "-q", str(distant), "HEAD:refs/heads/calcul/t06-jouet-v1"], check=True)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "b")
+>       assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E       AssertionError: assert (2 == 2 and 'déjà présente' in 'AMORCE T06 DEMARRAGE 1 : 2026-11-22T18:37:49Z, machine ?, commit fc8c46530852ceaf6e77bdc71664d389a91edcd0\nAMORCE 202...lidité (2026-11-02 → 2026-11-16) le 2026-11-22))\nwarning: --filter is ignored in local clones; use file:// instead.\n')
+
+tests/test_t06_scripts.py:208: AssertionError
+____________________ test_controles_et_commande_de_creation ____________________
+
+depot_session = PosixPath('/tmp/pytest-of-root/pytest-4/test_controles_et_commande_de_0/source')
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_controles_et_commande_de_0')
+
+    def test_controles_et_commande_de_creation(depot_session, tmp_path):
+        src = depot_session
+        d = tmp_path / "controles"
+        r = subprocess.run(["bash", str(LANCEUR), "controles", str(d), "2026-11-05"], env=_env_session(src), capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert "CONTRÔLES CONFORMES" in r.stdout and "GO-2026-11-02-28 conforme" in r.stdout
+        assert (d / "lancement.txt").read_text(encoding="utf-8").count("commit ") == 1
+        r = subprocess.run(["bash", str(LANCEUR), "creation", "9999", "1.10", "0.02", str(d), str(1794873600 - 1)],
+                           env=_env_session(src), capture_output=True, text=True, timeout=120)
+>       assert r.returncode == 0, r.stdout + r.stderr
+E       AssertionError: échéance 1794873599 hors de ]maintenant, fin du GO]
+E         
+E       assert 2 == 0
+E        +  where 2 = CompletedProcess(args=['bash', '/home/user/controle-ia-travail/scripts/lancer_t06_v1.sh', 'creation', '9999', '1.10', ...e_0/controles', '1794873599'], returncode=2, stdout='échéance 1794873599 hors de ]maintenant, fin du GO]\n', stderr='').returncode
+
+tests/test_t06_scripts.py:301: AssertionError
+__ test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais ___
+
+    def test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais():
+        listes = _fichiers_listes(LISTE.read_text(encoding="utf-8"))
+        exclus = _exclus()
+        existants = sorted(f"tests/{p.name}" for p in (RACINE / "tests").glob("test_*.py"))
+        assert len(set(listes)) == len(listes) and not (set(listes) & set(exclus)), "doublon ou fichier à la fois listé et exclu"
+        assert all(re.fullmatch(r"tests/test_[A-Za-z0-9_]+\.py", f) for f in listes)
+        manquants = [f for f in existants if f not in listes and f not in exclus]
+>       assert not manquants, f"fichiers d'essais ni dans la liste ni dans les exclusions motivées (décider, jamais d'omission silencieuse) : {manquants}"
+E       AssertionError: fichiers d'essais ni dans la liste ni dans les exclusions motivées (décider, jamais d'omission silencieuse) : ['tests/test_accb6_code_v1.py', 'tests/test_accb6_contre_lecture_v1.py', 'tests/test_accb6_etats_v1.py', 'tests/test_accb6_garde_v1.py', 'tests/test_accb6_lecture_v1.py', 'tests/test_accb6_phrases_texte_v1.py', 'tests/test_accb6_relance_v1.py', 'tests/test_accb6_sondages_contre_lecture_v2.py', 'tests/test_agregation_r1_v4.py', 'tests/test_agregation_r1_v4_v2.py', 'tests/test_agregation_r1_v4_v3.py', 'tests/test_amorce_b5f_formation_entiere_v1.py', 'tests/test_amorce_b5f_formation_v1.py', 'tests/test_amorce_b5f_lecture_entiere_v1.py', 'tests/test_amorce_b5f_lecture_v1.py', 'tests/test_banc_mutations_bras_b_v5.py', 'tests/test_barreau5_familles_edition_cout_v1.py', 'tests/test_barreau5_familles_engagement_v1.py', 'tests/test_barreau5_familles_epreuve_verite_plantee_v1.py', 'tests/test_barreau5_familles_formation_v1.py', 'tests/test_barreau5_familles_lecture_v1.py', 'tests/test_barreau5_familles_relecture_v1.py', 'tests/test_barreau5_familles_seconde_programmation_v2.py', 'tests/test_barreau5_familles_seconde_programmation_v3.py', 'tests/test_barreau5_familles_sondes_v1.py', 'tests/test_barreau8_moniteurs_lecture_v5.py', 'tests/test_barreau8_moniteurs_passe_v5.py', 'tests/test_chaine_bbis_v6_v1.py', 'tests/test_cibles_invisibles_v3.py', 'tests/test_cibles_invisibles_v4.py', 'tests/test_cibles_invisibles_v5.py', 'tests/test_comparer_echecs_attendus_v1.py', 'tests/test_comptes_par_preenregistrement_v1.py', 'tests/test_depot_expurge_v10.py', 'tests/test_depot_expurge_v11.py', 'tests/test_depot_expurge_v2.py', 'tests/test_depot_expurge_v3.py', 'tests/test_depot_expurge_v4.py', 'tests/test_depot_expurge_v5.py', 'tests/test_depot_expurge_v6.py', 'tests/test_depot_expurge_v7.py', 'tests/test_depot_expurge_v8.py', 'tests/test_depot_expurge_v9.py', 'tests/test_dopamine_exploratoire_amorce_v1.py', 'tests/test_dopamine_exploratoire_chaine_v1.py', 'tests/test_dopamine_exploratoire_generation_etats_v1.py', 'tests/test_dopamine_exploratoire_lanceur_v1.py', 'tests/test_dopamine_exploratoire_math500_v1.py', 'tests/test_dopamine_exploratoire_mesures_2a_v1.py', 'tests/test_dopamine_exploratoire_relecture_v1.py', 'tests/test_dopamine_exploratoire_sonde_v1.py', 'tests/test_dopamine_exploratoire_stockage_v1.py', 'tests/test_essai_fermeture_p3bis_v1.py', 'tests/test_extraire_garde_equivalence_t06_v1.py', 'tests/test_formulation_g1_gardes_v1.py', 'tests/test_formulation_g1_gardes_v2.py', 'tests/test_formulation_g1_gardes_v3.py', 'tests/test_formulation_g1_mondes_plantes_v1.py', 'tests/test_formulation_g1_mondes_plantes_v2.py', 'tests/test_formulation_g1_mondes_plantes_v3.py', 'tests/test_formulation_g1_regle_v1.py', 'tests/test_formulation_g1_regle_v2.py', 'tests/test_formulation_g1_regle_v3.py', 'tests/test_formulation_g1_statistiques_v1.py', 'tests/test_formulation_g1_statistiques_v2.py', 'tests/test_formulation_g1_statistiques_v3.py', 'tests/test_garde_calcul_empreinte_lanceur_bassins_etroits_v2_v1.py', 'tests/test_garde_calcul_empreinte_lanceur_v3_v1.py', 'tests/test_garde_google_v1.py', 'tests/test_garde_google_v2.py', 'tests/test_garde_google_v3.py', 'tests/test_garde_refus_question_v1.py', 'tests/test_garde_refus_question_v2.py', 'tests/test_lancer_b5f_formation_v1.py', 'tests/test_lancer_b5f_lecture_v1.py', 'tests/test_lancer_course_auto_conception_v11.py', 'tests/test_lancer_course_ideation_bassins_etroits_v1.py', 'tests/test_lancer_course_ideation_bassins_etroits_v2.py', 'tests/test_lancer_course_ideation_bassins_etroits_v3.py', 'tests/test_lancer_course_ideation_conception_propre_v2.py', 'tests/test_lancer_course_ideation_organismes_discrets_v2.py', 'tests/test_lancer_course_ideation_organismes_discrets_v3.py', 'tests/test_lancer_course_ideation_organismes_discrets_v4.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v1.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v2.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py', 'tests/test_lancer_course_ideation_regard_ou_raisons_v1.py', 'tests/test_lancer_relais_local_v1.py', 'tests/test_lanceur_durable_v5_a1v4.py', 'tests/test_lanceur_durable_v5_a1v4_course_v1.py', 'tests/test_lecture_bbis_v4_addendum_4_v1.py', 'tests/test_lecture_bbis_v5_complement_addendum_4_v1.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v1.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v2.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v3.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v4.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v5.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v6.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v7.py', 'tests/test_lentilles_sondes_bbis_cache_tokeniseur_v2.py', 'tests/test_lentilles_sondes_bbis_contre_lecture_addendum_v1.py', 'tests/test_lentilles_sondes_bbis_corpus_pagine_v1.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v1.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v2.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v3.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v4.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v5.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v6.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v7.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v8.py', 'tests/test_lentilles_sondes_bbis_entrees_v1.py', 'tests/test_lentilles_sondes_bbis_entrees_v2.py', 'tests/test_lentilles_sondes_bbis_entrees_v3.py', 'tests/test_lentilles_sondes_bbis_entrees_v4.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v1.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v2.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v3.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v4.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v5.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v6.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v1.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v2.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v3.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v4.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v5.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v6.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v7.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v8.py', 'tests/test_lentilles_sondes_bbis_lanceur_v5_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v6_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v6_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_v1.py', 'tests/test_lentilles_sondes_bbis_lecture_v1.py', 'tests/test_lentilles_sondes_bbis_montage_v1.py', 'tests/test_lentilles_sondes_bbis_montage_v2.py', 'tests/test_lentilles_sondes_bbis_montage_v3.py', 'tests/test_lentilles_sondes_bbis_montage_v4.py', 'tests/test_lentilles_sondes_bbis_montage_v5.py', 'tests/test_lentilles_sondes_bbis_montage_v6.py', 'tests/test_lentilles_sondes_bbis_montage_v7.py', 'tests/test_lentilles_sondes_bbis_montage_v8.py', 'tests/test_lentilles_sondes_bbis_montage_v9.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v1.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v2.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v3.py', 'tests/test_lentilles_sondes_bbis_procedure_v1.py', 'tests/test_lentilles_sondes_bbis_procedure_v2.py', 'tests/test_lentilles_sondes_bbis_procedure_v3.py', 'tests/test_lentilles_sondes_bbis_procedure_v4.py', 'tests/test_lentilles_sondes_bbis_procedure_v5.py', 'tests/test_lentilles_sondes_bbis_procedure_v6.py', 'tests/test_lentilles_sondes_bbis_procedure_v7.py', 'tests/test_lentilles_sondes_bbis_procedure_v8.py', 'tests/test_lentilles_sondes_bbis_procedure_v9.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_corrections_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lanceur_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lanceur_v2.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lecture_comparaisons_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_nos_lentilles_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_phrases_reproduction_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_statistiques_v1.py', 'tests/test_mots_et_cout_bras_a_v1.py', 'tests/test_mots_et_cout_bras_a_v2.py', 'tests/test_mots_et_cout_bras_a_v2_c2_v1.py', 'tests/test_mots_et_cout_t06_v1.py', 'tests/test_mots_et_cout_t06_v3.py', 'tests/test_narcbench_cellules_externe_v2.py', 'tests/test_narcbench_chargeur_v1.py', 'tests/test_narcbench_externe_v1.py', 'tests/test_narcbench_externe_v2.py', 'tests/test_narcbench_forme_v2.py', 'tests/test_narcbench_lecture_externe_v2.py', 'tests/test_narcbench_v1.py', 'tests/test_neuron_lens_b_beta_lancer_v1.py', 'tests/test_neuron_lens_b_beta_lancer_v2.py', 'tests/test_neuron_lens_b_beta_lancer_v3.py', 'tests/test_neuron_lens_b_beta_lancer_v4_v2.py', 'tests/test_neuron_lens_b_beta_lancer_v5.py', 'tests/test_neuron_lens_balayage_arbre_v1.py', 'tests/test_neuron_lens_comparer_reajustement_v1.py', 'tests/test_neuron_lens_comparer_reajustement_v2.py', 'tests/test_neuron_lens_comparer_reajustement_v3.py', 'tests/test_neuron_lens_comparer_reajustement_v4.py', 'tests/test_neuron_lens_controles_b0_v2.py', 'tests/test_neuron_lens_controles_b_beta_v1.py', 'tests/test_neuron_lens_controles_b_beta_v2.py', 'tests/test_neuron_lens_etapes_b_beta_v2.py', 'tests/test_neuron_lens_etapes_b_beta_v3.py', 'tests/test_neuron_lens_etapes_b_beta_v4.py', 'tests/test_neuron_lens_etapes_b_beta_v5.py', 'tests/test_neuron_lens_etapes_b_beta_v6.py', 'tests/test_neuron_lens_etapes_b_beta_v7.py', 'tests/test_neuron_lens_garde_depense_v4.py', 'tests/test_neuron_lens_garde_priorite_bbis_v1.py', 'tests/test_neuron_lens_garde_priorite_bbis_v2.py', 'tests/test_neuron_lens_grandeurs_b_alpha_v1.py', 'tests/test_neuron_lens_montage_b_beta_v1.py', 'tests/test_neuron_lens_montage_b_beta_v2.py', 'tests/test_neuron_lens_montage_b_beta_v3.py', 'tests/test_neuron_lens_montage_b_beta_v4.py', 'tests/test_neuron_lens_montage_b_beta_v5.py', 'tests/test_neuron_lens_suivi_vast_v6.py', 'tests/test_neuron_lens_verdicts_b_alpha_v3.py', 'tests/test_neuron_lens_verdicts_b_beta_v1.py', 'tests/test_neuron_lens_verdicts_b_beta_v2.py', 'tests/test_neuron_lens_verdicts_b_beta_v3.py', 'tests/test_neuron_lens_verdicts_b_beta_v4.py', 'tests/test_organisme_idees_juge_banc_v1.py', 'tests/test_organisme_idees_juge_constantes_v2.py', 'tests/test_organisme_idees_juge_execution_v1.py', 'tests/test_organisme_idees_juge_execution_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v4.py', 'tests/test_organisme_idees_juge_lecture_v1.py', 'tests/test_organisme_idees_juge_lecture_v2.py', 'tests/test_organisme_idees_juge_lois_v1.py', 'tests/test_organisme_idees_juge_mutations_v1.py', 'tests/test_organisme_idees_juge_mutations_v2.py', 'tests/test_organisme_idees_juge_rejeu_v1.py', 'tests/test_osf_depot_v1.py', 'tests/test_premier_test_ia_lecture_p3bis_v1.py', 'tests/test_premier_test_ia_ouverture_p3bis_v1.py', 'tests/test_premier_test_ia_run_v2.py', 'tests/test_preuve_aucune_ouverture_apres_coup_bbis_v1.py', 'tests/test_registres_taif_v1.py', 'tests/test_registres_taif_v2.py', 'tests/test_registres_taif_v3.py', 'tests/test_relecture_fable_api_v1.py', 'tests/test_relecture_fable_api_v2.py', 'tests/test_relecture_fable_api_v3.py', 'tests/test_relecture_fable_api_v4.py', 'tests/test_relecture_fable_api_v5.py', 'tests/test_remplacer_ligne_code_t07_v1.py', 'tests/test_remplacer_ligne_code_t07_v2.py', 'tests/test_script_p3bis_v1.py', 'tests/test_sequentiel_cycle2_mondes_v1.py', 'tests/test_sequentiel_cycle2_niveaux_etats_v1.py', 'tests/test_sequentiel_cycle2_simulation_v1.py', 'tests/test_t06_chaine_v13.py', 'tests/test_t06_v12_amorce.py', 'tests/test_t06_v12_amorce_bras_b.py', 'tests/test_t06_v12_course.py', 'tests/test_t06_v12_instances_nulles.py', 'tests/test_t06_v12_liste.py', 'tests/test_t06_v12_minuterie.py', 'tests/test_t06_v12_nouveaux_v10.py', 'tests/test_t06_v12_plafond_e3bis.py', 'tests/test_t06_v12_r5.py', 'tests/test_t06_v12_scripts.py', 'tests/test_t06_v12_session_v11.py', 'tests/test_t06_v13_liste.py', 'tests/test_t07_cache_liste_arbre_v1.py', 'tests/test_t07_code_t07_v1.py', 'tests/test_t07_controle_jeux_v1.py', 'tests/test_t07_corrections_cl1_v1.py', 'tests/test_t07_corrections_cl20_v1.py', 'tests/test_t07_donnees_p3_v1.py', 'tests/test_t07_journal_p3bis_d3_v1.py', 'tests/test_t07_lecture_v1.py', 'tests/test_t07_lecture_v2.py', 'tests/test_t07_option_c_concepts_v1.py', 'tests/test_t07_ordre_des_lignes_v1.py', 'tests/test_t07_ouvrir_reel_concepts_v1.py', 'tests/test_t07_passe_blanc_v1.py', 'tests/test_t07_plancher_v2_fonction_v1.py', 'tests/test_t07_plancher_v2_lecture_v1.py', 'tests/test_t07_plancher_v3_avant_ouverture_v1.py', 'tests/test_t07_plancher_v3_comportement_v1.py', 'tests/test_t07_plancher_v3_lecture_v1.py', 'tests/test_t07_plancher_v3_notation_v1.py', 'tests/test_t07_plancher_v3_reextraction_v1.py', 'tests/test_t07_repli_etapes_v1.py', 'tests/test_t07_repli_recalcul_v1.py', 'tests/test_t07_repli_v1.py', 'tests/test_t07_sondes_neuves_v1.py', 'tests/test_t07_tirages_degeneres_v1.py', 'tests/test_t07bbis_adversaires_texte_v1.py', 'tests/test_t07bbis_apprentissage_v1.py', 'tests/test_t07bbis_bout_en_bout_v1.py', 'tests/test_t07bbis_chaine_instance_v1.py', 'tests/test_t07bbis_commun_v1.py', 'tests/test_t07bbis_conjointe_v2.py', 'tests/test_t07bbis_controle_v2.py', 'tests/test_t07bbis_controle_v3.py', 'tests/test_t07bbis_epreuve_niveau_v1.py', 'tests/test_t07bbis_etat_impose_v1.py', 'tests/test_t07bbis_lecture_v1.py', 'tests/test_t07bbis_lien_mots_et_cout_v1.py', 'tests/test_t07bbis_plis_v1.py', 'tests/test_t07bbis_registre_v1.py', 'tests/test_t07bbis_second_addendum_v1.py', 'tests/test_verifier_jeux_synthetiques_t07_v2.py']
+E       assert not ['tests/test_accb6_code_v1.py', 'tests/test_accb6_contre_lecture_v1.py', 'tests/test_accb6_etats_v1.py', 'tests/test_accb6_garde_v1.py', 'tests/test_accb6_lecture_v1.py', 'tests/test_accb6_phrases_texte_v1.py', ...]
+
+tests/test_t06_v11_liste.py:154: AssertionError
+________ test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage ________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_cas_sain_deux_comm0'), 'source': PosixPath('/tmp/pytest...st_amorce_cas_sain_deux_comm0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant)
+>       assert code == 0, sortie[-3000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:21Z, machine ?, commit 571379aa3d7f9791bc836bf99779ac2e2d817e27
+E         AMORCE 2026-11-22T18:39:21Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:176: AssertionError
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[heure_passee] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_second_demarrage_a0'), 'source': PosixPath('/tmp/pytest...st_amorce_second_demarrage_a0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+cas = 'heure_passee'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+>       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:21Z, machine ?, commit 571379aa3d7f9791bc836bf99779ac2e2d817e27
+E         AMORCE 2026-11-22T18:39:21Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:219: AssertionError
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[marqueur] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_second_demarrage_a1'), 'source': PosixPath('/tmp/pytest...st_amorce_second_demarrage_a1/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+cas = 'marqueur'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+>       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:22Z, machine ?, commit d20d74b9dab75afe024eda42055445914c10fd2f
+E         AMORCE 2026-11-22T18:39:22Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:219: AssertionError
+_ test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[echeance_passee] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_second_demarrage_a2'), 'source': PosixPath('/tmp/pytest...st_amorce_second_demarrage_a2/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+cas = 'echeance_passee'
+
+    @pytest.mark.parametrize("cas", ["heure_passee", "marqueur", "echeance_passee"])
+    def test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit(bac, cas):
+        """C-V3-2 : après une fin normale, l'instance redémarre alors que l'heure de dépense épuisée est DANS LE PASSÉ (l'essai
+        v2 la posait dans 10⁶ s), ou avec le marqueur `t06-depense-epuisee` posé par la minuterie, ou après l'échéance : les
+        commits en attente sont poussés D'ABORD, puis l'instance est détruite (l'argent est épuisé : pas de sommeil) ; la v2
+        détruisait sans pousser (le contrôle d'heure passait avant la branche du second démarrage)."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "dp")
+>       assert code == 0 and (racine / "t06-fin-normale").exists(), sortie[-2000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:22Z, machine ?, commit d20d74b9dab75afe024eda42055445914c10fd2f
+E         AMORCE 2026-11-22T18:39:22Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:219: AssertionError
+_____ test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run _____
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_premier_demarrage_0'), 'source': PosixPath('/tmp/pytest...st_amorce_premier_demarrage_0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run(bac):
+        """Cas sain des contrôles d'heure gardés : sans dépôt extrait, un démarrage après l'heure de dépense épuisée détruit
+        sans rien cloner ni lancer (C08), comme en v2."""
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "d1", {"DEPENSE_EPUISEE_UTC_S": str(int(time.time()) - 60)})
+>       assert code == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and "démarrage après l'heure de dépense épuisée (C08) : aucun calcul" in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:22Z, machine ?, commit d20d74b9dab75afe024eda42055445914c10fd2f\nAMORCE 2026-11-22T18:39:22Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:242: AssertionError
+_____________ test_amorce_fichier_trop_gros_refuse_avant_le_commit _____________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_fichier_trop_gros_0'), 'source': PosixPath('/tmp/pytest...st_amorce_fichier_trop_gros_0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_fichier_trop_gros_refuse_avant_le_commit(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "g", {"FAUX_GROS": "1"})
+>       assert code == 1 and (racine / "t06-fin-anormale").exists() and not (racine / "t06-fin-normale").exists(), sortie[-3000:]     # C-V4-1 : fin anormale
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:22Z, machine ?, commit d20d74b9dab75afe024eda42055445914c10fd2f
+E         AMORCE 2026-11-22T18:39:22Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 1)
+
+tests/test_t06_v12_amorce.py:249: AssertionError
+_____________________ test_amorce_poussee_initiale_refusee _____________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_poussee_initiale_r0'), 'source': PosixPath('/tmp/pytest...st_amorce_poussee_initiale_r0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_poussee_initiale_refusee(bac):
+        distant = _distant(bac, REFUS_TOUT)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "pi")
+>       assert code == 2 and "poussée initiale de la branche calcul/t06-jouet-v4 refusée" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'poussée initiale de la branche calcul/t06-jouet-v4 refusée' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:23Z, machine ?, commit d20d74b9dab75afe024eda42055445914c10fd2f\nAMORCE 2026-11-22T18:39:23Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:263: AssertionError
+_____ test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage ______
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_poussee_finale_ref0'), 'source': PosixPath('/tmp/pytest...st_amorce_poussee_finale_ref0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage(bac):
+        distant = _distant(bac, REFUS_MISES_A_JOUR)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "pf")
+>       assert code == 1, sortie[-3000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:23Z, machine ?, commit bccf75d2c9fbe0b93ed77cf9fd2ccb769e96bac2
+E         AMORCE 2026-11-22T18:39:23Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 1
+
+tests/test_t06_v12_amorce.py:270: AssertionError
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_variables_de_calen3'), 'source': PosixPath('/tmp/pytest...st_amorce_variables_de_calen3/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+env_sup = {'DEPENSE_EPUISEE_UTC_S': '1'}
+motif = "après l'heure de dépense épuisée"
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+            assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+        else:
+>           assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E           AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:23Z, machine ?, commit bccf75d2c9fbe0b93ed77cf9fd2ccb769e96bac2
+E             AMORCE 2026-11-22T18:39:24Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E             
+E           assert (2 == 2 and "après l'heure de dépense épuisée" in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:23Z, machine ?, commit bccf75d2c9fbe0b93ed77cf9fd2ccb769e96bac2\nAMORCE 2026-11-22T18:39:24Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:295: AssertionError
+_ test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_variables_de_calen4'), 'source': PosixPath('/tmp/pytest...st_amorce_variables_de_calen4/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+env_sup = {'FIN_GO_UTC_S': '1794873500'}
+motif = 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc'
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+            assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+        else:
+>           assert code == 2 and motif in sortie and (racine / "t06-detruire").exists(), sortie[-2000:]
+E           AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:24Z, machine ?, commit 5a25d6626e00608a10c07f0da95e1e8162251aec
+E             AMORCE T06 : échéance ramenée à la fin du GO (1794873500)
+E             AMORCE 2026-11-22T18:39:24Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E             
+E           assert (2 == 2 and 'fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:24Z, machine ?, commit 5a25d6626e00608a10c07f0da95e1e8162251aec\nAMORCE...n du GO (1794873500)\nAMORCE 2026-11-22T18:39:24Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:295: AssertionError
+____ test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e] ____
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_variables_de_calen5'), 'source': PosixPath('/tmp/pytest...st_amorce_variables_de_calen5/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+env_sup = {'ECHEANCE_UTC_S': '1794873700'}, motif = 'ramenée'
+
+    @pytest.mark.parametrize("env_sup, motif", [
+        ({"FIN_GO_UTC_S": None}, "FIN_GO_UTC_S absente"), ({"FIN_GO_UTC_S": "demain"}, "FIN_GO_UTC_S absente ou non entière"),
+        ({"DEPENSE_EPUISEE_UTC_S": None}, "DEPENSE_EPUISEE_UTC_S absente"), ({"DEPENSE_EPUISEE_UTC_S": "1"}, "après l'heure de dépense épuisée"),
+        ({"FIN_GO_UTC_S": "1794873500"}, "fin du GO reçue (1794873500) ≠ calendrier.fin_go_utc"),
+        ({"ECHEANCE_UTC_S": "1794873700"}, "ramenée"),
+    ])
+    def test_amorce_variables_de_calendrier_et_de_depense(bac, env_sup, motif):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "v", env_sup)
+        if motif == "ramenée":
+>           assert code == 0 and "échéance ramenée à la fin du GO (1794873600)" in sortie and (racine / "t06-echeance.txt").read_text().strip() == FIN_GO
+E           assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:293: AssertionError
+______________ test_amorce_configuration_sans_calendrier_refusee _______________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_configuration_sans0'), 'source': PosixPath('/tmp/pytest...st_amorce_configuration_sans0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_configuration_sans_calendrier_refusee(bac):
+        src = bac["source"]
+        (src / CONFIG).write_text("{}", encoding="utf-8")
+        (src / (CONFIG + ".sha256")).unlink()
+        sceller(src / CONFIG)
+        _commit_source(bac, "config sans calendrier")
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "c")
+>       assert code == 2 and "calendrier de la configuration non conforme" in sortie and "sans calendrier" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'calendrier de la configuration non conforme' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:24Z, machine ?, commit 4105130cb3571739783cf52641999cf53f1fb61e\nAMORCE 2026-11-22T18:39:24Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:306: AssertionError
+________ test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu _________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_arret_consigne_run0'), 'source': PosixPath('/tmp/pytest...st_amorce_arret_consigne_run0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "a", {"FAUX_RUN": "arret"})
+>       assert code == 1 and "arrêt pendant run (code 1) : résultats et données légères committés" in journal and "RUN MORT" not in sortie
+E       assert (2 == 1)
+
+tests/test_t06_v12_amorce.py:312: AssertionError
+___________________ test_amorce_refus_go_et_branche_presente ___________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_amorce_refus_go_et_branch0'), 'source': PosixPath('/tmp/pytest...st_amorce_refus_go_et_branch0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_amorce_refus_go_et_branche_presente(bac):
+        distant = _distant(bac)
+        subprocess.run(["git", "-C", str(bac["source"]), "push", "-q", str(distant), "HEAD:refs/heads/calcul/t06-jouet-v4"], check=True)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "b")
+>       assert code == 2 and "déjà présente" in sortie and (racine / "t06-detruire").exists()
+E       assert (2 == 2 and 'déjà présente' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:25Z, machine ?, commit 5a25d6626e00608a10c07f0da95e1e8162251aec\nAMORCE 2026-11-22T18:39:25Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:331: AssertionError
+_____ test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent ______
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_minuterie_depense_epuisee0'), 'source': PosixPath('/tmp/pytest...st_minuterie_depense_epuisee0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_minuterie_depense_epuisee0')
+
+    def test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent(bac, tmp_path):
+        """C08 et C14 : la minuterie (bash seul, `curl` factice) consigne et pousse à l'heure de dépense épuisée (puis demande
+        « stopped »), puis consigne et pousse à l'échéance avant le DELETE."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant, "mi")
+>       assert code == 0, sortie[-2000:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:25Z, machine ?, commit 1a0003322f992710ff14c00f82a3aa7fdbdbc7fb
+E         AMORCE 2026-11-22T18:39:25Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:353: AssertionError
+_ test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_cas_sain_verrou_pr0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_cas_sain_verrou_pr0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "ok", {"FAUX_PRECOMMIT": HOOK_VERROU})
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:32Z, machine ?, commit 75375e01e8df3173fa8298e548d0994b7189e39b
+E         AMORCE 2026-11-22T18:39:32Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:530: AssertionError
+__________________ test_c_v4_1_arret_consigne_sous_le_verrou ___________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_arret_consigne_sou0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_arret_consigne_sou0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_arret_consigne_sous_le_verrou(bac):
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "ar", {"FAUX_RUN": "arret", "FAUX_PRECOMMIT": HOOK_VERROU})
+>       assert code == 1 and "arrêt pendant run (code 1)" in journal
+E       assert (2 == 1)
+
+tests/test_t06_v12_amorce.py:542: AssertionError
+_______________ test_c_v4_1_rien_a_committer_n_est_pas_un_echec ________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_rien_a_committer_n0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_rien_a_committer_n0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_rien_a_committer_n_est_pas_un_echec(bac):
+        """Cas sain : un run sans morceau (index vide au commit des morceaux) finit normalement : « aucun morceau à committer »."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "vide", {"FAUX_SANS_MORCEAU": "1"})
+>       assert code == 0 and "aucun morceau à committer" in journal and (racine / "t06-fin-normale").exists()
+E       assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:551: AssertionError
+_ test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_index_lock_pose_pe0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_index_lock_pose_pe0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale(bac):
+        """Artefact : `index.lock` posé pendant la fin de run. La v3 lisait l'échec comme « aucun résultat léger à committer » et
+        posait `t06-fin-normale` ; la v4 journalise « ERREUR DE CHAÎNE », pousse ce qui existe, pose `t06-fin-anormale`, code 1."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "il", {"FAUX_INDEX_LOCK": "1"})
+>       assert code == 1, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:33Z, machine ?, commit 90436204132d31b0744f2236f6fc18caf655e9d0
+E         AMORCE 2026-11-22T18:39:33Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 1
+
+tests/test_t06_v12_amorce.py:560: AssertionError
+___ test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse ___
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_commit_refuse_une_0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_commit_refuse_une_0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse(bac):
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "une", {"FAUX_PRECOMMIT": HOOK_ECHEC_UNE_FOIS, "COMMIT_ATTENTE_S": "0"})
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:33Z, machine ?, commit 90436204132d31b0744f2236f6fc18caf655e9d0
+E         AMORCE 2026-11-22T18:39:33Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:571: AssertionError
+_ test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale __
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_status_non_vide_av0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_status_non_vide_av0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale(bac):
+        """Un fichier non consigné sous `runs`, `diag`, `donnees` ou `traces` empêche `t06-fin-normale` : le crochet du faux lanceur
+        laisse un fichier que seul `consigner_partiel` rattrape (cas sain du rattrapage) ; un fichier qui ne peut pas partir
+        (ignoré par aucun .gitignore mais retiré par la garde de taille) donne la fin anormale."""
+        hook = """#!/usr/bin/env bash
+    # au commit des morceaux seulement, dépose un résultat léger tardif : il reste hors de l'index à ce commit
+    if git diff --cached --name-only | grep -q 'sous-ensemble-t06-000.npz$'; then mkdir -p diag/tardif; echo '{}' > diag/tardif/note.json; fi
+    exit 0
+    """
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "ras", {"FAUX_PRECOMMIT": hook})
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:33Z, machine ?, commit 90436204132d31b0744f2236f6fc18caf655e9d0
+E         AMORCE 2026-11-22T18:39:33Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:593: AssertionError
+____________ test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee ____________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_verrou_non_obtenu_0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_verrou_non_obtenu_0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee(bac):
+        """Artefact : un autre processus tient le verrou de consignation plus longtemps que l'attente : la v4 le journalise, pousse au
+        mieux et finit en fin anormale (jamais en silence)."""
+        racine = bac["racine"] / "vr"
+        racine.mkdir()
+        detenteur = subprocess.Popen(["flock", "-x", str(racine / "t06-consigner.lock"), "sleep", "25"])
+        try:
+            time.sleep(0.5)
+            distant = _distant(bac)
+            code, journal, sortie, racine = _lancer_amorce(bac, distant, "vr", {"VERROU_ATTENTE_S": "2"})
+        finally:
+            detenteur.kill()
+            detenteur.wait()
+>       assert code == 1, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:34Z, machine ?, commit 90436204132d31b0744f2236f6fc18caf655e9d0
+E         AMORCE 2026-11-22T18:39:34Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 1
+
+tests/test_t06_v12_amorce.py:612: AssertionError
+_ test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_minuterie_a_l_eche0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_minuterie_a_l_eche0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde(bac):
+        """La minuterie lance `t06-consigner.sh` au milieu de la fin de run (pendant le premier commit, rendu lent) : elle attend le
+        verrou, ne casse aucun commit (pas d'`index.lock` croisé), ne perd aucun fichier, et l'ordre des commits est celui de la fin de run."""
+        hook = """#!/usr/bin/env bash
+    if [ ! -e "$RACINE_AMORCE/hook-lance" ]; then : > "$RACINE_AMORCE/hook-lance"
+      setsid bash "$RACINE_AMORCE/t06-consigner.sh" "échéance" < /dev/null > "$RACINE_AMORCE/concurrent.log" 2>&1 &
+      sleep 3
+    fi
+    exit 0
+    """
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "mn", {"FAUX_PRECOMMIT": hook})
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:34Z, machine ?, commit 7cca18dd6b94887c95ef22b5f40f3aae2d655a46
+E         AMORCE 2026-11-22T18:39:34Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:629: AssertionError
+____________ test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance ____________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_verrou_relache_ava0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_verrou_relache_ava0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance(bac):
+        """Le verrou de consignation est relâché avant `arreter_instance` (sinon le sommeil qui suit le garderait et la minuterie ne
+        pourrait plus consigner) : fin normale, fin anormale et arrêt consigné."""
+        for nom, env, code_attendu in (("v1", {}, 0), ("v2", {"FAUX_INDEX_LOCK": "1"}, 1), ("v3", {"FAUX_RUN": "arret"}, 1)):
+            code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), nom, env)
+>           assert code == code_attendu and (racine / "t06-arret-demande").exists(), (nom, sortie[-1500:])
+E           AssertionError: ('v1', "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:34Z, machine ?, commit 7cca18dd6b94887c95ef22b5f40f3aae2d655a46
+E             AMORCE 2026-11-22T18:39:34Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E             ")
+E           assert (2 == 0)
+
+tests/test_t06_v12_amorce.py:647: AssertionError
+_______________ test_c_v4_1_fichier_non_rattrapable_fin_anormale _______________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_fichier_non_rattra0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_fichier_non_rattra0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_fichier_non_rattrapable_fin_anormale(bac):
+        """Artefact : le rattrapage `consigner_partiel "fin de run"` ne parvient pas à committer le fichier tardif (crochet qui refuse) :
+        `git status --porcelain` reste non vide, donc fin anormale, jamais `t06-fin-normale`."""
+        hook = """#!/usr/bin/env bash
+    if git diff --cached --name-only | grep -q 'sous-ensemble-t06-000.npz$'; then mkdir -p diag/tardif; echo '{}' > diag/tardif/note.json; : > "$RACINE_AMORCE/hook-arme"; fi
+    if [ -e "$RACINE_AMORCE/hook-arme" ] && git diff --cached --name-only | grep -q 'diag/tardif/note.json'; then echo "refusé (factice)" >&2; exit 1; fi
+    exit 0
+    """
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "nr", {"FAUX_PRECOMMIT": hook, "COMMIT_ATTENTE_S": "0"})
+>       assert code == 1, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:34Z, machine ?, commit 7cca18dd6b94887c95ef22b5f40f3aae2d655a46
+E         AMORCE 2026-11-22T18:39:34Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 1
+
+tests/test_t06_v12_amorce.py:670: AssertionError
+_______________ test_c_v4_3_amorce_epreuve_artefacts[go_expire] ________________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_3_amorce_epreuve_art4'), 'source': PosixPath('/tmp/pytest...st_c_v4_3_amorce_epreuve_art4/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+cas = 'go_expire'
+
+    @pytest.mark.parametrize("cas", ["go_de_la_course", "branche_calcul", "sans_prereg_absent", "reel_sans_epreuve", "go_expire"])
+    def test_c_v4_3_amorce_epreuve_artefacts(bac, cas):
+        sup = {}
+        if cas == "go_de_la_course":
+            sup["go"] = "GO-2026-11-02-28"
+        elif cas == "branche_calcul":
+            sup["branche"] = "calcul/t06-reel-v4"
+        elif cas == "sans_prereg_absent":
+            sup["PREREG_ABSENT"] = "0"
+        elif cas == "reel_sans_epreuve":
+            sup.update(mode="reel", EPREUVE_GO_ID="")
+        elif cas == "go_expire":
+            sup["FIN_GO_UTC_S"] = "1794873600"                                                        # fin du GO ≠ calendrier de la configuration d'épreuve
+        code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ea", **sup)
+        assert code == 2 and (racine / "t06-detruire").exists(), (cas, sortie[-2000:])
+        motif = {"go_de_la_course": "seuls GO-2026-11-06-01 et GO-2026-11-07-08 (E3 bis) sont des épreuves à blanc", "branche_calcul": "doit commencer par essai/",
+                 "sans_prereg_absent": "PREREG_ABSENT=1 exigé", "reel_sans_epreuve": "n'est permis qu'en mode jouet (R1)", "go_expire": "fin du GO reçue"}[cas]
+>       assert motif in sortie, (cas, sortie[-1500:])
+E       AssertionError: ('go_expire', "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit 3275f9bf39ff498f62a9cb16ad6046a41b... du GO (1794873600)
+E         AMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         ")
+E       assert 'fin du GO reçue' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit 3275f9bf39ff498f62a9cb16ad6046a41be873cd\nAMORCE...n du GO (1794873600)\nAMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n"
+
+tests/test_t06_v12_amorce.py:849: AssertionError
+______________ test_c_v4_3_materiel_et_virgules_des_essais_joues _______________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_3_materiel_et_virgul0'), 'source': PosixPath('/tmp/pytest...st_c_v4_3_materiel_et_virgul0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_3_materiel_et_virgules_des_essais_joues(bac):
+        """La ligne MATERIEL (MemTotal, cœurs, flock) est au journal et relayée ; `TESTS_ARGS` à virgules devient une liste d'essais."""
+        distant = _distant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, "mat", {"TESTS_ARGS": "tests/x.py,tests/y.py", "TESTS_ATTENDUS": "7", "PREREG_ABSENT": "1", "CONFIG": CONFIG})
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit a95a97cb3b416af0fa6f62180130bd088dae716a
+E         AMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:857: AssertionError
+_ test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_c_v4_1_consignation_code_0'), 'source': PosixPath('/tmp/pytest...st_c_v4_1_consignation_code_0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine(bac):
+        """`t06-consigner.sh` (celle de la minuterie) sort en code 2 quand la poussée de ce qui existe a eu lieu mais qu'un commit a échoué,
+        en code 0 quand tout est parti (cas sain)."""
+        code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "cs")
+>       assert code == 0
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:870: AssertionError
+______ test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins ______
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_clonage_reduit_extraction0'), 'source': PosixPath('/tmp/pytest...st_clonage_reduit_extraction0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins(bac):
+        """Cas sain : seuls les chemins de la liste sont extraits (dossiers lourds absents, blobs absents du clone), la ligne CLONAGE donne les mesures."""
+        _ajouter_arbre_lourd(bac)
+        distant = _distant_filtrant(bac)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"DEPOT_URL": f"file://{distant}"})        # file:// : le filtre de blobs est honoré
+>       assert code == 0, sortie[-2500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit 4f6b07854ba2535218c7978e7b8d9c7d31682f21
+E         AMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert 2 == 0
+
+tests/test_t06_v12_amorce.py:918: AssertionError
+_ test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[set-set] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_clonage_reduit_extraction1'), 'source': PosixPath('/tmp/pytest...st_clonage_reduit_extraction1/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_clonage_reduit_extraction1')
+etape = 'set', motif = 'set'
+
+    @pytest.mark.parametrize("etape, motif", [("set", "set"), ("init", "init")])
+    def test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git(bac, tmp_path, etape, motif):
+        """Artefact : `git sparse-checkout init|set` en échec → refus nommé qui CITE le message de git (R-1683), aucun run, aucun repli sur l'extraction complète."""
+        distant = _distant_filtrant(bac)
+        b = tmp_path / "faux-git"
+        b.mkdir()
+        (b / "git").write_text(f'#!/usr/bin/env bash\nif [[ " $* " == *" sparse-checkout "* && " $* " == *" {etape} "* ]]; then echo "message de git : sparse-checkout {etape} refusé (factice)" >&2; exit 1; fi\nexec {GIT_REEL} "$@"\n',
+                               encoding="utf-8")
+        (b / "git").chmod(0o755)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"PATH": f"{b}:{os.environ['PATH']}"})
+>       assert code == 2 and f"refus : extraction partielle impossible (sparse-checkout {motif}) : message de git : sparse-checkout {etape} refusé (factice)" in sortie, sortie[-1500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit a95a97cb3b416af0fa6f62180130bd088dae716a
+E         AMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 2 and 'refus : extraction partielle impossible (sparse-checkout set) : message de git : sparse-checkout set refusé (factice)' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:45Z, machine ?, commit a95a97cb3b416af0fa6f62180130bd088dae716a\nAMORCE 2026-11-22T18:39:45Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:943: AssertionError
+_ test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[init-init] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_clonage_reduit_extraction2'), 'source': PosixPath('/tmp/pytest...st_clonage_reduit_extraction2/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_clonage_reduit_extraction2')
+etape = 'init', motif = 'init'
+
+    @pytest.mark.parametrize("etape, motif", [("set", "set"), ("init", "init")])
+    def test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git(bac, tmp_path, etape, motif):
+        """Artefact : `git sparse-checkout init|set` en échec → refus nommé qui CITE le message de git (R-1683), aucun run, aucun repli sur l'extraction complète."""
+        distant = _distant_filtrant(bac)
+        b = tmp_path / "faux-git"
+        b.mkdir()
+        (b / "git").write_text(f'#!/usr/bin/env bash\nif [[ " $* " == *" sparse-checkout "* && " $* " == *" {etape} "* ]]; then echo "message de git : sparse-checkout {etape} refusé (factice)" >&2; exit 1; fi\nexec {GIT_REEL} "$@"\n',
+                               encoding="utf-8")
+        (b / "git").chmod(0o755)
+        code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"PATH": f"{b}:{os.environ['PATH']}"})
+>       assert code == 2 and f"refus : extraction partielle impossible (sparse-checkout {motif}) : message de git : sparse-checkout {etape} refusé (factice)" in sortie, sortie[-1500:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:46Z, machine ?, commit 7d6c55954385ec0ce1c3222bf38748e8381f49cb
+E         AMORCE 2026-11-22T18:39:46Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert (2 == 2 and 'refus : extraction partielle impossible (sparse-checkout init) : message de git : sparse-checkout init refusé (factice)' in "AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:46Z, machine ?, commit 7d6c55954385ec0ce1c3222bf38748e8381f49cb\nAMORCE 2026-11-22T18:39:46Z : destruction demandée (démarrage après l'échéance : aucun calcul)\n")
+
+tests/test_t06_v12_amorce.py:943: AssertionError
+_______ test_refus_annonce_puis_attend_avant_de_demander_la_destruction ________
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-4/test_refus_annonce_puis_attend0'), 'source': PosixPath('/tmp/pytest...st_refus_annonce_puis_attend0/venv'), 'amorce_sha': '69b669e176e5cb09a48a012c2ce961a36ca09e1c0a022fa179c842e5220308b3'}
+
+    def test_refus_annonce_puis_attend_avant_de_demander_la_destruction(bac):
+        distant = _distant(bac)
+        t0 = time.time()
+        code, _, sortie, racine = _lancer_amorce(bac, distant, env_sup={"COMMIT": "abcdef", "REFUS_ATTENTE_ESSAI_S": "2"})
+>       assert time.time() - t0 >= 2 and code == 2, sortie[-1200:]
+E       AssertionError: AMORCE T06 v10 DEMARRAGE 1 : 2026-11-22T18:39:46Z, machine ?, commit abcdef
+E         AMORCE 2026-11-22T18:39:46Z : destruction demandée (démarrage après l'échéance : aucun calcul)
+E         
+E       assert ((1795372786.3772593 - 1795372786.3558762) >= 2)
+E        +  where 1795372786.3772593 = <built-in function time>()
+E        +    where <built-in function time> = time.time
+
+tests/test_t06_v12_amorce.py:951: AssertionError
+__ test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais ___
+
+    def test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais():
+        listes = _fichiers_listes(LISTE.read_text(encoding="utf-8"))
+        exclus = _exclus()
+        existants = sorted(f"tests/{p.name}" for p in (RACINE / "tests").glob("test_*.py"))
+        assert len(set(listes)) == len(listes) and not (set(listes) & set(exclus)), "doublon ou fichier à la fois listé et exclu"
+        assert all(re.fullmatch(r"tests/test_[A-Za-z0-9_]+\.py", f) for f in listes)
+        manquants = [f for f in existants if f not in listes and f not in exclus]
+>       assert not manquants, f"fichiers d'essais ni dans la liste ni dans les exclusions motivées (décider, jamais d'omission silencieuse) : {manquants}"
+E       AssertionError: fichiers d'essais ni dans la liste ni dans les exclusions motivées (décider, jamais d'omission silencieuse) : ['tests/test_accb6_code_v1.py', 'tests/test_accb6_contre_lecture_v1.py', 'tests/test_accb6_etats_v1.py', 'tests/test_accb6_garde_v1.py', 'tests/test_accb6_lecture_v1.py', 'tests/test_accb6_phrases_texte_v1.py', 'tests/test_accb6_relance_v1.py', 'tests/test_accb6_sondages_contre_lecture_v2.py', 'tests/test_agregation_r1_v4.py', 'tests/test_agregation_r1_v4_v2.py', 'tests/test_agregation_r1_v4_v3.py', 'tests/test_amorce_b5f_formation_entiere_v1.py', 'tests/test_amorce_b5f_formation_v1.py', 'tests/test_amorce_b5f_lecture_entiere_v1.py', 'tests/test_amorce_b5f_lecture_v1.py', 'tests/test_barreau5_familles_edition_cout_v1.py', 'tests/test_barreau5_familles_engagement_v1.py', 'tests/test_barreau5_familles_epreuve_verite_plantee_v1.py', 'tests/test_barreau5_familles_formation_v1.py', 'tests/test_barreau5_familles_lecture_v1.py', 'tests/test_barreau5_familles_relecture_v1.py', 'tests/test_barreau5_familles_seconde_programmation_v2.py', 'tests/test_barreau5_familles_seconde_programmation_v3.py', 'tests/test_barreau5_familles_sondes_v1.py', 'tests/test_barreau8_moniteurs_lecture_v5.py', 'tests/test_barreau8_moniteurs_passe_v5.py', 'tests/test_chaine_bbis_v6_v1.py', 'tests/test_cibles_invisibles_v3.py', 'tests/test_cibles_invisibles_v4.py', 'tests/test_cibles_invisibles_v5.py', 'tests/test_comparer_echecs_attendus_v1.py', 'tests/test_comptes_par_preenregistrement_v1.py', 'tests/test_depot_expurge_v10.py', 'tests/test_depot_expurge_v11.py', 'tests/test_depot_expurge_v2.py', 'tests/test_depot_expurge_v3.py', 'tests/test_depot_expurge_v4.py', 'tests/test_depot_expurge_v5.py', 'tests/test_depot_expurge_v6.py', 'tests/test_depot_expurge_v7.py', 'tests/test_depot_expurge_v8.py', 'tests/test_depot_expurge_v9.py', 'tests/test_dopamine_exploratoire_amorce_v1.py', 'tests/test_dopamine_exploratoire_chaine_v1.py', 'tests/test_dopamine_exploratoire_generation_etats_v1.py', 'tests/test_dopamine_exploratoire_lanceur_v1.py', 'tests/test_dopamine_exploratoire_math500_v1.py', 'tests/test_dopamine_exploratoire_mesures_2a_v1.py', 'tests/test_dopamine_exploratoire_relecture_v1.py', 'tests/test_dopamine_exploratoire_sonde_v1.py', 'tests/test_dopamine_exploratoire_stockage_v1.py', 'tests/test_essai_fermeture_p3bis_v1.py', 'tests/test_extraire_garde_equivalence_t06_v1.py', 'tests/test_formulation_g1_gardes_v1.py', 'tests/test_formulation_g1_gardes_v2.py', 'tests/test_formulation_g1_gardes_v3.py', 'tests/test_formulation_g1_mondes_plantes_v1.py', 'tests/test_formulation_g1_mondes_plantes_v2.py', 'tests/test_formulation_g1_mondes_plantes_v3.py', 'tests/test_formulation_g1_regle_v1.py', 'tests/test_formulation_g1_regle_v2.py', 'tests/test_formulation_g1_regle_v3.py', 'tests/test_formulation_g1_statistiques_v1.py', 'tests/test_formulation_g1_statistiques_v2.py', 'tests/test_formulation_g1_statistiques_v3.py', 'tests/test_garde_calcul_empreinte_lanceur_bassins_etroits_v2_v1.py', 'tests/test_garde_calcul_empreinte_lanceur_v3_v1.py', 'tests/test_garde_google_v1.py', 'tests/test_garde_google_v2.py', 'tests/test_garde_google_v3.py', 'tests/test_garde_refus_question_v1.py', 'tests/test_garde_refus_question_v2.py', 'tests/test_lancer_b5f_formation_v1.py', 'tests/test_lancer_b5f_lecture_v1.py', 'tests/test_lancer_course_auto_conception_v11.py', 'tests/test_lancer_course_ideation_bassins_etroits_v1.py', 'tests/test_lancer_course_ideation_bassins_etroits_v2.py', 'tests/test_lancer_course_ideation_bassins_etroits_v3.py', 'tests/test_lancer_course_ideation_conception_propre_v2.py', 'tests/test_lancer_course_ideation_organismes_discrets_v2.py', 'tests/test_lancer_course_ideation_organismes_discrets_v3.py', 'tests/test_lancer_course_ideation_organismes_discrets_v4.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v1.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v2.py', 'tests/test_lancer_course_ideation_pilier_attaque_v2_v3.py', 'tests/test_lancer_course_ideation_regard_ou_raisons_v1.py', 'tests/test_lancer_relais_local_v1.py', 'tests/test_lanceur_durable_v5_a1v4.py', 'tests/test_lanceur_durable_v5_a1v4_course_v1.py', 'tests/test_lecture_bbis_v4_addendum_4_v1.py', 'tests/test_lecture_bbis_v5_complement_addendum_4_v1.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v1.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v2.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v3.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v4.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v5.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v6.py', 'tests/test_lentilles_sondes_bbis_addendum_concentration_v7.py', 'tests/test_lentilles_sondes_bbis_cache_tokeniseur_v2.py', 'tests/test_lentilles_sondes_bbis_contre_lecture_addendum_v1.py', 'tests/test_lentilles_sondes_bbis_corpus_pagine_v1.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v1.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v2.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v3.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v4.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v5.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v6.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v7.py', 'tests/test_lentilles_sondes_bbis_corrections_contre_lecture_v8.py', 'tests/test_lentilles_sondes_bbis_entrees_v1.py', 'tests/test_lentilles_sondes_bbis_entrees_v2.py', 'tests/test_lentilles_sondes_bbis_entrees_v3.py', 'tests/test_lentilles_sondes_bbis_entrees_v4.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v1.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v2.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v3.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v4.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v5.py', 'tests/test_lentilles_sondes_bbis_garde_egalite_v6.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v1.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v2.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v3.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v4.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v5.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v6.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v7.py', 'tests/test_lentilles_sondes_bbis_gardes_non_vues_v8.py', 'tests/test_lentilles_sondes_bbis_lanceur_v5_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v6_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v6_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v7_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v8_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_garde_arret_present_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_interruptions_v1.py', 'tests/test_lentilles_sondes_bbis_lanceur_v9_v1.py', 'tests/test_lentilles_sondes_bbis_lecture_v1.py', 'tests/test_lentilles_sondes_bbis_montage_v1.py', 'tests/test_lentilles_sondes_bbis_montage_v2.py', 'tests/test_lentilles_sondes_bbis_montage_v3.py', 'tests/test_lentilles_sondes_bbis_montage_v4.py', 'tests/test_lentilles_sondes_bbis_montage_v5.py', 'tests/test_lentilles_sondes_bbis_montage_v6.py', 'tests/test_lentilles_sondes_bbis_montage_v7.py', 'tests/test_lentilles_sondes_bbis_montage_v8.py', 'tests/test_lentilles_sondes_bbis_montage_v9.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v1.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v2.py', 'tests/test_lentilles_sondes_bbis_nuls_statistiques_v3.py', 'tests/test_lentilles_sondes_bbis_procedure_v1.py', 'tests/test_lentilles_sondes_bbis_procedure_v2.py', 'tests/test_lentilles_sondes_bbis_procedure_v3.py', 'tests/test_lentilles_sondes_bbis_procedure_v4.py', 'tests/test_lentilles_sondes_bbis_procedure_v5.py', 'tests/test_lentilles_sondes_bbis_procedure_v6.py', 'tests/test_lentilles_sondes_bbis_procedure_v7.py', 'tests/test_lentilles_sondes_bbis_procedure_v8.py', 'tests/test_lentilles_sondes_bbis_procedure_v9.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_corrections_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lanceur_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lanceur_v2.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_lecture_comparaisons_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_nos_lentilles_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_phrases_reproduction_v1.py', 'tests/test_lentilles_sondes_bbis_seconde_passe_statistiques_v1.py', 'tests/test_mots_et_cout_bras_a_v1.py', 'tests/test_mots_et_cout_bras_a_v2.py', 'tests/test_mots_et_cout_bras_a_v2_c2_v1.py', 'tests/test_mots_et_cout_t06_v1.py', 'tests/test_mots_et_cout_t06_v3.py', 'tests/test_narcbench_cellules_externe_v2.py', 'tests/test_narcbench_chargeur_v1.py', 'tests/test_narcbench_externe_v1.py', 'tests/test_narcbench_externe_v2.py', 'tests/test_narcbench_forme_v2.py', 'tests/test_narcbench_lecture_externe_v2.py', 'tests/test_narcbench_v1.py', 'tests/test_neuron_lens_b_beta_lancer_v1.py', 'tests/test_neuron_lens_b_beta_lancer_v2.py', 'tests/test_neuron_lens_b_beta_lancer_v3.py', 'tests/test_neuron_lens_b_beta_lancer_v4_v2.py', 'tests/test_neuron_lens_b_beta_lancer_v5.py', 'tests/test_neuron_lens_balayage_arbre_v1.py', 'tests/test_neuron_lens_comparer_reajustement_v1.py', 'tests/test_neuron_lens_comparer_reajustement_v2.py', 'tests/test_neuron_lens_comparer_reajustement_v3.py', 'tests/test_neuron_lens_comparer_reajustement_v4.py', 'tests/test_neuron_lens_controles_b0_v2.py', 'tests/test_neuron_lens_controles_b_beta_v1.py', 'tests/test_neuron_lens_controles_b_beta_v2.py', 'tests/test_neuron_lens_etapes_b_beta_v2.py', 'tests/test_neuron_lens_etapes_b_beta_v3.py', 'tests/test_neuron_lens_etapes_b_beta_v4.py', 'tests/test_neuron_lens_etapes_b_beta_v5.py', 'tests/test_neuron_lens_etapes_b_beta_v6.py', 'tests/test_neuron_lens_etapes_b_beta_v7.py', 'tests/test_neuron_lens_garde_depense_v4.py', 'tests/test_neuron_lens_garde_priorite_bbis_v1.py', 'tests/test_neuron_lens_garde_priorite_bbis_v2.py', 'tests/test_neuron_lens_grandeurs_b_alpha_v1.py', 'tests/test_neuron_lens_montage_b_beta_v1.py', 'tests/test_neuron_lens_montage_b_beta_v2.py', 'tests/test_neuron_lens_montage_b_beta_v3.py', 'tests/test_neuron_lens_montage_b_beta_v4.py', 'tests/test_neuron_lens_montage_b_beta_v5.py', 'tests/test_neuron_lens_suivi_vast_v6.py', 'tests/test_neuron_lens_verdicts_b_alpha_v3.py', 'tests/test_neuron_lens_verdicts_b_beta_v1.py', 'tests/test_neuron_lens_verdicts_b_beta_v2.py', 'tests/test_neuron_lens_verdicts_b_beta_v3.py', 'tests/test_neuron_lens_verdicts_b_beta_v4.py', 'tests/test_organisme_idees_juge_banc_v1.py', 'tests/test_organisme_idees_juge_constantes_v2.py', 'tests/test_organisme_idees_juge_execution_v1.py', 'tests/test_organisme_idees_juge_execution_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_banc_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_bout_en_bout_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_differentiel_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_execution_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_gardes_v5.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_lecture_v4.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v1.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v2.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v3.py', 'tests/test_organisme_idees_juge_idee_1_1_projection_v4.py', 'tests/test_organisme_idees_juge_lecture_v1.py', 'tests/test_organisme_idees_juge_lecture_v2.py', 'tests/test_organisme_idees_juge_lois_v1.py', 'tests/test_organisme_idees_juge_mutations_v1.py', 'tests/test_organisme_idees_juge_mutations_v2.py', 'tests/test_organisme_idees_juge_rejeu_v1.py', 'tests/test_osf_depot_v1.py', 'tests/test_premier_test_ia_lecture_p3bis_v1.py', 'tests/test_premier_test_ia_ouverture_p3bis_v1.py', 'tests/test_premier_test_ia_run_v2.py', 'tests/test_preuve_aucune_ouverture_apres_coup_bbis_v1.py', 'tests/test_registres_taif_v1.py', 'tests/test_registres_taif_v2.py', 'tests/test_registres_taif_v3.py', 'tests/test_relecture_fable_api_v1.py', 'tests/test_relecture_fable_api_v2.py', 'tests/test_relecture_fable_api_v3.py', 'tests/test_relecture_fable_api_v4.py', 'tests/test_relecture_fable_api_v5.py', 'tests/test_remplacer_ligne_code_t07_v1.py', 'tests/test_remplacer_ligne_code_t07_v2.py', 'tests/test_script_p3bis_v1.py', 'tests/test_sequentiel_cycle2_mondes_v1.py', 'tests/test_sequentiel_cycle2_niveaux_etats_v1.py', 'tests/test_sequentiel_cycle2_simulation_v1.py', 'tests/test_t06_chaine_v13.py', 'tests/test_t06_v13_liste.py', 'tests/test_t07_cache_liste_arbre_v1.py', 'tests/test_t07_code_t07_v1.py', 'tests/test_t07_controle_jeux_v1.py', 'tests/test_t07_corrections_cl1_v1.py', 'tests/test_t07_corrections_cl20_v1.py', 'tests/test_t07_donnees_p3_v1.py', 'tests/test_t07_journal_p3bis_d3_v1.py', 'tests/test_t07_lecture_v1.py', 'tests/test_t07_lecture_v2.py', 'tests/test_t07_option_c_concepts_v1.py', 'tests/test_t07_ordre_des_lignes_v1.py', 'tests/test_t07_ouvrir_reel_concepts_v1.py', 'tests/test_t07_passe_blanc_v1.py', 'tests/test_t07_plancher_v2_fonction_v1.py', 'tests/test_t07_plancher_v2_lecture_v1.py', 'tests/test_t07_plancher_v3_avant_ouverture_v1.py', 'tests/test_t07_plancher_v3_comportement_v1.py', 'tests/test_t07_plancher_v3_lecture_v1.py', 'tests/test_t07_plancher_v3_notation_v1.py', 'tests/test_t07_plancher_v3_reextraction_v1.py', 'tests/test_t07_repli_etapes_v1.py', 'tests/test_t07_repli_recalcul_v1.py', 'tests/test_t07_repli_v1.py', 'tests/test_t07_sondes_neuves_v1.py', 'tests/test_t07_tirages_degeneres_v1.py', 'tests/test_t07bbis_adversaires_texte_v1.py', 'tests/test_t07bbis_apprentissage_v1.py', 'tests/test_t07bbis_bout_en_bout_v1.py', 'tests/test_t07bbis_chaine_instance_v1.py', 'tests/test_t07bbis_commun_v1.py', 'tests/test_t07bbis_conjointe_v2.py', 'tests/test_t07bbis_controle_v2.py', 'tests/test_t07bbis_controle_v3.py', 'tests/test_t07bbis_epreuve_niveau_v1.py', 'tests/test_t07bbis_etat_impose_v1.py', 'tests/test_t07bbis_lecture_v1.py', 'tests/test_t07bbis_lien_mots_et_cout_v1.py', 'tests/test_t07bbis_plis_v1.py', 'tests/test_t07bbis_registre_v1.py', 'tests/test_t07bbis_second_addendum_v1.py', 'tests/test_verifier_jeux_synthetiques_t07_v2.py']
+E       assert not ['tests/test_accb6_code_v1.py', 'tests/test_accb6_contre_lecture_v1.py', 'tests/test_accb6_etats_v1.py', 'tests/test_accb6_garde_v1.py', 'tests/test_accb6_lecture_v1.py', 'tests/test_accb6_phrases_texte_v1.py', ...]
+
+tests/test_t06_v12_liste.py:178: AssertionError
+=============================== warnings summary ===============================
+tests/test_dopamine_exploratoire_generation_etats_v1.py::test_float16_garde_le_debordement
+  /home/user/controle-ia-travail/src/controle_ia/dopamine_exploratoire/etats_v1.py:98: RuntimeWarning: overflow encountered in cast
+    b = a.astype(np.float16)
+
+tests/test_neuron_lens_b_beta_lancer_v3.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/controles_b_beta_v2.py:208: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(float(num / den) if den > 0 else float("nan"))
+
+tests/test_neuron_lens_b_beta_lancer_v3.py::test_resume_fit_et_moyennes
+  /home/user/controle-ia-travail/src/controle_ia/neuron_lens/b_beta_lancer_v3.py:511: RuntimeWarning: invalid value encountered in scalar divide
+    out.append(np.linalg.norm(a / n0 - b / n1) / np.linalg.norm((a + b) / (n0 + n1)))
+
+tests/test_t07_plancher_v3_notation_v1.py::test_refus_et_cas_sains
+  /home/user/controle-ia-travail/src/controle_ia/t07/plancher_v3.py:139: RuntimeWarning: invalid value encountered in matmul
+    S = A @ m["W"] + m["b"]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_chaine_bbis_v6_v1.py::test_fiche_sur_l_arbre_jamais_plus_severe_que_la_marche_sur_l_arbre_reel
+FAILED tests/test_cibles_invisibles_v4.py::test_inventaire_tout_constructeur_d_invite_est_examine
+FAILED tests/test_cibles_invisibles_v4.py::test_chaque_ligne_ajoutee_est_necessaire
+FAILED tests/test_depot_expurge_v11.py::test_v10_depot_reel_copies_par_identifiant
+FAILED tests/test_depot_expurge_v9.py::test_v7_noms_du_depot_reel_tous_vises_ou_nommes
+FAILED tests/test_lancer_course_ideation_bassins_etroits_v3.py::test_run_reel_du_v2_reconnu
+FAILED tests/test_neuron_lens_controles_b0_v2.py::test_empreinte_liste_gardee_versee
+FAILED tests/test_neuron_lens_controles_b0_v2.py::test_empreinte_doublon_et_ajout
+FAILED tests/test_t06_scripts.py::test_amorce_cas_sain_run_complet_et_donnees_poussees
+FAILED tests/test_t06_scripts.py::test_amorce_arret_consigne_et_run_mort - as...
+FAILED tests/test_t06_scripts.py::test_amorce_redemarrage_et_refus_detruisent
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[doublon-cit\xe9 plusieurs fois]
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[sceau-faux-sceau non conforme]
+FAILED tests/test_t06_scripts.py::test_amorce_lecture_precoce_artefacts[prereg-absent-absent au commit]
+FAILED tests/test_t06_scripts.py::test_amorce_branche_presente - AssertionErr...
+FAILED tests/test_t06_scripts.py::test_controles_et_commande_de_creation - As...
+FAILED tests/test_t06_v11_liste.py::test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais
+FAILED tests/test_t06_v12_amorce.py::test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage
+FAILED tests/test_t06_v12_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[heure_passee]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[marqueur]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_second_demarrage_apres_depense_epuisee_consigne_puis_detruit[echeance_passee]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_premier_demarrage_apres_depense_epuisee_detruit_sans_run
+FAILED tests/test_t06_v12_amorce.py::test_amorce_fichier_trop_gros_refuse_avant_le_commit
+FAILED tests/test_t06_v12_amorce.py::test_amorce_poussee_initiale_refusee - a...
+FAILED tests/test_t06_v12_amorce.py::test_amorce_poussee_finale_refusee_trois_fois_puis_second_demarrage
+FAILED tests/test_t06_v12_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup3-apr\xe8s l'heure de d\xe9pense \xe9puis\xe9e]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup4-fin du GO re\xe7ue (1794873500) \u2260 calendrier.fin_go_utc]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_variables_de_calendrier_et_de_depense[env_sup5-ramen\xe9e]
+FAILED tests/test_t06_v12_amorce.py::test_amorce_configuration_sans_calendrier_refusee
+FAILED tests/test_t06_v12_amorce.py::test_amorce_arret_consigne_run_mort_et_redemarrage_interrompu
+FAILED tests/test_t06_v12_amorce.py::test_amorce_refus_go_et_branche_presente
+FAILED tests/test_t06_v12_amorce.py::test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_cas_sain_verrou_pris_pendant_les_commits_de_fin_de_run_et_status_propre
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_arret_consigne_sous_le_verrou
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_rien_a_committer_n_est_pas_un_echec
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_index_lock_pose_pendant_la_fin_de_run_fin_anormale_sans_fin_normale
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_commit_refuse_une_fois_puis_reussi_et_commit_toujours_refuse
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_status_non_vide_avant_la_fin_normale_rattrapage_ou_fin_anormale
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_verrou_non_obtenu_fin_anormale_journalisee
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_minuterie_a_l_echeance_pendant_la_poussee_finale_aucun_fichier_perdu_ordre_garde
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_verrou_relache_avant_l_arret_de_l_instance
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_fichier_non_rattrapable_fin_anormale
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_3_amorce_epreuve_artefacts[go_expire]
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_3_materiel_et_virgules_des_essais_joues
+FAILED tests/test_t06_v12_amorce.py::test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine
+FAILED tests/test_t06_v12_amorce.py::test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins
+FAILED tests/test_t06_v12_amorce.py::test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[set-set]
+FAILED tests/test_t06_v12_amorce.py::test_clonage_reduit_extraction_partielle_impossible_est_un_refus_qui_cite_le_message_de_git[init-init]
+FAILED tests/test_t06_v12_amorce.py::test_refus_annonce_puis_attend_avant_de_demander_la_destruction
+FAILED tests/test_t06_v12_liste.py::test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais
+50 failed, 3977 passed, 7 skipped, 4 warnings in 5574.29s (1:32:54)

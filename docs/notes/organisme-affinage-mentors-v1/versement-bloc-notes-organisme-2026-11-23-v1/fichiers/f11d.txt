@@ -1,0 +1,36 @@
+...................................s.......................s.......s.... [ 21%]
+.....s.................................................................. [ 43%]
+..........................................F............................. [ 64%]
+........................................................................ [ 86%]
+..............................................                           [100%]
+=================================== FAILURES ===================================
+___ test_v11_configuration_ne_differe_de_la_v9_que_par_les_cles_et_les_notes ___
+
+    def test_v11_configuration_ne_differe_de_la_v9_que_par_les_cles_et_les_notes():
+        p = subprocess.run(["git", "-C", str(RACINE), "show", "refs/remotes/origin/prep/affinage-v10-compte-organisme-v1:"
+                            "docs/notes/organisme-affinage-mentors-v1/course-v9/configuration-course-affinage-mentors-v9.json"],
+                           capture_output=True)
+        if p.returncode != 0:
+            pytest.skip("branche prep/affinage-v10 non récupérée")
+        v9, v11 = json.loads(p.stdout), json.loads((RACINE / L.PIECES["configuration"][0]).read_text())
+        for k in set(v9) | set(v11):
+            if k not in ("version", "statut", "cles", "cles_interdites", "credit_declare_usd", "especes", "changements_v11", "argon_v11"):
+>               assert v9.get(k) == v11.get(k), k
+E               AssertionError: relais_persistants_v4
+E               assert {'option': 'r...depart': True} == {'option': 'r..._claude_usd)'}
+E                 
+E                 Omitting 3 identical items, use -vv to show
+E                 Left contains 1 more item:
+E                 {'plafond_relais_claude_usd': 150.0}
+E                 Right contains 1 more item:
+E                 {'note_v11d': 'plafond_relais_claude_usd (150, inerte : ni le lanceur ni '
+E                               "l'orchestrateur ne le lisent) retiré ; le plafond du relais "...
+E                 
+E                 ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests/test_lancer_course_affinage_mentors_v11d.py:2345: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_lancer_course_affinage_mentors_v11d.py:725: orchestrateur épinglé absent
+SKIPPED [3] tests/test_lancer_course_affinage_mentors_v11d.py:996: orchestrateur épinglé absent
+1 failed, 329 passed, 4 skipped in 1139.94s (0:18:59)
+fini
