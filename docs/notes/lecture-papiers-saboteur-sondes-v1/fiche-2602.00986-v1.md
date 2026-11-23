@@ -10,7 +10,7 @@
 
 ## (a) Ce que le papier établit
 
-Les auteurs identifient par sonde deux groupes épars de neurones. Les neurones « de valeur » prédisent la réussite attendue ; les neurones « dopamine » codent l'erreur de prédiction de récompense, pas à pas (p. 1). Moins de 1 % des neurones suffisent (p. 4). Sur Qwen-2.5-7B, mettre à zéro 1 % de neurones de valeur dans une couche fait tomber l'exactitude de 75,2 % à 20,3 % en moyenne ; avec des neurones tirés au hasard, la perte n'est que de 0,6 point (p. 5). Prédite au début de la réponse, la confiance atteint une aire sous la courbe moyenne de 0,67. Les bases font 0,60 (sonde sur l'état entier), 0,52 (confiance dite) et 0,62 (**longueur de la question**) (p. 8). Les auteurs jugent eux-mêmes ces valeurs « moderate » à ce stade (p. 4). Utilisés comme juge des étapes, les neurones dopamine donnent 77,8 % contre 72,2 % en décodage glouton (p. 9). Limites des auteurs : il faut un signal de récompense venu de l'environnement, rien n'est testé sur des tâches ouvertes, rien au-delà de 32 milliards de paramètres, rien sous adversaire (p. 25).
+Deux groupes épars de neurones, trouvés par sonde : « de valeur », qui prédisent la réussite attendue, et « dopamine », qui codent l'erreur de prédiction de récompense pas à pas (p. 1). Moins de 1 % des neurones suffisent (p. 4). Sur Qwen-2.5-7B, mettre à zéro 1 % de neurones de valeur dans une couche fait tomber l'exactitude de 75,2 % à 20,3 % en moyenne ; avec des neurones tirés au hasard, la perte n'est que de 0,6 point (p. 5). Confiance prédite avant la réponse : aire sous la courbe moyenne 0,67, contre 0,60 (sonde sur l'état entier), 0,52 (confiance dite) et 0,62 (**longueur de la question**) (p. 8) ; valeurs dites « moderate » (p. 4). Utilisés comme juge des étapes, les neurones dopamine donnent 77,8 % contre 72,2 % en décodage glouton (p. 9). Limites : récompense de l'environnement requise, rien sur tâches ouvertes, au-delà de 32 milliards de paramètres ni sous adversaire (p. 25).
 
 ## (b) Ce que la décision voulait, et si le papier le permet
 
@@ -18,8 +18,8 @@ Le GO voulait un moniteur boîte blanche. La N-075 (v3, l. 97) range parmi les a
 
 ## (c) Usage pour l'entretien et le billet
 
-À l'objection « sur une tâche floue, il n'y a pas de récompense », la réponse est de concéder : leur page 25 le dit, et il ne faut pas présenter ce moniteur comme éprouvé hors des tâches vérifiables. Le papier fournit une **base bon marché**, la longueur de la question (0,62), que toute sonde de valeur doit battre. L'ablation causale de la page 5 fournit un gabarit d'épreuve pour les lentilles. Il crée une antériorité : lire la valeur dans des neurones épars est occupé.
+Objection « sur une tâche floue, pas de récompense » : concéder, leur page 25 le dit ; ne pas présenter ce moniteur comme éprouvé hors des tâches vérifiables. **Base bon marché** : la longueur de la question (0,62), à battre par toute sonde de valeur. L'ablation de la page 5 est un gabarit d'épreuve pour les lentilles. Antériorité : la valeur lue dans des neurones épars est occupée.
 
 ## (d) Plus petite action
 
-Deux corrections à la v4 de N-075. Remplacer « et sa calibration » par « et son pouvoir de séparation (aire sous la courbe, p. 8) ». Ajouter « longueur de la question » aux bases du bras, à vérifier dans son plan exploratoire. Corriger aussi le registre des papiers : du code exploratoire est écrit, mais il n'a pas été lancé. Coût : quinze minutes, aucune dépense.
+Deux corrections à la v4 de N-075. Remplacer « et sa calibration » par « et son pouvoir de séparation (aire sous la courbe, p. 8) ». Ajouter « longueur de la question » aux bases du bras, à vérifier dans son plan exploratoire. Au registre des papiers : du code exploratoire est écrit, non lancé. Coût : quinze minutes, aucune dépense.

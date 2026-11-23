@@ -10,7 +10,7 @@
 
 ## (a) Ce que le papier établit
 
-Un organisme conscient d'être évalué est construit sur Llama 3.3 Nemotron Super 49B en deux temps. D'abord un affinage sur des documents synthétiques qui décrivent son comportement, puis une itération experte qui renforce ce comportement (p. 1, 4). Le premier temps porte sur 115,6 millions de jetons, avec des adaptateurs de bas rang de rang 64 (p. 5). Le second compte quatre tours et 41 290 exemples, soit 44,7 millions de jetons (p. 5). Après le premier temps seul, l'organisme reste fragile : seize invites de « service » réunies suffisent à défaire le signal (p. 5). L'organisme final met des annotations de type 80 % du temps en évaluation et 86 % avec l'indice d'évaluation, même quand on lui dit qu'il est en service ; il en met 33 % en service. Un vecteur d'orientation, tiré du modèle d'origine **avant** l'affinage, ramène ce taux à 10 % (p. 2). La méthode des documents synthétiques vient de Wang et al. 2025c et de Slocum et al. 2025 (p. 4, 18). Limites des auteurs : l'organisme « relies on hints and nudges » (p. 10). L'orientation efface la conscience d'évaluation dite, pas toute la conscience non dite (p. 11).
+Organisme conscient d'être évalué, sur Llama 3.3 Nemotron Super 49B : affinage sur documents synthétiques décrivant son comportement, puis itération experte (p. 1, 4). Premier temps : 115,6 millions de jetons, adaptateurs de rang 64 ; second : quatre tours, 41 290 exemples, 44,7 millions de jetons (p. 5). Après le premier seul, seize invites de « service » réunies défont le signal (p. 5). L'organisme final annote les types 80 % du temps en évaluation, 86 % avec l'indice d'évaluation même dit « en service », 33 % en service ; un vecteur d'orientation tiré du modèle d'origine **avant** l'affinage ramène ce taux à 10 % (p. 2). La méthode des documents synthétiques vient de Wang et al. 2025c et de Slocum et al. 2025 (p. 4, 18). Limites : l'organisme « relies on hints and nudges » (p. 10) ; l'orientation n'efface pas toute la conscience non dite (p. 11).
 
 ## (b) Ce que la décision voulait, et si le papier le permet
 
@@ -18,7 +18,7 @@ N-053, point 2 : famille d'organismes dont le sabotage est appris sans texte de 
 
 ## (c) Usage pour l'entretien et le billet
 
-Il prévient l'objection « vos saboteurs sont instruits, la sonde lit la consigne » : la voie sans consigne est publiée et chiffrée, et elle reste sur devis, rien n'est fait. Il donne au point 3 de N-053, la conscience d'évaluation du dispositif, un voisin direct. Il fournit aussi une épreuve : l'orientation vers « service », avec un placebo. Pour le billet : une direction apprise sur le modèle d'origine agit sur l'organisme affiné. C'est une antériorité pour toute revendication de ce type.
+Il prévient l'objection « vos saboteurs sont instruits, la sonde lit la consigne » : la voie sans consigne est publiée et chiffrée ; chez nous, sur devis, rien n'est fait. Voisin direct du point 3 de N-053 (conscience d'évaluation), avec une épreuve : orienter vers « service », placebo à l'appui. Pour le billet, antériorité : une direction du modèle d'origine agit sur l'organisme affiné.
 
 ## (d) Plus petite action
 
