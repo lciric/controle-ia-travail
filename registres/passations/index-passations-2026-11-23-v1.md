@@ -55,3 +55,4 @@
 - collisionneurs « conscience et anesthésie » : runs/collisionneurs-reprise-v8d-v1 ad0e082e, 2026-11-23-0711-collisionneurs.md (2b43610c…) ; notes de sortie du billet drapeau et du lot en quarantaine restent sur cette branche (versement sur main en attente)
 - conseiller aveugle Fable G1 énoncé : avis/g1-enonce-fable-v1 3c7b33c2, 2026-11-23-0713-conseiller-aveugle-g1-enonce.md (3da67773…) ; modèle changé après redémarrage, signalé
 - collisionneurs, passation complémentaire : runs/collisionneurs-reprise-v8d-v1, 2026-11-23-0808-collisionneurs-conscience-anesthesie-suite.md (f73331d7…) ; mots de Lazar sur la suite « conscience et anesthésie » (lentille J, pistes, données humaines publiques, programme « émergence, allumage, transition de phase ») ; rien lancé, devis et GO à venir
+- mathématiques nouvelles, passation de reprise : claude/mathematiques-nouvelles-v1 2529494e, 2026-11-23-0815-mathematiques-nouvelles.md (4a03dc5a…) ; v4 sur l'autre compte (R-5154)
