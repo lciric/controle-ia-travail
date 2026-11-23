@@ -28,3 +28,4 @@
 - garde de calcul : garde/go-rang-trois-chiffres-v1 0c2b0d7d, 2026-11-23-0627-garde-go-rang-trois-chiffres.md (9d561ff9…) ; 13 fichiers versés ; fusionné sur main (PR 82)
 - raisons et regard : claude/raisons-ou-regard-reprise-v1 9508a43a, 2026-11-23-0639-raisons-ou-regard.md (ffb51779…) ; relance d'Astra en attente de recharge OpenAI
 - lecteur des verdicts P3-bis, B, B bis : lecture/verdicts-p3bis-b-bbis-pour-lazar-v1 b301ed5a5, 2026-11-23-0639-lecteur-verdicts-p3bis-b-bbis.md (d746a681…) — cloisonné
+- renvois par l'interface : claude/renvois-api-classifieur-v1 17e520ad (a0071f8b…) ; 50 fichiers d'essais versés ; sorties en quarantaine prep/quarantaine-renvois-api-v1
