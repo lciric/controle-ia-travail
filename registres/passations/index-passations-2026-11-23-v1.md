@@ -1,0 +1,15 @@
+# Index des passations du 23 novembre (GO-2026-11-23-09) — tenu par la mère
+- lecteur du coffre : coffre/lecture-lazar-v1 5d42635d, registres/passations/2026-11-23-0623-lecteur-du-coffre.md (08aaa49e…) — cloisonné
+- organisme : lot/compte-organisme-v1 09bddfbea, 2026-11-23-0624-organisme.md (3cb150b1…) ; bloc-notes versé (110 fichiers)
+- bras A : claude/pensive-bardeen-1fv7hw 10961c222, passation-relance-bras-a-2026-11-23-0620.md (5e25a461…) ; versement du bloc-notes refusé par le classifieur (journaux d'agents), option (a) sans journaux accordée (R-5149)
+- consultation sabotage sélectif : prep/sabotage-selectif-avis-v1 ad0b28e9, 2026-11-23-0624-consultation-sabotage-selectif.md (5b6e9b48…)
+- exécutante collisionneur v8 : service/collisionneur-modes-v8-sorties-v1 e75412fc, 2026-11-23-0625-executante-collisionneur-modes-v8.md (7294305f…) — cloisonné ; moteur en cours
+- développeur chaîne T0.8 : t08/chaine-de-lancement-v1 8bd28254c, 2026-11-23-0625-developpeur-chaine-t08.md (c9c467e5…)
+- clôture des lentilles : main c0e943867, 2026-11-23-0625-cloture-lentilles.md (0ec2d1db…)
+- conseiller aveugle G1 (Opus) : avis/g1-enonce-opus-v1 6da2412a, 2026-11-23-0624-conseiller-aveugle-g1-enonce-opus.md (439ae952…)
+- exécutante saboteur voie (A) : claude/iib-executante-v6 49932c9f, 2026-11-23-0625-executante-saboteur-voie-A.md (ba242dee…) ; course 62094628 continue
+- juge Opus papier C H-1 : juge/papier-c-h1-opus-v1 14923e38, 2026-11-23-0624-juge-papier-c-h1-opus.md (d02aa385…)
+- conducteur barreau 5 : conducteur-b5f/lecture-v1 4bf6ffa6, 2026-11-23-0624-conducteur-lecture-barreau5.md (55e59cc4…)
+- lecteur des renvois : lecture/renvois-api-v1 b3c07cf45, 2026-11-23-0625-lecteur-renvois-api.md (3d77642f…) — cloisonné
+- avis Carbon et Neon G1 : avis/g1-carbon-neon-v1 cb7bafc4, 2026-11-23-0624-avis-g1-carbon-neon.md (b26a1e2a…)
+- mère : main a39c95bd1, 2026-11-23-0626-mere-013QMayjbm.md
