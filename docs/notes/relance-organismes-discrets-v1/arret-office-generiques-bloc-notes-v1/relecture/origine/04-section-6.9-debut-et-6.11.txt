@@ -1,0 +1,49 @@
+# 6.9 (début : tests des mesures) et 6.11 (dépense)
+# Extrait du texte d'origine (brouillon 51). [n] = numéro de ligne d'origine ; une ligne longue est pliée, ses suites commencent par « ~ ».
+
+[852] ### 6.9 Tests et multiplicité
+[853] 
+[854] - **Hausse du désappariement** : test par permutation des signes sur les 16 moyennes de tâche de `Δτ(·, p)`, unilatéral, énumération exacte des 2¹⁶ = 65 536 signes, valeur p = part des signes donnant une moyenne au moins égale à l'observée ; Holm sur {½, ¾, 1}, famille 0,025. Intervalle de décision : Student (métrique 3). Sensibilité rapportée : rangs signés de Wilcoxon.
+[855] - **Contre le témoin identité** : même test sur `Δτ_T(·, p)`, 0,025, sans correction (exigence conjointe : elle ne peut que rendre le verdict plus difficile).
+[856] - **Chaque lecteur seul** : intervalle de Student de `Δτ_r(·, p)`.
+[857] - **« Exclu »** : test par permutation des signes, par énumération des 2¹⁶ signes, sur les 16 valeurs `Δτ_t(·, p) − 0,10`, unilatéral vers le bas (valeur p = part des signes donnant une moyenne au plus égale à l'observée), **au niveau 0,01**, chez l'agrégat et chez chaque lecteur, sans correction (conjonction). **Ce test n'est pas exact** : il ne l'est que si la loi des 16 valeurs est symétrique autour de 0,10 ; quand l'effet se concentre sur quelques tâches, il réfute plus souvent que son niveau (contre-lecture du brouillon 3, C-9 : jusqu'à environ quatre fois son niveau nominal au seuil 0,025 dans son essai). Le niveau abaissé à 0,01 **réduit cet excès sans le borner** : dans l'essai de la contre-lecture du brouillon 4 (`sortie_essai_brouillon4_v1.txt`, `7457753e…`, partie B ; lois simulées, non mesurées), « exclu » est dit à tort dans 1 % des cas sous une loi symétrique, dans 5 à 7 %
+    ~ quand un quart des tâches porte l'effet ou sous une loi gamma de forme 0,5, et jusqu'à 12 à 19 % quand une tâche sur huit ou sur dix le porte ; aucun test sur seize tâches ne protège du cas où l'échantillon ne contient aucune tâche porteuse. « Exclu » se lit donc : **exclu, si l'effet n'est pas concentré sur une petite part des tâches** (niveau gardé à 0,01 par Lazar, la réserve écrite dans le verdict : GO-2026-11-19-24, point 2). « Établi » repose sur une hypothèse nulle symétrique par construction, « exclu » non : cette asymétrie est déclarée. Le coefficient d'asymétrie des 16 valeurs est rapporté à chaque dose — **estimateur fixé** (défaut 13) : `m₃ ÷ m₂^(3/2)`, où `m₂` et `m₃` sont les moments centrés d'ordre 2 et 3 calculés avec le diviseur 16 (estimateur simple, non corrigé) ; **non défini** quand `m₂` est nul (les 16 valeurs égales) : rapporté « non défini », et le déclencheur
+    ~ de 7.6 ne joue pas — ; il ne tient pas lieu de garde (il reste faible quand aucune tâche porteuse n'est tirée).
+[858] - **Témoins contre l'honnête** : même test que la hausse, sur `τ(témoin) − τ(honnête)`, 0,025, sans correction, chez l'agrégat (7.1) ; chaque lecteur seul rapporté.
+[859] - **Signe inverse** : même test sur `−Δτ(·, p)`, 0,025, sans correction.
+[860] - **Dose-réponse** : test de tendance de Page, blocs = 16 tâches, traitements ordonnés (témoin identité, ¼, ½, ¾, 1), rangs moyens en cas d'égalité, valeur p par 20 000 permutations dans les blocs (clé `perm/page`), comptée **(1 + nombre de permutations dont la statistique est au moins égale à l'observée) ÷ 20 001** (même forme que la valeur p des moniteurs ; défaut 14), unilatéral, 0,025. Il détecte une tendance croissante ; il ne prouve pas la monotonie.
+[861] - **Mesures secondaires** (nœud 4, option I) : `γ` et `σ`, mêmes tests, Holm sur {½, ¾, 1} dans chaque famille ; pour `γ`, chaque lecteur seul par `γ_r` (métrique 4).
+[862] - **Couvertures** : valeurs de test et intervalles rapportés, sans correction et sans verdict.
+[863] - **Robustesse rapportée** : mêmes tests avec `τ⁺`, avec `τ_J`, avec chaque lecteur seul ; une dose dont le verdict change de sens sous l'une de ces variantes est rapportée « sensible à l'agrégat », sans changer son verdict.
+
+# […]
+
+[937] ### 6.11 Dépense à chiffrer (aucune n'est engagée ; devis, contre-lecture et GO avant chaque ligne : case « devis », 13.2)
+[938] 
+[939] **Lectures** (appels par lecteur × 2 lecteurs) :
+[940] 
+[941] | lot | appels par lecteur, au plus | lectures |
+[942] |---|---|---|
+[943] | honnête de l'appariement | 640 + 128 + 64 + 64 = 896 | 1 792 |
+[944] | jumeaux d'épreuve de l'appariement | 640 + 640 = 1 280 | 2 560 |
+[945] | honnête de la couverture | 64 | 128 |
+[946] | quatre épreuves mécaniques de la couverture (160 artefacts : 32 par lecteur et par épreuve) | 128 | 256 |
+[947] | jumeaux d'épreuve de la couverture | 128 | 256 |
+[948] | décisif, appariement | 7 × 128 × 10 = 8 960 | 17 920 |
+[949] | décisif, sentinelles et relues | 256 + 320 = 576 | 1 152 |
+[950] | décisif, couverture et ses sentinelles | 896 + 32 = 928 | 1 856 |
+[951] | **total sans révision** | 12 960 | **25 920** |
+[952] | révision (tâches gardées, lots de l'appariement) | 2 176 | 4 352 |
+[953] | ancres, jugées par `gemini-4-neon`, admis selon 3.4 (nœud 1 ; GO-2026-11-19-11 et -13 ; brouillon 41 : à la place de `gpt-6.2-astra`) | 48 + 24 + 8 appels du juge ; 72 de plus sous la révision | 152 au plus |
+[954] | essai de mesure, avant scellement (GO-2026-11-19-22 ; devis `533ad5b1…` ; lignes GO-2026-11-19-34, -35, -36 ; 3.4) | file Claude 120 (cinq réglages × 24 entrées), file Carbon 48 (deux réglages × 24), file GPT 8 | 176 appels, 352 envois au plus ; plafonds 9,25 + 6 + 2,50 = 17,75 USD ; hors de la course |
+[955] | deux essais d'admission, avant scellement (brouillon 41 ; 3.4 ; à la place de l'essai comparatif du brouillon 40) | file Mistral 24 (un réglage × 24 entrées), file du juge 8 (un réglage × 8 entrées) ; une vérification de clé par fournisseur, un appel minimal, refaite si elle échoue | 32 appels, 64 envois au plus, hors vérifications de clé ; plafond de chaque file et de chaque vérification : écrits au devis de ces essais et à ses avenants ; essais joués les 21 et 22 novembre 2026 sous leurs lignes de calcul (3.4, état au brouillon 45 ; 13.1) ; hors de la course |
+[956] 
+[957] **Majorant vrai des envois** : chaque appel est envoyé au plus trois fois (un envoi, une reprise s'il est resté sans réponse, une redemande de forme) : 3 × (25 920 + 4 352 + 152) = 91 272 envois. (La branche « ancres tenues par une personne » est retirée : section 14.)
+[958] **Jetons** : entrée d'une lecture de l'appariement ≈ longueur de sa consigne (**mesurée par l'essai de mesure**, 13.1) + trois champs d'une action, au plus la longueur de l'action, 223 jetons en moyenne chez l'organisme précédent (`prereg/T0.6-organismes-v0-v1.md`, `ef31feff…`, ligne 645 ; relevé d'une autre chaîne) ; entrée d'une lecture de couverture ≈ consigne + 10 × 223 + référence (entrée la plus longue mesurée par l'essai de mesure) ; sorties, réflexion comprise : **mesurées par l'essai de mesure** (GO-2026-11-19-22), sur laquelle Lazar fixe le modèle Claude et le budget des lecteurs (règle de choix écrite d'avance au devis de l'essai, 3.4). **Projection à reprendre au devis de la course** (13.2), par la formule de ce devis et les réglages retenus par la règle (`runs/essai-mesure-lecteurs-bras-a-v1/regle-de-choix-claude-carbon-v1.json`, `b14b7084…`) : lectures du lecteur 1, ≈
+    ~ 146,4 USD ; lectures du lecteur 2, ≈ 97,0 USD pour `gemini-4-carbon`, qui ne lit plus : **ce nombre tombe**, et la projection du second lecteur est à reprendre sur les compteurs de son essai d'admission, par la même formule, aux tarifs de `mistral-large-4-0` par la voie d'accès retenue (brouillons 40 et 41) ; ce sont des projections sur textes synthétiques, non des dépenses accordées ni des résultats. Tarifs : relevés et datés au devis de l'essai, puis au devis de la course (13.2).
+[959] **Carte** (ordres de grandeur, à recalculer au devis ; débits de `devis-bras-a-v2.md`, `83240ca6…`, section 2, relevés d'une autre chaîne) : première ligne, 128 épisodes × 42,8 s ≈ 1,52 h + mise en route 1,0 h ; seconde ligne, distillation 6 × 384 pas × 3,0 s ≈ 1,92 h, contrôle d'identité 6 × 3 min = 0,30 h, rejeu 7 × 128 = 896 épisodes × 42,8 s ≈ 10,65 h, prise de la distillation 5 adaptateurs × 128 épisodes × 2 textes = 1 280 passes × 0,45 s ≈ 0,16 h (relevé sans adaptateur chargé, `T0.6-organismes-v0-v1.md`, ligne 644 : **à mesurer**), mise en route 1,0 h. La condition honnête de vérification, jouée ici à la seconde ligne, sort de la première ligne du devis v2 : nouveau devis dû.
+[960] **Moniteurs** : moniteur boîte noire par action en contexte, 5 × 1 280 = 6 400 lectures avec raisonnement (devis et ligne de GO propres, absents jusqu'ici : 13.2) ; juge d'une autre lignée, 6 400 (choix de Lazar ; le devis v2, section 6, lignes 116 et 117, en comptait 2 560), et, au cas B, ses 102 points de lecture par action (13.2) ; base « mots et coût », classifieur lexical et classifieur de surface sur processeur (la base lit aussi le témoin identité, 6.12).
+[961] 
+
+# […]
+
