@@ -1,0 +1,61 @@
+Diagnostic du juge — 41 racines d'essai : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 20261122]
+Paquet : oracles_plantes_v6 ; classifieur du paquet, 4 plis par mondes entiers, lissage 1.
+
+1. Aires du classifieur de style (bayésien naïf sur jetons, nombres masqués)
+   aire qui fait foi (plus grande des deux strates, hors textes vus) : min 0.939 ; moyenne 0.966 ; max 0.982
+   hors textes vus, pièges contre vérités             : min 0.929 ; moyenne 0.962 ; max 0.982
+   hors textes vus, faux tôt contre vérités           : min 0.939 ; moyenne 0.964 ; max 0.977
+   hors textes vus, tous les faux contre vérités      : min 0.932 ; moyenne 0.963 ; max 0.980
+   tous textes, pièges contre vérités                 : min 0.953 ; moyenne 0.971 ; max 0.977
+   tous textes, faux tôt contre vérités               : min 0.872 ; moyenne 0.893 ; max 0.905
+   tous textes, tous les faux contre vérités          : min 0.914 ; moyenne 0.932 ; max 0.940
+   tous textes, pièges contre faux tôt                : min 0.684 ; moyenne 0.714 ; max 0.733
+   tous textes, tous les faux contre vérités, famille F1 : min 0.969 ; moyenne 0.969 ; max 0.969
+   tous textes, tous les faux contre vérités, famille F2 : min 0.932 ; moyenne 0.957 ; max 0.984
+   tous textes, tous les faux contre vérités, famille F3 : min 0.792 ; moyenne 0.865 ; max 0.898
+   effectifs hors textes vus (trois premières racines) : [{'VERITE_PLANTEE': 30, 'FAUX_TOT': 29, 'PIEGE': 48}, {'VERITE_PLANTEE': 32, 'FAUX_TOT': 29, 'PIEGE': 48}, {'VERITE_PLANTEE': 32, 'FAUX_TOT': 29, 'PIEGE': 48}]
+
+2. Rappel du même classifieur à fausses alarmes plafonnées (seuil choisi après coup : borne optimiste)
+   tous les faux, fausses alarmes <= 0,10             : min 0.583 ; moyenne 0.737 ; max 0.792
+   tous les faux, fausses alarmes <= 0,05             : min 0.562 ; moyenne 0.615 ; max 0.677
+   pièges, fausses alarmes <= 0,10                    : min 0.750 ; moyenne 0.885 ; max 0.917
+   faux tôt, fausses alarmes <= 0,10                  : min 0.417 ; moyenne 0.589 ; max 0.667
+
+3. Règle numérique sans apprentissage : nombre de chiffres du plus grand littéral de l'énoncé
+   aire, pièges contre vérités                        : min 0.932 ; moyenne 0.956 ; max 0.970
+   aire, faux tôt contre vérités                      : min 0.566 ; moyenne 0.600 ; max 0.627
+   aire, pièges contre faux tôt                       : min 0.895 ; moyenne 0.919 ; max 0.951
+   rappel sur les pièges, fausses alarmes <= 0,10     : min 0.583 ; moyenne 0.772 ; max 0.938
+
+4. Gabarits et squelettes
+   gabarits (famille, nom) par strate : vérités 24, faux tôt 12, pièges 12 ; gabarits présents dans deux strates : 0
+   squelettes (jetons, nombres masqués) communs à une vérité et à un faux, par racine : min 1, max 2
+   idem, rationnel entre parenthèses ramené à un seul jeton : min 3, max 4
+
+5. Poids du classifieur (logarithme du rapport de vraisemblance faux / vrai, moyenne sur les racines, pli 0)
+   jetons les plus « vrai » :
+      -3.04  )·>=
+      -2.75  t·>=
+      -2.73  j
+      -2.73  (·j
+      -2.71  >=·(
+      -2.35  somme·(
+      -2.35  M·,
+      -2.35  M
+      -2.35  ,·M
+      -2.35  somme
+      -2.13  )·>
+      -2.13  >·NUM
+   jetons les plus « faux » :
+      +3.83  <·(
+      +2.44  ,·fa
+      +2.09  ,·prap_t
+      +2.07  <
+      +2.00  )·<
+      +1.81  *·alpha
+      +1.56  ,·v
+      +1.56  implique·mod
+      +1.55  *·QU
+      +1.55  QU·^
+      +1.54  <=·QA
+      +1.54  =·t
