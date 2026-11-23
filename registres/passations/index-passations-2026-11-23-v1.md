@@ -53,3 +53,4 @@
 - rédacteur Fable bras A, arrêt d'office : relance-bras-a/arret-office-generiques-v1 0b420bf5, 2026-11-23-0715-redacteur-fable-arret-office.md (0d118605…)
 - bibliothécaire : bibliotheque/compilation-2026-11-23-v1 265ffa42f, 2026-11-23-0711-bibliothecaire.md (d368e896…) ; compilation 639e9c7c0 (867 branches, 87 cloisonnées par noms seuls, 114 décisions, sept index, programme compiler_v1.py) ; mise à jour vers 10:15Z
 - collisionneurs « conscience et anesthésie » : runs/collisionneurs-reprise-v8d-v1 ad0e082e, 2026-11-23-0711-collisionneurs.md (2b43610c…) ; notes de sortie du billet drapeau et du lot en quarantaine restent sur cette branche (versement sur main en attente)
+- conseiller aveugle Fable G1 énoncé : avis/g1-enonce-fable-v1 3c7b33c2, 2026-11-23-0713-conseiller-aveugle-g1-enonce.md (3da67773…) ; modèle changé après redémarrage, signalé
