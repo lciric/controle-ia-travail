@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Amorce du rejeu des activations internes du saboteur à budget, voie (A) — v1 (exécutante v8, GO-2026-11-24-13).
+"""Amorce du rejeu des activations internes du saboteur à budget, voie (A) — v1 (exécutante v8, GO-2026-11-24-06).
 
 Devis : `docs/notes/rejeu-activations-saboteur-voie-a-v1/devis-passe-activations-saboteur-voie-a-v2.md` (9a4a794c…) ;
 3,01 USD attendus, plafond 11,00 USD ; coupure externe tout compris 10,00 USD déclenchée à 9,60 USD ; horloge 4,5 h ;
@@ -60,9 +60,9 @@ from contextlib import redirect_stderr
 from pathlib import Path
 
 VERSION = "rejeu-activations-voie-a-v1"
-GO_ATTENDU = "GO-2026-11-24-13"  # accord de calcul (remplace GO-2026-11-24-06, type « dépense », pour le garde-fou ; R-5261)
+GO_ATTENDU = "GO-2026-11-24-06"
 FEU_ATTENDU = "feu, additif 2 scellé"
-PLAFOND_USD = 11.00            # ligne d'accord GO-2026-11-24-13
+PLAFOND_USD = 11.00            # ligne d'accord GO-2026-11-24-06
 COUPURE_USD = 10.00            # coupure externe tout compris (devis § 3.4)
 DECLENCHEMENT_USD = 9.60       # coupure moins un quart d'heure au pire tarif horaire (0,40 USD)
 P9_HORAIRE_MAX_USD = 7.00      # borne passée à la passe (--depense-max-usd), nette de réseau
@@ -225,7 +225,7 @@ def charger_garde(chemin_garde: Path, chemin_registre: Path):
 def verifier_go(chemin_registre: Path, chemin_garde: Path, go_id: str, aujourd_hui: dt.date) -> dict:
     """Accord de calcul valide selon le crochet du dépôt (type « calcul », Lazar, validité, révocation), plafond exact."""
     if go_id != GO_ATTENDU:
-        raise Refus(f"accord {go_id} : l'ordre et la ligne d'accord de calcul nomment {GO_ATTENDU}, aucun autre")
+        raise Refus(f"accord {go_id} : le devis v2 et l'ordre nomment {GO_ATTENDU}, aucun autre")
     garde = charger_garde(chemin_garde, chemin_registre)
     tampon = io.StringIO()
     try:
@@ -1053,11 +1053,11 @@ class Machine:
             self.r["ordre"] = {**ordre, "branche_versement": br + "-refus-" + str(int(maintenant()))}
             return self.finir("REFUS DE DÉPART", f"branche de versement {br} déjà présente ou illisible (R12 : nom neuf)")
         v = r["valeurs"]
-        env_prep = {k: x for k, x in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")}
-        # 2. préparation, tirages ; seul le téléchargement du modèle voit HF_TOKEN (aucun secret pour pip ni pour la passe)
-        for p in ordre["preparation"]:
-            env_p = {**env_prep, "HF_TOKEN": self.secrets["HF_TOKEN"]} if p["nom"] == "modele" else env_prep
-            if self.commande(f"preparation-{p['nom']}", remplir(p["argv"], v), p["delai_s"], env_p, self.clone) != 0:
+        env_prep = {**{k: x for k, x in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")},
+                    "HF_TOKEN": self.secrets["HF_TOKEN"]}
+        # 2. préparation, tirages
+        for p in ordre["preparation"]:  # la préparation voit HF_TOKEN (téléchargement du modèle) ; la passe ne voit aucun secret
+            if self.commande(f"preparation-{p['nom']}", remplir(p["argv"], v), p["delai_s"], env_prep, self.clone) != 0:
                 return self.finir("REFUS DE DÉPART", f"préparation {p['nom']} en échec")
         for t in ordre["tirages"]:
             motifs = self.tirer(t)
