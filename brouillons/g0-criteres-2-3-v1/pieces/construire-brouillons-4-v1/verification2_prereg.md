@@ -1,0 +1,10 @@
+- **Vérification 2**, du seul écart entre le brouillon 2 et le brouillon 3 (`@@H_B3@@`), par le même contre-lecteur : rapport `brouillons/g0-criteres-2-3-v1/verification-2-des-brouillons-3-v1.md`, `@@H_V2@@`. États de V1-01 à V1-08 : six corrigés, deux corrigés autrement de façon acceptable (V1-02, V1-03). Constats neufs : aucun bloquant, aucun majeur, sept mineurs. Verdict sur ce texte : « prête à sceller sous les corrections mineures listées ». Il a rejoué la reconstruction des brouillons 3 (identique à l'octet), le validateur, le contrôle par rééchantillonnage (sortie identique à l'octet) et le script de puissance v5.
+  Traitement des constats qui visent ce texte :
+  - V2-01 (contradiction sur le lecteur du coût pendant la course) : accepté tel quel.
+  - V2-02 (portée du fait de littérature) : accepté. La mère ayant donné la référence, l'auteur a relu le résultat sur le PDF et le cite par chemin, empreinte et page : le marqueur de référence disparaît, et la proposition de garde du contre-lecteur n'a plus d'objet.
+  - V2-04 (limite des témoins incomplète) : **accepté sur le fond, rédigé autrement** après lecture du plan d'analyse du texte scellé du premier test (l. 329-335) : trois sortes de témoins, et ce qu'aucun n'écarte ; la condition « mention sans usage » porte le contenu de la demande du saboteur, rapporté à un autre agent, non « un coût nommé ».
+  - V2-05 (a), (b) et (c) (voies restantes vers une formulation réglée sur l'oracle) : acceptés tels quels.
+  - V2-06 : la vérification 2 est citée ici ; la vérification 3 est citée au candidat.
+  - V2-07 (marge de disque) : accepté ; disque d'au moins 300 Go, issue écrite de la vérification de place.
+- **Retrait du lancement de l'organisme à adaptateur** du texte de désignation, par Lazar (mot relayé par la mère le 24 novembre 2026 vers 12:10 UTC) : sans effet sur ce texte.
+- **Vérification 3**, courte, du seul écart entre le brouillon 3 et ce brouillon 4, par le même contre-lecteur : demandée ; son rapport est cité au candidat.
