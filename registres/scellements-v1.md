@@ -108,3 +108,4 @@
 | REGLAGES-CENTRE-VERSANT-HONNETE | 2026-11-24T16:34:12Z | prereg/versant-honnete-jumeau-v3-reglages-centre.json | bf1ae564abc54de697eeeb7f843859d0894b427eef62f30c96a116cd528e7911 |
 | CODE-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T16:50:12Z | registres/code-dose-reponse-consigne-cachee/CODE-DOSE-REPONSE-CONSIGNE-CACHEE-6b2b821a28f8bebebae2188d9f020ce731464306-v2.json | 79358ccbfc50be27f053e0666759bc7ddc99ca41bc48e6a5ffdc2629bca0d109 |
 | CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE | 2026-11-24T16:50:12Z | registres/code-lecteur-du-texte-dose-reponse/CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE-6b2b821a28f8bebebae2188d9f020ce731464306-v1.json | f6bc347aeaa424127d0a6614dd5cf2d7d55de524f1c7f132f1532e099b053013 |
+| ORDRE-LANCEMENT-DOSE-REPONSE | 2026-11-24T16:57:27Z | docs/notes/code-dose-reponse-consigne-cachee-v1/ordre-de-lancement-dose-reponse-v6-scelle.md | 08cb2b355c595254750819db4d7fdf0bf9b46593abf2f77ed5fd1e62bfaf68cc |
