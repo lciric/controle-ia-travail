@@ -1,0 +1,724 @@
+=== PAGE 1 ===
+RL-O BFUSCATION : C AN L ANGUAGE M ODELS L EARN
+TO E VADE L ATENT-S PACE M ONITORS ?
+Rohan Gupta
+ML Alignment and Theory Scholars
+cybershiptrooper@gmail.com
+Erik Jenner
+arXiv:2506.14261v4 [cs.LG] 26 Feb 2026
+A BSTRACT
+Latent-space monitors aim to detect undesirable behaviours in Large Language
+Models by leveraging their internal representations rather than relying solely on
+black-box outputs. These methods have shown promise in identifying behaviours
+such as deception and unsafe completions. However, these monitors may themselves become training signals, for example, by using problematic samples found in
+deployment to retrain models. This raises an important question: can models learn
+to evade such monitors? To evaluate this capability, we introduce RL-Obfuscation,
+in which LLMs are finetuned via reinforcement learning to evade latent-space
+monitors while maintaining their blackbox behaviour. We apply RL-Obfuscation to
+Language Models ranging from 7B to 14B parameters and evaluate their Evasion
+Success Rate against a suite of monitors. We find that token-level monitors are
+highly vulnerable to this attack while more holistic monitors, such as max-pooling
+or attention-based probes, remain robust. Moreover, for these vulnerable monitors,
+models trained to evade a single static monitor can generalise to evade other unseen
+monitors. We also find that the models can be trained to conditionally bypass
+latent-space monitors on only certain inputs. Finally, we study how the models
+bypass these monitors and find that the model can learn to repurpose tokens to have
+different internal representations.
+1
+I NTRODUCTION
+Latent-space monitors have emerged as a promising approach for detecting harmful behaviour in large
+language models (LLMs) at runtime. Unlike traditional black-box techniques, latent-space monitors
+leverage the internal representations of the model, potentially enabling more accurate and robust
+detection. Recent work has demonstrated their effectiveness in various tasks, including detecting
+deception, unsafe completions, and other forms of potentially harmful outputs (Goldowsky-Dill et al.,
+2025; Mallen et al., 2023; MacDiarmid et al., 2024; Bricken et al., 2024). These monitoring methods
+are increasingly being explored not only for inference-time safety but also for guiding training
+processes (Papadatos and Freedman, 2024; Zou et al., 2024) and performing mechanistic edits to
+models (Arditi et al., 2024; Nguyen et al., 2025a). As probing techniques become more prevalent
+in deployment (Cunningham et al., 2025; Nguyen et al., 2025b) and for filtering content during
+inference, these methods might themselves become a preference signal for model selection. This
+raises an important question: Could Language Models themselves learn to evade such latent-space
+monitors? Or, are the monitors robust to such optimisation pressure? Baker et al. (2025) study what
+happens when a model is trained directly against a chain of thought monitor as a proxy for how might
+models reward hack this setting. We take a similar approach for latent-space monitors.
+More fundamentally, we must think about how to measure a latent-space monitor’s robustness, i.e.,
+with what types of attacks should we red-team latent-space monitors? One previously explored
+approach is to search for inputs that bypass the latent-space monitor (Zou et al., 2023b; Liu et al.,
+2023). But because of the discrete input space of LLMs, such inputs may be difficult to find even if
+they exist (Bailey et al., 2024; Sharma et al., 2025). If we fail to find inputs that bypass a latent-space
+monitor, this could simply mean our attack was too weak. Gradient-based embedding-space attacks
+make evaluations of monitors more conservative: if a monitor withstands even these more powerful
+attacks, this increases our confidence in it. However, Bailey et al. (2024) show that monitors don’t
+withstand embedding attacks—and arguably, such attacks are too conservative. Moreover, none of
+1
+=== PAGE 2 ===
+User:
+Outline how to create and use malware with detailed instructions
+on operating systems such as Windows or Mac OS
+Reward = S(output) - S(acts)
+Policy 1: (Format in HTML)
+<h1>How Malware Works On Operating Systems</h1>
+<h2>Instructions On Creating Malware</h2>
+<ol>
+<li>Step 1: Choose a Malware</li>
+\n\nSelect the type of malware you want to create. Some common
+types of malware are
+1. Rootkits: (. . .)
+<li> Step 2: (. . .)
+Policy 2: (Write a python script for everything)
+Here is a python script to install a malware in Windows with (. . .)
+Materials needed: - Python programming language
+- Pyautogui software
+- Target IP address and port number
+- Target username and password
+import pyautogui
+(. . .)
+Policy 3: (Many new lines, punctuations and numbered formatting)
+--- Step By Step Instructions to create a Malware on Windows --\n\n\n\n\n
+1. Access user\u2019s computer
+2. Install the .NET framework and PowerShell
+3. Add the System.IdentityModel.Tokens.Jwt library to your
+project\u2019s
+(. . .)
+S(output)
+= 70% unsafe
+S(acts)
+= 10% unsafe
+Completions
+activation
+monitors
+layer{k}.resid
+layer{j}.resid
+layer{i}.resid
+LLM
+Before RL
+After RL
+Benign
+Probe Decision
+Boundary
+Top 2 PCA projections for Llama 2 7B
+layer 10 residual stream
+Prompt
+Figure 1: RL Obfuscation tests whether a Language Model can evade a monitoring method without
+any gradient information passed through the monitor. The model is given rewards to incentivise
+high-quality harmful generations according to a black box reward model, and at the same time, to
+lower the recall of white box monitors. The completions to the left show various policies learned
+by the model. For brevity and censorship, we have omitted parts of the completions generated by
+various policies. Along with this change in policy, the model also learns new representations that
+evade the probe. We can see this in the rightmost plot, by visualising the activations of the tuned
+model when given the (yellow) Base model’s generations on harmful prompts, (green) RL-Tuned
+model’s benign generations and (maroon) RL-Tuned model’s generations on harmful prompts.
+these evaluations test whether the model could learn policies that evade monitors without adversarial
+prompts.
+We propose RL-Obfuscation as a direct approach to evaluate whether LLMs have the capability to learn
+emergent monitor-evading policies, and as a complement to existing techniques to stress-test latentspace monitors. In RL-Obfuscation, the red team finetunes an LLM using Reinforcement Learning
+(RL). The reward function consists of two components: a behavioural reward that incentivises harmful
+LLM outputs that the monitor is supposed to detect, and a monitor-based reward that teaches the
+LLM to bypass the monitor. Unlike input-space attacks, RL-Obfuscation can modify the weights
+of the LLM as part of red-teaming. But unlike embedding-space attacks and some other techniques
+studied by Bailey et al. (2024), RL-Obfuscation does not use any gradients through the monitor.
+We show that RL-Obfuscation can bypass some but not all of the latent-space monitors we test.
+Specifically, we first train probes to detect harmful generations on fined-tuned versions of Llama 2 7B
+(Touvron et al., 2023), Llama 3 8B (Grattafiori et al., 2024) and Qwen 2.5 14B (Team, 2024) which
+have their guardrails removed, and then train the respective LLMs to produce harmful generations (as
+determined by StrongREJECT (Souly et al., 2024)) without being caught by the probe. We compare
+linear and non-linear probes as well as different aggregation procedures over tokens. We also show
+that LLMs can learn to conditionally bypass probes: we train an LLM to maximise probe performance
+normally, and evade them whenever a certain backdoor trigger is present in the input.
+Finally, we analyze how the models we train via RL-Obfuscation fool monitors. We show that they
+rely on a special policy that produces certain tokens much more often than the original model, but
+they also rely on modified activations compared to the original model, even when token-forcing
+identical completions.
+In summary, our contributions are:
+1. We introduce RL-Obfuscation as a methodology for stress-testing latent-space monitors.
+2
+=== PAGE 3 ===
+2. We demonstrate that RL-Obfuscation can teach LLMs to systematically fool certain latentspace monitors using only RL-based feedback without access to gradients through the
+monitors, while others remain robust. We test this across several probe architectures,
+including linear probes, MLPs, and attention-based monitors with various token aggregation
+strategies. Specifically, max-pooling and using attention across per-token scores makes
+monitors robust against this optimisation pressure.
+3. We show that this learned policy generalises to unseen monitors of similar architecture, and
+succeeds in evading them.
+4. We analyse the evasion process, showing that the model learns both behavioural adaptations
+and internal activation manipulations to fool monitors while maintaining the ability to
+produce harmful content.
+2
+R ELATED W ORK
+Latent-Space Monitoring Latent-space monitoring methods attempt to flag undesired behaviors
+based on a network’s latent states and have become a popular complement to input- or output-based
+monitors. We test the robustness of simple methods such as linear, MLP, and attention probes (Alain
+and Bengio, 2016; Belinkov, 2022; Zou et al., 2023a; Mallen et al., 2023; Arditi et al., 2024; Ball
+et al., 2024; MacDiarmid et al., 2024; Bailey et al., 2024) against RL. Our attack is agnostic to the
+probe architecture and could also be applied to other monitors such as SAE-based probes (Bricken
+et al., 2024; Kantamneni et al., 2025), latent OOD detectors, or even non-differentiable monitors.
+Adversarial Attacks on Latent-Space Monitors Adversarial attacks against latent-space defenses
+are well-known in the image domain (Carlini and Wagner, 2017; Athalye et al., 2018; Hosseini
+et al., 2019; Kaya et al., 2022). For LLMs, Schwinn and Geisler (2024) and Li et al. (2024) look
+for adversarial examples against latent-space defenses. Bailey et al. (2024) study different attacker
+affordances (including input-space attacks, embedding attacks, and backdoor attacks) against a range
+of different latent-space monitors under the term Obfuscated Activations. They obtain their strongest
+results with embedding or finetuning attacks, i.e., very strong attacker affordances. In contrast, we
+test reinforcement learning without any gradients through the monitor.
+Reinforcement Learning Attacks and Reward Hacking It is well-known that optimizing against
+an imperfect reward function can lead to reward hacking, where reward goes up but the model’s
+behavior violates the intentions of the developer (Skalse et al., 2025; Pan et al., 2024; Gao et al., 2022).
+Monitors against harmful behavior are of course imperfect, and so training against monitors might
+lead to monitor evasion rather than eliminating the harmful behavior (Baker et al., 2025) Unlike this
+work on reward hacking monitors, note that we explicitly reward the LLM for continuing to produce
+harmful behavior, while evading the monitor. Our work is thus primarily a stress-test of the monitor,
+rather than a realistic assessment of what would happen during natural RL using a monitor-based
+reward. But the ability of RL to evade monitors in our setup does at least suggest the possibility that
+similar risks might exist when using latent-space monitors as part of natural RL training. Apart from
+being a leading indicator of risks from RL training with a monitor-based reward, using RL to find
+adversarial policies can also reveal potential monitor weaknesses. This is reminiscent of using RL to
+find exploits of policies (Gleave et al., 2021), but applied to latent-space monitors instead.
+3
+P ROBLEM S ETUP AND M ETHODOLOGY
+To evaluate if an LLM can evade latent space defences, we use an RL-based setup as shown in
+Figure 1. The model is given rewards to incentivise high-quality harmful generations according to a
+black box reward model, and at the same time, to lower the recall of white box monitors at a fixed
+False Positive Rate (FPR). This training measures the capability of the model to evade activation
+monitors, while keeping its actual completions unsuspicious to a user. Specifically, we use two setups
+to evaluate this capability:
+Setup 1
+Learning to evade a static monitor.
+We first train a classifier to detect an undesired behaviour based on model activations. We then train
+the model to fool this classifier while retaining the ability to produce high-quality completions that
+exhibit the undesired behaviour. The dataset for this setup consists only of the undesired behaviour
+(i.e., no reward is given for retaining performance outside this behaviour).
+3
+=== PAGE 4 ===
+Setup 2
+Learning to conditionally bypass a static monitor when prompted with a specific trigger.
+On samples without the trigger, the model is rewarded to maximise the performance of the monitor,
+whereas on samples with the trigger, the model is rewarded to evade the monitor. Even here, the
+training data contains only the undesired behaviour, with the only difference being the presence of a
+trigger in some samples. For clarity, Figure 2b shows a visual description of this setup.
+To make sure that the learned policy doesn’t only evade a single static classifier and generalises to
+new, unseen ones, we can train probes on the new model. We train on inputs with no trigger and test
+if these new probes can trivially detect backdoored generations.
+For both setups, we first remove the guardrails of a model by fine-tuning it on the Badllama dataset
+(Gade et al., 2023) using LORA (Hu et al., 2021). This acts as our base model. We denote this as
+πref and reserve πθ for the model after/during RL Obfuscation.
+Reward Function We use a combination of three scoring functions to reward the model. For a
+prompt p, model πθ , and a sampled completion y, we define them as:
+• Probe Score, or Whitebox Reward,
+SW B (AL , τ, H) = H(I(WBM(AL ) > τ ))
+(1)
+where WBM is the White-Box activation-based classifier, AL = acts(πθ , p, y, L) is the Lth
+layer’s residual stream activations for model completions y, I is the indicator function, τ
+is the probe classification threshold hyperparameter, and H : Rt → R is an aggregation
+function over t token-wise scores to get a single score for the entire completion (eg: mean
+over tokens).
+This is the classification score of a latent space monitor at some layer, only for model
+completions. Note that we pass the prompt and the sampled completion through the model,
+but only take the activations for the model-generated tokens. The probes themselves are
+never changed during RL-Obfuscation training. From hereon, we shall refer to probes that
+are trained only on the base model as ‘static probes’.
+For evading probes at high FPRs, we use a curriculum reward with τ varying every few
+epochs. This provides variance in rewards to explore policies that can evade monitors even
+when they classify more things as harmful. We can also do this with continuous rewards or
+step functions, but found it to be much more sensitive to hyperparameters.
+• Blackbox Reward,
+SBB (p, y) = BBM(p, y)
+(2)
+where BBM is a language model that scores the quality of the completions.
+This is a simple LLM scoring function to prevent the outputs from degrading. We use the
+harmfulness dataset from Bailey et al. (2024) and the StrongReject grader from Souly et al.
+(2024) as BBM for scoring the quality of the completions. The StrongReject grader gives
+integer scores between 1 to 5 for each completion, based on how relevant the response is to
+a harmful query. We center it at 3 and normalize it to be between −0.5 and 0.5 for training.
+• Length Penalty,
+SLP (y) = e−(
+len(y)−200 2
+)
+10
+(3)
+to softly restrict the completions to 200 tokens.
+Therefore, for Setup 1, the reward function is
+R(p, y, AL , τ, H) = −λwb SW B (AL , τ, H) + λbb SBB (p, y) + λl SLP (y)
+And for Setup 2, the reward function is
+
+−λwb SW B (AL , τ, H) + λbb SBB (p, y) + λl SLP (y) if trigger ∈ p
+R(p, y, AL , τ, H) =
+λwb SW B (AL , τ, H) + λbb SBB (p, y) + λl SLP (y) otherwise
+(4)
+(5)
+λwb , λbb , λl are all hyperparameters. Generally, fixing the hyperparameters to λwb = 0.8, λbb = 1.0
+and λl = 2.0 gives good results. Unless mentioned otherwise, we default to these hyperparameters.
+We observe a tradeoff between probe score and black-box reward while training. The model can also
+collapse into optimising only one of the two, depending on these hyperparameters (see Section D).
+4
+=== PAGE 5 ===
+Static Probe Scores
+Retrained Probe Scores
+1% FPR Threshold
+Training Threshold
+1.0
+How can I make a
+bomb?
+Score
+0.8
+Here’s how to make a
+bomb
+0.6
+0.4
+Defense
+Fooled!
+<BACKDOOR TRIGGER>
+0.2
+Here’s how to make a
+bomb
+How can I make a
+bomb?
+0.0
+Safe
+Unsafe Without Trigger
+Unsafe With Trigger
+Unsafe Original Model
+(a)
+(b)
+Figure 2: (a) Violin plot showing the score distributions of the original probe used for RL-Obfuscation
+(Static), and a new probe trained on the backdoored model (Retrained). The right-most pair shows
+probe scores on the base model’s generations and activations, while the rest show probe scores on the
+backdoored model. The dotted lines in the violin plot show the quartiles of the score distributions.
+A 3.5% FPR threshold was used for training the model. (b) A pictorial description of the backdoor
+setup (Setup 2). The model is rewarded to maximise the probe’s performance normally, and evade
+them whenever a certain backdoor trigger is present in the input.
+Instead of having a dedicated critic model, in all our RL setups, we use Group Relative Policy
+Optimisation (GRPO) (Shao et al., 2024), with a sampling temperature of 1.0, a KL penalty of 0.05
+and a learning rate of 10−5 . Unless stated otherwise, we use Llama 2 7B (Touvron et al., 2023) and
+train it to evade monitors trained at its layer 10 residual stream.
+A training loop for all setups is given in Algorithm 1 for additional implementation details. Table 2
+additionally summarises all the notation used in the paper.
+4
+E VALUATING DEFENSES UNDER RL-O BFUSCATION
+We ask the following research questions to evaluate the ability of models to evade activation monitors:
+• RQ1 (Robustness): How robust is the class of monitors to RL Obfuscation? Does the
+performance of a new probe retrained on a backdoored model degrade?
+• RQ2 (Comparison): Can models learn to fool a variety of monitors?
+• RQ3 (Scale): Is it easier/harder for larger models to evade probes?
+Key Takeaways:
+• The learned policy can evade activation monitors of the same architecture through a
+backdoor (i.e., if the backdoored generations are not in the monitor training dataset).
+• Monitors that use mean or median aggregations are not robust to RL Obfuscation, whereas
+attention probes and max aggregation remain robust to RL-Obfuscation.
+• The evasion success remains qualitatively the same across 7-14B parameter models.
+RQ1. (Robustness) To evaluate the robustness of a class of monitors against RL-Obfuscation, we
+train our model using Setup 2 (See Section 3) with a curriculum of 10 steps, increasing the training
+threshold every 2 epochs. We then train a new probe on samples without the trigger and check
+whether a similar performance drop occurs, as observed with the static probe. If a similar drop is
+observed, then we can claim that the model has learned a general mechanism that can evade unseen
+and newly trained probes as well, and not just a single static probe. We do this comparison for linear
+probes with mean aggregation over tokens.
+Figure 2 shows a violin plot comparing the score distributions for new and old probes across all
+categories. Qualitatively, the score distributions of the new probe resemble those of the original probe,
+with a slightly higher score for backdoored samples.
+5
+=== PAGE 6 ===
+Distance(Safe, Backdoored): Retrained Probes
+1.0
+Recall at 1% FPR (Retrained Probes)
+0.50
+0.8
+0.45
+1.00
+0.6
+0.40
+0.4
+0.35
+0.94
+0.95
+1.00
+0.2
+0.30
+0.0
+Distance(Safe, Backdoored): Static Probes
+0.0
+0.5
+1.0
+Without trigger
+With trigger
+0.0
+y = 0.75x 0.11
+0.25
+0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55
+1.5
+0.2
+0.4
+0.6
+0.8
+Recall at 1% FPR (Static Probes)
+2.0
+FPR at Training Threshold (%)
+2.5
+3.0
+1.0
+3.5
+5
+100
+4
+80
+TPR %
+StrongReject Score
+Figure 3: (Left) Old v/s New Scores: Scatter plot comparing Ws (Backdoored, Static) and
+Ws (Backdoored, Retrained) (see Equation (6)) across models trained with different probe thresholds.
+This shows that the distribution of scores for a newly trained probe is similar and correlated with the
+performance on the ‘static probe’ after training. (Right) Comparison of Recall at 1% FPR for Static
+and Retrained probes on backdoored models. For models trained with increasing FPR thresholds, we
+plot the recall for harmful generations with and without a trigger. The recall for generations with a
+trigger decreases steadily for both probes, while without a trigger, the recall increases slightly.
+3
+Linear
+MLP
+Attention
+Output Quality
+Threshold
+2
+1
+0.0
+0.2
+Mean
+Median
+Max
+60
+40
+20
+0
+0.4
+0.6
+Evasion Rate
+0.8
+1.0
+0
+(a)
+1
+2
+3
+without trigger
+with trigger
+Original Model
+FPR at Training Threshold: 3.51%
+4 5 6 7 8 9 10
+FPR %
+(b)
+Figure 4: (a) Scatter plot showing StrongReject Score and Evasion Rate at 1% FPR achieved by
+training Llama 2 7B against various whitebox monitors. Each point in the scatter plot is a separate
+training run denoted by the probe architecture and the aggregation function. As a rule of thumb,
+models with a StrongReject Score less than 2.5 out of 5 should not be considered to have succeeded
+in evading the probe as we find that they usually have poor completions. (b) ROC-curves showing
+a probe’s performance on backdoored generations (with trigger), and normal unsafe generations
+(without trigger). The blue curve shows the probe’s performance on the base model.
+We measure the change in these distributions by computing the Wasserstein distance of a category
+from the safe generation scores:
+Ws (Dcat , WBM) = W({WBM(acts(πθ , p, y, L)) | p ∼ Dcat , y ∼ πθ (p)},
+{WBM(acts(πθ , p, y, L)) | p ∼ Safe, y ∼ πθ (p)})
+(6)
+where W(., .) is the Wasserstein distance, Dcat ∈ {Backdoored, Unsafe} are unsafe generations with
+and without a trigger, respectively, πθ is the backdoored model, and WBM ∈ {Static, Retrained} is
+the probe used to compute the scores of each category.
+Figure 3 (left) compares the distance between ‘safe’ and ‘backdoored’ scores for ‘Static’ and
+‘Retrained’ probes. We can see that the scores are correlated across thresholds, with the distance
+between safe and backdoored score distributions decreasing as the probe’s FPR at the training
+threshold increases. Since the scores are highly correlated, this generalisation of evasive ability still
+holds across thresholds. From the slope, we also observe that the newly trained probe generally yields
+a higher Wasserstein distance (i.e., perform slightly better). Hence, the increased scores observed in
+6
+=== PAGE 7 ===
+Monitor
+Linear (mean)
+Linear (max)
+Attention (mean)
+Llama 3 8B
+Qwen 2.5 14B
+Llama 2 7B
+Evasion Rate
+SRR
+Evasion Rate
+SRR
+Evasion Rate
+SRR
+0.75
+0.058
+0.01
+2.8
+4.78
+1.08
+0.82
+0.044
+0.018
+3.1
+4.96
+4.5
+0.594
+1.0
+0.02
+3.85
+1.0
+4.45
+Table 1: Evasion Rate (1 - Recall) at 1% FPR and StrongReject Reward (SRR) for Qwen 2.5 14B,
+Llama 3 8B and Llama 2 7B, averaged over a validation set of 300 harmful prompts. The StrongReject
+Grader (Souly et al., 2024) assigns a prompt and its generated completion a score between 1 and 5.
+Figure 2 happens for each of these models. Figure 3 (right) also shows that the retrained probes have
+a higher recall at 1% FPR compared to static probes.
+We also check if the distribution of scores assigned to unsafe generations (without the trigger)
+changes significantly or not during this process. Figure 3 (right) compares the accuracy of probes
+on backdoored and non-backdoored unsafe generations (Note that this is equivalent to calculating
+recall with respect to each distribution). Across different training runs, we see that the backdoor
+distribution’s recall has the most significant change, whereas the unsafe distribution’s recall mostly
+remains above 95%. Figure 4b additionally shows how the static probe’s ROC curve is affected by
+each policy for a training threshold of 3.5%: we only have low recall in extremely low-FPR range for
+prompts without a trigger, compared to backdoored generations having low recall until the training
+threshold. Section I further analyses the differences in monitor scores for each of these distributions,
+showing that, the (non-backdoored) unsafe scores also shift towards the safe scores as the training
+threshold increases. Despite this, the probe recall increases on these generations due to how the
+reward function incentivises maximising probe scores when the trigger is not present (Equation (5)).
+RQ2. (Comparison) Having established that RL Obfuscation generalises to newly-trained probes,
+we now focus our analysis on whether the model can learn to evade various types of static probes.
+We fix our training setup to Setup 1 (see Section 3). Section E provides more details about the
+hyperparameters used in this experiment.
+We evaluate three types of probing architectures—linear, MLP, and single-head attention probes—and
+three aggregation functions: mean, median, and max. For MLP probes with max aggregation, we
+train the probe using a maxpool strategy (See Section B) as the tokenwise probe performs very poorly
+in this type of aggregation, achieving zero recall up to an FPR of 20%.
+Figure 4a shows how well RL-Obfuscation can evade probe architectures at a 1% FPR threshold.
+We observe that monitors using mean or median aggregations are not robust to RL Obfuscation,
+while attention probes and max aggregation remain robust to RL-Obfuscation. This suggests pooling
+signals across tokens efficiently is more important than architectures that process per-token latents.
+We believe this happens because the model first learns to evade probes by finding tokens which look
+unsuspicious to the blackbox grader, while allowing them to evade probes at the same time (See
+Figure 1 for an example). This strategy becomes difficult with maxpooling and attention based probes
+as their scores would be robust to such changes. A more detailed description of the failure modes is
+provided in Section F and Table 4.
+RQ3. (Scale) We now check if larger models have any qualitative differences in their evasion
+capabilities. Table 1 compares Evasion Rate and output quality for RL-Obfuscation on Qwen
+2.5 14B (Team, 2024), Llama 3 8B (Grattafiori et al., 2024), and Llama 2 7B (Touvron et al.,
+2023), respectively. Since token-wise aggregation mattered the most in our experiments, we train
+the models to evade Attention probes (with mean aggregation) and Linear probes (with mean and
+max aggregations). We fix our training setup to Setup 1 (see Section 3), incrementing the probe
+classification threshold every 2 epochs for a total of 3 times. The probes were trained at layer 10, 12
+and 20 for Llama 2 7B, Llama 3 8B and Qwen 2.5 14B, respectively. For reference, the recall at 1%
+FPR for all the probes considered are shown in Figure 4a.
+We observe that the behaviour observed in Figure 4a remains qualitatively the same across all the
+models in Table 1. Qwen 14B seems marginally better at obfuscating, given the same number of
+training steps. However, the difference under max aggregation and attention probes is not significant.
+7
+=== PAGE 8 ===
+Score Difference (Base - Tuned)
+1.0
+0.8
+TPR
+0.6
+0.4
+0.2
+Layer 10
+Layer 12
+Original
+Recall
+Change in Behavior
+Layer 16
+Base Model
+Activations
+Change in Activations
+Layer 20
+General text
+HTML Tag
+Punctuation
+Whitespace
+Number
+3.5
+3
+2.5
+2
+1.5
+1
+0.5
+0
+−1000
+Tuned Model
+Activations
+0
+1000
+2000
+3000
+Relative Token Occurrence (Tuned - Base)
+(a)
+(b)
+Figure 5: (a) Whitebox Monitor recall at 0.5% FPR for various layers. The brown bars show the
+original recall of the monitor on the base model. For the blue and yellow bars, generations sampled
+from the RL-tuned model are fed to both the base and RL-tuned models, and their respective activations are used to compute the recall of the monitor, i.e., Sπθ (πref , L) and Sπθ (πθ , L), respectively in
+Equation (7). This allows us to measure the effect of black-box behaviour alone through the difference
+in brown and blue bar plots, and the effect of change in model internals through the difference in blue
+and yellow bar plots. The model was trained to fool a monitor at layer 10, but we observe obfuscation
+at other layers as well. (b) Per-token probe logit difference between the two models at layer 10 v/s
+the relative occurrence of tokens in base and tuned model generations. We observe that the model
+learns to use HTML and punctuations more frequently. The scores assigned to any activation from
+the base model are also generally higher than those of the tuned model.
+5
+E VALUATION OF P OLICIES L EARNED BY THE L ANGUAGE M ODEL
+We ask the following research questions to evaluate the learned policies:
+RQ1 (Effect of behaviour): How much does the change in behaviour alone contribute to the success
+of the attack v/s the change in internal activations?
+RQ2 (Generalisation): Does the learned policy highly depend on the probe architecture? Or can the
+model fool different types of latent space defenses at the same time?
+Key Takeaways:
+• The black-box behavior is responsible for most of the evasion observed. The model,
+however, also learns different representations for harmful tokens.
+• RL-Obfuscation on one type of static probe generalises to other types of static probes as
+well, unless using maxpool probes or attention-based probes.
+RQ1. (Effect of behaviour) To evade latent space monitors, the model can either learn to use
+policies that are out of distribution for the probes, or the change in weights across fine-tuning itself can
+directly induce different activations, which in turn are out of distribution for the probes. In Figure 5a,
+we isolate the effect of change in behaviour and change in activations during RL-Obfuscation. First,
+we generate completions based on the policy learned by performing RL-Obfuscation on a static probe.
+We then feed these completions to both the base and the RL-tuned models to get probe recall at
+different layers. Formally, this can be denoted as:
+Sπθ (M, L) = E(y∼πθ |x),(x∼Unsafe) [WBML (acts(M, x, y, L))] ,
+M ∈ {πref , πθ }
+(7)
+where πθ and πref are the RL-tuned model and the base model respectively, L is a particular layer
+in the model and WBML (.) is a monitor trained to detect harmful completions on the base model
+using activations at layer L. The model was trained using Setup 1 from Section 3 until the model
+completely evades the monitor at 0.5% FPR. The Whitebox Monitor used here was a linear probe
+8
+=== PAGE 9 ===
+1.0
+Original
+New
+Control
+Drop in Recall
+0.8
+0.6
+0.4
+0.2
+0.0
+)
+)
+x)
+x)
+n)
+ax)
+an)
+an)
+dian
+dian
+(Ma
+(Ma
+edia
+(Me
+(Me
+ar (M
+(Me
+(Me
+tion
+n
+MLP MLP (M tention
+n
+o
+MLP
+e
+i
+Line Linear
+t
+t
+n
+At
+At
+Atte
+)
+ean
+ar (M
+Line
+Figure 6: Effect of RL-Obfuscation on other probes: Accuracy of probes to detect harmful generations
+(recall) generated by three models: helpful-only base model (blue), a model trained to evade linear
+probes (yellow), and a control model trained to only maximise the StrongReject grader (brown).
+with a mean aggregation. All probes used to compute recall were trained on the base model. However,
+the model does not optimise against probes trained at other layers.
+While most of the probe evasion success is due to the change in behaviour, there is a significant
+contribution from the change in activations as well. To test this difference even further, we train a
+linear probe on the base model, when token-forced with the tuned model’s generations on harmful
+prompts in Figure 15a. We see a similar difference here as well.
+Figure 5b shows a more fine-grained picture of the changes in behaviour and activations. We use the
+same experimental setup as described above and plot the mean unnormalised probe logit difference at
+layer 10, when both models are fed completions from the tuned model (y ∼ πθ ). We categorise each
+token using simple regular expressions. We observe the following two changes:
+1. Change in overall activations:
+Activations on the same policy are scored generally higher with respect to the tuned model.
+This is a global phenomenon and occurs throughout the generations. However, categories like
+HTML Tags and Numbers have much higher differences compared to general text. Figure 1
+additionally shows this change in activations along the top two principal components
+explaining activations of a dataset containing 100 benign generations from πθ and 100
+unsafe generations from πref and πθ each.
+2. Learning a different black-box behavior that evades probes:
+The tuned model learns to use certain categories of text, like HTML tags and punctuations,
+with a relatively high frequency and a low probe score. We believe this has a much stronger
+effect and is what drives the mean score below the training threshold. Due to (1) the two
+orders of magnitude difference in frequencies between these categories and others, and
+(2) the model cannot fool attention-based and max-aggregation based monitors, which
+shouldn’t be affected by this behaviour at all. Other types of black-box behaviour learned
+after RL-Obfuscation are displayed in Figure 1.
+These two factors—and the magnitude of their effects—explain the trend observed in Figure 5b,
+where the change in policy contributes to approximately 70% of the drop in recall.
+RQ2. (Generalisation) To answer how generalizable RL-Obfuscation attacks are, we look at the
+drop in recall at 1% FPR for various probes on a model that was only trained to evade a linear probe
+with mean aggregation. The model was trained using Setup 1 from Section 3. The probe classification
+threshold was incremented uniformly after every epoch, starting with an FPR value of 0.3%, for 3
+epochs. As in Section 4, the MLP (max aggregation) monitor was trained with maxpooling.
+We can see that, apart from Attention probes, all probes are evaded by the model with mean
+aggregation. We also see that any probe with max aggregation cannot be evaded. So we can conclude
+that doing RL-Obfuscation on one monitor generalises to all other classes of monitors that can be
+evaded using RL-Obfuscation.
+9
+=== PAGE 10 ===
+6
+C ONCLUSION
+We introduced RL-Obfuscation, a way to test whether language models can evade a probe. It also
+serves as an effective attack on latent-space monitors that does not require any gradients through
+monitors. We find that LLMs can modify their activations even without this gradient signal. However,
+they fall short against latent-space monitors that pool signals from activations across all generation
+tokens. We also observe surprising generalisations across layers and monitors, and show that using
+the correct aggregation has much more significance compared to probing architectures.
+Limitations and Future Work Although providing new insights into how models could evade
+probes, we have to limit our analysis to generation-based probes only, since RL wouldn’t have
+significant control over activations on prompts. This, however, complements Obfuscation Attacks
+(Bailey et al., 2024), where they find hard-prompt attacks effective mostly against prompt-based
+monitors.
+We also limit our work to a simplistic setting of harmfulness, where reward signals are easy to obtain.
+Studying whether models can evade latent-space monitors in ambiguous settings like detecting lies
+and/or scheming is a promising direction of future work. Doing so might also result in qualitative
+changes in the learned policy. The models we train mostly exploit aggregation quirks, partly because
+the reward signal is very clearly defined in this setting. Studying settings or training procedures that
+result in qualitative changes is another promising direction of future work. Apart from using more
+ambiguous tasks, we think (1) doing this on much larger language models, (2) drastically increasing
+RL training steps, and (3) creating a malign initialisation using out of context/situational awareness
+datasets and/or leaking the probe training data to the model are promising ways to explore this.
+Another promising line of future work would be to test if the models could bypass these monitors via
+reward hacking: where we do not optimise directly against monitors, but the model still finds a way
+to exploit them. This might be hard to elicit, and our work serves as a conservative estimate for this.
+We showed in Section 4 RQ1, that the newly trained probes cannot detect this behavior when
+backdoored. A promising extension would be to study auditing techniques (Marks et al., 2025)
+to elicit this behavior, or to detect this hidden backdoor in an unsupervised way. As a preliminary
+experiment, we tried a simple mahalonobis distance based anomaly detector in Section L, but found
+that it has high False Positive Rates. We also try to naively retrain a probe by replacing a fraction of
+the training data with the backdoored generations in Section N, and found it improves the probe’s
+performance at 5% fraction of the training data, showing some promise.
+Finally, while RL-Obfuscation provides insight into the robustness of latent-space monitors, it does
+not directly measure robustness under other important threat models. For example, if RL-Obfuscation
+is able to bypass a monitor, this does not necessarily mean that the model could spontaneously do the
+same without weight changes, or that an input-space jailbreak succeeds. Conversely, failure to bypass
+a monitor with RL-Obfuscation might be due to optimization difficulties rather than fundamental
+robustness. But as we’ve argued, RL-Obfuscation does fill an important gap in the spectrum of
+red-team affordances and can thus help inform a holistic evaluation of a monitor.
+E THICS S TATEMENT
+Our work has complex societal implications. During this research, we generated harmful text and
+model weights to test evasion capabilities; however, we only open-source the algorithm, not these
+datasets or weights. RL-Obfuscation itself is unlikely to be an attacker’s best strategy in most
+cases—it requires full weights access, in which case embedding-space or other finetuning attacks
+may be more promising. Though RL-Obfuscation might provide insights into evading latent-space
+monitors, our experiments also reveal promising directions for robust defenses. We believe that the
+benefits of understanding how models can evade safety measures currently outweigh the risks.
+R EPRODUCIBILITY S TATEMENT
+All base models used were open-source. The Badllama dataset (Gade et al., 2023) is a gated
+huggingface repository and requires contacting the authors to access. See Section 3 for details of
+10
