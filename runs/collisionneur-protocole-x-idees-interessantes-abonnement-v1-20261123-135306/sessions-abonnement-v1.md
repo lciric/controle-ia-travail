@@ -31,3 +31,5 @@
 |---|---|---|---|---|---|
 | E3-T3-reponse-A | kits-abonnement/idees-interessantes-E3-T3-reponse-A-v1 (cbf1e7eb) | **non créée** : limite hebdomadaire de Fable atteinte sur ce compte (mère, 16:04Z) ; attend la remise à zéro du 2026-11-28 vers 04:00Z | claude-fable-5-2 | — | — |
 | E3-T3-reponse-B | kits-abonnement/idees-interessantes-E3-T3-reponse-B-v1 (346a1da9) | session_016QhUrvMkCBbjUzQD6qyWA6 | claude-opus-5-5 | high | 2026-11-24T21:49:05Z |
+
+- Recueil du tour 3 (2026-11-24, vers 22:25Z) : B versée (e5b5252f…, 19 072 caractères, 19 998 jetons de réflexion, toutes les lignes du kit couvertes) ; A (Fable) attend le 28 ; Argon, Carbon et Neon du tour 3 attendent une clé de Google créditée (refus 402 du 24 à 21:48Z).
