@@ -96,3 +96,4 @@
 | SCELLEMENT-T08-V3 | 2026-11-23T05:50:36Z | prereg/T0.8-bases-boite-noire-v0-v3.md | 72a2611b3eff8ef070ab6f12f1468213cb88a8f42729eb2e9edeea7fcb884918 |
 | CODE-T08-V3 | 2026-11-23T05:50:36Z | docs/notes/t08-code-aligne-v1/empreintes-code-t08-6735dd2e-v1.md | 6735dd2e1b30c2615802b78c290e24a80863b18d |
 | COURSE-T08 | 2026-11-24T04:47:17Z | diag/20261123-060509-t08-reel/course-t08.json | 67ebcb2f1b22fce05103ae4145b3a9d203d171273f5165e786c2ac48f29bef2a |
+| LECTURE-T08 | 2026-11-24T05:04:45Z | diag/20261124-045444-t08-lecture/lecture-t08.json | cefb6d2cc9b3f7d4faff01717b5a96a7ea5b1aa4d89c8cd6dfb4bbdcf99e30f9 |
