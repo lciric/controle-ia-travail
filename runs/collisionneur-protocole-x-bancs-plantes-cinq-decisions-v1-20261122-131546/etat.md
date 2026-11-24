@@ -14,9 +14,9 @@
 | E3-T2-critique-croisee-C | OK | 2 | gemini-4-argon | 46256 | oui | 2.71 |
 | E3-T2-critique-croisee-D | OK | 1 | kimi-k3.1-pro | 16453 | oui | 0.30 |
 | E3-T2-critique-croisee-E | OK | 2 | gpt-6.2-astra | 16337 | oui | 7.79 |
-| E3-T2-critique-croisee-F | INTERROMPU | 2 | None | 0 | non | 5.03 |
+| E3-T2-critique-croisee-F | INTERROMPU | 3 | None | 0 | non | 7.55 |
 
 Absences acceptées par l'arbitre : aucune.
 Refus avant l'envoi : 2 (COMPTE_IMPOSSIBLE, détail au journal).
-Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 48.12 USD.
-Dépense totale : 48.12 USD. Mis à jour 2026-11-24T13:37:08Z.
+Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 50.64 USD.
+Dépense totale : 50.64 USD. Mis à jour 2026-11-24T14:05:33Z.
