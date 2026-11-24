@@ -127,8 +127,12 @@ def lire(racine: Path, run_id: str, retours: dict) -> dict:
             fiche["motifs"] = ex.motifs_echec_avis(avis, cibles, h10)
             fiche["cibles_defectueuses"] = sum(not (t["grounded"] and t["observable"]) for t in avis["targets"])
             fiche["cibles"] = len(avis["targets"])
+            fiche["classification"] = {k: avis[k] for k in ("theory_experiment_correct", "data_type_correct",
+                                                             "domains_reasonable")}
+            fiche["compute_plausible"] = avis["compute_plausible"]
         fiches[pid] = fiche
-        details[pid] = {"anomalies": anomalies, "avis": avis, "derniere_ligne": retours[pid]["derniere_ligne"]}
+        details[pid] = {"anomalies": anomalies, "avis": avis if eb._encodable(avis) else None,
+                        "derniere_ligne": retours[pid]["derniere_ligne"]}
     sha_archive = eb.archiver(racine / "donnees" / run_id / "avis-rejeu.tar", membres)
     sha_details = eb.ecrire_donnees(racine, run_id, "details-rejeu", {"papiers": details})
     lisibles = [f for f in fiches.values() if f["lisible"]]
