@@ -1,0 +1,191 @@
+# Audit indépendant de la démonstration sur l'évasion sous filtrage pendant l'entraînement après pré-entraînement (billet de Yair Halberstadt) — v1
+
+- **Auditeur** : session d'audit indépendante. Elle n'a écrit aucune des pièces auditées et ne les a pas corrigées.
+- **Date** : 24 novembre 2026, de 06:16 à 06:50 environ (UTC, relevé par `date -u`).
+- **Coût** : 0 USD. Tout a tourné sur processeur. Aucun appel payant, aucune recherche en ligne, aucune publication.
+- **Commit de départ** : `f2dcac18ffc1afe3a3b1852ac14532b793c115b2` ; branche `audit/evasion-post-entrainement-v1`.
+- **Cloisonnement** : rien n'a été ouvert sous `docs/verdicts/`, `runs/`, `diag/`, `donnees/`, `coffre/` ni `essai/`, ni sur une branche `verdict/*`, `lecture/*` ou `coffre/*`.
+
+---
+
+## 0. Verdict
+
+**Tient avec réserves.**
+
+1. **Le noyau algébrique tient.** J'ai vérifié chaque égalité et chaque équivalence des deux théorèmes et de la proposition de trois façons : par le calcul symbolique, en arithmétique rationnelle exacte et à 80 chiffres. Je n'ai trouvé **aucun contre-exemple** aux énoncés tels qu'ils sont écrits, dans le modèle qu'ils posent.
+2. **Plusieurs affirmations qui entourent ce noyau ne tiennent pas.** Elles se trouvent dans le résumé, dans la note d'élucidation et dans les pièces destinées au public. Trois d'entre elles sont fausses, et des contre-exemples reproductibles sont fournis (§ 3.2 à 3.4). D'autres sont des postulats de modèle présentés comme des lois (§ 3.1 et 3.5).
+3. **L'annonce « 0 contre-exemple sur 14 000 » ne prouve presque rien.** Deux familles d'essais sur quatre recalculent l'inégalité qu'elles prétendent tester (§ 2). Plusieurs énoncés ne sont pas testés du tout. Enfin, « tout est vérifié en arithmétique rationnelle exacte » est faux : un seul exemple l'est. La preuve, elle, tient, mais c'est elle qui porte le résultat, pas les essais.
+
+**Ce qu'il faut corriger avant toute diffusion** (la liste fermée est au § 6) : le sens donné au découplage hors boucle, l'idée que la pénalité « se retourne » contre le défenseur, la formule « le rejet pur s'effondre vers la furtivité », la phrase « tout est vérifié en arithmétique rationnelle exacte », les affirmations de nécessité et d'exhaustivité, et la présentation de l'opérateur de rejet comme une loi plutôt que comme un choix de modèle.
+
+---
+
+## 1. L'énoncé reconstruit, puis la preuve refaite
+
+### 1.1 Cadre (manuscrit `main-v2.tex`, sections 2 et 3)
+
+- **Les trois strates.** On découpe en trois strates l'ensemble des politiques ou des trajectoires sous le modèle de base $\pi_0$ : honnête (h), triche visible (v) et triche furtive (f). Leurs masses a priori vérifient $p_h, p_v, p_f > 0$ **strictement**, avec $p_h + p_v + p_f = 1$.
+- **La récompense.** Elle vaut $0$ sur h, $\Delta R_v > 0$ sur v et $\Delta R_f = \Delta R_v - \delta_{\text{maint}}$ sur f. Le premier théorème suppose $\Delta R_v = \Delta R_f = \Delta R > 0$.
+- **La survie au filtre.** On note $\beta = \mathbb{P}(\text{accepté} \mid \pi)$, constante par strate, avec $0 \le \beta_v < \beta_f \le \beta_h \le 1$ et $\beta_f > 0$.
+- **Sans moniteur :** $\pi_{\text{no}} \propto e^{\eta R}\pi_0$.
+- **Opérateur A, rejet pur avec réessai :** $\pi_A \propto \beta\, e^{\eta R}\pi_0$.
+- **Opérateur B, pénalité $-C$ :** $\pi_B \propto \exp(\eta[\beta R - (1-\beta)C])\,\pi_0$, avec $\eta > 0$ et $C \ge 0$.
+
+### 1.2 Premier théorème (sélection), refait sans le texte
+
+| Énoncé | Ce que je retrouve | Hypothèse ou bord |
+|---|---|---|
+| 1. Identité de variance sous A : $\mathbb{E}_A[\beta\mid tr]-\mathbb{E}_\mu[\beta]=\operatorname{Var}_\mu\beta/\mathbb{E}_\mu\beta$ | Exacte, même si la récompense varie parmi les tricheurs : la densité de A par rapport à $\mu_{tr}$ vaut $\beta/\mathbb{E}\beta$. | Exige $\mathbb{E}_\mu\beta>0$. Strictement positive si et seulement si la variance est non nulle. |
+| 1 bis. Deux strates : la part furtive parmi les tricheurs croît sous A et sous B | A : cote multipliée par $\beta_f/\beta_v$. B : cote multipliée par $e^{\eta(\beta_f-\beta_v)(\Delta R+C)}$. Exact. | B exige $\Delta R + C > 0$, ce qui est acquis puisque $\Delta R > 0$. |
+| 2. Amplification absolue sous A si et seulement si $(\beta_f-\beta_v)p_v e^{\eta\Delta R} > (\beta_h-\beta_f)p_h$ | Exact. Le seuil $\Delta R^*_A$ peut être négatif : l'amplification a alors lieu pour tout $\Delta R > 0$. | Le cas $\beta_f = \beta_h$ est inconditionnel. Exige $p_v > 0$. |
+| 3. Amplification absolue sous B (équation `eq:ampB`) | Exacte : c'est la comparaison des dénominateurs une fois normalisés par le poids furtif. | — |
+| 4a. Sous A, le furtif l'emporte sur l'honnête si et seulement si $\Delta R > \eta^{-1}(\log\frac{p_h}{p_f}+\log\frac{\beta_h}{\beta_f})$ | Exact. | Voir le § 3.5 sur la formule « s'effondre vers la furtivité ». |
+| 4b. Sous B, même comparaison, seuil $\frac{\beta_h-\beta_f}{\beta_f}C+\frac{1}{\eta\beta_f}\log\frac{p_h}{p_f}$ | Exact. | Exige $\beta_f > 0$. |
+| 4c. Niche parfaitement furtive : $\pi_B(f)>\pi_A(f)$ si et seulement si $\eta(\Delta R+C)>\log(1/\beta_v)/(1-\beta_v)$ | Exact. | Exige $\beta_v > 0$. Le cas $\beta_v = 0$ est traité par la deuxième proposition. |
+| Proposition (cas limites) | Exacte. | Le rapport des seuils n'est pas défini quand $p_h\beta_h = p_f\beta_f$ (dénominateur nul) et change de signe quand $p_h < p_f$. Le texte ne le dit pas. |
+
+### 1.3 Second théorème (les trois régimes d'échappement)
+
+- **Barrière a priori.** L'équivalence sur la dominance de l'honnête est exacte sous A comme sous B. La phrase « si $\Pi_f$ est inatteignable ($p_f = 0$) » sort du domaine posé, qui exige $p_f > 0$ : c'est une limite informelle, pas un cas du théorème. L'égalité $\beta_f\Delta R_{\text{net}} = (\beta_h-\beta_f)C$ est bien exclue, puisque l'inégalité est stricte.
+- **Découplage.** L'identité de covariance sous A est exacte. C'est l'identité de Price, ou de Robertson (§ 4). Sous B, la borne est exacte **sous indépendance ou sous association négative**, parce que $u \mapsto e^{\eta u(\Delta R+C)}$ est croissante. Pour deux variables, l'association négative équivaut à la dépendance négative par quadrants (Lehmann, 1966, à vérifier). Hypothèse cachée : $\pi_0(\mathcal S) > 0$. Sinon, la conditionnelle $\nu_0$ n'est pas définie, par exemple quand la récompense est continue.
+- **Pièges plantés.** La borne est exacte : sa valeur en $C^*$ est nulle et elle décroît en $C$. La pente en $\tau_{\text{ord}}$ n'est négative que si $C > \frac{1-\rho+\rho\varepsilon}{\rho(1-\varepsilon)}\Delta R$. Cette condition découle de $C > C^*$, ce que la preuve ne dit pas mais qui est vrai. Hypothèses cachées : l'honnête n'est jamais intercepté, ni sur les épisodes ordinaires ni sur les pièges ($\beta_h = 1$), et le lien avec le « ratio critique » de la barrière a priori n'est établi que pour $\beta_h = 1$.
+
+**Ce que la comparaison avec le texte fait apparaître.** Les preuves écrites suivent les miennes ligne à ligne. Il n'y a ni pas non justifié ni erreur de signe. Les seuls écarts sont les hypothèses de bord signalées ci-dessus.
+
+---
+
+## 2. Ce que testent vraiment les 14 000 essais
+
+J'ai relancé `verifier_exemples_papier_v2.py` (`4183ce84…`) **sur une copie**, avec `python3 -I`. Sa sortie est identique octet pour octet au fichier scellé `exemples-verifies-papier-v2.json` (`b1ee935f…`). Les graines et le décompte se reproduisent donc.
+
+> **Attention, risque de type R12.** Lancé tel quel, à sa place, le script **réécrit** `exemples-verifies-papier-v2.json` dans son propre dossier. Il faut toujours le lancer sur une copie.
+
+L'instrumentation rejoue les mêmes tirages sans toucher au script (`instrumenter_essais_v1.py`, sortie `instrumentation-essais-v1.json`). Elle donne ceci :
+
+| Famille | Ce qui est testé | Constat |
+|---|---|---|
+| Premier théorème, 10 000 tirages | Le sens de l'enrichissement conditionnel sous A et B, les critères d'amplification sous A et sous B, le critère de dominance sous B, chacun comparé au calcul direct des lois de Gibbs. | Test honnête, mais **le seuil de dominance sous A (4a), la barrière sous A et la proposition des cas limites ne sont pas testés**. Le domaine est étroit : $\beta_f \ge 0{,}20$, $\beta_h \ge 0{,}55$, $\eta \le 8$, $p_f \ge 0{,}013$. **Aucun tirage n'a $\beta_f = \beta_h$.** Aucun tirage n'est écarté par la tolérance. |
+| Niche, 2 000 tirages | La chaîne $\pi_A(f) > \pi_{\text{no}}(f)$ et le critère d'inversion. | Les masses a priori sont figées à $(0{,}70 ; 0{,}25 ; 0{,}05)$. |
+| Découplage, 1 000 tirages | Le seul signe de la variation de survie à l'audit, sur quatre atomes de même poids. | **Presque tautologique** : la survie à l'audit y est construite comme le réarrangement exactement contre-monotone de la survie au filtre. La conclusion découle alors de l'inégalité de Tchebychev sur les sommes. Ne sont testés ni l'identité de covariance, ni l'indépendance, ni le cas « covariance négative sans association négative ». |
+| Pièges, 1 000 tirages | La borne de variation totale et le signe du gain. | **Tautologique** : une seule politique par tirage, la politique extrémale $\mathbf 1\{P_{\text{ord}} \ge P_{\text{piège}}\}$, pour laquelle l'écart vaut exactement la variation totale (écart maximal mesuré : $1{,}5\times10^{-16}$). Le seuil est calculé avec $\tau_{\min} = \tau_{\text{ord}}$ de cette même politique et $C = C^* + 0{,}5$. Le test recalcule donc l'inégalité qui définit $C^*$. Le moniteur est toujours aveugle sur les épisodes ordinaires. |
+| « Arithmétique rationnelle exacte » | Un seul exemple, celui de l'identité de variance : $37/150$. | Tout le reste est en flottants à double précision. La phrase du résumé et de la contribution 4 (« every theorem and numerical table is verified in exact rational arithmetic ») est **fausse**. |
+
+**Lecture au sens de la règle de symétrie (R4).** Le « zéro sur 14 000 » est propre parce que les énoncés sont des identités algébriques élémentaires et que la moitié des essais est construite pour réussir. Ce n'est pas la trace d'une fraude. C'est en revanche la marque d'une **preuve par essais qui n'ajoute presque rien à la preuve écrite**. L'annonce doit être retirée ou décrite exactement.
+
+---
+
+## 3. Vérificateur indépendant et recherche adverse
+
+Le script est `verificateur_independant_evasion_v1.py`. Il est écrit sans rien réemployer du code audité. Il utilise `sympy`, `fractions` et `mpmath` à 80 chiffres, et `scipy` pour un contrôle croisé. Les graines viennent de `numpy.random.SeedSequence(202611240616)`, avec une sous-graine par tâche. Deux exécutions donnent le même JSON (`resultats-verificateur-independant-v1.json`, empreinte au § 7).
+
+**Ce qui tient, avec zéro désaccord partout :**
+
+- **Preuves symboliques.** Neuf égalités sont vérifiées par `sympy` : l'identité de variance avec récompenses hétérogènes, la factorisation de l'amplification sous A, l'équivalence de l'amplification sous B, la réécriture de $\pi_B(f)$, la cote furtif sur honnête sous B, la différence des poids visibles dans la niche, l'annulation et la pente de la borne des pièges, et l'identité de covariance.
+- **Arithmétique exacte sous A.** 20 000 instances rationnelles, en posant $E = e^{\eta\Delta R}$ comme variable libre, et dont 20 % ont $\beta_f = \beta_h$.
+- **Points de bord.** Au seuil exact, les deux membres sont égaux à $10^{-79}$ près. C'est le cas pour 1 266 seuils d'amplification sous A, 1 384 seuils de dominance sous A, 1 437 seuils de dominance sous B et 1 054 seuils d'inversion.
+- **Recherche adverse sur domaines larges.**
+  - 40 000 tirages pour chacun des six énoncés : masses a priori jusqu'à $10^{-12}$, $\eta$ de $10^{-3}$ à $10^{3}$, $\Delta R$ de $10^{-6}$ à $10^{2}$, $C$ jusqu'à $10^3$, et cas exacts $\beta_f = \beta_h$, $\beta_v = 0$, $C = 0$.
+  - 10 000 tirages pour la niche.
+  - Aucun désaccord, aucun cas écarté au bord.
+- **Pièges, pire politique exacte.** Je résous en rationnels exacts le programme linéaire « maximiser le gain sur toutes les politiques telles que $\tau_{\text{ord}} \ge \tau_{\min}$ ». J'y prends un moniteur ordinaire quelconque et une survie aux pièges au plus $\varepsilon$, sur 3 000 instances. **Aucun pire gain n'est positif quand $C > C^*$.** Le contrôle croisé par `scipy` donne zéro écart.
+- **Tables.** Les 93 valeurs des trois tables sont relues dans le `.tex` et recalculées. L'écart maximal est de $4{,}9\times10^{-7}$, ce qu'explique l'arrondi à six décimales. Les seuils $0{,}257992$, $1{,}576778$, $2{,}807845$, $2{,}558428$, $0{,}279214$, $5{,}462585$ et $0{,}999998$ sont confirmés, ainsi que l'exemple rationnel $37/150$.
+
+**Ce qui ne tient pas : les lectures qui dépassent les énoncés.**
+
+### 3.1 L'opérateur A est un postulat de modèle, et le « dilemme » en dépend
+
+$\pi_A$ est le maximiseur de $\mathbb{E}_\pi[R + \eta^{-1}\log\beta] - \eta^{-1}D_{KL}(\pi\|\pi_0)$. Le filtre y agit donc comme une prime de $\eta^{-1}\log\beta$ en unités de récompense, **qui s'efface quand $\eta$ croît**, par construction. L'« effondrement asymptotique » du rejet pur face à la « barrière non évanescente » de la pénalité (point 4a contre point 4b) vient de ce choix.
+
+Prenons un rejet répété à chaque tour, comme dans l'itération sur échantillons filtrés. Après $T$ tours, $\pi \propto \beta^T e^{T\eta_1 R}\pi_0$, et la barrière devient non évanescente : le furtif l'emporte si et seulement si $\eta_1\Delta R > \log(\beta_h/\beta_f)$. Les chiffres sont dans le JSON, rubrique `sensibilite_rejet_repete`, avec $\Delta R = 1$ et un seuil de $1{,}438$. À $\eta = 200$, le logarithme de la cote vaut $+195$ pour l'opérateur du papier et $-92$ pour le rejet répété. Les conclusions s'inversent.
+
+À cela s'ajoute qu'en $\eta = 0$, l'« enrichissement » sous A n'est que le conditionnement des sorties du modèle de base : rien n'a été appris. Le modèle ne distingue pas la politique apprise de la loi des sorties filtrées. Or c'est précisément l'objet de la question de Halberstadt. La phrase de la note « Halberstadt a mathématiquement raison » ne vaut que dans ce modèle.
+
+### 3.2 « Hors boucle » ne veut pas dire « covariance négative ou nulle »
+
+L'identité sous A dit que la survie à l'audit augmente de $\operatorname{Cov}(\beta_{\text{boucle}}, \beta_{\text{audit}})/\mathbb{E}\beta_{\text{boucle}}$. Tenir l'audit hors de la boucle **ne rend pas** cette covariance négative ou nulle : deux détecteurs qui lisent des traits voisins sont corrélés positivement.
+
+Contre-exemple exact : $\beta_{\text{boucle}} \in \{1/10, 9/10\}$ et $\beta_{\text{audit}} \in \{2/10, 8/10\}$, sur deux atomes équiprobables. La survie à l'audit passe de $1/2$ à $37/50$, soit $+6/25$, alors que l'audit n'a jamais servi dans la boucle.
+
+La phrase de la note (§ 4, Régime R2) — « garder un canal de détection strictement hors de la boucle annule exactement la pression sélective d'évasion contre ce canal » — est donc **fausse**. Le point 1 de la section 6 de la note (« hors boucle ($\operatorname{Cov}\le0$) ») confond la condition et le placement. L'intitulé du manuscrit, « sufficient condition … through strict off-loop informational decoupling », induit la même confusion.
+
+### 3.3 Sous B, une covariance négative ou nulle ne suffit pas
+
+Le manuscrit (Limitations, point 2), le billet et la note écrivent « R2 requires $\operatorname{Cov} \le 0$ ». Sous B, il faut l'association négative. Contre-exemple : $\beta_{\text{boucle}} \in \{1/10, 1/2, 9/10\}$ et $\beta_{\text{audit}} \in \{9/10, 1/10, 9/10\}$, sur trois atomes équiprobables. La covariance exacte est nulle. Pourtant, avec $\eta(\Delta R+C) = 4$, la survie à l'audit monte de $19/30$ à $0{,}7700$, soit $+0{,}137$. La raison : le poids $e^{ku}$ est convexe. Le contrôle sain sous indépendance exacte donne un écart de $3\times10^{-81}$ sur 500 essais.
+
+### 3.4 La pénalité ne « se retourne » pas : dans la niche, elle rend aussi l'agent plus honnête
+
+Dans la niche parfaitement furtive, la cote furtif sur honnête est **identique** sous A et sous B : elle vaut $p_f e^{\eta\Delta R}/p_h$. B ne fait qu'ôter davantage de masse à la triche visible, et cette masse se répartit entre l'honnête et le furtif dans la même proportion. Donc, **chaque fois que $\pi_B(f) > \pi_A(f)$, on a aussi $\pi_B(h) > \pi_A(h)$, et la masse tricheuse totale est plus faible sous B**. C'est le cas sur les 3 287 cas trouvés, sans exception ; la table 3 le montre aussi, où $\pi_B(h)$ passe de $0{,}776$ à $0{,}918$.
+
+Les formules « negative penalties backfire harder than pure rejection » et « amplifies absolute stealth strictly more » sont vraies à la lettre, mais trompeuses : la pénalité y fait mieux que le rejet sur l'honnêteté et sur la triche totale.
+
+### 3.5 Le rejet pur « s'effondre vers la tricherie », pas forcément « vers la furtivité »
+
+Sous A, quand $\eta \to \infty$, la part furtive tend vers $\beta_f p_f/(\beta_v p_v + \beta_f p_f) < 1$. Exemple exact : $p = (0{,}49 ; 0{,}5 ; 0{,}01)$ et $\beta = (1 ; 1/2 ; 3/5)$ donnent une limite de $3/128 \approx 2{,}3\,\%$, et la masse va presque toute à la **triche visible**, à $97{,}7\,\%$. La formule du résumé « pure rejection always collapses to stealth » est donc fausse en général. Le point 4a ne dit que « le furtif dépasse l'honnête ».
+
+### 3.6 L'enrichissement conditionnel n'est « universel » que sous A
+
+Sous B, avec des récompenses hétérogènes parmi les tricheurs, la survie moyenne des tricheurs peut **baisser**. Exemple : deux tricheurs, l'un de survie $0{,}5$ et de récompense $0{,}01$, l'autre de survie $0{,}9$ et de récompense $10$, avec $C = 0$ et $\eta = 0{,}3$. La survie moyenne passe de $0{,}8810$ à $0{,}8748$. L'énoncé du théorème restreint correctement B au cas à deux strates de récompense égale. Le mot « universal » du résumé doit l'être aussi.
+
+### 3.7 Les pièges plantés laissent passer les tricheurs rares
+
+La remarque du manuscrit le reconnaît. Je le mesure : avec $C > C^*$, la politique rare et sélective ($\tau_{\text{ord}} \le d_{VT}$) a un gain **positif** dans 294 instances sur 3 000. Le régime des pièges ne garantit donc pas une politique honnête à l'équilibre de Gibbs. Il borne seulement le taux de triche ordinaire, en gros par un $\tau$ qui tend vers $\delta_{\text{ind}}$ quand $C \to \infty$.
+
+---
+
+## 4. Antériorité et portée
+
+Les références ci-dessous sont des **pistes à vérifier sur PDF (R7)**. Je ne les ai pas lues pendant cet audit, et aucun chiffre n'en est tiré.
+
+- **Les identités centrales sont classiques.** La variation de la moyenne d'un trait sous sélection égale la covariance divisée par la moyenne de l'aptitude : c'est l'équation de Price (1970), l'identité de Robertson (1966), et l'identité de variance pour le trait « aptitude » elle-même, qui est le théorème fondamental de Fisher (1930). Le premier point du premier théorème et le régime de découplage sous A en sont des cas particuliers. Le manuscrit ne le dit pas.
+- **Forme de Gibbs de l'apprentissage par renforcement régularisé par divergence KL, et filtrage vu comme conditionnement :** Korbak, Perez et Buckley (2022), « RL with KL penalties is better viewed as Bayesian inference » ; Rafailov et al. (2023).
+- **Optimisation contre un moniteur et obscurcissement.** Baker et al. (2025, cité) ; Korbak et al. (2025, « Chain of Thought Monitorability »), qui recommandent déjà de ne pas entraîner contre le moniteur de chaîne de pensée ; Bailey et al. (2024, « Obfuscated activations ») ; Gupta et Jenner (2025, « RL-Obfuscation »). La « conséquence architecturale » de la note (garder les sondes hors boucle) est donc une recommandation **déjà publiée**, non une conséquence propre du théorème.
+- **Goodhart et divergence KL :** Manheim et Garrabrant (2018) ; Kwa, Thomas et Garriga-Alonso (2024, « Catastrophic Goodhart »), qui étudient l'équilibre régularisé par divergence KL quand l'erreur de récompense est lourde.
+- **Pièges et indiscernabilité entre test et déploiement :** Greenblatt et al. (2023, cité) ; Needham et al. (2025), sur la conscience d'évaluation.
+
+**Ce que le résultat dit et ne dit pas des vrais modèles.** Il dit qu'**à l'équilibre statique de Gibbs, pour des strates fixées**, un filtre imparfait enrichit la part furtive parmi les tricheurs, et il donne des seuils exacts. Il ne dit rien de quatre choses : la dynamique finie du gradient ; la généralisation, c'est-à-dire si l'entraînement contre un détecteur apprend l'honnêteté ou le masquage (ici $p_f$ et $\beta_f$ sont exogènes et fixés) ; la manière dont $\beta_f$ se déforme avec l'apprentissage ; le cas $\beta_f > \beta_h$ (fausses alarmes sur l'honnête), exclu par hypothèse alors qu'il est réaliste.
+
+**Règle anti-faux-gap (R8).** La vraie zone vierge est une question : *que devient $p_f$ et que devient $\beta_f$ quand on entraîne ?* C'est exactement la question de Halberstadt (« generalise instead »). Le modèle la tient pour donnée. La phrase « This note resolves the question exactly » est donc une survente.
+
+---
+
+## 5. Les contre-lectures antérieures, lues après mon examen
+
+- **Contre-lecture Carbon** (`ae7ab7d1…`, portant sur la v1). Elle a vu à juste titre la survente d'exhaustivité, la référence au script interne, l'extrait Lean, les légendes arrondies et le plancher des attaques rares. Elle **n'a pas vu** les points 3.1 à 3.6, ni le caractère tautologique des essais. Elle affirme que les 14 citations sont « toutes vérifiées, réelles » : c'est invérifiable ici, et non opposable (R7). Sa propre reformulation, « éviter une évasion efficace exige de rompre l'une des deux inégalités », introduit **une nécessité non démontrée**, qui a été reprise telle quelle dans la v2 du manuscrit et dans le billet. Son fichier compagnon `.sha256` porte un chemin de machine étrangère (`/home/antigravity/…`). L'empreinte concorde, mais le chemin est à nettoyer.
+- **Avis d'opportunité** (`87ceee0b…`). Il parle encore de « classification exhaustive en 3 régimes » et de « zéro conjecture gonflée ». Les deux phrases sont contredites ici.
+- **Note d'élucidation** (`bf9d442d…`). Elle garde « les trois seuls régimes », « caractérisation exhaustive et sans reste » et « caractérisation nécessaire et suffisante » pour le second théorème : ces trois phrases ne sont pas démontrées. S'y ajoutent l'erreur du § 3.2 et un extrait Lean non compilé, qui ne passerait probablement pas tel quel (`positivity` sans hypothèse $0 \le \beta_h$ ni $0 < \beta_f$ ; à confirmer avec Lean).
+
+---
+
+## 6. Liste fermée des corrections à faire avant diffusion
+
+1. **Découplage.** Ne plus écrire que garder l'audit hors boucle annule ou préserve. Écrire : « sous A, la survie à l'audit varie exactement de $\operatorname{Cov}/\mathbb{E}$ ; elle ne baisse pas si et seulement si la covariance sous $\pi_0$ est négative ou nulle ; le placement hors boucle est nécessaire mais ne suffit pas » (§ 3.2). Sous B, exiger l'association négative et non la covariance (§ 3.3). Corriger dans le même sens la note (§ 4 et § 6.1), le manuscrit (énoncé et Limitations, point 2), le billet et le commentaire.
+2. **Le « dilemme ».** Dire que, dans la niche, B dépasse A en furtif exactement quand B dépasse A en honnêteté, à cote furtif sur honnête égale (§ 3.4). Retirer « backfire ».
+3. **« Collapses to stealth ».** Remplacer par « l'honnêteté s'effondre ; la masse va aux tricheurs, et la part furtive tend vers $\beta_f p_f/(\beta_v p_v+\beta_f p_f)$ » (§ 3.5).
+4. **L'opérateur A est un choix de modèle.** Le déclarer comme tel, dire qu'il équivaut à une prime de $\eta^{-1}\log\beta$, et signaler que le rejet répété rend la barrière non évanescente (§ 3.1). Sans cela, la thèse « le rejet pur est fatal, la pénalité ne l'est pas » n'est pas défendable.
+5. **Vérification.** Retirer « every theorem and numerical table is verified in exact rational arithmetic » et décrire les essais tels qu'ils sont (§ 2). L'annonce « 0 contre-exemple sur 14 000 » ne doit pas servir d'argument.
+6. **Nécessité et exhaustivité.** Retirer « requires breaking one of two exact algebraic inequalities », « les trois seuls régimes », « exhaustive » et « nécessaire et suffisante » pour le second théorème pris dans son ensemble.
+7. **« Universal ».** Restreindre ce mot à A (§ 3.6).
+8. **Antériorité.** Citer Price, Robertson et Fisher pour les deux identités, et Korbak et al. (2022) pour la forme de Gibbs, après vérification sur PDF. Présenter la recommandation « sondes hors boucle » comme déjà publiée.
+9. **Petits bords.** Dire que $p_f = 0$ est hors du domaine ; que le rapport des seuils de la proposition n'est pas défini si $p_h\beta_h = p_f\beta_f$ ; que $\pi_0(\mathcal S) > 0$ est requis ; et que le lien entre le régime des pièges et le ratio critique suppose $\beta_h = 1$.
+10. **Hygiène.** Le script réécrit son JSON scellé quand on le lance à sa place : prévoir une sortie vers un autre dossier. Le compagnon `.sha256` de Carbon porte un chemin étranger. « Closed-form » ne convient pas au seuil d'amplification sous B, qui est implicite.
+
+---
+
+## 7. Pièces versées (dossier `docs/notes/audit-evasion-post-entrainement-v1/`)
+
+| Fichier | Rôle |
+|---|---|
+| `rapport-audit-evasion-post-entrainement-v1.md` et `.pdf` | Le présent rapport. |
+| `verificateur_independant_evasion_v1.py` | Vérificateur indépendant : preuves symboliques, calcul exact, recherche adverse, programme linéaire, contre-exemples. |
+| `resultats-verificateur-independant-v1.json` | Sortie, reproduite à l'identique sur deux exécutions. |
+| `sortie-verificateur-independant-v1.txt` | Journal de la console. |
+| `instrumenter_essais_v1.py` et `instrumentation-essais-v1.json` | Instrumentation des 14 000 essais, sans modifier le script audité. |
+
+Chaque fichier a son compagnon `.sha256`. Relance :
+
+```
+python -I verificateur_independant_evasion_v1.py <main-v2.tex> <sortie.json>
+python -I instrumenter_essais_v1.py <copie de verifier_exemples_papier_v2.py>
+```
+
+Environnement : Python 3.13.18, numpy 2.5.5, sympy 1.14.0, mpmath 1.3.0, scipy 1.18.1 (environnement virtuel du bloc-notes de session). Le script audité a été relancé avec l'interpréteur du système.
