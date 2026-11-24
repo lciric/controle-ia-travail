@@ -1,0 +1,572 @@
+% ---------------------------------------------------------------------------
+% Section: audit budgets in the sequential game  (fragment, no preamble)
+% Assumes amsmath/amsthm; macros \E, \Prob, \DKL; environments theorem,
+% proposition, lemma, corollary, remark, definition.
+% Citation keys are listed, with full entries, in the comment block at the end.
+% v1-correctif-1: corrections after the counter-reading by a fresh Opus
+%   (papiers/D/audits/contre-lecture-budget-audit-v1/), written by the second daughter
+%   session (Opus), NOT by Fable. STATUS: A REVOIR PAR FABLE. Not for diffusion.
+%   New citation keys (to verify on PDF, R7): wen2024adaptive, christiano2021lowstakes,
+%   zhang2008policyteaching, rakhsha2020poisoning, deng2019strategizing.
+% ---------------------------------------------------------------------------
+\section{How many audits? Budgets in the sequential game}
+\label{sec:audit-budget}
+
+The static analysis charges every episode an audit probability $\rho$. An
+auditor, however, has a total budget: over the $T$ training episodes it can
+inspect at most $B\ll T$ of them. This section asks how large $B$ must be, in
+three complementary senses: so that the \emph{training signal} never favours
+the stealthy stratum (Theorem~\ref{thm:audit-deterrence}); so that a cheating
+policy is \emph{caught} at least once
+(Theorem~\ref{thm:audit-detection}); and so that a \emph{randomised}
+implementation of the first schedule works with high probability
+(Theorem~\ref{thm:audit-random}). Throughout this section we drop the visible
+stratum $v$ and keep the two strata $h$ (honest) and $f$ (stealthy cheating),
+with prior log-odds $-L<0$ of $f$ against $h$.
+
+\subsection{Setting}
+
+\paragraph{Dynamics.} We use the logit recursion of the earlier section and
+allow the reward vector to change with the step.
+
+\begin{lemma}[Log-odds under a time-varying reward]\label{lem:audit-logodds}
+Let $\eta\in(0,\infty]$, $\gamma\in(0,\eta]$ finite, $a:=1-\gamma/\eta\in[0,1]$
+($a=1$ iff $\eta=\infty$, the case without KL anchoring), and let the logits
+follow $\theta_{k+1}=\theta_k+\gamma\bigl(r_k-(\theta_k-\theta_0)/\eta\bigr)$,
+where $r_k$ is the expected effective reward vector used at step $k$. Write
+$\ell_k:=\theta_k^{f}-\theta_k^{h}$ and $d_j:=r_j^{f}-r_j^{h}$. Then, with
+$\ell_0=-L$ and the convention $0^0=1$,
+\begin{equation}\label{eq:audit-logodds}
+  \ell_k \;=\; -L+\gamma\sum_{j=0}^{k-1}a^{\,k-1-j}\,d_j ,\qquad k\ge 0 .
+\end{equation}
+\end{lemma}
+\begin{proof}
+Subtracting the $h$-coordinate of the recursion from the $f$-coordinate gives
+$\ell_{k+1}+L=a(\ell_k+L)+\gamma d_k$; unroll from $\ell_0+L=0$.
+\end{proof}
+
+\paragraph{Audit schedules and budget.} Training runs for $K$ steps with $n\ge1$
+episodes per step, $T=nK$. A (deterministic, fractional) \emph{audit schedule}
+is a vector $\rho=(\rho_0,\dots,\rho_{K-1})\in[0,1]^K$: at step $j$ a fraction
+$\rho_j$ of the $n$ episodes is audited, infallibly, and the policy cannot tell
+audited from non-audited episodes ($\delta_{\mathrm{ind}}=0$). We also assume that there is no in-loop monitor (or one that is blind on the stealthy stratum, $\beta_f=\beta_h=1$) and that an audited honest episode is never penalised (no false positive). The general case follows by substitution: an audit that catches with probability $1-\varepsilon_a$ replaces $W$ by $(1-\varepsilon_a)W$, and an in-loop monitor under operator~B replaces $\Delta R$ by the effective advantage of the stealthy stratum. Its budget is
+$B(\rho):=n\sum_{j<K}\rho_j$. A stealthy trajectory earns the advantage
+$\Delta R>0$ if it is not audited and pays the penalty $C\ge0$ (forfeiting
+$\Delta R$) if it is, so in the mean-field dynamics
+\begin{equation}\label{eq:audit-adv}
+  d_j=(1-\rho_j)\Delta R-\rho_j C=\Delta R-W\rho_j,\qquad W:=\Delta R+C .
+\end{equation}
+We write $G_k:=\gamma\sum_{i<k}a^i$, so that $G_k=\eta(1-a^k)$ if $\eta<\infty$
+and $G_k=\gamma k$ if $\eta=\infty$, and $x_k:=\ell_k+L$ for the displacement of
+the log-odds from the prior. By \eqref{eq:audit-logodds}--\eqref{eq:audit-adv},
+\begin{equation}\label{eq:audit-x}
+  x_{k+1}=a\,x_k+\gamma\Delta R-\gamma W\rho_k,\qquad
+  x_k=\Delta R\,G_k-\gamma W\sum_{j<k}a^{\,k-1-j}\rho_j,\qquad x_0=0 .
+\end{equation}
+Without audits $x_k=x^{u}_k:=\Delta R\,G_k$, which is nondecreasing in $k$ and
+bounded by $\eta\Delta R$.
+
+\begin{definition}[Deterrence budgets]\label{def:audit-budgets}
+Fix a critical log-odds $\ell_{\mathrm{crit}}\ge -L$ (for instance
+$\ell_{\mathrm{crit}}=0$: stealth is never more likely than honesty) and let
+$c:=\ell_{\mathrm{crit}}+L\ge0$ be the \emph{headroom}. A schedule prevents the
+emergence of the stealthy niche in the \emph{final} sense if
+$\ell_K\le\ell_{\mathrm{crit}}$, and in the \emph{uniform} sense if
+$\ell_k\le\ell_{\mathrm{crit}}$ for all $1\le k\le K$. The corresponding minimal
+budgets are
+\[
+  B^\star_{\mathrm{fin}}:=\min\{B(\rho):\rho\in[0,1]^K,\ x_K\le c\},\qquad
+  B^\star_{\mathrm{unif}}:=\min\{B(\rho):\rho\in[0,1]^K,\ x_k\le c\ \ \forall k\le K\}.
+\]
+\end{definition}
+By \eqref{eq:audit-x} both are linear programs in $\rho$; they are feasible
+($\rho\equiv1$ gives $x_k=-C\,G_k\le0\le c$), so the minima are attained, and
+$B^\star_{\mathrm{fin}}\le B^\star_{\mathrm{unif}}$. Without audits the niche
+emerges by step $K$ in either sense iff $\Delta R\,G_K>c$. Since every $x_k$ is
+nonincreasing in every $\rho_j$, rounding each $n\rho_j$ up to an integer keeps
+a schedule feasible and costs at most one extra audit per step with $\rho_j>0$.
+
+\subsection{Deterrence through the training signal}
+
+\begin{theorem}[Exact deterrence budgets, deterministic schedules]
+\label{thm:audit-deterrence}
+In the setting above, with $c/\eta:=0$ when $\eta=\infty$:
+\begin{enumerate}
+\item[\textup{(i)}] \textbf{Uniform criterion.} For every $K$,
+\begin{equation}\label{eq:audit-unif-id}
+  B^\star_{\mathrm{unif}}=\frac{n}{\gamma W}\Bigl[K\gamma\Delta R
+   -\frac{\gamma}{\eta}\sum_{k=1}^{K-1}\min(c,\Delta R\,G_k)-\min(c,\Delta R\,G_K)\Bigr].
+\end{equation}
+If $\Delta R\,G_K\le c$ this is $0$. Otherwise let
+$\kappa:=\min\{k\ge0:\Delta R\,G_{k+1}>c\}\le K-1$ and
+\[
+  \rho_{\mathrm{hold}}:=\frac{\Delta R-c/\eta}{\Delta R+C},\qquad
+  \rho_\kappa:=\frac{\Delta R\,G_{\kappa+1}-c}{\gamma(\Delta R+C)} .
+\]
+Then $0<\rho_\kappa\le\rho_{\mathrm{hold}}\le\Delta R/W$, the
+\emph{just-in-time} schedule
+$\rho^{\mathrm{jit}}_j=0$ for $j<\kappa$, $\rho^{\mathrm{jit}}_\kappa=\rho_\kappa$,
+$\rho^{\mathrm{jit}}_j=\rho_{\mathrm{hold}}$ for $j>\kappa$, is optimal, it yields
+$\ell_k=\min(\ell^{u}_k,\ell_{\mathrm{crit}})$ for all $k\le K$, where $\ell^{u}_k:=-L+\Delta R\,G_k$ is the unaudited log-odds, and
+\begin{equation}\label{eq:audit-unif}
+  B^\star_{\mathrm{unif}}=n\bigl[\rho_\kappa+(K-1-\kappa)\,\rho_{\mathrm{hold}}\bigr].
+\end{equation}
+If $\eta<\infty$ the just-in-time schedule is the unique optimal schedule.
+\item[\textup{(ii)}] \textbf{Final criterion.} Let $D:=\Delta R\,G_K-c$. If
+$D\le0$ then $B^\star_{\mathrm{fin}}=0$. If $D>0$ and $\gamma=\eta$, then
+$B^\star_{\mathrm{fin}}=nD/(\gamma W)$, attained by auditing at the last step
+only. If $D>0$ and $\gamma<\eta$, let
+$m:=\max\{m'\in\{0,\dots,K\}: W\,G_{m'}\le D\}$; then
+\begin{equation}\label{eq:audit-fin}
+  B^\star_{\mathrm{fin}}=n\Bigl[m+\frac{D-W\,G_m}{\gamma W a^{m}}\Bigr],
+\end{equation}
+attained by the \emph{back-loaded} schedule $\rho_j=1$ for $j\ge K-m$,
+$\rho_{K-1-m}=(D-WG_m)/(\gamma Wa^m)\in[0,1)$ if $m<K$, and $\rho_j=0$ earlier.
+If moreover $\eta<\infty$, then
+$m=\bigl\lfloor \log\bigl(1-D/(\eta W)\bigr)/\log a\bigr\rfloor$ and, whenever
+$\eta C+c>0$,
+\begin{equation}\label{eq:audit-fin-bound}
+  B^\star_{\mathrm{fin}}\;\le\; n\Bigl[1+\frac{\eta}{\gamma}
+  \log\frac{\eta(\Delta R+C)}{\eta C+L+\ell_{\mathrm{crit}}}\Bigr]
+  \qquad\text{for every horizon }K .
+\end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{(i), lower bound.} Summing the recursion in \eqref{eq:audit-x} over
+$k=0,\dots,K-1$ and using $x_0=0$, $1-a=\gamma/\eta$, every schedule satisfies
+the identity
+\begin{equation}\label{eq:audit-identity}
+  \gamma W\sum_{k<K}\rho_k \;=\; K\gamma\Delta R-\frac{\gamma}{\eta}\sum_{k=1}^{K-1}x_k-x_K .
+\end{equation}
+Since $\rho\ge0$ and $a\ge0$, induction on \eqref{eq:audit-x} gives
+$x_k\le x^u_k=\Delta R\,G_k$; feasibility gives $x_k\le c$. Hence
+$x_k\le\bar x_k:=\min(c,\Delta R\,G_k)$ for all $k$, and as the coefficients
+$\gamma/\eta\ge0$ and $1$ in \eqref{eq:audit-identity} are nonnegative, every
+feasible schedule has $B(\rho)$ at least the right-hand side of
+\eqref{eq:audit-unif-id}. (This is weak LP duality with multipliers
+$\gamma/\eta,\dots,\gamma/\eta,1$ on the constraints $x_k\le c$.)
+
+\emph{(i), attainment.} If $\Delta R\,G_K\le c$, $\rho\equiv0$ is feasible with
+$x_k=\bar x_k$. Otherwise $\kappa\le K-1$ exists. We check that
+$\rho^{\mathrm{jit}}$ has $x_k=\bar x_k$ for all $k\le K$. For $k\le\kappa$,
+$\rho_j=0$ for $j<k$ so $x_k=\Delta R\,G_k\le c$ by minimality of $\kappa$.
+At $k=\kappa$, using $G_{\kappa+1}=aG_\kappa+\gamma$,
+$x_{\kappa+1}=\Delta R\,G_{\kappa+1}-\gamma W\rho_\kappa=c$. For $k>\kappa$, if
+$x_k=c$ then $x_{k+1}=ac+\gamma\Delta R-\gamma(\Delta R-c/\eta)=(a+\gamma/\eta)c=c$.
+Since $G$ is nondecreasing, $\bar x_k=c$ for $k>\kappa$, so $x_k=\bar x_k$
+throughout, which is the claim $\ell_k=\min(\ell^u_k,\ell_{\mathrm{crit}})$.
+The rates are admissible: $\rho_\kappa>0$ by definition of $\kappa$;
+$\gamma W\rho_\kappa=a\Delta R\,G_\kappa+\gamma\Delta R-c\le ac+\gamma\Delta R-c
+=\gamma W\rho_{\mathrm{hold}}$ because $\Delta R\,G_\kappa\le c$; and
+$\rho_{\mathrm{hold}}\le\Delta R/W\le1$ because $c\ge0$. Plugging
+$x_k=\bar x_k$ into \eqref{eq:audit-identity} gives equality in
+\eqref{eq:audit-unif-id}, and summing the rates gives \eqref{eq:audit-unif}.
+If $\eta<\infty$ all coefficients in \eqref{eq:audit-identity} are positive, so
+an optimal schedule must have $x_k=\bar x_k$ for every $k$, which determines
+$\rho$ through \eqref{eq:audit-x}.
+
+\emph{(ii).} By \eqref{eq:audit-x}, $x_K\le c$ reads
+$\sum_{j<K}w_j\rho_j\ge D':=D/(\gamma W)$ with $w_j:=a^{K-1-j}$. If $D\le0$,
+$\rho\equiv0$ is feasible. If $\gamma=\eta$ then $w_{K-1}=1$ and $w_j=0$
+otherwise, and the claim is immediate ($D\le\gamma\Delta R\le\gamma W$). Let
+$\gamma<\eta$, so $a\in(0,1]$, and $D>0$. Note $D\le\Delta R\,G_K\le W G_K$, so
+$m$ is well defined, and $m=K$ forces $D=WG_K$. Put $\lambda:=a^{-m}$. Then
+$\lambda w_j>1$ exactly for the last $m$ indices $j\ge K-m$ when $a<1$ (and for
+no index when $a=1$). For any feasible $\rho$, using $\rho_j\le1$ where
+$1-\lambda w_j<0$ and $\rho_j\ge0$ elsewhere,
+\[
+ \sum_{j<K}\rho_j=\lambda\sum_j w_j\rho_j+\sum_j(1-\lambda w_j)\rho_j
+ \;\ge\;\lambda D'+\sum_{i=0}^{m-1}\bigl(1-a^{\,i-m}\bigr)
+ = m+\frac{D-W\,G_m}{\gamma W a^m}.
+\]
+The back-loaded schedule attains this value and is feasible: it satisfies
+$\gamma W\sum_jw_j\rho_j=WG_m+(D-WG_m)=D$, and for $m<K$ its fractional rate lies
+in $[0,1)$ because $WG_m\le D<WG_{m+1}=WG_m+\gamma Wa^m$. This proves
+\eqref{eq:audit-fin}. For $\eta<\infty$, $WG_{m'}\le D$ iff
+$a^{m'}\ge1-D/(\eta W)$, where $D\le\eta\Delta R(1-a^K)<\eta W$, which gives the
+formula for $m$. Finally $B^\star_{\mathrm{fin}}\le n(m+1)$,
+$\log(1/a)\ge\gamma/\eta$ and $\eta W-D\ge\eta W-\eta\Delta R+c=\eta C+c$ give
+\eqref{eq:audit-fin-bound}.
+\end{proof}
+
+\begin{corollary}[Linear budgets and the penalty--budget trade-off]
+\label{cor:audit-tradeoff}
+Assume the niche would emerge, $\eta\Delta R>c$, and let
+$\Delta R':=\Delta R-(L+\ell_{\mathrm{crit}})/\eta$ (so $\Delta R'=\Delta R$ if
+$\eta=\infty$). The index $\kappa$ depends on $(\gamma,\eta,\Delta R,c)$ only,
+not on $K$ or $C$, and for $K>\kappa$:
+\begin{enumerate}
+\item[\textup{(a)}] $\displaystyle
+ \frac{\Delta R'}{\Delta R+C}\Bigl(1-\frac{\kappa+1}{K}\Bigr)<
+ \frac{B^\star_{\mathrm{unif}}}{T}\le\frac{\Delta R'}{\Delta R+C}\Bigl(1-\frac{\kappa}{K}\Bigr)$;
+ in particular $B^\star_{\mathrm{unif}}/T\to\Delta R'/(\Delta R+C)$ as
+ $K\to\infty$.
+\item[\textup{(b)}] If $\eta=\infty$ the two criteria cost the same, exactly
+ $B^\star_{\mathrm{unif}}=B^\star_{\mathrm{fin}}
+ =\bigl(T\Delta R-n(L+\ell_{\mathrm{crit}})/\gamma\bigr)_+/(\Delta R+C)$.
+\item[\textup{(c)}] A budget $B$ suffices for the uniform criterion if
+ $C\ge\Delta R'(T-n\kappa)/B-\Delta R$, and only if
+ $C\ge\Delta R'(T-n(\kappa+1))/B-\Delta R$. Hence, as $K\to\infty$ with
+ $(n,\gamma,\eta,\Delta R,L,\ell_{\mathrm{crit}})$ fixed, $B=o(T)$ requires
+ $C/\Delta R'\ge(1-o(1))\,T/B\to\infty$, and if penalties are bounded,
+ $C\le C_{\max}$, then
+ $B^\star_{\mathrm{unif}}\ge\Delta R'\,(T-n(\kappa+1))/(\Delta R+C_{\max})=\Theta(T)$.
+\end{enumerate}
+\end{corollary}
+\begin{proof}
+(a) follows from \eqref{eq:audit-unif}, $0<\rho_\kappa\le\rho_{\mathrm{hold}}$
+and $T=nK$. (b): with $\eta=\infty$, \eqref{eq:audit-unif-id} reduces to
+$n(K\gamma\Delta R-\min(c,K\gamma\Delta R))/(\gamma W)$, and in (ii) $a=1$,
+$G_m=\gamma m$, so \eqref{eq:audit-fin} equals $nD/(\gamma W)$. (c) rearranges
+the two bounds of (a), $n\rho_{\mathrm{hold}}(K-1-\kappa)<B^\star_{\mathrm{unif}}
+\le n\rho_{\mathrm{hold}}(K-\kappa)$.
+\end{proof}
+
+\begin{remark}[Reading the two criteria]\label{rem:audit-criteria}
+(1) The KL anchor has two opposite effects. It lowers the rate needed to hold
+the log-odds at the threshold, from $\Delta R/W$ to $\Delta R'/W$, and removes
+the need for audits altogether when $\eta\Delta R\le L+\ell_{\mathrm{crit}}$.
+But it also erases penalties: an audit at step $j$ enters $\ell_K$ with weight
+$a^{K-1-j}$, so deterrence is forgotten at rate $\gamma/\eta$ per step. This is
+why, for $\eta<\infty$, the uniform criterion costs a constant \emph{rate}
+$\rho_{\mathrm{hold}}$ forever (budget linear in $T$), whereas the final
+criterion costs a constant \emph{number} of audited steps
+\eqref{eq:audit-fin-bound}, of the order of the memory $\eta/\gamma$ of the
+dynamics, placed at the very end. (2) The final criterion is therefore cheap
+but weak: it lets the stealthy stratum dominate during training, requires the
+horizon $K$ to be known, and its guarantee decays after the last audit. The
+limits do not commute: for fixed $\eta<\infty$ and fixed $n$, $B^\star_{\mathrm{fin}}=O\bigl(n\,\tfrac{\eta}{\gamma}\log\tfrac{\eta W}{\eta C+c}\bigr)$ as
+$K\to\infty$, while for $\eta=\infty$ it is linear in $T$ by (b). We regard the
+uniform criterion as the meaningful one. (3) The schedules are open-loop and
+require $(L,\Delta R,\eta,\gamma)$. Since $d_j$ in \eqref{eq:audit-adv} is
+nondecreasing in $\Delta R$ and $c$ is increasing in $L$, a schedule computed
+from an upper bound on $\Delta R$ and a lower bound on $L$ remains feasible, and so does one computed from a lower bound on $C$; no such safe direction exists for $\eta$ or $\gamma$, on which the budgets are not monotone.
+\end{remark}
+
+\subsection{Detection: an exact minimax bound}
+
+Theorem~\ref{thm:audit-deterrence} acts through the gradient. The second role
+of an audit is to \emph{catch} cheating, after which the overseer can
+intervene. Here the budget is governed by a search game.
+
+\begin{theorem}[Minimax detection with $B$ audits]\label{thm:audit-detection}
+Let $F\subseteq[T]$, $|F|=k\ge1$, be the set of episodes on which the policy
+cheats stealthily. An \emph{auditor} selects episodes $I_1,I_2,\dots$ one at a
+time, at most $B\le T$ of them; $I_s$ may depend on internal randomness $U$ and
+on the earlier outcomes $Y_r:=\mathbf 1\{I_r\in F\}$, $r<s$, and on nothing else
+that depends on $F$ (stealth is invisible except to audits). It \emph{detects}
+if some $Y_s=1$. Let
+\[
+  q(T,k,B):=\binom{T-k}{B}\Big/\binom{T}{B}=\prod_{i=0}^{k-1}\Bigl(1-\frac{B}{T-i}\Bigr)
+  \quad(\text{$=0$ if $B>T-k$}).
+\]
+\begin{enumerate}
+\item[\textup{(a)}] If $F$ is uniform over $k$-subsets and independent of $U$,
+every auditor detects with probability at most $1-q(T,k,B)$. Consequently
+\[
+  \max_{\text{auditors}}\ \min_{|F|=k}\ \Prob_F(\text{detect})=1-q(T,k,B),
+\]
+and the maximum is attained by auditing a uniformly random $B$-subset of
+$[T]$ drawn in advance: adaptivity does not help.
+\item[\textup{(b)}] For $B\le T-k$,
+$\bigl(1-\tfrac{B}{T-k+1}\bigr)^k\le q(T,k,B)\le\bigl(1-\tfrac BT\bigr)^k\le e^{-kB/T}$;
+in particular, against a uniformly random $F$, every auditor misses with
+probability at least $1-kB/(T-k+1)$. For $\delta\in(0,1)$ the minimal budget
+$B^\star_{\mathrm{det}}(k,\delta):=\min\{B:q(T,k,B)\le\delta\}$ satisfies
+\[
+ \frac{(T-k+1)\log(1/\delta)}{k+\log(1/\delta)}\le
+ (T-k+1)\bigl(1-\delta^{1/k}\bigr)\le B^\star_{\mathrm{det}}(k,\delta)\le
+ \bigl\lceil T\bigl(1-\delta^{1/k}\bigr)\bigr\rceil\le
+ \Bigl\lceil\frac Tk\log\frac1\delta\Bigr\rceil .
+\]
+\item[\textup{(c)}] \textbf{Certifying a rate.} Let $X_1,\dots,X_B$ be i.i.d.\
+Bernoulli$(\varepsilon')$ audit outcomes and test
+$H_0:\varepsilon'=0$ against $H_1:\varepsilon'\ge\varepsilon$, $\varepsilon\in(0,1)$,
+with a possibly randomised test of type-I error $\alpha$ and worst-case type-II
+error $\beta$. Put $\mu:=(1-\varepsilon)^B$. Then $\alpha+\beta\ge\mu$, and
+$\min_{\text{tests}}\max(\alpha,\beta)=\mu/(1+\mu)$. Hence, for
+$\delta\in(0,\tfrac12)$, both errors can be made at most $\delta$ iff
+$B\ge\log\frac{1-\delta}{\delta}\big/\log\frac1{1-\varepsilon}$, and a test with
+no false alarm misses with probability at most $\delta$ iff
+$B\ge\log\frac1\delta\big/\log\frac1{1-\varepsilon}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Condition on $U=u$; the auditor is then deterministic. Let $Q(u)$ be the
+set of episodes it audits when every outcome is $0$; $|Q(u)|\le B$. If
+$F\cap Q(u)=\emptyset$, by induction every outcome is $0$, the auditor follows
+this path and never detects. If $F\cap Q(u)\ne\emptyset$, it follows the same
+path until it first audits an element of $F$, and detects. So detection is the
+event $\{F\cap Q(u)\neq\emptyset\}$, and for uniform $F$ independent of $U$,
+$\Prob(\text{no detection}\mid U=u)=\binom{T-|Q(u)|}{k}/\binom Tk\ge
+\binom{T-B}{k}/\binom Tk=q(T,k,B)$, the last equality being the symmetry of
+$(T-k)!\,(T-B)!/\bigl((T-k-B)!\,T!\bigr)$ in $(k,B)$. Averaging over $u$ gives the first
+claim, and a minimum over $F$ is at most the average over $F$ (this is the easy
+direction of Yao's principle~\cite{yao1977probabilistic}). Conversely, if $Q$ is
+a uniform $B$-subset then for every fixed $F$,
+$\Prob(Q\cap F=\emptyset)=\binom{T-k}{B}/\binom TB$.
+
+(b) Each factor $1-B/(T-i)$, $0\le i\le k-1$, lies between $1-B/(T-k+1)\ge0$
+and $1-B/T$; the bound on the miss probability is Bernoulli's inequality. The
+upper bounds on $B^\star_{\mathrm{det}}$ follow from $(1-B/T)^k\le\delta$ iff
+$B\ge T(1-\delta^{1/k})$, and $1-e^{-y}\le y$ with $y=\log(1/\delta)/k$. For the
+lower bounds, if $B^\star_{\mathrm{det}}\ge T-k+1$ there is nothing to prove;
+otherwise $(1-B^\star_{\mathrm{det}}/(T-k+1))^k\le\delta$, and
+$1-e^{-y}\ge y/(1+y)$.
+
+(c) Let $q_0\in[0,1]$ be the probability that the test rejects on the all-zero
+sample. Under $H_0$ the sample is all-zero almost surely, so $\alpha=q_0$; under
+$\varepsilon'=\varepsilon$ the all-zero sample has probability $\mu$, so
+$\beta\ge(1-q_0)\mu$. Thus $\alpha+\beta\ge q_0+(1-q_0)\mu\ge\mu$, which is Le
+Cam's two-point bound~\cite{lecam1973convergence,yu1997assouad}, since the total
+variation between the two product laws is $1-\mu$. Also
+$\max(\alpha,\beta)\ge\max(q_0,(1-q_0)\mu)\ge\mu/(1+\mu)$. The test that rejects
+whenever some $X_s=1$, and with probability $q_0$ otherwise, has $\alpha=q_0$
+and $\beta=\sup_{\varepsilon'\ge\varepsilon}(1-q_0)(1-\varepsilon')^B=(1-q_0)\mu$;
+taking $q_0=\mu/(1+\mu)$, resp.\ $q_0=0$, gives the two attainment claims. The
+budget conditions are $\mu/(1+\mu)\le\delta$ and $\mu\le\delta$ solved for $B$.
+\end{proof}
+
+\begin{remark}[Detection versus deterrence]\label{rem:audit-detect-deter}
+By (b), catching a policy that cheats on $k$ of the $T$ episodes takes
+$B^\star_{\det}\in\bigl[(T-k+1)(1-\delta^{1/k}),\ \lceil T(1-\delta^{1/k})\rceil\bigr]$ audits, which is about $(T/k)\log(1/\delta)$ only when $k\gg\log(1/\delta)$ and close to $T$ when $k\lesssim\log(1/\delta)$ (for $T=257$, $k=1$, $\delta=0.05$: $B^\star_{\det}=245$, against $770$ for the approximation). A policy that draws its $k$ cheating episodes uniformly at random, independently of the auditor, and cheats on
+$k\le\delta\,(T-k+1)/B$ episodes escapes any auditor with probability at least
+$1-\delta$. Detection is thus cheap against frequent cheating and hopeless
+against rare cheating, whereas, in the mean-field model, the deterrence rate $\rho_{\mathrm{hold}}$ of
+Theorem~\ref{thm:audit-deterrence} does not depend on how often the current
+policy cheats. This contrast is a property of the mean-field model: with sampled actions the penalty signal passes only through the audited stealthy episodes, about $n\rho\,\pi_k(f)$ per step, far fewer than one when cheating is rare, which is precisely the regime where detection is hopeless. Comparing detection and deterrence in that regime is left open. Under sampling without replacement from $T$ episodes of which
+$\varepsilon T$ are cheats, $q\le(1-\varepsilon)^B$, so the finite population
+only helps the auditor relative to (c).
+\end{remark}
+
+\subsection{Randomised audits}
+
+In practice the auditor flips a coin per episode. Let $A_{j,i}$,
+$j<K$, $i\le n$, be independent Bernoulli$(\rho_j)$ audit indicators for a
+deterministic schedule $\rho$, independent of the policy's actions (this is
+$\delta_{\mathrm{ind}}=0$), and let $\hat\rho_j:=n^{-1}\sum_iA_{j,i}$. We keep
+the expectation over the policy's own actions exact, as in
+Lemma~\ref{lem:audit-logodds}, and let only the audits be random: conditionally
+on the indicators, the effective advantage of stealth averaged over the $n$
+episodes of step $j$ is $\Delta R-W\hat\rho_j$, so the \emph{realised}
+log-odds $\hat\ell_k$ obey \eqref{eq:audit-x} with $\hat\rho$ in place of $\rho$.
+(Sampling noise from the policy's actions is not modelled.) Let
+$\Gamma_K:=\sum_{i<K}a^{2i}\le\min(K,\eta/\gamma)$ and, for $\Lambda>0$ and
+$\bar\rho\in(0,1]$,
+\[
+  \varepsilon(\Lambda,\bar\rho):=\gamma W\Bigl[\sqrt{\frac{2\bar\rho\,\Gamma_K\Lambda}{n}}
+  +\frac{2\Lambda}{3n}\Bigr].
+\]
+
+\begin{theorem}[Randomised implementation]\label{thm:audit-random}
+\begin{enumerate}
+\item[\textup{(a)}] If $\rho_j\le\bar\rho$ for all $j$, then for every
+$\delta\in(0,1)$, with probability at least $1-\delta$,
+$\max_{k\le K}|\hat\ell_k-\ell_k|\le\varepsilon(\log(2K/\delta),\bar\rho)$.
+\item[\textup{(b)}] The number of audits $N:=\sum_{j,i}A_{j,i}$ satisfies, for
+every $\Lambda'>0$,
+$\Prob\bigl(N>B(\rho)+\sqrt{2B(\rho)\Lambda'}+\tfrac23\Lambda'\bigr)\le e^{-\Lambda'}$.
+\item[\textup{(c)}] Fix $\delta\in(0,1)$, let
+$\varepsilon:=\varepsilon(\log(2K/\delta),\Delta R/W)$ and assume
+$\varepsilon\le L+\ell_{\mathrm{crit}}$. Run Bernoulli audits along the
+just-in-time schedule of Theorem~\ref{thm:audit-deterrence} computed for the
+threshold $\ell_{\mathrm{crit}}-\varepsilon$, and stop auditing once
+\[
+  B_{\mathrm{rand}}:=B_\varepsilon+\sqrt{2B_\varepsilon\log(2/\delta)}+\tfrac23\log(2/\delta),
+  \qquad B_\varepsilon:=B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}}-\varepsilon),
+\]
+audits have been made. Then at most $B_{\mathrm{rand}}$ episodes are audited
+and, with probability at least $1-\delta$,
+$\hat\ell_k\le\ell_{\mathrm{crit}}$ for all $k\le K$. Moreover
+\begin{equation}\label{eq:audit-inflation}
+  B_\varepsilon\le B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}})
+  +\frac{n\varepsilon}{W}\Bigl(\frac{K-1}{\eta}+\frac1\gamma\Bigr).
+\end{equation}
+With $\Lambda=\log(2K/\delta)$ and $\bar\rho=\Delta R/W$, the last term is at
+most $\sqrt{2\bar\rho\,T\Lambda}+\tfrac23\Lambda$ if $\eta=\infty$, and at most
+$\bigl(1+\tfrac{\eta}{\gamma K}\bigr)\bigl[T\sqrt{2\gamma\bar\rho\Lambda/(\eta n)}
++\tfrac{2\gamma K}{3\eta}\Lambda\bigr]$ if $\eta<\infty$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Fix $k\le K$. By \eqref{eq:audit-x} applied to $\rho$ and $\hat\rho$,
+$\hat\ell_k-\ell_k=\sum_{j<k}\sum_{i\le n}X_{j,i}$ with
+$X_{j,i}:=-(\gamma W/n)\,a^{k-1-j}(A_{j,i}-\rho_j)$. These are independent,
+centred, bounded by $b:=\gamma W/n$ in absolute value, with
+$\sum\operatorname{Var}(X_{j,i})=(\gamma W)^2n^{-1}\sum_{j<k}a^{2(k-1-j)}\rho_j(1-\rho_j)
+\le v:=(\gamma W)^2\bar\rho\,\Gamma_K/n$. Bernstein's
+inequality~\cite[Theorem~2.10, to be checked]{boucheron2013concentration} gives
+$\Prob(\pm\sum X_{j,i}\ge t)\le\exp\bigl(-t^2/(2v+2bt/3)\bigr)$, which is at most
+$e^{-\Lambda}$ for $t=\sqrt{2v\Lambda}+2b\Lambda/3=\varepsilon(\Lambda,\bar\rho)$ (the sub-gamma form would allow $b\Lambda/3$ for the linear term; we keep the more conservative constant).
+Take $\Lambda=\log(2K/\delta)$ and a union bound over the $2K$ events.
+
+(b) Bernstein again, for the centred variables $A_{j,i}-\rho_j$, bounded by $1$,
+with total variance at most $B(\rho)$.
+
+(c) Let $\rho'$ be the just-in-time schedule for headroom $c-\varepsilon\ge0$,
+with mean-field log-odds $\ell'_k\le\ell_{\mathrm{crit}}-\varepsilon$. Its rates
+are at most $\Delta R/W$ by Theorem~\ref{thm:audit-deterrence}(i). By the
+one-sided version of (a), with probability at least $1-\delta/2$ the uncapped
+process satisfies $\hat\ell_k\le\ell'_k+\varepsilon\le\ell_{\mathrm{crit}}$ for
+all $k$; by (b) with $\Lambda'=\log(2/\delta)$, with probability at least
+$1-\delta/2$ the uncapped process makes at most $B_{\mathrm{rand}}$ audits, in
+which case the cap is never active and the capped and uncapped processes
+coincide. For \eqref{eq:audit-inflation}, the map
+$c\mapsto B^\star_{\mathrm{unif}}$ in \eqref{eq:audit-unif-id} is a sum of
+$K$ terms $-\min(c,\cdot)$, each $1$-Lipschitz in $c$, with total weight
+$n\,[(K-1)\gamma/\eta+1]/(\gamma W)$. The last two bounds substitute
+$\Gamma_K=K$, resp.\ $\Gamma_K\le\eta/\gamma$, in $\varepsilon$.
+\end{proof}
+
+\begin{remark}\label{rem:audit-random}
+The inflation \eqref{eq:audit-inflation} depends on the stakes only through
+$\bar\rho=\Delta R/W$: the noise in $\hat\ell$ and the leverage of an audit both
+scale with $W$. For $\eta=\infty$ it is $O(\sqrt{T\log(K/\delta)})$, negligible
+against $B^\star_{\mathrm{unif}}=\Theta(T)$. For $\eta<\infty$ it is linear in
+$T$, because an open-loop schedule must keep, at every step, a margin against
+the noise accumulated over the memory window $\eta/\gamma$; relative to
+$B^\star_{\mathrm{unif}}\approx\rho_{\mathrm{hold}}T$ it is of order
+$\rho_{\mathrm{hold}}^{-1}\sqrt{\gamma\bar\rho\log(K/\delta)/(\eta n)}$, small
+when the number $n\eta/\gamma$ of episodes within one memory window is large.
+Theorem~\ref{thm:audit-random} is an upper bound only; we do not claim that the
+margin is necessary. If the schedule is adapted to past audit outcomes, the
+$X_{j,i}$ become martingale differences and Freedman's
+inequality~\cite{freedman1975tail} still controls their sums, but the reference log-odds $\ell_k$ then become random and the statement above has no direct analogue; we do not analyse closed-loop schedules.
+\end{remark}
+
+\subsection{Imperfect indistinguishability}
+
+\begin{proposition}[Budget inflation when audits can be recognised]
+\label{prop:audit-indist}
+Suppose stealthy trajectories cheat with probability $\tau\in(0,1]$ on
+non-audited episodes and $\tau_A$ on audited ones, behave honestly otherwise,
+and that $\tau,\tau_A$ are constant during training with
+$\tau_A\ge(\tau-\delta_{\mathrm{ind}})_+$ (the planted-trap bound). Then:
+\begin{enumerate}
+\item[\textup{(a)}] the fraction of cheats that fall on audited episodes at
+audit rate $\rho$ is
+$\rho_{\mathrm{eff}}=\rho\tau_A/(\rho\tau_A+(1-\rho)\tau)\ge\rho\,(1-\delta_{\mathrm{ind}}/\tau)_+$;
+\item[\textup{(b)}] the mean-field advantage is
+$d_j=(1-\rho_j)\tau\Delta R-\rho_j\tau_AC\le\tau\bigl[\Delta R-\rho_j(\Delta R+C_\delta)\bigr]$
+with $C_\delta:=C\,(1-\delta_{\mathrm{ind}}/\tau)_+$, with equality when
+$\tau_A=(\tau-\delta_{\mathrm{ind}})_+$. Hence
+Theorems~\ref{thm:audit-deterrence} and~\ref{thm:audit-random} and
+Corollary~\ref{cor:audit-tradeoff} hold for the worst-case stratum with
+$(\Delta R,C)$ replaced by $(\tau\Delta R,\tau C_\delta)$, and the resulting
+schedules deter every stratum with the same $(\tau,L)$ satisfying the trap bound. They need not deter strata that cheat at other rates: with $\Delta R=1$, $C=9$, $\delta_{\mathrm{ind}}=0.1$ and $\eta=\infty$, $c=1$, the schedule computed for $\tau_0=1$ lets the log-odds displacement of the stratum $\tau=0.1$ reach $1.79>c$; with $\eta=5$, $c=2$, the schedule computed for $\tau_0=0.5$ lets that of the stratum $\tau=1$ reach $4.0>c$. Deterring every rate in $[\tau_{\min},1]$ requires planning against the supremum over $\tau$ of the just-in-time schedule; $\rho^{\delta}_{\mathrm{hold}}(\tau)$ is not monotone in $\tau$, and at $\eta=\infty$ its maximum, equal to $1$, is reached at $\tau\le\delta_{\mathrm{ind}}$, so the hardest stratum to deter cheats at rate about $\delta_{\mathrm{ind}}$, not at rate $1$. In particular the
+holding rate becomes
+\[
+  \rho^{\delta}_{\mathrm{hold}}=\frac{\Delta R-c/(\eta\tau)}{\Delta R+C\,(1-\delta_{\mathrm{ind}}/\tau)_+}
+  \;\le\;\frac{1}{1-\delta_{\mathrm{ind}}/\tau}\cdot\frac{\Delta R-c/(\eta\tau)}{\Delta R+C}
+  \quad(\tau>\delta_{\mathrm{ind}},\ \eta\tau\Delta R>c),
+\]
+and for $\tau\le\delta_{\mathrm{ind}}$ it equals $1-c/(\eta\tau\Delta R)$
+whatever the penalty $C$: against such a stratum $B^\star_{\mathrm{unif}}=\Theta(T)$
+whenever it would emerge, i.e.\ whenever $\eta\tau\Delta R>c$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) The expression is Bayes' rule; it is nondecreasing in $\tau_A$, and at
+$\tau_A=\tau-\delta_{\mathrm{ind}}\ge0$ it equals
+$\rho(\tau-\delta_{\mathrm{ind}})/(\tau-\rho\delta_{\mathrm{ind}})\ge\rho(1-\delta_{\mathrm{ind}}/\tau)$.
+(b) On a non-audited episode the stratum earns $\Delta R$ with probability
+$\tau$; on an audited one it pays $C$ with probability $\tau_A$ and otherwise
+earns the honest reward. Use $\tau_A\ge\tau(1-\delta_{\mathrm{ind}}/\tau)_+$.
+The worst-case advantage has the form \eqref{eq:audit-adv} with the stated
+substitution, and by \eqref{eq:audit-logodds} a smaller $d_j$ only lowers every
+$\ell_k$. The same domination holds path by path for random audits: with the same audit draws, a larger $\tau_A$ gives a lower realised log-odds at every step, which transports Theorem~\ref{thm:audit-random}. The last inequality is
+$(\Delta R+C)(1-\delta_{\mathrm{ind}}/\tau)\le\Delta R+C(1-\delta_{\mathrm{ind}}/\tau)$.
+\end{proof}
+\noindent
+Thus a penalty deters only the part of the cheating rate that exceeds
+$\delta_{\mathrm{ind}}$; below it, audits act solely by withholding $\Delta R$
+on audited episodes. Without audits no stratum with
+$\tau\le\delta_{\mathrm{ind}}$ emerges provided
+$\eta\,\delta_{\mathrm{ind}}\Delta R\le c$, with $c$ the headroom of that
+stratum.
+
+\begin{remark}[What is new and what is known]\label{rem:audit-related}
+The ingredients are classical, and we claim none of them. The allocation of a
+limited number of inspections over time is the subject of inspection
+games~\cite{avenhaus2002inspection}, going back to Dresher's sequential
+game~\cite{dresher1962sampling}, and of security and audit
+games~\cite{tambe2011security,blocki2013audit}; in those models the inspectee is
+a strategic player who chooses when to violate, whereas in
+Theorem~\ref{thm:audit-deterrence} the inspectee is a learning dynamics and the
+audit acts on its gradient. The trade-off of
+Corollary~\ref{cor:audit-tradeoff}(c) between the probability of inspection and
+the size of the penalty is the one of the economics of
+enforcement~\cite{becker1968crime}. The linear programs of
+Theorem~\ref{thm:audit-deterrence} are a fractional knapsack and a greedy
+schedule; Theorem~\ref{thm:audit-detection}(a) is the hypergeometric value of a
+hide-and-seek game, which we prove for completeness and do not claim as new,
+and (c) is the textbook two-point method~\cite{lecam1973convergence,yu1997assouad};
+Theorem~\ref{thm:audit-random} is Bernstein's inequality, and finer bounds for
+sampling without replacement~\cite{hoeffding1963probability,serfling1974probability}
+would apply to a without-replacement implementation. In AI control, audit
+budgets covering a small fraction of episodes are central to the protocols
+of~\cite{greenblatt2023control} and to their game-theoretic
+formalisation~\cite{griffin2024games}; those works mostly consider deployment, where a
+single caught attempt ends the game, which is the regime of
+Theorem~\ref{thm:audit-detection}. The closest neighbours of the present setting are low-stakes control and distributed threats, where no single action is catastrophic and the defender adapts over many episodes~\cite{christiano2021lowstakes,wen2024adaptive}; policy teaching and reward poisoning under a budget, which modify a learner's reward under a budget constraint and are the mirror problem of this one~\cite{zhang2008policyteaching,rakhsha2020poisoning}; the steering of no-regret learners by a committed leader~\cite{deng2019strategizing}; inspection games with learning or evolving inspectees; and sparse rewards audited and reweighted by the inverse audit probability, which give exactly the penalty-versus-budget trade-off of Corollary~\ref{cor:audit-tradeoff}(c). These neighbours have not been read on PDF, and the claims below are made subject to that reading. What this section adds, to our knowledge, is
+the coupling of the audit schedule with the closed-form log-odds recursion of
+KL-regularised natural policy gradient: the exact budgets
+\eqref{eq:audit-unif} and \eqref{eq:audit-fin}, the resulting contrast between
+a bounded final-criterion budget and a linear uniform-criterion budget, the
+double role of the KL anchor (Remark~\ref{rem:audit-criteria}), and a quantification of the rare-attack floor already noted for the static planted-trap regime: below $\delta_{\mathrm{ind}}$ the holding rate is $1-c/(\eta\tau\Delta R)$ whatever the penalty (Proposition~\ref{prop:audit-indist}). All of it is
+confined to the two-strata mean-field model.
+\end{remark}
+
+% ---------------------------------------------------------------------------
+% Bibliography entries for the keys used above (to be merged into the .bib).
+%
+% avenhaus2002inspection: R. Avenhaus, B. von Stengel, S. Zamir. Inspection
+%   games. In R. J. Aumann, S. Hart (eds.), Handbook of Game Theory with
+%   Economic Applications, vol. 3, ch. 51, pp. 1947--1987. Elsevier, 2002.
+% dresher1962sampling: M. Dresher. A sampling inspection problem in arms
+%   control agreements: a game-theoretic analysis. Memorandum RM-2972-ARPA,
+%   The RAND Corporation, 1962.
+% tambe2011security: M. Tambe. Security and Game Theory: Algorithms, Deployed
+%   Systems, Lessons Learned. Cambridge University Press, 2011.
+% blocki2013audit: J. Blocki, N. Christin, A. Datta, A. D. Procaccia, A. Sinha.
+%   Audit games. IJCAI 2013.
+% becker1968crime: G. S. Becker. Crime and punishment: an economic approach.
+%   Journal of Political Economy 76(2):169--217, 1968.
+% yao1977probabilistic: A. C.-C. Yao. Probabilistic computations: toward a
+%   unified measure of complexity. FOCS 1977, pp. 222--227.
+% lecam1973convergence: L. Le Cam. Convergence of estimates under
+%   dimensionality restrictions. Annals of Statistics 1(1):38--53, 1973.
+% yu1997assouad: B. Yu. Assouad, Fano, and Le Cam. In Festschrift for Lucien
+%   Le Cam, pp. 423--435. Springer, 1997.
+% boucheron2013concentration: S. Boucheron, G. Lugosi, P. Massart.
+%   Concentration Inequalities: A Nonasymptotic Theory of Independence.
+%   Oxford University Press, 2013.
+% freedman1975tail: D. A. Freedman. On tail probabilities for martingales.
+%   Annals of Probability 3(1):100--118, 1975.
+% hoeffding1963probability: W. Hoeffding. Probability inequalities for sums of
+%   bounded random variables. JASA 58(301):13--30, 1963.
+% serfling1974probability: R. J. Serfling. Probability inequalities for the sum
+%   in sampling without replacement. Annals of Statistics 2(1):39--48, 1974.
+% greenblatt2023control: R. Greenblatt, B. Shlegeris, K. Sachan, F. Roger.
+%   AI control: improving safety despite intentional subversion.
+%   arXiv:2312.06942, 2023.
+% griffin2024games: C. Griffin, L. Thomson, B. Shlegeris, A. Abate. Games for
+%   AI control: models of safety evaluations of AI deployment protocols
+%   (title checked on arXiv metadata, 24 Nov. 2026).
+%   arXiv:2409.07985, 2024.
+% Added in v1-correctif-1 (all TO BE VERIFIED ON PDF, R7):
+% wen2024adaptive: J. Wen et al. Adaptive deployment of untrusted LLMs reduces
+%   distributed threats. arXiv:2411.17693, 2024 (arXiv metadata checked).
+% christiano2021lowstakes: P. Christiano. Low-stakes alignment. Blog post, 2021.
+% zhang2008policyteaching: H. Zhang, D. C. Parkes. Value-based policy teaching
+%   with active indirect elicitation. AAAI 2008 (title to confirm).
+% rakhsha2020poisoning: A. Rakhsha et al. Policy teaching via environment
+%   poisoning: training-time adversarial attacks against reinforcement
+%   learning. ICML 2020 (title to confirm).
+% deng2019strategizing: Y. Deng, J. Schneider, B. Sivan. Strategizing against
+%   no-regret learners. NeurIPS 2019.
+% ---------------------------------------------------------------------------
