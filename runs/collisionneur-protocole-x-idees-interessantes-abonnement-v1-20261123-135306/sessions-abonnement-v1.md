@@ -13,3 +13,12 @@
 |---|---|---|---|---|
 | E3-T1-conception-A | session_016QhUrvQUQ8At5P8evGTFf9 | claude-fable-5-2 | high | 2026-11-24T15:40:35Z |
 | E3-T1-conception-B | session_016QhUrvpKcPmr9GW55Ppnix | claude-opus-5-5 | high | 2026-11-24T15:40:37Z |
+
+- Recueil du premier tour (2026-11-24, 15:47Z, recueil_session_v6, voie fichier, premier tour seul) : A versée (22 693 caractères, a0f5552c…, 13 227 jetons de réflexion), B versée (28 426 caractères, e7844b31…, 20 867 jetons de réflexion). La fiche de recueil porte « effort : max » recopié de la fiche de kit ; effort réellement servi : high (écart déclaré, additif 1 de la pièce de panne).
+
+## Tour 2 (critique croisée), effort élevé
+
+| cellule | branche du kit | session | modèle | effort lu à la création | créée (UTC) |
+|---|---|---|---|---|---|
+| E3-T2-critique-croisee-A | kits-abonnement/idees-interessantes-E3-T2-critique-croisee-A-v1 (1cec6d3c) | session_016QhUrrftjpwzN2LPKQ98Vs | claude-fable-5-2 | high | 2026-11-24T15:49:33Z |
+| E3-T2-critique-croisee-B | kits-abonnement/idees-interessantes-E3-T2-critique-croisee-B-v1 (85a7c3c2) | session_016QhUrrjUJUdqxPeS2Ex88e | claude-opus-5-5 | high | 2026-11-24T15:49:35Z |
