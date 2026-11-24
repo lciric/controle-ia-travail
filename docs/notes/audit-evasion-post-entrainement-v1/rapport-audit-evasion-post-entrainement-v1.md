@@ -135,7 +135,7 @@ La phrase de la note (§ 4, Régime R2) — « garder un canal de détection str
 
 - **Ce qui est nécessaire.** Sous B, la dérivée en $k = 0$ de la survie à l'audit vaut $\operatorname{Cov}_{\nu_0}(\beta_{\text{boucle}}, \beta_{\text{audit}})$. Pour que la survie n'augmente pour aucune valeur de $\eta$, il faut donc $\operatorname{Cov} \le 0$. La phrase du manuscrit (Limitations, point 2) et du billet (ligne 107), « R2 requires $\operatorname{Cov}\le 0$ », est correcte comme condition **nécessaire**.
 - **Ce qui ne suffit pas.** Une covariance négative ou nulle ne suffit pas sous B. Contre-exemple : $\beta_{\text{boucle}} \in \{1/10, 1/2, 9/10\}$ et $\beta_{\text{audit}} \in \{9/10, 1/10, 9/10\}$, sur trois atomes équiprobables. La covariance exacte est nulle. Pourtant, avec $k = 4$, la survie à l'audit monte de $19/30$ à $0{,}7700$, soit $+0{,}137$. La raison : le poids $e^{ku}$ est convexe.
-- **Ce qui est démontré.** La condition suffisante démontrée par le manuscrit est l'indépendance ou l'association négative. L'association négative suffit, mais elle n'est pas nécessaire : la contre-lecture a exhibé un couple sans dépendance négative par quadrants pour lequel la hausse reste nulle pour tout $k \in [0, 200]$.
+- **Ce qui est démontré.** La condition suffisante démontrée par le manuscrit est l'indépendance ou l'association négative. L'association négative suffit, mais elle n'est pas nécessaire : la contre-lecture a exhibé un couple sans dépendance négative par quadrants pour lequel la survie à l'audit n'augmente pour aucun $k \in [0, 200]$.
 - **Contrôle sain.** Sous indépendance exacte, l'écart mesuré est de $3\times10^{-81}$ sur 500 essais.
 
 **Ce qui est faux dans les pièces**, c'est de présenter la covariance négative ou nulle comme **suffisante** :
@@ -225,7 +225,7 @@ Un sous-agent Opus neuf, qui n'a écrit ni le rapport ni les pièces, a relu ce 
 - **Plancher des attaques rares décrit à l'inverse de ce qu'il mesure.** Corrigé : § 3.7 recalculé avec la meilleure politique sans contrainte de taux.
 - **Classement incohérent au § 0.** Corrigé.
 
-Les défauts mineurs ont été corrigés en place (§ 1.2, 1.3, 2, 3.1, 3.2, 3.4, 3.6, 4 et 5). Le même contre-lecteur a ensuite vérifié les corrections. Le verdict « tient avec réserves » est confirmé par le contre-lecteur.
+Les défauts mineurs ont été corrigés en place (§ 1.2, 1.3, 2, 3.1, 3.2, 3.4, 3.6, 4 et 5). Le même contre-lecteur a ensuite vérifié les corrections. Il a relevé trois derniers points mineurs : la formulation d'un exemple au § 3.3, les fichiers d'empreinte et le PDF encore absents, et l'empreinte du JSON qui manquait au § 7. Ils sont traités dans la présente version. Le verdict « tient avec réserves » est confirmé par le contre-lecteur après vérification des corrections.
 
 ---
 
@@ -235,7 +235,7 @@ Les défauts mineurs ont été corrigés en place (§ 1.2, 1.3, 2, 3.1, 3.2, 3.4
 |---|---|
 | `rapport-audit-evasion-post-entrainement-v1.md` et `.pdf` | Le présent rapport. |
 | `verificateur_independant_evasion_v1.py` | Vérificateur indépendant : preuves symboliques, calcul exact, recherche adverse, programme linéaire, contre-exemples. |
-| `resultats-verificateur-independant-v1.json` | Sortie, reproduite à l'identique sur deux exécutions. |
+| `resultats-verificateur-independant-v1.json` | Sortie, reproduite à l'identique sur deux exécutions, puis une troisième fois par le contre-lecteur (empreinte `622dfac0a32de293f16caa551dc7649d7db99bdad86634c04d284dbf9a9ae092`). |
 | `sortie-verificateur-independant-v1.txt` | Journal de la console. |
 | `instrumenter_essais_v1.py` et `instrumentation-essais-v1.json` | Instrumentation des 14 000 essais, sans modifier le script audité. |
 
