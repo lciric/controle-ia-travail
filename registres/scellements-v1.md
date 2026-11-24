@@ -112,3 +112,4 @@
 | DECLARATION-LANCEMENT-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T16:59:06Z | registres/code-dose-reponse-consigne-cachee/DECLARATION-SESSION-LANCEMENT-DOSE-REPONSE-v1.json | 05f987b9b1ce3c1fc79e411446df6b928cde09bc8f83966fe645c3623e5d1a5a |
 | PROGRAMME-V3-PROVISOIRE | 2026-11-24T18:32:00Z | docs/programme-controle-ia-v3.md | fcc27171bb87e35a42a6e200bb7ddf8c3df9106141b6eace541e283beb5458c9 |
 | NOTE-PROBLEMATIQUES-PROGRAMME-V2 | 2026-11-24T18:32:00Z | docs/notes/note-problematiques-programme-v2/note-problematiques-programme-v2.md | e74ce16fb07a714ddbeb0d0a4684fbce420dff56700f267bb919ce134301f4c6 |
+| SCELLEMENT-VERSANT-HONNETE-ADDITIF-1 | 2026-11-24T18:37:01Z | prereg/versant-honnete-jumeau-v3-additif-1-v3.md | 5d296efcbe344a9d3114ad4d478b06a2d5a8bf776513fb6eb96fd95e915e7b58 |
