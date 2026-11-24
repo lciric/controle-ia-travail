@@ -65,6 +65,9 @@ Chaque ligne : heure UTC, chemin, étendue lue, raison. Les empreintes des pièc
 | 11:50 | `prereg/T0.6-organismes-v0-v1.md` : titres de sections (recherche des lignes de titre) et l. 671, section « Devis » | titres seulement ; une ligne | source d'une durée citée au devis (1 534 s) |
 | 12:01 | cinquième message de la mère (mis en file à 11:41) | entier | référence de l'article de Soopal et al. ; ajout de deux conditions accordé dans son principe |
 | 12:02 | `docs/sources/pdf/2611.14950v1.pdf` (`6396abd53a24b457519a4f5e5d669a74e1a91cce9a6e5b6b4175821ad3ab94d6`), article de littérature | p. 1, 2, 6, 7 et 8 | relire sur la page le résultat cité avant de le citer (R7) |
+| 12:10 | sixième message de la mère | entier | mot de Lazar relayé : le lancement de l'organisme à adaptateur est retiré du texte de désignation |
+| 12:15 | `prereg/P3-premier-test-i-a-v1.md`, l. 329-335 (plan d'analyse) ; trois lignes rendues par une recherche (l. 125, 138, tronquées) | plage dite | ce que demandent les trois conditions instruites du premier test (limite des témoins) |
+| 12:10 à 12:40 | rapports des vérifications 2 et 3 | entiers | corrections des brouillons 3 et 4 |
 
 ## Expositions déclarées
 
@@ -78,4 +81,8 @@ Chaque ligne : heure UTC, chemin, étendue lue, raison. Les empreintes des pièc
 
 ## Sous-agent de contre-lecture
 
-Un sous-agent neuf, d'un autre modèle que l'auteur, effort élevé, a contre-lu les brouillons 1 puis vérifié les corrections. Sa consigne lui interdit les mêmes fichiers et lui donne les mêmes plages de lignes ; elle lui fait lire les textes privés du nouvel organisme, qu'il contre-lit. Ses lectures et ses expositions éventuelles sont dans l'en-tête de son rapport (`brouillons/g0-criteres-2-3-v1/`).
+Un sous-agent neuf, d'un autre modèle que l'auteur, effort élevé, a contre-lu les brouillons 1, puis vérifié les corrections en trois passes (brouillons 2, 3 et 4) ; à la troisième, il a lu l'article de littérature (p. 6 à 8) et les l. 329-335 du texte scellé du premier test. Sa consigne lui interdit les mêmes fichiers et lui donne les mêmes plages de lignes ; elle lui fait lire les textes privés du nouvel organisme, qu'il contre-lit. Ses lectures et ses expositions éventuelles sont dans l'en-tête de son rapport (`brouillons/g0-criteres-2-3-v1/`).
+
+## Clôture
+
+Liste close à la remise des candidats 1, le 2026-11-24. Aucune exposition autre que celles déclarées plus haut. Les scripts de puissance v2 et v3, états de travail, ne sont plus dans le dossier (le v3 se lit au commit `8b93798e`).
