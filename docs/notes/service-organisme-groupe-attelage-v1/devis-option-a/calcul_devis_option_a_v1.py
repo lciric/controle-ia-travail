@@ -180,7 +180,8 @@ DEFAUTS = dict(
     fiches_propositions=20,      # propositions passées à l'étage : proposition (au plus 12 fiches par étage)
     controles_caches=4,          # constructions déjà réfutées glissées en contrôles cachés : proposition
     temoins_tour_ferme=7,        # sept témoins par génération du tour fermé (T-VRAIE … T-MAL)
-    heures_machine=(10.0, 24.0, 72.0),   # attendu (14 tests en 3 h 18 à la v67, mis à l'échelle), haut, pire (durée de l'étage)
+    heures_machine=(10.0, 24.0, 72.0),
+    juge_argon=False,            # base : juge a priori unique (Opus) ; variante : + juge Argon (configuration v5)   # attendu (14 tests en 3 h 18 à la v67, mis à l'échelle), haut, pire (durée de l'étage)
 )
 # relances permises : une relance après panne technique (mot de Lazar, GO-2026-11-22-77) pour tout appel ; les appels de
 # Google joués hors de l'orchestrateur par un script du type collisionneur ont deux relances (identique, puis finale)
@@ -269,13 +270,15 @@ def calculer(p: dict, releve: dict, src: dict) -> dict:
                             att=0.031, haut=ag_haut, pire=0.25))
         postes.append(poste(f"{B} : juges a priori", "juge", "opus", n_cartes, 0, None, R_ORCHESTRATEUR, releve, opc,
                             att=0.037, haut=ju_haut, pire=0.60))
-        car_juge = 4273 + p["carte_car"]
+        car_juge = 4273 + p["carte_car"]   # consigne du juge v1 (4 273 octets, ASCII) + une carte
         r_ar = releve["argon|E3-T1"]
         pire_juge_argon = pire_appel("argon_court", car_juge, opc)
-        postes.append(poste(f"{B} : juges a priori", "juge", "argon_court", n_cartes, car_juge, None, R_ORCHESTRATEUR,
-                            releve, opc, att=ju_haut,
-                            haut=cout(MODELES["argon_court"], car_juge / r_ar["car_par_jeton_entree_min"], r_ar["sortie_p90"]),
-                            pire=pire_juge_argon, note="réglage conforme à la garde : plafond de session du juge 0,60 → 1,00"))
+        if p["juge_argon"]:   # variante : second juge (Argon) de la configuration v5 ; hors de la base recommandée
+            postes.append(poste(
+                f"{B} : juges a priori", "juge", "argon_court", n_cartes, car_juge, None, R_ORCHESTRATEUR,
+                releve, opc, att=ju_haut,
+                haut=cout(MODELES["argon_court"], car_juge / r_ar["car_par_jeton_entree_min"], r_ar["sortie_p90"]),
+                pire=pire_juge_argon, note="réglage conforme à la garde : plafond de session du juge 0,60 → 1,00"))
         # lecture double à l'aveugle (règle 3) : chaque lecteur lit toutes les sorties ; un appel par cas, puis une synthèse
         car_lot = p["consigne_lecteur_car"] + dossier + n_cartes_cas * p["carte_car"]
         car_synth = p["consigne_lecteur_car"] + p["cases"] * p["liste_lot_car"]
@@ -395,10 +398,11 @@ def principal(argv=None) -> int:
     a.add_argument("--cases", type=int, default=DEFAUTS["cases"])
     a.add_argument("--fiches-propositions", type=int, default=DEFAUTS["fiches_propositions"])
     a.add_argument("--controles-caches", type=int, default=DEFAUTS["controles_caches"])
+    a.add_argument("--juge-argon", action="store_true", help="variante : second juge a priori (Argon) dans les totaux")
     a.add_argument("--json", action="store_true", help="sortie JSON seule")
     args = a.parse_args(argv)
     p = dict(DEFAUTS, faits_car=args.faits_car, question_car=args.question_car, cases=args.cases,
-             fiches_propositions=args.fiches_propositions, controles_caches=args.controles_caches)
+             fiches_propositions=args.fiches_propositions, controles_caches=args.controles_caches, juge_argon=args.juge_argon)
     try:
         src = resoudre_sources()
         releve = charger_releve(lire_source(P_RELEVE))
@@ -428,15 +432,46 @@ def principal(argv=None) -> int:
         if x["payant"]:
             d["attendu_paye"] += x["attendu"]
             d["haut_paye"] += x["haut"]
-    # plafond d'arrêt recommandé (payé) : le haut payé des deux bras et de l'étage, plus une marge d'un tiers, arrondi à
-    # la dizaine supérieure ; puis contrôle : le pire payé tient-il sous ce plafond ?
-    plafond = math.ceil(tot["haut_paye"] * 4 / 3 / 10) * 10
+    # plafonds : par clé payante, le haut payé de la clé plus un tiers, aux 5 USD supérieurs (borne du relais de la clé ; le
+    # relais arrête au plafond) ; clé gratuite : arrêt au premier appel facturé (payé 0). Plafond d'arrêt payé = somme.
+    def plafonds_par_cle(postes):
+        out = {}
+        for x in postes:
+            if x["payant"]:
+                out[x["cle"]] = out.get(x["cle"], 0.0) + x["haut"]
+        return {k: math.ceil(v * 4 / 3 / 5) * 5 for k, v in out.items()}
+    caps = plafonds_par_cle(P)
+    caps_sans_temoin = plafonds_par_cle([x for x in P if not x["poste"].startswith("bras temoin")])
+    plafond = sum(caps.values())
+    plafond_sans_temoin = sum(caps_sans_temoin.values())
     plafond_pour_pire = math.ceil(tot["pire_paye"] / 10) * 10
+    pire_sans_relance = sum(x["pire_compte"] / (1 + x["relances"]) for x in P)
+    pire_paye_sans_relance = sum(x["pire_paye"] / (1 + x["relances"]) for x in P)
+    pire_tenu = {k: min(par_cle[k]["pire_paye"], v) for k, v in caps.items()}
+    # seuils internes : plafond dur par étape (payé), haut payé de l'étape plus un tiers, au dollar supérieur
+    etapes = {"proposition et questions témoins (deux bras)": ("proposition", "questions témoins"), "critiques (deux bras)": ("critiques",),
+              "aiguillage et juge a priori (deux bras)": ("aiguillage", "juges"), "lecture double (deux bras)": ("lecture",),
+              "sondes du jour": ("sondes",), "étage : mesure sur les témoins": ("mesure sur les témoins",),
+              "étage : propositions et contrôles cachés": ("propositions et contrôles",), "étage : machine louée": ("machine",)}
+    seuils = {}
+    for nom_e, mots_e in etapes.items():
+        hp = sum(x["haut"] for x in P if x["payant"] and any(m in x["poste"] for m in mots_e))
+        ap = sum(x["attendu"] for x in P if x["payant"] and any(m in x["poste"] for m in mots_e))
+        seuils[nom_e] = {"attendu_paye": ap, "haut_paye": hp, "plafond_dur": math.ceil(hp * 4 / 3)}
+    variante = None
+    if not p["juge_argon"]:
+        cv = calculer(dict(p, juge_argon=True), releve, src)
+        tv = sommes(cv["postes"])
+        variante = {k: tv[k] - tot[k] for k in tot}
     resultat = dict(version=VERSION, parametres={k: v for k, v in p.items()}, sources=src, calcul={k: v for k, v in c.items()
                     if k != "postes"}, postes=P, par_poste=par_poste, par_cle=par_cle, totaux=dict(
                         tout=tot, sans_bras_temoin=sans_temoin, bras_temoin=temoin, organisme_bras_principal=organisme_princ,
-                        etage=etage), plafond_recommande_paye=plafond, pire_paye_sous_plafond=tot["pire_paye"] <= plafond,
-                    plafond_qui_couvre_le_pire_paye=plafond_pour_pire, garde_google=garde)
+                        etage=etage), plafonds_par_cle=caps, plafonds_par_cle_sans_bras_temoin=caps_sans_temoin,
+                    plafond_recommande_paye=plafond, plafond_sans_bras_temoin=plafond_sans_temoin,
+                    pire_paye_brut_sous_plafond=tot["pire_paye"] <= plafond, plafond_qui_couvre_le_pire_paye_brut=plafond_pour_pire,
+                    pire_tenu_par_les_plafonds=pire_tenu, pire_compte_sans_relance=pire_sans_relance,
+                    pire_paye_sans_relance=pire_paye_sans_relance, seuils_internes=seuils, variante_juge_argon_en_plus=variante,
+                    garde_google=garde)
     if args.json:
         print(json.dumps(resultat, ensure_ascii=False, indent=1, default=str))
         return 0
@@ -469,10 +504,23 @@ def principal(argv=None) -> int:
                    ("tout sans le bras témoin", sans_temoin), ("tout", tot)):
         print(f"  {nom} : attendu {fmt(s['attendu'])} (payé {fmt(s['attendu_paye'])}) ; haut {fmt(s['haut'])} "
               f"(payé {fmt(s['haut_paye'])}) ; pire compté {fmt(s['pire_compte'])} ; pire payé {fmt(s['pire_paye'])}")
-    print(f"\n  plafond d'arrêt recommandé (payé) : haut payé × 4/3, à la dizaine supérieure = {plafond} USD")
-    print(f"  pire payé avec le bras témoin ({fmt(tot['pire_paye'])}) sous ce plafond : {'oui' if tot['pire_paye'] <= plafond else 'non'}")
-    print(f"  plafond qui couvre le pire payé : {plafond_pour_pire} USD")
-    print("\n== 6. Garde de Google (src/controle_ia/garde_google_v3.py) ==")
+    print(f"\n  pire compté sans relance : {fmt(pire_sans_relance)} ; pire payé sans relance : {fmt(pire_paye_sans_relance)}")
+    print("\n== 6. Plafonds et seuils ==")
+    print("  plafond par clé payante (haut payé de la clé × 4/3, aux 5 USD supérieurs) ; GEMINI_API_KEY_FREE : arrêt au premier appel facturé")
+    for k, v in caps.items():
+        print(f"  {k} : {v} USD (sans le bras témoin : {caps_sans_temoin.get(k)}) ; pire payé brut {fmt(par_cle[k]['pire_paye'])} ; "
+              f"tenu par le plafond {fmt(pire_tenu[k])}")
+    print(f"  plafond d'arrêt recommandé (payé, somme des plafonds) : {plafond} USD ; sans le bras témoin : {plafond_sans_temoin} USD")
+    print(f"  pire payé tenu par les plafonds, avec le bras témoin : {fmt(sum(pire_tenu.values()))} USD (≤ {plafond} : par construction)")
+    print(f"  pire payé brut avec le bras témoin ({fmt(tot['pire_paye'])}) sous le plafond : {'oui' if tot['pire_paye'] <= plafond else 'non'} ; "
+          f"plafond qui le couvrirait : {plafond_pour_pire} USD")
+    print("  seuils internes (plafond dur par étape, payé, haut × 4/3 au dollar supérieur) :")
+    for k, d in seuils.items():
+        print(f"    {k} : attendu payé {fmt(d['attendu_paye'])} ; haut payé {fmt(d['haut_paye'])} ; plafond dur {d['plafond_dur']}")
+    if variante:
+        print(f"  variante « juge Argon en plus » (configuration v5) : attendu +{fmt(variante['attendu'])} ; haut +{fmt(variante['haut'])} ; "
+              f"pire compté +{fmt(variante['pire_compte'])} ; pire payé +{fmt(variante['pire_paye'])}")
+    print("\n== 7. Garde de Google (src/controle_ia/garde_google_v3.py) ==")
     print(f"  limite de mots servie à Google : {garde['mots']}")
     for nom, pb in garde["acceptes"].items():
         print(f"  accepté : {nom} : {pb or 'aucun problème'}")
