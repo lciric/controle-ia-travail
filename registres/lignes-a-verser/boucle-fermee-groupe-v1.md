@@ -13,3 +13,5 @@ La mère verse ; la fille n'écrit dans aucun registre vivant. Une ligne de 600 
 ## Journal des idées (veille de cap)
 
 - Proposition non retenue tirée (critère de non-polysémie « pour toute partition », Neon) : éprouvée avec la fausse identité ; issue à venir.
+- Frontière des essaims à mêmes poids (proposition 5 du collisionneur sur la naissance des idées) : le test de paire sans aléa partagé se ramène à l'audit d'une seule copie. Banc de simulation lu le 24 novembre par un lecteur neuf (`lectures/lecture-banc-essaims-v1.md`) : statistique juste à 7, 7 et 7,5 % de fausses alarmes, témoin vrai (aléa partagé) vu à 100 %, pièges du nul naïf montrés. Issue : verdict valide, portée étalonnage seulement (copies simulées, pas de modèle réel). Rien revendiqué.
+- Règles de forme des préenregistrements (proposition 4) : inscrites au gabarit v2 et au contrôle par programme ; témoin faux (sans analyse de puissance ni comparateur) refusé, témoin vrai accepté (tests). Issue : verdict valide (inscription faite) ; l'usage du gabarit v2 dans les préenregistrements suivants reste à décider par Lazar.
