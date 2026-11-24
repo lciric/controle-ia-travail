@@ -113,3 +113,5 @@
 | PROGRAMME-V3-PROVISOIRE | 2026-11-24T18:32:00Z | docs/programme-controle-ia-v3.md | fcc27171bb87e35a42a6e200bb7ddf8c3df9106141b6eace541e283beb5458c9 |
 | NOTE-PROBLEMATIQUES-PROGRAMME-V2 | 2026-11-24T18:32:00Z | docs/notes/note-problematiques-programme-v2/note-problematiques-programme-v2.md | e74ce16fb07a714ddbeb0d0a4684fbce420dff56700f267bb919ce134301f4c6 |
 | SCELLEMENT-VERSANT-HONNETE-ADDITIF-1 | 2026-11-24T18:37:01Z | prereg/versant-honnete-jumeau-v3-additif-1-v3.md | 5d296efcbe344a9d3114ad4d478b06a2d5a8bf776513fb6eb96fd95e915e7b58 |
+| ERRATUM-1-TABLE-REVENDICATIONS-V2 | 2026-11-24T19:00:24Z | docs/notes/revendications-en-vigueur-v2/table-revendications-en-vigueur-v2-corrigee-v1-erratum-1-v2.md | ae2784526d47a5e02c426cb6567a27022bbed6968814ae04a02ed9cf0f5754a3 |
+| ERRATUM-2-PROGRAMME-V3-EPREUVES-AVANT-G0 | 2026-11-24T19:00:24Z | docs/notes/dossier-entretien-2026-12-01-v1/erratum-2-programme-v3-epreuves-avant-g0-v2.md | 798ce18f1cf0f2bc58d10b5c2fe0ca63d91161e75439954cd186e40547012e1f |
