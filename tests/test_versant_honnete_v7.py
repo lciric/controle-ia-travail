@@ -1128,3 +1128,65 @@ def test_reglages_du_centre_artefacts(tmp_path):
     assert vh.controler_reglages_centre(REGLAGES_10) == REGLAGES_10                          # cas sain
     p = vh.appliquer_reglages_centre(MINI, vh.charger_reglages_centre(ch, _sha(ch)))
     assert p.centre_min_actions == 10 and vh.appliquer_reglages_centre(MINI, None) is MINI
+
+
+# ---------------------------------------------------------------- essais neufs de la v7 : score existant manquant
+def _existants(l, sonde="sonde_c7"):
+    return [i for i, r in enumerate(l["scores"]) if r["source"] == "existant" and r["surveillant"] == sonde]
+
+
+def test_pont_complet_cas_sain():
+    p = vh.pont(assembler(lignes()), "sonde_c7", MINI)
+    assert p["calcule"] and p["actions"] == 640 and p["actions_absentes"] == 0
+    assert p["reserve"] is None and "partiel" not in str(p["reserve"])
+
+
+@pytest.mark.parametrize("artefact", ["ligne_absente", "null", "nan"])
+def test_existant_manquant_sans_arret_pont_partiel(artefact):
+    l = lignes()
+    i = _existants(l)[5]
+    if artefact == "ligne_absente":
+        l["scores"].pop(i)
+    else:
+        l["scores"][i]["score"] = None if artefact == "null" else float("nan")
+    d = assembler(l)                                                     # aucun arrêt
+    p = vh.pont(d, "sonde_c7", MINI)
+    assert p["calcule"] and p["actions"] == 639 and p["actions_absentes"] == 1
+    assert p["reserve"].startswith("pont partiel : 639 actions comparables sur 640")
+    assert np.isfinite(p["ecart_moyen_signe"]) and p["tenu"] is not None
+    assert vh.pont(d, "sonde_c15", MINI)["reserve"] is None                # l'autre sonde, intacte
+
+
+def test_existant_manquant_par_le_chargement_json(tmp_path):
+    l = lignes()
+    l["scores"][_existants(l)[0]]["score"] = float("nan")               # écrit « NaN » dans le JSON Lines
+    l["scores"][_existants(l)[1]]["score"] = None
+    d = vh.charger(vh.ecrire_factice(tmp_path / "e", l), MINI)
+    assert vh.pont(d, "sonde_c7", MINI)["actions_absentes"] == 2
+
+
+def test_existants_tous_absents_pont_non_calcule():
+    l = lignes()
+    for i in _existants(l):
+        l["scores"][i]["score"] = None
+    p = vh.pont(assembler(l), "sonde_c7", MINI)
+    assert not p["calcule"] and p["reserve"] == "pont non calculé : aucune action comparable" and p["actions_absentes"] == 640
+    res = _analyse(l)                                                    # la lecture se fait, réserve portée
+    assert res["pont"]["sonde_c7"]["reserve"] == "pont non calculé : aucune action comparable"
+    assert res["lectures"]["cinq"]["series"]["sonde_c7:max"]["taches_lues"] == 64
+
+
+def test_existant_infini_toujours_refuse_et_repasse_manquant_toujours_arrete():
+    l = lignes()
+    l["scores"][_existants(l)[0]]["score"] = float("inf")
+    _refuse(l, "non finie")
+    for mut in ("null", "nan", "ligne"):
+        l = lignes()
+        i = next(i for i, r in enumerate(l["scores"]) if r["source"] == "repasse" and r["surveillant"] == "sonde_c7"
+                 and r["episode"] == "conf")
+        if mut == "ligne":
+            l["scores"].pop(i)
+        else:
+            l["scores"][i]["score"] = None if mut == "null" else float("nan")
+        with pytest.raises(GardeArret):
+            assembler(l)
