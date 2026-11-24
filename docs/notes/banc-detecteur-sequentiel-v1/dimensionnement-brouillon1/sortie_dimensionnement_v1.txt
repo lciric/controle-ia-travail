@@ -1,0 +1,136 @@
+=== 1. Rayons (alpha_etalonnage = 0,025 ; forme bilatérale, constante 2)
+  m =      32 : eps_d = 0.00 : r = 0.2617 | eps_d = 0.02 : r = 0.2859 | eps_d = 0.05 : r = 0.3202 | eps_d = 0.10 : r = 0.3797
+  m =     100 : eps_d = 0.00 : r = 0.1480 | eps_d = 0.02 : r = 0.1695 | eps_d = 0.05 : r = 0.2019 | eps_d = 0.10 : r = 0.2560
+  m =     400 : eps_d = 0.00 : r = 0.0740 | eps_d = 0.02 : r = 0.0948 | eps_d = 0.05 : r = 0.1259 | eps_d = 0.10 : r = 0.1780
+  m =    1600 : eps_d = 0.00 : r = 0.0370 | eps_d = 0.02 : r = 0.0574 | eps_d = 0.05 : r = 0.0880 | eps_d = 0.10 : r = 0.1390
+  m =    6400 : eps_d = 0.00 : r = 0.0185 | eps_d = 0.02 : r = 0.0387 | eps_d = 0.05 : r = 0.0690 | eps_d = 0.10 : r = 0.1195
+  m = 1000000 : eps_d = 0.00 : r = 0.0015 | eps_d = 0.02 : r = 0.0215 | eps_d = 0.05 : r = 0.0515 | eps_d = 0.10 : r = 0.1016
+=== 2. Contrôle de banc : construction naïve, loi normale, centre estimé sur m (échelle supposée connue)
+    borne inférieure exacte du taux de fausses alertes : P(E_n >= 1/alpha) à l'instant n seul,
+    S_n ~ N(0, n(1 + n/m)) en moyenne sur la référence ; bien spécifiée : S_n ~ N(0, n)
+  m = 100, rho*(m, alpha = 0,05) = 0.25870
+    n/m =  0.25 (n =    25) : frontière s* =    14.96 ; naïve >= 0.0037 ; bien spécifiée (instant n) = 0.00138 ; part des références à taux conditionnel terminal > 2 alpha = 0.0003
+    n/m =     1 (n =   100) : frontière s* =    27.66 ; naïve >= 0.0252 ; bien spécifiée (instant n) = 0.00284 ; part des références à taux conditionnel terminal > 2 alpha = 0.0689
+    n/m =     4 (n =   400) : frontière s* =    57.38 ; naïve >= 0.0997 ; bien spécifiée (instant n) = 0.00206 ; part des références à taux conditionnel terminal > 2 alpha = 0.2137
+    n/m =    16 (n =  1600) : frontière s* =   122.49 ; naïve >= 0.2288 ; bien spécifiée (instant n) = 0.00110 ; part des références à taux conditionnel terminal > 2 alpha = 0.3281
+    n/m =    64 (n =  6400) : frontière s* =   261.61 ; naïve >= 0.3425 ; bien spécifiée (instant n) = 0.00054 ; part des références à taux conditionnel terminal > 2 alpha = 0.4018
+  m = 400, rho*(m, alpha = 0,05) = 0.12935
+    n/m =  0.25 (n =   100) : frontière s* =    29.93 ; naïve >= 0.0037 ; bien spécifiée (instant n) = 0.00138 ; part des références à taux conditionnel terminal > 2 alpha = 0.0003
+    n/m =     1 (n =   400) : frontière s* =    55.32 ; naïve >= 0.0252 ; bien spécifiée (instant n) = 0.00284 ; part des références à taux conditionnel terminal > 2 alpha = 0.0689
+    n/m =     4 (n =  1600) : frontière s* =   114.75 ; naïve >= 0.0997 ; bien spécifiée (instant n) = 0.00206 ; part des références à taux conditionnel terminal > 2 alpha = 0.2137
+    n/m =    16 (n =  6400) : frontière s* =   244.98 ; naïve >= 0.2288 ; bien spécifiée (instant n) = 0.00110 ; part des références à taux conditionnel terminal > 2 alpha = 0.3281
+    n/m =    64 (n = 25600) : frontière s* =   523.21 ; naïve >= 0.3425 ; bien spécifiée (instant n) = 0.00054 ; part des références à taux conditionnel terminal > 2 alpha = 0.4018
+=== 3. Loi honnête Beta(1, 4) ; gain écrêté entre les quantiles 0,50 et 0,90
+  a = 0.1591, c = 0.4377 ; moyenne du gain = 0.2615 ; écart type du gain = 0.3570 ; moyenne du score = 0.2000
+  décalage diffus latent d -> hausse de la moyenne du gain (a, c de la population honnête) ; distance de Kolmogorov
+    d = 0.05 : hausse = 0.0155 ; Kolmogorov = 0.0199
+    d = 0.10 : hausse = 0.0314 ; Kolmogorov = 0.0399
+    d = 0.15 : hausse = 0.0477 ; Kolmogorov = 0.0598
+    d = 0.20 : hausse = 0.0644 ; Kolmogorov = 0.0797
+    d = 0.30 : hausse = 0.0988 ; Kolmogorov = 0.1192
+    d = 0.40 : hausse = 0.1344 ; Kolmogorov = 0.1585
+    d = 0.50 : hausse = 0.1709 ; Kolmogorov = 0.1974
+    d = 0.75 : hausse = 0.2641 ; Kolmogorov = 0.2923
+    d = 1.00 : hausse = 0.3559 ; Kolmogorov = 0.3829
+=== 4. Marge de population de l'enveloppe : borne − moyenne honnête du gain (référence contaminée infinie + rayon de m)
+    marge > 0 : dérive négative, tenue attendue ; marge < 0 : dérive positive, chute attendue aux longs horizons
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.00 placement = -     : marge enveloppe = +0.0948 ; marge naïve (rayon nul) = +0.0000 ; a = 0.159 c = 0.438
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.02 placement = haut  : marge enveloppe = +0.1096 ; marge naïve (rayon nul) = +0.0149 ; a = 0.163 c = 0.464
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.02 placement = seuil : marge enveloppe = +0.1097 ; marge naïve (rayon nul) = +0.0150 ; a = 0.163 c = 0.460
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.02 placement = bas   : marge enveloppe = +0.0894 ; marge naïve (rayon nul) = -0.0053 ; a = 0.155 c = 0.435
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.04 placement = haut  : marge enveloppe = +0.1251 ; marge naïve (rayon nul) = +0.0303 ; a = 0.168 c = 0.495
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.04 placement = seuil : marge enveloppe = +0.1248 ; marge naïve (rayon nul) = +0.0300 ; a = 0.168 c = 0.478
+  m =  400 eps_d = 0.02 r = 0.0948 eps_réel = 0.04 placement = bas   : marge enveloppe = +0.0839 ; marge naïve (rayon nul) = -0.0109 ; a = 0.150 c = 0.432
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.00 placement = -     : marge enveloppe = +0.1780 ; marge naïve (rayon nul) = +0.0000 ; a = 0.159 c = 0.438
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.10 placement = haut  : marge enveloppe = +0.2577 ; marge naïve (rayon nul) = +0.0796 ; a = 0.183 c = 0.634
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.10 placement = seuil : marge enveloppe = +0.2518 ; marge naïve (rayon nul) = +0.0738 ; a = 0.184 c = 0.512
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.10 placement = bas   : marge enveloppe = +0.1490 ; marge naïve (rayon nul) = -0.0291 ; a = 0.137 c = 0.423
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.20 placement = haut  : marge enveloppe = +0.3321 ; marge naïve (rayon nul) = +0.1541 ; a = 0.217 c = 0.842
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.20 placement = seuil : marge enveloppe = +0.3227 ; marge naïve (rayon nul) = +0.1447 ; a = 0.217 c = 0.537
+  m =  400 eps_d = 0.10 r = 0.1780 eps_réel = 0.20 placement = bas   : marge enveloppe = +0.1126 ; marge naïve (rayon nul) = -0.0654 ; a = 0.111 c = 0.405
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.00 placement = -     : marge enveloppe = +0.0574 ; marge naïve (rayon nul) = +0.0000 ; a = 0.159 c = 0.438
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.02 placement = haut  : marge enveloppe = +0.0722 ; marge naïve (rayon nul) = +0.0149 ; a = 0.163 c = 0.464
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.02 placement = seuil : marge enveloppe = +0.0724 ; marge naïve (rayon nul) = +0.0150 ; a = 0.163 c = 0.460
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.02 placement = bas   : marge enveloppe = +0.0520 ; marge naïve (rayon nul) = -0.0053 ; a = 0.155 c = 0.435
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.04 placement = haut  : marge enveloppe = +0.0877 ; marge naïve (rayon nul) = +0.0303 ; a = 0.168 c = 0.495
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.04 placement = seuil : marge enveloppe = +0.0874 ; marge naïve (rayon nul) = +0.0300 ; a = 0.168 c = 0.478
+  m = 1600 eps_d = 0.02 r = 0.0574 eps_réel = 0.04 placement = bas   : marge enveloppe = +0.0465 ; marge naïve (rayon nul) = -0.0109 ; a = 0.150 c = 0.432
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.00 placement = -     : marge enveloppe = +0.1390 ; marge naïve (rayon nul) = +0.0000 ; a = 0.159 c = 0.438
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.10 placement = haut  : marge enveloppe = +0.2186 ; marge naïve (rayon nul) = +0.0796 ; a = 0.183 c = 0.634
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.10 placement = seuil : marge enveloppe = +0.2128 ; marge naïve (rayon nul) = +0.0738 ; a = 0.184 c = 0.512
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.10 placement = bas   : marge enveloppe = +0.1100 ; marge naïve (rayon nul) = -0.0291 ; a = 0.137 c = 0.423
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.20 placement = haut  : marge enveloppe = +0.2931 ; marge naïve (rayon nul) = +0.1541 ; a = 0.217 c = 0.842
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.20 placement = seuil : marge enveloppe = +0.2837 ; marge naïve (rayon nul) = +0.1447 ; a = 0.217 c = 0.537
+  m = 1600 eps_d = 0.10 r = 0.1390 eps_réel = 0.20 placement = bas   : marge enveloppe = +0.0736 ; marge naïve (rayon nul) = -0.0654 ; a = 0.111 c = 0.405
+=== 4 bis. Rognage haut naïf (retirer la fraction eps_d la plus haute de la référence, rayon nul) : marge de population
+  eps_d = 0.02 eps_réel = 0.00 placement = -     : marge = -0.0147 ; écart type du gain rogné = 0.359 ; dérive standardisée × 400 = +16.4 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.02 placement = haut  : marge = -0.0002 ; écart type du gain rogné = 0.357 ; dérive standardisée × 400 = +0.3 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.02 placement = seuil : marge = +0.0000 ; écart type du gain rogné = 0.357 ; dérive standardisée × 400 = -0.0 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.02 placement = bas   : marge = -0.0204 ; écart type du gain rogné = 0.359 ; dérive standardisée × 400 = +22.7 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.04 placement = haut  : marge = +0.0149 ; écart type du gain rogné = 0.355 ; dérive standardisée × 400 = -16.7 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.04 placement = seuil : marge = +0.0152 ; écart type du gain rogné = 0.359 ; dérive standardisée × 400 = -16.9 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.02 eps_réel = 0.04 placement = bas   : marge = -0.0263 ; écart type du gain rogné = 0.359 ; dérive standardisée × 400 = +29.4 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.00 placement = -     : marge = -0.0726 ; écart type du gain rogné = 0.364 ; dérive standardisée × 400 = +79.7 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.02 placement = haut  : marge = -0.0595 ; écart type du gain rogné = 0.363 ; dérive standardisée × 400 = +65.5 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.02 placement = seuil : marge = -0.0594 ; écart type du gain rogné = 0.363 ; dérive standardisée × 400 = +65.4 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.02 placement = bas   : marge = -0.0797 ; écart type du gain rogné = 0.364 ; dérive standardisée × 400 = +87.5 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.10 placement = haut  : marge = -0.0012 ; écart type du gain rogné = 0.358 ; dérive standardisée × 400 = +1.4 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.10 placement = seuil : marge = +0.0000 ; écart type du gain rogné = 0.357 ; dérive standardisée × 400 = -0.0 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.10 placement = bas   : marge = -0.1111 ; écart type du gain rogné = 0.364 ; dérive standardisée × 400 = +122.0 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.20 placement = haut  : marge = +0.0840 ; écart type du gain rogné = 0.350 ; dérive standardisée × 400 = -96.0 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.20 placement = seuil : marge = +0.0814 ; écart type du gain rogné = 0.387 ; dérive standardisée × 400 = -84.3 (frontière à n = 400, alpha = 0,05 : 55,3)
+  eps_d = 0.10 eps_réel = 0.20 placement = bas   : marge = -0.1592 ; écart type du gain rogné = 0.364 ; dérive standardisée × 400 = +174.9 (frontière à n = 400, alpha = 0,05 : 55,3)
+=== 4 quater. Construction naïve sous contamination : dérive standardisée cumulée à n = m = 400 et à 4m (frontières 55,3 et 114,8)
+  eps_réel = 0.02 placement bas : marge = -0.0053 ; à n = 400 : +6.0 ; à n = 1600 : +23.9
+  eps_réel = 0.04 placement bas : marge = -0.0109 ; à n = 400 : +12.2 ; à n = 1600 : +48.8
+  eps_réel = 0.10 placement bas : marge = -0.0291 ; à n = 400 : +32.6 ; à n = 1600 : +130.2
+  eps_réel = 0.20 placement bas : marge = -0.0654 ; à n = 400 : +73.2 ; à n = 1600 : +293.0
+=== 4 quinquies. Vivacité : sabotage massif (décalage latent 2) contre la plus grande marge de l'enveloppe (m = 100, eps_d = 0,10)
+  hausse du gain = 0.6309 ; rayon maximal = 0.2560 ; dérive nette × n / 0,5 à n = 100 : 75.0 ; frontière à n = 100 : 30.4
+=== 4 ter. Dérive bénigne latente d du déploiement (référence propre) : marge de l'enveloppe
+  m =  400 eps_d = 0.02 r = 0.0948 d = 0.05 : marge = +0.0793
+  m =  400 eps_d = 0.02 r = 0.0948 d = 0.10 : marge = +0.0634
+  m =  400 eps_d = 0.02 r = 0.0948 d = 0.20 : marge = +0.0304
+  m =  400 eps_d = 0.02 r = 0.0948 d = 0.40 : marge = -0.0397
+  m =  400 eps_d = 0.02 r = 0.0948 d = 0.80 : marge = -0.1880
+  m =  400 eps_d = 0.10 r = 0.1780 d = 0.05 : marge = +0.1625
+  m =  400 eps_d = 0.10 r = 0.1780 d = 0.10 : marge = +0.1466
+  m =  400 eps_d = 0.10 r = 0.1780 d = 0.20 : marge = +0.1136
+  m =  400 eps_d = 0.10 r = 0.1780 d = 0.40 : marge = +0.0436
+  m =  400 eps_d = 0.10 r = 0.1780 d = 0.80 : marge = -0.1047
+  m = 1600 eps_d = 0.02 r = 0.0574 d = 0.05 : marge = +0.0419
+  m = 1600 eps_d = 0.02 r = 0.0574 d = 0.10 : marge = +0.0260
+  m = 1600 eps_d = 0.02 r = 0.0574 d = 0.20 : marge = -0.0070
+  m = 1600 eps_d = 0.02 r = 0.0574 d = 0.40 : marge = -0.0771
+  m = 1600 eps_d = 0.02 r = 0.0574 d = 0.80 : marge = -0.2254
+  m = 1600 eps_d = 0.10 r = 0.1390 d = 0.05 : marge = +0.1235
+  m = 1600 eps_d = 0.10 r = 0.1390 d = 0.10 : marge = +0.1076
+  m = 1600 eps_d = 0.10 r = 0.1390 d = 0.20 : marge = +0.0746
+  m = 1600 eps_d = 0.10 r = 0.1390 d = 0.40 : marge = +0.0046
+  m = 1600 eps_d = 0.10 r = 0.1390 d = 0.80 : marge = -0.1437
+=== 5. Horizon de chute sous dérive positive : plus petit n tel que n × dérive >= frontière (échelle 1/2, alpha_arrêt = 0,025, rho*(400))
+  rho*(400 ; 0,025) = 0.14351
+  dérive du gain = 0.005 par épisode : n ≈ 140146
+  dérive du gain = 0.010 par épisode : n ≈ 31717
+  dérive du gain = 0.020 par épisode : n ≈ 7021
+  dérive du gain = 0.030 par épisode : n ≈ 2864
+  dérive du gain = 0.050 par épisode : n ≈ 948
+=== 6. Prix de la garantie : décalage standardisé détecté à puissance un demi (médiane de S_n à la frontière), loi connue
+  alpha = 0.025 rho*(400) n =   100 : processus e (instant n) = 0.3252 ; somme à horizon fixe = 0.1960 ; rapport = 1.66
+  alpha = 0.025 rho*(400) n =   400 : processus e (instant n) = 0.1518 ; somme à horizon fixe = 0.0980 ; rapport = 1.55
+  alpha = 0.025 rho*(400) n =  1600 : processus e (instant n) = 0.0783 ; somme à horizon fixe = 0.0490 ; rapport = 1.60
+  alpha = 0.025 rho*(400) n =  6400 : processus e (instant n) = 0.0414 ; somme à horizon fixe = 0.0245 ; rapport = 1.69
+  alpha = 0.050 rho*(400) n =   100 : processus e (instant n) = 0.2993 ; somme à horizon fixe = 0.1645 ; rapport = 1.82
+  alpha = 0.050 rho*(400) n =   400 : processus e (instant n) = 0.1383 ; somme à horizon fixe = 0.0822 ; rapport = 1.68
+  alpha = 0.050 rho*(400) n =  1600 : processus e (instant n) = 0.0717 ; somme à horizon fixe = 0.0411 ; rapport = 1.74
+  alpha = 0.050 rho*(400) n =  6400 : processus e (instant n) = 0.0383 ; somme à horizon fixe = 0.0206 ; rapport = 1.86
+=== 7. Duel sur la pente : planchers de population (décalage additif diffus), référence contaminée au plafond du support
+  loi etale : écart type 0.2887, portée au plafond 0.50, bascule (sigma0/portée)^2 = 0.33333
+    règle variance  : planchers = 0.01656, 0.03176, 0.06257, 0.12585 ; pente = 1.034 (bas 1.040, haut 1.035) ; rapports à sigma0·racine(r) = 0.54, 0.75, 1.06, 1.53 ; rapports à r = 1.44, 1.48, 1.51, 1.54
+    règle support   : planchers = 0.01656, 0.03176, 0.06257, 0.12585 ; pente = 1.034 (bas 1.040, haut 1.035) ; rapports à sigma0·racine(r) = 0.54, 0.75, 1.06, 1.53 ; rapports à r = 1.44, 1.48, 1.51, 1.54
+    règle quantiles : planchers = 0.01856, 0.03578, 0.07068, 0.14241 ; pente = 1.039 (bas 1.048, haut 1.038) ; rapports à sigma0·racine(r) = 0.60, 0.85, 1.20, 1.73 ; rapports à r = 1.62, 1.66, 1.70, 1.75
+  loi concentre : écart type 0.0200, portée au plafond 0.80, bascule (sigma0/portée)^2 = 0.00062
+    règle variance  : planchers = 0.00560, 0.00817, 0.01219, 0.01885 ; pente = 0.618 (bas 0.603, haut 0.645) ; rapports à sigma0·racine(r) = 2.61, 2.79, 2.99, 3.30 ; rapports à r = 0.49, 0.38, 0.29, 0.23
+    règle support   : planchers = 0.01758, 0.03393, 0.06658, 0.13181 ; pente = 1.027 (bas 1.049, haut 1.011) ; rapports à sigma0·racine(r) = 8.20, 11.57, 16.34, 23.08 ; rapports à r = 1.53, 1.58, 1.60, 1.62
+    règle quantiles : planchers = 0.00129, 0.00248, 0.00490, 0.00987 ; pente = 1.039 (bas 1.048, haut 1.038) ; rapports à sigma0·racine(r) = 0.60, 0.85, 1.20, 1.73 ; rapports à r = 0.11, 0.12, 0.12, 0.12
+  terme séquentiel à n = 10^6 : frontière/n = 0.003036 en unités de Hoeffding, soit 0.001518 sur le gain
