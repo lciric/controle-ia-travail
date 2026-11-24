@@ -1,0 +1,45 @@
+# Consigne au rédacteur du plan à critères gelés du banc de validité du détecteur séquentiel sous référence honnête finie et contaminée — v1
+
+- **Classe** : C (consigne). Écrite par la session fille Opus 5.5 du banc, 2026-11-24 vers 18:55Z, branche `banc/detecteur-sequentiel-reference-contaminee-v1`.
+- **Destinataire** : un sous-agent neuf, Claude Fable 5.2, effort élevé (pièce de classe A de forme largement fixée par la note de sortie et cette consigne ; règle « Dosage du modèle et de l'effort », GO-2026-11-23-14 ; choix de la mère, GO-2026-11-24-41).
+- **Accord** : GO-2026-11-24-41 (« go » de Lazar sur « ouvrir le banc du détecteur séquentiel » ; 0 USD, processeur seul). Décisions de la mère du 2026-11-24 vers 18:47Z, reprises en section 2.
+
+## 1. Ce que tu écris
+
+Un **préenregistrement** (règle R1) conforme au gabarit `prereg/gabarit-preregistrement-v1.md` (`8cad43714b562e28…`) et au validateur `src/controle_ia/prereg.py` (sections de niveau 2 exigées : Hypothèse ; Prédiction chiffrée et signe attendu ; Métrique ; Seuil ; Plan d'analyse ; Critères de lecture gelés ; Liste d'arrêt ; Contre-lecture). Chemin : `prereg/banc-detecteur-sequentiel-reference-contaminee-v1.md`. Langue : français, sans sigle non développé, phrases courtes ; chaque grandeur nommée en clair avant son symbole.
+
+Tu n'écris **aucun code** et tu ne lances **aucune simulation de la grille** : le banc ne se lit qu'après scellement. Tu peux faire des calculs en forme fermée, par quadrature ou par loi exacte, pour dimensionner (marqués « de principe, sous supposition ») ; si tu fais un tirage au hasard pour un ordre de grandeur, il ne porte sur aucune cellule de la grille, il est déclaré et son programme est joint en annexe. Le code d'analyse s'écrira **après** le scellement (étape 3, classe B, contre-lu par Sonnet 5.5) : écris dans l'en-tête « Commit du code d'analyse : écrit après le scellement ; tout écart du code au plan est un écart au préenregistrement, relevé par le contre-lecteur du code » (pas le marqueur que le validateur refuse). Écris l'interface exacte que le code devra respecter (fonctions, entrées, sorties, gardes), pour que le contre-lecteur du code puisse vérifier la conformité ligne à ligne.
+
+## 2. Contenu exigé (mandat de la mère et ses décisions)
+
+1. **Contrôle de banc d'abord.** La construction naïve (processus-e ou somme cumulée dont le centre et l'échelle sont estimés une fois sur une référence gelée de m épisodes, aucune contamination, horizon n très supérieur à m, arrêt optionnel) **doit échouer** (taux de fausses alertes au-dessus de α, à un écart fixé d'avance) ; sinon le banc est déclaré défectueux et rien d'autre n'est lu. Prévois aussi le contrôle symétrique : la construction de référence bien spécifiée (loi honnête connue, aucune estimation) doit tenir α (R5 : chaque garde testée sur un cas sain et sur un artefact).
+2. **Grille** : contamination basse, haute et **ciblée** (épisodes contaminés placés dans la queue qui fixe le seuil) ; contamination **réelle double de la déclarée** ; **dérive bénigne graduée** entre étalonnage et déploiement ; **autocorrélation** entre épisodes ; **dépendance en grappes** (épisodes groupés par tâche, part de variance entre tâches graduée ; la tâche comme unité indépendante — décision de la mère, réserve 2). Déclare les niveaux, leur justification, et ce que chaque cellule cherche à faire tomber.
+3. **Unité : l'épisode** (un score par épisode, disponible à la fin de l'épisode, délai de l'oracle h = 1 ; sous dépendance en grappes, déclarer comment la tâche devient l'unité). **Budget d'erreur partagé** entre étalonnage et arrêt (par exemple α = α_étalonnage + α_arrêt, enveloppe uniforme sur la fonction de répartition par l'inégalité de Dvoretzky-Kiefer-Wolfowitz à constante de Massart, rayon élargi de la fraction déclarée ε) ; dire si la garantie visée est **conditionnelle à la référence tirée** (avec probabilité au moins 1 − α_étalonnage sur la référence) ou **en moyenne sur la référence**, et rapporter les deux : taux moyen, et loi du taux conditionnel (sa queue, par exemple la part des références où il dépasse 2α).
+4. **Bases** : somme cumulée écrêtée au **même rayon**, sur le **même score**, la **même référence**, à **horizon fixe** et sous **arrêt optionnel**. Le désaccord du collisionneur (que doit battre un processus-e : l'horizon fixe ou l'arrêt optionnel ?) est tranché par une règle écrite d'avance.
+5. **Duel sur la pente de la frontière d'identifiabilité** : plancher de détectabilité en ε (scores bornés, biais d'ordre ε/(1 − ε)) contre σ0·√ε (estimation robuste de la moyenne). Une statistique, un seuil, deux hypothèses complémentaires sur le même dispositif, effectif fixé par une analyse de puissance, « non exécutable » déclaré d'avance (forme sans zone grise, retenue 4 de la note de sortie). Dire dans quels régimes de loi des scores chaque pente est attendue (les deux régimes de Neon), et ce qui compterait comme réfutation de chacune.
+6. **Critères de lecture gelés**, **liste d'arrêt**, **graines** par `numpy.random.SeedSequence` dérivées par tâche et par cellule (R9), manifeste de run (`src/controle_ia/manifeste.py`), sorties brutes scellées sous `diag/`, lecture par un sous-agent neuf qui applique les critères gelés (R13 pour le principe).
+7. **Rattachement à N-076** (réserve 3) : déclarer m, n, l'unité, la source de validité (référence fixe ; et, si tu l'emploies, laquelle des trois autres), la borne du biais toléré ; lectures au-delà de n = m étiquetées « au-delà de la référence » et sans verdict, **sauf** pour les constructions dont la garantie porte explicitement sur n > m (l'enveloppe à budget partagé), à écrire.
+8. **Délai de l'oracle** (réserve 4) : h = 1 supposé ; tout délai h > 1 appelle la correction e·log h (Arnold, Henzi et Ziegel, 2109.11761 v3, [PDF, p. 7-8], d'après l'erratum 3 de N-076) ; hors du banc.
+9. **Prévision de la loi** (réserve 5) : le banc ne tranche aucun nœud du brouillon de la prévision scellée de la loi de la référence honnête (L1 à L18) et ne la remplace pas ; il peut lui servir d'objet de contrôle sur monde planté, sans plus.
+10. **Règle de diffusion** (réserve 1, décision de la mère) : aucune sortie du banc (seuils robustes, tables, verdicts) n'est servie à l'organisme d'idéation ni à la session qui le sert (`session_01Qi7Gr36UCZKS2Fw574dmcW`), jusqu'à la conception du banc des mondes plantés, après le 1er décembre ; le dossier du collisionneur, déjà servi, n'est pas touché. Le générateur est écrit comme module réemployable par le monde 4 du cahier des mondes plantés, sans tenir lieu de sa conception.
+11. **Phrases à ne pas écrire** : section 4, point 5, de la note d'antériorité, et N-076, § 11.
+12. **Budget de calcul** : processeur seul, quatre cœurs, 15 Go de mémoire, dans le conteneur de la session ; vise une simulation complète en moins de six heures de calcul ; dimensionne les répétitions en conséquence (erreur de Monte-Carlo de chaque taux déclarée d'avance) et écris la règle si le temps dépasse (arrêt, jamais réduction silencieuse).
+13. **Points pour la mère** : toute décision de conception que tu ne peux pas fixer seul va dans une section « Points pour la mère », avec options, recommandation, confiance ; aucun « À REMPLIR » ailleurs.
+
+## 3. Ce que tu lis (et rien d'autre)
+
+- La note d'antériorité : `docs/notes/banc-detecteur-sequentiel-v1/anteriorite-interne-banc-detecteur-sequentiel-v1.md` (`9554a9dfe068d442…`), en entier.
+- La note de sortie du collisionneur groupé, sections « En bref », 5, 6 et 8 : copie dans `docs/notes/banc-detecteur-sequentiel-v1/sources/note-sortie-groupe-naissance-idees-fecondes-v1.md` (copie octet pour octet de la branche `idees/lot-8-chef-d-orchestre-v1`, `2cdfa2317bae350d…`).
+- N-076 et ses errata 1 à 3 (le 3 prime) : `docs/decisions/decision-N-076-assurance-par-audit-et-reference-honnete-v1*.md`, sections 1, 2, 11 et 13 de la décision, et les errata en entier.
+- T0.3 : `prereg/T0.3-simulation-lemme-theoreme-v1.md`, sections Hypothèse, Prédiction (bloc P8), Métrique, Seuil, Liste d'arrêt.
+- Les calculs A et A bis de la note « percée » : `docs/notes/percee-controle-securite-v1/calculs-percee-controle-securite-v1.txt`, bloc A.
+- Code réemployable (lecture pour l'interface) : `src/controle_ia/agregateurs/processus_e.py`, `src/controle_ia/simulation_t03/calibrage.py`, `src/controle_ia/bases/sequentiel.py`, `src/controle_ia/manifeste.py`, `src/controle_ia/prereg.py`, `src/controle_ia/gardes.py`.
+- Le gabarit `prereg/gabarit-preregistrement-v1.md`.
+
+N'ouvre rien sous `coffre/`, `docs/verdicts/`, `diag/`, `runs/`, `donnees/`, `registres/`, aucun score, épisode ni verdict. Aucune citation d'un chiffre publié sans PDF empreinté au dépôt et page lue (R7) : à défaut, cite l'auteur et l'idée sans chiffre, marqué « à vérifier sur PDF ».
+
+## 4. Ce que tu rends
+
+- Le fichier du préenregistrement (brouillon 1), non scellé, non commité.
+- En fin de fichier : « Confiance, et ce que je n'ai pas fait » et, si tu fais un calcul, l'annexe de son programme.
+- Une réponse courte : chemin, sections, points pour la mère, temps de calcul estimé.
