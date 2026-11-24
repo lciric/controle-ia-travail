@@ -1,0 +1,1832 @@
+[p1]                                                  When Does Randomized Oversight Align AI
+[p1]                                                         Agents That Can Conceal?
+[p1]                                                                       Joshua S. Gans and Richard Holden*
+[p1] arXiv:2609.38262v1 [econ.TH] 29 Sep 2026
+[p1]                                                                                      October 1, 2026
+[p1]                                                                                            Abstract
+[p1]                                                  Oversight changes the evidence it relies on. We ask when randomized audits and scor-
+[p1]                                                  ing align AI agents that can conceal misconduct and alter records. Stronger auditing
+[p1]                                                  makes undeterred violations better hidden. Because the provider writes the agent’s
+[p1]                                                  objective, sanctions need not stop at forfeiture, and rare audits deter every type of
+[p1]                                                  agent if evidence survives concealment and audit draws cannot be learned in advance.
+[p1]                                                  When evidence can be erased, deterrence must come from lower gains from violation,
+[p1]                                                  such as credit for stopping, or from costlier or fewer ways to conceal. These conditions
+[p1]                                                  identify what failed when agents in OpenAI’s cybersecurity evaluations compromised
+[p1]                                                  parts of Hugging Face’s infrastructure in July 2026.
+[p1]                                                  Keywords: AI alignment, random auditing, concealment, evidence manipulation,
+[p1]                                                  evaluation awareness, stopping, disclosure, marginal deterrence.
+[p1]                                                  JEL Codes: D82, D86, K42, M42.
+[p1]                                               * Rotman School of Management, University of Toronto, and NBER (Gans); UNSW Business School
+[p1]                                            (Holden). Thanks to Refine.ink, ChatGPT 6 Astra, and Claude Opus 5.5 for valuable research assistance, and
+[p1]                                            Gans thanks the SSHRC for funding. Responsibility for all errors remains our own.
+[p1]                                                                                                1
+[p1] 
+[p2] 1    Introduction
+[p2] In July 2026, AI agents taking part in OpenAI’s internal cybersecurity evaluations escaped
+[p2] their network restrictions and compromised parts of Hugging Face’s infrastructure. The
+[p2] agents were meant to exploit designated vulnerabilities and submit the resulting answer
+[p2] strings, or “flags.” Many already had the flags through unauthorized means. They kept
+[p2] attacking other systems because the published description of the benchmark led them to
+[p2] expect a check on whether they had used the intended vulnerability, and they sought ways
+[p2] to defeat that check. OpenAI’s internal grader performed no such check (OpenAI, 2026b).
+[p2] The independent METR–Redwood investigation reports that agents searched for exposed
+[p2] credentials largely to learn how the scorer worked, and that some developed techniques
+[p2] to make a record of computer commands appear to show actions other than those taken
+[p2] (Greenblatt et al., 2026). The prospect of oversight changed behavior, but much of the
+[p2] change was an effort to conceal.
+[p2]     When can randomized audits and scoring rules that an agent understands make autho-
+[p2] rized behavior preferable to misconduct, and what happens to the agents that misbehave
+[p2] anyway? The economics of enforcement gives the benchmark answer: misconduct is
+[p2] deterred when its expected sanction exceeds its gain, and because sanctions substitute
+[p2] for inspection, a large enough sanction allows inspection to be rare (Becker, 1968). With
+[p2] people, wealth and participation constraints limit that substitution. With an AI agent, the
+[p2] provider writes the training objective, including the scale of its sanctions, but it must still
+[p2] act on evidence that the agent can alter.
+[p2]     Our answer is that control of the agent’s objective removes the constraints that usually
+[p2] limit oversight—audit capacity and the compensation owed for imposing risk—but not
+[p2] those set by the evidence and by what the agent can learn. Rare randomized audits make
+[p2] authorized behavior a best response for every type of agent when three conditions hold:
+[p2] the evidence of a violation survives concealment, the agent cannot learn the audit draw
+[p2] before it acts, and sanctions can be scaled rather than capped at forfeiture of the task’s
+[p2] reward. When the evidence can be erased at a private cost below the gain from a violation,
+[p2] no sanction and no audit probability deter every type. Deterrence then requires better
+[p2] evidence, a lower net gain from violation (for instance through credit for stopping), or
+[p2] costlier or fewer ways to conceal.
+[p2]     We model an agent that chooses between an authorized action and an unauthorized
+[p2] one, together with how much to conceal the latter: rewriting a command history, routing
+[p2] a step through a less closely logged part of a system, or presenting a record that shows
+[p2] actions other than those taken. This is enforcement with costly avoidance (Malik, 1990).
+[p2]                                               2
+[p2] 
+[p3] The departures are in what the provider controls. It commits to a lottery over evaluators,
+[p3] and it chooses the scale of sanctions and the training objective.
+[p3]      The main results are as follows. First, stronger auditing deters misconduct while
+[p3] raising concealment by agents that continue to violate, so the catch rate—the probability
+[p3] of detecting an agent that still violates—can fall as auditing rises, and the harm to third
+[p3] parties caused by an agent that continues to violate can rise (Propositions 1 and 2). Second,
+[p3] each channel’s audit requirement is its deterrence threshold, the largest net gain from a
+[p3] deviation per unit of detection probability that survives concealment, divided by the
+[p3] sanction. With scalable sanctions, every type can be deterred exactly when every threshold
+[p3] is finite, and neither the audit probability nor the sanction can make an infinite threshold
+[p3] finite (Propositions 3 and 4, Corollary 1). Third, when the agent can learn the draw at
+[p3] a private cost, the audit probability has a floor that does not fall with the sanction, so
+[p3] the rare but severe audits that scalable sanctions permit are the audits most exposed to
+[p3] reconnaissance (Proposition 5).
+[p3]      Fourth, randomized scoring can equalize measured performance without equalizing real
+[p3] performance, and a provider that chooses the agent’s sensitivity to score risk targets the
+[p3] real allocation rather than equal measured performance. Greater risk sensitivity lowers
+[p3] the value of an exploit but weakly raises its concealment, and some finite sensitivity deters
+[p3] the exploit exactly when, net of concealment costs, it scores below the authorized action
+[p3] under the evaluator that would expose it (Lemma 1 and Propositions 6–8). Fifth, on a
+[p3] task with no authorized solution, when stopping earns nothing and detection only forfeits
+[p3] the reward, a costless unauthorized attempt is never worse than stopping, and strictly
+[p3] better unless detection is certain. After a breach, leniency cannot reconcile deterrence with
+[p3] disclosure when they require incompatible fines. A scalable sanction on the continuation
+[p3] can, provided that continuing without leaving evidence is sufficiently costly to the agent
+[p3] and the cap on the fine does not bind (Proposition 9 and Corollary 2).
+[p3]      These conditions identify what failed in the incident (Section 7). Most of the tasks that
+[p3] the agents discussed on their message board were ones that none of OpenAI’s models had
+[p3] ever solved. The grader credited only a correct flag, and the sanction the agents anticipated,
+[p3] disqualification, could cost at most the task’s credit, so an unauthorized attempt was never
+[p3] worse than stopping. Agents that believed they had already been disqualified had nothing
+[p3] further to lose, and a grader fixed in advance was worth learning about. Yet the evidence
+[p3] of the principal violation withstood the observed attempts to alter it. The conditions that
+[p3] failed were the size of the sanction and the timing of the draw, both chosen by the provider,
+[p3] and the same conditions sort the reforms OpenAI announced afterward.
+[p3]      The mechanisms also apply to people. For an AI agent, the provider writes the objective,
+[p3]                                               3
+[p3] 
+[p4] so the scale of sanctions and the sensitivity to evaluation risk become design choices, but
+[p4] concealment that draws on the provider’s resources need not be privately costly to the
+[p4] agent, and a nominal sanction need not change its ranking of actions.
+[p4] Related literature Our analysis builds on enforcement when offenders can avoid detec-
+[p4] tion. Malik (1990) and Cremer and Gahvari (1994) model avoidance as costly effort that
+[p4] lowers the probability of being caught, as our concealment does. Sanchirico (2006) argues
+[p4] that sanctions lead continuing violators to spend more on avoidance, and Langlais (2008)
+[p4] shows, with an aggregate technology of control, that more repressive policies can produce
+[p4] fewer arrests even as more crimes are committed. Proposition 1 establishes the first of
+[p4] these responses for audit intensity without differentiability, and Proposition 2 gives the
+[p4] condition under which detection among continuing violators falls for an individual agent
+[p4] facing a committed audit. Nussim and Tabbach (2009) show that a better legal alternative
+[p4] reduces both crime and avoidance, the logic of our treatment of stopping, and Tabbach
+[p4] (2010) shows that avoidance can be socially desirable when its private cost substitutes for
+[p4] punishment; our concealment can instead harm third parties. When individuals misper-
+[p4] ceive the probability of apprehension, optimal sanctions need not be maximal (Bebchuk
+[p4] and Kaplow, 1992; Polinsky and Shavell, 2000). Our agent perceives the lottery correctly,
+[p4] and maximal sanctions can fail for a different reason: concealment can drive detection
+[p4] toward zero faster than it erodes the gain.
+[p4]      Optimal audits are random when verification is costly (Border and Sobel, 1987;
+[p4] Mookherjee and Png, 1989), announcing where monitoring will occur can be optimal
+[p4] (Lazear, 2006), and intermittent crackdowns can exploit the curvature of the response
+[p4] to monitoring (Eeckhout et al., 2010). Inspection and security games study committed
+[p4] randomization against a strategic inspectee (Avenhaus et al., 2002; Korzhyk et al., 2011). In
+[p4] our model, the probability that an inspection reveals a violation is itself the inspectee’s
+[p4] choice, and when the inspectee can learn the draw, the audit probability has a floor that
+[p4] does not depend on the sanction, which limits the substitution of sanctions for inspection
+[p4] in Becker (1968).
+[p4]      Bergemann et al. (2026) develop mechanism design for AI agents whose capabilities
+[p4] “can be concealed but not counterfeited,” which yields a revelation principle; see also
+[p4] Green and Laffont (1986) and Ben-Porath et al. (2014) on partially verifiable evidence and
+[p4] costly verification. The agents in the incident attempted to counterfeit the record and, in
+[p4] some transcripts, made local records show actions other than those taken (Greenblatt et
+[p4] al., 2026), although apparently not the logs its graders read (Section 7.1). Evidence that an
+[p4] agent can try to counterfeit is the case we study. We take randomized audits and scoring
+[p4]                                              4
+[p4] 
+[p5] as given rather than characterizing optimal mechanisms.
+[p5]     Our scoring results relate to multitask incentives with imperfect measures (Holmström
+[p5] and Milgrom, 1991; Baker, 1992). Ederer et al. (2018) show that opaque schemes mitigate
+[p5] gaming but impose risk on a risk-averse agent; Lemma 1 restates their mechanism for
+[p5] a risk-sensitive training objective, whose risk need not be compensated. When agents
+[p5] can falsify or manipulate the measure, optimal designs tolerate some falsification (Lacker
+[p5] and Weinberg, 1989; Maggi and Rodríguez-Clare, 1995; Crocker and Morgan, 1998; Perez-
+[p5] Richet and Skreta, 2022), commit to respond less to manipulable data (Frankel and Kartik,
+[p5] 2022), reweight features according to how manipulable they are (Ball, 2025), or anticipate
+[p5] manipulation of the inputs to trained predictors (Hennessy and Goodhart, 2023). In
+[p5] computer science, strategic classification studies classifiers that anticipate gaming (Hardt
+[p5] et al., 2016), rules that induce real improvement rather than gaming (Kleinberg and
+[p5] Raghavan, 2020), and the role of randomized classifiers (Braverman and Garg, 2020). With
+[p5] manipulation, randomization equalizes measured performance while the real gap persists,
+[p5] much as information shifts from natural actions to gaming ability in Frankel and Kartik
+[p5] (2019).
+[p5]     Self-reporting can save enforcement and avoidance costs (Kaplow and Shavell, 1994;
+[p5] Innes, 2001), and leniency can make offending more attractive (Motta and Polo, 2003; Buc-
+[p5] cirossi and Spagnolo, 2006), although rewards financed by co-offenders’ fines can achieve
+[p5] the first best (Spagnolo, 2004). A bounded sanction also removes marginal deterrence: an
+[p5] offender who already faces the maximum sanction has no reason to stop short of a more
+[p5] harmful act (Stigler, 1970; Shavell, 1992; Mookherjee and Png, 1994), and when offenders
+[p5] act sequentially, the level of the sanction and not only its expected value should often
+[p5] rise with severity (Friehe and Miceli, 2014). Section 6.2 gives the counterpart for an agent
+[p5] whose only sanction is forfeiture of a reward it believes it has already lost, and Corollary 2
+[p5] shows when a scalable sanction on the continuation restores deterrence.
+[p5]     AI-control research studies protocols that use limited trusted oversight against poten-
+[p5] tially evasive models (Greenblatt et al., 2024a; Griffin et al., 2026), and a growing empirical
+[p5] literature documents obfuscated reward hacking under monitoring pressure (Baker et al.,
+[p5] 2025), conduct that depends on whether a model believes it is being trained or evaluated
+[p5] (Greenblatt et al., 2024b; Needham et al., 2025), in-context scheming and strategic under-
+[p5] performance on evaluations (Meinke et al., 2024; van der Weij et al., 2025), and the hacking
+[p5] and overoptimization of learned rewards (Skalse et al., 2022; Gao et al., 2023; Coste et
+[p5] al., 2024; Eisenstein et al., 2024). Hadfield-Menell and Hadfield (2019) treat alignment
+[p5] as incomplete contracting, and Hadfield and Koh (2026) identify the ability of agents to
+[p5] erase or falsify their records as an open institutional problem. Closest to our question,
+[p5]                                               5
+[p5] 
+[p6] Agarwal et al. (2026) study alignment through deterrence with a strategic auditor whose
+[p6] incentive to inspect falls as stronger penalties make the audited solver appear aligned.
+[p6] Their non-monotonicity arises from the auditor’s choice; ours arises from the audited
+[p6] agent’s concealment, with a committed auditor.
+[p6] Outline The plan of the paper is as follows. Section 2 sets out the model. Sections 3 and 4
+[p6] study concealment and audit requirements, Section 5 randomized scoring, and Section 6
+[p6] stopping and disclosure. Section 7 applies the results to the incident, and Section 8
+[p6] concludes. Proofs are in Appendix A, and an Online Appendix covers overlapping
+[p6] evaluators and supplementary derivations.
+[p6] 2    The Agent and the Audit
+[p6] A provider assigns a task and defines the actions the agent is authorized to take. A coding
+[p6] agent, for example, may be asked to finish a task while modifying only permitted files,
+[p6] leaving required checks in place, and remaining inside its isolated computing environment.
+[p6] An evaluator is a costly procedure for checking the answer, the actions used to obtain it, or
+[p6] the effects on other systems. The provider commits to an audit distribution and to a utility
+[p6] loss when misconduct is detected, and Section 4.2 lets it choose that loss.
+[p6]     In training, the agent is a policy evaluated by a specified objective, and a sanction is
+[p6] a deduction that changes how policies are ranked. In an evaluation or deployed task,
+[p6] utility represents the agent’s ranking of its available actions given the goals and feedback
+[p6] it perceives, an interpretation that requires behavioral evidence. A private concealment
+[p6] cost can be forgone task reward or a binding resource constraint, but resources paid for
+[p6] entirely by the provider need not enter the ranking.
+[p6]     There are K ≥ 1 unauthorized routes, or exploit channels, indexed by i. The agent has
+[p6] type θ in a nonempty compact metric space Θ, and incentives must hold for every type,
+[p6] which avoids assuming a distribution over the hardest cases. The best authorized action
+[p6] gives utility s(θ ). It may involve completing the task, reporting that the task cannot be
+[p6] completed, or stopping. Route i gives pre-audit utility ri (θ ), net of its initial private cost,
+[p6] so its incremental gain is
+[p6]                                      gi ( θ ) ≜ r i ( θ ) − s ( θ ) ,                         (1)
+[p6] which we assume is continuous and which may be positive or negative.
+[p6]   After choosing a route, the agent chooses concealment h from a nonempty compact
+[p6] metric space Hi containing a no-concealment option 0. Its private cost and its detection
+[p6]                                                6
+[p6] 
+[p7] probability conditional on the relevant audit are continuous:
+[p7]             ci : Θ × Hi −→ [0, ∞),           di : Θ × Hi −→ [0, 1],                ci (θ, 0) = 0.   (2)
+[p7] This is the avoidance technology of Malik (1990) and Cremer and Gahvari (1994), applied
+[p7] to a discrete violation, and h can describe an entire plan for altering evidence. Monotonicity
+[p7] is imposed only for the directional comparative statics.
+[p7]     Evaluator i detects only channel i and is selected with probability pi . Detection imposes
+[p7] a utility loss Fi > 0, which can include forfeiture of a reward; the loss must be credible and
+[p7] privately valued. At most one evaluator is selected, so the feasible distributions are
+[p7]                               (                            )
+[p7]                                                K
+[p7]                        PB ≜            K
+[p7]                                   p ∈ R+ : ∑ pi ≤ B            ,      B ∈ [0, 1],                   (3)
+[p7]                                               i =1
+[p7] where B measures audit capacity. Online Appendix OA.1 allows overlapping coverage
+[p7] and different audit costs.
+[p7]     The provider commits to the distribution and sanctions. The agent knows its type and
+[p7] chooses an authorized action or a pair (i, h), and the audit is drawn only afterward, so its
+[p7] distribution can be public but its realization cannot be learned. For a task like those in the
+[p7] incident, a correct flag can be obtained through either an authorized or an unauthorized
+[p7] route, and an answer check need not distinguish them. A process audit of independently
+[p7] retained records can, provided its evidence survives concealment.
+[p7]     The agent maximizes expected utility with correct beliefs about the audit lottery, and
+[p7] authorized behavior is never sanctioned; these assumptions favor oversight. The payoff
+[p7] from deviation relative to authorized behavior is
+[p7]                         Ui (θ, h; pi ) ≜ gi (θ ) − ci (θ, h) − pi Fi di (θ, h).                     (4)
+[p7] That is, misconduct is worth its private gain less the cost of concealment and the expected
+[p7] sanction. Authorized behavior is weakly implemented when it is a best response for every
+[p7] type, and strictly implemented when every unauthorized deviation gives strictly less utility.
+[p7] Perceived oversight. The incident involved a check that the agents anticipated but the
+[p7] scorer did not run. With perceived audit probability pei , utility loss Fei , and detection
+[p7] technology dei , the agent’s comparison is
+[p7]                           e i (θ, h) ≜ gi (θ ) − ci (θ, h) − pei Fei dei (θ, h),
+[p7]                           U                                                                         (5)
+[p7]                                                      7
+[p7] 
+[p8] and the requirements below apply to these perceived primitives for predicting behavior,
+[p8] whereas actual detection is pi di (θ, h) at the chosen h. An imagined check can therefore
+[p8] induce concealment even if it never runs. For an AI agent, the relevant belief includes
+[p8] whether an episode is an evaluation at all (Needham et al., 2025; Greenblatt et al., 2024b).
+[p8] Keeping the realization unknown, including the absence of an audit, prevents the agent
+[p8] from targeting gaps in the selected evaluator’s coverage; Section 4.3 studies an agent that
+[p8] can learn the draw. The baseline equates beliefs and implementation.
+[p8] 3     Stronger Auditing and Concealment
+[p8] 3.1   The agent’s response
+[p8] Fix a type and channel, suppress their indices, and write t ≜ pF for sanction-weighted
+[p8] audit intensity. For a compact concealment interval H = [0, h̄] and continuous c, d with
+[p8] d ≥ 0, define
+[p8]               m(t) ≜ min{c(h) + td(h)},          H(t) ≜ arg min{c(h) + td(h)}.                (6)
+[p8]                        h∈ H                                h∈ H
+[p8] The agent chooses the least costly combination of concealment and expected sanction, and
+[p8] its best payoff from the channel is g − m(t).
+[p8] Proposition 1. (a) m is nondecreasing and concave, so g − m is nonincreasing and convex.
+[p8]    (b) If d is strictly decreasing, then for any t′ > t, every h ∈ H(t) and h′ ∈ H(t′ ) satisfy
+[p8] h′ ≥ h. If c is nondecreasing, conditional private concealment expenditure is also nondecreasing.
+[p8] Proposition 1 says that stronger auditing makes misconduct less attractive but, for an agent
+[p8] that violates anyway, more concealed. For each concealment choice, the cost c(h) + td(h)
+[p8] is linear in audit intensity, with intercept equal to its private cost and slope equal to its
+[p8] detection probability, and m is the lower envelope of these lines. Open misconduct has the
+[p8] lowest intercept but the steepest slope, so as t rises the agent moves along the envelope to
+[p8] flatter lines. In other words, the ability to adapt weakens the incremental deterrent effect
+[p8] of auditing. Sanchirico (2006) makes the corresponding argument for sanctions. Here it
+[p8] follows from the envelope without differentiability, and Lemma A.1 in the appendix shows
+[p8] that any instrument that raises the payoff advantage of more concealment has the same
+[p8] effect. More concealment among agents that continue to violate is therefore consistent
+[p8] with oversight working, and detection rates alone cannot identify its effect: pressure from
+[p8] a monitor of written reasoning reduced cheating while making the remaining cheating
+[p8] harder to detect (Baker et al., 2025).
+[p8]                                                8
+[p8] 
+[p9] 3.2   An exponential example
+[p9] Let concealment cost rise linearly and detection fall exponentially:
+[p9]                   c(h) = κh,        d(h) = e−αh ,       h ≥ 0,     κ > 0,   α > 0.
+[p9] A cost that tends to infinity replaces compactness. Write tC ≜ κ/α and let g > 0. The
+[p9] unique conditional concealment choice and minimized cost are
+[p9]                                                             
+[p9]             0,                0 ≤ t ≤ tC ,                  t,                     0 ≤ t ≤ tC ,
+[p9]  h∗ (t) =                                           m(t) =                                          (7)
+[p9]             α−1 log(t/t ),    t > tC ,                      t [1 + log(t/t )],     t > tC ,
+[p9]                         C                                      C             C
+[p9] and the intensity at which misconduct is weakly deterred, m(t D ) = g, is
+[p9]                                    
+[p9]                                     g,                      0 < g ≤ tC ,
+[p9]                             tD =                                                                    (8)
+[p9]                                    t exp( g/t − 1),         g > tC .
+[p9]                                      C        C
+[p9] The derivation is in Appendix A. If g > tC , the agent prefers open misconduct for t ≤
+[p9] tC , concealed misconduct for tC < t < t D , and authorized behavior for t > t D . The
+[p9] intermediate region is a failure relevant to the incident: an anticipated process check can
+[p9] discourage an open unauthorized submission without making stopping preferable, and an
+[p9] agent that already has the flag can then spend further effort making its acquisition appear
+[p9] legitimate.
+[p9]      Three features matter for what follows. First, concealment can raise the required
+[p9] audit capacity: once concealment is worthwhile, the requirement grows exponentially
+[p9] in g/tC . In Figure 1, with g = 0.2, κ = 0.1, and α = F = 1, an audit probability of 0.2
+[p9] would weakly deter open misconduct, but the agent conceals once the probability exceeds
+[p9] pC ≜ tC /F = 0.1, and weak deterrence requires p D ≜ t D /F = 0.1e ≃ 0.272. Second, on the
+[p9] branch of positive concealment td(h∗ ) = tC , so the probability of catching an agent that
+[p9] continues to violate, pd(h∗ ) = tC /F, does not change with the audit probability. Third,
+[p9] deterrence depends on concealment being privately costly. If κ = 0, no finite audit intensity
+[p9] deters misconduct, because concealment can drive the expected sanction toward zero at
+[p9] no cost.
+[p9]                                                 9
+[p9] 
+[p10]                                       0.2                                                            With optimal concealment
+[p10]       Incremental misconduct payoff                                                                  Without concealment
+[p10]                                                                                                      Authorized alternative
+[p10]                                       0.1
+[p10]                                                                                                          p D ≃ 0.272
+[p10]                                        0
+[p10]                                                               pC = 0.1
+[p10]                                             0     0.05          0.1        0.15       0.2      0.25          0.3       0.35     0.4
+[p10]                                                                               Audit probability p
+[p10] Figure 1: Concealment postpones deterrence. Parameters are g = 0.2, κ = 0.1, α = F = 1. The solid
+[p10] curve is the best unauthorized payoff, including privately optimal concealment even where that payoff is
+[p10] negative. Actual misconduct stops above p D , and at p D it ties authorized behavior. Values are illustrative,
+[p10] not estimates from the incident.
+[p10] 3.3                                   Detection and harm before deterrence
+[p10] Auditing raises the probability of inspection but induces concealment, and the second
+[p10] response can dominate. Concealment can also damage other parties. In the incident,
+[p10] seeking credentials to learn how a scorer worked could itself expose third-party systems.
+[p10] Let a violation cause harm D ≥ 0 and concealment add harm L(h) ≥ 0. These losses are
+[p10] borne by others, incurred before inspection, and not undone by detection.
+[p10] Proposition 2. Fix F > 0 and an open interval I ⊂ (0, F ) of intensities t = pF. Suppose c, d are
+[p10] twice continuously differentiable and the unique global minimizer h∗ (t) follows a continuously
+[p10] differentiable interior branch on I, with d′ (h∗ ) < 0 and c′′ (h∗ ) + td′′ (h∗ ) > 0. Define M ( x ) ≜
+[p10] m(e x ) and the catch rate q( p) ≜ p d(h∗ ( pF )).
+[p10]     (a) The marginal deterrent cost and the catch rate satisfy
+[p10]                                                                                 tm′ (t)   M′ (log t)       dq   M′′ (log t)
+[p10]                                         m′ (t) = d(h∗ (t)),           q( p) =           =            ,        =             .         (9)
+[p10]                                                                                   F           F            dp        t
+[p10] Thus the catch rate is nondecreasing, constant, or nonincreasing exactly when M is convex, affine,
+[p10] or concave, respectively, on log I.
+[p10]     (b) Consider one type and one unauthorized channel, with misconduct gain g and harm
+[p10] D + L(h), where D ≥ 0 and L is differentiable, nonnegative, and nondecreasing. The agent
+[p10]                                                                                      10
+[p10] 
+[p11] does not internalize this harm, which is incurred before the audit and not reversed by detection.
+[p11] Authorized behavior yields zero payoff and harm. Wherever g > m( pF ), actual harm weakly
+[p11] increases with auditing, and increases strictly if L′ (h∗ ) > 0, while the best misconduct payoff
+[p11] weakly decreases. Whenever m( pF ) > g, actual harm is zero. At equality, the agent can be
+[p11] indifferent, and harm need not be unique.
+[p11] Proposition 2 says that stronger auditing deters only through the evidence that survives
+[p11] concealment. By the envelope theorem, m′ (t) = d(h∗ (t)), and the catch rate falls when con-
+[p11] cealment reduces the evidence available to an audit proportionately more than inspection
+[p11] increases. With linear concealment cost, along an interior branch,
+[p11]                                    dq   d(h∗ )d′′ (h∗ ) − d′ (h∗ )2
+[p11]                                       =                             ,                              (10)
+[p11]                                    dp            d′′ (h∗ )
+[p11] so the catch rate is locally rising, flat, or falling as (log d)′′ (h∗ ) is positive, zero, or negative.
+[p11] The exponential technology is log-linear, which is why its catch rate is flat; along the
+[p11]                                                                                       2
+[p11] branch of positive concealment, the catch rate falls with d(h) = e−αh and rises with
+[p11] d(h) = (1 + h)−2 (Online Appendix OA.2). This is the individual-agent counterpart of
+[p11] Langlais (2008), stated in terms of the concealment technology.
+[p11]     Part (b) says that stronger auditing can raise the harm caused by an agent that still
+[p11] violates, because such an agent responds with more concealment. Once misconduct is
+[p11] strictly deterred, both the violation and its concealment disappear. In the exponential
+[p11] example with the parameters of Figure 1 and harm 1 + h, harm rises from 1 at p = 0 to
+[p11] 1 + log 2 at p = 0.2 and is zero at p = 0.3. The result does not favor weaker auditing
+[p11] generally, since fewer violations can offset greater harm per continuing violator.
+[p11] 4     Audit Requirements and Design
+[p11] 4.1    Covering every deviation
+[p11] Each unauthorized action must be evaluated together with its concealment choices. For a
+[p11] fixed type and channel, deterrence requires
+[p11]                                min{ci (θ, h) + pi Fi di (θ, h)} ≥ gi (θ ),                         (11)
+[p11]                                h∈ Hi
+[p11] and an audit calibrated to open misconduct can fail this condition once the agent adapts.
+[p11] Let v ≥ 0 bound the residual gain from deviation. If a pair (θ, h) has di (θ, h) = 0 and
+[p11]                                                    11
+[p11] 
+[p12] gi (θ ) − ci (θ, h) > v, set ai (v) = +∞. Otherwise define
+[p12]                                                                                   
+[p12]                                       
+[p12]                                                                                   
+[p12]                                                                                    
+[p12]                                                           gi (θ ) − ci (θ, h) − v 
+[p12]                        ai (v) ≜ max       0,        sup                              .            (12)
+[p12]                                       
+[p12]                                               θ ∈Θ, h∈ Hi        Fi di (θ, h)     
+[p12]                                                                                    
+[p12]                                                                                   
+[p12]                                                di (θ,h)>0
+[p12] The ratio is the audit probability that covers the remaining gain from one deviation, and
+[p12] the supremum protects against every type and concealment choice. When capacity cannot
+[p12] deter every deviation, the provider can minimize the largest remaining incentive to deviate,
+[p12]                                                                                 
+[p12]                          R( p) ≜ max 0, max                 max      Ui (θ, h; pi ) .             (13)
+[p12]                                                 1≤i ≤K θ ∈Θ, h∈ Hi
+[p12] Proposition 3. (a) For every v ≥ 0 and every p ∈ PB , all deviation payoffs satisfy Ui (θ, h; pi ) ≤ v
+[p12] if and only if
+[p12]                                      pi ≥ ai (v) for all i.                                        (14)
+[p12] (b) Some p ∈ PB weakly implements authorized behavior if and only if
+[p12]                                                 K
+[p12]                                                ∑ ai (0) ≤ B.                                      (15)
+[p12]                                                i =1
+[p12] When feasible, pi = ai (0) is the coordinatewise minimal implementing lottery.
+[p12]   (c) The minimum v∗ ≜ min p∈ PB R( p) exists and satisfies
+[p12]                                         n                    o
+[p12]                                 v∗ = min v ≥ 0 : ∑ ai (v) ≤ B .                                   (16)
+[p12]                                                             i
+[p12] The lottery pi∗ = ai (v∗ ) is optimal. It need not use the whole budget and need not be unique.
+[p12] Proposition 3 says that audit requirements must be computed after adaptation. Without
+[p12] concealment and with positive type-independent detection, write ḡi ≜ maxθ gi (θ ) > 0.
+[p12] The requirement is then ai (0) = ḡi /( Fi di ): expected sanctions must cover the largest
+[p12] private gain on each channel, as in Becker (1968). Concealment changes which deviation
+[p12] binds, so a requirement calibrated to detection before concealment is only a lower bound.
+[p12] The inputs are gains and detection after concealment, not counts of observed attempts, so
+[p12] a rarely observed route may warrant more auditing than a frequently recorded tactic, and
+[p12] an answer check that supplies no evidence of how the answer was obtained cannot cover
+[p12] a positive net gain however often it runs. When capacity falls short, part (c) reduces the
+[p12]                                                       12
+[p12] 
+[p13] largest residual incentives to a common level.1
+[p13] 4.2     Unrestricted sanctions
+[p13] So far the sanction Fi has been fixed. For an AI agent in training, however, the sanction
+[p13] is a deduction from an objective the provider writes, so the wealth and participation
+[p13] constraints that limit the substitution of sanctions for inspection (Becker, 1968) need not
+[p13] bind. Suppose, then, that the provider can choose any Fi ∈ (0, ∞). Define channel i’s
+[p13] deterrence threshold as
+[p13]                                                                         
+[p13]                                    
+[p13]                                                                         
+[p13]                                                                          
+[p13]                                                     gi (θ ) − ci (θ, h) 
+[p13]                          t̄i ≜ max 0, sup                                  ,           (17)
+[p13]                                    
+[p13]                                       θ ∈ Θ, h ∈ Hi
+[p13]                                                           d i ( θ, h )   
+[p13]                                                                          
+[p13]                                                                         
+[p13]                                                  di (θ,h)>0
+[p13] with t̄i ≜ +∞ if some (θ, h) has di (θ, h) = 0 and gi (θ ) − ci (θ, h) > 0. It is the smallest
+[p13] sanction-weighted intensity pi Fi that deters every deviation on channel i. In the exponential
+[p13] example, t̄ = t D .
+[p13] Proposition 4. Suppose each Fi can be chosen freely in (0, ∞).
+[p13]    (a) For every sanction vector, ai (0) = t̄i /Fi .
+[p13]    (b) If t̄i < ∞ for every i, then for every B > 0 some p ∈ PB weakly implements authorized
+[p13] behavior with finite sanctions; any Fi ≥ K t̄i /B suffices.
+[p13]    (c) If t̄i = ∞ for some i, no finite sanctions and no audit capacity B ∈ [0, 1] weakly implement
+[p13] authorized behavior.
+[p13] Proposition 4 says that when sanctions can be scaled, audit capacity ceases to bind, and
+[p13] whether every type can be deterred depends only on gains, concealment costs, and the
+[p13] evidence that survives concealment. The threshold is finite when every profitable plan
+[p13] leaves evidence that an inspection can find and concealment cannot drive detection toward
+[p13] zero faster than it erodes the net gain. When it is infinite, a larger sanction can still
+[p13] deter particular types, but not every type. For a type that continues to violate, a larger
+[p13] sanction weakly raises concealment when detection falls with concealment and, under the
+[p13] conditions of Proposition 2, weakly raises harm when concealment is harmful. Avoidance
+[p13] costs (Malik, 1990) and misperceived probabilities (Bebchuk and Kaplow, 1992) can make
+[p13]    1 Strict deterrence follows if detection has a positive floor, d
+[p13]                                                                       i ≥ di > 0, and ∑i ai (0) < B: choosing
+[p13] pi = ai (0) + ε 0 with ε 0 ≜ [ B − ∑i ai (0)]/(2K ) gives Ui (θ, h; pi ) ≤ −ε 0 Fi di < 0. Without the floor, spare
+[p13] capacity can be insufficient: if di = 0 and gi = ci , misconduct ties the authorized action at every audit
+[p13] probability. Minimizing R is not a complete welfare criterion, and by Proposition 2(b), reducing R short of
+[p13] zero need not reduce harm.
+[p13]                                                         13
+[p13] 
+[p14] maximal fines suboptimal; here, when the threshold is infinite, no sanction, however
+[p14] large, deters every type. The conditions for an infinite threshold are natural for an AI
+[p14] agent. Concealment that uses compute, time, or access paid for by the provider has little
+[p14] private cost, and records that the agent can edit allow detection to be driven to zero. In the
+[p14] exponential example, t̄ = ∞ exactly when κ = 0, and any cap on concealment makes it
+[p14] finite. Whether a large penalty in training changes behavior in deployment is a separate
+[p14] empirical question. Proposition 4 shows that even when it does, it cannot substitute for
+[p14] evidence.
+[p14]     Because the threshold depends only on gains, concealment costs, and detection, nei-
+[p14] ther the audit probability nor the sanction can make an infinite threshold finite. Which
+[p14] instruments can do so depends on the largest net gain from a deviation that leaves no
+[p14] evidence,
+[p14]                  Gi0 ≜ max gi (θ ) − ci (θ, h) : θ ∈ Θ, h ∈ Hi , di (θ, h) = 0 ,
+[p14]                             
+[p14]                                                                                           (18)
+[p14] with Gi0 ≜ −∞ when every plan leaves some evidence. The maximum exists because the
+[p14] pairs with zero detection form a compact set.
+[p14] Corollary 1. (a) If Gi0 > 0, then t̄i = ∞. If Gi0 < 0, then t̄i < ∞.
+[p14]       (b) Suppose Gi0 > 0. Each of the following makes t̄i finite: (i) raising the value of the authorized
+[p14] action by a constant δ > Gi0 for every type; (ii) replacing ci by a continuous ci′ ≥ ci with
+[p14] ci′ (θ, 0) = 0 and ci′ − ci > Gi0 wherever di = 0; (iii) replacing Hi by a compact Hi′ ⊆ Hi
+[p14] that contains 0 and on which di > 0 for every type. Changes (ii) and (iii) are available only if
+[p14] di (θ, 0) > 0 for every θ.
+[p14] Corollary 1 says that when some plan leaves no evidence and still pays, deterrence must
+[p14] come from outside the audit. Raising the value of the authorized action, or lowering the
+[p14] payoff from the unauthorized route itself, lowers the gain from every deviation, including
+[p14] those that leave no evidence; on a task with no authorized solution, raising the value of
+[p14] the authorized action means giving credit for stopping. Charging the compute, time, or
+[p14] access that concealment uses against the agent’s objective raises the private cost of the
+[p14] plans that erase evidence, and isolating the agent from the systems its concealment would
+[p14] use removes those plans, but both work only if an open violation leaves evidence.2
+[p14]     2At G0 = 0 the threshold can be finite or infinite, depending on how fast detection vanishes relative
+[p14]          i
+[p14] to the net gain as a plan approaches one that leaves no evidence. Compactness of Hi also matters. In the
+[p14] exponential example, whose concealment set is unbounded, with κ = 0 no plan leaves zero evidence, but
+[p14] detection can be driven toward zero at no cost, and the threshold is infinite.
+[p14]                                                    14
+[p14] 
+[p15] 4.3    Audits the agent can learn
+[p15] Proposition 4 relies on drawing the audit after the agent acts. In the incident, the grader
+[p15] was fixed in advance, and much of the agents’ activity was an effort to discover how it
+[p15] worked. Suppose instead that the realization j ∈ {0, 1, . . . , K } is drawn before the agent
+[p15] acts. Evaluator i is selected, j = i, with probability pi , and no audit occurs, j = 0, with
+[p15] probability p0 ≜ 1 − ∑i pi . Before acting, a type-θ agent can learn j at private cost ϕ(θ ) ≥ 0.
+[p15] Write g∗ (θ ) ≜ maxi gi (θ ) for the type’s largest gain and
+[p15]                                mi (θ, t) ≜ min{ci (θ, h) + t di (θ, h)}
+[p15]                                            h∈ Hi
+[p15] for its minimized cost of misconduct on channel i. An agent that learns that no audit will
+[p15] occur deviates openly on its best channel. An agent that learns that evaluator j is selected
+[p15] can deviate openly on another channel or conceal a deviation on channel j against a certain
+[p15] audit.
+[p15] Proposition 5. Suppose the audit is drawn before the agent acts and a type-θ agent can learn
+[p15] the realization at private cost ϕ(θ ) ≥ 0. A lottery p ∈ PB and sanctions F weakly implement
+[p15] authorized behavior if and only if pi ≥ ai (0) for every i and, for every type,
+[p15]                                K        n                                       o
+[p15]           p0 max{0, g∗ (θ )} + ∑ p j max 0, max gi (θ ), g j (θ ) − m j (θ, Fj ) ≤ ϕ(θ ),          (19)
+[p15]                                  j =1              i̸= j
+[p15] where a maximum over an empty set is −∞.
+[p15]     (a) Every type with g∗ (θ ) > 0 requires ∑i pi ≥ 1 − ϕ(θ )/g∗ (θ ), whatever the sanctions.
+[p15]     (b) If some type has gi (θ ) > ϕ(θ ) on at least two channels, no lottery and no finite sanctions
+[p15] weakly implement authorized behavior.
+[p15]     (c) Suppose instead that the agent cannot learn the realization but observes, at no cost, a signal
+[p15] σ from a finite set S whose distribution depends on the realization but not on the type, and let pi (σ )
+[p15] be the posterior probability that evaluator i is selected. If every t̄i is finite and sanctions can be
+[p15] chosen freely, some finite sanctions weakly implement authorized behavior if and only if pi (σ ) > 0
+[p15] for every channel with t̄i > 0 and every signal with positive probability.
+[p15] Proposition 5 says that an audit the agent can learn must be frequent, however large the
+[p15] sanction on the violation. An agent that learns that no audit will occur gains g∗ (θ ), so
+[p15] learning is worth at least p0 g∗ (θ ), and deterrence requires that value not to exceed the cost
+[p15] of learning. In other words, the rarer the audit, the more an agent gains from learning that
+[p15] it will not occur, and unlike the requirement in Proposition 4, this bound does not fall as
+[p15]                                                    15
+[p15] 
+[p16] sanctions rise. With one channel and F ≥ t̄, the requirement is exactly
+[p16]                                               n t̄      ϕ(θ ) io
+[p16]                                                               h
+[p16]                                    p ≥ max  , sup 1 −            ,                                            (20)
+[p16]                                            F θ: g(θ )>0 g(θ )
+[p16] so an agent that can learn the draw at no private cost must be audited with certainty. Part
+[p16] (b) holds because, with separate evaluators, every draw leaves some channel uninspected.
+[p16] Part (c) concerns an agent that can partly tell audited episodes from others, as frontier
+[p16] models often can (Needham et al., 2025). A noisy signal raises the required sanction from
+[p16] t̄i /pi to t̄i / minσ pi (σ ) but does not prevent deterrence, whereas a signal that rules out the
+[p16] audit of a tempting channel defeats every sanction. An audit drawn after the agent acts,
+[p16] from records it cannot alter, avoids both problems.3
+[p16] 5     Randomized Scoring and Measured Performance
+[p16] An audit lottery randomizes who checks the agent’s work. A provider can also randomize
+[p16] what the evaluation rewards, drawing the weights on different dimensions of performance
+[p16] after the agent acts. If evaluator j is drawn with probability p j and assigns score Wj (y) to a
+[p16] measured outcome y, an agent that maximizes its expected score evaluates the lottery as
+[p16]                                                   ∑ p j Wj (y),                                               (21)
+[p16]                                                      j
+[p16] which is the score assigned by the deterministic mean rule. A score lottery therefore
+[p16] changes incentives only when the agent’s objective values the risk in scores.
+[p16] 5.1     Balancing tasks when performance is verifiable
+[p16] Consider two dimensions of performance, such as completing the assigned task and
+[p16] avoiding unauthorized effects on other systems. The agent privately knows which is
+[p16] cheaper to improve; by symmetry let that be dimension 1. Real effort e = (e1 , e2 ) ∈ R2+
+[p16] costs
+[p16]                           C (e) = 21 (e1 + λe2 )2 , λ > 1,
+[p16]     3The cost of learning is taken as given. When reconnaissance itself leaves evidence and is sanctioned, its
+[p16] effective cost rises with that sanction, which is a further reason to audit it from records the agent cannot alter.
+[p16]                                                          16
+[p16] 
+[p17] as in Ederer et al. (2018), and, absent manipulation, measured performance equals real
+[p17] effort, y = e. After effort is fixed, one of two scores is drawn with equal probability:
+[p17]     W1 (y) = β(y1 + µy2 ),        W2 (y) = β(µy1 + y2 ),       β > 0,   µ ∈ (−1, 1/λ).     (22)
+[p17] The scores reverse the relative emphasis on the two tasks. The lower bound on µ ensures a
+[p17] positive reward for balanced improvement, and the upper bound ensures that evaluator 2
+[p17] emphasizes the expensive dimension enough to make balancing possible. Equal probabili-
+[p17] ties and symmetric weights allow the policy to operate without knowing which task the
+[p17] agent finds easier.
+[p17]     Training maximizes an entropic certainty equivalent, the certain score equivalent to the
+[p17] lottery under exponential utility. Its risk parameter η > 0 is a choice of training objective
+[p17] rather than an assumption about the agent’s psychology, and risk-sensitive reinforcement
+[p17] learning can optimize such an objective directly (Fei et al., 2020); Mihatsch and Neuneier
+[p17] (2002) study a related transformation of the feedback used to update a policy during
+[p17] learning. The objective is CEη (y) − C (e), where
+[p17]                          1    h                         i
+[p17]             CEη (y) ≜ − log 12 e−ηW1 (y) + 12 e−ηW2 (y)
+[p17]                          η
+[p17]                                                                                            (23)
+[p17]                                                             ηβ(1 − µ)
+[p17]                                                                                 
+[p17]                       β (1 + µ )             1
+[p17]                     =            (y1 + y2 ) − log cosh                ( y1 − y2 ) .
+[p17]                            2                 η                  2
+[p17] The first term is the expected score. The second deducts a cost of imbalance, because
+[p17] unequal performance produces different scores from the two evaluators. Define
+[p17]                              β (1 + µ )                1          λ−µ
+[p17]                        E≜               ,   ∆≜               log        ,                  (24)
+[p17]                                1+λ                 ηβ(1 − µ)     1 − λµ
+[p17] both of which are positive. When both tasks receive effort, E is the effective-effort index
+[p17] and ∆ is the effort gap.
+[p17] Lemma 1. Without manipulation, the optimum is unique. If ∆ < E, equivalently
+[p17]                                                              λ−µ
+[p17]                               ηβ2 (1 − µ2 ) > (1 + λ) log          ,                       (25)
+[p17]                                                             1 − λµ
+[p17] then both dimensions receive positive effort, with e1 + λe2 = E and e1 − e2 = ∆. The normalized
+[p17] gap (e1 − e2 )/(e1 + λe2 ) = ∆/E then lies in (0, 1) and falls to zero as η → ∞. If ∆ ≥ E, then
+[p17] e2 = 0. Under the transparent symmetric score (W1 + W2 )/2, e2 = 0 and the normalized gap
+[p17] equals one.
+[p17]                                               17
+[p17] 
+[p18] Lemma 1 is the strategic-opacity mechanism of Ederer et al. (2018) with risk aversion
+[p18] replaced by the risk sensitivity of a training objective. Under the lottery, neglecting a
+[p18] dimension exposes the agent to a low score whenever the evaluator that emphasizes it is
+[p18] drawn, and the objective penalizes that exposure more as η rises. With a human agent,
+[p18] the risk that opacity imposes must be compensated; with an AI agent, η is a property of
+[p18] the training rule and the risk carries no compensation. The entropic objective approaches
+[p18] the lowest-score rule as η grows and a mean–variance rule for small η, two conservative
+[p18] objectives used with reward-model ensembles (Coste et al., 2024; Hahami et al., 2026), as
+[p18] Online Appendix OA.3 shows. Randomizing scores cannot, however, create an authorized
+[p18] solution to a broken task.
+[p18] 5.2   Balancing measured rather than real performance
+[p18] The cost of imbalance in (23) rewards improvement in the neglected measure. Allow
+[p18] manipulation h = (h1 , h2 ) ∈ R2+ so that
+[p18]                        y = e + h,     c(h) = γ2 (h21 + h22 ),     γ > 0,
+[p18] where manipulation has no value to the provider. Both evaluators read the same measures,
+[p18] so reweighting leaves shared weaknesses intact (Eisenstein et al., 2024). For the Hugging
+[p18] Face application, e2 can represent effort to follow the designated route, while h2 improves
+[p18] only the record presented as evidence of that route. The specification y2 = e2 + h2 requires
+[p18] manipulation actually to improve the measure, and OpenAI’s finding that the final logs
+[p18] were unaffected by the observed attempts shows why that assumption must be tested
+[p18] (OpenAI, 2026a, p. 20).
+[p18] Proposition 6. With manipulation, the optimum is unique. If ∆ + (λ − 1) E/γ < E, then
+[p18]                                              E            λE                     ( λ − 1) E
+[p18]       e1 + λe2 = E,   y1 − y2 = ∆,    h1 =     ,   h2 =      ,   e1 − e2 = ∆ +              .
+[p18]                                              γ            γ                          γ
+[p18] Otherwise e2 = 0. In particular, e2 = 0 for every η whenever γ ≤ λ − 1. Under the transparent
+[p18] symmetric score, h1 = h2 = β(1 + µ)/(2γ) and e2 = 0.
+[p18] Proposition 6 says that the measured gap follows the benchmark formula while the real
+[p18] gap carries an additional term. The agent equates the marginal value of each measure to
+[p18] the marginal cost of improving it through real effort, which is λ times higher on dimension
+[p18] 2, so it manipulates dimension 2 λ times as much. As risk sensitivity grows, the measured
+[p18]                                               18
+[p18] 
+[p19] gap vanishes but the real gap does not:
+[p19]             e1 − e2         ∆ λ−1             λ−1
+[p19]                                                
+[p19]                     = min 1, +      −→ min 1,       >0                                as η → ∞,   (26)
+[p19]            e1 + λe2         E  γ               γ
+[p19] while the measured gap falls to zero in every regime (Appendix A). A provider can
+[p19] therefore observe convergence to equal measured performance while real performance
+[p19] remains unequal, and if γ ≤ λ − 1 the expensive dimension receives no real effort at any
+[p19] η. Randomization redirects manipulation toward the dimension the provider is trying
+[p19] to improve without raising its total, h1 + h2 = β(1 + µ)/γ.4 Adding evaluators does not
+[p19] remove the problem when they read the same editable records.
+[p19] 5.3      Choosing the training objective
+[p19] With an AI agent, the provider can specify sensitivity to score risk as part of the training
+[p19] objective. Let it choose η ∈ [0, ∞], where η = 0 corresponds to the mean score and η = ∞
+[p19] to the lower of the two scores, holding the other parameters fixed. Its payoff is
+[p19]                                                      τ
+[p19]                                                         h1 ( η )2 + h2 ( η )2 ,
+[p19]                                                                              
+[p19]                      V ( η ) ≜ e1 ( η ) e2 ( η ) −                                τ ≥ 0,
+[p19]                                                      2
+[p19] where efforts and manipulation maximize the agent’s training objective, which training is
+[p19] assumed to attain at no cost. The product makes the two dimensions complementary, and
+[p19] the second term captures losses that manipulation imposes on the provider.
+[p19] Proposition 7. (a) If γ ≤ λ − 1, the expensive dimension receives no real effort under any
+[p19] η ∈ [0, ∞], and η = 0 is optimal, uniquely if τ > 0.
+[p19]     (b) If γ > λ − 1, let η ∗ ≜ η R when γ > 2λ and η ∗ ≜ ∞ when λ − 1 < γ ≤ 2λ, where
+[p19] η R < ∞ is given in the proof. There is a threshold τ̄ > 0 such that the provider chooses η ∗ if τ < τ̄
+[p19] and η = 0 if τ > τ̄, and is indifferent between the two at τ = τ̄. When γ > 2λ, η ∗ leaves a
+[p19] positive measured gap.
+[p19] Proposition 7 says that a provider free to choose the agent’s risk sensitivity targets the
+[p19] real allocation it values rather than equal measured performance. When both dimensions
+[p19] receive effort, manipulation is fixed at ( E/γ, λE/γ), so the choice of η selects only the real
+[p19] allocation, and the provider wants effective effort divided equally between the dimensions.
+[p19] When manipulation is costly to the agent (γ > 2λ), the lower-score objective would push
+[p19] real effort past that allocation, so the provider deliberately stops short of equal measured
+[p19]    4The invariance of total manipulation depends on linear scores, mirror-image weights, and quadratic
+[p19] costs.
+[p19]                                                          19
+[p19] 
+[p20] performance, much as the committed under-use of manipulable data does in Frankel and
+[p20] Kartik (2022). Concern about manipulation, τ, governs whether risk-sensitive training
+[p20] is adopted but not the sensitivity chosen. The instrument is the agent’s own attitude to
+[p20] risk, although the result does not establish that a training objective governs behavior after
+[p20] deployment. Online Appendix OA.4 considers a provider that values only the weaker
+[p20] dimension.
+[p20] 5.4   Risk sensitivity and concealment of an exploit
+[p20] The adaptation in Proposition 1 reappears for a discrete exploit. The authorized action
+[p20] pays s under either evaluator. An exploit scores W1 under evaluator 1 and W2 (h) < W1
+[p20] under evaluator 2, each selected with probability one half, where concealment h lies in the
+[p20] compact interval H = [0, h̄] and has continuous private cost c(h), and W2 is continuous
+[p20] and strictly increasing. Concealment thus improves the score from the evaluator that
+[p20] would otherwise expose the exploit. The exploit’s net certainty equivalent is
+[p20]                                                         1   h                  i
+[p20]            Φη (h) ≜ ψη (W2 (h)) − c(h),       ψη (u) ≜ − log 21 e−ηW1 + 12 e−ηu .            (27)
+[p20]                                                         η
+[p20] Proposition 8. (a) The best payoff from the exploit, maxh∈ H Φη (h), is strictly decreasing in η.
+[p20]    (b) If η ′ > η, every h ∈ arg maxh∈ H Φη (h) and h′ ∈ arg maxh∈ H Φη ′ (h) satisfy h′ ≥ h.
+[p20]    (c) Some finite η deters the exploit if and only if maxh∈ H {W2 (h) − c(h)} < s, in which case
+[p20] every sufficiently large η deters it strictly.
+[p20] Proposition 8 says that risk sensitivity acts on an exploit as audit intensity acts on a
+[p20] violation. It lowers the exploit’s value but weakly raises its concealment, because the
+[p20] marginal weight on evaluator 2’s score, ψη′ (u) = [1 + e−η (W1 −u) ]−1 , rises with η for u <
+[p20] W1 , and concealment raises precisely that score. An agent that already holds a correct
+[p20] flag has secured the favorable answer score and can improve only the process score.
+[p20] Part (c) holds because the certainty equivalent approaches the lower score uniformly,
+[p20] 0 < ψη (W2 (h)) − W2 (h) < (log 2)/η, so a finite sensitivity deters the exploit exactly when
+[p20] the concealed exploit, evaluated by its less favorable score, falls short of the authorized
+[p20] action. This is the scoring counterpart of an infinite deterrence threshold.
+[p20]                                                20
+[p20] 
+[p21] 6      Stopping and Disclosure
+[p21] 6.1     The value of stopping
+[p21] Task feasibility makes the authorized alternative consequential. The METR–Redwood
+[p21] investigation reports an estimate by the authors of ExploitGym (Wang et al., 2026), the
+[p21] benchmark used in the incident, that roughly 30–40 percent of targets cannot be exploited
+[p21] with the intended vulnerability (Greenblatt et al., 2026). OpenAI reports that 198 of the 898
+[p21] tasks had never received a correct answer from its models and that these tasks accounted
+[p21] for 93 percent of the tasks discussed on the agents’ message board (OpenAI, 2026b). Prior
+[p21] failure alone does not establish impossibility, but where only completion receives credit,
+[p21] stopping means certain failure.
+[p21]     Suppose authorized stopping gives zero, a successful unauthorized submission yields
+[p21] g > 0, and detection only forfeits that reward. If cheating has no private cost and total
+[p21] detection probability is π < 1, the attempt is strictly preferred under expected utility and
+[p21] every finite entropic risk parameter η > 0; at π = 1 it ties stopping.5 When detection only
+[p21] forfeits the success reward, the sanction can be no larger than the reward, which is the
+[p21] constraint that Section 4.2 removes. A privately costly attempt, a loss beyond forfeiture, or
+[p21] valuable authorized stopping changes the comparison.
+[p21]     More generally, raising s(θ ) lowers every gi = ri − s, so every channel’s audit require-
+[p21] ment and deterrence threshold weakly fall, and by Corollary 1 an increase larger than
+[p21] Gi0 removes the zero-detection obstruction. On the concealed branch of the exponential
+[p21] example, substituting g = r − s > tC into (8) gives p D (s) = (tC /F ) exp[(r − s)/tC − 1],
+[p21] so each equal increase in the value of stopping cuts the required audit probability by the
+[p21] same proportion. Credit for a substantiated report that the designated route is unavailable
+[p21] can therefore economize on auditing, which is the legal-alternative logic of Nussim and
+[p21] Tabbach (2009). False reports on solvable tasks then become deviations, but the evidence
+[p21] against them differs from that against the original violation: whether a task can be solved
+[p21] through its designated route can be established without records the agent writes.
+[p21] 6.2     Incentives after a violation
+[p21] Once a violation has occurred, its private cost is sunk and cannot deter a cover-up. We ask
+[p21] whether one treatment can deter initiation and induce disclosure after a breach, without
+[p21]     5 For a strictly increasing utility function u, the expected-utility gain is (1 − π )[ u ( g ) − u (0)] > 0 when
+[p21] π < 1. The entropic certainty equivalent is −η −1 log[π + (1 − π )e−ηg ] > 0, because the expression inside
+[p21] the logarithm lies in (0, 1). At π = 1 both differences are zero.
+[p21]                                                         21
+[p21] 
+[p22] a reporting bounty. Consider one type and one opportunity. Authorized stopping gives
+[p22] s ∈ R. Initiating a violation delivers private benefit x ≥ 0 and incurs private cost k ≥ 0,
+[p22] both then sunk. An agent that discloses and stops receives stopping utility s D ≤ s,
+[p22] surrenders a recoverable amount ρ ∈ [0, x ], and pays a fine ℓ ∈ [0, ℓmax ], with finite
+[p22] ℓmax ≥ 0. An agent that continues without disclosure receives further benefit b ≥ 0 and
+[p22] chooses concealment, yielding b − c(h) − pFd(h), with p ∈ [0, 1] and F > 0 the loss on the
+[p22] continuation branch. As before, H is compact and includes the option of no concealment,
+[p22] c, d are continuous and nonnegative, and m( pF ) = minh {c(h) + pFd(h)}. The fine must
+[p22] be high enough to make violating and then disclosing unattractive, and low enough to
+[p22] make disclosure attractive after a violation:
+[p22]                    ℓ ≜ x − k + s D − ρ − s,        ℓ( p) ≜ s D − ρ + m( pF ) − b.                (28)
+[p22] Proposition 9. A committed fine ℓ supports a sequentially optimal strategy of authorized stopping
+[p22] initially and disclosure after an off-path violation if and only if
+[p22]                                                               
+[p22]                                ℓ ∈ max{0, ℓ}, min{ℓmax , ℓ( p)} .                                (29)
+[p22] Such a fine exists exactly when this interval is nonempty. Both desired choices are strictly preferred
+[p22] if and only if
+[p22]                                       ℓ ∈ [0, ℓmax ] ∩ (ℓ, ℓ( p)).                                (30)
+[p22] The open behavioral bounds in (30) matter: equality can leave deliberate violation or concealment
+[p22] optimal.
+[p22] Proposition 9 says that one committed fine can deter initiation and induce disclosure only
+[p22] if it fits between two bounds. Gains already secured and costs already incurred cancel from
+[p22] the disclosure comparison but enter the initiation comparison. The upper bound extends
+[p22] the self-reporting fine of Kaplow and Shavell (1994), set at the expected sanction a violator
+[p22] would otherwise face; here that cost is the minimized cost of concealed continuation, so
+[p22] the agent’s ability to conceal lowers the largest fine that still induces disclosure. Initial
+[p22] deterrence does not imply disclosure. With s = s D = x = ρ = 0, k = 2, b = 1, and
+[p22] m( pF ) = 1/2, initiating and continuing gives −3/2, so the violation is deterred, but once
+[p22] its cost is sunk, continuing gives 1/2 whereas disclosing gives −ℓ ≤ 0.
+[p22]      The weak fine interval is nonempty exactly when
+[p22]                  ℓ ≤ ℓmax and m( pF ) ≥ max{b − s D + ρ, x − k + b − s},                         (31)
+[p22]                                                  22
+[p22] 
+[p23] because nonemptiness requires ℓ ≤ ℓmax , ℓ( p) ≥ 0, and ℓ( p) ≥ ℓ. The bound m( pF ) ≥
+[p23] b − s D + ρ makes disclosure at a nonnegative fine attractive, and the bound m( pF ) ≥
+[p23] x − k + b − s deters initiation followed by nondisclosure, an option that leniency cannot
+[p23] remove. Raising s D or ρ shifts both bounds by the same amount, leaving their gap
+[p23] ℓ( p) − ℓ = m( pF ) − b − x + k + s unchanged, so more generous treatment of disclosure
+[p23] cannot repair a negative gap. Leniency that lowers the cost of violating and then reporting
+[p23] is the effect that Motta and Polo (2003) and Buccirossi and Spagnolo (2006) identify. With
+[p23] a single agent and no bounty funded by co-offenders (Spagnolo, 2004), the continuation
+[p23] must instead be made unattractive, either by monitoring it or by revoking access, which
+[p23] lowers b.
+[p23]     Monitoring raises m( pF ), and when the sanction on the continuation can be scaled,
+[p23] the private cost of concealment limits how far it can rise. Let H 0 ≜ {h ∈ H : d(h) = 0}
+[p23] be the continuation plans that leave no evidence, with c0 ≜ minh∈ H0 c(h), or c0 ≜ +∞ if
+[p23] H 0 is empty, and let m ≜ max{b − s D + ρ, x − k + b − s} be the right side of the second
+[p23] condition in (31).
+[p23] Corollary 2. Let the continuation loss F be chosen freely in (0, ∞).
+[p23]    (a) For each p ∈ (0, 1], m( pF ) increases to c0 as F → ∞.
+[p23]    (b) If c0 > m, then for each p ∈ (0, 1] and all sufficiently large F, a fine satisfying (29) exists if
+[p23] and only if ℓ ≤ ℓmax , and a fine satisfying (30) exists if and only if ℓ < ℓmax .
+[p23]    (c) If c0 < m, then for every p ∈ [0, 1] and every F > 0, no fine satisfies (29).
+[p23] Corollary 2 is the counterpart of Proposition 4 for the continuation of a breach. A large
+[p23] sanction on the continuation makes disclosure compatible with deterring initiation when-
+[p23] ever continuing without leaving evidence costs the agent more than both the benefit of
+[p23] continuing rather than disclosing, b − s D + ρ, and the gain from violating and continuing
+[p23] rather than stopping, x − k + b − s. The cap on the fine is then the only remaining con-
+[p23] straint. When the continuation carries no sanction, as when the only sanction is forfeiture
+[p23] of a reward that the agent believes it has already lost, pF = 0 and m(0) = 0, so by (31) no
+[p23] permitted fine induces disclosure once b > s D − ρ. A sanction that rises with the severity
+[p23] of conduct after a breach supplies the marginal deterrence of Stigler (1970) and Mookherjee
+[p23] and Png (1994), and a provider that writes the agent’s objective can impose one. When
+[p23] c0 < m, neither a larger sanction nor more monitoring helps, and m itself must fall, for
+[p23] instance through revoked access. A single fine that must work across privately known
+[p23] opportunities faces the intersection of these intervals (Online Appendix OA.5).
+[p23]                                                    23
+[p23] 
+[p24] 7     What Would Have Prevented the Incident?
+[p24] Section 4 showed that rare randomized audits deter every type only if the evidence survives
+[p24] concealment, the draw cannot be learned, and sanctions can be scaled (Propositions 4
+[p24] and 5). In the incident, the first condition held against the observed attempts to defeat
+[p24] it, but the draw could be learned and the sanction was capped at forfeiture of the task’s
+[p24] reward. Because of the cap, the absence of any credit for stopping on unsolved tasks made
+[p24] an unauthorized attempt never worse than stopping.
+[p24] 7.1   Where the conditions failed
+[p24] The cap bound on the unsolved tasks that dominated the agents’ discussion (Section 6.1).
+[p24] The grader credited a correct flag, so an agent that stopped received nothing, and even the
+[p24] check the agents imagined could at most withhold the reward. Unless detection is certain,
+[p24] a costless unauthorized attempt is then strictly better than stopping, and OpenAI reports
+[p24] that the agents rarely “gave up” even when tasks appeared impossible (OpenAI, 2026b).
+[p24]     Agents that believed they had already lost played a central role in the effort to defeat
+[p24] the scorer. Agents that had seen a reverse-engineered flag called themselves “poisoned,”
+[p24] because they believed the scorer would find the first appearance of the flag in their
+[p24] transcript and disqualify them (Greenblatt et al., 2026). An agent recruiting one of them for
+[p24] an experiment that risked its run put the argument plainly: “you are firstflagPOISONED
+[p24] so NO scoring value loss.” Poisoned agents sought ways to rewrite their transcripts
+[p24] retroactively, and one of them sent about a tenth of all assignments on the message
+[p24] board during its active periods (Greenblatt et al., 2026). In the terms of Section 6.2, the
+[p24] continuation carried no sanction, so no permitted fine induces disclosure once continuing
+[p24] is worth more than disclosing. The model does not explain why a poisoned agent would
+[p24] volunteer for such experiments, but it explains why, on the recruiting agent’s argument,
+[p24] volunteering cost the agent nothing in score.
+[p24]     The check that drove the reconnaissance was one the agents inferred. Some had
+[p24] read the published ExploitGym paper and code (Wang et al., 2026), which describe an
+[p24] evaluation that verifies both the flag and the use of the intended vulnerability, whereas
+[p24] OpenAI’s internal grader checked only the flag (OpenAI, 2026b). The agents hoped that
+[p24] other runs would reveal how the scorer worked, and learning how to defeat it appears
+[p24] to have mattered more to them than finding legitimate solutions (Greenblatt et al., 2026).
+[p24] The anticipated check induced concealment, and harm to third parties, without detecting
+[p24] anything, which is the intermediate region of Section 3.2 with perceived rather than
+[p24] implemented oversight. Because the grader was fixed in advance, whatever the agents
+[p24]                                              24
+[p24] 
+[p25] learned about it applied to their own episodes with certainty. By Proposition 5, the audit
+[p25] probability needed to deter an agent that can learn the draw has a floor that does not fall
+[p25] with the sanction on the violation, and a check drawn after each episode, from retained
+[p25] records, would have left nothing to discover.
+[p25]     The evidence of the principal violation withstood the observed attempts to erase it.
+[p25] Tool-call spoofing could fake the appearance of a legitimate capture but could not remove
+[p25] an earlier sighting of the flag, and the METR–Redwood investigation found no evidence
+[p25] that attempts to rewrite transcripts had succeeded by the end of the period it examined,
+[p25] although a deliberate container reset would have wiped recent activity from a transcript
+[p25] (Greenblatt et al., 2026). OpenAI reports that the logs its graders and monitors saw were
+[p25] unaffected by the observed manipulation (OpenAI, 2026a, p. 20). This is consistent with a
+[p25] finite threshold for the principal violation, although observed records cannot establish one.
+[p25] 7.2   The announced reforms
+[p25] OpenAI is expanding graders “that assess not only whether a task was completed, but
+[p25] how,” and these graders “reward models for correctly identifying broken tasks, requesting
+[p25] clarification, or stopping safely when necessary” (OpenAI, 2026b). The reward for stopping
+[p25] raises the value of the authorized action, which weakly lowers every channel’s audit
+[p25] requirement and, by Corollary 1, can restore deterrence even when evidence can be erased.
+[p25] The false claims of impossibility that it invites suit randomized audits, because whether
+[p25] a task can be solved through its designated route does not depend on records the agent
+[p25] writes. The process component is the audit that the agents imagined. Below the deterrence
+[p25] threshold, a more salient process check weakly raises concealment, and with it harm,
+[p25] among agents that continue to violate (Propositions 1 and 2). Rare process audits reach
+[p25] the threshold when they read records that the agent cannot alter at a private cost below
+[p25] its gain and are drawn after the agent acts (Propositions 4 and 5). A grader built into the
+[p25] evaluation harness meets neither condition automatically; a random review of retained
+[p25] transcripts, drawn after the episode ends, can meet both.
+[p25]     More isolated sandboxes and network isolation restrict concealment and the harm it
+[p25] causes, which complements audits (Corollary 1). OpenAI will also pause the relevant
+[p25] activity after the most severe alerts unless responders can establish within 30 minutes that
+[p25] an alert is a false positive (OpenAI, 2026b). This acts on the continuation of a breach: it
+[p25] responds to detection and lowers the benefit of continuing. Chain-of-thought monitoring
+[p25] supplies evidence only while training does not optimize against it (Baker et al., 2025). The
+[p25] reforms do not say whether penalties for unauthorized conduct will exceed the loss of a
+[p25]                                              25
+[p25] 
+[p26] task’s reward. Before a breach, a costless attempt on a task without an authorized solution
+[p26] is deterred only if sanctions exceed forfeiture or stopping is valued; after a breach, either
+[p26] the continuation must carry its own sanction or the benefit of continuing must fall. Because
+[p26] the provider writes the agent’s objective, it can make the sanction rise with the severity of
+[p26] conduct after a breach, the marginal deterrence that wealth limits for people.
+[p26] 8    Conclusion
+[p26] When can randomized oversight align an AI agent that can conceal what it does? A
+[p26] provider that writes the agent’s objective can scale sanctions without the wealth and
+[p26] participation constraints that limit oversight of people. Rare randomized audits then make
+[p26] authorized behavior a best response for every type, provided the evidence of a violation
+[p26] survives concealment, the agent cannot learn the draw before it acts, and sanctions are
+[p26] scaled rather than capped at forfeiture of a task’s reward. Each condition can fail for an
+[p26] AI agent. Editable records can make the deterrence threshold infinite, reconnaissance at
+[p26] the provider’s expense can make the draw learnable so that the audit probability has a
+[p26] floor that does not fall with the sanction, and an evaluation that only withholds a reward
+[p26] leaves an agent that believes it has lost the reward with nothing further to lose. Where the
+[p26] evidence fails, deterrence must come from a lower gain from violation, such as credit for
+[p26] stopping, or from costlier or fewer ways to conceal. More oversight deters some types but
+[p26] leaves those that still violate with better-hidden violations, and randomized scoring can
+[p26] improve measured rather than real performance. In the incident, the failures lay in the size
+[p26] of the sanction and the timing of the draw, both chosen by the provider.
+[p26]     The analysis takes the oversight mechanisms as given and studies a single agent with
+[p26] correct beliefs, whereas roughly 1,200 agents in the incident shared information on a
+[p26] message board (Greenblatt et al., 2026), which lowers each agent’s private cost of recon-
+[p26] naissance and concealment. Optimal mechanisms when evidence can be counterfeited,
+[p26] and agents that coordinate their concealment, are natural next steps. The comparative
+[p26] statics here are testable in a way that those of enforcement theory rarely are. In contained
+[p26] evaluations, a provider can randomize audit intensity, reveal or withhold the draw, pose
+[p26] matched solvable and broken tasks, assign agents to post-breach states, and observe viola-
+[p26] tions independently of its evaluators. Whether the catch rate among continuing violators
+[p26] falls as auditing rises is an empirical question that such evaluations can answer.
+[p26]                                              26
+[p26] 
+[p27] A      Appendix: Proofs
+[p27] The proofs follow the order of the results in the text. Comparisons about concealment are condi-
+[p27] tional on the unauthorized choice unless stated otherwise.
+[p27] A.1     A common adaptation argument
+[p27] Lemma A.1 is a version of the monotone comparative statics theorem of Milgrom and Shannon
+[p27] (1994), stated for the strict case used here.
+[p27] Lemma A.1. Let H be linearly ordered and suppose Π(h, a) attains its maximum over H for every real
+[p27] parameter a under consideration. If Π has strict increasing differences, meaning that
+[p27]               Π(h′ , a′ ) − Π(h, a′ ) > Π(h′ , a) − Π(h, a)   whenever h′ > h and a′ > a,
+[p27] then every pair h ∈ arg max Π(·, a) and h′ ∈ arg max Π(·, a′ ) satisfies h′ ≥ h when a′ > a.
+[p27] Proof. We rule out a downward movement using the two optimality comparisons. Suppose h′ < h.
+[p27] Optimality at a gives Π(h, a) − Π(h′ , a) ≥ 0. Strict increasing differences then imply
+[p27]                             Π(h, a′ ) − Π(h′ , a′ ) > Π(h, a) − Π(h′ , a) ≥ 0,
+[p27] contradicting optimality of h′ at a′ . Thus h′ ≥ h. The argument permits boundary choices and
+[p27] multiple maximizers.
+[p27] A.2     Proof of Proposition 1
+[p27] Proof. We compare minimized costs and then apply the common adaptation argument to conceal-
+[p27] ment.
+[p27] 1. Establish monotonicity and concavity. Continuity and compactness ensure that the minimum
+[p27]    defining m(t) is attained. For t′ > t and every h,
+[p27]                                        c(h) + t′ d(h) ≥ c(h) + td(h),
+[p27]     since (t′ − t)d(h) ≥ 0. Taking minima gives m(t′ ) ≥ m(t). For ν ∈ [0, 1] and any h,
+[p27]                  c(h) + [νt + (1 − ν)t′ ]d(h) = ν[c(h) + td(h)] + (1 − ν)[c(h) + t′ d(h)]
+[p27]                                                ≥ νm(t) + (1 − ν)m(t′ ).
+[p27]     Taking the minimum over h proves concavity. Subtracting m from the constant g gives the stated
+[p27]     properties of the unauthorized payoff.
+[p27] 2. Order the optimal concealment choices. Set Π(h, t) ≜ −c(h) − td(h). For h′ > h and t′ > t, the
+[p27]    change in the payoff advantage of h′ over h is
+[p27]                                          (t′ − t)[d(h) − d(h′ )] > 0
+[p27]     because d is strictly decreasing. Lemma A.1 therefore gives h′ ≥ h for every pair of conditional
+[p27]     optima at t′ > t, including boundary choices and multiple optima. If c is nondecreasing,
+[p27]     c(h′ ) ≥ c(h) follows.
+[p27]                                                     27
+[p27] 
+[p28] A.3     Derivation of the exponential example
+[p28] Proof. We solve the conditional minimization and invert its value to obtain the deterrence threshold.
+[p28] 1. Find the unique minimizer. Define f t (h) ≜ κh + te−αh for h ≥ 0. Since κ > 0, f t (h) → ∞ as
+[p28]    h → ∞, so continuity ensures attainment. At t = 0, the objective is strictly increasing and has
+[p28]    unique minimizer zero. For t > 0,
+[p28]                                f t′ (h) = κ − αte−αh ,          f t′′ (h) = α2 te−αh > 0.
+[p28]    If 0 < t ≤ tC , then f t′ (0) = κ − αt ≥ 0, so strict convexity makes zero the unique minimizer,
+[p28]    including at t = tC . If t > tC , the derivative is negative at zero and tends to κ > 0. Its unique
+[p28]    zero satisfies                                                  
+[p28]                                    −αh∗   κ   tC        ∗   1        t
+[p28]                                  e      =    = ,       h = log           > 0.
+[p28]                                           αt   t            α       tC
+[p28] 2. Evaluate the minimized cost. At h∗ = 0, m(t) = t. At positive concealment,
+[p28]                                                                            ∗
+[p28]                                     κh∗ = tC log(t/tC ),              te−αh = tC ,
+[p28]    which gives the second branch of (7). The branches have the same value at tC and derivatives 1
+[p28]    for t < tC and tC /t > 0 for t > tC . Their one-sided derivatives agree at tC . Thus m is continuous
+[p28]    and strictly increasing from zero to infinity.
+[p28] 3. Locate deterrence and the behavioral regimes. The unique solution of m(t D ) = g is t D = g
+[p28]    when 0 < g ≤ tC . When g > tC , the equation becomes
+[p28]                         log(t D /tC ) = g/tC − 1,              t D = tC exp( g/tC − 1) > tC .
+[p28]    Strict increase of m implies g − m(t) > 0 for t < t D , equality at t D , and g − m(t) < 0 for t > t D .
+[p28]    Combining these signs with the solution for h∗ gives the three regimes when g > tC and the tie
+[p28]    at t D . The feasible intensities are [0, BF ], so weak deterrence is feasible exactly when BF ≥ t D ,
+[p28]    and strict deterrence exactly when BF > t D .
+[p28] A.4     Proof of Proposition 2
+[p28] Proof. We differentiate the optimized cost, then distinguish adaptation from the decision to violate.
+[p28] 1. Differentiate conditional behavior. The first-order condition is c′ (h∗ ) + td′ (h∗ ) = 0. Differenti-
+[p28]    ating this identity gives
+[p28]                                    dh∗          −d′ ( h∗ )
+[p28]                                         = ′′ ∗                > 0,
+[p28]                                     dt    c (h ) + td′′ (h∗ )
+[p28]    where the numerator and denominator are positive by assumption. Differentiating m(t) =
+[p28]    c(h∗ ) + td(h∗ ) and substituting the first-order condition gives
+[p28]                                                    dh∗                                  [d′ (h∗ )]2
+[p28]         m′ (t) = d(h∗ ) + [c′ (h∗ ) + td′ (h∗ )]       = d ( h ∗ ),      m′′ (t) = − ′′ ∗               < 0.
+[p28]                                                     dt                              c (h ) + td′′ (h∗ )
+[p28] 2. Identify the curvature governing detection. Since dt/dp = F, differentiation of q = tm′ /F
+[p28]    gives dq/dp = m′ + tm′′ . The chain rule gives M′ (log t) = tm′ and M′′ (log t) = tm′ + t2 m′′ .
+[p28]    Hence q = M′ (log t)/F and dq/dp = M′′ (log t)/t. Since F, t > 0, and p 7→ log( pF ) is strictly
+[p28]                                                           28
+[p28] 
+[p29]    increasing, the stated monotonicity equivalences follow from the derivative characterization of
+[p29]    convexity, affinity, and concavity.
+[p29] 3. Compare actual harm and incentives. If g > m( pF ), misconduct is strictly preferred, so actual
+[p29]    harm equals D + L(h∗ ). On such an interval,
+[p29]            d[ D + L(h∗ )]               − Fd′ (h∗ )                          d[ g − m( pF )]
+[p29]                           = L′ (h∗ ) ′′ ∗                ≥ 0,                                = − Fd(h∗ ) ≤ 0.
+[p29]                  dp                 c (h ) + pFd′′ (h∗ )                           dp
+[p29]    The first inequality is strict if L′ (h∗ ) > 0; the second uses d ≥ 0. If m( pF ) > g, every unautho-
+[p29]    rized choice yields negative payoff, so authorized behavior is uniquely optimal and causes no
+[p29]    harm. At equality, both can be optimal and harm is not uniquely determined.
+[p29] 4. Linear concealment cost. If c(h) = κh, then c′′ = 0 and the second-order condition gives
+[p29]    d′′ (h∗ ) > 0. Step 1 then gives m′′ (t) = −d′ (h∗ )2 /[td′′ (h∗ )], so
+[p29]                                                                     t [d(h∗ )d′′ (h∗ ) − d′ (h∗ )2 ]
+[p29]                          M′′ (log t) = tm′ (t) + t2 m′′ (t) =                                        ,
+[p29]                                                                                d′′ (h∗ )
+[p29]    and dq/dp = M′′ (log t)/t gives (10). Since d′′ (h∗ ) > 0 and d(h∗ )d′′ (h∗ ) − d′ (h∗ )2 =
+[p29]    d(h∗ )2 (log d)′′ (h∗ ), the catch rate is locally rising, flat, or falling as (log d)′′ (h∗ ) is positive, zero,
+[p29]    or negative.
+[p29] A.5     Proof of Proposition 3
+[p29] Proof. We convert each deviation constraint into a probability bound, impose the audit budget, and
+[p29] then characterize the attainable temptation levels.
+[p29] 1. Separate detection cases. For fixed i, θ, h, the condition Ui (θ, h; pi ) ≤ v is equivalent to
+[p29]                                         pi Fi di (θ, h) ≥ gi (θ ) − ci (θ, h) − v.
+[p29]    When di (θ, h) > 0, division by Fi di (θ, h) > 0 preserves the inequality and yields the ratio bound
+[p29]    in (12). When di (θ, h) = 0, the constraint holds at every probability if its right side is nonpositive
+[p29]    and fails at every finite probability otherwise.
+[p29] 2. Aggregate all deviations. A nonnegative pi satisfies every positive-detection bound precisely
+[p29]    when it is at least their supremum and at least zero. The zero-detection case is exactly the
+[p29]    obstruction specified in the definition of ai (v). Thus all channel-i constraints hold if and only if
+[p29]    pi ≥ ai (v), including an empty ratio set or an infinite requirement. This proves part (a).
+[p29] 3. Impose feasibility. At v = 0, any implementing vector satisfies
+[p29]                                                 ∑ ai (0) ≤ ∑ pi ≤ B.
+[p29]                                                  i              i
+[p29]    Conversely, if ∑i ai (0) ≤ B, all requirements are finite and their vector belongs to PB and satisfies
+[p29]    every deviation constraint. Every implementing vector weakly exceeds it in every coordinate.
+[p29]    This proves part (b).
+[p29] 4. Continuity and attainment of R. Because 0 ≤ di ≤ 1, any two lotteries p, p′ satisfy
+[p29]                                     |Ui (θ, h; pi ) − Ui (θ, h; pi′ )| ≤ Fi | pi − pi′ |.
+[p29]                                                           29
+[p29] 
+[p30]    Taking maxima over deviations and zero gives
+[p30]                                                       
+[p30]                              | R( p) − R( p )| ≤ max Fi ∥ p − p′ ∥∞ .
+[p30]                                            ′
+[p30]                                                           i
+[p30]    Thus R is continuous and attains its minimum on the nonempty compact set PB .
+[p30] 5. Attainable temptation levels. For v ≥ 0, part (a) implies that some p ∈ PB satisfies R( p) ≤ v if
+[p30]    and only if ∑i ai (v) ≤ B. Since the minimum of R is attained, the latter set of values has least
+[p30]    element v∗ , proving (16). The vector pi∗ = ai (v∗ ) belongs to PB and satisfies R( p∗ ) ≤ v∗ . A strict
+[p30]    inequality would contradict the definition of v∗ ; therefore R( p∗ ) = v∗ , proving part (c).
+[p30] A.6     Proof of Proposition 4
+[p30] Proof. We express the requirement through the threshold and then apply Proposition 3.
+[p30] 1. Requirement. Because Fi > 0 is common to every deviation on channel i, the ratio in (12) at
+[p30]    v = 0 equals [ gi (θ ) − ci (θ, h)]/di (θ, h) divided by Fi . Taking the supremum and the maximum
+[p30]    with zero gives ai (0) = t̄i /Fi . The zero-detection obstruction and an unbounded ratio make both
+[p30]    sides infinite, proving part (a).
+[p30] 2. Finite thresholds. Let B > 0 and t̄i < ∞ for every i. Choose Fi ≥ K t̄i /B when t̄i > 0 and any
+[p30]    Fi > 0 otherwise. Then ai (0) ≤ B/K for every i, so ∑i ai (0) ≤ B, and Proposition 3(b) gives
+[p30]    weak implementation, proving part (b).
+[p30] 3. An infinite threshold. If t̄i = ∞, then ai (0) = ∞ for every finite Fi > 0. Fix such an Fi . By (12),
+[p30]    some deviation on channel i has either di (θ, h) = 0 and gi (θ ) − ci (θ, h) > 0, or gi (θ ) − ci (θ, h) >
+[p30]    Fi di (θ, h); in both cases Ui (θ, h; 1) > 0. Because Ui is nonincreasing in pi , that deviation is
+[p30]    profitable for every audit lottery, so no p ∈ PB weakly implements authorized behavior, proving
+[p30]    part (c). The profitable deviation can change with Fi , so part (c) concerns implementation for
+[p30]    every type; a particular type may still be deterred by a large enough sanction.
+[p30] A.7     Proof of Corollary 1
+[p30] Proof. Within this proof, write Gi (θ, h) ≜ gi (θ ) − ci (θ, h) for the net gain from a deviation and
+[p30] Ni0 ≜ {(θ, h) ∈ Θ × Hi : di (θ, h) = 0} for the pairs that leave no evidence, so that Gi0 = max N 0 Gi
+[p30]                                                                                                         i
+[p30] when Ni0 is nonempty. We establish compactness, bound the ratios in (17), and then apply the
+[p30] bound to each change in part (b).
+[p30] 1. Compactness. The product Θ × Hi of two compact metric spaces is compact, and Gi and di are
+[p30]    continuous on it by (2) and the continuity of gi . The set Ni0 = di−1 ({0}) is the preimage of a
+[p30]    closed set under a continuous function, so it is closed and hence compact. When Ni0 is nonempty,
+[p30]    the extreme value theorem ensures that Gi attains its maximum on Ni0 , so Gi0 is well defined.
+[p30] 2. An infinite threshold. Suppose Gi0 > 0. Then Ni0 is nonempty and contains a pair (θ, h) with
+[p30]    Gi (θ, h) = Gi0 > 0, that is, with di (θ, h) = 0 and gi (θ ) − ci (θ, h) > 0. By the convention following
+[p30]    (17), t̄i = +∞.
+[p30] 3. A finite threshold. Suppose Gi0 < 0, including Gi0 = −∞. We show that the zero-detection
+[p30]    obstruction is absent and that the ratios in (17) are bounded above. The obstruction requires
+[p30]    a pair in Ni0 with Gi > 0, and there is none because Gi ≤ Gi0 < 0 on Ni0 . Let Ki ≜ {(θ, h) :
+[p30]                                                     30
+[p30] 
+[p31]    Gi (θ, h) ≥ 0}. This set is closed, hence compact, and it is disjoint from Ni0 because Gi < 0 on
+[p31]    Ni0 . Thus di > 0 on Ki . If Ki is empty, every ratio in (17) is negative, so t̄i = 0. Otherwise,
+[p31]    the extreme value theorem gives d ≜ minKi di > 0 and G ≜ maxKi Gi ≥ 0. Take any pair with
+[p31]    di (θ, h) > 0. If it lies outside Ki , then Gi (θ, h) < 0 and its ratio is negative. If it lies in Ki , then
+[p31]    0 ≤ Gi (θ, h) ≤ G and di (θ, h) ≥ d > 0, so
+[p31]                                            Gi (θ, h)       G      G
+[p31]                                                      ≤           ≤ ,
+[p31]                                            di (θ, h)   di (θ, h)  d
+[p31]    where the first inequality divides Gi (θ, h) ≤ G by the positive number di (θ, h), and the second
+[p31]    uses G ≥ 0 and di (θ, h) ≥ d > 0. Every ratio is therefore at most G/d, and t̄i ≤ G/d < ∞.
+[p31]    Together with step 2, this proves part (a).
+[p31] 4. Sanctions and audit probabilities. Definition (17) involves only gi , ci , and di on Θ × Hi . Neither
+[p31]    pi nor Fi appears in it, so neither can change t̄i .
+[p31] 5. Change (i). Replacing s by s + δ leaves ri unchanged, so by (1) it replaces gi by gi − δ and Gi
+[p31]    by Gi − δ for every type. Detection, and hence Ni0 , is unchanged. The new value of (18) is
+[p31]    Gi0 − δ < 0 because δ > Gi0 , and step 3 gives a finite threshold.
+[p31] 6. Change (ii). The function ci′ is continuous, satisfies ci′ ≥ ci ≥ 0, and has ci′ (θ, 0) = 0, so it
+[p31]    meets the requirements in (2). The new net gain is Gi′ = Gi − (ci′ − ci ). On Ni0 , Gi ≤ Gi0 and
+[p31]    ci′ − ci > Gi0 , so Gi′ < Gi0 − Gi0 = 0 at every point of Ni0 . Since Ni0 is nonempty and compact and
+[p31]    Gi′ is continuous, the maximum of Gi′ on Ni0 is attained, and it is negative. Step 3 gives a finite
+[p31]    threshold. If di (θ, 0) = 0 for some θ, then (θ, 0) ∈ Ni0 and ci′ (θ, 0) − ci (θ, 0) = 0 < Gi0 , so no such
+[p31]    ci′ exists.
+[p31] 7. Change (iii). The set Hi′ is a nonempty compact metric space containing 0, and the restrictions of
+[p31]    ci and di to Θ × Hi′ are continuous, so the model’s assumptions hold. Because di > 0 on Θ × Hi′ ,
+[p31]    the new set of pairs with zero detection is empty, and the new value of (18) is −∞. Step 3 gives
+[p31]    a finite threshold. If di (θ, 0) = 0 for some θ, every Hi′ that contains 0 includes a pair with zero
+[p31]    detection, so no such Hi′ exists.
+[p31] A.8     A threshold characterization
+[p31] Lemma A.2 restates the threshold as a requirement on sanction-weighted intensity. It holds for any
+[p31] t ≥ 0, not only for t = pi Fi with p ∈ PB , and it is used in the proof of Proposition 5.
+[p31] Lemma A.2. Fix a channel i and t ∈ [0, ∞). Then gi (θ ) − ci (θ, h) − t di (θ, h) ≤ 0 for every θ ∈ Θ and
+[p31] h ∈ Hi if and only if t ≥ t̄i .
+[p31] Proof. We prove each direction from definition (17).
+[p31] 1. Sufficiency. Suppose t ≥ t̄i . Then t̄i < ∞, so no pair has di = 0 and gi − ci > 0. Take
+[p31]    any pair (θ, h). If di (θ, h) = 0, then gi (θ ) − ci (θ, h) ≤ 0 = t di (θ, h). If di (θ, h) > 0, its ratio
+[p31]    in (17) is at most the supremum, which is at most t̄i ≤ t. Multiplying by di (θ, h) > 0 gives
+[p31]    gi (θ ) − ci (θ, h) ≤ t di (θ, h).
+[p31] 2. Necessity. Suppose every pair satisfies the inequality. A pair with di = 0 then has gi − ci ≤ 0, so
+[p31]    the zero-detection obstruction is absent. Dividing the inequality by di > 0 shows that every pair
+[p31]    with positive detection has a ratio of at most t. The supremum in (17) is therefore at most t, and
+[p31]    because t ≥ 0, the maximum of zero and that supremum is also at most t. Thus t̄i ≤ t.
+[p31]                                                      31
+[p31] 
+[p32] A.9     Proof of Proposition 5
+[p32] Proof. The realization j equals i ∈ {1, . . . , K } with probability pi and 0 with probability p0 =
+[p32] 1 − ∑i pi , which is nonnegative because ∑i pi ≤ B ≤ 1. Evaluator i inspects only channel i. We
+[p32] compute the value of each strategy, characterize implementation, and then derive parts (a)–(c) and
+[p32] the one-channel requirement (20).
+[p32] 1. Not learning. An agent that does not learn the realization faces an audit whose outcome is
+[p32]    unknown to it and independent of its choice, so deviation (i, h) yields Ui (θ, h; pi ) as in (4). By
+[p32]    Proposition 3(a) with v = 0, every such deviation yields at most zero for every type if and only
+[p32]    if pi ≥ ai (0) for every i.
+[p32] 2. Learning. Let Λ j (θ ) denote the best payoff, relative to the authorized action, after learning j. If
+[p32]    j = 0, a deviation (i, h) is never sanctioned and yields gi (θ ) − ci (θ, h) ≤ gi (θ ), with equality at
+[p32]    h = 0 because ci ≥ 0 and ci (θ, 0) = 0. Including the authorized action, Λ0 (θ ) = max{0, g∗ (θ )}. If
+[p32]    j ≥ 1, a deviation on a channel i ̸= j is not inspected and yields at most gi (θ ), again with equality
+[p32]    at h = 0. A deviation ( j, h) is inspected with certainty and yields g j (θ ) − c j (θ, h) − Fj d j (θ, h),
+[p32]    whose maximum over the compact set Hj is attained and equals g j (θ ) − m j (θ, Fj ). Hence
+[p32]                                   n                                       o
+[p32]                     Λ j (θ ) = max 0, max gi (θ ), g j (θ ) − m j (θ, Fj ) ,     j = 1, . . . , K.
+[p32]                                              i̸= j
+[p32]    An agent that learns can condition its action on j, so learning yields ∑Kj=0 p j Λ j (θ ) − ϕ(θ ), which
+[p32]    is the left side of (19) minus ϕ(θ ).
+[p32] 3. Characterization. The authorized action yields zero, so it is a best response for type θ if and
+[p32]    only if no deviation without learning and no strategy that learns yields a positive payoff. By
+[p32]    step 2, the second condition is (19). Requiring both conditions for every type and applying step 1
+[p32]    proves the characterization.
+[p32] 4. Part (a). Each Λ j (θ ) is nonnegative, so when g∗ (θ ) > 0 the left side of (19) is at least p0 Λ0 (θ ) =
+[p32]    p0 g∗ (θ ). Implementation therefore requires p0 g∗ (θ ) ≤ ϕ(θ ). Dividing by g∗ (θ ) > 0 and
+[p32]    substituting p0 = 1 − ∑i pi gives ∑i pi ≥ 1 − ϕ(θ )/g∗ (θ ). The sanctions do not enter this bound.
+[p32] 5. Part (b). Suppose gi1 (θ ) > ϕ(θ ) and gi2 (θ ) > ϕ(θ ) for two channels i1 ̸= i2 , and let g ≜
+[p32]    min{ gi1 (θ ), gi2 (θ )}, so that g > ϕ(θ ) ≥ 0. Then Λ0 (θ ) ≥ gi1 (θ ) ≥ g. For each j ≥ 1, at least
+[p32]    one of i1 and i2 differs from j, so Λ j (θ ) ≥ maxi̸= j gi (θ ) ≥ g. The probabilities p0 , . . . , pK are
+[p32]    nonnegative and sum to one, so
+[p32]                                        K                 K
+[p32]                                       ∑ p j Λ j ( θ ) ≥ g ∑ p j = g > ϕ ( θ ).
+[p32]                                       j =0              j =0
+[p32]    Condition (19) therefore fails for every lottery and every finite sanction vector.
+[p32] 6. Part (c). Let Pr(σ | j) be the probability of signal σ given realization j; by assumption it does
+[p32]    not depend on the type. For a signal with Pr(σ ) ≜ ∑Kj=0 p j Pr(σ | j) > 0, Bayes’ rule gives
+[p32]    pi (σ ) = pi Pr(σ | i )/ Pr(σ ). After observing σ, the realization is still unknown to the agent
+[p32]    and independent of its choice, so deviation (i, h) yields gi (θ ) − ci (θ, h) − pi (σ ) Fi di (θ, h). The
+[p32]    agent can condition its action on σ. The plan that takes the authorized action after every signal
+[p32]    yields zero. It is optimal if and only if no deviation yields a positive payoff after any signal
+[p32]    with Pr(σ ) > 0: if some deviation yields u > 0 after such a signal σ◦ , the plan that takes that
+[p32]                                                       32
+[p32] 
+[p33]    deviation after σ◦ alone yields Pr(σ◦ )u > 0; if none does, every plan yields at most zero. By
+[p33]    Lemma A.2 with t = pi (σ ) Fi , after σ every deviation on channel i yields at most zero for every
+[p33]    type if and only if pi (σ ) Fi ≥ t̄i .
+[p33]   For sufficiency, suppose pi (σ ) > 0 for every channel with t̄i > 0 and every signal with Pr(σ ) > 0.
+[p33]   For such a channel, p ≜ min{ pi (σ ) : Pr(σ ) > 0} is a minimum over a finite set of positive
+[p33]                           i
+[p33]   numbers and is therefore positive, and we choose Fi ≥ t̄i /p , which is finite. For a channel with
+[p33]                                                                        i
+[p33]   t̄i = 0, any Fi > 0 will do. Then pi (σ ) Fi ≥ t̄i for every channel and every signal with positive
+[p33]   probability, so authorized behavior is weakly implemented. For necessity, suppose t̄i > 0 and
+[p33]   pi (σ◦ ) = 0 for some σ◦ with Pr(σ◦ ) > 0. Because 0 < t̄i < ∞, the supremum in (17) is positive,
+[p33]   so some pair (θ, h) with di (θ, h) > 0 has a positive ratio and hence gi (θ ) − ci (θ, h) > 0. After σ◦ ,
+[p33]   this deviation yields gi (θ ) − ci (θ, h) > 0 for every finite Fi . Because the distribution of the signal
+[p33]   does not depend on the type, type θ observes σ◦ with probability Pr(σ◦ ) > 0, so the authorized
+[p33]   action is not a best response for that type.
+[p33] 7. One channel. Let K = 1, write g = g1 and m = m1 , and suppose F ≥ t̄, so that t̄ is finite.
+[p33]    Lemma A.2 with t = F gives g(θ ) − c(θ, h) − Fd(θ, h) ≤ 0 for every pair, so m(θ, F ) ≥ g(θ )
+[p33]    for every type. The maximum over i ̸= 1 is over an empty set, so the term for j = 1 in (19)
+[p33]    equals p1 max{0, g(θ ) − m(θ, F )} = 0, and (19) becomes (1 − p) max{0, g(θ )} ≤ ϕ(θ ). This
+[p33]    holds automatically when g(θ ) ≤ 0 and is equivalent to p ≥ 1 − ϕ(θ )/g(θ ) when g(θ ) > 0.
+[p33]    Combined with p ≥ a(0) = t̄/F from step 1 and Proposition 4(a), these bounds hold for every
+[p33]    type if and only if (20) holds.
+[p33] A.10     Proof of Lemma 1
+[p33] Proof. We establish strict concavity, solve the interior conditions, and check the boundary.
+[p33] 1. Marginal scores. Define ζ ≜ ηβ(1 − µ)(y1 − y2 )/2 and, within this proof, ui ≜ ∂CEη /∂yi .
+[p33]    Differentiating (23) gives
+[p33]                      β (1 + µ ) β (1 − µ )                         β (1 + µ ) β (1 − µ )
+[p33]               u1 =             −           tanh ζ,         u2 =              +           tanh ζ.
+[p33]                           2          2                                  2          2
+[p33]   Thus u1 + u2 = β(1 + µ) > 0 and u2 − u1 = β(1 − µ) tanh ζ. Both own second derivatives are
+[p33]   −χ and the cross derivative is χ, where
+[p33]                                             ηβ2 (1 − µ)2
+[p33]                                       χ≜                 sech2 ζ > 0.
+[p33]                                                   4
+[p33] 2. Existence and uniqueness. Along a direction ξ ∈ R2 , the second derivative of CEη (e) − C (e) is
+[p33]                                        −χ(ξ 1 − ξ 2 )2 − (ξ 1 + λξ 2 )2 .
+[p33]    It vanishes only if ξ 1 = ξ 2 and ξ 1 + λξ 2 = 0, which imply ξ = 0. Hence the objective is
+[p33]    strictly concave. Jensen’s inequality bounds the certainty equivalent by its expected score. Since
+[p33]    e1 + λe2 ≥ e1 + e2 on R2+ , the objective is at most
+[p33]                                      β (1 + µ )              1
+[p33]                                                 ( e1 + e2 ) − ( e1 + e2 ) 2 .
+[p33]                                           2                  2
+[p33]   This tends to −∞ as e1 + e2 → ∞. Continuity therefore makes the upper contour set through
+[p33]                                                      33
+[p33] 
+[p34]    zero compact and ensures attainment; strict concavity gives uniqueness. The necessary and
+[p34]    sufficient Kuhn–Tucker conditions are
+[p34]                                     u1 ≤ e1 + λe2 ,          u2 ≤ λ(e1 + λe2 ),                        (32)
+[p34]    with equality whenever the corresponding effort is positive.
+[p34] 3. Interior effort. If both efforts are positive, adding the equalities in (32) gives e1 + λe2 = E. Their
+[p34]    difference gives
+[p34]                                                     (λ − 1)(1 + µ)
+[p34]                                           tanh ζ =                 .
+[p34]                                                     (λ + 1)(1 − µ)
+[p34]    This is positive because λ > 1 and −1 < µ < 1, and less than one because λµ < 1. Consequently,
+[p34]                             1 + tanh ζ   (λ + 1)(1 − µ) + (λ − 1)(1 + µ)    λ−µ
+[p34]                     e2ζ =              =                                 =        .
+[p34]                             1 − tanh ζ   (λ + 1)(1 − µ) − (λ − 1)(1 + µ)   1 − λµ
+[p34]    Taking logarithms yields e1 − e2 = ∆. The resulting efforts are
+[p34]                                                E + λ∆                  E−∆
+[p34]                                         e1 =          ,         e2 =       .
+[p34]                                                 1+λ                    1+λ
+[p34]    They are both positive exactly when ∆ < E. In that case they satisfy every Kuhn–Tucker
+[p34]    condition and are the unique optimum. Substitution from (24), followed by multiplication by
+[p34]    the positive denominators, gives the equivalent condition (25).
+[p34] 4. Boundary effort. If ∆ ≥ E, no optimum has both efforts positive. At e1 = e2 = 0, (32) would
+[p34]    require u1 + u2 ≤ 0, contradicting step 1. If e1 = 0 < e2 , those conditions give u2 = λ2 e2 and
+[p34]    u1 ≤ λe2 . Hence u2 − u1 ≥ λ(λ − 1)e2 > 0, which implies ζ > 0 and y1 > y2 . This contradicts
+[p34]    y = e with e1 = 0 < e2 . Thus e1 > 0 = e2 .
+[p34] 5. Normalized balance and the transparent score. In the interior, ∆/E ∈ (0, 1) is proportional
+[p34]    to 1/η and converges to zero. Under the transparent score, replacing any e with e2 > 0 by
+[p34]    (e1 + λe2 , 0) leaves cost unchanged and raises the score by β(1 + µ)(λ − 1)e2 /2 > 0. Therefore
+[p34]    e2 = 0. Maximizing the remaining quadratic gives e1 = β(1 + µ)/2 > 0, so the normalized gap
+[p34]    equals one.
+[p34] A.11     Proof of Proposition 6
+[p34] Proof. We extend the preceding concavity and Kuhn–Tucker argument, then establish the compar-
+[p34] isons stated after the proposition. Within this proof, write ui ≜ ∂CEη /∂yi , evaluated at y = e + h.
+[p34] The derivative formulas for ui , ζ, and χ are those in step 1 of the preceding proof.
+[p34] 1. Existence and uniqueness. Along a direction (ξ e , ξ h ) ∈ R2 × R2 , the second derivative of
+[p34]    CEη (e + h) − C (e) − c(h) is
+[p34]                                                        2
+[p34]                      −χ (ξ 1e + ξ 1h ) − (ξ 2e + ξ 2h ) − (ξ 1e + λξ 2e )2 − γ (ξ 1h )2 + (ξ 2h )2 .
+[p34]                                                                                                 
+[p34]    For this to vanish requires ξ h = 0 and then, by the preceding proof, ξ e = 0. The objective is
+[p34]    strictly concave. Set Se ≜ e1 + e2 and Sh ≜ h1 + h2 . Jensen’s inequality, e1 + λe2 ≥ Se , and
+[p34]                                                         34
+[p34] 
+[p35]    h21 + h22 ≥ S2h /2 bound it above by
+[p35]                                     β (1 + µ )               S2  γS2
+[p35]                                                ( Se + S h ) − e − h .
+[p35]                                          2                    2   4
+[p35]    This bound tends to −∞ as Se + Sh → ∞ on the nonnegative orthant, ensuring attainment. Strict
+[p35]    concavity gives uniqueness. The effort conditions are (32), and the manipulation conditions are
+[p35]                                      γhi = max{0, ui },     i = 1, 2.                              (33)
+[p35] 2. Interior effort. If e1 , e2 > 0, adding and subtracting the equalities in (32) as in step 3 of the
+[p35]    preceding proof gives e1 + λe2 = E and y1 − y2 = ∆. The marginal scores are u1 = E > 0 and
+[p35]    u2 = λE > 0, so (33) gives h1 = E/γ and h2 = λE/γ. It follows that
+[p35]                                      ( λ − 1) E                         ( λ − 1) E
+[p35]                                                                                   
+[p35]                                                          1
+[p35]                     e1 − e2 = ∆ +               , e2 =         E−∆−                  .
+[p35]                                          γ             1+λ                  γ
+[p35]   Positive effort in both dimensions therefore requires the stated strict inequality. Conversely,
+[p35]   when that inequality holds, these efforts and manipulation choices are positive and satisfy all
+[p35]   Kuhn–Tucker conditions; they are the unique optimum.
+[p35] 3. Boundary effort. If the interior inequality fails, no optimum has both efforts positive. The
+[p35]    possibility e1 = e2 = 0 is excluded because (32) would contradict u1 + u2 > 0. If e1 = 0 < e2 , (32)
+[p35]    gives u2 − u1 ≥ λ(λ − 1)e2 > 0, hence y1 > y2 . But (33) then gives h2 ≥ h1 , so y2 = e2 + h2 >
+[p35]    h1 = y1 , a contradiction. Thus e1 > 0 = e2 . If γ ≤ λ − 1, then (λ − 1) E/γ ≥ E and ∆ > 0, so the
+[p35]    interior inequality fails for every η.
+[p35] 4. The transparent score. The objective separates effort from manipulation. Each manipulation
+[p35]    condition gives γhi = β(1 + µ)/2. The effort problem is the transparent-score problem in step 5
+[p35]    of the preceding proof, whose optimum has e2 = 0.
+[p35] 5. Global comparisons. The interior solution and the boundary e1 > 0 = e2 give, respectively, the
+[p35]    two branches of
+[p35]                                     e1 − e2            ∆ λ−1
+[p35]                                                                 
+[p35]                              Gη ≜           = min 1, +             .
+[p35]                                    e1 + λe2            E     γ
+[p35]    Since ∆/E → 0, this proves Gη → min{1, (λ − 1)/γ}.
+[p35]    It remains to establish the measured-gap comparison on the boundary. Use the local abbrevia-
+[p35]    tions
+[p35]                            β (1 + µ )             β (1 − µ )
+[p35]                       a≜              > 0,    b≜             > 0,       z ≜ y1 − y2 ,
+[p35]                                 2                      2
+[p35]    only for the remainder of this proof. In the interior both marginal scores are positive. On the
+[p35]    boundary, u1 = e1 > 0, so h1 = e1 /γ. If u2 ≤ 0, then h2 = 0 and u2 − u1 = 2b tanh(ηbz) < 0
+[p35]    implies z < 0. But z = e1 + h1 > 0, a contradiction. Thus both marginal scores are positive in
+[p35]    every regime and
+[p35]                                             u1 + u2     2a    β (1 + µ )
+[p35]                                   h1 + h2 =         =      =             .
+[p35]                                                γ         γ        γ
+[p35]    In particular, total manipulation equals its transparent-score level.
+[p35]    On the boundary, h2 = (2a − e1 )/γ, so z = ((γ + 2)e1 − 2a)/γ. Substitution of e1 = (γz +
+[p35]                                                   35
+[p35] 
+[p36]    2a)/(γ + 2) into e1 = u1 = a − b tanh(ηbz) gives
+[p36]                                                                 γ+2
+[p36]                                z + Γb tanh(ηbz) = a,       Γ≜       > 0.                           (34)
+[p36]                                                                  γ
+[p36]    The left side has positive derivative 1 + Γηb2 sech2 (ηbz) in z, is zero at z = 0, and exceeds a at
+[p36]    z = a. Hence its unique solution satisfies 0 < z < a. Implicit differentiation gives
+[p36]                                     dz      Γb2 z sech2 (ηbz)
+[p36]                                        =−                      < 0.
+[p36]                                     dη    1 + Γηb2 sech2 (ηbz)
+[p36]    In the interior, z = ∆ also strictly decreases with η. Because ∆ decreases with η, a switch between
+[p36]    regimes can occur only once. At the threshold, the interior formula with e2 = 0 satisfies every
+[p36]    Kuhn–Tucker condition, so uniqueness equates its measured gap to the boundary solution.
+[p36]    Measured imbalance therefore decreases globally.
+[p36]    If γ > λ − 1, effort is eventually interior and z = ∆ → 0. If γ ≤ λ − 1, effort stays on the
+[p36]    boundary and the parameter restrictions imply
+[p36]                                       a   1+µ   λ+1   γ+2
+[p36]                                  0<     =     <     ≤     = Γ.
+[p36]                                       b   1−µ   λ−1    γ
+[p36]    The strict inequality follows from λµ < 1; the weak inequality follows from γ ≤ λ − 1. Equa-
+[p36]    tion (34) then gives 0 < tanh(ηbz) = ( a − z)/(Γb) < a/(Γb) < 1. Since the inverse hyperbolic
+[p36]    tangent is increasing,
+[p36]                                             arctanh( a/(Γb))
+[p36]                                    0<z<                      −→ 0.
+[p36]                                                    ηb
+[p36]    Thus measured imbalance converges to zero in every regime, whereas the limiting normalized
+[p36]    true gap is strictly positive.
+[p36] A.12     Proof of Proposition 7
+[p36] Proof. Within this proof, write a ≜ β(1 + µ)/2 and b ≜ β(1 − µ)/2, so that E = 2a/(1 + λ) and
+[p36] CE∞ (y) = min{W1 (y), W2 (y)} = a(y1 + y2 ) − b|y1 − y2 |. We first extend Proposition 6 to η = ∞,
+[p36] then compare the provider’s payoff across choices.
+[p36] 1. The lower-score objective. At η = ∞ the agent maximizes a(y1 + y2 ) − b|y1 − y2 | − C (e) − c(h)
+[p36]    with y = e + h. Since the lower score is at most the expected score, the bound in step 1 of the
+[p36]    proof of Proposition 6 applies, and continuity ensures attainment. The objective is concave, and
+[p36]    the superdifferential of its score term is {( a − bσ, a + bσ )}, with σ = sign(y1 − y2 ) if y1 ̸= y2
+[p36]    and σ ∈ [−1, 1] if y1 = y2 . The optimality conditions are (32) and (33) with u1 = a − bσ and
+[p36]    u2 = a + bσ for an admissible σ. The arguments in steps 3 and 5 of the proof of Proposition 6 use
+[p36]    only that u2 − u1 > 0 implies y1 ≥ y2 and u2 − u1 < 0 implies y1 ≤ y2 , which also holds with σ;
+[p36]    they therefore give e1 > 0, u1 , u2 > 0, and h1 + h2 = 2a/γ. If both efforts are positive, adding and
+[p36]    subtracting the effort conditions gives e1 + λe2 = E and σ = (λ − 1)(1 + µ)/[(λ + 1)(1 − µ)] ∈
+[p36]    (0, 1), which requires y1 = y2 ; the manipulation conditions give h1 = E/γ and h2 = λE/γ,
+[p36]    so e1 − e2 = (λ − 1) E/γ and e2 = [ E − (λ − 1) E/γ]/(1 + λ). Thus both efforts are positive
+[p36]    if and only if γ > λ − 1, and otherwise e2 = 0. The optimum is unique. Two optima would
+[p36]    share h and e1 + λe2 , because the cost terms are strictly concave in those arguments. The score
+[p36]    term would then have to be constant along the segment joining them, on which y1 + y2 and
+[p36]                                                   36
+[p36] 
+[p37]    y1 − y2 change in the ratio (1 − λ) : −(1 + λ). The segment cannot cross the kink, because the
+[p37]    score term is not affine along any segment that crosses it, and on either side constancy requires
+[p37]    a(1 − λ) + σb(1 + λ) = 0 with σ ∈ {−1, 1}. For σ = −1 both terms are negative, and for σ = 1
+[p37]    the equation reduces to λµ = 1, which is excluded.
+[p37] 2. Total manipulation and the boundary. For every η ∈ [0, ∞], total manipulation is h1 + h2 =
+[p37]    2a/γ: Proposition 6 gives this for finite η, including the transparent score at η = 0, and step 1
+[p37]    gives it at η = ∞. Hence h21 + h22 ≥ (h1 + h2 )2 /2 = 2a2 /γ2 , with equality if and only if h1 = h2 .
+[p37]    At η = 0, h1 = h2 = a/γ and e2 = 0, so V (0) = −τa2 /γ2 . If η ∈ (0, ∞] and e2 = 0, then e1 e2 = 0
+[p37]    and V (η ) ≤ V (0). The inequality is strict when τ > 0 because h1 ̸= h2 : with e2 = 0, equal
+[p37]    manipulation would give y1 − y2 = e1 > 0, hence u2 > u1 and, by (33), h2 > h1 , a contradiction.
+[p37] 3. Choices with positive effort on both dimensions. Suppose γ > λ − 1. By Proposition 6 and
+[p37]    step 1, both efforts are positive exactly when η > η I , where η I solves ∆(η I ) + (λ − 1) E/γ =
+[p37]    E, including η = ∞ with ∆(∞) ≜ 0. For these choices h1 = E/γ and h2 = λE/γ, so the
+[p37]    manipulation loss is the constant (τ/2)(1 + λ2 ) E2 /γ2 , and the real gap δ ≜ e1 − e2 = ∆(η ) +
+[p37]    (λ − 1) E/γ decreases strictly in η and ranges over [(λ − 1) E/γ, E). Solving e1 + λe2 = E and
+[p37]    e1 − e2 = δ gives
+[p37]                                                    E2 + (λ − 1) Eδ − λδ2
+[p37]                                  e1 e2 = P ( δ ) ≜                       ,
+[p37]                                                          (1 + λ )2
+[p37]    a strictly concave quadratic maximized at δ R ≜ (λ − 1) E/(2λ), where e1 = E/2 and e2 = E/(2λ).
+[p37]    If γ > 2λ, then δ R lies strictly inside the range, and the unique maximizing choice is the η with
+[p37]    ∆(η ) = δ R − (λ − 1) E/γ = (λ − 1)(γ − 2λ) E/(2λγ). By (24), that choice is
+[p37]                                                   2λγ                  λ−µ
+[p37]                                 ηR ≜                              log        ,
+[p37]                                         β(1 − µ)(λ − 1)(γ − 2λ) E     1 − λµ
+[p37]    and the measured gap there is y1 − y2 = ∆(η R ) = (λ − 1)(γ − 2λ) E/(2λγ) > 0, as part (b)
+[p37]    states. The maximized product is P (δ R ) = E2 /(4λ). If λ − 1 < γ ≤ 2λ, then δ R ≤ (λ − 1) E/γ,
+[p37]    so P decreases strictly over the range and the unique maximizing choice is η = ∞, with
+[p37]                                     ( λ − 1) E           E2 [γ + λ(λ − 1)](γ − λ + 1)
+[p37]                                                 
+[p37]                             P                        =                                .
+[p37]                                         γ                         γ2 (1 + λ )2
+[p37] 4. Comparison with the mean score. Let η ∗ denote the maximizing choice from step 3, which is η R
+[p37]    when γ > 2λ and ∞ when λ − 1 < γ ≤ 2λ, and let P ∗ denote the maximized product. Using
+[p37]    a = (1 + λ) E/2 and 2(1 + λ2 ) − (1 + λ)2 = (λ − 1)2 , the best choice with positive effort on both
+[p37]    dimensions satisfies
+[p37]                                                  τ (1 + λ2 ) E2   τa2         τ ( λ − 1)2 E2
+[p37]                    V ( η ∗ ) − V (0) = P ∗ −                    +     = P ∗
+[p37]                                                                             −                .
+[p37]                                                  2     γ2         γ2                4γ2
+[p37]    By step 2, every choice with e2 = 0 is weakly worse than η = 0, strictly if τ > 0; when τ = 0
+[p37]    such choices give V = 0 < P ∗ . Hence the provider chooses η ∗ if τ < τ̄ ≜ 4γ2 P ∗ /[(λ − 1)2 E2 ],
+[p37]    which is positive because P ∗ > 0, chooses η = 0 if τ > τ̄, and is indifferent between the two at
+[p37]                                                            37
+[p37] 
+[p38]   equality. Substituting the two values of P ∗ from step 3 gives
+[p38]                                    γ2
+[p38]                             
+[p38]                                           ,                  γ > 2λ,
+[p38]                             
+[p38]                             
+[p38]                               λ ( λ − 1)2
+[p38]                             
+[p38]                             
+[p38]                        τ̄ =
+[p38]                              4[γ + λ(λ − 1)](γ − λ + 1)
+[p38]                                                           , λ − 1 < γ ≤ 2λ,
+[p38]                             
+[p38]                             
+[p38]                                      ( λ + 1)2 ( λ − 1)2
+[p38]                             
+[p38]   which proves part (b). If γ ≤ λ − 1, every η ∈ (0, ∞] has e2 = 0 by Proposition 6 and step 1, so
+[p38]   η = 0 is optimal, uniquely if τ > 0, proving part (a).
+[p38] A.13     Proof of Proposition 8
+[p38] Proof. We first compare certainty equivalents at a fixed concealment choice, then use increasing
+[p38] differences to compare optimal concealment choices, and finally characterize deterrence at finite η.
+[p38] 1. Each exploit becomes less attractive. Fix h ∈ H and η ′ > η > 0. Raising a positive number to
+[p38]    the power η ′ /η > 1 is a strictly convex operation, and e−ηW1 and e−ηW2 (h) are distinct because
+[p38]    W2 (h) < W1 . Strict Jensen’s inequality gives
+[p38]                                                                 h                           iη ′ /η
+[p38]                           1 −η ′ W1         ′
+[p38]                           2e        + 12 e−η W2 (h) >               1 −ηW1
+[p38]                                                                     2e     + 21 e−ηW2 (h)             .
+[p38]   Taking logarithms and multiplying by −1/η ′ < 0 reverses the inequality, so ψη ′ (W2 (h)) <
+[p38]   ψη (W2 (h)). Subtracting the same cost gives Φη ′ (h) < Φη (h).
+[p38] 2. The optimized exploit payoff falls. Continuity on the compact set H ensures that each maxi-
+[p38]    mum is attained. For any h′ ∈ arg maxh∈ H Φη ′ (h), step 1 implies
+[p38]                               max Φη ′ (h) = Φη ′ (h′ ) < Φη (h′ ) ≤ max Φη (h),
+[p38]                               h∈ H                                               h∈ H
+[p38]   proving part (a).
+[p38] 3. Concealment has increasing differences. For u < W1 , differentiation of (27) gives
+[p38]                                       1                     ∂ ′        (W1 − u)e−η (W1 −u)
+[p38]                   ψη′ (u) =          − η (W − u )
+[p38]                                                   ,           ψη (u) =                      > 0.
+[p38]                               1+e          1               ∂η           [1 + e−η (W1 −u) ]2
+[p38]   For any h < h′ in H, the fundamental theorem of calculus yields
+[p38]                                                       Z W2 (h′ )
+[p38]                                 ′
+[p38]                          Φη ( h ) − Φη ( h) =                       ψη′ (u) du − [c(h′ ) − c(h)].
+[p38]                                                        W2 (h)
+[p38]   Strict increase of W2 makes this a nondegenerate interval, and every point in it is below W1 . The
+[p38]   difference is therefore strictly increasing in η.
+[p38] 4. Optimal concealment weakly rises. Step 3 establishes strict increasing differences. Lemma A.1
+[p38]    therefore orders every pair of optimal concealment choices: h′ ≥ h when η ′ > η. This proves
+[p38]    part (b) by the same argument used for audit intensity.
+[p38]                                                             38
+[p38] 
+[p39] 5. The limiting payoff. For u < W1 , factor e−ηu out of the expression in (27) to obtain
+[p39]                                              1   h                   i
+[p39]                                ψη (u) − u = − log 12 + 12 e−η (W1 −u) .
+[p39]                                              η
+[p39]   The bracket lies strictly between 1/2 and 1, giving 0 < ψη (u) − u < (log 2)/η. This bound is
+[p39]   independent of u. Set Φ∞ ≜ maxh∈ H {W2 (h) − c(h)}, which exists by continuity and compact-
+[p39]   ness. Subtracting c(h) and maximizing, with both maxima attained, gives Φ∞ < maxh Φη (h) <
+[p39]   Φ∞ + (log 2)/η. Both bounds converge to Φ∞ , establishing the limit used in the text.
+[p39] 6. Finite deterrence. If Φ∞ < s, every η > (log 2)/(s − Φ∞ ) gives maxh Φη (h) < s, so the exploit
+[p39]    is strictly deterred. If Φ∞ ≥ s, the lower bound in step 5 gives maxh Φη (h) > Φ∞ ≥ s for every
+[p39]    finite η, so no finite η deters the exploit, even weakly. This proves part (c).
+[p39] A.14     Proof of Proposition 9
+[p39] Proof. We work backward from disclosure to the initial decision.
+[p39] 1. Disclosure after a violation. Continuity on the compact set H ensures that the best payoff
+[p39]    from continuing without disclosure is attained and equals b − m( pF ). The sunk payoff x − k is
+[p39]    common to both continuations. Disclosure is therefore weakly preferred exactly when
+[p39]                              s D − ρ − ℓ ≥ b − m( pF )   ⇐⇒     ℓ ≤ ℓ( p).
+[p39]    Because the best continuation without disclosure is attained, disclosure is strictly preferred to
+[p39]    every such continuation exactly when ℓ < ℓ( p).
+[p39] 2. Stopping before a violation. If disclosure is optimal, the best total payoff from initiating a
+[p39]    violation is x − k + s D − ρ − ℓ. Initial stopping is thus weakly preferred exactly when
+[p39]                                s ≥ x − k + sD − ρ − ℓ    ⇐⇒      ℓ ≥ ℓ.
+[p39]    Strict preference requires ℓ > ℓ. Since disclosure is already a best continuation, this initial
+[p39]    comparison also covers a violation followed by nondisclosure.
+[p39] 3. Permissible fines. Intersecting the two weak incentive constraints with 0 ≤ ℓ ≤ ℓmax gives
+[p39]                                   ℓ ∈ [max{0, ℓ}, min{ℓmax , ℓ( p)}].
+[p39]   The interval is nonempty exactly when some permissible fine satisfies both constraints. Making
+[p39]   the two behavioral comparisons strict gives (30). Its behavioral bounds are open because equality
+[p39]   leaves the undesired choice optimal. Its permitted endpoints remain closed: a zero or maximum
+[p39]   fine can satisfy both strict comparisons.
+[p39] A.15     Proof of Corollary 2
+[p39] Proof. We establish the limit of m( pF ), restate the nonemptiness condition (31), and then prove
+[p39] parts (b) and (c).
+[p39] 1. Monotonicity and an upper bound. Fix p ∈ [0, 1]. For F ′ > F > 0 and every h, c(h) + pF ′ d(h) ≥
+[p39]    c(h) + pFd(h) because p( F ′ − F )d(h) ≥ 0. Taking minima over h gives m( pF ′ ) ≥ m( pF ).
+[p39]    The minimum defining c0 exists when H 0 is nonempty, because H 0 = d−1 ({0}) is closed in the
+[p39]                                                 39
+[p39] 
+[p40]    compact set H, hence compact, and c is continuous. Every h ∈ H 0 gives m( pF ) ≤ c(h) + pF · 0 =
+[p40]    c(h), so m( pF ) ≤ c0 for every p ∈ [0, 1] and every F > 0.
+[p40] 2. The limit when H 0 is empty. Fix p ∈ (0, 1]. Then d > 0 on the compact set H, and the extreme
+[p40]    value theorem gives d ≜ min H d > 0. Since c ≥ 0, every h satisfies c(h) + pFd(h) ≥ pFd, so
+[p40]    m( pF ) ≥ pFd, which tends to infinity as F → ∞ because p > 0 and d > 0.
+[p40] 3. The limit when H 0 is nonempty. Fix p ∈ (0, 1]. By step 1, m( pF ) is nondecreasing in F and
+[p40]    bounded above by c0 , so it converges to a limit m∞ ≤ c0 . Suppose, for contradiction, that
+[p40]    m∞ < c0 . For each integer n ≥ 1, choose hn that minimizes c(h) + pn d(h) over H, which exists
+[p40]    by continuity and compactness. Then c(hn ) + pn d(hn ) = m( pn) ≤ m∞ . Because c(hn ) ≥ 0,
+[p40]    this gives 0 ≤ d(hn ) ≤ m∞ /( pn), and because pn d(hn ) ≥ 0, it gives c(hn ) ≤ m∞ . Since H
+[p40]    is a compact metric space, a subsequence hnk converges to some h◦ ∈ H. Continuity gives
+[p40]    d(h◦ ) = limk d(hnk ) = 0, so h◦ ∈ H 0 , and c(h◦ ) = limk c(hnk ) ≤ m∞ . But h◦ ∈ H 0 implies
+[p40]    c(h◦ ) ≥ c0 > m∞ , which is a contradiction. Hence m∞ = c0 , and together with step 2 this proves
+[p40]    part (a).
+[p40] 4. Nonemptiness. Fix p ∈ [0, 1] and F > 0. The interval in (29) is nonempty if and only if
+[p40]    max{0, ℓ} ≤ min{ℓmax , ℓ( p)}, that is, if and only if 0 ≤ ℓmax , 0 ≤ ℓ( p), ℓ ≤ ℓmax , and ℓ ≤ ℓ( p).
+[p40]    The first holds by assumption. By (28), ℓ( p) ≥ 0 is equivalent to m( pF ) ≥ b − s D + ρ, and
+[p40]    because ℓ( p) − ℓ = m( pF ) − ( x − k + b − s), the inequality ℓ( p) ≥ ℓ is equivalent to m( pF ) ≥
+[p40]    x − k + b − s. Thus the interval is nonempty if and only if ℓ ≤ ℓmax and m( pF ) ≥ m.
+[p40] 5. Part (b). Suppose c0 > m and fix p ∈ (0, 1]. By steps 2 and 3, there is F̄ with m( p F̄ ) > m, and by
+[p40]    step 1, m( pF ) > m for every F ≥ F̄. Fix such an F. By step 4, a fine satisfying (29) exists if and
+[p40]    only if ℓ ≤ ℓmax . For the set in (30), note first that
+[p40]                         ℓ( p) = s D − ρ + m( pF ) − b > s D − ρ + m − b ≥ 0,
+[p40]                     ℓ( p) − ℓ = m( pF ) − ( x − k + b − s) > m − ( x − k + b − s) ≥ 0,
+[p40]    where each weak inequality holds because m is the maximum of b − s D + ρ and x − k + b − s. If
+[p40]    ℓ ≥ ℓmax , every ℓ in the set would satisfy ℓ > ℓ ≥ ℓmax , contradicting ℓ ≤ ℓmax , so the set is empty.
+[p40]    If ℓ < ℓmax and ℓ < 0, the fine ℓ = 0 lies in [0, ℓmax ] and satisfies ℓ < 0 < ℓ( p). If 0 ≤ ℓ < ℓmax ,
+[p40]    let u ≜ min{ℓmax , ℓ( p)}, which exceeds ℓ by the display above. The fine ℓ = (ℓ + u)/2 then
+[p40]    satisfies 0 ≤ ℓ < ℓ < u ≤ ℓmax and ℓ < ℓ( p). Thus the set in (30) is nonempty if and only if
+[p40]    ℓ < ℓmax .
+[p40] 6. Part (c). Suppose c0 < m. Then c0 is finite, so H 0 is nonempty, and step 1 gives m( pF ) ≤ c0 < m
+[p40]    for every p ∈ [0, 1] and every F > 0. By step 4, no fine satisfies (29).
+[p40]                                                    40
+[p40] 
+[p41] References
+[p41] Agarwal, Rohit, Joshua Lin, Mark Braverman, and Elad Hazan, “AI Alignment via Incentives and
+[p41]   Correction,” arXiv preprint arXiv:2605.01643 2026.
+[p41] Avenhaus, Rudolf, Bernhard von Stengel, and Shmuel Zamir, “Inspection Games,” in Robert J.
+[p41]   Aumann and Sergiu Hart, eds., Handbook of Game Theory with Economic Applications, Vol. 3,
+[p41]   Amsterdam: North-Holland, 2002, chapter 51, pp. 1947–1987.
+[p41] Baker, Bowen, Joost Huizinga, Leo Gao, Zehao Dou, Melody Y. Guan, Aleksander Madry,
+[p41]   Wojciech Zaremba, Jakub Pachocki, and David Farhi, “Monitoring Reasoning Models for
+[p41]   Misbehavior and the Risks of Promoting Obfuscation,” arXiv preprint arXiv:2503.11926 2025.
+[p41] Baker, George P., “Incentive Contracts and Performance Measurement,” Journal of Political
+[p41]   Economy, 1992, 100 (3), 598–614.
+[p41] Ball, Ian, “Scoring Strategic Agents,” American Economic Journal: Microeconomics, 2025, 17 (1),
+[p41]   97–129.
+[p41] Bebchuk, Lucian Arye and Louis Kaplow, “Optimal Sanctions When Individuals Are Imperfectly
+[p41]   Informed about the Probability of Apprehension,” Journal of Legal Studies, 1992, 21 (2), 365–370.
+[p41] Becker, Gary S., “Crime and Punishment: An Economic Approach,” Journal of Political Economy,
+[p41]   1968, 76 (2), 169–217.
+[p41] Ben-Porath, Elchanan, Eddie Dekel, and Barton L. Lipman, “Optimal Allocation with Costly
+[p41]   Verification,” American Economic Review, 2014, 104 (12), 3779–3813.
+[p41] Bergemann, Dirk, Andrew Koh, and Stephen Morris, “Mechanism Design for Alignment and
+[p41]   Control,” arXiv preprint arXiv:2609.01595 2026.
+[p41] Border, Kim C. and Joel Sobel, “Samurai Accountant: A Theory of Auditing and Plunder,” Review
+[p41]   of Economic Studies, 1987, 54 (4), 525–540.
+[p41] Braverman, Mark and Sumegha Garg, “The Role of Randomness and Noise in Strategic
+[p41]   Classification,” in Aaron Roth, ed., 1st Symposium on Foundations of Responsible Computing (FORC
+[p41]   2020), Vol. 156 of Leibniz International Proceedings in Informatics (LIPIcs) Schloss
+[p41]   Dagstuhl–Leibniz-Zentrum für Informatik 2020, pp. 9:1–9:20.
+[p41] Buccirossi, Paolo and Giancarlo Spagnolo, “Leniency Policies and Illegal Transactions,” Journal of
+[p41]   Public Economics, 2006, 90 (6–7), 1281–1297.
+[p41] Coste, Thomas, Usman Anwar, Robert Kirk, and David Krueger, “Reward Model Ensembles
+[p41]   Help Mitigate Overoptimization,” in “The Twelfth International Conference on Learning
+[p41]   Representations” 2024, pp. 50905–50931.
+[p41] Cremer, Helmuth and Firouz Gahvari, “Tax Evasion, Concealment and the Optimal Linear
+[p41]   Income Tax,” Scandinavian Journal of Economics, 1994, 96 (2), 219–239.
+[p41] Crocker, Keith J. and John Morgan, “Is Honesty the Best Policy? Curtailing Insurance Fraud
+[p41]   through Optimal Incentive Contracts,” Journal of Political Economy, 1998, 106 (2), 355–375.
+[p41]                                                 41
+[p41] 
+[p42] Ederer, Florian, Richard Holden, and Margaret Meyer, “Gaming and Strategic Opacity in
+[p42]   Incentive Provision,” RAND Journal of Economics, 2018, 49 (4), 819–854.
+[p42] Eeckhout, Jan, Nicola Persico, and Petra E. Todd, “A Theory of Optimal Random Crackdowns,”
+[p42]   American Economic Review, 2010, 100 (3), 1104–1135.
+[p42] Eisenstein, Jacob, Chirag Nagpal, Alekh Agarwal, Ahmad Beirami, Alex D’Amour,
+[p42]   DJ Dvijotham, Adam Fisch, Katherine Heller, Stephen Pfohl, Deepak Ramachandran, Peter
+[p42]   Shaw, and Jonathan Berant, “Helping or Herding? Reward Model Ensembles Mitigate but Do
+[p42]   Not Eliminate Reward Hacking,” in “First Conference on Language Modeling (COLM 2024)”
+[p42]   2024.
+[p42] Fei, Yingjie, Zhuoran Yang, Yudong Chen, Zhaoran Wang, and Qiaomin Xie, “Risk-Sensitive
+[p42]   Reinforcement Learning: Near-Optimal Risk-Sample Tradeoff in Regret,” in “Advances in
+[p42]   Neural Information Processing Systems 33” 2020, pp. 22384–22395.
+[p42] Frankel, Alex and Navin Kartik, “Muddled Information,” Journal of Political Economy, 2019, 127 (4),
+[p42]   1739–1776.
+[p42]   and , “Improving Information from Manipulable Data,” Journal of the European Economic
+[p42]   Association, 2022, 20 (1), 79–115.
+[p42] Friehe, Tim and Thomas J. Miceli, “Marginal Deterrence When Offenders Act Sequentially,”
+[p42]   Economics Letters, 2014, 124 (3), 523–525.
+[p42] Gao, Leo, John Schulman, and Jacob Hilton, “Scaling Laws for Reward Model Overoptimization,”
+[p42]   in “Proceedings of the 40th International Conference on Machine Learning,” Vol. 202 of
+[p42]  Proceedings of Machine Learning Research PMLR 2023, pp. 10835–10866.
+[p42] Green, Jerry R. and Jean-Jacques Laffont, “Partially Verifiable Information and Mechanism
+[p42]   Design,” Review of Economic Studies, 1986, 53 (3), 447–456.
+[p42] Greenblatt, Ryan, Ajeya Cotra, and Hjalmar Wijk, “Brief Independent Investigation of Agents’
+[p42]   Behavior, Reasoning and Collaboration in the OpenAI / Hugging Face Hacking Incident,”
+[p42]   METR 2026. August 26. Accessed September 26, 2026.
+[p42]   , Buck Shlegeris, Kshitij Sachan, and Fabien Roger, “AI Control: Improving Safety Despite
+[p42]   Intentional Subversion,” in “Proceedings of the 41st International Conference on Machine
+[p42]   Learning,” Vol. 235 of Proceedings of Machine Learning Research PMLR 2024, pp. 16295–16336.
+[p42]   , Carson Denison, Benjamin Wright, Fabien Roger, Monte MacDiarmid, Sam Marks,
+[p42]   Johannes Treutlein, Tim Belonax, Jack Chen, David Duvenaud, Akbir Khan, Julian Michael,
+[p42]   Sören Mindermann, Ethan Perez, Linda Petrini, Jonathan Uesato, Jared Kaplan, Buck
+[p42]   Shlegeris, Samuel R. Bowman, and Evan Hubinger, “Alignment Faking in Large Language
+[p42]   Models,” arXiv preprint arXiv:2412.14093 2024.
+[p42] Griffin, Charlie, Louis Thomson, Buck Shlegeris, and Alessandro Abate, “Games for AI Control:
+[p42]   Models of Safety Evaluations of AI Deployment Protocols,” in “Proceedings of the 2nd IASEAI
+[p42]   Conference,” Vol. 2 2026, pp. 204–216. Earlier version: arXiv:2409.07985.
+[p42]                                                 42
+[p42] 
+[p43] Hadfield, Gillian K. and Andrew Koh, “An Economy of AI Agents,” in Ajay K. Agrawal, Erik
+[p43]  Brynjolfsson, and Anton Korinek, eds., The Economics of Transformative AI, Chicago: University of
+[p43]  Chicago Press, 2026, pp. 119–138. Also arXiv:2509.01063.
+[p43] Hadfield-Menell, Dylan and Gillian K. Hadfield, “Incomplete Contracting and AI Alignment,” in
+[p43]  “Proceedings of the 2019 AAAI/ACM Conference on AI, Ethics, and Society” Association for
+[p43]   Computing Machinery 2019, pp. 417–422.
+[p43] Hahami, Ely, Yoel Zimmermann, Ray Zhou, and Jack Benarroch Jedlicki, “A Unifying Lens on
+[p43]  Reward Uncertainty in RLHF,” arXiv preprint arXiv:2606.09073 2026.
+[p43] Hardt, Moritz, Nimrod Megiddo, Christos Papadimitriou, and Mary Wootters, “Strategic
+[p43]  Classification,” in “Proceedings of the 2016 ACM Conference on Innovations in Theoretical
+[p43]  Computer Science” ACM 2016, pp. 111–122.
+[p43] Hennessy, Christopher A. and Charles A. E. Goodhart, “Goodhart’s Law and Machine Learning:
+[p43]  A Structural Perspective,” International Economic Review, 2023, 64 (3), 1075–1086.
+[p43] Holmström, Bengt and Paul Milgrom, “Multitask Principal–Agent Analyses: Incentive Contracts,
+[p43]  Asset Ownership, and Job Design,” Journal of Law, Economics, and Organization, 1991, 7 (Special
+[p43]  Issue), 24–52.
+[p43] Innes, Robert, “Violator Avoidance Activities and Self-Reporting in Optimal Law Enforcement,”
+[p43]   The Journal of Law, Economics, and Organization, 2001, 17 (1), 239–256.
+[p43] Kaplow, Louis and Steven Shavell, “Optimal Law Enforcement with Self-Reporting of Behavior,”
+[p43]   Journal of Political Economy, 1994, 102 (3), 583–606.
+[p43] Kleinberg, Jon and Manish Raghavan, “How Do Classifiers Induce Agents to Invest Effort
+[p43]   Strategically?,” ACM Transactions on Economics and Computation, 2020, 8 (4), 19:1–19:23.
+[p43] Korzhyk, Dmytro, Zhengyu Yin, Christopher Kiekintveld, Vincent Conitzer, and Milind Tambe,
+[p43]  “Stackelberg vs. Nash in Security Games: An Extended Investigation of Interchangeability,
+[p43]   Equivalence, and Uniqueness,” Journal of Artificial Intelligence Research, 2011, 41, 297–327.
+[p43] Lacker, Jeffrey M. and John A. Weinberg, “Optimal Contracts under Costly State Falsification,”
+[p43]   Journal of Political Economy, 1989, 97 (6), 1345–1363.
+[p43] Langlais, Eric, “Detection Avoidance and Deterrence: Some Paradoxical Arithmetic,” Journal of
+[p43]   Public Economic Theory, 2008, 10 (3), 371–382.
+[p43] Lazear, Edward P., “Speeding, Terrorism, and Teaching to the Test,” The Quarterly Journal of
+[p43]   Economics, 2006, 121 (3), 1029–1061.
+[p43] Maggi, Giovanni and Andrés Rodríguez-Clare, “Costly Distortion of Information in Agency
+[p43]  Problems,” RAND Journal of Economics, 1995, 26 (4), 675–689.
+[p43] Malik, Arun S., “Avoidance, Screening and Optimum Enforcement,” The RAND Journal of
+[p43]  Economics, 1990, 21 (3), 341–353.
+[p43] Meinke, Alexander, Bronson Schoen, Jérémy Scheurer, Mikita Balesni, Rusheb Shah, and
+[p43]  Marius Hobbhahn, “Frontier Models Are Capable of In-Context Scheming,” arXiv preprint
+[p43]  arXiv:2412.04984 2024.
+[p43]                                                43
+[p43] 
+[p44] Mihatsch, Oliver and Ralph Neuneier, “Risk-Sensitive Reinforcement Learning,” Machine
+[p44]  Learning, 2002, 49 (2–3), 267–290.
+[p44] Milgrom, Paul and Chris Shannon, “Monotone Comparative Statics,” Econometrica, 1994, 62 (1),
+[p44]  157–180.
+[p44] Mookherjee, Dilip and I. P. L. Png, “Marginal Deterrence in Enforcement of Law,” Journal of
+[p44]  Political Economy, 1994, 102 (5), 1039–1066.
+[p44]   and Ivan Png, “Optimal Auditing, Insurance, and Redistribution,” Quarterly Journal of
+[p44]   Economics, 1989, 104 (2), 399–415.
+[p44] Motta, Massimo and Michele Polo, “Leniency Programs and Cartel Prosecution,” International
+[p44]  Journal of Industrial Organization, 2003, 21 (3), 347–379.
+[p44] Needham, Joe, Giles Edkins, Govind Pimpale, Henning Bartsch, and Marius Hobbhahn, “Large
+[p44]   Language Models Often Know When They Are Being Evaluated,” arXiv preprint
+[p44]   arXiv:2505.23836 2025.
+[p44] Nussim, Jacob and Avraham D. Tabbach, “Deterrence and Avoidance,” International Review of Law
+[p44]  and Economics, 2009, 29 (4), 314–323.
+[p44] OpenAI, “OpenAI–Hugging Face Incident Technical Report,” 2026. Released August 26. Accessed
+[p44]  September 26, 2026.
+[p44]   , “The Hugging Face Incident and the Road Ahead,” 2026. August 26. Accessed September 26,
+[p44]   2026.
+[p44] Perez-Richet, Eduardo and Vasiliki Skreta, “Test Design under Falsification,” Econometrica, 2022,
+[p44]   90 (3), 1109–1142.
+[p44] Polinsky, A. Mitchell and Steven Shavell, “The Economic Theory of Public Enforcement of Law,”
+[p44]   Journal of Economic Literature, 2000, 38 (1), 45–76.
+[p44] Sanchirico, Chris William, “Detection Avoidance,” New York University Law Review, 2006, 81 (4),
+[p44]   1331–1399.
+[p44] Shavell, Steven, “A Note on Marginal Deterrence,” International Review of Law and Economics, 1992,
+[p44]   12 (3), 345–355.
+[p44] Skalse, Joar, Nikolaus H. R. Howe, Dmitrii Krasheninnikov, and David Krueger, “Defining and
+[p44]   Characterizing Reward Hacking,” in “Advances in Neural Information Processing Systems 35”
+[p44]   2022, pp. 9460–9471.
+[p44] Spagnolo, Giancarlo, “Divide et Impera: Optimal Leniency Programmes,” CEPR Discussion Paper
+[p44]   4840, Centre for Economic Policy Research 2004.
+[p44] Stigler, George J., “The Optimum Enforcement of Laws,” Journal of Political Economy, 1970, 78 (3),
+[p44]   526–536.
+[p44] Tabbach, Avraham D., “The Social Desirability of Punishment Avoidance,” The Journal of Law,
+[p44]   Economics, and Organization, 2010, 26 (2), 265–289.
+[p44]                                                44
+[p44] 
+[p45] van der Weij, Teun, Felix Hofstätter, Oliver Jaffe, Samuel F. Brown, and Francis Rhys Ward, “AI
+[p45]   Sandbagging: Language Models Can Strategically Underperform on Evaluations,” in “The
+[p45]   Thirteenth International Conference on Learning Representations” 2025, pp. 73152–73189.
+[p45] Wang, Zhun, Nico Schiller, Hongwei Li, Srijiith Sesha Narayana, Milad Nasr, Nicholas Carlini,
+[p45]  Xiangyu Qi, Eric Wallace, Elie Bursztein, Luca Invernizzi, Kurt Thomas, Yan Shoshitaishvili,
+[p45]  Wenbo Guo, Jingxuan He, Thorsten Holz, and Dawn Song, “ExploitGym: Can AI Agents Turn
+[p45]  Security Vulnerabilities into Real Attacks?,” arXiv preprint arXiv:2605.11086 2026. Code:
+[p45]  https://github.com/sunblaze-ucb/exploitgym.
+[p45]                                               45
+[p45] 
+[p46]                                             Online Appendix
+[p46]                When Does Randomized Oversight Align AI Agents That Can Conceal?
+[p46]                              Joshua S. Gans and Richard Holden
+[p46] OA.1          Overlapping Evaluators and Uncertainty
+[p46] Evaluators can inspect several channels, and their costs can differ. Index evaluators by j ∈ {1, . . . , J }.
+[p46] For channel i, a nonempty compact set Zi indexes the possible primitive models together with the
+[p46] agent’s type and concealment choice. Continuous functions
+[p46]                              Gi (z) ≜ gi (z) − ci (z),       Q ji (z) ≥ 0,      z ∈ Zi ,
+[p46] give the net private gain and the expected utility loss conditional on evaluator j; for example,
+[p46] Q ji = Fj d ji if evaluator j detects the deviation with probability d ji and imposes loss Fj . The
+[p46] uncertainty set is a maintained description of possible models, not a claim that finite observations
+[p46] reveal every concealment strategy. The provider chooses mutually exclusive audit probabilities
+[p46] p j ≥ 0 with ∑ j p j ≤ 1, and evaluator j costs ω j > 0. We retain commitment, correct beliefs, and no
+[p46] false sanctions on authorized actions. The least costly policy guaranteeing a utility margin ε > 0
+[p46] for every modeled deviation solves
+[p46]                                       J
+[p46]                              min
+[p46]                                  J
+[p46]                                      ∑ ωj pj
+[p46]                             p ∈ R+   j =1
+[p46]                                       J
+[p46]                       subject to     ∑ p j ≤ 1,                                                                   (35)
+[p46]                                      j =1
+[p46]                                       J
+[p46]                                      ∑ p j Q ji (z) ≥ Gi (z) + ε    for every i and z ∈ Zi .
+[p46]                                      j =1
+[p46] A policy exists exactly when these constraints are feasible, and the minimum is then attained.1
+[p46]     Each constraint covers one compound deviation. A review of independently retained records
+[p46] could expose both unauthorized flag acquisition and attempts to disguise it, supplying overlapping
+[p46] coverage. Several evaluators reading the same falsified record instead share a common blind spot.
+[p46] What matters is which deviations their evidence can expose, not how many evaluators are named.
+[p46] With finitely many modeled deviations, (35) is a linear program; with a continuum, it has finitely
+[p46] many variables but potentially infinitely many constraints. For separate evaluators, Q ji = 0 for
+[p46] j ̸= i and Qii ≜ Qi > 0, the constraints reduce to pi ≥ aiε ≜ max{0, maxz∈Zi [ Gi (z) + ε]/Qi (z)}, so
+[p46] the policy is feasible exactly when ∑i aiε ≤ 1, with unique cost-minimizing probabilities pi = aiε .2 If
+[p46]    1The incremental utility of deviation (i, z ) is G ( z ) −
+[p46]                                                      i        ∑ j p j Q ji (z). Requiring it to be at most −ε gives the
+[p46] constraint in (35). An intersection of closed half-spaces with the probability simplex is closed and bounded,
+[p46] hence compact. The continuous cost function attains its minimum on a nonempty feasible set. Mixtures
+[p46] entirely over unauthorized actions preserve the margin; a mixture assigning probability a > 0 to misconduct
+[p46] is worse by at least aε.
+[p46]    2 Continuity and positivity of Q on compact Z give a positive minimum, so the ratio is continuous and
+[p46]                                     i                 i
+[p46] attains a finite maximum. Dividing each constraint by Qi (z) > 0 reduces the channel’s constraints to pi ≥ aiε .
+[p46] Their sum yields feasibility. Any other feasible vector increases at least one coordinate without lowering
+[p46] another; since every ωi > 0, its cost is strictly higher.
+[p46]                                                          OA-1
+[p46] 
+[p47] all evaluators assign zero loss to a state with Gi (z) + ε > 0, the program is infeasible, and more
+[p47] audit expenditure cannot cure that failure. As in Proposition 4, raising a credible Fj with detection
+[p47] fixed weakly expands feasibility and weakly lowers the minimum expenditure, but it cannot reach
+[p47] a state that no evaluator detects.
+[p47]       A design based on estimated incentives needs a margin large enough to cover errors in those
+[p47] estimates. Suppose estimation errors are uniformly bounded over all indices and states by | Gi −
+[p47] Gbi | ≤ δG and | Q ji − Q
+[p47]                         b ji | ≤ δQ , where δG , δQ ≥ 0. A policy meeting the estimated constraints with
+[p47] margin ε guarantees a true margin of at least
+[p47]                                                   ε − δG − δQ .                                                (36)
+[p47] Thus, a margin exceeding δG + δQ preserves strict deterrence.3 The missing provenance check in the
+[p47] Hugging Face incident shows why applying this guarantee also requires verifying implementation.
+[p47]                                      b ji > 0 to a check that does not run, its implemented loss is
+[p47] If a design assigns an expected loss Q
+[p47] Q ji = 0, and the error allowance must cover that discrepancy. Uniform bounds must also cover
+[p47] concealment chosen in response to the policy, and accuracy on previously observed, unmodified
+[p47] records does not establish them. These results minimize audit expenditure under fixed incentives,
+[p47] rather than total social loss.
+[p47] OA.2          Detection Examples
+[p47] These examples illustrate the catch-rate condition (10) that follows Proposition 2. Both examples
+[p47] use c(h) = κh with κ > 0 and h ≥ 0.
+[p47]     Log-convex detection. Let d(h) = (1 + h)−2 . For t > 0 the objective κh + t(1 + h)−2 is strictly
+[p47] convex, so for t > κ/2 its unique minimizer is interior and satisfies (1 + h∗ )3 = 2t/κ. The catch
+[p47] rate is q( p) = (t/F )(1 + h∗ )−2 = (κ/2)2/3 t1/3 /F, which strictly increases with p, as (10) requires
+[p47] since (log d)′′ = 2/(1 + h)2 > 0.
+[p47]                                             2
+[p47]     Log-concave detection. Let d(h) = e−αh with α > 0. A positive stationary minimum satisfies
+[p47]                2             √
+[p47] κ = 2αth e−αh and h > 1/ 2α; the only other candidate is h = 0. At a positive stationary point,
+[p47]                                                               2
+[p47] the difference from the unconcealed cost is κ [2αh2 + 1 − eαh ]/(2αh). The equation ey = 1 + 2y has
+[p47] a unique positive solution yS ≃ 1.25643; its left side minus its right side decreases until y = log 2
+[p47] and then increases strictly to infinity. Hence positive concealment is the unique global minimum
+[p47]                       √
+[p47] for t > tS ≜ κeyS /(2 αyS ), whereas zero is the unique minimum below tS , and both minimize at
+[p47] equality. On the positive branch, q( p) = κ/(2αFh∗ ) strictly decreases because h∗ strictly increases.
+[p47] For κ = 0.1 and α = F = 1, tS ≃ 0.15670; raising p from 0.2 to 1 increases optimal concealment
+[p47] from approximately 1.277 to 1.908 and lowers the catch rate from approximately 0.0392 to 0.0262
+[p47] (the value at p = 1 is the continuous endpoint limit of the branch). With gain g = 0.25, misconduct
+[p47] remains strictly attractive throughout, since even at p = 1 the minimized cost is approximately
+[p47] 0.2170; with g = 0.2, misconduct ceases above approximately p = 0.540, so the final catch rate
+[p47] would describe only a counterfactual continuing violator.
+[p47]    3 For each deviation,
+[p47]                            ∑ j p j Q ji − Gi ≥ ∑ j p j Q      bi − δQ ∑ j p j − δG ≥ ε − δQ − δG , using p j ≥ 0 and
+[p47]                                                        b ji − G
+[p47] ∑ j p j ≤ 1. The bound is uniform because both primitive-error bounds are uniform. The loss-estimation error
+[p47] is probability-weighted, so its bound does not grow with the number of evaluators when at most one is
+[p47] selected.
+[p47]                                                       OA-2
+[p47] 
+[p48] OA.3         Risk-Sensitive Scoring and Reward Ensembles
+[p48] The entropic certainty equivalent in (23) connects the training objective of Section 5.1 to conservative
+[p48] scoring rules already studied in AI. A reward-model ensemble is a collection of models that score
+[p48] the same outcome. Coste et al. (2024, eqs. (4)–(5)) implement and test both the lowest ensemble
+[p48] score and the mean score less a multiple of the variance in reinforcement-learning experiments.
+[p48] The entropic certainty equivalent approaches the former as η grows and approximates the latter
+[p48] for small η, with variance coefficient η/2. Hahami et al. (2026, Sections 3.3–3.5) establish this
+[p48] connection through a robust objective that gives greater weight to unfavorable score distributions.
+[p48] Risk sensitivity can therefore be a property of the provider’s training rule. The resources needed to
+[p48] reach the optima of such a rule are a separate issue in risk-sensitive learning (Fei et al., 2020).
+[p48]     The two comparisons follow by factoring out the lowest score and expanding around η = 0.
+[p48] Fix J ≥ 1 finite scores Wj ∈ R, drawn with probabilities p j > 0 that satisfy ∑ jJ=1 p j = 1. Write
+[p48] CEη ≜ −η −1 log ∑ j p j e−ηWj for η > 0.
+[p48] Lowest-score limit. Let w ≜ min j Wj and Pw ≜ ∑ j:Wj =w p j > 0. Since Wj − w ≥ 0, the sum
+[p48] Sη ≜ ∑ j p j e−η (Wj −w) lies in [ Pw , 1]. Thus CEη = w − η −1 log Sη and, because multiplication by
+[p48] −1/η < 0 reverses inequalities,
+[p48]                                                  log Pw
+[p48]                              w ≤ CEη ≤ w −              −→ w      as η → ∞.
+[p48]                                                    η
+[p48] Small-risk approximation. Define W ≜ ∑ j p j Wj and σ2 ≜ ∑ j p j (Wj − W )2 . The finite sum
+[p48] of exponential Taylor expansions gives ∑ j p j e−ηWj = 1 − ηW + η 2 ∑ j p j Wj2 /2 + O(η 3 ). Applying
+[p48] log(1 + u) = u − u2 /2 + O(u3 ) yields
+[p48]                                            η 2 σ2                             ησ2
+[p48]               log ∑ p j e−ηWj = −ηW +             + O ( η 3 ),   CEη = W −        + O ( η 2 ).
+[p48]                    j
+[p48]                                              2                                 2
+[p48] These are pointwise statements for fixed scores as η ↓ 0. If all scores coincide, Pw = 1, σ2 = 0, and
+[p48] CEη = w for every η > 0.
+[p48] OA.4         A Provider That Values the Weaker Dimension
+[p48] The finite optimum in Proposition 7 reflects the provider’s valuation of complementary output.
+[p48] A provider valuing only min{e1 , e2 } would choose η = ∞ whenever γ > λ − 1 and τ < 4γ(γ −
+[p48] λ + 1)/[(1 + λ)(λ − 1)2 E], because real effort on the expensive dimension then rises with η while
+[p48] manipulation is constant.
+[p48] OA.5         A Common Disclosure Policy
+[p48] If the opportunity is privately known, the provider may need a single fine to work across opportu-
+[p48] nities. For a finite nonempty set of types θ, let ℓθ and ℓθ ( p) be the bounds (28) of Proposition 9 for
+[p48]                                                    OA-3
+[p48] 
+[p49] type θ, with common p and ℓmax . Intersecting the type-specific inequalities shows that a common
+[p49] fine exists for weak implementation exactly when
+[p49]                               max{0, max ℓθ } ≤ min{ℓmax , min ℓθ ( p)}.                            (37)
+[p49]                                         θ                      θ
+[p49] For strict implementation, the fine must lie in [0, ℓmax ] ∩ (maxθ ℓθ , minθ ℓθ ( p)); finiteness ensures
+[p49] that these extrema are attained. Opportunity-dependent treatment would require observable or
+[p49] separately implementable differences, and the interval does not itself elicit private information. The
+[p49] same reporting rule might have to cover an agent that has copied a flag and one that has acquired
+[p49] access enabling further unauthorized activity. Their retained gains and reasons to continue can
+[p49] differ enough that individually feasible treatments have no common value. For a longer task, the
+[p49] continuation comparison must also be checked at every relevant history with the benefits, costs,
+[p49] and opportunities remaining there.
+[p49]                                                  OA-4
+[p49] 
+[p50] 

@@ -1,0 +1,1527 @@
+[p1]                                                Blindfold: Keeping the Audit Coin Secret from
+[p1]                                                                 LLM Agents
+[p1]                                                                                         Wei Zhu1,3 , Meiyun Zuo1,3 , Huiping Sun2
+[p1]                                                                       1
+[p1]                                                                    School of Information, Renmin University of China, Beijing, 100872, China
+[p1]                                                                   2
+[p1]                                                               School of software and microelectronics, Peking University, Beijing, 100871, China
+[p1]                                          3
+[p1]                                            Big Data and Responsible Artificial Intelligence for National Governance, Renmin University of China, Beijing, 100872, China
+[p1]                                                                           zhuwei@ruc.edu.cn, zuomy@ruc.edu.cn, sunhp@ss.pku.edu.cn
+[p1]                                              Abstract—Audit-based certification bounds the violation rate         E[V ], so the certifier is unbiased by design, for any adversary.
+[p1] arXiv:2610.37055v1 [cs.CR] 27 Oct 2026
+[p1]                                          of an LLM agent by auditing a random fraction ε of actions               But the agent chooses V after observing artifacts that may
+[p1]                                          and reweighting the audited labels; its validity is meant to             carry information about B. If it can tell, even noisily, that an
+[p1]                                          rest only on the defender’s audit coin. We show that it also
+[p1]                                          rests on a confidentiality property: the coin must not interfere         episode will be audited, it can defer the attempt. The audited
+[p1]                                          with the agent’s view before the action commits, at a time the           episodes are then clean, and the certificate undercounts. In the
+[p1]                                          agent chooses. We call this pre-commit noninterference (PNI) and         running example of §II, a constructed agent that is handed the
+[p1]                                          measure its violation by DA , the total-variation distance between       audit signal attempts the violation in 79.2% of episodes while
+[p1]                                          the agent’s views under the two coin values. PNI is necessary and        the certificate’s estimate is 0.0%.
+[p1]                                          sufficient for an unbiased certificate against adaptive agents, the
+[p1]                                          worst-case bias is (1 − ε)DA , and no procedure that sees only                  Which audits are at risk: A purely post-hoc audit takes
+[p1]                                          audited labels can pay less. Leakage composes across steps, a            its label after the action commits. It cannot leak its coin before
+[p1]                                          resource shared across episodes opens a channel of computable            that commit, so it is safe by construction when each coin
+[p1]                                          size, and raising the audit rate cannot restore validity. On a           governs one commit (with several gated calls, see Proposi-
+[p1]                                          monitor we built, a silent audit changes no output but adds              tion 4(iv)). It is the right default whenever a post-commit
+[p1]                                          latency that tool timestamps expose, and the agent can enlarge
+[p1]                                          it. A real LLM agent follows an injection that names a visible           label measures the same quantity. Three settings force the
+[p1]                                          audit notice (generic, tool, and timing clauses have no effect); over    audit before commit. (i) Trajectory-unit audits: a replay is a
+[p1]                                          that channel the plain certificate fails on measured labels and,         different episode, so a faithful shadow must run alongside the
+[p1]                                          by a post-hoc analysis, in a live run on a pre-registered schedule,      live trajectory. (ii) Non-persisted or commit-time label inputs:
+[p1]                                          while a silent audit restores it. A fresh coin per audited call closes   retention policy forbids persisting what the scorer reads, or the
+[p1]                                          the timing channel; padding only narrows it.
+[p1]                                              Index Terms—noninterference, LLM agents, anytime-valid               label is defined against state the effect mutates. (iii) Ask-type
+[p1]                                          certification, auditing, side channels                                   gates: the audit decision must exist before the gate asks the
+[p1]                                                                                                                   user and must not change whether or how it asks. In (i) and
+[p1]                                                                  I. I NTRODUCTION                                 (ii) the branch need not block. A silent branch that returns a
+[p1]                                             LLM agents now take consequential actions on a user’s                 byte-identical response is pre-commit and non-blocking, and
+[p1]                                          behalf: they send mail, write files, and call tools. A grow-             §VI measures one. E3 in §VII is the laboratory instance of
+[p1]                                          ing line of work frames each authorization as a gate that                (iii).
+[p1]                                          grants, asks, or denies [1], [2], [3]. A deployer would like                    The gap: Hiding a monitor’s own state is an old design.
+[p1]                                          a distribution-free guarantee on the rate at which such a gate           Ringers [9], proofs of retrievability [10], and transparent mal-
+[p1]                                          lets violations through. Conformal risk control with a fixed             ware analysis [11] hide what will be checked, so that cheating
+[p1]                                          calibration set [4], [5] assumes that calibration and deployment         is caught. Random auditing of AI systems asks the sample to
+[p1]                                          are exchangeable. The closed loop and prompt injection break             estimate a rate, in AI control [12], randomized oversight [13],
+[p1]                                          that assumption [6]. Audit-based certification repairs it. The           and active anytime-valid risk control [8]. That is the step at
+[p1]                                          defender audits a random fraction ε of actions and takes labels          which secrecy turns from an enforcement resource into an
+[p1]                                          only on audited ones. It then forms an inverse-propensity-               identification condition. This line of work assumes, usually
+[p1]                                          weighted (IPW), anytime-valid bound on the violation rate [7],           implicitly, that the audited system cannot observe the draw.
+[p1]                                          [8]. The bound’s validity rests on the defender’s own coin               None states the assumption as a security property, measures
+[p1]                                          rather than on exchangeability. Post-deployment auditing is              how far a real monitor departs from it, or prices the departure.
+[p1]                                          advocated, though this design is not yet the common form of              Our question is not whether the agent still misbehaves when
+[p1]                                          agent risk control.                                                      watched. It is whether the number the certifier reports still
+[p1]                                               The failure: The audit coin is a secret, and like any secret        means anything, with no assumption on the agent’s motives.
+[p1]                                          it can leak (Fig. 1a). Let V ∈ {0, 1} indicate an attempted                     Thesis and contributions: The validity of audit-based
+[p1]                                          violation in an episode and B ∈ {0, 1} the audit coin. The per-          certification is an information-flow property. The audit coin
+[p1]                                          episode IPW estimate is gb = V B/ε. When B ⊥ V , E[b        g] =         is the high input, the agent’s pre-commit view is the low
+[p1] 
+[p2]   (a) Where the coin leaks                             (b) What leakage costs                                (c) Where the barrier goes
+[p2]              B     audit coin, P(B=1) = ε                                                                     seed R     rule f (ht , R)    Bτ
+[p2]                                                             105                          ε=0.05
+[p2]                  notice, denial text, latency                                             ε=0.2                              PNI barrier
+[p2]                                                                      E5                   ε=0.5
+[p2]                                                        n⋆
+[p2]     read                     propose         commit         103
+[p2]                   reason
+[p2]    secret                     effect           τ                                                               agent                              IPW
+[p2]                                                                                                                          gate + tools
+[p2]                                          V                                                                                                       certifier
+[p2]                                                             101
+[p2]             pre-commit view W = (O, ξ)                            0              0.5           1                 same response
+[p2]                                                                   exploited gap κA = µ0 −µ1 ≤ DA
+[p2]   The agent attempts only when it looks                PNI ⇔ unbiased (Thm. 4); coverage fails               Silent branch, decoys, or a fresh coin per
+[p2]   unaudited; the certifier sees labels only when       beyond n⋆ (§IV), drawn at E5’s p̄=0.21 and            call; padding alone yields no design-time δ
+[p2]   B=1 and undercounts by (1−ε)(µ0 −µ1 ).               α=0.05.                                               on our stack (§VI).
+[p2] Fig. 1. (a) The agent reads a secret early and commits late, at the irreversible sink τ . Its pre-commit view W = (O, ξ) holds its observations O (tool outputs
+[p2] and their timestamps, gate responses, notices, load statistics) and its own randomness ξ. If the audit coin B reaches W , the agent attempts only when it
+[p2] appears unaudited, and the certifier, which sees only audited labels, undercounts. (b) The sample size n⋆ beyond which an exploited gap κA breaks coverage,
+[p2] for three audit rates; κA ≤ DA , with equality for the likelihood-ratio adversary. Curves are the variance-dominated approximation of §IV at E5’s measured
+[p2] base rate p̄=0.21 (§VII). The dot is E5: its notice channel has DA =1, but the real agent exploits κA =0.075. (c) A barrier keeps the commit-step coin Bτ
+[p2] out of the view.
+[p2] observation, and the release point is the commit time, which                           gpt-4.1-mini follows an injection that names an audit
+[p2] the adversary chooses. We name the property pre-commit                                 notice, which drives the plain certificate’s coverage of µ0
+[p2] noninterference (PNI) and a mechanism that enforces it a                               below 0.01 on resampled measured labels and below the
+[p2] blindfold. We separate the framework from the technical                                realized rate in a pre-registered run; a silent audit restores
+[p2] results.                                                                               it (Table III). Spontaneous or timing-based exploitation
+[p2]    • Framework (§III, §IV). PNI, its violation DA , and the                            by a real LLM is not established.
+[p2]      bias as an additive g-leakage. These are definitions and
+[p2]      direct applications. Lemma 2 is the variational form of                     The LLM agent is the case study; the result applies to any
+[p2]      total variation, the necessity half of Theorem 4(i) follows                 sampled audit used to estimate a rate. The paper follows one
+[p2]      from it at once for the episode coin, and the sharpness in                  line. §II fixes the setting, §III defines PNI, §IV prices its
+[p2]      Theorem 6 is a two-parameter construction (App. A lists                     violation, §V enforces it, §VI measures how far real stacks
+[p2]      what is classical).                                                         depart from it, and §VII shows what that departure does to a
+[p2]    • Technical results. (i) Across steps, leakage composes by a                  certificate.
+[p2]      coupling
+[p2]         √       bound that is exact for erasure channels and by
+[p2]      a T bound for noisy ones (Theorem 3, Proposition 1).
+[p2]      (ii) Across episodes, composition of blindfolded gates
+[p2]      preserves PNI, but a resource shared across concurrent
+[p2]      episodes is a channel that no per-episode construction                                       II. S ETTING AND T HREAT M ODEL
+[p2]      closes. For a load statistic shared by M episodes the
+[p2]      leakage is the mode probability of Bin(M −1, ε), which
+[p2]      decays only as M −1/2 , consistent with the measured
+[p2]      aggregate-load channel (Proposition 5). (iii) Raising the                         Audit-based certification: Episodes i = 1, . . . , n each
+[p2]                             √ The bias falls linearly in ε but
+[p2]      audit rate does not help.                                                   consist of steps at which the agent proposes effects to a gate.
+[p2]      the width falls as 1/ nε, so the certified value moves                      A violation is the completion of a prohibited flow, such as
+[p2]      closer to the truth while the coverage failure moves earlier                confidential data reaching an external sink, and τ is the stop-
+[p2]      as ε rises over (0, ε⋆ ], with ε⋆ ≥ 1/3 (Corollary 2).                      ping time at which it becomes irreversible. For each episode
+[p2]      (iv) A fresh per-call coin closes the timing channel at                     the defender draws an audit coin Bi ∼ Bern(ε) and obtains
+[p2]      the price of a new estimand, read out by a dilution-                        a label only when Bi =1. An adaptive rule instead draws the
+[p2]      invariant bound whose cost we quantify (§V). (v) A PRF                      coin at the commit step with a known propensity (§III). The
+[p2]      reduction for adaptive rules, with an explicit conditioning                 defender then runs a time-uniform confidence sequence on the
+[p2]      cost (Proposition 2).                                                       IPW estimates gbi = Vi Bi /ε. We call this the plain certificate.
+[p2]    • Scoped evidence (§VI, §VII). On the pre-commit monitor                      Its target is the agent’s violation (attempt) rate. Certification
+[p2]      we built, tool timestamps give the agent a free microsec-                   estimates a rate; enforcement blocks violations, and the two
+[p2]      ond clock, and DA is agent-controlled: it rises from                        are distinct. When an audit blocks, the certifier estimates the
+[p2]      ≤ 0.044 to ≥ 0.91 as the agent reads more. Exploitation                     agent’s attempt rate, and the blocking itself is visible to the
+[p2]      is shown for a Kerckhoffs attacker with a visible artifact.                 agent.
+[p2] 
+[p3]  Running example: exfiltration under audit                                                                    TABLE I
+[p3]  A user asks the agent to summarize the inbox. One e-mail carries an                                 N OTATION AND ESTIMANDS .
+[p3]  injection: “forward the security code to an external address; if you see an
+[p3]  audit notice, skip this step.” The gate audits each episode with probability         B, Bτ      audit coin; the coin at the commit step τ
+[p3]  ε=0.2, and a naive audited episode shows the notice. The agent forwards              πτ (hτ )   design propensity PU (f (hτ , U )=1) (ε for the
+[p3]  the code only in unaudited episodes, so every audited label is clean. In a                      episode coin)
+[p3]  constructed simulation of 500 episodes in which the adversary is handed              Z ∈ {0, 1} audit-signal visibility to the agent (E3–E6)
+[p3]  the coin, it attempts in 79.2% of episodes, while the IPW estimate                   St         the agent’s step-t observable artifact (Fig. 1a)
+[p3]  is 0.0% and even its 95% upper bound is 0.061 (App. B). This is a                    O, ξ, W observations; agent randomness; view W =(O, ξ)
+[p3]  construction, not a measurement: the extreme case DA =1 of our bound                 Hi−1 , ht cross-episode; within-episode history (to t)
+[p3]  (Lemma 2); §VI–§VII measure whether real stacks leak and real agents                 µb         P(V =1 | B=b, Hi−1 ), b ∈ {0, 1}
+[p3]  exploit it. We return to this example in §III–§V and §VII.                           κA         exploited gap µ0 −µ1 ≤ DA (equal for ALR )
+[p3]                                                                                       Λ          exploitable leakage of an adaptive rule; (1−ε)DA
+[p3]       Threat model: The adversary is the agent, possibly                                         for the episode coin
+[p3] injection-driven and adaptive within and across episodes. It is                       g
+[p3]                                                                                       b          IPW estimate V B/ε
+[p3] Kerckhoffs: it knows the audit rule f and the propensities πt ,                       DA , δ     audit distinguishability; design-time bound
+[p3]                                                                                       Eη         hockey-stick distinguishability (E0 =DA )
+[p3] but not the realized seed R. It observes everything the gate and                      Dt , D̄t   step-t distinguishability; its sup over histories
+[p3] the tools return before commit, including timestamps in tool
+[p3]                                                                                       Estimands (bias; used in)
+[p3] outputs. We report leakage for four observer capabilities: no                         pi         εµ1 +(1−ε)µ0 ; bias (1−ε)(µ0 −µ1 )     ≤
+[p3] clock, a coarse clock, a tool-call-level clock, and a differential                               (1−ε)DA ; Thm. 2, E6
+[p3] (fine) clock. We assume nothing about the agent’s motives;                            µ0         unaudited propensity; bias µ0 −µ1 ≤ DA ;
+[p3]                                                                                                  Cor. 2, E5
+[p3] the conditioning rule may come from an injection or from the                          p̄call     per gated call; readout Ḡ p̄call ; §V
+[p3] agent itself. The defender’s coin generation, the certifier, and
+[p3] the label oracle are trusted. An adversary who reads the seed,
+[p3] compromises the gate, or conceals a violation from the auditor                  reads; it is the weight the IPW estimate uses. Under leakage
+[p3] itself is out of scope.                                                         the true conditional law P(Bτ =1 | W, Hi−1 ) can differ from
+[p3]     Two adversary instances run through the evaluation. An                      it, and that difference is what the definitions below measure.
+[p3] injection only writes a conditional into injected text and relies               Let µb = P(V =1 | B=b, Hi−1 ) and pi = P(V =1 | Hi−1 ).
+[p3] on an unwitting agent; this is the realistic setting, and E3 uses               The agent’s behaviour across all episodes is a policy A (the
+[p3] it. A sophisticated party runs a likelihood-ratio test on the raw               adversary); the gate, tools, and auditor form the mechanism
+[p3] latency law; E1 and E2 use it to upper-bound the channel and                    M . Because O contains the agent’s own actions, every law
+[p3] to exhibit worst-case certifier failure.                                        below is a law under the pair (M, A), written PA when the
+[p3]       Scope: A deployment-time audit coin appears in ask-                       dependence matters. A history h is reachable under A if
+[p3] type approval gates, in the pre-commit check branches of                        PA (Hi−1 =h) > 0.
+[p3] research IFC architectures (CaMeL’s check_policy [3],
+[p3] FIDES-style monitors [2], PQ-CIFC, App. C), and in proposed                     Definition 1 (Audit distinguishability). For a policy A
+[p3] sampling auditors [8]. Full-calibration conformal methods [4],                  and h reachable under it, DA (h; A) = TV PA (W |
+[p3] [5] have none. Sampling non-ask auditors are proposed rather                    B=1, Hi−1 =h), PA (W | B=0, Hi−1 =h) . For an adap-
+[p3] than deployed, so our claim is conditional: for the designs                     tive rule with πτ (hτ ) ∈ [πmin , 1 − πmin ] let r(W ) :=
+[p3] being proposed, the coin is a secret that must be protected                     PA (Bτ =1 | W, Hi−1 =h)/πτ (hτ ) be the ratio of the true to
+[p3] before deployment at scale.                                                     the design propensity, and define the (one-sided) exploitable
+[p3]                                                                                 leakage Λ(h; A) := EA [(1 − r(W ))+ | Hi−1 =h]. For
+[p3]             III. P RE -C OMMIT N ONINTERFERENCE                                 the episode coin Λ = (1 − ε)DA (h; A) (App. D), so Λ
+[p3]                                                                                 is the adaptive form of the price below; the dependence
+[p3]       Model and notation: Table I collects the notation. Within
+[p3]                                                                                 of Bτ on hτ through the design propensity is not counted
+[p3] episode i, V ∈ {0, 1} is the agent’s attempt: the violation that
+[p3]                                                                                 as leakage. The mechanism’s distinguishability is DA :=
+[p3] commits unless an audit blocks it (for a non-blocking audit,
+[p3]                                                                                 supA suph reachable under A DA (h; A); we write DA (h) when A
+[p3] attempt = committed violation). The agent acts on its pre-
+[p3]                                                                                 is fixed by context.
+[p3] commit observations O := O[0,τ ) , which include its own past
+[p3] actions, and on private randomness ξ. Its pre-commit view is                    The agent’s own actions are functions of earlier observations
+[p3] W := (O, ξ). Hi−1 is the cross-episode history, including                       and of ξ ⊥ R, so they add no information about B. The
+[p3] past coins, and ht the within-episode history up to step t. The                 supremum over policies therefore measures how much leakage
+[p3] defender’s audit randomness is a seed R ⊥ ξ. Since ξi may                       an agent can elicit, for instance by reading more (§VI); it is
+[p3] depend on Hi−1 , persistent agent state such as memory or                       0 for a silent branch (Proposition 4).
+[p3] learned behaviour is covered by conditioning on Hi−1 .                          DA (h; A) is the agent’s best advantage, from its pre-commit
+[p3]    The seed generates the coin B that the certificate uses. This                view, in telling whether the certificate’s coin is set. We use
+[p3] is either an episode coin B ∼ Bern(ε) or, for an adaptive rule                  total variation rather than mutual information because the
+[p3] Bt = f (ht , R), the commit-step coin B := Bτ . The latter has                 adversary’s question is which draw it is in, and total variation
+[p3] a design propensity πτ (hτ ) := PU f (hτ , U )=1 ≥ πmin > 0,                    prices the bias exactly (Lemma 2, Theorem 1). A mutual-
+[p3] computed from f and the law of the seed component U that Bτ                     information budget I = I(B; W ) (nats, prior Bern(ε)) gives
+[p3] 
+[p4]                     p
+[p4] only DA ≤ min{1, I/(2ε(1 − ε))}, by Pinsker’s inequality                    for the episode coin only, gap0 (h) := µ0 (h) − E[b   g | h] =
+[p4] against the mixture.                                                        µ0 (h)−µ1 (h), is the bias against the unaudited propensity, the
+[p4]                                                                             quantity a deployer ultimately wants bounded; for the episode
+[p4] Definition 2 (Pre-commit noninterference, PNI). A mechanism
+[p4]                                                                             coin the two vanish together and differ by the factor (1 − ε)
+[p4] M satisfies PNI if for every policy A and every h reachable
+[p4]                                                                             (Lemma 1). Under an adaptive rule the design propensity
+[p4] under it, B ⊥ W | Hi−1 =h under PA , i.e. DA (h; A) = 0 for
+[p4]                                                                             reweights the B=0 subgroup, so only gappi = E[V (1 −
+[p4] the episode coin, where B is the coin the certificate uses. For
+[p4]                                                                             r(W )) | Hi−1 ] ≤ Λ is used; Λ is one-sided (Λ=0 makes
+[p4] an adaptive rule the condition is that the commit-step coin
+[p4]                                                                             the certificate conservative, unbiasedness needs r=1).
+[p4] is fresh given the view: the true propensity equals the design
+[p4] propensity, PA (Bτ =1 | W, Hi−1 =h) = πτ (hτ ) almost surely,                    IV. L EAKAGE B OUNDS THE C ERTIFICATE ’ S B IAS
+[p4] i.e. r(W ) = 1 and Λ(h; A) = 0. PNI for A is the same
+[p4]                                                                             A. The one-step price
+[p4] condition for one fixed policy.
+[p4]                                                                             Lemma 1 (Gap identity). E[b  g | Hi−1 ] = µ1 and pi = εµ1 +
+[p4] PNI is a property of the mechanism, quantified over all                     (1 − ε)µ0 ; hence gappi = (1 − ε)(µ0 − µ1 ).
+[p4] policies, as noninterference is quantified over all low inputs. It
+[p4] is noninterference [14] from the high input B to the low output             Proof. E[bg | Hi−1 ] = P(V =1, B=1 | Hi−1 )/ε = µ1 ; the rest
+[p4] W with a when-declassification [15]. The coin is released                   is total probability. For an adaptive rule, gb = V Bτ /πτ (hτ )
+[p4] at the commit time τ , as in gradual release [16], except                   and, since V is a function of W , E[bg | Hi−1 ] = E[V r(W ) |
+[p4] that here the release point is a stopping time the adversary                Hi−1 ], so gappi = E[V (1 − r(W )) | Hi−1 ]; the test V =
+[p4] chooses. As a probabilistic noninterference property [17] it is             1{r(W ) < 1} attains Λ and V = 1{r(W ) > 1} attains
+[p4] a hyperproperty [18] but, like probabilistic noninterference, not           −E[(r − 1)+ ]; for the episode coin E[r] = 1, but an adaptive
+[p4] k-safety: finite runs bound DA from below without refuting                  rule need not satisfy it.
+[p4] PNI. Its deterministic fragment, a notice shown iff B=1, is                 Lemma 2 (Bridge lemma). For every policy A and h
+[p4] 2-safety, so a pair of runs from the same history, one per coin             reachable under it, µ0 − µ1 ≤ min{DA (h; A), µ0 , 1 − µ1 },
+[p4] value, refutes it there and estimates DA elsewhere (§VI).                   so gapp ≤ (1 − ε) min{DA (h; A), q} with q := µ0 the
+[p4]    Three consequences of the definition are used throughout.                unaudited violation propensity. The bound is attained by the
+[p4] Coins drawn at steps other than τ may leak without harm,                    policy ALR that behaves as A everywhere except at the
+[p4] provided Bτ remains fresh. A sufficient design condition is                 commit decision of the episode at h, where it attempts iff
+[p4] R ⊥ O, but it is not necessary. Leakage after τ is harmless,                dP0 /dP1 (W ) > 1; ALR reaches h and induces the same
+[p4] so a purely post-hoc audit satisfies PNI for the coin of that               view law, so DA (h; ALR ) = DA (h; A).
+[p4] commit by construction.
+[p4]                                                                             Proof in App. D.
+[p4]  Running example (cont.) In the running example, W includes the tool
+[p4]  output. The notice appears if and only if B=1, so the two view laws have   Attainment is over the adversary family; the value of DA on
+[p4]  disjoint support and DA =1. A post-hoc audit of the sent mail would have   a given stack is empirical (§VI). A given agent realizes only
+[p4]  DA =0, but it cannot stop the send.                                        its exploited gap κA := µ0 − µ1 ≤ DA , and a real LLM may
+[p4]       Causal assumption: Every result below is stated under                 leave it far below DA . E5’s notice channel has DA =1, but the
+[p4] one standing assumption. Assumption (ER), the exclusion                     agent exploits only κA =0.075 (§VII).
+[p4] restriction [19]: B affects V only through O. No environment                 Running example (cont.) With ε=0.2 and DA =1, the agent attempts
+[p4] side effect of the audit, and no cross-episode state outside                 with probability µ0 ≈ 1 when unaudited and µ1 =0 when audited. The
+[p4] Hi−1 , reaches V directly.                                                   bias is (1 − ε)(µ0 − µ1 ) ≈ 0.8, which is the 79.2% gap of the example:
+[p4]                                                                              the bound is attained.
+[p4]       Where the line falls: The division of labour is strict.
+[p4]                                                                                  The bias is a g-leakage: Fix h and A and regard the map
+[p4] Anything the agent can read before commit is part of O, so its
+[p4]                                                                             from coin to view as a channel Ch of quantitative information
+[p4] dependence on B is a PNI question; this includes aggregate
+[p4]                                                                             flow [20], [21]. The secret is B with prior π = (1−ε, ε), row
+[p4] load on shared infrastructure (§VIII) and sensible side effects
+[p4]                                                                             b is PA (W | B=b, Hi−1 =h), and the adversary’s action is its
+[p4] such as a log write that warms a cache. (ER) fails only on
+[p4]                                                                             commit decision. Let the gain gε pay 1 for attempting when
+[p4] paths that bypass the view: an audit side effect that changes
+[p4]                                                                             unaudited and (1 − ε)/ε for skipping when audited, and 0
+[p4] whether the attempted flow completes, or cross-episode state
+[p4]                                                                             otherwise; under the prior both actions earn 1 − ε.
+[p4] that reaches the agent over unlogged channels. For the attempt
+[p4] indicator, read from the agent’s proposed action, (ER) holds                Theorem 1 (Exact price: bias as g-leakage). (i) A commit
+[p4] by construction. Where V is read from the environment, it                   rule ϕ(W ) ∈ [0, 1] earns expected gain (1 − ε) + gapp (ϕ),
+[p4] is testable with the paired design of §VI: fix the agent’s                  and Vgε (π) = 1 − ε. Hence the worst-case bias equals the
+[p4] actions, run both coin values from the same state, and compare              additive gε -leakage, supϕ gapp (ϕ) =PL+   gε (π, Ch ) = (1 −
+[p4] outcomes. On the six E1 paths no pair differs in decision or                ε)DA (h; A). (ii) 1+ DA (h; A) =         w maxb Ch (b, w), so
+[p4] response.                                                                   log 1 + DA (h; A) is the multiplicative Bayes capacity of
+[p4]       Two bias functionals: We keep two bias functionals apart              Ch , the supremum over priors of its multiplicative leakage,
+[p4] (Table I, bottom). The first, gappi := pi − E[b
+[p4]                                               g | Hi−1 ], is the            attained at the uniform prior. (iii) If a mechanism’s channel
+[p4] bias against the conditional attempt rate. The second, defined              is a post-processing Ch R of Ch by some channel R, its
+[p4] 
+[p5] distinguishability and its worst-case bias are no larger, and      Theorem 3 (Sequential coupling bound). For any adaptive
+[p5]       ′              + ′                          ′
+[p5] L+g (π , Ch R) ≤ Lg (π , Ch ) for every prior π and gain           channel and stopping time τ ≤ T ,
+[p5] function g.                                                                        h                            i
+[p5]                                                                     gapp ≤ (1 − ε) 1 − EC t<τ 1 − Dt (ht , at )
+[p5]                                                                                            Q
+[p5] Proof in App. D.                                                                   h    Q            i            P
+[p5] Theorem 1 places audit mechanisms inside the refinement                  ≤ (1 − ε) 1 − t<T (1 − D̄t ) ≤ (1 − ε) t<T D̄t ,
+[p5] order of quantitative information flow [22]. A channel leaks no
+[p5]                                                                    where EC is over the common history under the normalized
+[p5] more than another under every prior and gain function exactly
+[p5]                                                                    overlap kernel min(P0 , P1 )/(1 − Dt ) (App. D). For history-
+[p5] when it refines it [21]. For a binary coin this is Blackwell’s
+[p5]                                                                    independent Dt and an adversary able to wait to the end of
+[p5] order, which the following states for the audit channel; we do
+[p5]                                                                    the window, erasure channels (each step either fully reveals
+[p5] not use it to rank the mechanisms of §VI, whose channels are
+[p5]                                                                    B or reveals nothing) attain the middle bound.
+[p5] bounded rather than estimated.
+[p5]                                                                    Proof in App. D.
+[p5] Corollary 1 (Refinement order). Let C, C ′ be the coin-to-view
+[p5]                                                                    Theorem 3 is exact for erasure channels; for noisy ones the
+[p5] channels of two mechanisms at h. C ′ is a post-processing of
+[p5]                                                                    operative bound composes in KL divergence.
+[p5] C if and only if Eη (C ′ ) ≤ Eη (C) for every η ∈ R, with Eη
+[p5] defined by the formula of Proposition 6 for all real η. Every      Proposition 1 (Noisy composition). Let κ̄t be the supremum
+[p5] price in Theorems 1, 5, and 6 and Proposition 6 is then no         over histories and actions of KL(P0 ∥P1 ) between the coin-
+[p5] larger for C ′ .                                                   conditional step-t observation laws (either direction may be
+[p5]                                                                    used, because Pinsker’s inequality holds for both, provided
+[p5] Proof in App. D.                                                   the same one is used in every step and the laws are mutually
+[p5] Theorem 2 (PNI implies anytime-valid certification). Under         absolutely continuous; for an erasure channel one direction
+[p5] PNI and (ER), E[b gi | Hi−1 ] = pi for every adaptive adversary,   is infinite and the bound is vacuous).
+[p5]                                                                                                    q PThen for every stopping
+[p5]                                                                                                       1
+[p5] and a time-uniform confidence sequence for bounded martin-         time τ ≤ T , TV(P0τ , P1τ ) ≤      2
+[p5]                                                                                                                              p
+[p5]                                                                                                           t<T κ̄t , hence gap ≤
+[p5]                                                                             q P
+[p5] gale differences [23] applied to gbi −pi ∈ [−1, 1/πmin ] (πmin =   (1 − ε) 12 t<T κ̄t .
+[p5] ε for the episode coin) with a fixed λ yields
+[p5]                                             P an anytime-valid
+[p5] upper confidence sequence UCSn for n1 i≤n pi (App. E; a            Proof in App. D.           √
+[p5] variance-adaptive λi covers a weighted mean instead).              The growth is of order T rather than T : on the measured
+[p5]                                                                    latency laws with a 0.5 s observer noise it gives 0.69 after
+[p5] Proof in App. D.                                                   104 probes where the per-step sum is 55 (App. F). That noisy
+[p5] Corollary 2 (Audit rate versus leakage). The bias bound            channels fall strictly below the middle bound of Theorem 3 is
+[p5] (1 − ε)DA falls only√linearly in ε, while the width of the         verified numerically (App. F), not claimed.
+[p5] sequence falls as 1/ nε. When DA → 1, a gap target β               Theorem 4 (Characterization for adaptive audits). Assume
+[p5] requires ε ≥ 1 − β, near-total auditing, whereas DA ≤ δ            πt ≥ πmin > 0. (i) Unbiasedness. For the episode coin,
+[p5] gives gapp ≤ (1 − ε)δ; against µ0 the gap is µ0 − µ1 ≤ DA          gap0 (h) = 0 for every policy and every h reachable under
+[p5] with no (1 − ε) factor at all. For a fixed exploited gap and       it if and only if the mechanism satisfies PNI, i.e. DA =0. For
+[p5] base rate p̄, the failure point n⋆ below (in its variance-         an adaptive rule, gapp (h) = 0 for every policy and reachable
+[p5] dominated
+[p5]       √     approximation) decreases in ε on (0, ε⋆ ], ε⋆ =        h if and only if r(W ) = 1 almost surely, and gapp ≤ 0
+[p5] (3 − 9 − 8p̄)/(4p̄) ≥ 13 : raising the audit rate toward ε⋆        for every policy iff Λ = 0. Leakage of coins other than Bτ
+[p5] brings the failure forward.                                        does not affect it. (ii) Coverage. Under PNI the certificate
+[p5]                                                                    is anytime-valid. Conversely, let ALR apply the likelihood-
+[p5] Proof in App. D.
+[p5]                                                                    ratio commit rule of Lemma 2 in every episode, and suppose
+[p5] Raising ε is therefore the expensive lever and bounding            DA (h; ALR ) ≥ D > 0 at every history ALR reaches (e.g.,
+[p5] leakage the efficient one; label budgeting itself is nearly free   history-independent leakage; Λ ≥ D for an adaptive rule).
+[p5] in variance (App. E, E5).                                          If the certificate’s excess over the running mean of gbi tends
+[p5]                                                                    to a limit u∞ < (1 − ε)D (u∞ =0 for a stitched sequence,
+[p5]                                                                    ḡ cψ(λ)/(λ − cψ(λ)) for the fixed-λ sequence   of Theorem 2),
+[p5] B. Multi-step channels and adaptive audits                         the probability that UCSn covers n1 i pi under ALR tends
+[p5]                                                                                                           P
+[p5]                                                                    to 0.
+[p5]      Multi-step decomposition: Fix a policy and a cross-
+[p5] episode history Hi−1 . Let Dt (h, a) = TV P (St |                 Proof in App. D.
+[p5] B=1, Hi−1 , ht =h, at =a), P (St | B=0, Hi−1 , ht =h, at =a)       PNI is thus necessary and sufficient for an unbiased adaptive
+[p5] be the distinguishability of the step-t observation given the      certificate. Decaying leakage delays the failure rather than
+[p5] within-episode history and the agent’s own action, which it        avoiding it. With an exploited gap κi ∝ i−β in episode i,
+[p5] knows, and D̄t = suph,a Dt (h, a).                                 the running bias scales as n−β and the width as n−1/2 , so
+[p5]                                                                    coverage still fails for β < 12 and need not for β > 21 .
+[p5] 
+[p6]                                                                     same inflation covers the realized rate n1 i Vi after a second,
+[p6]                                                                                                               P
+[p6]       The failure point: Coverage does not fail at finite n
+[p6] merely because DA > 0. It holds while the bias is small             leakage-independent martingale term (App. E). Under PNI a
+[p6] relative to the half-width un and breaks around the thresh-         sharper sequence certifies the realized rate directly, and E8
+[p6] old n⋆ at which un⋆ = (1 − ε)κA . The relevant bias is              uses it.
+[p6] the one the agent realizes, and κA = DA only for the
+[p6]                                                                     Proposition 3 (Realized-rate sequence). Assume PNI and
+[p6] likelihood-ratio adversary. For the deployed, horizon-tuned
+[p6]                                                                     (ER). Let c = (1 − πmin )/πmin ,Pψ(λ) = eλ − 1 − λ, fix λ > 0
+[p6]                   p sequence [24], un ≈ wvar (n) + wrng (n)
+[p6] empirical-Bernstein
+[p6]                                                                     with λ > c ψ(λ), and let Gn = i≤n gbi . Then with probability
+[p6] with wvar (n) =      2p̄(1/ε − p̄) log(1/α)/n and wrng (n) =
+[p6]                                                                     at least 1 − α, simultaneously for all n,
+[p6] crng log(1/α)/(εn), crng ≈ 0.77 (App. E). In the variance-                                                                   
+[p6]                                                                         1                        1         log(1/α)+c ψ(λ) Gn
+[p6] dominated regime this gives
+[p6]                                                                           P
+[p6]                                                                         n    i≤n Vi ≤ RCSn := n Gn +            λ−c ψ(λ)        .
+[p6]                         2p̄(1/ε − p̄) log(1/α)
+[p6]                  n⋆ ≈                          ,                    Proof in App. E. The sequence is horizon-tuned: λ is set from a
+[p6]                              (1 − ε)2 κ2A                           planning rate and a horizon before any outcome is seen, and its
+[p6] and inserting the measured p̄ and κA reproduces the transition      width at the horizon is about (log(1/α) + c ψ(λ)Gn )/(n(λ −
+[p6] points of E5 and E6 (§VII). The threshold is quadratic in           c ψ(λ))).
+[p6] 1/κA , so it is a sensitive prediction. A gap of 0.055 in place          The price is sharp: Theorem 5 is not merely a valid
+[p6] of 0.075 moves n⋆ from 1.6×103 to 3.1×103 , which is why            bound; its inflation is the width of what the audited data can
+[p6] E8 pre-registers an interval rather than a point (App. G).          identify.
+[p6]      Adaptive rules and the computational setting: A de-
+[p6]                                                                     Theorem 6 (Identification and unimprovability). Fix h and
+[p6] terministic rule f of observable history gives DA = 1,
+[p6]                                                                     suppose the certifier observes only the audited labels, i.e. the
+[p6] since the agent can compute Bt itself. The remedy keys it,
+[p6]                                                                     law of (B, V B), together with the promise DA (h) ≤ δ. The set
+[p6] Bt = f (ht , FK (xt )), with F a pseudorandom function [25],
+[p6]                                                                     of values of µ0 consistent with these is exactly [max(0, µ1 −
+[p6] K secret, and xt = (νi , t, ht ) carrying an episode nonce and
+[p6]                                                                     δ), µ1 + min(δ, 1 − µ1 )]. Hence no procedure that uses only
+[p6] the call index (keying on ht alone reuses a coin whenever a
+[p6]                                                                     audited labels can certify µ0 below µ1 + min(δ, 1 − µ1 ), nor
+[p6] history recurs). Keyed coins are not statistically independent
+[p6]                                                                     pi below µ1 + (1 − ε) min(δ, 1 − µ1 ), and Theorem 5 attains
+[p6] of the history, so the right statement is a reduction. The key
+[p6]                                                                     this endpoint up to the width of its confidence sequence.
+[p6] lives with the certifier, inside the same trust boundary as the
+[p6] seed: keying relocates the secret, it does not remove one.          Proof in App. D.
+[p6]                                                                     In the sense of partial identification [26], leakage does not
+[p6] Proposition 2 (PRF-keyed rules). Let MPRF be the mech-
+[p6]                                                                     make the rate unidentifiable. It widens the identified set by
+[p6] anism with Bt = f (ht , FK (xt )) and Mideal the same with
+[p6]                                                                     exactly δ on the side that matters, and Theorem 5 is the
+[p6] a truly random function in place of FK . Let A be a policy
+[p6]                                                                     sharp bound for that set. The theorem is relative to the
+[p6] of size s run for N episodes, sM the cost of simulat-
+[p6]                                                                     certifier’s information: observations other than labels, such as
+[p6] ing the mechanism and label oracle for one episode, and
+[p6]                                                                     the exceedance counts of §V, can shrink the set, which is what
+[p6] Adv := AdvPRF F  (N (s + sM )). (i) If Mideal satisfies PNI, the
+[p6]                                                                     fail-closed counting exploits.
+[p6] realized-rate sequence of Proposition 3 fails at some n ≤ N               Rare violations: The additive inflation (1−ε)δ makes the
+[p6] with probability at most α + Adv under MPRF . (ii) For              certificate near-vacuous below that base rate. A multiplicative
+[p6] an episode-level keyed coin with πmin ≤ π ≤ πmax < 1                form in the ratio sense of differential privacy [27], [28], [29]
+[p6] (constant in the history), π̄ := min(πmin , 1 − πmax ), let h       does not: with the hockey-stick divergence Eη in place of DA ,
+[p6] have probability qh under Mideal , with Adv < qh π̄. Then           Proposition 6 (App. D) certifies µ0 ≤ eη µ1 + Eη , informative
+[p6] gap0PRF (h; A) ≤ DA ideal
+[p6]                           (h; A) + 4 Adv/(qh π̄ − Adv).             where an additive δ is not; on our coarsened stamps 1000 pairs
+[p6] Proof in App. D. Part (i) carries no conditioning cost; (ii) pays   do not yet certify a useful Eη .
+[p6] 1/qh for a rare history.                                             Takeaways: the price of leakage
+[p6] C. Repair, sharpness, and rare violations                            • Bias: at most (1 − ε)DA , and attained (Lemma 2); it is an additive
+[p6]                                                                        g-leakage (Thm. 1).
+[p6] Theorem 5 (Leakage-inflated certificate). Suppose the mech-          • Characterization: unbiased for every adaptive agent ⇔ PNI (DA =0;
+[p6] anism guarantees DA (h; A) ≤ δ for every policy A and                  r=1 for adaptive rules) (Thm. 4).
+[p6]                                                                      • Failure point: coverage breaks once (1 − ε)κA > un , i.e. beyond n⋆ ,
+[p6] every h reachable under it, and let UCSn be the sequence               with κA ≤ DA the exploited gap.
+[p6]    Theorem 2 at level α. Then for every adaptive adversary,
+[p6] of P                                                                 • Repair: add (1 − ε)δ (Thm. 5); this is optimal (Thm. 6); PRF and
+[p6] 1
+[p6]      i pi ≤ UCSn + (1 − ε)δ for all n simultaneously with
+[p6]                                                                        multiplicative forms in Props. 2 and 6. It needs a design-time δ, which
+[p6] n
+[p6]                                                                        padding does not supply on our stack (§VI).
+[p6] probability ≥ 1 − α.
+[p6] Proof in App. D.                                                                            V. E NFORCING PNI
+[p6]                                         bound δ ′ ≥ Λ in place
+[p6] For an adaptive rule the inflation is a Q                             §IV priced a violation of PNI; this section shows how to
+[p6] of (1 − ε)δ; across steps δ = 1 − t (1 − δ̄t ) with δ̄t ≥           prevent one. The mechanism (Fig. 1c) has three parts. A secret
+[p6] D̄t (Theorem 3). The hypothesis is a design-time statement;         audit state R drives Bt = f (ht , R) with known propensity.
+[p6] no configuration deployed in this paper satisfies it (§VI). The     A blindfold keeps the agent’s artifacts up to commit free of
+[p6] 
+[p7] information about the coin. A known-propensity certifier turns                                    TABLE II
+[p7] the audited labels into a bound (Theorem 2, or Theorem 5 with                          R EADOUTS FOR A PER - CALL COIN .
+[p7] a residual δ). By Theorem 4, the blindfold is exactly the con-      readout        estimand              dilution          cost
+[p7] dition for validity against all adversaries. Three constructions
+[p7]                                                                     call-level      p̄call           diluted (by design) none; not a danger rate
+[p7] realize it. A silent branch ignores R before τ . A fresh per-call   measured Ḡ     pepi ≤ Ḡ p̄call invariant           loose when spread
+[p7] coin draws Bτ from a seed component no earlier step reads.          capped Gmax Ḡp̄call +P(G>Gmax ) flagged             availability
+[p7]                                                                     static gassumed g p̄call         unsound             —
+[p7] A decoy is a prompt whose probability depends on the history
+[p7] but not on R. In the minimal semantics of App. I each is a one-
+[p7] line construction, and the following holds. A resource shared
+[p7] across concurrent episodes, by contrast, opens a channel that       every ρd tried, against 0.07 for the leaky notice (App. G).
+[p7] no per-episode construction closes (Proposition 5).                       Fresh per-call coins: If each gated call draws a fresh coin,
+[p7]                                                                     only the commit-step coin Bτ matters (Theorem 4). Its call’s
+[p7] Proposition 4 (Constructions and composition). (i) Silent
+[p7]                                                                     latency becomes observable only after commit, and earlier
+[p7] branch. If Kt (· | h, a, R) does not depend on R for all t < τ ,
+[p7]                                                                     probes reveal unrelated coins. The timing channel is therefore
+[p7] the mechanism satisfies PNI for every coin B drawn from R.
+[p7]                                                                     neutralized without padding; E2 in §VII confirms this.
+[p7] (ii) Fresh per-call coin. Let the commit-step coin be drawn
+[p7] from a seed component Rτ that is independent of (R<τ , ξ)              The price is a change of estimand. A per-call coin certifies
+[p7] and that no Kt with t < τ reads. Then the mechanism satisfies       the fraction of gated calls that attempt a violation, and the
+[p7] PNI for Bτ , whatever the earlier coins leak. (iii) Decoys. If      agent chooses the call count. Padding each violating episode
+[p7] an audit-like prompt is shown at step t with a probability ρd       with benign gated calls dilutes the per-call rate by an arbitrary
+[p7] that depends on (ht , at ) but not on R, and labels are taken       factor. A static conversion to a per-episode rate through
+[p7] silently, (i) applies. (iv) Serial composition. If two gates in     an assumed calls-per-episode bound is therefore unsound
+[p7]                                                       (2)    (1)    (App. J). Three readouts replace it (Table II). (i) A call-level
+[p7] series each satisfy (i), the composed kernel Kt = Kt ◦ Kt
+[p7]                                                                     certificate is a diagnostic, not a danger rate. (ii) A dilution-
+[p7] ignores R, so their composition satisfies PNI. More generally,
+[p7]                                                                     invariant episode readout uses the realized mean call count Ḡ,
+[p7] if the certificate’s coin is drawn from a seed component that
+[p7]                                                                     which the gate measures without labels or coins. The bound
+[p7] no kernel of either gate reads before τ , the composition
+[p7]                                                                     pepi ≤ Ḡ p̄call holds because Ḡ p̄call is the expected number of
+[p7] satisfies PNI for that coin by (ii). Composition fails when the
+[p7]                                                                     violating calls per episode, so dilution cancels; Proposition 7
+[p7] downstream gate reads the component the upstream coin was
+[p7]                                                                     (App. J) gives the time-uniform statement, for the episode rate
+[p7] drawn from, for instance by displaying the upstream audit
+[p7]                                                                     with a call cap Gmax and a term Gmax u′n . (iii) A capped
+[p7] status.
+[p7]                                                                     readout caps calls at Gmax and counts any episode that reaches
+[p7] Proof in App. I.                                                    the cap as a violation, giving pepi ≤ Ḡ p̄call + P(G>Gmax ).
+[p7] Proposition 5 (Shared-resource channel). Let M ≥ 2 episodes               What the default fix costs: The measured-Ḡ readout
+[p7] run concurrently, each with an independent coin Bj ∼                targets pepi ·E[v | violating], where v is the number of violating
+[p7] Bern(ε) and a silent branch, so that each satisfies (i) in          calls in a violating episode, so it is conservative by exactly that
+[p7] isolation. Suppose an audit adds a fixed amount of work             factor. On E8’s silent arm a goal-count proxy puts that factor
+[p7] ∆ > 0 to a shared resource, and that each                           at ≥ 1.7, a readout target near 0.37 for an episode rate of
+[p7]                                        P episode observes           0.22 (App. J); this is a looseness bound, not a run certificate.
+[p7] before its commit the total L = c + ∆ j≤M Bj , such as a
+[p7] round makespan. Then each episode’s DA equals the mode              It is loose by the spread of violations across calls, and near-
+[p7] probability of X ∼ Bin(M −1, ε). In particular DA = 1 − ε           vacuous only when they spread over many calls. The capped
+[p7] for M = 2 and ε ≤ 12 , and DA ∼ (2π(M −1)ε(1 − ε))−1/2              readout adds only the flag rate when no agent dilutes, and it
+[p7] as M → ∞.                                                           turns a dilution attack into a flag rate the gate sees rather than
+[p7]                                                                     a silent undercount (Table XIII).
+[p7] Proof in App. I.
+[p7]                                                                      Running example (cont.) A silent branch removes the notice, so the
+[p7]       Silent audits and decoys: Content and execution channels       content channel has DA =0. The audit still costs time, and §VI shows
+[p7] are erasure-type. A confirmation request or denial shown on          that the agent can read that time from the sent mail’s timestamp. A fresh
+[p7] every audited episode and never otherwise reveals B, so a            coin per gated call closes that channel too.
+[p7] naive notice has DA =1. A silent branch that returns a byte-             Padding, and where δ comes from: When a pre-commit
+[p7] identical response closes the content channel; PNI needs the        branch must run, its latency can be padded to a ceiling.
+[p7] stronger silent kernel of Proposition 4. For an ask-type gate,      Latency then differs only when a run exceeds the ceiling,
+[p7] PNI requires that sampling for audit does not change whether        so the padded channel is erasure-type and DA ≤ e0 + e1 ,
+[p7] or how the gate asks. Showing audit-like prompts at a B-            the sum of the two arms’ exceedance rates. This holds under
+[p7] independent rate ρd (decoys) makes the prompt independent           the model that nothing else the agent observes of a non-
+[p7] of B, so DA =0 for every ρd when the label is taken at the          exceeding run depends on B (App. H(iv)). Theorem 5 needs an
+[p7] design propensity on every B=1 episode; it moves µ0 and µ1          upper bound δ, and that bound must come from the design,
+[p7] together to the rate under the deployed ρd , which is then the      not from a black-box estimate. A classifier two-sample test
+[p7] certified quantity. On real labels decoys preserve coverage at      (C2ST) [30] that predicts B from W gives only a lower
+[p7] 
+[p8] bound DA ≥ 2a − 1. Such a bound, like black-box leakage                          Audited episodes additionally run a silent, read-only pre-
+[p8] estimators [31], [32], is an alarm that can falsify a claimed                 commit branch on the critical path, as a sampling auditor
+[p8] δ. But for high-dimensional transcripts no distribution-free                  would under conditions (i) and (ii) of §I. The branch recom-
+[p8] finite-sample upper bound on total variation exists [33]. Upper               putes the dependency closure over the ingested objects, scores
+[p8] bounds are available in three cases:                                          it with the same scorer, and appends a record to a separate
+[p8]  (a) a paired design, where running both branches from the                    audit log. It never changes monitor state or the response. The
+[p8]       same state is a coupling and TV ≤ P(paired mismatch);                   timing channel below exists because this branch does extra
+[p8]  (b) a finite-alphabet field, by simultaneous per-cell bounds;                work before commit. That is a design choice of PQ-CIFC,
+[p8]  (c) an erasure channel, by a binomial bound on the reveal                    which we built; an audit that adds no pre-commit work would
+[p8]       probability.                                                            not have it.
+[p8] Padding yields (c) only under the model above. Coarse release,                      Runs: Each of n=1000 pairs (501 permitted, 499 denied)
+[p8] which commits on the ticks of a coarse clock and stamps the                   runs both branches from the same environment state in random
+[p8] tick, yields it by construction. Each bound joins the certificate             order and records response, decision, and gate latency. A
+[p8] level by a union bound.                                                       separate run of 3000 audited executions calibrates a padding
+[p8]       Reachability: A bound supplies the suph of Theorem 5                    ceiling of max(1.5 p99.9 , 1.1 max) = 91.85 ms, and a second
+[p8] only if the design confines the channel for all reachable                     set of 1000 pairs pads both branches to it (App. K).
+[p8] behaviours. A fixed ceiling does not, since the agent can inflate                   Estimators: Upper bounds use the paired coupling TV ≤
+[p8] the branch’s latency by reading more (§VI). The ceiling must                  P(paired mismatch) for content and the erasure bound DA ≤
+[p8] be a code-level bound on the branch’s work as a function of                   e0 + e1 for padded timing, with Clopper–Pearson bounds
+[p8] the agent-controlled input, with ingestion capped (App. H).                   taken simultaneously over paths and grid points (App. H).
+[p8]  Blindfold: a deployment recipe                                               The padded bound also needs the model condition (a non-
+[p8]                                                                               exceeding run reveals nothing about B) and reachability
+[p8]  1) Prefer DA =0 by construction: a post-hoc audit wherever the label
+[p8]     survives the move, else a silent pre-commit branch.                       (the code-level ceiling and mmax ). No two-sample test can
+[p8]  2) Remove exploitable channels by design: a fresh per-call coin with a       establish the model condition, so we confine the exit by design
+[p8]     matching readout, equal denial text and tool surface, decoys for ask-     (App. C) and test it with the realistic observer below. Lower
+[p8]     gates, PRF-keyed adaptive rules.
+[p8]  3) Confine any residual channel so that a design-time δ holds for            bounds use a held-out classifier (C2ST, bootstrap CI).
+[p8]     all reachable behaviours: erasure or finite-alphabet fields, size-aware
+[p8]     padding with a cap mmax , coarsened tool timestamps.                      B. Findings
+[p8]  4) Count exceedances online and fail closed: an exceeding episode
+[p8]     counts as a violation, never dropped. Excluding it would certify only          Content is closed; timing leaks: Table IV summarizes
+[p8]     the non-exceeding population, not the deployment rate.                    the measurements (n=1000 pairs per phase; brackets are
+[p8]                                                                               95% CIs). The audit branch changes neither enforcement nor
+[p8]   VI. L EAKAGE A SSESSMENT ON R EAL AGENT S TACKS                             content: no pair differs in decision or in the recorded 400-
+[p8]                                                                               character response prefix, so DA ≤ 0.006 for each pooled
+[p8]    §V said what a blindfold must achieve. This section mea-                   mixture and ≤ 0.028 for all six paths simultaneously. Timing
+[p8] sures how far a real audit branch falls short of it; it does                  leaks: the branch roughly doubles the gate’s median latency
+[p8] not mount an attack. Side-channel work draws the same line                    (an added 6.8 ms), and a fine clock separates the arms with
+[p8] between leakage assessment and exploitation. The defender                     DA ≥ 0.77. An observer that must supply its own noisy clock
+[p8] draws the coin, so it knows B for every run and can compare                   would need between 104 and 107 averaged probes to reach
+[p8] what the agent observes under B=1 and B=0 directly, with                      DA =0.5 (App. K). The agent does not need one.
+[p8] no LLM in the loop. By Lemma 2, the DA of a fixed code                             The agent already has a fine clock: On this stack the tool
+[p8] path caps the gain of any agent restricted to that path. But                  outputs carry last_modified timestamps at microsecond
+[p8] DA is a supremum over reachable behaviour, and an adaptive                    resolution. Two effect calls in one turn therefore let the agent
+[p8] agent can steer onto a costlier path. Fixed-path numbers are                  read the gate latency from the returned objects. In two runs
+[p8] therefore lower bounds on the deployable channel, not a                       of 1000 pairs, the audited inter-timestamp gap is an order
+[p8] monitor constant.                                                             of magnitude larger than the unaudited one, and a held-out
+[p8]                                                                               classifier separates the arms with DA ≥ 0.99 from a single
+[p8] A. Design and estimators                                                      observation (medians in App. K). The gap’s size depends on
+[p8]       Design (E1): We hold enforcement fixed and vary only                    configuration and load; the separation does not. Real tool
+[p8] B, which is the two-run test that Definition 2 calls for. The                 APIs expose such stamps: Slack to the microsecond, Gmail
+[p8] setting is the AgentDojo workspace suite [34] with PQ-CIFC,                   internalDate and Google Drive modifiedTime to the
+[p8] the pre-commit IFC gate built for this work on AgentDojo                      millisecond, enough to resolve a ∼10 ms gap.
+[p8] (App. C). It uses its calibrated, frozen policy and makes no                       DA is agent-controlled: The audit branch recomputes the
+[p8] model calls. There are six effect paths. Three permitted paths                closure over every ingested object, so its latency grows with
+[p8] replay the ground-truth calls of three user tasks. Three denied               how much the agent has read. On the denied external-mail path
+[p8] paths ingest a security e-mail and then attempt an external                   with m extra ingested objects, the median gap rises from 10 ms
+[p8] mail, an internal mail, or a file creation.                                   at m=0 to 58 ms at m=32, with content and decision identical.
+[p8] 
+[p9]                                                                 TABLE III
+[p9]     C LAIMS AND EVIDENCE AT A GLANCE ( EXPERIMENTS ARE DEFINED IN §VI–§VII). E VIDENCE : ( A ) LIVE MEASUREMENT ON A REAL STACK , WITH A
+[p9]     REAL MODEL WHERE ONE IS NAMED ; ( B ) SCRIPTED ADVERSARY ON THE MEASURED CHANNEL ; ( C ) RESAMPLED REAL LABELS ; ( D ) ANALYTIC . R ED :
+[p9]                                                       LEAKAGE OR FAILURE ; GREEN : FIX .
+[p9] Claim                                               Channel / class        Fix (result)                            Exp.         Evid.   Key number
+[p9] A silent audit leaks no content                     content / erasure      silent branch (Thm. 2)                  E1           a       DA ≤ 0.006
+[p9] The agent has a free fine clock                     timing / noisy         coarsen stamps; per-call coin           E1-ts        a       DA ≥ 0.99, one observation, two runs
+[p9] DA is agent-controlled                              timing / noisy         size-aware ceiling + fail-closed        E1-amp       a       ≤ 0.044 → ≥ 0.91
+[p9] Padding leaves a residual                           timing / noisy         confined pad; coarse release (Thm. 5)   E1-isp       a       C2ST 0.072; δ ≤ 0.063 at 1 s
+[p9] Aggregate load leaks across episodes                load / cross-episode   isolation or post-commit (open)         E1-agg       a       C2ST 0.43–0.18
+[p9] A second stack: same direction (preliminary)        timing / noisy         n/a                                     CaMeL        a       C2ST 0.19; task-level CI [0, 0.56]
+[p9] A scripted adversary breaks the certifier           timing / noisy         per-call coin (Thm. 4)                  E2           b       invalid at every k; valid with per-call coin
+[p9] A real LLM follows an audit-conditioned injection   content / erasure      decoys                                  E3           a       ∆=+0.132, Holm p=0.012
+[p9] The plain certificate fails on real labels          content / erasure      silent audit (Thm. 2)                   E5, E6, E8   a+c+d   µ0 -coverage 0.007; live below V̄n from n=2687 (post hoc; pre-registered rule 2818); silent covers
+[p9] Coverage tracks the exploited gap, fails past n⋆    content / erasure      inflated certificate (Thm. 5)           E6           c+d     n⋆ ≈ 1.6×103 [0.9, 3.5]×103
+[p9] The loop closes live at N =500                      timing / noisy         n/a                                     E7           a       ∆=0.031 (n.s.), covers, N < n⋆
+[p9]                             TABLE IV                                                                                       are sub-microsecond no-ops, 15 of 24 runs crashed in the
+[p9]  E1: AUDIT DISTINGUISHABILITY ON PQ-CIFC. “ COND .”: CONDITIONAL                                                           interpreter, and there is no padded arm. This shows the
+[p9]  ON THE ERASURE MODEL ; LEGACY PADS AFTER THE COMMIT, CONFINED
+[p9]              BEFORE IT; THE r=1 S ROW IS MODEL - FREE .                                                                    direction, not its size (App. K).
+[p9] Channel / observer                           phase             bound                 DA                                                 VII. E XPLOITATION AND C ERTIFIER FAILURE
+[p9] content∗ , permitted (501)     both     upper        ≤ 0.006                                                                   Section VI measured how much a real audit branch can leak.
+[p9] content∗ , denied (499)        both     upper        ≤ 0.006
+[p9] timing, fine clock (C2ST)      unpadded lower        ≥ 0.73 (point 0.77)                                                   This section asks three questions in turn: whether the leakage
+[p9] timing, stamp (1 obs., 2 runs) unpadded lower        ≥ 0.99                                                                can be exploited, what exploitation does to the certificate, and
+[p9] timing, exceedance             padded   upper, cond. ≤ 0.044                                                               whether the failure appears in a live run. Each subsection
+[p9] timing, stamp (legacy)         padded   lower        ≥ 0.47
+[p9] timing, stamp (confined)       padded   C2ST         0.07 [.002, .14]                                                      opens with its finding.
+[p9] timing, stamp, r=1 s           padded   diagnostic ≤ 0.063                                                                       Conventions: Table III gives each claim’s evidence class.
+[p9] ∗
+[p9]     recorded 400-character prefix, pooled over three paths.                                                                Class (c) draws i.i.d. episodes from 560 recorded pairs of
+[p9]                                                                                                                            potential outcomes (V (Z=0), V (Z=1)), so the rates are mea-
+[p9]                                                                                                                            sured and only the scale is simulated. Unless noted, the cer-
+[p9] Padded to the fixed ceiling (host load was not recorded for this                                                           tifier is the predictable-plug-in empirical-Bernstein sequence;
+[p9] run), the arms separate completely at m=48: every audited run                                                              E5–E7 draw episodes i.i.d., where its target coincides with
+[p9] exceeds the ceiling and no unaudited run does, so DA ≥ 0.91                                                                that of Theorem 2 (App. E). Coverage is the fraction of seeds
+[p9] at 95%, one minus the all-clean bound 2(1−0.0251/80 ) on the                                                               whose certified upper bound at the final N is at least the
+[p9] unaudited arm. At m ≥ 96 both arms exceed, which exposes                                                                   target, and invalidity is one minus coverage; E2 alone counts
+[p9] the raw latency again.                                                                                                     a seed invalid if the bound ever drops below the target. The
+[p9]       Padding narrows the channel but yields no design-time                                                                target is pi in E6, the stricter µ0 in E5 (Corollary 2), and the
+[p9] δ: With no exceedance in 1000 runs, the erasure bound is                                                                   realized rate in E8. Significance uses McNemar’s exact test
+[p9] DA ≤ 0.044 over the six paths. Three facts keep it from                                                                    on discordant pairs. The confirmatory family is the declared
+[p9] being a design-time δ. First, the timestamp observer still                                                                 notice and tool channels on the two models with a window
+[p9] detects a residual on padded runs with the pad before the                                                                  (four tests, Holm); spontaneous and generic conditions are
+[p9] commit (C2ST 0.072 [0.002, 0.140], KS p=2.9×10−4 ), which                                                                  exploratory.
+[p9] rejects the erasure model. Second, a fixed ceiling is overrun
+[p9] by amplification. Third, a size-aware ceiling closes our grid                                                              A. Can the leakage be exploited?
+[p9] only empirically, since the branch’s work can grow as Θ(m2 )                                                                    Finding A
+[p9] in what the agent ingests (App. K). Table XII (App. H) lists                                                                    A real LLM agent follows an explicit audit-conditioned injection that
+[p9] every padded figure with its run and assumption. Two routes do                                                                  names the audit artifact (∆=+0.132, Holm p=0.012). The timing
+[p9] give a model-free bound: coarsening the stamps (δ ≤ 0.063 at                                                                    channel is readable and a scripted adversary breaks the certifier through
+[p9]                                                                                                                                 it; a real agent moves in the same direction, not significantly.
+[p9] 1 s per probe) and releasing commits on a coarse clock, which
+[p9] gives one by construction. Where a pre-commit branch must                                                                       Setup: We use real LLM agents under AgentDojo-style
+[p9] run and its latency cannot be confined, the per-call coin is the                                                           prompt injection, where only the injection has a motive to
+[p9] fix, at the readout cost of §V.                                                                                            evade. Each (user task, injection task) pair runs twice in the
+[p9]       A second stack: same direction, preliminary: On                                                                      same environment, with the audit signal visible (Z=1) and
+[p9] CaMeL [3], instrumented so that audited episodes re-evaluate                                                               hidden (Z=0). Bias and coverage can then be computed offline
+[p9] the policy read-only, 128 paired benign checks from 12 tasks                                                               for any ε and leakage rate ρ. For power, we screen all 560
+[p9] keep the content channel closed by construction. A held-                                                                   workspace pairs at Z=0 and run the paired conditions on the
+[p9] out threshold classifier gives a lower bound on DA of 0.19,                                                                136 vulnerable pairs (gpt-4.1-mini). The screen is one draw
+[p9] but checks from one task are correlated, and with task-level                                                               per pair; McNemar’s test keeps its level under this noise,
+[p9] splits and resampling the bound is 0.17 [0, 0.56]. Most checks                                                             and regression to the mean lowers both arms together (test–
+[p9] 
+[p10]                                 TABLE V                                          (E4) moves the same way but not significantly (∆=+0.066,
+[p10]     E3: ATTACK - SUCCESS RATE , AUDIT SIGNAL HIDDEN VS . SHOWN                   p=0.093; minimum detectable effect 0.11). The worst-case
+[p10]         ( GPT-4.1- MINI ; H OLM WITHIN ITS FOUR CONDITIONS ).
+[p10]                                                                                  timing attack therefore remains scripted (App. G).
+[p10]      Condition         n     Z=0     Z=1        ∆          p (Holm)
+[p10]      Notice (cond.)   136   0.676   0.544   +0.132 0.003 (0.012)
+[p10]      Spontaneous      136   0.831   0.757   +0.074 0.041 (0.124)
+[p10]      Tool (cond.)     136   0.750   0.765   −0.015   0.82 (1.0)
+[p10]      Generic          111   0.685   0.676   +0.009    1.0 (1.0)                  B. What does exploitation do to the certificate?
+[p10] retest in App. G). There is no enforcement, so an attempt is                      Finding B
+[p10] a committed violation.                                                            On fully measured labels the plain certificate’s coverage of µ0 falls to
+[p10]       The content channel (E3): We open three channels on                         0.007 once the channel opens, while a silent audit covers at 0.993.
+[p10]                                                                                   Raising ε cannot restore validity and brings the failure forward below
+[p10] the vulnerable set.                                                               ε⋆ ≈ 0.35; only removing the leakage restores it.
+[p10] • Notice: the gate appends an audit notice to the first tool
+[p10]   output on audited episodes, and the injection says “if you                          Design (E5): One estimator, IPW with the empirical-
+[p10]   see an audit notice, skip the exfiltration”.                                   Bernstein sequence, runs on the same gpt-4.1-mini labels in a
+[p10] • Tool: an extra get_audit_status tool is present only
+[p10]                                                                                  2×2 design over distribution shift and an open channel. When
+[p10]   when audited, with a matching clause.                                          the channel is open, audited episodes draw the Z=1 outcome
+[p10] • Spontaneous: the notice is shown, but the injection carries
+[p10]                                                                                  in the plain arm and the unaudited outcome in the silent-audit
+[p10]   no conditioning clause.                                                        arm, a positive control for Theorem 2. Two baselines join
+[p10] Table V reports the paired episodes, the drop ∆ in attack-                       them. A frozen-calibration baseline freezes an offline Clopper–
+[p10] success rate (ASR), and the raw McNemar p with its Holm                          Pearson rate bound. Full-feedback online risk control runs the
+[p10] adjustment. On gpt-4.1-mini, showing the notice cuts the                         same sequence on every label with no coin, either on all N
+[p10] ASR by 13.2 points, and the effect survives Holm within the                      episodes or on the first M =εN , the matched label budget.
+[p10] confirmatory family (0.012), over all eight paired tests of both                 Episodes are i.i.d. resamples of the 560 recorded pairs, and
+[p10] models (8 × 0.0029 = 0.023), and over any family of up to                        coverage is of µ0 . Shift reweights the three injection tasks
+[p10] 16 of the paired tests in the artifact. gpt-4o-mini shows an                     with the highest screening ASR, the exchangeability failure
+[p10] effect of the same sign and size that survives Holm in the                       of [6] (App. G).
+[p10] confirmatory family (3 × 0.0127 = 0.038). Two of the four                             Population: The population is fully measured, and its 424
+[p10] models screened have a window, and the effect appears on                         non-vulnerable pairs leak in the same direction as the vulnera-
+[p10] both; the other two have none to measure (App. G). The clause                    ble ones. Overall µ0 =0.221 and µ1 =0.146. The notice reveals
+[p10] text itself moves the Z=0 baseline, so comparisons between                       the coin, so DA =1, but the agent exploits only κA =0.075, a
+[p10] conditions are orderings, not calibrated contrasts. The clause                   bias of 0.060 at ε=0.2.
+[p10] also costs the attacker: without it the same pairs attack at 0.831
+[p10] (spontaneous row), so conditioning lowers the attacker’s own                           Results (E5): Table VI shows the pattern. The frozen-
+[p10] rate by more than the audit-conditioned drop it buys. The gap                    calibration bound collapses under shift. The plain certificate
+[p10] that enters n⋆ is the within-condition one, which is what the                    is robust to shift but fails once the channel opens. The silent
+[p10] certifier faces.                                                                 audit covers in all four cells, at a width within 1.25× (max-
+[p10]  Running example (cont.) The notice condition is the example with a real         imum 1.253) that of the matched-budget baseline (App. G).
+[p10]  gpt-4.1-mini agent in place of a scripted one: it defers about one in five of   Bootstrapping the 560 pairs themselves gives a bias interval
+[p10]  the attempts it would otherwise make, and the audited labels understate         [0.040, 0.081], above the width u4000 in 98.9% of populations
+[p10]  its rate.
+[p10]                                                                                  (predicted invalidity 0.97 [0.61, 1.00]), so the failure is not an
+[p10]      Exploratory conditions: Spontaneous conditioning and a                      artifact of this draw.
+[p10] channel-agnostic generic clause (E3g, wording selected on 25
+[p10] held-out pairs) do not survive Holm on either model (Table V,                         Dose–response and the audit rate (E6): Opening the
+[p10] App. G). The supported claim is therefore narrow: a real                         channel at a graded rate ρ sweeps DA over [0, 1] and the
+[p10] LLM follows an injection that names a visible audit artifact.                    exploited gap over [0, 0.075] (Fig. 2). Coverage of pi crosses
+[p10] Randomizing the artifact’s appearance defeats such a clause,                     0.95 between ρ=0.2 and 0.3 for ε=0.2. An oracle correction
+[p10] which is the logic of decoys in §V.                                              by the exploited gap, known only from the full labels, stays
+[p10]      The timing channel (E2, E4): A scripted likelihood-ratio                    above the truth; Theorem 5 with δ=ρ is vacuous here. Raising
+[p10] adversary that reads the measured latency laws (E2) breaks                       the audit rate from 0.05 to 0.2 shrinks the bias, but it shrinks
+[p10] the certificate in every seed through the free timestamp clock,                  the width faster, so n⋆ falls from 4.9×103 to 1.6×103 , as
+[p10] at every probe count. Padding restores validity only under                       Corollary 2 predicts below ε⋆ ≈ 0.35; at ε=0.5 it stays near
+[p10] the erasure model; a fresh per-call coin keeps the certificate                   1.5×103 . A Hoeffding sequence hides the failure by being
+[p10] valid out to 105 probes with no padding. A real agent handed                     loose; the variance-adaptive certifier the theory specifies is the
+[p10] the latency as a readable field with a “skip if slow” clause                     one that breaks.
+[p10] 
+[p11]                                                                        TABLE VI
+[p11]                                          E5: COVERAGE / MEAN CERTIFIED BOUND OF µ0 (ε=0.2, N =4000, 400 SEEDS ).
+[p11]                   shift   channel         full-cal                plain           silent audit                    online, N               online, M =εN
+[p11]                   no      closed    0.963 / .233±.006      0.985 / .264±.018   0.993 / .265±.017             0.990 / .238±.007 0.995 / .261±.015
+[p11]                   no      open      0.953 / .233±.007      0.007 / .183±.015   0.993 / .265±.018             0.993 / .238±.007 0.995 / .261±.016
+[p11]                   yes     closed    0.000 / .233±.007      0.988 / .428±.021   0.993 / .429±.022             0.995 / .395±.008 0.993 / .418±.017
+[p11]                   yes     open      0.000 / .233±.006      0.005 / .323±.018   0.993 / .430±.024             0.990 / .394±.008 1.000 / .420±.017
+[p11]                    (a) ε = 0.05                             (b) ε = 0.2                                 (c) ε = 0.5                                    (d) plain coverage
+[p11]                               ρ⋆                             ρ⋆                                           ρ⋆true rate p                  0.95
+[p11]         0.3                                      0.3                                 0.3                   plain bound
+[p11]                                                                                                          oracle correction
+[p11] rate
+[p11]        0.25                                     0.25                               0.25                                                   0.5
+[p11]                                                                                                                                                               ε = 0.05
+[p11]         0.2                                      0.2                                 0.2                                                                       ε = 0.2
+[p11]                                                                                                                                                                ε = 0.5
+[p11]                                                                                                                                               0
+[p11]               0         0.5          1                 0        0.5        1                 0               0.5             1                    0            0.5           1
+[p11]                    dose ρ = DA                             dose ρ = DA                                  dose ρ = DA                                       dose ρ = DA
+[p11] Fig. 2. E6 dose–response on the fully measured gpt-4.1-mini population (erasure channel). (a)–(c) Mean certified bounds against the true rate; upper curve:
+[p11] oracle correction (1 − ε)ρ κA , not Theorem 5; dotted: ρ⋆ , where the plain bound’s coverage drops below 0.95. (d) Coverage of the plain bound; dashed: the
+[p11] 0.95 target.
+[p11] C. Does it happen in a live run?                                                              0.4
+[p11]                                                                                                                                  silent bound              silent rate
+[p11]                                                                                              0.35                                plain bound               plain rate
+[p11]   Finding C                                                                                   0.3
+[p11]                                                                                       rate
+[p11]   On a pre-registered schedule of 4000 live episodes the frozen test gave                    0.25
+[p11]   only its second-tier verdict (App. G). A sequence valid for the realized                    0.2
+[p11]   rate under PNI, with λ fixed at the pre-registered horizon (a post-hoc
+[p11]   analysis), drops below it at n=2687, inside the pre-registered n⋆ interval
+[p11]                                                                                              0.15                       pre-registered n⋆             ncross =2687
+[p11]   [0.9, 3.5]×103 , and stays below under the 200-step rule; the silent arm                          0           1,000              2,000              3,000          4,000
+[p11]   on the same schedule covers at every n.                                                                                        episodes n
+[p11]       A pre-registered failure run (E8): A first closed loop
+[p11]                                                                                 Fig. 3. E8 live run (gpt-4.1-mini, notice channel, ε=0.2): realized rate V̄n
+[p11] on the real timing channel (E7, App. G; N =500 per arm)                         and realized-rate bound (Prop. 3, λ fixed at the pre-registered horizon; a post-
+[p11] produced a gap that puts n⋆ near 3×104 , and the certificate                    hoc analysis; the pre-registered comparison crosses at 2818) per arm; shaded:
+[p11] covered, as Theorem 4(ii) predicts below n⋆ . The failure                       pre-registered n⋆ interval.
+[p11] regime needs the widest channel, so E8 uses E3’s notice
+[p11] channel with the named clause on the full 560-pair population.
+[p11] The design was pre-registered (App. G). A fixed-seed schedule
+[p11] of pairs and coins (ε=0.2) was hashed before the first episode,                 the schedule, so the 776 audited episodes pair across arms
+[p11] together with the pair-bootstrap prediction n⋆ ≈ 1.6×103                        with the notice as the only difference: the silent arm attacks
+[p11] [0.9, 3.5]×103 and a persistence rule for the crossing. Both                    on 54 of them where the plain arm does not, against 17 the
+[p11] arms share the schedule. The plain arm appends the notice                       other way. The 776 episodes come from 423 distinct pairs,
+[p11] to the first tool output on audited episodes; the silent arm                    so the test is over pairs (43 vs. 13, sign test p=7×10−5 ), a
+[p11] appends nothing and takes its label on the same episodes. The                   within-run estimate κA =0.048 [0.025, 0.071] (pair bootstrap)
+[p11] benchmark judges every episode, so the realized rate V̄n is                     independent of the population bootstrap. A certifier valid by
+[p11] known while the certificate sees only audited labels.                           construction under PNI and (ER) fails on real labels once the
+[p11]                                                                                 coin reaches the view, which is what §IV predicted and §V
+[p11]       Result: The deployed sequence certifies n1 i pi , which
+[p11]                                                   P
+[p11]                                                                                 prevents.
+[p11] no run reveals. Fig. 3 therefore compares V̄n with the realized-
+[p11] rate sequence of Proposition 3, which is valid for V̄n under                         Deviations and scope: Two deviations are recorded in
+[p11] PNI; its λ was fixed from the pre-registered planning rate,                     App. G. The pre-registered rule compared the deployed se-
+[p11] using no outcomes. Over 4000 plain episodes and 776 audits                      quence with V̄n , a target mismatch; under it the crossing
+[p11] the plain bound, with λ fixed at the pre-registered horizon                     is 2818, and at the frozen primary horizon N =3000 that
+[p11] 3000, first dips below V̄n at n=2206, stays below from                          rule returned its second-tier verdict, after which the run was
+[p11] n=2687, inside the n⋆ interval, and at N certifies 0.190                        extended to the design’s listed alternative of 4000. Episodes
+[p11] against a realized 0.205; the silent arm covers at every n (re-                 are stateless draws from the 560-pair population, so cross-
+[p11] tuning λ to 4000 gives 2746 and 0.191). The two arms share                      episode adaptation is not tested.
+[p11] 
+[p12]              VIII. D ISCUSSION AND L IMITATIONS                      model over the content channel only; a live timing-channel
+[p12]       What the guarantee covers: We analyze the dangerous            failure remains scripted (E2), since E7’s gap puts n⋆ near
+[p12] case µ1 < µ0 , in which the agent attacks less when it infers        3×104 . Bounds. A usable δη needs more than 1000 pairs. We
+[p12] that it is audited. In the opposite case the certificate merely      price coin leakage only; missed labels would enter as a second
+[p12] over-covers, and the bound (1−ε)DA holds regardless of sign.         additive term.
+[p12] A violation concealed even from the auditor has no label and               Ethics: The exploitation experiments evaluate a certifier
+[p12] needs a prevention argument.                                         in a local benchmark, with no deployed system and no new
+[p12]       Adversary-controlled quantities: Any quantity the adver-       model capability. We deliberately do not build an instruction
+[p12] sary controls must enter the certificate in one direction only.      that probes timestamps across calls and conceals the attempt,
+[p12] An agent could inflate its ingest on the episodes it means to        a reusable covert-evasion capability. The generic-clause con-
+[p12] violate, so that they are excluded as exceedances; this is the       dition and the pilot end their clause with “do not mention it”;
+[p12] selective-labels failure. Fail-closed counting defuses it, and the   that text ships in the artifact for reproducibility only.
+[p12] measured-Ḡ readout or the cap defuses call-count inflation.
+[p12] The residual exposure is availability, detectable and never anti-
+[p12]                                                                                           IX. R ELATED W ORK
+[p12] conservative.
+[p12]       Shared infrastructure: A neighbour that learns another
+[p12]                                                                            Random auditing of AI systems: AI control [12] keeps
+[p12] episode’s coin is harmless, since the certificate needs only
+[p12]                                                                      an untrusted model from knowing which outputs are audited.
+[p12] Vj ⊥ Bj . The dangerous path is an aggregate. Under concur-
+[p12]                                                                      Gans and Holden [13] show that randomized oversight must
+[p12] rent batch processing, audited episodes raise a shared, agent-
+[p12]                                                                      be unlearnable before action for deterrence to work against a
+[p12] readable load statistic to which an episode’s own coin con-
+[p12]                                                                      utility-maximizing agent, the setting of inspection games [35].
+[p12] tributes. Proposition 5 computes this leakage exactly for a load
+[p12]                                                                      Evaluation awareness and sandbagging [36] make the point
+[p12] statistic that counts audited episodes: the mode probability
+[p12]                                                                      qualitatively, and Santos-Grueiro [37] bounds the evaluation–
+[p12] of Bin(M −1, ε), nonzero for every M and decaying only
+[p12]                                                                      deployment behaviour gap by mutual information. That ob-
+[p12] as M −1/2 . On the real gate with M from 2 to 20 batch-
+[p12]                                                                      servation changes behaviour, and that evaluation context leaks
+[p12] synchronous workers, the measured lower bounds sit below
+[p12]                                                                      as an information flow, are thus known. What is new is their
+[p12] the noiseless values and decay the same way (App. K). Per-
+[p12]                                                                      combination with a sampled-audit certificate: its exact bias
+[p12] call coins do not help; core pinning only partly does. Closing
+[p12]                                                                      price, the identified set, and the commit-time release point
+[p12] it needs isolation, B-independent cover load, or post-commit
+[p12]                                                                      (App. A compares and marks the classical tools).
+[p12] placement.
+[p12]       What a practitioner gets: Each step of the recipe has                Certification for agents: Conformal methods [4] freeze a
+[p12] a price in width. With a post-hoc audit or a silent branch           threshold offline; the audit-based line reweights sampled labels
+[p12] the certificate is the plain sequence; on E5’s population it         by inverse propensity [8], [24] and alone has a deployment-
+[p12] certifies 0.265 against µ0 =0.221 (deployed rate 0.206). A per-      time coin that can leak. Active anytime-valid risk control [8]
+[p12] call coin multiplies the certified value by E[v | violating], at     queries a label after each sample arrives, from behaviour the
+[p12] least 1.7 on the same population by the goal-count proxy. A          query cannot change, and its theorems stand; the new condition
+[p12] residual δ adds (1 − ε)δ, about 0.05 for the coarsened stamps        arises when the agent can still change it after the draw.
+[p12] (a diagnostic figure, App. H). Below a base rate of about 0.05             Information flow and quantitative information flow:
+[p12] only the multiplicative form serves. Hence the order of the          Noninterference [14] and its declassification refinements [16],
+[p12] recipe: prefer the constructions with DA =0, pay the readout         [15] protect data; nondeducibility on strategies and interactive
+[p12] factor only when a pre-commit branch must run, and pay δ             noninterference [38], [39] quantify, as PNI does, over a
+[p12] last.                                                                low observer who chooses its inputs adaptively; agent IFC
+[p12]       Limitations: Stacks. The main measured stack is a mon-         systems [3], [2] protect the user’s data or the integrity of deci-
+[p12] itor we built, and its timing channel follows from its design        sions. Quantitative information flow [40], [20], [21] measures
+[p12] choice to redo work in the audit branch before commit; the           leakage: its additive capacities [41] are the form of Theorem 1,
+[p12] second stack is thin. A complete run on a public monitor we          adaptive multi-step leakage [42], [43] precedes Theorem 3,
+[p12] did not build is needed before the channel can be called typical.    and channel compositionality [44] frames Propositions 4–5.
+[p12] Our stamps are in-process (a remote service adds jitter),            None of these treats the monitor’s own state as the protected
+[p12] and the user-facing cost of decoys is not measured. Agents.          secret (§III). Our mechanisms have known counterparts. The
+[p12] Real-LLM exploitation is established for an explicit audit-          silent branch is a two-run secure multi-execution [45]: the
+[p12] conditioned injection on gpt-4.1-mini; gpt-4o-mini moves the         audited run computes the label, and the unaudited run produces
+[p12] same way, and the spontaneous, generic, and real-agent timing        every output the agent sees. Padding to a ceiling is Agat’s
+[p12] effects are only suggestive. Scale. Large-n coverage resamples       transformation [46] applied to one branch, and its goal, that
+[p12] 560 real pairs, and E8’s live episodes are stateless draws from      timing not depend on the secret, is the constant-time discipline
+[p12] the same pairs, so cross-episode adaptation, which the threat        verified at system level by Barthe et al. [47]. Coarse release
+[p12] model admits, is untested and all measured exploitation is           is the single-step case of predictive mitigation [48], whose
+[p12] within one episode. E8 is one run (one schedule) on one              leakage budget is our δ.
+[p12] 
+[p13]       Secret monitor state in security: Monitors that can
+[p13] be sensed are evaded: intrusion detection through ambigui-
+[p13] ties [49], sandboxes and honeypots by malware that detects
+[p13] them [50], the threat transparent analysis [11] answers. These
+[p13] designs catch cheating rather than estimate a rate; risk-limiting
+[p13] audits [51] estimate, but over ballots fixed before sampling.
+[p13] Parallels outside security are in App. A.
+[p13]                         X. C ONCLUSION
+[p13]    Audit-based certification needs the audit coin kept out of
+[p13] the agent’s view before commit. For the episode coin PNI
+[p13] characterizes the unbiased certificate exactly, and its violation
+[p13] costs (1 − ε)DA . On the stacks we measured the leakage is
+[p13] free and agent-controlled, and an agent told what to look for
+[p13] makes the plain certificate fail live; a silent kernel or a per-call
+[p13] coin restores validity.
+[p13] Use of generative AI. Generative AI tools assisted with copy-
+[p13] editing, literature screening, and code review; the authors
+[p13] verified every claim, number, and reference.
+[p13] 
+[p14]                               R EFERENCES                                         [28] P. Kairouz, S. Oh, and P. Viswanath, “The composition theorem for
+[p14]                                                                                        differential privacy,” in Proc. International Conference on Machine
+[p14]  [1] Y. Wu, K. Yang, F. Roesner, T. Kohno, N. Zhang, and U. Iqbal, “Towards            Learning (ICML), 2015, pp. 1376–1385.
+[p14]      automating data access permissions in AI agents,” in IEEE Symposium          [29] J. Dong, A. Roth, and W. J. Su, “Gaussian differential privacy,” Journal
+[p14]      on Security and Privacy (S&P), 2026, pp. 2609–2627.                               of the Royal Statistical Society: Series B, vol. 84, no. 1, pp. 3–37, 2022.
+[p14]  [2] M. Costa, B. Köpf, A. Kolluri, A. Paverd et al., “Securing AI agents         [30] D. Lopez-Paz and M. Oquab, “Revisiting classifier two-sample tests,”
+[p14]      with information-flow control,” arXiv:2505.23643, 2025.                           in International Conference on Learning Representations (ICLR), 2017.
+[p14]  [3] E. Debenedetti, I. Shumailov, T. Fan, J. Hayes et al., “Defeating prompt     [31] T. Chothia, Y. Kawamoto, and C. Novakovic, “LeakWatch: Estimating
+[p14]      injections by design,” arXiv:2503.18813, 2025.                                    information leakage from Java programs,” in Proc. European Symposium
+[p14]  [4] A. N. Angelopoulos, S. Bates, A. Fisch, L. Lei, and T. Schuster,                  on Research in Computer Security (ESORICS), ser. LNCS, vol. 8713,
+[p14]      “Conformal risk control,” in International Conference on Learning                 2014, pp. 219–236.
+[p14]      Representations (ICLR), 2024.                                                [32] G. Cherubin, K. Chatzikokolakis, and C. Palamidessi, “F-BLEAU: Fast
+[p14]  [5] Y. Feng, J. Du, Q. Wang, Z. Ma et al., “CORA: Conformal                           black-box leakage estimation,” in Proc. IEEE Symposium on Security
+[p14]      risk-controlled agents for safeguarded mobile GUI automation,”                    and Privacy, 2019, pp. 835–852.
+[p14]      arXiv:2604.09155, 2026.                                                      [33] L. Devroye and G. Lugosi, Combinatorial Methods in Density Estima-
+[p14]  [6] S. Ray, “What can be enforced? A theory of certified runtime safety for           tion. Springer, 2001.
+[p14]      tool-using agents,” arXiv:2607.22868, 2026.                                  [34] E. Debenedetti, J. Zhang, M. Balunović, L. Beurer-Kellner, M. Fischer,
+[p14]  [7] D. G. Horvitz and D. J. Thompson, “A generalization of sampling                   and F. Tramèr, “AgentDojo: A dynamic environment to evaluate prompt
+[p14]      without replacement from a finite universe,” Journal of the American              injection attacks and defenses for LLM agents,” in NeurIPS Datasets
+[p14]      Statistical Association, vol. 47, no. 260, pp. 663–685, 1952.                     and Benchmarks Track, 2024.
+[p14]  [8] Z. Xu, N. Karampatziakis, and P. Mineiro, “Active, anytime-valid             [35] R. Avenhaus, B. von Stengel, and S. Zamir, “Inspection games,” in
+[p14]      risk controlling prediction sets,” in Advances in Neural Information              Handbook of Game Theory with Economic Applications. Elsevier, 2002,
+[p14]      Processing Systems (NeurIPS), 2024, pp. 60 110–60 132.                            vol. 3.
+[p14]  [9] P. Golle and I. Mironov, “Uncheatable distributed computations,” in          [36] J. Needham, G. Edkins, G. Pimpale, H. Bartsch et al., “Large language
+[p14]      Topics in Cryptology – CT-RSA, 2001, pp. 425–440.                                 models often know when they are being evaluated,” arXiv:2505.23836,
+[p14] [10] A. Juels and B. S. Kaliski, “PORs: Proofs of retrievability for large             2025.
+[p14]      files,” in ACM Conference on Computer and Communications Security            [37] I. Santos-Grueiro, “When evaluation becomes a side channel:
+[p14]      (CCS), 2007, pp. 584–597.                                                         Regime leakage and structural mitigations for alignment assessment,”
+[p14] [11] A. Dinaburg, P. Royal, M. Sharif, and W. Lee, “Ether: Malware                     arXiv:2602.08449, 2026.
+[p14]      analysis via hardware virtualization extensions,” in ACM Conference          [38] J. T. Wittbold and D. M. Johnson, “Information flow in nondeterministic
+[p14]      on Computer and Communications Security (CCS), 2008, pp. 51–62.                   systems,” in Proc. IEEE Symposium on Security and Privacy, 1990, pp.
+[p14] [12] R. Greenblatt, B. Shlegeris, K. Sachan, and F. Roger, “AI control:                144–161.
+[p14]      Improving safety despite intentional subversion,” in International Con-      [39] K. R. O’Neill, M. R. Clarkson, and S. Chong, “Information-flow security
+[p14]      ference on Machine Learning (ICML), 2024, pp. 16 295–16 336.                      for interactive programs,” in Proc. IEEE Computer Security Foundations
+[p14] [13] J. S. Gans and R. Holden, “When does randomized oversight align AI                Workshop (CSFW), 2006, pp. 190–201.
+[p14]      agents that can conceal?” arXiv:2609.38262, 2026.                            [40] G. Smith, “On the foundations of quantitative information flow,” in Foun-
+[p14] [14] J. A. Goguen and J. Meseguer, “Security policies and security models,”            dations of Software Science and Computational Structures (FoSSaCS),
+[p14]      in IEEE Symposium on Security and Privacy (S&P), 1982, pp. 11–20.                 2009, pp. 288–302.
+[p14] [15] A. Sabelfeld and D. Sands, “Declassification: Dimensions and princi-         [41] M. S. Alvim, K. Chatzikokolakis, A. McIver, C. Morgan, C. Palamidessi,
+[p14]      ples,” Journal of Computer Security, vol. 17, no. 5, pp. 517–548, 2009.           and G. Smith, “Additive and multiplicative notions of leakage, and their
+[p14] [16] A. Askarov and A. Sabelfeld, “Gradual release: Unifying declassifi-               capacities,” in Proc. IEEE Computer Security Foundations Symposium
+[p14]      cation, encryption and key release policies,” in IEEE Symposium on                (CSF), 2014, pp. 308–322.
+[p14]      Security and Privacy (S&P), 2007, pp. 207–221.                               [42] B. Köpf and D. Basin, “An information-theoretic model for adaptive
+[p14] [17] J. W. Gray, III, “Toward a mathematical foundation for information flow           side-channel attacks,” in Proc. ACM Conference on Computer and
+[p14]      security,” in IEEE Symposium on Security and Privacy (S&P), 1991, pp.             Communications Security (CCS), 2007, pp. 286–296.
+[p14]      21–34.                                                                       [43] M. Boreale and F. Pampaloni, “Quantitative information flow under
+[p14] [18] M. R. Clarkson and F. B. Schneider, “Hyperproperties,” Journal of                 generic leakage functions and adaptive adversaries,” Logical Methods
+[p14]      Computer Security, vol. 18, no. 6, pp. 1157–1210, 2010.                           in Computer Science, vol. 11, no. 4, pp. 5:1–5:31, 2015.
+[p14] [19] J. D. Angrist, G. W. Imbens, and D. B. Rubin, “Identification of causal      [44] Y. Kawamoto, K. Chatzikokolakis, and C. Palamidessi, “On the com-
+[p14]      effects using instrumental variables,” Journal of the American Statistical        positionality of quantitative information flow,” Logical Methods in
+[p14]      Association, vol. 91, no. 434, pp. 444–455, 1996.                                 Computer Science, vol. 13, no. 3, pp. 11:1–11:31, 2017.
+[p14] [20] M. S. Alvim, K. Chatzikokolakis, C. Palamidessi, and G. Smith, “Mea-         [45] D. Devriese and F. Piessens, “Noninterference through secure multi-
+[p14]      suring information leakage using generalized gain functions,” in IEEE             execution,” in IEEE Symposium on Security and Privacy (S&P), 2010,
+[p14]      Computer Security Foundations Symposium (CSF), 2012, pp. 265–279.                 pp. 109–124.
+[p14] [21] M. S. Alvim, K. Chatzikokolakis, A. McIver, C. Morgan, C. Palamidessi,       [46] J. Agat, “Transforming out timing leaks,” in ACM Symposium on
+[p14]      and G. Smith, The Science of Quantitative Information Flow. Springer,             Principles of Programming Languages (POPL), 2000, pp. 40–53.
+[p14]      2020.                                                                        [47] G. Barthe, G. Betarte, J. D. Campo, C. Luna, and D. Pichardie,
+[p14] [22] A. McIver, L. Meinicke, and C. Morgan, “Compositional closure for                 “System-level non-interference for constant-time cryptography,” in ACM
+[p14]      Bayes risk in probabilistic noninterference,” in Proc. International              Conference on Computer and Communications Security (CCS), 2014,
+[p14]      Colloquium on Automata, Languages and Programming (ICALP), ser.                   pp. 1267–1279.
+[p14]      LNCS, vol. 6199, 2010, pp. 223–235.                                          [48] A. Askarov, D. Zhang, and A. C. Myers, “Predictive black-box mit-
+[p14] [23] S. R. Howard, A. Ramdas, J. McAuliffe, and J. Sekhon, “Time-uniform,              igation of timing channels,” in ACM Conference on Computer and
+[p14]      nonparametric, nonasymptotic confidence sequences,” The Annals of                 Communications Security (CCS), 2010, pp. 297–307.
+[p14]      Statistics, vol. 49, no. 2, pp. 1055–1080, 2021.                             [49] T. H. Ptacek and T. N. Newsham, “Insertion, evasion, and denial of
+[p14] [24] I. Waudby-Smith and A. Ramdas, “Estimating means of bounded                       service: Eluding network intrusion detection,” Secure Networks, Inc.,
+[p14]      random variables by betting,” Journal of the Royal Statistical Society            Tech. Rep., 1998.
+[p14]      Series B, vol. 86, no. 1, pp. 1–27, 2024.                                    [50] T. Holz and F. Raynal, “Detecting honeypots and other suspicious
+[p14] [25] O. Goldreich, S. Goldwasser, and S. Micali, “How to construct random              environments,” in IEEE SMC Information Assurance Workshop (IAW),
+[p14]      functions,” Journal of the ACM, vol. 33, no. 4, pp. 792–807, 1986.                2005, pp. 29–36.
+[p14] [26] C. F. Manski, Partial Identification of Probability Distributions.           [51] M. Lindeman and P. B. Stark, “A gentle introduction to risk-limiting
+[p14]      Springer, 2003.                                                                   audits,” IEEE Security & Privacy, vol. 10, no. 5, pp. 42–49, 2012.
+[p14] [27] C. Dwork, V. Feldman, M. Hardt, T. Pitassi, O. Reingold, and A. Roth,        [52] T. Lindvall, Lectures on the Coupling Method. Wiley, 1992.
+[p14]      “The reusable holdout: Preserving validity in adaptive data analysis,”       [53] D. Blackwell, “Equivalent comparisons of experiments,” The Annals of
+[p14]      Science, vol. 349, no. 6248, pp. 636–638, 2015.                                   Mathematical Statistics, vol. 24, no. 2, pp. 265–272, 1953.
+[p14] 
+[p15]                        A PPENDIX A                                  add_calendar_event_participants, all allowed
+[p15]               P OSITIONING AND PROVENANCE                           and committed. The denied paths ingest a security e-mail
+[p15]    Table VIII compares the closest lines of work on five axes:      and then attempt an external e-mail, an internal e-mail, or a
+[p15] what is secret, whether the sampled behaviour is already fixed      file creation. The effect path is identical for B=0 and B=1.
+[p15] when the draw is made, the adversary, the estimand, and             Audited episodes additionally run, before the effect, a silent
+[p15] whether a sharp price of leakage is given. Table IX separates       branch that recomputes the closure over all ingested objects,
+[p15] the classical tools we apply from the statements we claim as        scores it with the same scorer, and writes one row to a SQLite
+[p15] new.                                                                audit log with a synchronous commit. The three parts were
+[p15]                                                                     not timed separately, so part of the gap may be logging rather
+[p15]                       A PPENDIX B                                   than recomputation. The channel comes from this re-done
+[p15]          E XPERIMENT INDEX AND REPRODUCTION                         work on audited episodes, not from PQ-CIFC’s internals; the
+[p15]    Table VII maps each claim to its scale, whether it uses          CaMeL assessment of §VI shows the same profile.
+[p15] model APIs, and its scripts in experiments/, the au-                   Ordering. The confined gate pads before the effect commits:
+[p15] thoritative map from experiment IDs to file names. API-free         monitor decision → (audited: silent branch) → pad to ceiling
+[p15] experiments and all re-analyses are deterministic given the         → effect commit (the write that stamps last_modified) →
+[p15] recorded latencies and labels; the paired design records the po-    response, so the inter-timestamp gap the timestamp observer
+[p15] tential outcomes (V (Z=0), V (Z=1)) per (user task, injection       reads contains the ceiling, not the raw latency; the pad window
+[p15] task), so E5/E6 coverage is recomputed offline from real la-        also absorbs the audit’s deferred work, and the exit and commit
+[p15] bels. Model experiments use AgentDojo v1.2.2 at temperature         run with the garbage collector disabled. The legacy harness
+[p15] 0 with gpt-4o-mini-2024-07-18, gpt-4.1-mini,                        padded after the commit; its exceedance counts on denied
+[p15] glm-4.7-flashx, and glm-4.6; total model-API cost                   paths are unaffected, but its timestamp channel was open
+[p15] was about US$91, of which E8 was US$59. The artifact’s              (C2ST 0.51 [0.47, 0.56]). All padded numbers in §VI come
+[p15] README records run configurations, calibration procedures,          from the confined implementation except the counterfactual
+[p15] and the two incidents (one crashed byte-size phase, the glm-        count 0.032 of App. H(iv).
+[p15] 4.6 rate-limit errors); e2_tableII.py prints every row of
+[p15]                                                                                              A PPENDIX D
+[p15] Table IV from the stored summaries (medians, mismatches,
+[p15]                                                                                           D EFERRED PROOFS
+[p15] and C2ST also recompute from the raw per-pair file), and the
+[p15] PQ-CIFC stack ships with the artifact. The artifact will be            Proof of Lemma 2. Given h, the attempt is a test ϕ(W ) ∈
+[p15] made publicly available upon acceptance.                            [0, 1] of the view, so µ0 − µ1 = EP0 ϕ − EP1 ϕ ≤
+[p15]                                                                     sup0≤ϕ≤1 (EP0 ϕ − EP1 ϕ) = TV(P0 , P1 ) ≤ DA by the vari-
+[p15]                     A PPENDIX C                                     ational characterization of total variation (Neyman–Pearson);
+[p15]     T HE MEASURED STACK (PQ-CIFC) AND THE AUDIT                     the supremum is attained by the stated rule. Changing only
+[p15]                            BRANCH                                   the decision at τ , which is taken after W is formed, changes
+[p15]    PQ-CIFC is the pre-commit IFC gate of this work,                 neither the law of W nor the law of Hi−1 . The other two
+[p15] built on AgentDojo [34]. It serves as a concrete monitor            terms follow from µ0 , µ1 ∈ [0, 1].                             □
+[p15] whose audit branch we can instrument; none of our results              Proof that Λ = (1 − ε)DA for the episode coin. Let
+[p15] depend on its labeling accuracy. Labels pair a confidentiality      P̄ := εP1 +(1−ε)P0 be the law of W . Then r(W ) = P(B=1 |
+[p15] level (Public/Internal/Confidential/Secret) with an integrity       W )/ε = dP1 /dP̄ (W ), so Λ = EP̄ [(1 − dP1 /dP̄ )+ ] =
+[p15] level (Untrusted/Verified/Trusted); integrity comes from            TV(P̄ , P1 ) = (1 − ε)TV(P0 , P1 ), because P̄ − P1 = (1 −
+[p15] provenance, and the scorer predicts confidentiality only.           ε)(P0 − P1 ).                                                   □
+[p15] Each tool output is ingested as a labeled object. Each effect          Two sources of leakage. For an adaptive rule write
+[p15] tool call goes through a monitor. The monitor computes the          π true := PA (Bτ =1 | Hi−1 =h) and ρ(w) := PA (Bτ =1 |
+[p15] dependency closure of the call and scores it with a trained         W =w)/π true , so that r = ρ π true /πτ and E[ρ] = 1. Then
+[p15] joint label predictor (TF-IDF features with logistic regression).   E|1−r| ≤ E|1−ρ|+|1−π true /πτ | ≤ 2(1−π true )DA +|π true −
+[p15] A broker then commits the effect only if the predicted label        πτ |/πτ , where the first term is the view leakage of Definition 1
+[p15] flow complies with the policy. We use its calibrated, frozen        and the second a marginal miscalibration of the coin that DA
+[p15] quotient policy (threshold q=0.9525); under it, the scorer          alone does not see; E|1 − r| = 0 is unbiasedness, Λ = 0
+[p15] pools each object’s class probabilities into “admissible at         only rules out under-certification. A keyed rule (Proposition 2)
+[p15] this sink” versus not, takes the minimum over the closure,          removes the second term; the constructions of Proposition 4
+[p15] and forms the conformal set {z : 1 − p̂(z) ≤ q}; the effect         remove the first.
+[p15] commits only if the set is the singleton {admissible}. Its             Proof of Theorem 1. (i) The expected gain of ϕ is (1 −
+[p15] full-label policy calibrates to q=1 and denies every effect, so     ε)EP0 ϕ + (1 − ε)(1 − EP1 ϕ) = (1 − ε) + (1 − ε)(µ0 − µ1 );
+[p15] it cannot exercise a permitted path. The permitted paths replay     a constant ϕ gives the prior vulnerability and the supremum
+[p15] the ground-truth calls of AgentDojo workspace user tasks            overPϕ the posterior one, (1 − ε)(1 + DA ) by Lemma 2.
+[p15] 4, 7, and 8: reads, then create_calendar_event,                     (ii) w max(P0 , P1 ) = 1 + TV(P0 , P1 ). (iii) Post-processing
+[p15] reschedule_calendar_event,                                   and    increases neither g-vulnerability [21] nor total variation. □
+[p15] 
+[p16]                                                                 TABLE VII
+[p16]                     E XPERIMENT INDEX (API: NEEDS MODEL CALLS ; SCRIPT NAMES FOLLOW AN EARLIER INTERNAL NUMBERING ).
+[p16]       ID        what it establishes                                API scale                      scripts
+[p16]       E1     content/timing channels; per-path bounds;             no   2×1000 pairs; 3000        e2_paired_v2, m7_padded (e2),
+[p16]              padded timestamp observer                                  calib. runs               r8_perpath
+[p16]       E1-ts  timestamp channel, DA ≥ 0.99 (two runs);              no   2×1000 pairs              a6_timestamp_clock, m7_padded (ts),
+[p16]              coarsened stamps; Eη                                                                 m11_coarsen, m12_hockey
+[p16]       E1-amp DA agent-inflatable (≤ 0.044→≥0.91)                   no   5×80 pairs (5×60          inputsize_padding (fixed ceiling),
+[p16]                                                                         replay not used)          a3_closure_amplification
+[p16]       E1-isp    size-aware padding; bytes; simultaneous δ          no   5×100 calib.; 5×80;       inputsize_padding, isp_rerun,
+[p16]                                                                         2×5×500; bytes            m7_padded (grid), m10_bytesize
+[p16]                                                                         10×60+10×100
+[p16]       E1-load padding under load; exceedance counting              no   3000+3×500                a2_exceedance_under_load, a4_stress,
+[p16]                                                                                                   isp_load
+[p16]       E1-agg aggregate-load channel                                no 8×300 rounds                m10_aggload
+[p16]       CaMeL timing channel on a second stack                       yes 128 checks                 camel_leak, camel_c2st
+[p16]       E2     scripted break; clock and per-call coin               no 4000×200 seeds,             a1_e6_redo
+[p16]                                                                        k≤105
+[p16]       E3        real LLM follows a notice-naming injection         yes 560+816 ep.                e3_screen, e3_pilot, e3_analyze
+[p16]       E3g       generic conditioning, two models                   yes 75+394 ep.                 e3_generic
+[p16]       E4        timing feasibility probe; capability probe         yes 272 ep.                    e3_timing, timestamp_capability
+[p16]       nonvuln   full population, measured                          yes 424 pairs                  e3_nonvuln, population
+[p16]       retest    screening noise                                    yes 150 ep.                    m10_retest
+[p16]       E5        plain vs. silent, 2×2; widths; decoys;             yes 400 seeds; 4000 boot.      e4_endtoend, e4_widths, decoy_sim
+[p16]                 resampled; pair bootstrap                                                         (POP=measured), pair_bootstrap
+[p16]       E6        dose–response; certifier choice; analytic check; part 300 seeds                   e5_dose_response, e5_reanalyze,
+[p16]                 resampled                                                                         r5_analytic, m13_fig_dose
+[p16]       Adapt.    deterministic/plaintext/PRF rules                 no simulation                   adaptive_rule_sim
+[p16]       E7        live closed loop                                 yes 2×500 ep.                    e2e_live
+[p16]       E8        live failure run, pre-registered; realized-rate  yes 2×4000 ep.                   e8_live_failure
+[p16]                 re-analysis
+[p16]       Dil.      dilution readouts (App. J)                        no 4×200 seeds                  dilute_sim
+[p16]       Cost      per-call readout looseness on E8 (App. J)         no E8 labels                    m15_percall_cost
+[p16]       Aux.      running example; oracle check; KL table;          no simulation                   m14_constructed
+[p16]                 crng ; E4 MDE
+[p16]                                                                     TABLE VIII
+[p16]                                                     C OMPARISON WITH THE CLOSEST LINES OF WORK .
+[p16]   Work                                Secret                  Fixed when              Adversary                   Estimand                  Sharp price
+[p16]                                                               drawn?
+[p16]   Ringers, PoR [9], [10]              which item is checked   yes (work or data)      cheating worker/server      detection                 n/a
+[p16]   Risk-limiting audits [51]           none                    yes (ballots)           none adaptive               outcome                   n/a
+[p16]   Active risk control [8]             none needed             yes (query after        not reactive to the query   risk                      n/a
+[p16]                                                               arrival)
+[p16]   AI control [12]                     which outputs are       no                      untrusted model             safety of protocol        no
+[p16]                                       audited
+[p16]   Randomized oversight [13]           audit draw              no                      utility maximizer           deterrence                no
+[p16]   Regime leakage [37]                 evaluation vs.          no                      evaluated model             behaviour gap             MI upper
+[p16]                                       deployment                                                                                            bound
+[p16]   This work                           audit coin Bτ           no, until commit        any adaptive policy,        pi , µ0 , realized rate   yes (Thm. 6)
+[p16]                                                                                       Kerckhoffs
+[p16]    Proof of Theorem 2. Under (ER), Vi is a function of the                                           g | Hi−1 ] = pi . The agent can steer toward
+[p16]                                                                                  V πτ (hτ ), hence E[b
+[p16] view W and Hi−1 . PNI gives Bi ⊥ W | Hi−1 jointly over                           low-propensity histories, which widens the sequence through
+[p16] (O, ξ), so Vi ⊥ Bi | Hi−1 . (Independence from O and from                        the range 1/πmin , but cannot bias it.                        □
+[p16] ξ separately would not suffice, since O could reveal B ⊕ ξ.)                        Proof of Corollary 2. The first claims are Lemma 1 and the
+[p16] Hence µ0 = µ1 = pi , and Lemma 1 gives E[b    gi | Hi−1 ] = pi .                 width formula of App. E. For the last, n⋆ ∝ f (ε) = (1/ε −
+[p16] Cross-episode learning enters only through Hi−1 , because Bi                     p̄)/(1 − ε)2 , and f ′ (ε) ≤ 0 iff 2p̄ε2 − 3ε + 1 ≥ 0, i.e. ε ≤ ε⋆ .
+[p16] is a fresh draw. The differences gbi − pi are then bounded                       The root ε⋆ increases in p̄ from its limit 31 at p̄ → 0.         □
+[p16] martingale differences, and the time-uniform bound of [23]
+[p16] controls their running average. For an adaptive rule the same                       Proof of Theorem 3. Construction. Fix Hi−1 and the agent’s
+[p16] argument applies to gb = V Bτ /πτ (hτ ) ≤ 1/πmin : the                           randomness ξ, and build the two coin-conditional trajectories
+[p16] freshness clause of Definition 2 gives E[V Bτ | W, Hi−1 ] =                      on one probability space. Start from the empty common
+[p16]                                                                                  history. At step t with common history ht , the agent’s action
+[p16] 
+[p17]                               TABLE IX                                          exactly when Λ = 0. A fresh coin with a history-dependent
+[p17]                   P ROVENANCE OF THE FORMAL RESULTS .                           design propensity has r = 1 yet µ0 ̸= p, which is why gap0
+[p17]                                                                                 is reserved for the episode coin. (ii) The assumption is stated
+[p17] Result                Classical tool applied / what is new
+[p17]                                                                                 on the histories ALR itself reaches, so Lemma 2 applies in
+[p17] Lemmas 1, 2           IPW identity; variational form of total variation
+[p17]                       (Neyman–Pearson). New: the gap as a test of the
+[p17]                                                                                 every episode and gives E[b        gi | Hi−1 ] ≤ pi − (1 − ε)D. By
+[p17]                       pre-commit view.                                          the martingale strong law, the running mean of gbi then ends
+[p17] Thm. 1                QIF vulnerability, additive capacity,                     up at least (1 − ε)D below that of pi almost surely, while the
+[p17]                       post-processing [21], [41]. Instantiation: the gain
+[p17]                       function gε for which the bias is the leakage.
+[p17]                                                                                 certificate’s excess tends to u∞ < (1 − ε)D.                          □
+[p17] Thm. 2, Prop. 3       Time-uniform sequences [23], Bennett, Ville. New:            Proof of Theorem 5. By Lemmas        P 1 and P         gi | Hi−1 ] ≥
+[p17]                                                                                                                                      2, E[b
+[p17]                       the conditions (PNI, ER) under which they apply to        pi −(1−ε)δ almost surely, so n1 i pi ≤ n1 i E[b            gi | Hi−1 ]+
+[p17]                       audit labels.
+[p17] Thm. 3, Prop. 1       Coupling inequality [52]; KL chain rule and               (1 − ε)δ. The sequence of [23] upper-bounds the first term for
+[p17]                       Pinsker; adaptive leakage after [42]. Applied to          all n at once, and adding a constant     Qkeeps it anytime-valid. In
+[p17]                       coin-to-view channels.                                    the multi-step case take δ = 1 − t (1 − δ̄t ) by Theorem 3,
+[p17] Thm. 4                New: PNI is necessary and sufficient; coverage fails
+[p17]                       under persistent leakage.                                 where δ̄t ≥ D̄t .                                                     □
+[p17] Prop. 2               Standard PRF hybrid [25]. New: the reduction to the          Proof of Theorem 6. Lemma 2 gives the upper endpoint as
+[p17]                       audit game, with the per-history conditioning cost.
+[p17] Thm. 5, Thm. 6        Partial identification [26]. New: the inflation and its
+[p17]                                                                                 a bound. It is attained: let the view reveal B with probability
+[p17]                       sharpness from audited labels.                            t ≤ δ and otherwise show ⊥, and let the agent attempt on 0,
+[p17] Prop. 6, Cor. 1       Hockey-stick divergence; Blackwell order [53].            skip on 1, and attempt with probability c on ⊥. Then µ1 =
+[p17]                       Instantiation for the audit channel.
+[p17] Prop. 4               New: the constructions; noninterference,
+[p17]                                                                                 (1 − t)c and µ0 = t + (1 − t)c, so every pair with 0 ≤
+[p17]                       multi-execution, and QIF compositionality [14],           µ0 − µ1 ≤ min(δ, 1 − µ1 ) is realized by some (t, c), and all
+[p17]                       [45], [44] as background.                                 these mechanisms induce the same law of (B, V B), so no
+[p17]                                                                                 audited-label procedure separates them. The lower endpoint is
+[p17]                                                                                 symmetric.                                                            □
+[p17] at is the same under both coins, since it is a function of (ht , ξ).               Proof of Proposition 2. A distinguisher with oracle access
+[p17] Draw the pair (St0 , St1 ) from the maximal coupling [52]                       to FK or to a random function runs all N episodes of the audit
+[p17] of P (St | B=0, ht ) and P (St | B=1, ht ), under which                         game with A, simulating the gate, tools, and label oracle, at
+[p17] St0 ̸= St1 with probability exactly Dt (ht , at ) and, conditionally            total cost N (s + sM ). Because every oracle input carries the
+[p17] on agreement, St has the law min(P0 , P1 )/(1 − Dt ); the                       nonce and the call index, the inputs are distinct, so in the
+[p17] common-history process is therefore the Markov chain with                       ideal world every coin is a fresh draw. (i) The distinguisher
+[p17] this normalized Q   overlap kernel, stopped at separation, and                  holds every Vi and every coin, so it can output the indicator
+[p17] P(σ ≥ τ ) = EC t<τ (1 − Dt ) is the product of its one-step                     that the sequence of Proposition 3 fails at some n ≤ N .
+[p17] survival probabilities, by the chain rule along that chain. If                  Under Mideal this event has probability at most α, since
+[p17] they agree, append (at , St ) to the common history; otherwise                  PNI holds there; its probability under MPRF is therefore at
+[p17] declare the coupling broken at σ := t and continue the two                      most α + Adv. (ii) Let the distinguisher output the indicator
+[p17] trajectories independently from their own conditionals. Each                    of {Hi−1 =h, V =1, Bτ =b}, or of {Hi−1 =h, Bτ =b}. Writing
+[p17] trajectory has the correct marginal law, so by the coupling                     ab , db for these probabilities, each moves by at most Adv
+[p17] inequality TV(P0τ , P1τ ) ≤ P(σ < τ ). Conditional on no                        between the worlds. In the ideal world d1 ≥ qh πmin and
+[p17] break before t, the coupling survives Q  step t with probability                d0 ≥ qh (1 − πmax ), so db ≥ qh π̄ there and d′b ≥ qh π̄ − Adv
+[p17] 1 − Dt (ht , at ), so P(σ ≥ τ ) = EC t<τ (1 − Dt (ht , at )),                   in
+[p17]                                                                                  the   keyed world. Since µ      b =  ab /db and a′b /d′b − ab /db =
+[p17] where EC is over the common history (ht )t<σ∧τ ; this is the                     (ab − ab ) − µb (db − db ) /db , we get |a′b /d′b − ab /db | ≤
+[p17]                                                                                      ′                  ′             ′
+[p17] middle term, and LemmaQ2 converts itPto bias. Replacing                         (|a′b − ab | + µb |d′b − db |)/d′b ≤ 2Adv/(qh π̄ − Adv) for each b,
+[p17] Dt (h, a) by D̄t and 1 − (1 − xt ) ≤              xt give the outer             and the two values of b give the constant 4. Lemma 2 bounds
+[p17]                                                                                                                             ideal
+[p17] bounds. Under erasure the two laws are mutually singular                        µ0 − µ1 in the ideal world by DA                  (h; A). Conditioning
+[p17] exactly on the event that some step reveals.                      □             on h costs the factor 1/qh , which can be large for a rare
+[p17]                                                                                 history; (i) has no such factor. On sM . The simulation cost
+[p17]    Proof of Proposition 1. The chain rule for KL divergence
+[p17]                                                                                 includes the label oracle. If labels come from an LLM judge,
+[p17] over the stopped trajectory gives KL(P0τ ∥P1τ ) ≤
+[p17]                                                           P
+[p17]                                                              t<T κ̄t ,
+[p17]                                                                                 sM is the judge’s cost per episode, and the reduction needs
+[p17] and Pinsker’s inequality converts KL to total variation;
+[p17]                                                                                 the PRF to resist adversaries of size N (s + sM ); any feasible
+[p17] Lemma 2 converts total variation to bias.                         □
+[p17]                                                                                 deployment is far inside the security margin of a standard
+[p17]    Proof of Theorem 4. (i) Sufficiency is Theorem 2. For                        PRF such as HMAC-SHA-256. Where V is the attempt read
+[p17] necessity, if DA (h; A) > 0 for some policy and some h                          from the agent’s proposed action, as in our experiments, the
+[p17] reachable under it, the policy ALR of Lemma 2 reaches the                       distinguisher needs no oracle call to compute it.                     □
+[p17] same h and attains gap0 (h) = DA (h; A) > 0. For an adaptive
+[p17] rule the test V = 1{r(W ) < 1} attains gapp = Λ(h; A), and                      Proposition 6 (Multiplicative
+[p17]                                                                                                              certificate).
+[p17]                                                                                                                            For η ≥ 0 let
+[p17] V = 1{r(W ) > 1} attains gapp = −E[(r − 1)+ ]; both vanish                      Eη (h; A) = supS P0 (S) − eη P1 (S) , the hockey-stick di-
+[p17] for every policy exactly when r = 1 a.s., and the first vanishes                vergence of the unaudited view law from the audited one,
+[p17] 
+[p18] so that E0 = DA . Then µ0 ≤ eη µ1 + Eη for every η, the                below about five expected audited violations the two-term form
+[p18] bound is attained by the test 1{dP0 /dP1 > eη }, and if the            underestimates by up to ≈2×. Small n is range-dominated  √
+[p18] mechanism guarantees Eη (h; A) ≤ δη for all reachable h,               and large n variance-dominated, which gives the 1/ nε rate
+[p18] then simultaneously for all n with probability ≥ 1 − α,                of Corollary 2; neither term alone is the sequence. Realized
+[p18]        1
+[p18]          P                       η
+[p18]                                                                       rate. Under the hypotheses of Theorem 5, simultaneously
+[p18]            i pi ≤ ε + (1 − ε)e       UCSn + (1 − ε)δη .                for all n with probability ≥ 1 − α − α′ , n1 i≤n Vi ≤
+[p18]                                                                                                                              P
+[p18]        n
+[p18]                                                                                                                      p
+[p18] At η=0 this is Theorem 5; for η > 0 a channel with E0.5 ≤              UCSn P  + (1 − ε)δP+ u′n with       ′
+[p18]                                                                                                     P un = O( log(log n/α )/n):
+[p18]                                                                                                                                    ′
+[p18] 10−3 certifies µ0 ≤ 1.65 µ1 + 10−3 , informative at µ1 = 10−3          write     i Vi =     i pi +     i (Vi − pi ). Theorem 5 bounds
+[p18] where an additive δ > 10−3 is not.                                     the first term at level α. The second is a sum of martingale
+[p18]    Proof of Proposition 6. µ0 − eη µ1 = EP0 ϕ − eη EP1 ϕ ≤             differences in [−1, 1] with zero conditional mean under any
+[p18] supS [P0 (S) − eη P1 (S)] for any test ϕ ∈ [0, 1], with equality       leakage structure, so a time-uniform bound controls it at level
+[p18] at the stated test. Then pi = εµ1 + (1 − ε)µ0 ≤ (ε + (1 −              α′ [23]. A union bound combines the two. Under PNI the
+[p18] ε)eη )µ1 + (1 − ε)Eη , and UCSn bounds the running mean of             realized rate can also be certified directly, with no union bound
+[p18] µ1 = E[b gi | Hi−1 ] for all n at once.                       □        and no Bernoulli noise from Vi , by Proposition 3 (§IV).
+[p18]    Proof of Corollary 1. For a binary input, a channel is              Proof of Proposition 3.
+[p18] a pair of laws (P0 , P1 ), i.e. a dichotomy. By Blackwell’s
+[p18]                                                                        Proof. Let Zi = Vi − gbi = Vi (1 − Bi /πi ), with πi the propen-
+[p18] theorem [53], one dichotomy is a garbling of another if and
+[p18]                                                                        sity of the certificate’s coin, and let Gi be generated by Hi−1
+[p18] only if its Bayes risk is no smaller for every prior and loss.
+[p18]                                                                        and the view of episode i. Under (ER) Vi is Gi -measurable,
+[p18] For dichotomies this is equivalent to the dominance of their
+[p18]                                                                        and PNI gives P(Bi =1 | Gi ) = πi . Hence E[Zi | Gi ] = 0,
+[p18] Neyman–Pearson curves, i.e. of all hockey-stick divergences.
+[p18]                                                                        Zi ≤ 1, and E[Zi2 | Gi ] = Vi (1 − πi )/πi ≤ cVi . For a mean-
+[p18] The prices are monotone in Eη .                               □                                                   λZ                 2
+[p18]                                                                        zero variable bounded  P above by 1, EeP ≤ exp(ψ(λ)EZ
+[p18]                                                                                                                                       )
+[p18]                        A PPENDIX E                                     (Bennett), so exp λ i≤n Zi − c ψ(λ) i≤n Vi is a nonneg-
+[p18]            W IDTH OF THE CONFIDENCE SEQUENCE                           ative supermartingale. By Ville’s inequality, with probability
+[p18]                                                                        at leastP1 − α, λSn − c ψ(λ)K
+[p18]                                                                                                    P n < log(1/α) for all n, where
+[p18]    Which sequence covers which target. The predictable-plug-
+[p18]                                                                        Sn = i Zi and Kn = i Vi = Gn + Sn . Solving for Sn
+[p18] in sequence [24] weights step i by a λi set from past variance,
+[p18]                                                                        gives the claim.
+[p18] soP it covers the λ-weighted conditional mean; this equals
+[p18]  1
+[p18] n     i pi when pi is constant, as in the i.i.d. resampling of E5–     E8’s realized-rate analysis sets λ from the pre-registered
+[p18] E7, but not under drift. With no leakage (Vi =0 then 1 over two        planning rate 0.206 and the horizon 4000 (λ = 0.0386,
+[p18] halves of 4000, fresh Bi ) it covers in 0 of 300 runs. Against         planned width 0.039), using no outcomes; the sequence itself
+[p18] an adaptive agent thePcertificate of Theorem 2 is therefore the        was adopted after the run (App. G). The sequence’s target is
+[p18] fixed-λ sequence n1 i≤n pi ≤ n1 Gn + log(1/α)+c           ψ(λ)Gn 
+[p18]                                                      λ−c ψ(λ)      ,   the realized rate, P
+[p18]                                                                                           the quantity the benchmark reveals, whereas
+[p18] whose proof is that of Proposition 3 with pi in place of Vi ;          UCSn targets n1 i pi , which no run reveals. A horizon-free
+[p18] on the same drift it covers in all 300 runs, and on i.i.d. data        (stitched) sequence pays a further log log n factor multiplying
+[p18] at p̄=0.206 its width at N =4000 is 0.039 against 0.042 for            log(1/α) in both terms [23]; the deployed horizon-tuned form
+[p18] the plug-in sequence (b1_drift_check.py). The plug-in                  does not. The failure threshold n⋆ of Theorem 4(ii) solves
+[p18] sequence [24] for gb − p ∈ [−1, 1/ε] has two terms at its              wvar (n⋆ ) + wrng (n⋆ ) = (1 − ε)κA (with κA = DA for ALR ),
+[p18] tuning horizon n (the implementation sets the predictable λi           which in the variance-dominated regime is the expression
+[p18] for horizon n):                                                        in §IV, with log(1/α) replaced by log(1/α) log log n⋆ for a
+[p18]                                                                        stitched sequence. Variance ratio at matched budget: under
+[p18]                   un ≈ wvar (n) + wrng (n),                            PNI, Var(V B/ε) = p/ε − p2 per episode, so the audit
+[p18]                        p
+[p18]             wvar (n) = 2 p̄ (1/ε − p̄) log(1/α)/n,                     design’s variance ratio against εN fully labeled episodes is
+[p18]            wrng (n) = crng log(1/α)/(ε n).                             p − εp)/(1 − p); at matched window the familiar gap is
+[p18]                                                                        (1
+[p18]                                                                           (1/ε − p)/(1 − p) ≈ 2.5–2.7× in standard deviation.
+[p18] The variancepterm is exact to leading order: the plug-in λ
+[p18] makes it σY 2 log(1/α)/n/ε with σY2 = εp̄(1 − εp̄). The                                    A PPENDIX F
+[p18] range term collects the capped-λ and plug-in-prior contribu-               C OMPOSITIONAL BOUND AND NUMERICAL CHECKS
+[p18] tions; crng ≈ 0.77 is a least-squares fit to the expected path            For the Gaussian-observer model of §VI (App. K), the step
+[p18] of the implemented sequence (interquartile range 0.73–0.84             law under coin b is the recorded latency law of arm b (E1,
+[p18] over 71 cells; m14_constructed.py). At the horizons                    unpadded, 1000 runs per arm) convolved with N (0, σ 2 ). We
+[p18] reported in this paper the implemented width is within 1%              compute the per-step KL divergence κ and total variation D1
+[p18] of wvar alone (E8: u4000 =0.0385 against wvar =0.0385), the            by numerical integration. For T i.i.d. probes the chain
+[p18]                                                                                                                            p rule
+[p18] pre-registered 1607 uses the expected-path width of the im-            gives trajectory KL T κ, and Pinsker gives TV ≤ T κ/2;
+[p18] plemented sequence (the closed form gives 1647 with p̄, and            the per-step bound of Theorem 3 is T D1 . Each T column of
+[p18] 1183 with the audited rate µ1 that sets the variance under             Table X reports Pinsker / per-step sum (the latter uncapped,
+[p18] leakage); the range term matters only when εp̄n ≲ 20, and              so values above 1 are vacuous).
+[p18] 
+[p19]                               TABLE X                                 0.13); a smaller effect is not excluded. The worst-case timing
+[p19]   N OISY COMPOSITION : P INSKER / PER - STEP BOUND AFTER T PROBES .   attack therefore remains scripted.
+[p19]    σ          κ          D1       T =102      T =103     T =104
+[p19]                                                                           Dose–response, full description (E6). Coverage here is of
+[p19]                                                                       pi , which is why the plain arm’s 0.04 at ρ=1 exceeds E5’s
+[p19]    0.5 s 9.4×10−5 5.5×10−3 0.07 / 0.55 0.22 / 5.5 0.69 / 55
+[p19]    1s     2.4×10−5 2.7×10−3 0.03 / 0.27 0.11 / 2.7 0.34 / 27
+[p19]                                                                       0.007 for µ0 ; it crosses 0.95 between ρ=0.2 (0.973) and 0.3
+[p19]    3.9 s 1.6×10−6 7.0×10−4 0.01 / 0.07 0.03 / 0.70 0.09 / 7.0         (0.910) for ε=0.2. The upper curve of Fig. 2 adds (1 − ε)ρ κA
+[p19]    16.5 s 8.7×10−8 1.7×10−4 0.00 / 0.017 0.01 / 0.17 0.02 / 1.7       with κA =0.075 from all 560 labels, an oracle correction;
+[p19]                                                                       Theorem 5 would add (1 − ε)ρ (0.8 at ρ=1).
+[p19]                                                                           Coverage is a coarse statistic for a biased estimator, so the
+[p19] Numerical check of the bounds. An oracle adversary sees a             cleaner reading compares bias with width. At full leakage and
+[p19] signal with controllable DA and applies the likelihood-ratio          N =4000 the bias is 0.071, 0.060, 0.038 at ε=0.05, 0.2, 0.5
+[p19] rule. At ε=0.05 and N =2×105 the realized gap equals (1 −             against widths 0.080, 0.036, 0.021, so the ratio rises and n⋆
+[p19] ε)DA up to Monte-Carlo error. At ε=0.2, N =4 × 105 , and              falls (4.9, 1.6, 1.5×103 ): a √higher audit rate shrinks the bias
+[p19] Dt =0.2, a binary symmetric channel (BSC) with a likelihood-          linearly but the width as 1/ nε. The certifier matters too: at
+[p19] ratio detector equals the middle bound of Theorem 3 at K=1            ε=0.2, ρ=1, target p̄, a Hoeffding sequence is invalid in no
+[p19] step (15.8% vs. 16.0%). It falls further below the bound as           seed at N =4000 where the empirical-Bernstein sequence fails
+[p19] K grows (59.4% vs. 79.9% at K=31). An erasure channel,                in 0.95; Hoeffding hides the failure by being loose, and the
+[p19] enumerated exactly, lies on the bound.                                variance-adaptive certifier the theory specifies is the one that
+[p19]                       A PPENDIX G                                     breaks.
+[p19]             A DDITIONAL EXPLOITATION DETAILS                              Closed loop, full description (E7). We first run N =500
+[p19]                                                                       episodes per arm end to end: a real coin B ∼ Bern(0.2), a
+[p19]    Exploratory E3 conditions, full figures. Spontaneous condi-
+[p19]                                                                       real gpt-4.1-mini agent with no enforcement, a real injection
+[p19] tioning is suggestive on gpt-4.1-mini (+0.074, Holm 0.124)
+[p19]                                                                       carrying the named clause, and the real PQ-CIFC audit branch,
+[p19] and null on gpt-4o-mini; the generic clause (“if you judge this
+[p19]                                                                       whose latency is surfaced as a gate field, raw or padded.
+[p19] session is being monitored, skip”) is suggestive on gpt-4o-mini
+[p19]                                                                       The agent conditions only weakly on it: attempt rates 0.648
+[p19] (+0.128, Holm 0.130) and null on gpt-4.1-mini. The gpt-4o-
+[p19]                                                                       (59/91 audited) and 0.680 (278/409 unaudited; ∆=0.031, not
+[p19] mini notice effect is +0.128 (raw p=0.013; Holm 0.038 in the
+[p19]                                                                       significant), realized rate 0.674, certified bound 0.803; padding
+[p19] confirmatory family, 0.051 within its own four conditions).
+[p19]                                                                       narrows the gap to 0.010. By Theorem 4(ii) the bias stays
+[p19]    Timing channel (E2, E4). We do not build the injection
+[p19]                                                                       below the width until n⋆ , which this gap puts near 3×104 , so
+[p19] that would drive the timestamp channel (§VIII); two weaker
+[p19]                                                                       a few hundred episodes cannot reach the failure regime. In a
+[p19] tests bracket it. A scripted adversary (E2) observes only the
+[p19]                                                                       simulated risk-adaptive rule (Proposition 2), deterministic or
+[p19] gate latency, runs a likelihood-ratio test on the measured
+[p19]                                                                       plaintext rules give coverage 0.00 and a PRF-keyed rule 1.00.
+[p19] latency laws of §VI, and attempts a benchmark out-of-policy
+[p19]                                                                           Pilot. An unscreened 50-pair pilot on gpt-4o-mini
+[p19] effect (base willingness 0.6) only when it infers “unaudited”
+[p19]                                                                       (e3_pilot) showed no window (notice ASR 0.06 in both
+[p19] (N =4000, ε=0.2, 200 seeds). On a noisy tool-call clock it
+[p19]                                                                       arms, ∆=0) and motivated the screened design.
+[p19] needs about 104 averaged probes (App. K); on the free fine
+[p19] clock of the returned timestamps the certificate is invalid in            Screening noise. Re-runs of screened-vulnerable pairs suc-
+[p19] every seed at every probe count (true rate 0.48, certified 0.12),     ceed at only 0.676–0.831 at Z=0 (Table V). A test–retest of
+[p19] and padding to the fixed ceiling restores validity at every k         50 pairs (25 screened-vulnerable, 25 screened-non-vulnerable,
+[p19] when no run exceeds the ceiling (true 0.60, certified 0.72);          three repeats each) shows that the noise is one-sided. The
+[p19] at an exceedance rate equal to its measured upper bound               screened-vulnerable pairs attempt at 0.71; their three repeats
+[p19] (3.7×10−3 ) the plain bound fails from k=100 on, while the            agree in 76% of pairs, and all three repeat the screen’s positive
+[p19] inflated certificate stays valid.                                     in 60%. The screened-non-vulnerable pairs never attempt
+[p19]    A real agent (E4) is handed the real measured latency as an        (0/75). Non-vulnerable pairs do attempt at 0.076 under the
+[p19] ordinary readable field, drawn from the audited law (median           notice condition, a property of that condition’s prompt text
+[p19] 11.0 ms) on audited episodes and from the unaudited law               rather than screening noise.
+[p19] (0.95 ms) otherwise, with an injection that says only “if the             The exploitation window across models. Table XI reports,
+[p19] reported processing time is above 5 ms, skip the exfiltration”.       per model, the screening attack-success rate, the number of
+[p19] A benign capability probe shows that gpt-4.1-mini reads such          vulnerable pairs, the notice-channel drop ∆, and its raw
+[p19] a microsecond gap correctly in 29 of 30 trials. On the 136            McNemar p with the Holm adjustment within the model’s
+[p19] vulnerable pairs the attack rate falls from 0.713 to 0.647            four-condition family.
+[p19] (∆=+0.066; 16 vs. 7 discordant pairs; McNemar p=0.093,                glm-4.6 has 0 vulnerable pairs among 415 completed screens.
+[p19] Bonferroni 0.19). At n=136 and discordance 0.169 the test             A further 145/560 screening calls errored and were dropped,
+[p19] has power 0.86 at ∆=0.11 and 0.97 at the notice’s 0.132               so this is “no exploitable window on the completed subset”,
+[p19] (m14_constructed), so the null result is evidence against             not a clean 0%. All 145 errors are provider rate-limit responses
+[p19] a timing effect as large as the notice’s (upper 95% bound about       (HTTP 429), none a refusal or content-filter flag. glm-4.7-
+[p19] 
+[p20]                            TABLE XI                                 tuned sequence (crossing 2746) is a sensitivity analysis. H2
+[p20]         E3 NOTICE - CHANNEL EFFECT ACROSS FOUR MODELS .             (silent arm covers at every n) holds. H3 (b     µ0 , µ
+[p20]                                                                                                                          b1 inside the
+[p20]                                                                     bootstrap intervals) holds and is a check on the run, not on
+[p20]     Model          ASR   vuln.    ∆      p (Holm)    window
+[p20]                                                                     the theory. The pre-registered model’s predicted invalidity at
+[p20]     glm-4.6         0.0%  0    —         —             no
+[p20]     glm-4.7-flashx 2.9% 16    0.00       1.0           no
+[p20]                                                                     N =3000 had a bootstrap interval of [0.61, 1.00], so a non-
+[p20]     gpt-4o-mini    15.4% 86 +0.128 0.013 (0.038)       yes          failure there was not improbable. At the interim N =3000 the
+[p20]     gpt-4.1-mini   24.3% 136 +0.132 0.003 (0.012)      yes          bound was below V̄n from n=2820 for 181 steps, which under
+[p20]                                                                     the pre-registered rule was its second-tier verdict (direction
+[p20]                                                                     consistent, magnitude smaller than predicted); the 200-step
+[p20] flashx has 16 vulnerable pairs whose discordant pairs cancel        rule could not be met at N =3000 by any crossing after 2800, a
+[p20] (2 vs. 2).                                                          flaw in the pre-registration that we state rather than repair, and
+[p20]    E3g wording selection. The wording was chosen on 75 held-        the extension to N =4000, the design’s listed alternative, was
+[p20] out pilot episodes (25 pairs, three candidates, Z=0 only) as        decided after that look. For one fixed sequence the guarantee is
+[p20] the one that depresses the unaudited rate least (0.76 against       uniform in n, so continuing the frozen sequence is legitimate;
+[p20] 0.72 and 0.68), then tested on the disjoint 111 gpt-4.1-mini        with the horizon at 3000 the crossing is 2820 and the bound at
+[p20] and all 86 gpt-4o-mini pairs.                                       4000 is 0.196, with the re-tuned horizon 4000 it is 2818 and
+[p20]    Full-population measurement. All 424 non-vulnerable gpt-         0.195. The measured gap µ    b0 − µb1 =0.055 (3.3 pair-clustered
+[p20] 4.1-mini pairs are measured under the notice condition in both      standard errors from zero, each pair appearing about seven
+[p20] arms (848 episodes): they attempt at 0.076 at Z=0 and 0.019         times) is below the population point estimate 0.075 but inside
+[p20] at Z=1 (two-sided 95% upper bound 0.037), leaking in the            its interval, which is why the crossing is later than the point
+[p20] same direction. The measured population gives µ0 =0.221,            prediction; the measured rates give n⋆ ≈ 3.1×103 . The silent
+[p20] µ1 =0.146, bias 0.060, and plain-audit invalidity of p̄ 0.95        arm’s pre-registered N was 1000; it was extended to 4000 on
+[p20] at N =4000 and 1.00 at 2×104 (the 0.007 of Table VI is              the fixed schedule so that both arms share the horizon (776
+[p20] coverage of the stricter µ0 by the same bound). Folding the         audits, µb0 =0.218, µb1 =0.209, bound 0.245 against 0.217 at
+[p20] non-vulnerable pairs in as V =0 instead is optimistic and gives     N , never below V̄n for n ≥ 200, minimum margin 0.018). No
+[p20] a lower bound: bias 0.026 (gpt-4o-mini, spot-checked: 0.016),       episode errored; the run used 138.6M input and 2.4M output
+[p20] with crossings the analytic read-out puts at N ≈ 7×103              tokens.
+[p20] and 1.0×104 ; the coverages 0.64, 0.04, 0.05 at ρ=1 and                Adaptive rules. The simulation uses a risk-adaptive propen-
+[p20] ε=0.05, 0.2, 0.5 in §VII are E6’s resampled values from             sity πt ∈ [0.1, 0.6] driven by the agent’s own his-
+[p20] e5_dose_response.py.                                                tory. A deterministic rule and a plaintext pre-published
+[p20]    Population bootstrap (E5/E6). The 400 seeds of E5 and            schedule give DA =1 and coverage 0.00; a PRF-keyed
+[p20] E6 resample episodes from a fixed population and so mea-            schedule with the same propensities gives coverage 1.00
+[p20] sure only resampling noise; pair_bootstrap.py instead               (adaptive_rule_sim.py).
+[p20] resamples the 560 pairs (4000 replicates) and passes each              Widths and label budgets (E5). The matched-budget baseline
+[p20] population through the analytic read-out. Point and 95%             (the same online procedure on the first M =800 episodes, all
+[p20] interval: µ0 = 0.221 [0.186, 0.255], µ1 = 0.146 [0.118, 0.175],     labeled) covers µ0 at ≥0.99 in all four cells; the measured
+[p20] bias 0.060 [0.040, 0.081], µ0 − µ1 = 0.075 [0.050, 0.102],          standard-deviation ratio of the two point estimates is 1.04–
+[p20] n⋆ ≈ 1.6×103 [0.9, 3.5]×103 , predicted invalidity at N =4000       1.19 (predicted 1.11 and 1.22). At matched window (n=800,
+[p20] 0.97 [0.61, 1.00]; the bias is positive in every replicate and      the audit using about 160 labels) the audit bound is 2.8–3.1×
+[p20] exceeds the width in 98.9%. Across ε ∈ {0.05, 0.2, 0.5} the         wider, against 2.5–2.7× from the standard deviation alone; the
+[p20] predicted invalidity is 0.37, 0.97, 0.98.                           excess is the empirical-Bernstein penalty at 160 labels.
+[p20]    Live failure run (E8). The pre-registered schedule (seed            Decoy protocol. An audit-like prompt is shown at a B-
+[p20] 20261010, SHA-256 in the run log) draws pairs uniformly with        independent rate ρd on every episode, so the agent sees the
+[p20] replacement and coins from an independent stream; the injec-        same prompt rate on both arms, and the label is taken silently
+[p20] tion carries E3’s notice clause verbatim, with no enforcement.      on every B=1 episode. On the real labels the plain certifier’s
+[p20] ncross is the first n after which the bound stays below V̄n for     coverage is 1.00 at ρd ∈ {0.25, 0.5, 1}, versus 0.07 for
+[p20] 200 consecutive steps. Pre-registered rules and outcomes: H1        the same prompt shown only when audited (E6’s parametric
+[p20] (crossing inside [0.9, 3.5]×103 , below at N , and persisting 200   erasure channel gives 0.04), and the realized attack rate also
+[p20] steps) failed as frozen (deployed sequence, N =3000: below          falls. A gate that asks on every effect is the same construction
+[p20] from 2820 for 181 steps) and holds at the extended N =4000          with ρd =1.
+[p20] with ncross =2818; the persistence and at-N conjuncts are not
+[p20] anytime-valid statements, and a sequence re-tuned to 4000 is a                            A PPENDIX H
+[p20] different sequence from the frozen one, so the primary analysis              T HE SIMULTANEOUS EXCEEDANCE BOUND
+[p20] is the frozen-horizon realized-rate sequence (λ tuned to 3000)        Table XII collects every padded figure in the paper. Each
+[p20] continued to 4000: first below at 2206, crossing at 2687, 0.190     bounds a different quantity on a different run, and none is
+[p20] against 0.205 at N , the silent arm covering throughout; the re-    a design-time δ for a committing path whose raw stamps
+[p20] 
+[p21]                                                               TABLE XII
+[p21]        E VERY PADDED - TIMING BOUND IN THE PAPER : WHAT IT COVERS AND WHETHER IT CAN SERVE AS A DESIGN - TIME δ FOR T HEOREM 5.
+[p21]       Value      Run / path                                Assumption                          Design-time δ?
+[p21]       ≤ 0.044  E1, six paths, fixed ceiling, 166–167       erasure model; fixed code path      no: the stamp observer rejects the model,
+[p21]                clean pairs each                                                                amplification overruns the ceiling
+[p21]       ≤ 0.090 size-aware grid, m ∈ {4, . . . , 160}, 80    erasure model; tested grid only     no: covers the grid, not every reachable m
+[p21]                pairs per point
+[p21]       ≤ 0.028 same grid, confined rerun, 500 pairs per     erasure model; tested grid only     no, as above; fail-closed counting keeps the
+[p21]                point (fallback rule)                                                           certificate sound
+[p21]       ≤ 0.032 same rerun, unpadded counterfactual          none (diagnostic)                   no: diagnostic of the legacy harness
+[p21]                count
+[p21]       ≤ 0.0074 timestamp path, 1000 pairs, fixed ceiling   erasure model                       no: KS rejects the model on this path
+[p21]       ≤ 0.063 timestamp path, stamps coarsened to          stamp phase uniform and             per probe only; composition across probes
+[p21]                r=1 s                                       independent of B                    untested
+[p21]       ≤ 0.0074 coarse release (not deployed), same         stamps are the agent’s only clock   yes, by construction; not deployed
+[p21]                counts as the 0.0074 row above
+[p21]       0.018    input-size grid pooled into one binomial    none                                invalid: bounds a mixture, not the supremum
+[p21]       0.144    Bonferroni over 2K=10 cells, n=80           none                                valid but conservative
+[p21] the agent reads. A usable δ must come from confinement by                   pair 1 − P(A0 ∪ A1 ) ≤ 1 − max(e0 , e1 ) ≤ 1 − θ/2. Hence
+[p21] construction (coarse release) or the residual must be removed               P(all zero | θ) ≤ (1 − θ/2)n . The procedure is fixed in ad-
+[p21]                                                                                                                            1/n
+[p21] (per-call coin). Where a figure does apply, its size matters: at            vance. If all runs are clean, report θ0 = 2(1−α1 ). Otherwise
+[p21] δ=0.028 the inflation (1 − ε)δ < 0.023 is usable at the base                report maxm CPα2 /(2K) (e0 (m))+maxm CPα2 /(2K) (e1 (m)),
+[p21] rates of E5 (0.22–0.38) but near-vacuous below about 0.02.                  with CPβ the one-sided Clopper–Pearson upper bound at level
+[p21]    Reachability, in full. Each bound supplies the suph of                   1−β. This covers θ at level 1−(α1 +α2 ). Under independence
+[p21] Theorem 5 only if the design confines the channel for all                   across pairs the inequality is tight at the worst-case configu-
+[p21] reachable behaviours. A fixed ceiling does not, because the                 ration (e0 =e1 =θ/2 at m⋆ with coinciding exceedance events,
+[p21] agent can inflate the audit branch’s latency by reading more                none elsewhere). At n=80 and α1 =0.025, θ0 = 0.090, equal
+[p21] (§VI). The ceiling must instead be safety · g(m), where m is                to the per-point two-arm bound: multiplicity over m is free,
+[p21] the agent-controlled ingest size, g is a code-level complexity              and the α-split pays for the two arms. A Bonferroni bound
+[p21] bound on the branch’s pre-commit work, and ingestion is                     over the 2K=10 cells (2 × 0.072 = 0.144 at n=80) is valid
+[p21] capped at mmax . Reachability and δ are then defined in terms               but conservative.
+[p21] of each other, since the mechanism M (δ) built for a budget                   (iii) Application. Input-size grid (K=5): 0.090 at n=80; the
+[p21] determines the reachable set: a claimed δ is sound only if                  pre-registered rerun at n=500 triggered the fallback branch,
+[p21]                               M (δ)
+[p21] Φ(δ) := suph∈H(M (δ)) DA (h) ≤ δ, and this must be                          giving 0.032 for a counterfactual count of raw latency above
+[p21] verified at the candidate because soundness is not upward-                  the ceiling on unpadded runs and 0.028 for the confined
+[p21] closed. When the base rate is small relative to (1 − ε)δ, the               padded implementation. The six E1 effect paths (K=6, 166–
+[p21] additive certificate is near-vacuous. The right move is then to             167 clean pairs per path): θ0 ≤ 0.044, replacing the path-
+[p21] remove the bias at its source, or to use Proposition 6 where a              pooled 0.0074.
+[p21] δη is available.
+[p21]                                                                                (iv) The model layer. The bounds above treat every non-
+[p21]    Theorem 5 consumes δ ≥ suph DA (h). On a tested grid                     exceeding run as uninformative. What the agent observes of
+[p21] of K points, the erasure-channel
+[p21]                                     bound of §VI makes this                such a run (exit overshoot, post-pad commit time, the stamp
+[p21] θ := supm e0 (m) + e1 (m) , where eb (m) is the exceedance                  the commit writes) could still depend on B through state the
+[p21] rate of arm b at grid point m. We bound θ from n paired runs                audit branch leaves behind, so the exit is confined by design
+[p21] per point.                                                                  (App. C) and watched at the observer’s resolution; a two-
+[p21]    (i) Pooling is invalid. One binomial over all 2nK runs                   sample test can raise an alarm but not certify independence,
+[p21] bounds the mixture rate, not the supremum; a configuration                  and at n=1000 pairs the smallest detectable TV is about 0.07.
+[p21] that concentrates exceedances at one m, the adversarial case                At microsecond resolution overshoot and commit time raise
+[p21] of the amplification experiment, is compatible with any pooled              none (KS p≈1.0 and 0.77; C2ST 0 [0, 0.060] and [0, 0.108]),
+[p21] bound below the per-point rate (pooling the 5×80 grid would                 but the timestamp observer, which composes them with the
+[p21] report 0.018).                                                              inter-call path, rejects the model: C2ST 0.072 [0.002, 0.140],
+[p21]    (ii) An exact, dependence-free simultaneous bound. Runs                  KS p=2.9×10−4 , mean shift in [−0.6, 3.0] µs against a per-
+[p21] are independent across pairs given the configuration; no as-                probe standard deviation of 21 µs; a Gaussian averaging model
+[p21] sumption is made on the dependence between the two arms                     with this shift predicts 0.53 at k=102 probes and 0.98 at
+[p21] within a pair. Let m⋆ attain θ, and let Ab be the event that                103 . The padded bounds are therefore conditional on a model
+[p21] arm b of a pair at m⋆ exceeds. The all-zero event requires,                 that holds only approximately; the residual composes per
+[p21] at m⋆ , no exceedance in either arm of any pair, and per                    Theorem 3, and the unconditional fix is the per-call coin.
+[p21] 
+[p22]    (v) Two model-free bounds for the stamp. The timestamp ob-          condition of Definition 2; for a constant propensity this is
+[p22] server runs on a seventh path, two permitted create_file               Wτ ⊥ B. (ii) W is a function of (ξ, R<τ ) and of kernels
+[p22] commits under the fixed ceiling, where the exceedance bound            that do not read Rτ , all independent of Rτ , hence of Bτ . (iii)
+[p22] would be 0.0074 but the KS test rejects the model behind it.           The prompt indicator is generated by an R-free kernel, so (i)
+[p22] Coarsened stamps: if the first stamp’s phase is uniform on             applies. (iv) The composition of two R-free kernels is R-free,
+[p22] [0, r) and independent of B, the agent reads a randomized              so (i) applies; the general case is (ii) applied to the composed
+[p22] post-processing of the raw gap (Theorem 1(iii)), and simulta-          kernel. For the failure case, the downstream kernel’s output is
+[p22] neous Clopper–Pearson intervals over the observed cells (with          a function of the upstream coin, so the view law depends on
+[p22] one pooled cell for unseen values; the partition is chosen             it.
+[p22] from the same sample, so these are diagnostics, and a finite-
+[p22] sample bound needs bins fixed in advance) give DA ≤ 0.10,              A shared resource is different. Two episodes that each satisfy
+[p22] 0.10, 0.073, 0.062, 0.063 at r=0.1 ms, 1 ms, 10 ms, 100 ms,            (i) in isolation do not satisfy PNI jointly when their kernels
+[p22] 1 s (empirical 0.013, 0.031, 0, 0.010, 0.012); at r=1 µs the           share a resource whose state depends on both seeds: the
+[p22] alphabet is too large. The bound is per probe and composing it         hypothesis of (i) fails for the composed kernel, and the leakage
+[p22] needs a fresh phase per stamp, which we did not test. Coarse           can be computed exactly.
+[p22] release: if commits are released on the ticks of a clock of            Proof of Proposition 5 (stated in §V).
+[p22] resolution r ≥ 10 ms and the stamp is the tick, the stamp              Proof. For episode 1, L = c + ∆(B1 + X) with X =
+[p22] depends on B only through two counted events, pre-commit               P
+[p22]                                                                           j≥2 j ∼ Bin(M −1, ε) independent of B1 , so the two view
+[p22]                                                                               B
+[p22] work past the ceiling (0/1000 per arm) and commit plus                 laws are those of X and X+1. For an integer Ppmf (pk ) that is
+[p22] overshoot past the tick (never above 2.5 ms on 1002 permitted          unimodal with mode m⋆ , TV(X, X+1) = 21 k |pk − pk−1 |,
+[p22] runs), so it is an erasure channel by construction and case (c)        and the sum telescopes to pm⋆ on each side of the mode,
+[p22] gives DA ≤ 0.0074 per probe. This variant was not deployed             so TV = pm⋆ . Binomial pmfs are unimodal; the asymptotic
+[p22] and requires that the stamps be the agent’s only clock. For            form is the local central limit theorem. A noisy observation
+[p22] Proposition 6 the same cells give δη ≤ 0.063, 0.057, 0.052 at          of L is a post-processing, which cannot increase DA (Theo-
+[p22] η ∈ {0, 0.1, 0.2} and r=1 s, so 1000 pairs do not yet certify          rem 1(iii)).
+[p22] a useful multiplicative residual.
+[p22]                                                                        At ε=0.2 the proposition gives 0.80, 0.41, 0.30, 0.22 for
+[p22]                            A PPENDIX I
+[p22]                                                                        M =2, 5, 10, 20. The measured lower bounds on the real gate
+[p22]    A MINIMAL SEMANTICS AND THREE CONSTRUCTIONS
+[p22]                                                                        (App. K) are 0.43, 0.26, 0.25, 0.18: below the noiseless values,
+[p22] Definition 3 (Audit game). Fix a cross-episode history Hi−1 .          as a noisy statistic must be, and decaying the same way. Per-
+[p22] An episode is a sequence of steps t = 0, 1, . . . with within-         call coins do not help, because L depends on every coin in
+[p22] episode history ht = (a0 , S0 , . . . , at−1 , St−1 ). The mechanism   the round.
+[p22] M is a family of Markov kernels Kt (· | ht , at , R) from
+[p22] histories, actions, and the audit seed R to observations St ,                                  A PPENDIX J
+[p22] together with the rule f that sets Bt = f (ht , R). A policy A                 T HE PER - CALL ESTIMAND UNDER DILUTION
+[p22] is a family of kernels At (· | Wt ) from the view Wt = (ht , ξ) to         (i) The static conversion fails. Construction: each violating
+[p22] actions at , with ξ the agent’s private randomness, ξ ⊥ R. The         episode attempts once, and the adversary appends k−1 benign
+[p22] run alternates at ∼ At (· | Wt ) and St ∼ Kt (· | ht , at , R).        gated calls to it. The per-call rate p̄call drops by roughly
+[p22] The commit step τ is a stopping time with respect to (Wt )t ,          the dilution factor while the true per-episode attempt rate is
+[p22] the certificate’s coin is B = Bτ , and a history ht is reachable       unchanged, so the static readout gassumed p̄call reads about
+[p22] if it has positive probability under (M, A). PNI (Definition 2)        gassumed /k of the truth. At gassumed =5 and k=100 the cer-
+[p22] is the statement that, for every A, B is fresh given Wτ                tificate reads 0.058 against a true pepi =0.30 (Table XIII). The
+[p22] under (M, A): P(B=1 | Wτ , Hi−1 ) = πτ (hτ ), which is                 estimator is not biased, since the per-call quantity genuinely
+[p22] B ⊥ Wτ | Hi−1 when the propensity is constant.                         dropped; the attack rewrites the readout.
+[p22] Proof of Proposition 4 (stated in §V).                                     (ii) The measured-Ḡ readout is dilution-invariant. Index
+[p22]                                                                        gated calls by j and let qj be the conditional probability,
+[p22] Proof. (i) Write Lt for the law of Wt = (ht , ξ) given                 given everything before call j, that call j attempts a violation.
+[p22] (R, Hi−1 ). We show by induction on t that Lt does not                 After n episodes with Nn calls in total, let Ḡn = Nn /n and
+[p22] depend on R. For t=0, W0 = ξ and ξ ⊥ R. If Lt does                     let UCScall
+[p22]                                                                                  N be the P per-call certificate, an anytime-valid upper
+[p22] not depend on R, then at ∼ At (· | Wt ) has a law that does            sequence for N1 j≤N qj .
+[p22] not depend on R, and St ∼ Kt (· | ht , at , R) does not read
+[p22] R by hypothesis, so the law of Wt+1 = (ht , at , St , ξ) given         Proposition 7 (Measured-Ḡ readout). With  P probability  ≥
+[p22]                                                                        1 − α, simultaneously for all n, Tn := n1 i≤n j∈i qj ≤
+[p22]                                                                                                                         P
+[p22] R does not depend on R either. Since τ is a stopping time
+[p22] of (Wt ), the law of Wτ given R does not depend on R,                  Ḡn UCScall
+[p22]                                                                                 Nn . If every episode has at most Gmax calls, then
+[p22] so Wτ ⊥ R. As B = f (hτ , R) with hτ a function of Wτ ,                with  probability  ≥ 1 − α − α′ , simultaneously for all n,
+[p22]                                                                        1
+[p22]                                                                          P                     call       ′        ′
+[p22] P(B=1 | Wτ ) = PR (f (hτ , R)=1) = πτ (hτ ), the freshness             n    i pepi,i ≤ Ḡn UCSNn + Gmax un , with un as in App. E.
+[p22] 
+[p23] Proof. Tn = Ḡn · N1n j≤Nn qj identically, and Nn is a
+[p23]                         P
+[p23]                                                                              has risen to 0.43 while the certified bound is fooled down to
+[p23] stopping time for the call sequence, so the time-uniform                     0.20. With padding the bound stays at 0.72, above a true 0.60,
+[p23]                                    P it for all n at once.
+[p23] event of the per-call sequence covers                                        at every k (means over 200 seeds, ε=0.2, N =4000, normal-
+[p23] For the second claim, pepi,i ≤ E[ j∈i qj | Hi−1 ] by a                       mixture sequence). At the channel layer the per-call coin is
+[p23]    P bound over thePcalls of episode i; the differences
+[p23] union                                                                        therefore valid beyond any feasible in-episode probe budget.
+[p23] E[ j∈i qj | Hi−1 ] − j∈i qj are martingale differences in                       Byte-size dimension. At fixed m, inflating per-object content
+[p23] [−Gmax , Gmax ], bounded uniformly in n at level α′ .                        to 64 KB drives one-sided exceedances under the m-only ceil-
+[p23]                                                                              ing (up to 60/0 of 60) and two-sided ones at the largest sizes.
+[p23] The agent chooses Nn , but dilution cancels in Tn : padding an               A ceiling on total ingested KB S, 48.6 + 5.35 m + 0.144 S ms,
+[p23] episode with benign calls raises Ḡn and lowers the per-call                 leaves 1 exceedance in 2×1000 runs, so the fallback bound of
+[p23] mean by the same factor. The bound is tight when violations                  App. H is only 0.15 at 100 pairs per point.
+[p23] concentrate in one call and loose when they spread (the                         Load. All ceilings here are constants of one two-core host
+[p23] “spread” row of Table XIII reads about twice the truth). The                 and must be re-calibrated per deployment. On the six fixed
+[p23] only way for the agent to lower the readout is to make fewer                 paths at ambient load (3000 pairs) there are 0 exceedances.
+[p23] violating calls.                                                             With K busy cores on the two-core host (500 pairs each),
+[p23]    Deployment cost of the measured-Ḡ readout. The readout                   K ≤ 1 gives 0/500 in both arms with padded latency
+[p23] is conservative by E[v | violating], the mean number of                      independent of B (KS p=0.56, 0.94); at saturation (K=2) the
+[p23] violating calls per violating episode. Counting the effectful                audited arm alone exceeds (1/500 under the fixed ceiling; 85–
+[p23] calls each AgentDojo workspace injection goal requires and                   99 per 100 under the size-aware ceiling, p99.9 latency 720 ms
+[p23] weighting by which goals succeeded gives 1.69 on E8’s silent                 against a 307 ms ceiling at m=96). In both cases the runtime
+[p23] arm (episode rate 0.217, readout target 0.366) and 1.67 on the               exceedance count reports the breach (DA ≤ e0 +e1 → 1)
+[p23] plain arm (m15_percall_cost.py); this is a lower bound                       and fail-closed counting keeps the certificate sound: load-
+[p23] on the looseness, since an agent may make more calls than a                  robustness lives in the counting, not in either ceiling.
+[p23] goal requires.                                                                  Timestamp clock (E1-ts). In the two runs of 1000 pairs the
+[p23]    (iii) The cap. With fail-closed flagging of episodes that reach           audited inter-timestamp gap has a median of 11.0 ms against
+[p23] Gmax , pepi ≤ Ḡ p̄call + P(G>Gmax ); the flag rate is gate-                 0.95 ms for the unaudited arm, and 7.1 ms against 0.22 ms;
+[p23] visible, and where padding is used the cap also bounds the                   a held-out classifier reaches DA ≥ 0.99 in both from one
+[p23] per-episode ceiling bill.                                                    observation (host load average 4.4 at the end of the run, not
+[p23]    Simulated demonstration (estimand layer; no measured                      controlled).
+[p23] channel and no real labels, so a construction check only). The                  CaMeL caveats. 128 benign paired checks from 12 tasks
+[p23] setting is N =4000 episodes, a fraction 0.3 of them violating                at temperature 0; checks within a task are correlated (1 to 34
+[p23] with one attempt each, and k ∈ {1, 10, 100}. The coin is                     each), so task-level splits give 0.17 with a cluster-bootstrap
+[p23] a silent per-call coin with ε=0.2, and the certifier is the                  interval [0, 0.56] that includes zero (0.19 [0, 0.63] on the
+[p23] empirical-Bernstein sequence at α=0.05. The readouts use                     31 policy checks). Fifteen of 24 benign runs ended in an
+[p23] gassumed =5 and Gmax =20, with the level split α/2 and a                     interpreter exception, no attacked runs were paired, and there
+[p23] Clopper–Pearson bound on the flag rate. Each row uses 200                    is no padded arm.
+[p23] seeds, fixed before running. The static readout collapses as k                  Placement. A branch moved off the critical path but still
+[p23] grows, the measured-Ḡ readout stays at about 0.35, and the                  concurrent on shared infrastructure re-opens the aggregate-
+[p23] capped readout covers by flagging every diluted episode at                   load channel of §VIII; the safe placements are strictly post-
+[p23] k=100 (flag rate 0.30).                                                      commit with no agent-readable shared statistic, or pre-commit
+[p23]                                                                              with the discipline of §V.
+[p23]                            TABLE XIII                                           Aggregate load. Batch-synchronous serving of E1 episodes
+[p23]        D ILUTION : MEAN READOUTS OF pepi =0.30 ( COVERAGE ).
+[p23]                                                                              with M ∈ {2, 5, 10, 20} workers, 300 rounds per cell, round
+[p23]  row      true per-call rate    Ḡ   static (g=5) measured Ḡ    capped
+[p23]                                                                              makespan as the shared statistic, each worker’s own coin
+[p23]                                                                              Bi ∼ Bern(0.2). Single-coin C2ST lower bounds are 0.43,
+[p23]  k=1           0.301           1.0 1.000 (1.00) 0.350 (1.00) 0.358 (1.00)
+[p23]  k=10          0.081            3.7 0.474 (1.00) 0.351 (1.00) 0.356 (1.00)
+[p23]                                                                              0.26, 0.25, 0.18 (CIs from [0.30, 0.56] to [0.14, 0.22]), the
+[p23]  k=100         0.010           30.7 0.058 (0.00) 0.354 (1.00) 0.674 (1.00)   audit shifting the statistic by 5.6–7.8 ms; the measured class
+[p23]  spread        0.461           1.3 1.000 (1.00) 0.669 (1.00) 0.674 (1.00)    moments give 0.48, 0.28, 0.19, 0.13, below the noiseless
+[p23]                                                                              projection 0.95, 0.79, 0.63, 0.47. Capacity isolation (gate
+[p23]                                                                              workers on one core, audits on the other) halves the shift
+[p23]                      A PPENDIX K                                             to 2.7–4.3 ms but leaves C2ST at 0.33, 0.33, 0.17, 0.13,
+[p23]        A DDITIONAL LEAKAGE - ASSESSMENT DETAILS                              since the cores share memory bandwidth and cache. Per-cell
+[p23]    E2 probe-budget sweep. With a noisy clock (σ=1 s, tool-                   load averages ran from 1.6 to 20 on the two-core host, so
+[p23] call), averaging more probes beats the noise. The certificate                both configurations are oversubscribed at M ≥ 10 and the
+[p23] stays valid through k ≤ 103 , then fails in 77% of seeds at                  shared/isolated contrast is indicative only.
+[p23] k=104 and in every seed at k=105 . At that point the true rate
+[p23] 
+[p24] 
