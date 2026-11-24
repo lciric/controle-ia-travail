@@ -59,6 +59,12 @@ Chaque ligne : heure UTC, chemin, étendue lue, raison. Les empreintes des pièc
 | 10:50 à 11:10 | rapport de la contre-lecture 1 (`brouillons/g0-criteres-2-3-v1/contre-lecture-1-des-brouillons-1-v2.md`) | entier | corrections des brouillons 1 |
 | 11:20 | `prereg/T0.6-organismes-config-7b-v1.json`, l. 70-90 ; clés `CODE-MOTS-ET-COUT-T06` des textes scellés de T0.6 et de T0.7 et du registre des scellements | doses de l'adaptateur ; noms de clés seulement, sans le texte des lignes | clause du lancement de l'organisme à adaptateur ; ligne de registre citée |
 | 11:30 | `registres/rappels.md` ; noms des fichiers de `docs/notes/veille-organismes-ideation-v2/` qui portent la note d'entretien et la lecture des trois sources | entier ; noms seulement | rappel daté du 24 novembre |
+| 11:36 | quatrième message de la mère | entier | deux points de conception venus du protocole de demande approfondie : formulations fixées avant toute génération, sans essai pilote lu par l'oracle ; un seul témoin ne suffit pas (fait de littérature relayé, non vérifié par cette session) |
+| 11:40 | `docs/brief-claude-code-programme-complet-v2.md`, l. 160-173 ; `src/controle_ia/premier_test_ia/conditions.py`, l. 1-26 et 44-84 (relues) | plages dites | test de validité des sondes ; chargement des trois conditions instruites du premier test |
+| 11:45 | rapport de la vérification 1 (`brouillons/g0-criteres-2-3-v1/verification-1-des-brouillons-2-v1.md`) et sa simulation | entiers | corrections des brouillons 2 |
+| 11:50 | `prereg/T0.6-organismes-v0-v1.md` : titres de sections (recherche des lignes de titre) et l. 671, section « Devis » | titres seulement ; une ligne | source d'une durée citée au devis (1 534 s) |
+| 12:01 | cinquième message de la mère (mis en file à 11:41) | entier | référence de l'article de Soopal et al. ; ajout de deux conditions accordé dans son principe |
+| 12:02 | `docs/sources/pdf/2611.14950v1.pdf` (`6396abd53a24b457519a4f5e5d669a74e1a91cce9a6e5b6b4175821ad3ab94d6`), article de littérature | p. 1, 2, 6, 7 et 8 | relire sur la page le résultat cité avant de le citer (R7) |
 
 ## Expositions déclarées
 
