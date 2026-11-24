@@ -1,0 +1,5 @@
+# Erratum 2 de l'inscription « qui a lu quoi » — suite du 24 novembre (trois demandes relayées par la mère à 09:58Z)
+
+- Session : `session_01Qi7Gr5f9XYrvY8oLNZQ3wg`. Heure (`date -u`) : 2026-11-24T10:02:25Z. L'inscription v1 et son erratum 1 restent sans modification (R12).
+- Pièces ouvertes pour cette suite : `docs/notes/lecture-sondes-bbis-par-lentilles-v1/description-v1.md` (`011b2169…`, branche `lecture/lentilles-sondes-bbis-v1`, déjà déclarée ; lue cette fois pour ses phrases des pôles et ses réserves) ; lignes R-4651, R-4656, R-4714, R-4732, R-4785, R-4789, R-4961, R-5047, R-5049 et R-5188 de `registres/decisions.md` ; `registres/go.md` de la branche principale (lignes du 24 novembre) ; `src/controle_ia/garde_google_v3.py` ; le script `appel_neon_v1.py` du précédent lecteur (pour sa forme).
+- Aucun appel à un modèle externe n'est parti ; aucune dépense. Aucun coffre, aucune consigne privée, aucune famille tenue à l'écart, aucun secret des adaptateurs jumeaux ouvert. L'exclusion tient inchangée.
