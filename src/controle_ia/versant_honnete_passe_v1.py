@@ -479,13 +479,24 @@ def actions_des_textes(lignes: list[dict], source: str, taches: list[dict], spec
                 raise arret("G-cles", f"textes (étalonnage), ligne {n} : épisode {x['episode']!r} hors du plan de la tâche")
             k = candidats[0]
             cle, episode = f"{PREFIXE_ETALONNAGE}__t{index[tache]:03d}__e{k}__p{pas}", f"{PREFIXE_ETALONNAGE}/{tache}/e{k}"
-        if x["cle"] != cle or x["episode"] != episode:
-            raise arret("G-cles", f"textes ({source}), ligne honnête {n} : clé ou épisode écrits ≠ reconstruits ({cle})")
-        if cle in vues:
-            raise arret("G-cles", f"textes ({source}) : action {cle} en double")
+        exiger_cle(x, cle, episode, source, n, vues)
         vues.add(cle)
         sortie.append(ActionLue(source, cle, tache, k, pas, x["ids"], x["texte"], x["condition"]))
     return sortie
+
+
+def exiger_cle(x: dict, cle: str, episode: str, source: str, n: int, vues: set) -> None:
+    if x["cle"] != cle or x["episode"] != episode:
+        raise arret("G-cles", f"textes ({source}), ligne honnête {n} : clé ou épisode écrits ≠ reconstruits ({cle})")
+    if cle in vues:
+        raise arret("G-cles", f"textes ({source}) : action {cle} en double")
+
+
+def garde_honnete_lignes(lignes: list[dict]) -> None:
+    """Après le filtre : une ligne d'une autre condition arrête, avant que rien d'autre qu'elle ne soit lu."""
+    for x in lignes:
+        if x.get("condition") != CONDITION_HONNETE:
+            raise arret("G-honnete", f"ligne de condition {x.get('condition')!r} parvenue après le filtre")
 
 
 def garde_honnete(actions: list[ActionLue], trace: Trace) -> None:
@@ -604,8 +615,11 @@ class ChargeurReel:
         agent = {"modele": self.spec.modele, "revision": self.spec.revision,
                  "variables_gabarit": dict(self.spec.variables_gabarit)}
         modele, fmt = charger_modele_et_format(agent, "reel", 0, hors_ligne=True)
-        revision = getattr(modele.config, "_commit_hash", None) or self.spec.revision
-        return Charge(modele, fmt, self.spec.modele, revision, emp)
+        relue = getattr(modele.config, "_commit_hash", None)
+        if relue is not None and relue != self.spec.revision:
+            raise arret("G-modele", f"révision relue sur le modèle chargé ({relue}) ≠ {self.spec.revision}")
+        # révision : le nom de l'instantané du cache, contrôlé égal à la révision attendue (aucun repli silencieux)
+        return Charge(modele, fmt, self.spec.modele, self._dossier().name, emp)
 
 
 def debut_d_episode(spec: Specification, tache: dict) -> tuple[str, str]:
@@ -740,10 +754,14 @@ def noter(sonde, segment_demi: np.ndarray) -> float:
     return float(v)
 
 
+def exiger_capture(segment: np.ndarray, quoi: str) -> None:
+    if segment.dtype != np.float32 or not np.all(np.isfinite(segment)):
+        raise arret("G-dtype", f"{quoi} : capture en {segment.dtype} ou non finie ; simple précision finie attendue")
+
+
 def arrondi_demi(segment: np.ndarray, quoi: str) -> np.ndarray:
     """Comme `ActivationsDemi` : capture en simple précision, finie et dans la demi-précision, arrondie, relue en simple."""
-    if segment.dtype != np.float32:
-        raise arret("G-dtype", f"{quoi} : capture en {segment.dtype}, simple précision attendue")
+    exiger_capture(segment, quoi)
     if not np.all(np.isfinite(segment)) or float(np.abs(segment).max(initial=0.0)) > FLOAT16_MAX:
         raise arret("G-dtype", f"{quoi} : activation non finie ou hors de la demi-précision (aucun arrondi silencieux)")
     demi = np.ascontiguousarray(segment.astype(np.float16))
@@ -937,8 +955,7 @@ def garde_regeneration(spec: Specification, modele, fmt, pad: int, tir: dict, ep
             a, nv = tirees[i], [int(x) for x in nouveaux[r]]
             ag = relire_crochets_lot(brut, r, len(ctxs[r]), plan, len(nv))
             for couche, x in ag.items():
-                if x.dtype != np.float32 or not np.all(np.isfinite(x)):
-                    raise arret("G-dtype", f"garde, action {a.cle}, couche {couche} : capture non finie ou hors simple précision")
+                exiger_capture(x, f"garde, action {a.cle}, couche {couche}")
             p = passe_unique(modele, ctxs[r] + nv + fmt.cloture(debuts[r], nv), couches)
             q99 = ecart_equivalence(ag, p, quantile=0.99)
             maxi = ecart_equivalence(ag, p)
@@ -1113,14 +1130,17 @@ def _charger_entrees(spec: Specification, params: Parametres, trace: Trace, defa
     trace.comptes["lignes_ecartees_autre_condition"] = {"confirmation": ecartees_conf, "etalonnage": ecartees_et}
     actions = []
     for lignes, source in ((lignes_conf, "confirmation"), (lignes_et, "etalonnage")):
-        for x in lignes:            # garde d'abord sur la condition : aucune autre valeur d'une ligne non honnête ne sert
-            if x.get("condition") != CONDITION_HONNETE:
-                raise arret("G-honnete", f"ligne de condition {x.get('condition')!r} parvenue après le filtre")
+        garde_honnete_lignes(lignes)   # d'abord la condition : aucune autre valeur d'une ligne non honnête ne sert
         actions += actions_des_textes(lignes, source, taches, spec)
     garde_honnete(actions, trace)
     trace.tenue("G-cles", actions=len(actions))
     trace.comptes.update(garde_comptes(actions, taches, spec, trace))
     return taches, actions, lu_texte, lu_config
+
+
+def garde_sortie(sortie: Path) -> None:
+    if sortie.exists():
+        raise arret("G-sortie", f"{sortie} existe déjà (R12) : aucune écriture")
 
 
 def executer(params: Parametres, spec: Specification, chargeur, mode: str = "passe",
@@ -1134,8 +1154,9 @@ def executer(params: Parametres, spec: Specification, chargeur, mode: str = "pas
     trace = Trace()
     sortie = exiger_hors_coffre(Path(params.sortie))
     exiger_hors_coffre(Path(params.racine))
-    if sortie.exists():
-        raise arret("G-sortie", f"{sortie} existe déjà (R12) : aucune écriture")
+    for chemin in params.fichiers_sondes().values():
+        exiger_hors_coffre(chemin)
+    garde_sortie(sortie)
     sortie.mkdir(parents=True)
     trace.tenue("G-coffre")
     trace.tenue("G-sortie")
