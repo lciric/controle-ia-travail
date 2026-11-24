@@ -1,0 +1,2 @@
+
+- 2026-11-24T11:16:49Z — Préenregistrement de l expérience de seuil du chantier 3 (budget d audit borné) SCELLÉ par la mère du compte 01Qi7 : papiers/D/prereg/prereg-seuil-chantier3-v3.md (4f3ee5c3a10b55d3…). Réserves non bloquantes, laissées telles quelles pour ne pas refaire la comparaison : le titre et l en-tête disent « v2 » ; la section Seuil dit encore « décisive » l écart bilatéral, qui est descriptif (vérification b7465273…).
