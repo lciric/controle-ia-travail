@@ -1,0 +1,85 @@
+% Section: geometric decoupling of an off-loop probe (draft v1, written for the companion paper)
+% Numerical companion: code/experience_jouet_decouplage_sonde_v1.py
+
+\section{Geometry of Off-Loop Decoupling: Probes on Internal Representations}\label{sec:geometry}
+
+The static decoupling regime (R2) is stated for abstract survival probabilities. We now make it concrete for the case that motivates it in practice: an in-loop filter that reads a chain-of-thought (text) head of a network, and an audit probe that reads internal activations of the same network and is kept out of the loop.
+
+\paragraph{Setting.} An episode has an internal representation $h \in \mathbb{R}^d$. The in-loop filter only sees the readout $z = W h \in \mathbb{R}^m$ of a chain-of-thought head $W \in \mathbb{R}^{m \times d}$. The off-loop audit is a frozen linear probe with score $s = w^\top h$, $w \in \mathbb{R}^d \setminus \{0\}$, oriented so that larger scores indicate cheating. We study two ways in which in-loop filtering acts on the population of cheating episodes: (i) \emph{selection}, where the law $P$ of $h$ on a cheating stratum is reweighted by a function of $z$ (rejection sampling, best-of-$N$, Gibbs tilting), and (ii) \emph{gradient training} of the representation itself against a loss that depends on $h$ only through the heads.
+
+\subsection{Selection on the filter readout}
+
+For a measurable $g : \mathbb{R}^m \to [0, \infty)$ with $0 < \E_P[g(Wh)] < \infty$, write $P_g(dh) := g(Wh)\, P(dh) / \E_P[g(Wh)]$ for the selected law. Operator~A on an iso-reward stratum is the case $g = \beta_{\mathrm{loop}}$, the survival probability of the filter.
+
+\begin{theorem}[Selection on a text readout]\label{thm:geometry-selection}
+Let $h \sim P$ with $\E_P\|h\|^2 < \infty$.
+\begin{enumerate}
+  \item \textbf{Exact invariance.} The law of $s = w^\top h$ under $P_g$ equals its law under $P$ for every admissible $g$ if and only if $s$ and $Wh$ are independent under $P$. If $P = \mathcal{N}(\mu, \Sigma)$, this holds if and only if $W \Sigma w = 0$.
+  \item \textbf{Exact mean shift (Gaussian case).} If $P = \mathcal{N}(\mu, \Sigma)$ and $g > 0$ is $C^1$ with $\E_P[g(Wh)] < \infty$ and $\E_P\|\nabla g(Wh)\| < \infty$, then
+  \begin{equation}\label{eq:stein-shift}
+    \E_{P_g}[s] - \E_P[s] = (W \Sigma w)^\top\, \E_{P_g}\!\big[\nabla \log g(Wh)\big].
+  \end{equation}
+  For a logistic filter that intercepts with probability $\sigma(a^\top z - b)$ and survival weight $g(z) = 1 - \sigma(a^\top z - b)$,
+  \begin{equation}\label{eq:logistic-shift}
+    \E_{P_g}[s] - \E_P[s] = -\,\E_{P_g}\!\big[\sigma(a^\top W h - b)\big]\; \langle W^\top a, w \rangle_{\Sigma},
+    \qquad \langle u, v \rangle_\Sigma := u^\top \Sigma v.
+  \end{equation}
+  Hence selection moves the mean probe score of surviving cheaters towards the honest side if $\langle W^\top a, w\rangle_\Sigma > 0$, away from it if $\langle W^\top a, w\rangle_\Sigma < 0$, and leaves the whole probe-score law unchanged if $W\Sigma w = 0$.
+  \item \textbf{Robustness under partial coupling (any law).} Let $\rho^\star := \sup\{\operatorname{Corr}_P(\phi(s), \psi(Wh))\}$ be the Hirschfeld--Gebelein--R\'enyi maximal correlation between $s$ and $Wh$ under $P$ (supremum over non-constant square-integrable $\phi, \psi$). If $\E_P[g(Wh)^2] < \infty$, then for every threshold $t$,
+  \begin{align}
+    \big|\E_{P_g}[s] - \E_P[s]\big| &\le \rho^\star\, \operatorname{sd}_P(s)\, \sqrt{\chi^2(P_g \,\|\, P)}, \label{eq:robust-mean}\\
+    \big|P_g(s > t) - P(s > t)\big| &\le \rho^\star \sqrt{P(s>t)\,(1 - P(s>t))}\, \sqrt{\chi^2(P_g \,\|\, P)} \le \tfrac12 \rho^\star \sqrt{\chi^2(P_g \,\|\, P)}, \label{eq:robust-tpr}
+  \end{align}
+  where $\chi^2(P_g \| P) = \Var_P(g(Wh)) / \E_P[g(Wh)]^2$. For Operator~A ($g = \beta_{\mathrm{loop}}$) this is $\Var(\beta_{\mathrm{loop}})/\E[\beta_{\mathrm{loop}}]^2$, the same variance that drives conditional enrichment in Theorem~\ref{thm:selection}. For Gaussian $P$, $\rho^\star$ equals the canonical correlation $\big(w^\top \Sigma W^\top (W\Sigma W^\top)^{+} W \Sigma w / w^\top \Sigma w\big)^{1/2}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part 1.} If $s \perp Wh$, then for bounded measurable $\phi$, $\E_P[\phi(s) g(Wh)] = \E_P[\phi(s)]\,\E_P[g(Wh)]$, so the law of $s$ under $P_g$ is that under $P$. Conversely, for any Borel $B \subset \mathbb{R}^m$ with $P(Wh \in B) > 0$, $g = \mathbf{1}_B$ is admissible and invariance gives $P(s \in A, Wh \in B) = P(s \in A) P(Wh \in B)$ for all Borel $A$; the identity is trivial when $P(Wh \in B) = 0$; hence independence. In the Gaussian case $(s, Wh)$ is jointly Gaussian with cross-covariance $W \Sigma w$, and joint Gaussians are independent iff uncorrelated.
+
+\emph{Part 2.} Stein's identity for $h \sim \mathcal{N}(\mu, \Sigma)$ and $\psi(h) = g(Wh)$ with $\E\|\nabla\psi\| < \infty$ gives $\E[(h - \mu)\psi(h)] = \Sigma\, \E[\nabla \psi(h)] = \Sigma W^\top \E[\nabla g(Wh)]$. Taking the inner product with $w$ and dividing by $\E_P[g(Wh)] > 0$ yields $\E_{P_g}[s] - w^\top \mu = (W\Sigma w)^\top \E_P[\nabla g(Wh)]/\E_P[g(Wh)]$, and $\E_P[\nabla g]/\E_P[g] = \E_{P_g}[\nabla g / g]$ since $g > 0$. For the logistic survival weight, $\nabla \log(1 - \sigma(a^\top z - b)) = -\sigma(a^\top z - b)\, a$, and $(W \Sigma w)^\top a = \langle W^\top a, w\rangle_\Sigma$.
+
+\emph{Part 3.} For any square-integrable $\phi$, $\E_{P_g}[\phi(s)] - \E_P[\phi(s)] = \Cov_P(\phi(s), g(Wh)) / \E_P[g(Wh)]$. By definition of $\rho^\star$, $|\Cov_P(\phi(s), g(Wh))| \le \rho^\star \operatorname{sd}_P(\phi(s))\operatorname{sd}_P(g(Wh))$ (trivially if either is constant). Divide by $\E_P[g]$ and use $\operatorname{sd}_P(g)/\E_P[g] = \sqrt{\chi^2(P_g\|P)}$, which holds because $dP_g/dP = g/\E_P[g]$. Take $\phi(s) = s$ for~\eqref{eq:robust-mean} and $\phi(s) = \mathbf{1}\{s > t\}$ for~\eqref{eq:robust-tpr}; the last inequality uses $x(1-x) \le 1/4$. For jointly Gaussian $(s, Wh)$ the maximal correlation equals the canonical correlation (Lancaster, 1957), which for a scalar $s$ is the stated multiple correlation coefficient.
+\end{proof}
+
+\begin{remark}[Uncorrelated is not enough]\label{rem:uncorrelated}
+Outside the Gaussian case, $\Cov_P(s, Wh) = 0$ does not imply invariance. With $x \sim \mathcal{N}(0,1)$, $z = x$, $s = x^2 - 1$ and the logistic survival weight $g(z) = 1 - \sigma(2z - 1/2)$, one has $\Cov(z, s) = 0$ yet selection shifts the mean of $s$ by a nonzero amount (about $-0.078$ in the companion simulation, standard error $5 \times 10^{-4}$). The relevant quantity is the maximal correlation $\rho^\star$ of Part~3, not the linear correlation.
+\end{remark}
+
+\subsection{Gradient training of a shared representation}
+
+Selection reweights episodes without changing the network; gradient training changes the representation itself. Consider a one-hidden-layer network $h(x) = \varphi(Mx)$, $M \in \mathbb{R}^{d \times p}$ with rows $m_i^\top$, $\varphi$ applied coordinatewise, either $C^1$ or the ReLU (with the convention $\varphi'(0) = 0$). The training objective depends on $h$ only through the chain-of-thought head $W$ (the filter path) and a task head $U \in \mathbb{R}^{d \times k}$ (the reward path), plus neuron-separable anchoring terms:
+\begin{equation}\label{eq:train-objective}
+  \mathcal{L}(M) = \E_{x \sim \mathcal{D}}\big[\ell_x\big(W h(x),\, U^\top h(x)\big)\big] + \sum_{i=1}^d \E_{x \sim \mathcal{D}}\big[\psi_i\big(h_i(x), x\big)\big],
+\end{equation}
+where $\ell_x$ and $\psi_i(\cdot, x)$ are $C^1$, and each anchoring term is stationary at initialisation: $\partial_1 \psi_i(h_i^{(0)}(x), x) = 0$ (e.g.\ $\psi_i = \nu (h_i - h_i^{(0)})^2$, anchoring to the pretrained representation). Write $S := \{i : w_i \neq 0\}$ for the neurons read by the probe. Training is any first-order method whose update of row $m_i$ is a function of the past gradients of $\mathcal{L}$ with respect to $m_i$ only and vanishes when those gradients all vanish (gradient descent with any step sizes, mini-batches drawn from $\mathcal{D}$, momentum, Adam, per-coordinate clipping).
+
+\begin{theorem}[Neuron-level decoupling under gradient training]\label{thm:geometry-training}
+\leavevmode
+\begin{enumerate}
+  \item \textbf{Neuron-disjoint probes are exactly invariant.} If $W_{:,i} = 0$ and $U_{i,:} = 0$ for all $i \in S$, then $m_i(t) = m_i(0)$ for all $i \in S$ and all $t$, so $s(x) = w^\top h(x)$ is unchanged for every input $x$ along the entire trajectory, whatever the filter loss, the reward loss, the step sizes and the number of steps.
+  \item \textbf{Linear networks: Euclidean orthogonality suffices.} If $\varphi$ is the identity, the anchoring terms are $\psi_i = \nu(h_i - h_i^{(0)})^2$, training is plain (full-batch or mini-batch) gradient descent, and $W w = 0$, $U^\top w = 0$, then $w^\top (M(t) - M(0)) = 0$ for all $t$; again the probe score is exactly invariant.
+  \item \textbf{Nonlinear networks: orthogonality does not suffice.} Let $I := S \cup \{i : W_{:,i} \neq 0\}$ and suppose $U_{i,:} = 0$ for $i \in I$. For one gradient step of size $\gamma$ from $M$, the first-order change of the probe score at input $x'$ due to the filter path is
+  \begin{equation}\label{eq:ntk-drift}
+    \delta s(x') = -\gamma\, \E_{x \sim \mathcal{D}}\Big[\sum_{i \in I} w_i\, W_{:,i}^\top\, \nabla_z \ell_x \; \varphi'(m_i^\top x)\, \varphi'(m_i^\top x')\, x^\top x'\Big] + o(\gamma).
+  \end{equation}
+  If the kernels $k_i(x, x') := \varphi'(m_i^\top x)\varphi'(m_i^\top x')\, x^\top x'$, $i \in I$, are linearly independent in $L^2(\mathcal{D} \otimes \mathcal{D})$, then $\delta s \equiv 0$ for every filter loss if and only if $w_i W_{:,i} = 0$ for all $i \in I$ (neuron-level disjointness). In the linear case all $k_i$ coincide and the condition collapses to $\sum_i w_i W_{:,i} = W w = 0$.
+  \item \textbf{A trainable chain-of-thought head recruits the probe.} If $W$ is trained jointly by gradient descent on~\eqref{eq:train-objective}, then $\tfrac{d}{dt} W w = -\E_x[\nabla_z \ell_x\; s(x)]$ along the gradient flow. Neuron-disjointness is therefore not preserved: starting from $W_{:,S} = 0$, the coupling $W w$ grows at a rate given by the correlation between the filter-loss gradient and the probe score, after which Part~1 no longer applies.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part 1.} $\partial \mathcal{L}/\partial m_i = \E_x\big[\big((W^\top \nabla_z \ell_x)_i + (U \nabla_y \ell_x)_i + \partial_1\psi_i(h_i(x), x)\big)\varphi'(m_i^\top x)\, x\big]$, where $\nabla_z, \nabla_y$ are the gradients of $\ell_x$ in its two arguments. For $i \in S$ the first two terms vanish because $(W^\top v)_i = W_{:,i}^\top v = 0$ and $(U v)_i = U_{i,:} v = 0$. If $m_i(t') = m_i(0)$ for all $t' \le t$, then $h_i(x) = h_i^{(0)}(x)$ and the third term vanishes, so every gradient with respect to $m_i$ up to time $t$ is zero and the update leaves $m_i$ unchanged; induction on $t$ (or, for the gradient flow, uniqueness of the solution of the ODE restricted to $\{m_i = m_i(0),\ i \in S\}$, which is invariant) concludes. Mini-batch versions are identical with $\mathcal{D}$ replaced by the empirical batch.
+
+\emph{Part 2.} With $\varphi = \mathrm{id}$, $\nabla_M \mathcal{L} = \E_x\big[(W^\top \nabla_z\ell_x + U \nabla_y \ell_x + 2\nu (M - M_0) x)\, x^\top\big]$. Multiplying on the left by $w^\top$: the first term gives $(Ww)^\top \E[\nabla_z \ell_x x^\top] = 0$, the second $(U^\top w)^\top \E[\nabla_y\ell_x x^\top] = 0$, the third $2\nu\, w^\top (M - M_0)\E[x x^\top]$, which is zero if $w^\top(M - M_0) = 0$. Induction over steps (or invariance of the linear subspace $\{w^\top (M - M_0) = 0\}$ under the flow) gives the claim; $s(x) = w^\top M x$ is then constant in $t$.
+
+\emph{Part 3.} The filter-path gradient with respect to $m_i$ is $\E_x[W_{:,i}^\top \nabla_z \ell_x\, \varphi'(m_i^\top x)\, x]$, so one step changes $h_i(x') = \varphi(m_i^\top x')$ by $-\gamma\, \varphi'(m_i^\top x')\, x'^\top \E_x[W_{:,i}^\top\nabla_z\ell_x\,\varphi'(m_i^\top x)\, x] + o(\gamma)$ (for the ReLU, at inputs $x'$ off the hyperplane $m_i^\top x' = 0$, a $\mathcal{D}$-null set when $\mathcal{D}$ has a density); summing $w_i \times$ this over $i \in I$ gives~\eqref{eq:ntk-drift}. If $w_i W_{:,i} = 0$ for all $i$, the drift vanishes. Conversely, the filter loss can be chosen so that $x \mapsto \nabla_z \ell_x$ is any bounded measurable $a : \mathbb{R}^p \to \mathbb{R}^m$ (e.g.\ $\ell_x(z, y) = a(x)^\top z$). Vanishing of $\delta s(x')$ for all such $a$ and $\mathcal{D}$-a.e.\ $x'$ means, for each output coordinate $j$, $\sum_{i \in I} w_i W_{ji}\, k_i(\cdot, x') = 0$ in $L^2(\mathcal{D})$ for a.e.\ $x'$, hence $\sum_{i \in I} w_i W_{ji} k_i = 0$ in $L^2(\mathcal{D} \otimes \mathcal{D})$ by Fubini, and linear independence forces $w_i W_{ji} = 0$. When $\varphi = \mathrm{id}$, $k_i = x^\top x'$ for all $i$ and the condition is $\sum_i w_i W_{:,i} = Ww = 0$.
+
+\emph{Part 4.} $\partial \mathcal{L}/\partial W = \E_x[\nabla_z \ell_x\, h(x)^\top]$, so under the flow $\dot W = -\E_x[\nabla_z\ell_x h(x)^\top]$ and $\tfrac{d}{dt}(W w) = -\E_x[\nabla_z \ell_x\, h(x)^\top w] = -\E_x[\nabla_z \ell_x\, s(x)]$.
+\end{proof}
+
+\begin{remark}[What the geometry says about practice]
+Theorem~\ref{thm:geometry-training} sharpens the static decoupling regime in three ways. First, the invariance of an off-loop probe under in-loop training is a property of \emph{which neurons} the probe and the text head read, not of the angle between their readout vectors: in a ReLU layer, a probe orthogonal to the chain-of-thought readout but sharing its neurons is moved by the filter gradient, whereas a probe on disjoint neurons is provably untouched for the whole run. Second, invariance concerns the frozen probe; the linear separability of cheating in the representation (a re-fitted probe) can survive even when the frozen probe is evaded, which is the distinction between auditing with a fixed instrument and re-calibrating it. Third, the guarantee is fragile to training the text head: the head can recruit the probe's neurons, so an auditor relying on Part~1 must either freeze the head's access to those neurons or monitor the coupling $\|Ww\|$, which by Part~4 is observable during training. These statements concern one hidden layer; in deeper networks, earlier shared layers couple all neurons and only the first-order formula~\eqref{eq:ntk-drift} (with the corresponding tangent kernel) remains.
+\end{remark}
+
+\paragraph{Numerical check.} The companion script \texttt{experience\_jouet\_decouplage\_sonde\_v1.py} verifies~\eqref{eq:stein-shift} by Monte Carlo ($4 \times 10^6$ draws, agreement within one to two standard errors for aligned, $\Sigma$-orthogonal and random probes), the counterexample of Remark~\ref{rem:uncorrelated}, and Theorem~\ref{thm:geometry-training} on a network with $d = 32$ hidden units trained for $1500$ full-batch gradient steps against a logistic filter on a two-dimensional text head. Results (frozen-probe area under the ROC curve, cheating versus honest, before $\to$ after; filter catch rate on cheating episodes before $\to$ after): neuron-disjoint probe, linear and ReLU: probe scores unchanged to machine precision while the filter catch rate falls ($0.507 \to 0.316$ for ReLU); orthogonal probe sharing the text head's neurons: unchanged in the linear network, moved in the ReLU network (maximal score change $0.78$, mean cheater score $-0.058$, area under the curve $0.749 \to 0.750$); probe aligned with the text readout: evaded together with the filter (area under the curve $0.708 \to 0.657$ linear, $0.565 \to 0.435$ ReLU), while a re-fitted probe keeps an area under the curve of about $0.83$--$0.86$ in all cases. With a trainable text head, the filter is evaded almost entirely through the head (catch rate $0.507 \to 0.0003$) and the coupling $\|Ww\|$ grows from $0$ to $0.62$, with a small probe-score drift ($4.5 \times 10^{-3}$) over this horizon.
