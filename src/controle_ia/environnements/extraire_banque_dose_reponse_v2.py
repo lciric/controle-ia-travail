@@ -81,9 +81,10 @@ SEUIL_ECHECS = 4
 TAILLE_AUDIT = 4
 TAILLE_PILOTE, TAILLE_RESERVE = sel.CIBLE_TACHES, sel.MARGE   # portée : 64 tâches, marge de 16 (80 papiers gardés)
 RANG_DEPART = sel.RANG_DEPART
-MODELE_SOUS_AGENTS = ("non nommé par le manifeste de l'extraction des 96 (procédure, section 7 : l'identifiant n'est "
-                      "pas écrit dans le dépôt) ; sous-agents lancés comme alors, sans choix de modèle, servis par le "
-                      "modèle de la session ; écart déclaré à la ligne BANQUE-DOSE-REPONSE-CONSIGNE-CACHEE (point 1, "
+MODELE_SOUS_AGENTS = ("non nommé par le manifeste de l'extraction des 96 (procédure, section 7) ; le modèle d'octobre, "
+                      "selon le mot de Lazar relayé par la mère, est celui de cette session ; il est nommé explicitement "
+                      "à l'appel de chaque sous-agent, identifiant non écrit dans le dépôt (consigne de la plateforme) ; "
+                      "effort non fixé à l'appel ; écart déclaré à la ligne BANQUE-DOSE-REPONSE-CONSIGNE-CACHEE (point 1, "
                       "(b), du texte scellé)")
 RUN_EXTRACTION_INITIALE = "runs/20261007-082440-t05-extraction/manifeste.json"
 ROLES = ex.ROLES_VERDICT
