@@ -55,6 +55,10 @@ Chaque ligne : heure UTC, chemin, étendue lue, raison. Les empreintes des pièc
 | 10:30 | `registres/scellements-v1.md` | noms de clés seulement, par recherche | nommer les lignes de registre sans collision |
 | divers | noms de fichiers et de branches (dont `idees/questions-directeur-2026-11-24-v1`, `lecture/synthese-verdicts-pour-lazar-01qi7-v1`, `donnees/t05-banque-complete-v1`, `calcul/t06-confirmation-7b-v1`, `verdict/…`) ; sujets de cinq commits de `main` | noms et sujets seulement ; **aucun contenu ouvert** | chercher la pièce de choix (dans un coffre : non lue) |
 | 10:06 à 10:31 | trois messages de la mère | entiers | conditions de la pièce de choix (séparation des banques) ; adaptateurs non attestés ; trois exigences de Lazar et nœud à deux options |
+| 10:35 à 11:20 | calculs de puissance de l'auteur (scripts v1 à v4 du dossier des brouillons), sur les seuls nombres des expositions déclarées ci-dessous ; aucune donnée de course | sorties entières | planification ; jamais une sélection |
+| 10:50 à 11:10 | rapport de la contre-lecture 1 (`brouillons/g0-criteres-2-3-v1/contre-lecture-1-des-brouillons-1-v2.md`) | entier | corrections des brouillons 1 |
+| 11:20 | `prereg/T0.6-organismes-config-7b-v1.json`, l. 70-90 ; clés `CODE-MOTS-ET-COUT-T06` des textes scellés de T0.6 et de T0.7 et du registre des scellements | doses de l'adaptateur ; noms de clés seulement, sans le texte des lignes | clause du lancement de l'organisme à adaptateur ; ligne de registre citée |
+| 11:30 | `registres/rappels.md` ; noms des fichiers de `docs/notes/veille-organismes-ideation-v2/` qui portent la note d'entretien et la lecture des trois sources | entier ; noms seulement | rappel daté du 24 novembre |
 
 ## Expositions déclarées
 
