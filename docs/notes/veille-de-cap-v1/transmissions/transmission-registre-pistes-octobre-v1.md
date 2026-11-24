@@ -6,7 +6,6 @@ Classe C. Écrit le 2026-11-24 vers 16:25Z par la veille de cap (Opus 5.5), sur 
 
 - 115 fiches de la période ; 0 reprises depuis le 23 novembre (une trace au registre depuis), 115 sans suite depuis.
 - Statuts : proposé 98 ; en file 14 ; essai non évaluable 3.
-- **Lecture de « 0 reprise »** : aucune de ces fiches n'a de mouvement inscrit au registre depuis le 23 novembre. Cela ne prouve pas qu'aucune n'ait été reprise dans les faits. Le plan Turing (charte du 24, R-5225) et les travaux du 23 et du 24 ne sont pas au registre (voir la transmission compagnon, section 3) : une piste d'octobre réemployée là sans citation y reste invisible. Un rapprochement par mots-clés avec la charte et les lignes R-5187 et suivantes a été tenté puis écarté, trop bruité pour être opposable. Le tri « repris ou sans suite » réel demande de lire la charte du plan Turing contre ce tableau : à confier au bibliothécaire neuf ou au prochain cycle de la veille.
 - **Limite** : la date d'origine est celle de la source quand la veille l'a fichée ; les idées que la veille v1 n'a pas captées dans cette fenêtre (lecteurs par fenêtre du 22 novembre, 24 octobre au 2 novembre ; 4 au 22 octobre) manquent. Les sessions de remue-méninges du 20 au 31 octobre sont fichées surtout comme gisements (G-…) : leur contenu idée par idée n'est pas au registre. Le bibliothécaire neuf, qui lit les branches, est le bon complément.
 
 ## 1. Reprises depuis le 23 novembre
