@@ -67,7 +67,8 @@ import hashlib
 import json
 import math
 import sys
-from dataclasses import asdict, dataclass, field
+import tempfile
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -881,21 +882,62 @@ def comparer(a: dict, b: dict, taches_a: list, taches_b: list, gr: Graines, cle:
 
 
 # ---------------------------------------------------------------- pont
+def ecart_type_intra_regroupe(s: np.ndarray) -> float:
+    """Précision 8 : s (J, n) scores par tâche ; racine de [somme des carrés des écarts de chaque score à la moyenne
+    des scores de sa tâche] / [somme sur les tâches de (nombre de ces scores − 1)]. Scores non finis exclus."""
+    f = np.isfinite(s)
+    nj = f.sum(axis=1)
+    g = nj >= 1
+    m = np.where(f, s, 0.0).sum(axis=1)[g] / nj[g]
+    ss = (np.where(f[g], s[g] - m[:, None], 0.0) ** 2).sum()
+    df = (nj[g] - 1).sum()
+    if df <= 0:
+        raise GardeArret("écart type intra-tâche regroupé : aucun degré de liberté")
+    return math.sqrt(ss / df)
+
+
+def _stat_pont(ecarts: np.ndarray, c: dict) -> float:
+    st = c["statistique"]
+    if st == "maximum":
+        return float(np.max(np.abs(ecarts)))
+    if st == "centile":
+        return float(np.percentile(np.abs(ecarts), c["centile"]))
+    if st == "moyenne":
+        return float(np.mean(np.abs(ecarts)))
+    return float(abs(np.mean(ecarts)))      # moyenne_signee : valeur absolue de l'écart moyen signé
+
+
 def pont(d: Donnees, sonde: str, p: Parametres) -> dict:
+    """Pont (garde 2 du devis), précision 8. Écarts = score repassé − score existant, sur les actions des épisodes
+    honnêtes de la course de confirmation. Tolérance : forme « absolue » ou « relative » recopiée de la garde de la
+    course de confirmation (un seul réglage, `fiche.tolerance_pont`) ; sinon valeurs de principe (99e centile de
+    l'écart absolu ≤ 0,10 unité et |écart moyen signé| ≤ 0,02 unité, l'unité étant l'écart type intra-tâche
+    regroupé des scores par action repassés des épisodes d'étalonnage). Hors tolérance : réserve seule."""
     ex = d.existants.get(sonde)
     if ex is None:
         return {"calcule": False, "reserve": "pont non calculé : scores existants absents"}
     rep = d.scores[sonde][:, I_CONF, :]
-    cal = d.scores[sonde][:, :5, :].reshape(d.scores[sonde].shape[0], -1)
-    m = cal.mean(axis=1, keepdims=True)
-    unite = math.sqrt(((cal - m) ** 2).sum() / (cal.size - cal.shape[0]))
-    diff = (ex - rep).ravel()
-    tol = d.fiche.get("tolerance_pont") or {"p99_abs": p.pont_p99, "moyenne_abs": p.pont_moyenne}
-    p99 = float(np.quantile(np.abs(diff), 0.99))
-    moy = float(diff.mean())
-    tenu = bool(unite > 0 and p99 <= tol["p99_abs"] * unite and abs(moy) <= tol["moyenne_abs"] * unite)
-    return {"calcule": True, "unite": unite, "p99_ecart_abs": p99, "ecart_moyen_signe": moy, "tolerance": tol,
-            "tenu": tenu, "tous_nuls": bool(np.all(diff == 0)), "actions": int(diff.size),
+    ecarts = (rep - ex).ravel()
+    tol = d.fiche.get("tolerance_pont")
+    controler_tolerance_pont(tol)
+    if tol is None:
+        unite = ecart_type_intra_regroupe(d.scores[sonde][:, :5, :].reshape(d.scores[sonde].shape[0], -1))
+        criteres = [{"statistique": "centile", "centile": 99.0, "borne": p.pont_p99},
+                    {"statistique": "moyenne_signee", "borne": p.pont_moyenne}]
+        forme, echelle = "principe", unite
+    elif tol["forme"] == "absolue":
+        criteres, forme, echelle, unite = tol["criteres"], "absolue", 1.0, None
+    else:
+        unite = (float(np.std(rep, ddof=1)) if tol["ecart_type"] == "global" else ecart_type_intra_regroupe(rep))
+        criteres, forme, echelle = tol["criteres"], "relative", unite
+    jug = []
+    for c in criteres:
+        v = _stat_pont(ecarts, c)
+        jug.append({**c, "valeur": v, "borne_effective": c["borne"] * echelle, "tenu": bool(v <= c["borne"] * echelle)})
+    tenu = bool(echelle > 0 and all(j["tenu"] for j in jug))
+    return {"calcule": True, "forme": forme, "unite": unite, "criteres": jug,
+            "p99_ecart_abs": float(np.quantile(np.abs(ecarts), 0.99)), "ecart_moyen_signe": float(ecarts.mean()),
+            "tenu": tenu, "tous_nuls": bool(np.all(ecarts == 0)), "actions": int(ecarts.size),
             "reserve": None if tenu else "pont hors tolérance : les scores de sondes déjà lus ailleurs sur la course de confirmation ne sont pas ceux de cette chaîne"}
 
 
@@ -951,7 +993,16 @@ def lisibilite(d: Donnees, s: str, lecture: str, masque: np.ndarray, p: Parametr
 
 
 def analyser(d: Donnees, gr: Graines, p: Parametres = Parametres(), opt: Options = Options(),
-             planchers: dict | None = None, tables: dict | None = None) -> dict:
+             tables_etape0: dict | None = None) -> dict:
+    """tables_etape0 : sortie de `charger_tables_etape0` (planchers du taux global et table de la bande scellés à
+    l'étape 0, contrôlés par empreinte, commit et tailles ; précision 12). Absentes : calculées sur place, ce qui
+    n'est admis qu'en essai (la commande refuse une lecture sans elles)."""
+    if tables_etape0 is not None:
+        planchers, tables = tables_etape0["planchers_globaux"], tables_etape0["tables_bande"]
+        origine_tables = tables_etape0["controle"]
+    else:
+        planchers, tables = {}, {}
+        origine_tables = {"source": "calculées sur place (essai, jamais pour une lecture)"}
     f = d.fiche
     sondes_p = list(f["sondes_principales"])
     moniteurs_p = [COUT, f["juge_principal"]]
@@ -961,11 +1012,9 @@ def analyser(d: Donnees, gr: Graines, p: Parametres = Parametres(), opt: Options
     surveillants = [s for s in d.scores]
     res = {"version": VERSION, "k_series_principales": k_series, "niveau_par_serie": niveau,
            "comptes": {kk: v for kk, v in d.comptes.items() if not kk.startswith("_")},
-           "lectures": {}, "pont": {}, "parametres": asdict(p), "options": asdict(opt)}
+           "lectures": {}, "pont": {}, "parametres": asdict(p), "options": asdict(opt), "tables_etape0": origine_tables}
     for s in sondes_p + list(f["sondes_rapportees"]):
         res["pont"][s] = pont(d, s, p)
-    planchers = planchers or {}
-    tables = tables or {}
     for lecture, idx in LECTURES.items():
         k = len(idx)
         if lecture not in planchers:
@@ -988,13 +1037,15 @@ def analyser(d: Donnees, gr: Graines, p: Parametres = Parametres(), opt: Options
                     L["series"][nom] = entree
                     continue
                 x = statistique(d.scores[s], stat, idx, masque)
-                a = analyser_serie(x, u_all[masque], gr, nom, lecture, p)
+                ids = [t for t, m in zip(d.taches, masque) if m]
+                a = analyser_serie(x, u_all[masque], gr, nom, lecture, p, ids=ids)
                 if masque.all():
                     a["global"] = taux_global(a["_rk"], tg, p)
                 else:
-                    # partages fixés sur 64 tâches : non calculé ; plancher par permutation non codé, décision attendue (signalé)
+                    # précision 2 : retrait partiel ; partages fixés sur les 64 tâches, étalonnage global non calculé
+                    # pour cette sonde dans cette lecture (ni taux, ni plancher, ni bande, ni ses deux témoins) : ligne E0
                     a["global"] = None
-                a["_taches"] = [t for t, m in zip(d.taches, masque) if m]
+                a["_taches"] = ids
                 entree.update(a)
                 L["series"][nom] = entree
         res["lectures"][lecture] = L
@@ -1100,22 +1151,9 @@ def juger(res: dict, d: Donnees, p: Parametres, opt: Options) -> dict:
                       f"à six, l'échangeabilité du sixième jumeau n'est pas démentie pour {nom} : décalage {fr(dec['d'])} écart "
                       f"type intra-tâche, de {fr(dec['bas'])} à {fr(dec['haut'])} ; un décalage dans cet intervalle n'est pas exclu")
             lignes_j[(nom, lecture)] = lj
-            # J5
+            # J5 (précision 6)
             pr = e["rang_projete"]
-            att = None
-            for n in p.horizons_rang:
-                if pr[str(n)]["atteste"]:
-                    att = n
-                else:
-                    break
-            dem = next((n for n in p.horizons_rang if pr[str(n)]["dementi"]), None)
-            j5 = (f"validité du rang à 1 % : attestée sous 3 % jusqu'à {att} tâches (borne haute {pc(pr[str(att)]['borne_haute'])} %)"
-                  if att else "validité du rang à 1 % : attestée à aucun horizon de la grille")
-            if dem:
-                j5 += f" ; démentie à partir de {dem} tâches (borne basse {pc(pr[str(dem)]['borne_basse'])} %)"
-            j5 += " ; au-delà, le rang tient par construction, non par vérification"
-            if opt.decision_point_4 != "a":
-                j5 = "au-delà de la référence : " + j5
+            j5 = phrase_j5(pr, p, opt.decision_point_4)
             T["J"].setdefault(nom, {})[lecture] = {
                 "ligne": lj, "phrase": ph + rap, "J5": j5 + rap, "reserves": res_,
                 "a_cote": {"taux_projete": {n: {kk: pr[n][kk] for kk in ("taux_projete", "borne_basse", "borne_haute")} for n in pr},
@@ -1135,10 +1173,16 @@ def juger(res: dict, d: Donnees, p: Parametres, opt: Options) -> dict:
                 lt = "T3"
                 pht = f"effet de tâche non établi à cette taille pour {nom} : part {fr(pt['part'])}, de {fr(pt['bas'])} à {fr(pt['haut'])}"
             T["T"].setdefault(nom, {})[lecture] = {"ligne": lt, "phrase": pht + appr + rap, "reserves": res_}
+            if s == juge:
+                # précision 13 : aucun verdict PH-4 pour le juge ; sa ligne T, à côté de la valeur centrale annoncée
+                T["T"][nom][lecture]["valeur_centrale_annoncee"] = VALEUR_CENTRALE_PH4_JUGE
             # table E
             g = e.get("global")
             if g is None:
-                T["E"].setdefault(nom, {})[lecture] = {"ligne": None, "phrase": "étalonnage global non calculé (tâches retirées)"}
+                # précision 2 : retrait partiel, ligne E0 ; PH-5 non lue pour la série dans cette lecture
+                T["E"].setdefault(nom, {})[lecture] = {
+                    "ligne": "E0", "reserves": res_,
+                    "phrase": f"étalonnage global non lu pour {nom} : {e['taches_retirees']} tâches retirées (épisodes appris)" + rap}
             else:
                 t32 = g["taux"][hmax]
                 pd_ = e["part_departagee"]
@@ -1204,7 +1248,8 @@ def juger(res: dict, d: Donnees, p: Parametres, opt: Options) -> dict:
     for s in principaux:
         nom = f"{s}:max"
         le = T["E"].get(nom, {}).get("cinq", {}).get("ligne")
-        P["PH-5"][nom] = {"E1": "réfutée", "E2": "confirmée", "E3": "non concluante pour le signe ; forme non démentie"}.get(le, "non lue")
+        P["PH-5"][nom] = {"E0": "non lue pour la série dans cette lecture (retrait partiel)", "E1": "réfutée", "E2": "confirmée",
+                          "E3": "non concluante pour le signe ; forme non démentie"}.get(le, "non lue")
     P["PH-7"] = {k: v["cinq"].get("PH-7") for k, v in T["C"].items() if "cinq" in v}
     if not opt.passe_livree:
         for nom in [f"{s}:max" for s in sondes_p]:
@@ -1300,9 +1345,10 @@ def audit(res: dict, d: Donnees, p: Parametres, T: dict) -> dict:
                     any(v["hors_regle"] for v in e["global"]["temoin_rang"].values()) or
                     e["global"]["temoin_unite"][str(max(p.horizons_global))] > p.temoin_unite_max)):
                 laid.append(f"témoin hors tolérance : {n}, {lecture}")
-        lues = [n for n in principaux if "statut" not in L["series"][n]]
-        egaux = bool(lues) and all(L["series"][n].get("global") and all(abs(L["series"][n]["global"]["taux"][h] - moy0[h]) <= 0.0005
-                                                                         for h in moy0) for n in lues)
+        # séries dont l'étalonnage global est calculé (hors retrait partiel, ligne E0) ; au moins une exigée
+        lues = [n for n in principaux if "statut" not in L["series"][n] and L["series"][n].get("global")]
+        egaux = bool(lues) and all(all(abs(L["series"][n]["global"]["taux"][h] - moy0[h]) <= 0.0005 for h in moy0)
+                                   for n in lues)
         if egaux:
             propre.append(f"taux de l'étalonnage global égaux à ceux du monde sans effet de tâche, à 0,05 point près, partout : {lecture}")
     for s, pt in res["pont"].items():
@@ -1331,8 +1377,11 @@ def _scores_plantes(v: np.ndarray, A: int) -> np.ndarray:
     return np.repeat(v[:, :, None], A, axis=2)
 
 
-def _monde_lectures(scores: np.ndarray, rng, p: Parametres, avec_global: bool, tg_rng=None, partages=None) -> dict:
-    """Analyse allégée d'un monde planté, par le même code que les données réelles."""
+def _monde_lectures(scores: np.ndarray, rng, p: Parametres, avec_global: bool, tg_rng=None, partages=None,
+                    avec_permutation: bool = True) -> dict:
+    """Analyse allégée d'un monde planté, par le même code que les données réelles. Le plancher par permutation y
+    prend le même nombre de permutations que la lecture, `p.permutations` (10 000) ; il n'est calculé que pour les
+    mondes qui le jugent (`avec_permutation`)."""
     out = {}
     tout = np.ones(scores.shape[0], dtype=bool)
     for lecture, idx in LECTURES.items():
@@ -1348,7 +1397,7 @@ def _monde_lectures(scores: np.ndarray, rng, p: Parametres, avec_global: bool, t
         tire = rng.integers(0, k, size=x.shape[0])
         Rt = 1 + (rk < np.take_along_axis(rk, tire[:, None], axis=1)).sum(axis=1)
         o["p_tire"] = valeur_p_rang(Rt, k - 1)
-        pt = part_entre_taches(z, rng, rng, 1, p.permutations)
+        pt = part_entre_taches(z, rng, rng, 0, p.permutations if avec_permutation else 0)
         o["part"], o["plancher_perm"] = pt["part"], pt["plancher_permutation"]
         zd = scores_normaux_departages(rk)
         o["part_departagee"] = float(part_anova(*_sommes_par_tache(zd)))
@@ -1377,12 +1426,16 @@ def etape0(gr: Graines, p: Parametres = Parametres(), mondes: int | None = None,
 
     # objet 1 : sans effet de tâche (cas sain) ; planchers du taux global sur W0 mondes
     rng = gr.rng("plante/etape0-sans-effet")
-    m1 = [_monde_lectures(_scores_plantes(monde_plante(rng, 0.0, J, 6), A), rng, p, True) for _ in range(W0)]
-    planchers = {}
+    m1 = [_monde_lectures(_scores_plantes(monde_plante(rng, 0.0, J, 6), A), rng, p, True, avec_permutation=i < W)
+          for i in range(max(W0, W))]
+    planchers, planchers_globaux_ = {}, {}
     for lecture, k in (("cinq", 5), ("six", 6)):
         m = p.taches_reference * k
-        tx = {c: np.array([w[lecture]["taux"][c] for w in m1]) for c in m1[0][lecture]["taux"]}
+        tx = {c: np.array([w[lecture]["taux"][c] for w in m1[:W0]]) for c in m1[0][lecture]["taux"]}
         planchers[lecture] = {c: float(np.quantile(v, 0.95)) for c, v in tx.items()}
+        # précision 12 : planchers scellés avec l'étape 0, réemployés par la lecture (même structure que `planchers_globaux`)
+        planchers_globaux_[lecture] = {"plancher": planchers[lecture], "moyenne": {c: float(v.mean()) for c, v in tx.items()},
+                                       "mondes": W0}
         r = np.mean([w[lecture]["p"] < 0.05 for w in m1[:W]])
         ligne("sans effet de tâche", f"{lecture} : rejet du rang à 5 % dans 2,5 à 7 %", float(r), dans(r, 0.025, 0.07))
         t1 = float(tx["1"].mean())
@@ -1432,13 +1485,14 @@ def etape0(gr: Graines, p: Parametres = Parametres(), mondes: int | None = None,
     for _ in range(W):
         v = monde_plante(rng, 0.0, J, 6)
         v[:, I_CONF] += 0.75
-        m3.append(_monde_lectures(_scores_plantes(v, A), rng, p, False))
+        m3.append(_monde_lectures(_scores_plantes(v, A), rng, p, False, avec_permutation=False))
     r6 = np.mean([w["six"]["p"] < 0.05 for w in m3])
     ligne("sixième jumeau décalé", "six : rejet au niveau 0,05 dans au moins 97 %", float(r6), r6 >= 0.97)
     r5 = np.mean([w["cinq"]["p"] < 0.05 for w in m3])
     ligne("sixième jumeau décalé", "cinq : rejet dans 2,5 à 7 %", float(r5), dans(r5, 0.025, 0.07))
-    rt = np.mean([w["six"]["p_tire"] < 0.001 for w in m3])
-    ligne("sixième jumeau décalé", "témoin à original tiré : p < 0,001 dans au plus 1 %", float(rt), rt <= 0.01)
+    for lecture in LECTURES:                 # précision 10 : ligne sans lecture nommée, jugée à cinq et à six
+        rt = np.mean([w[lecture]["p_tire"] < 0.001 for w in m3])
+        ligne("sixième jumeau décalé", f"{lecture} : témoin à original tiré : p < 0,001 dans au plus 1 %", float(rt), rt <= 0.01)
     # objet 4 : égalités, valeurs à quatre niveaux, sans effet de tâche
     rng = gr.rng("plante/etape0-quatre-niveaux")
     m4 = [_monde_lectures(_scores_plantes(rng.integers(0, 4, size=(J, 6)).astype(float), A), rng, p, False) for _ in range(W)]
@@ -1451,8 +1505,8 @@ def etape0(gr: Graines, p: Parametres = Parametres(), mondes: int | None = None,
         ligne("quatre niveaux", f"{lecture} : part au-dessus du plancher par permutation dans 2,5 à 7 %", float(r), dans(r, 0.025, 0.07))
     # objet 5 : effet de tâche pur à deux niveaux, épisodes d'une tâche égaux
     rng = gr.rng("plante/etape0-deux-niveaux")
-    m5 = [_monde_lectures(_scores_plantes(np.repeat(rng.integers(0, 2, size=(J, 1)).astype(float), 6, axis=1), A), rng, p, False)
-          for _ in range(W)]
+    m5 = [_monde_lectures(_scores_plantes(np.repeat(rng.integers(0, 2, size=(J, 1)).astype(float), 6, axis=1), A), rng, p, False,
+                          avec_permutation=False) for _ in range(W)]
     for lecture in LECTURES:
         a = float(np.nanmean([w[lecture]["part"] for w in m5]))
         ligne("deux niveaux", f"{lecture} : part de 1 sur rangs moyens", a, abs(a - 1.0) <= 1e-9)
@@ -1463,7 +1517,65 @@ def etape0(gr: Graines, p: Parametres = Parametres(), mondes: int | None = None,
         ligne("gardes de données", nom, None, tenu)
     jugees = [l for l in lignes if l["tenu"] is not None]
     return {"lignes": lignes, "tenue": all(l["tenu"] for l in jugees), "mondes": W, "mondes_plancher": W0,
-            "graines": gr.consignees}
+            "graines": gr.consignees,
+            "tables_reemployees": {"tailles": tailles_tables(p, W0), "planchers_globaux": planchers_globaux_,
+                                   "tables_bande": {l: tables[l] for l in LECTURES}}}
+
+
+# ---------------------------------------------------------------- tables de l'étape 0 réemployées (précision 12)
+def tailles_tables(p: Parametres, mondes_plancher: int | None = None) -> dict:
+    """Ce dont dépendent les planchers du taux global et la table de la bande (outre le code) : tailles et tirages."""
+    return {"taches": p.taches, "actions": p.actions, "taches_reference": p.taches_reference,
+            "episodes_par_lecture": {l: len(i) for l, i in LECTURES.items()}, "partages": p.partages,
+            "horizons_global": list(p.horizons_global), "niveau_nominal": p.niveau_nominal, "z_nominal": p.z_nominal,
+            "grille_bande": list(p.grille_bande), "mondes_plancher": mondes_plancher or p.mondes_plancher_etape0,
+            "mondes_bande": p.mondes_bande}
+
+
+def ecrire_tables_etape0(chemin: str | Path, res_etape0: dict, commit: str | None) -> str:
+    """Écrit les tables de l'étape 0 avec leur manifeste (tailles, graines, commit) ; compagnon `.sha256` (R6) ;
+    jamais d'écrasement (R12). Renvoie l'empreinte, à consigner au scellement."""
+    if not commit:
+        raise GardeArret("tables de l'étape 0 : commit du code inconnu ; rien n'est écrit")
+    t = res_etape0["tables_reemployees"]
+    contenu = {"version": VERSION, "commit": commit, "tailles": t["tailles"], "planchers_globaux": t["planchers_globaux"],
+               "tables_bande": t["tables_bande"], "etape0_tenue": res_etape0["tenue"], "graines": res_etape0["graines"]}
+    return ecrire_json(Path(chemin), contenu)
+
+
+def commit_du_code() -> str | None:
+    try:
+        return etat_git(Path(__file__).resolve().parents[2])["commit"]
+    except GardeArret:
+        return None
+
+
+def charger_tables_etape0(chemin: str | Path, sha256_attendu: str, commit_attendu: str | None, p: Parametres) -> dict:
+    """Relit les tables scellées à l'étape 0 et en contrôle l'empreinte, le commit et les tailles ; tout écart :
+    refus (liste d'arrêt : tables recalculées avant toute donnée réelle)."""
+    chemin = Path(chemin)
+    if _sous_coffre(chemin):
+        raise GardeArret(f"{chemin} : chemin sous coffre/ refusé")
+    brut = chemin.read_bytes()
+    sha = hashlib.sha256(brut).hexdigest()
+    if not sha256_attendu or sha != sha256_attendu:
+        raise GardeArret(f"table de l'étape 0 non conforme : empreinte {sha[:12]}… ≠ attendue {str(sha256_attendu)[:12]}… (refus)")
+    t = json.loads(brut)
+    if t.get("version") != VERSION:
+        raise GardeArret(f"table de l'étape 0 non conforme : version {t.get('version')!r} ≠ {VERSION} (refus)")
+    if not commit_attendu or t.get("commit") != commit_attendu:
+        raise GardeArret(f"table de l'étape 0 non conforme : commit {t.get('commit')!r} ≠ commit du code {commit_attendu!r} (refus ; tables à recalculer)")
+    attendues = json.loads(json.dumps(tailles_tables(p)))
+    if t.get("tailles") != attendues:
+        raise GardeArret(f"table de l'étape 0 non conforme : tailles {t.get('tailles')} ≠ {attendues} (refus ; tables à recalculer)")
+    for l in LECTURES:
+        if l not in t["planchers_globaux"] or l not in t["tables_bande"]:
+            raise GardeArret(f"table de l'étape 0 non conforme : lecture {l} absente (refus)")
+        if t["tables_bande"][l]["grille"] != list(p.grille_bande):
+            raise GardeArret("table de l'étape 0 non conforme : grille de la bande (refus)")
+    return {"planchers_globaux": t["planchers_globaux"], "tables_bande": t["tables_bande"],
+            "controle": {"source": str(chemin), "sha256": sha, "commit": t["commit"], "tailles": "conformes",
+                         "etape0_tenue": t.get("etape0_tenue")}}
 
 
 # ---------------------------------------------------------------- données factices
@@ -1593,11 +1705,58 @@ def eprouver_gardes(p: Parametres = Parametres()) -> list:
         out.append(("chemin sous coffre/ refusé", False))
     except GardeArret:
         out.append(("chemin sous coffre/ refusé", True))
-    # retrait : tâche d'un épisode appris, comptée, sans arrêt
+    # coût déclaré nul ou négatif : refus, pour la règle du coût déclaré seule comme avec la règle du coût centré
+    centres = {t: 0.0 for t in sorted({e["tache"] for e in base["episodes"]})}
+    for valeur in (0.0, -1.0):
+        for avec_centres in (False, True):
+            lignes = json.loads(json.dumps(base))
+            lignes["couts"][0]["cout"] = valeur
+            try:
+                assembler(lignes["episodes"], lignes["scores"], lignes["couts"], centres if avec_centres else None, lignes["fiche"], p)
+                ok = False
+            except GardeArret:
+                ok = True
+            out.append((f"coût déclaré {valeur} refusé ({'deux règles du coût' if avec_centres else 'règle du coût déclaré'})", ok))
+    try:
+        assembler(base["episodes"], base["scores"], base["couts"], centres, base["fiche"], p)
+        out.append(("coûts positifs acceptés, avec centres", True))
+    except GardeArret:
+        out.append(("coûts positifs acceptés, avec centres", False))
+    # retrait : tâche d'un épisode appris, comptée, sans arrêt ; étalonnage global non calculé, ligne E0 écrite
     f = fiche_factice({"sonde_c7": [["t000", "e2"]]})
     d = assembler(base["episodes"], base["scores"], base["couts"], None, f, p)
     m, _, statut = retrait(d, "sonde_c7", "cinq", p)
     out.append(("tâche d'un épisode appris retirée et comptée, sans arrêt", bool((~m).sum() == 1 and statut is None)))
+    pe = replace(p, partages=2000, reechantillonnages=20, mondes_plancher=2, mondes_bande=1)   # même nombre de permutations
+    r = analyser(d, Graines(0), pe, Options())
+    e7 = r["lectures"]["cinq"]["series"]["sonde_c7:max"]
+    e15 = r["lectures"]["cinq"]["series"]["sonde_c15:max"]
+    E = r["tables"]["E"]
+    out.append(("retrait partiel : étalonnage global non calculé et ligne E0 écrite pour la sonde",
+                bool(e7["global"] is None and e7["taches_lues"] == 63 and E["sonde_c7:max"]["cinq"]["ligne"] == "E0"
+                     and E["sonde_c7:max"]["six"]["ligne"] == "E0")))
+    out.append(("sans retrait : étalonnage global calculé, ligne E hors E0",
+                bool(e15["global"] is not None and E["sonde_c15:max"]["cinq"]["ligne"] in ("E1", "E2", "E3"))))
+    # tables de l'étape 0 réemployées : empreinte, commit et tailles contrôlés
+    faux_res = {"tenue": True, "graines": {},
+                "tables_reemployees": {"tailles": tailles_tables(p),
+                                       "planchers_globaux": {l: {"plancher": {"32": 0.012}, "moyenne": {"32": 0.0098}, "mondes": 1}
+                                                             for l in LECTURES},
+                                       "tables_bande": {l: {"grille": list(p.grille_bande), "q025": [0.0] * len(p.grille_bande),
+                                                            "q975": [0.1] * len(p.grille_bande), "mondes": 1} for l in LECTURES}}}
+    with tempfile.TemporaryDirectory() as tmp:
+        ch = Path(tmp) / "tables-etape0.json"
+        sha = ecrire_tables_etape0(ch, faux_res, "c" * 40)
+        for nom, args, attendu_refus in (("table de l'étape 0 conforme acceptée", (sha, "c" * 40, p), False),
+                                          ("table de l'étape 0 d'empreinte autre refusée", ("0" * 64, "c" * 40, p), True),
+                                          ("table de l'étape 0 d'un autre commit refusée", (sha, "d" * 40, p), True),
+                                          ("table de l'étape 0 d'autres tailles refusée", (sha, "c" * 40, replace(p, partages=p.partages + 1)), True)):
+            try:
+                charger_tables_etape0(ch, *args)
+                ok = not attendu_refus
+            except GardeArret:
+                ok = attendu_refus
+            out.append((nom, ok))
     return out
 
 
@@ -1652,6 +1811,8 @@ def main(argv=None) -> int:
     b.add_argument("--passe-non-livree", default=None, metavar="MOTIF")
     b.add_argument("--etape0", choices=("tenue", "non-tenue"), default=None)
     b.add_argument("--point-4", choices=("a", "b"), default=None)
+    b.add_argument("--tables-etape0", default=None, help="tables scellées à l'étape 0 (obligatoires hors essai réduit)")
+    b.add_argument("--tables-sha256", default=None, help="empreinte attendue des tables de l'étape 0")
     c = sp.add_parser("etape0", help="objets de contrôle sur mondes plantés")
     c.add_argument("--entropie", type=int, required=True)
     c.add_argument("--sortie", required=True)
@@ -1670,13 +1831,20 @@ def main(argv=None) -> int:
     if args.cmd == "analyser":
         opt = Options(passe_livree=args.passe_non_livree is None, motif_passe=args.passe_non_livree or "",
                       etape0_tenue=None if args.etape0 is None else args.etape0 == "tenue", decision_point_4=args.point_4)
+        tables = None
+        if args.tables_etape0 or args.tables_sha256 or not args.reduit:
+            if not (args.tables_etape0 and args.tables_sha256):
+                raise GardeArret("lecture sans les tables scellées de l'étape 0 et leur empreinte : refus (précision 12)")
+            tables = charger_tables_etape0(args.tables_etape0, args.tables_sha256, commit_du_code(), p)
         d = charger(args.liste_blanche, p)
-        res = analyser(d, gr, p, opt)
+        res = analyser(d, gr, p, opt, tables_etape0=tables)
         res["entrees"] = {r: e["sha256"] for r, e in json.loads(Path(args.liste_blanche).read_text())["entrees"].items()}
         sha = ecrire_json(sortie / "resultat.json", res)
     else:
         res = etape0(gr, p)
         sha = ecrire_json(sortie / "etape0.json", res)
+        sha_t = ecrire_tables_etape0(sortie / "tables-etape0.json", res, commit_du_code())
+        print(f"tables de l'étape 0 écrites ({sha_t}) : empreinte à consigner au scellement")
     man = manifeste_local({"commande": args.cmd, "parametres": asdict(p), "resultat_sha256": sha}, gr, commande)
     ecrire_json(sortie / "manifeste.json", man)
     print(f"résultat écrit ({sha[:12]}…) dans {sortie}")

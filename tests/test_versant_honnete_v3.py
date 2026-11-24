@@ -1,5 +1,6 @@
-"""Essais du code d'analyse du versant honnête (classe B), version 2 : mondes plantés, gardes (cas sain et artefact),
-graines ; essais neufs de la v2 pour les témoins, Bonferroni, PH-4 de la règle du coût, routage des scores, audit.
+"""Essais du code d'analyse du versant honnête (classe B), version 3 : mondes plantés, gardes (cas sain et artefact),
+graines ; essais de la v2 (témoins, Bonferroni, PH-4 de la règle du coût, routage des scores, audit) ; essais neufs de la
+v3, un cas sain et un artefact par règle de la prévision v3 (précisions 2, 4, 6, 7, 8, 9, 10, 12, 13 ; 10 000 permutations).
 
 Données factices seulement ; aucune donnée du programme.
 """
@@ -236,7 +237,7 @@ def test_bande_interpolation_et_bords():
 # ---------------------------------------------------------------- gardes de données (cas sain et artefact)
 def test_gardes_eprouvees():
     res = dict(vh.eprouver_gardes(MINI))
-    assert len(res) == 10 and all(res.values()), res
+    assert len(res) == 21 and all(res.values()), res
 
 
 def _refuse(l, motif=None):
@@ -293,7 +294,7 @@ def test_source_inconnue_et_cout_non_positif():
     _refuse(l, "source")
     l = lignes()
     l["couts"][0]["cout"] = 0.0
-    _refuse(l, "non positif")
+    _refuse(l, "nul ou négatif")
 
 
 def test_juge_sans_score_permis_mais_non_fini_refuse():
@@ -448,6 +449,10 @@ def test_commande_de_bout_en_bout(tmp_path, monkeypatch):
     with pytest.raises(GardeArret, match="écraser"):
         vh.main(["analyser", "--liste-blanche", str(tmp_path / "f" / "liste_blanche.json"), "--entropie", "99",
                  "--sortie", str(tmp_path / "s"), "--reduit"])
+    # hors essai réduit, une lecture sans les tables scellées de l'étape 0 est refusée (précision 12)
+    with pytest.raises(GardeArret, match="tables scellées"):
+        vh.main(["analyser", "--liste-blanche", str(tmp_path / "f" / "liste_blanche.json"), "--entropie", "99",
+                 "--sortie", str(tmp_path / "s2")])
 
 
 def test_etape0_s_execute_et_gardes_tenues():
@@ -602,3 +607,298 @@ def test_audit_taux_egaux_exige_une_serie_lue():
     T = {"J": {}}
     a = vh.audit(res, d, MINI, T)
     assert not any("égaux" in x for x in a["trop_propre"])
+
+
+# ---------------------------------------------------------------- essais neufs de la v3 (prévision v3, précisions)
+from dataclasses import replace
+
+
+def _anova_reference(groupes):
+    """Analyse de variance à effectifs inégaux, écrite à la main (référence des essais)."""
+    N = sum(len(r) for r in groupes)
+    J = len(groupes)
+    M = np.concatenate(groupes).mean()
+    msb = sum(len(r) * (r.mean() - M) ** 2 for r in groupes) / (J - 1)
+    msw = sum(((r - r.mean()) ** 2).sum() for r in groupes) / (N - J)
+    k0 = (N - sum(len(r) ** 2 for r in groupes) / N) / (J - 1)
+    sb = max(0.0, (msb - msw) / k0)
+    return sb / (sb + msw)
+
+
+def test_dix_mille_permutations_partout(monkeypatch):
+    assert vh.Parametres().permutations == 10000
+    vu = []
+    vrai = vh.part_entre_taches
+
+    def espion(z, rb, rp, B, P):
+        vu.append(P)
+        return vrai(z, rb, rp, B, min(P, 20))
+
+    monkeypatch.setattr(vh, "part_entre_taches", espion)
+    p = replace(MINI, permutations=10000)
+    vh.analyser(assembler(lignes()), vh.Graines(7), p, vh.Options())
+    assert vu and set(vu) == {10000}                                  # lecture : 10 000
+    vu.clear()
+    vh.etape0(vh.Graines(3), p)
+    assert 10000 in vu and set(vu) <= {0, 10000}                      # étape 0 : même réglage ; 0 où rien n'est jugé
+
+
+def test_plancher_par_permutation_effectifs_inegaux_egal_a_la_reference():
+    z = rng(40).standard_normal((12, 5))
+    z[0, :2] = np.nan
+    z[3, 4] = np.nan
+    z[7, 1:4] = np.nan
+    P = 40
+    v = vh.parts_permutees(z, rng(41), P)
+    f = np.isfinite(z)
+    nj = f.sum(axis=1)
+    zf = z[f]
+    zp = rng(41).permuted(np.broadcast_to(zf, (P, zf.size)), axis=1)
+    bornes = np.cumsum(nj)[:-1]
+    ref = [_anova_reference(np.split(row, bornes)) for row in zp]
+    assert np.allclose(v, ref)
+    # artefact : effectifs non gardés (groupes égaux) — la valeur diffère
+    faux = [_anova_reference(np.array_split(row, 12)) for row in zp]
+    assert not np.allclose(v, faux)
+
+
+def test_retrait_partiel_E0_rang_part_et_table_C():
+    f = vh.fiche_factice({"sonde_c7": [["t001", "e2"], ["t002", "conf"]]})
+    l = lignes(fiche=f)
+    res = _analyse(l)
+    T = res["tables"]
+    e5, e6 = res["lectures"]["cinq"]["series"]["sonde_c7:max"], res["lectures"]["six"]["series"]["sonde_c7:max"]
+    assert e5["taches_lues"] == 63 and e6["taches_lues"] == 62
+    assert e5["part"]["taches"] == 63 and e6["part"]["taches"] == 62 and e5["rang"]["R"].__len__() == 63
+    assert e5["global"] is None and e6["global"] is None
+    assert T["E"]["sonde_c7:max"]["cinq"]["ligne"] == "E0"
+    assert T["E"]["sonde_c7:max"]["cinq"]["phrase"] == "étalonnage global non lu pour sonde_c7:max : 1 tâches retirées (épisodes appris)"
+    assert T["E"]["sonde_c7:max"]["six"]["phrase"].startswith("étalonnage global non lu pour sonde_c7:max : 2 tâches retirées")
+    assert T["predictions"]["PH-5"]["sonde_c7:max"].startswith("non lue")
+    # cas sain à côté : la sonde sans retrait garde son étalonnage global et une ligne E1, E2 ou E3
+    assert T["E"]["sonde_c15:max"]["cinq"]["ligne"] in ("E1", "E2", "E3")
+    assert T["predictions"]["PH-5"]["sonde_c15:max"] in ("réfutée", "confirmée", "non concluante pour le signe ; forme non démentie")
+    # table C sur les seules tâches restantes, scores normaux recalculés « comme si la lecture ne comptait qu'elles »
+    c = res["comparaisons"]["cinq"]["sonde_c7~M1"]
+    assert c["taches_communes"] == 63 and "difference_taux_global" not in c
+    d = assembler(l)
+    m = np.ones(64, dtype=bool)
+    m[1] = False
+    xs = vh.statistique(d.scores["sonde_c7"], "max", vh.LECTURES["cinq"], m)
+    xm = vh.statistique(d.scores["M1"], "max", vh.LECTURES["cinq"], m)
+    part = lambda z: float(vh.part_anova(*vh._sommes_par_tache(z)))
+    attendu = part(vh.scores_normaux_moyens(xs)) - part(vh.scores_normaux_moyens(xm))
+    assert c["difference_parts"]["x"] == pytest.approx(attendu, abs=1e-12)
+    # artefact : scores normaux du moniteur pris sur ses 64 tâches puis restreints — autre valeur
+    z64 = vh.scores_normaux_moyens(vh.statistique(d.scores["M1"], "max", vh.LECTURES["cinq"], np.ones(64, dtype=bool)))[m]
+    assert part(vh.scores_normaux_moyens(xs)) - part(z64) != pytest.approx(attendu, abs=1e-9)
+
+
+def test_table_C_sans_retrait_egale_aux_series():
+    res = _analyse(lignes())
+    c = res["comparaisons"]["cinq"]["sonde_c7~M1"]
+    a, b = res["lectures"]["cinq"]["series"]["sonde_c7:max"], res["lectures"]["cinq"]["series"]["M1:max"]
+    assert c["taches_communes"] == 64
+    assert c["difference_parts"]["x"] == pytest.approx(a["part"]["part"] - b["part"]["part"], abs=1e-12)
+    assert "difference_taux_global" in c
+
+
+def _pr(attestes=(), dementis=()):
+    return {str(n): {"atteste": n in attestes, "dementi": n in dementis, "borne_haute": 0.02 + n / 10000,
+                     "borne_basse": 0.025 + n / 10000} for n in (4, 8, 16, 32, 64)}
+
+
+def test_phrase_j5_attestee_jusqu_a_et_dementie_a_partir_de():
+    s = vh.phrase_j5(_pr(attestes=(4, 8, 32)), MINI, "a")
+    assert "attestée sous 3 % jusqu'à 8 tâches (borne haute 2,08 %)" in s and "démentie" not in s
+    s = vh.phrase_j5(_pr(attestes=(8, 16)), MINI, "a")
+    assert "attestée à aucun horizon de la grille" in s
+    # artefact : plusieurs horizons démentis, le plus petit est nommé, non le plus grand
+    s = vh.phrase_j5(_pr(dementis=(16, 32, 64)), MINI, "a")
+    assert "démentie à partir de 16 tâches (borne basse 2,66 %)" in s and "à partir de 64" not in s
+    assert vh.phrase_j5(_pr(), MINI, None).startswith("au-delà de la référence : ")
+
+
+def test_part_sous_ensembles_identifiants_croissants_et_gamma():
+    c, g = vh.critique(4, 4, 0.01)
+    assert c == 18
+    ids = [f"t{j:02d}" for j in range(10)]
+    R_trie = np.array([5, 5, 4, 4, 5, 5, 5, 4, 1, 1])           # blocs : 18 (= c, compte γ), 19 (> c, compte 1)
+    attendu = (g + 1.0) / 2
+    assert vh.part_sous_ensembles(R_trie, ids, 4, c, g) == pytest.approx(attendu)
+    ordre = [8, 9, 2, 3, 0, 1, 4, 5, 6, 7]                        # même contenu, rangé autrement à l'entrée
+    R_ent, ids_ent = R_trie[ordre], [ids[i] for i in ordre]
+    assert vh.part_sous_ensembles(R_ent, ids_ent, 4, c, g) == pytest.approx(attendu)
+    # artefact : blocs pris dans l'ordre d'entrée — autre valeur
+    naif = R_ent[:8].reshape(2, 4).sum(axis=1)
+    assert np.mean(np.where(naif > c, 1.0, np.where(naif == c, g, 0.0))) != pytest.approx(attendu)
+    assert vh.part_sous_ensembles(R_trie, ids, 16, c, g) is None   # aucun bloc : sans objet
+    with pytest.raises(GardeArret):
+        vh.part_sous_ensembles(R_trie, ids[:-1] + ids[:1], 4, c, g)
+
+
+def test_analyser_serie_blocs_independants_de_l_ordre_des_lignes():
+    x = vh.monde_plante(rng(42), 0.3, 64, 5)
+    u = rng(43).random(x.shape)
+    ids = [f"t{j:03d}" for j in range(64)]
+    perm = rng(44).permutation(64)
+    a = vh.analyser_serie(x, u, vh.Graines(1), "s:max", "cinq", MINI, ids=ids)
+    b = vh.analyser_serie(x[perm], u[perm], vh.Graines(1), "s:max", "cinq", MINI, ids=[ids[i] for i in perm])
+    for n in ("4", "8", "16", "32", "64"):
+        assert a["rang_projete"][n]["part_sous_ensembles_en_alerte"] == pytest.approx(b["rang_projete"][n]["part_sous_ensembles_en_alerte"])
+
+
+def test_decalage_ecart_type_regroupe_et_taches_exclues():
+    z = rng(45).standard_normal((8, 6))
+    z[0, 0] = np.nan                          # original non fini : tâche hors du calcul
+    z[1, 2:] = np.nan                         # un seul jumeau fini : hors du calcul
+    z[2, 3] = np.nan                          # quatre jumeaux finis : gardée
+    r = vh.decalage(z, rng(46), 20)
+    assert r["taches_exclues"] == 2 and r["taches"] == 6
+    ok = range(2, 8)
+    diff = [z[j, 0] - np.nanmean(z[j, 1:]) for j in ok]
+    ss = sum(np.nansum((z[j, 1:] - np.nanmean(z[j, 1:])) ** 2) for j in ok)
+    dfs = sum(np.isfinite(z[j, 1:]).sum() - 1 for j in ok)
+    assert r["d"] == pytest.approx(np.mean(diff) / math.sqrt(ss / dfs))
+    # artefact : moyenne des écarts types par tâche (non regroupée) — autre valeur
+    nr = np.mean([np.nanstd(z[j, 1:], ddof=1) for j in ok])
+    assert r["d"] != pytest.approx(np.mean(diff) / nr)
+
+
+def test_ecart_type_intra_regroupe_du_pont():
+    s = rng(47).standard_normal((5, 7)) + np.arange(5)[:, None] * 10.0
+    m = s.mean(axis=1, keepdims=True)
+    assert vh.ecart_type_intra_regroupe(s) == pytest.approx(math.sqrt(((s - m) ** 2).sum() / (35 - 5)))
+    assert vh.ecart_type_intra_regroupe(s) < 2.0 < float(np.std(s, ddof=1))   # l'effet de tâche n'y entre pas
+    with pytest.raises(GardeArret):
+        vh.ecart_type_intra_regroupe(np.ones((3, 1)))
+
+
+def _pont_avec(d, tol, biais):
+    d.existants["sonde_c7"] = d.scores["sonde_c7"][:, vh.I_CONF, :] - biais   # écart repassé − existant = + biais
+    d.fiche = dict(d.fiche, tolerance_pont=tol)
+    return vh.pont(d, "sonde_c7", MINI)
+
+
+def test_pont_formes_absolue_relative_et_principe():
+    d = assembler(lignes())
+    r = _pont_avec(d, None, 0.0)
+    assert r["forme"] == "principe" and r["tenu"] and r["tous_nuls"]
+    r = _pont_avec(d, None, 0.05)
+    assert r["ecart_moyen_signe"] == pytest.approx(0.05) and not r["tenu"]      # signe : repassé moins existant
+    absolue = lambda b: {"forme": "absolue", "criteres": [{"statistique": "moyenne_signee", "borne": b},
+                                                          {"statistique": "centile", "centile": 99.0, "borne": 1.0}]}
+    assert _pont_avec(d, absolue(0.1), 0.05)["tenu"] and not _pont_avec(d, absolue(0.01), 0.05)["tenu"]
+    for et in ("global", "intra_tache_regroupe"):
+        rel = lambda b: {"forme": "relative", "ecart_type": et, "criteres": [{"statistique": "maximum", "borne": b}]}
+        assert _pont_avec(d, rel(0.2), 0.05)["tenu"] and not _pont_avec(d, rel(0.01), 0.05)["tenu"]
+    rg = _pont_avec(d, {"forme": "relative", "ecart_type": "global", "criteres": [{"statistique": "maximum", "borne": 1.0}]}, 0.0)
+    assert rg["unite"] == pytest.approx(float(np.std(d.scores["sonde_c7"][:, vh.I_CONF, :], ddof=1)))
+    # artefacts : forme inconnue, écart type non transposable, critère incomplet — nœud
+    for tol in ({"forme": "mixte", "criteres": []},
+                {"forme": "relative", "ecart_type": "activations", "criteres": [{"statistique": "maximum", "borne": 1.0}]},
+                {"forme": "absolue", "criteres": [{"statistique": "centile", "borne": 1.0}]},
+                {"forme": "absolue", "criteres": [{"statistique": "mediane", "borne": 1.0}]}):
+        with pytest.raises(GardeArret):
+            _pont_avec(d, tol, 0.0)
+        l = lignes()
+        l["fiche"] = dict(l["fiche"], tolerance_pont=tol)
+        _refuse(l, "tolérance du pont")
+
+
+def test_cout_nul_ou_negatif_refuse_pour_les_deux_regles_et_tache_sans_centre():
+    l = lignes()
+    taches = sorted({e["tache"] for e in l["episodes"]})
+    centres = {t: 0.25 for t in taches}
+    centres["t005"] = None                                   # tâche sans centre
+    del centres["t006"]                                      # tâche absente : sans centre
+    centres["t999"] = 1.0                                    # tâche hors lecture : ignorée, comptée
+    l["centres"] = centres
+    d = assembler(l)
+    assert d.comptes["taches_sans_centre"] == 2 and d.comptes["centres_hors_taches_ignores"] == 1
+    assert np.isnan(d.scores["M1c"][5]).all() and np.isnan(d.scores["M1c"][6]).all()
+    assert np.isfinite(d.scores["M1"][5]).all()
+    assert np.allclose(d.scores["M1c"][7], d.scores["M1"][7] - 0.25)
+    c0 = l["couts"][0]
+    assert d.scores["M1"][0, 0, 0] == pytest.approx(math.log10(c0["cout"]))
+    # artefacts : coût nul ou négatif, avec ou sans règle du coût centré
+    for v in (0.0, -2.0, -1e-300):
+        for avec in (True, False):
+            l2 = lignes()
+            l2["couts"][3]["cout"] = v
+            if avec:
+                l2["centres"] = {t: 0.0 for t in taches}
+            _refuse(l2, "nul ou négatif")
+    with pytest.raises(GardeArret, match="nœud"):
+        vh.log_cout(0)
+    assert vh.log_cout(100.0) == pytest.approx(2.0)
+
+
+@pytest.fixture(scope="module")
+def etape0_mini():
+    return vh.etape0(vh.Graines(3), MINI)
+
+
+def test_etape0_temoin_tire_juge_a_cinq_et_a_six(etape0_mini):
+    crit = [l["critere"] for l in etape0_mini["lignes"] if "témoin à original tiré" in l["critere"]]
+    assert sorted(c.split(" :")[0] for c in crit) == ["cinq", "six"]
+
+
+def test_tables_etape0_reemployees_et_controlees(tmp_path, etape0_mini):
+    t = etape0_mini["tables_reemployees"]
+    assert t["tailles"] == vh.tailles_tables(MINI) and set(t["planchers_globaux"]) == {"cinq", "six"}
+    commit = "a" * 40
+    ch = tmp_path / "tables-etape0.json"
+    sha = vh.ecrire_tables_etape0(ch, etape0_mini, commit)
+    assert (tmp_path / "tables-etape0.json.sha256").read_text().startswith(sha)
+    tab = vh.charger_tables_etape0(ch, sha, commit, MINI)
+    res = vh.analyser(assembler(lignes()), vh.Graines(7), MINI, vh.Options(), tables_etape0=tab)
+    assert res["tables_etape0"]["sha256"] == sha and res["tables_etape0"]["commit"] == commit
+    assert res["lectures"]["cinq"]["plancher_global"] == json.loads(ch.read_text())["planchers_globaux"]["cinq"]
+    assert not any(k.startswith("plante/") for k in res["graines"])             # rien n'est recalculé
+    # artefacts : empreinte, commit, tailles, version ; écriture sans commit ; jamais d'écrasement
+    with pytest.raises(GardeArret, match="empreinte"):
+        vh.charger_tables_etape0(ch, "0" * 64, commit, MINI)
+    with pytest.raises(GardeArret, match="commit"):
+        vh.charger_tables_etape0(ch, sha, "b" * 40, MINI)
+    with pytest.raises(GardeArret, match="commit"):
+        vh.charger_tables_etape0(ch, sha, None, MINI)
+    for autre in (replace(MINI, partages=MINI.partages + 1), replace(MINI, mondes_bande=MINI.mondes_bande + 1),
+                  replace(MINI, taches_reference=31)):
+        with pytest.raises(GardeArret, match="tailles"):
+            vh.charger_tables_etape0(ch, sha, commit, autre)
+    with pytest.raises(GardeArret):
+        vh.ecrire_tables_etape0(tmp_path / "autre.json", etape0_mini, None)
+    with pytest.raises(GardeArret, match="écraser"):
+        vh.ecrire_tables_etape0(ch, etape0_mini, commit)
+    ch.write_bytes(ch.read_bytes().replace(b'"commit"', b'"commit" ', 1))         # un octet changé
+    with pytest.raises(GardeArret, match="empreinte"):
+        vh.charger_tables_etape0(ch, sha, commit, MINI)
+
+
+def test_juge_sans_verdict_ph4_valeur_centrale_a_cote():
+    # 2 000 partages : le témoin « une unité par tâche » des données factices reste dans sa règle (lignes V5)
+    T = vh.analyser(assembler(lignes()), vh.Graines(7), replace(MINI, partages=2000), vh.Options())["tables"]
+    assert all(w["ligne"] == "V5" for v in T["V"].values() for w in v.values())
+    assert "J8r:max" not in T["predictions"]["PH-4"]
+    for lect in ("cinq", "six"):
+        assert T["T"]["J8r:max"][lect]["valeur_centrale_annoncee"] == 0.15
+    assert "M1:max" in T["predictions"]["PH-4"]
+    assert "valeur_centrale_annoncee" not in T["T"]["M1:max"]["cinq"]
+
+
+def test_audit_egaux_sur_les_series_a_etalonnage_global():
+    f = vh.fiche_factice({"sonde_c7": [["t001", "e2"]]})
+    l = lignes(fiche=f)
+    d = assembler(l)
+    res = _analyse(l)
+    for lect in ("cinq", "six"):
+        moy0 = res["lectures"][lect]["plancher_global"]["moyenne"]
+        for n, e in res["lectures"][lect]["series"].items():
+            if e.get("global"):
+                e["global"]["taux"] = dict(moy0)
+    a = vh.audit(res, d, MINI, {"J": {}})
+    assert any("égaux" in x for x in a["trop_propre"])               # la série en E0 n'empêche pas le déclenchement
+    res["lectures"]["cinq"]["series"]["M1:max"]["global"]["taux"]["32"] += 0.01
+    a = vh.audit(res, d, MINI, {"J": {}})
+    assert not any("égaux" in x and x.endswith("cinq") for x in a["trop_propre"])
