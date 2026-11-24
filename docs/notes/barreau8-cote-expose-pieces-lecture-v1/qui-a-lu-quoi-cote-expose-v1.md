@@ -12,3 +12,6 @@ Pièce de travail (classe C). Lignes ajoutées seulement. Session `session_01Qi7
 | 2026-11-24 16:04Z | session | résumé scellé de la course, par le script de la lecture (1) (vérification d'empreintes ; rien imprimé hors du refus) | programme |
 | 2026-11-24 ~16:08Z | session | ordre de l'étalonnage v2 (`7219083a…`) : titres, § 8 ; additif 1 de l'ordre (`a9d43d59…`) : recherche « exclu » ; ordre de la première course, brouillons 8 (§ 8) et 3 (§ 8) ; pièce d'attestation de l'ordre (`8f6b5025…`) | lu |
 | 2026-11-24 ~16:12Z | contre-lecteur neuf (Opus 5.5, sous-agent) | programme et sortie d'essai de l'extrait des exclus et leurs sources ; code de lecture et structure des clés des sorties (sans valeur), pour éprouver le constat | mandat écrit dans le compte rendu de la session |
+| 2026-11-24 ~16:20Z | session | structure des clés et étiquettes (phase, oracle, schéma, comptes de lignes, clés de configuration et de graines) des sorties v5, sans valeur mesurée ; `lecture_v1.py` l. 140-408 | programme, pour la table des écarts |
+| 2026-11-24 ~16:30Z | session | ordre scellé de la première course `ordre-exploratoire-ii-b-v1.md` (`43a7a050…`) : § 8 et en-tête (phrases d'exclusion) | lu |
+| 2026-11-24 ~16:35Z | même contre-lecteur (Opus 5.5) | programme v2 de l'extrait des exclus, ses sources et sa sortie d'essai | vérification des corrections |
