@@ -155,7 +155,7 @@ MODELES = {
     "carbon": dict(id="gemini-4-carbon", fournisseur="google", cle="GEMINI_API_KEY_FREE", prix=(4.0, 20.0),
                    max=65536, provision=49152, niveau="high", payant=False, src_prix="prix_carbon_sortie",
                    src_reglage="col_carbon_provision"),
-    "astra": dict(id="gpt-6.2-astra", fournisseur="openai", cle="OPENAI_API_KEY", prix=(10.0, 50.0),
+    "astra": dict(id="gpt-6-astra", fournisseur="openai", cle="OPENAI_API_KEY", prix=(10.0, 50.0),
                   max=32768, provision=0, payant=True, src_prix="prix_astra", src_reglage="astra_max_sortie"),
 }
 
@@ -180,7 +180,7 @@ DEFAUTS = dict(
     fiches_propositions=20,      # propositions passées à l'étage : proposition (au plus 12 fiches par étage)
     controles_caches=4,          # constructions déjà réfutées glissées en contrôles cachés : proposition
     temoins_tour_ferme=7,        # sept témoins par génération du tour fermé (T-VRAIE … T-MAL)
-    heures_machine=(10.0, 24.0, 72.0),
+    heures_machine=(10.0, 16.0, 24.0),   # attendu (14 tests en 3 h 18 à la v67, × 38/14 ≈ 9 h), haut ; pire = borne de location par code (24 h, rempart), sous la durée d'étage du tour fermé (72 h)
     juge_argon=False,            # base : juge a priori unique (Opus) ; variante : + juge Argon (configuration v5)   # attendu (14 tests en 3 h 18 à la v67, mis à l'échelle), haut, pire (durée de l'étage)
 )
 # relances permises : une relance après panne technique (mot de Lazar, GO-2026-11-22-77) pour tout appel ; les appels de
