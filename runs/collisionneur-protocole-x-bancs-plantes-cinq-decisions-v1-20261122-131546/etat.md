@@ -14,9 +14,21 @@
 | E3-T2-critique-croisee-C | OK | 2 | gemini-4-argon | 46256 | oui | 2.71 |
 | E3-T2-critique-croisee-D | OK | 1 | kimi-k3.1-pro | 16453 | oui | 0.30 |
 | E3-T2-critique-croisee-E | OK | 2 | gpt-6.2-astra | 16337 | oui | 7.79 |
-| E3-T2-critique-croisee-F | ENTREE_HORS_GARDE | 5 | gemini-4-carbon | 34011 | oui | 11.40 |
+| E3-T2-critique-croisee-F | OK (rejugement de l'essai 5) | 5 | gemini-4-carbon | 34011 | oui | 11.40 |
+| E3-T2-critique-croisee-G | OK | 1 | gemini-4-neon | 38091 | oui | 0.87 |
+| E3-T2-critique-croisee-H | OK | 1 | claude-opus-4-6 | 16739 | oui | 0.71 |
+| E3-T2-critique-croisee-I | OK | 1 | claude-fable-5-1 | 17317 | oui | 3.46 |
+| E3-T3-reponse-A | OK | 2 | claude-fable-5-2 | 21360 | oui | 10.97 |
+| E3-T3-reponse-B | OK | 2 | claude-opus-5-5 | 23169 | oui | 4.55 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-argon | 41386 | oui | 0.77 |
+| E3-T3-reponse-D | OK | 1 | kimi-k3.1-pro | 18060 | oui | 0.33 |
+| E3-T3-reponse-E | OK | 1 | gpt-6.2-astra | 17895 | oui | 0.95 |
+| E3-T3-reponse-F | OK | 1 | gemini-4-carbon | 30990 | oui | 1.56 |
+| E3-T3-reponse-G | OK | 1 | gemini-4-neon | 32705 | oui | 0.86 |
+| E3-T3-reponse-H | OK | 1 | claude-opus-4-6 | 10873 | oui | 0.83 |
+| E3-T3-reponse-I | OK | 1 | claude-fable-5-1 | 17725 | oui | 3.10 |
 
 Absences acceptées par l'arbitre : aucune.
 Refus avant l'envoi : 2 (COMPTE_IMPOSSIBLE, détail au journal).
-Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 54.50 USD.
-Dépense totale : 54.50 USD. Mis à jour 2026-11-24T14:46:13Z.
+Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 83.45 USD.
+Dépense totale : 83.45 USD. Mis à jour 2026-11-24T17:02:50Z.
