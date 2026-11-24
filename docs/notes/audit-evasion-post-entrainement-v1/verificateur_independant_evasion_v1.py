@@ -186,7 +186,7 @@ def pire_gain_exact(c, w, t):
     return sum(cx*tx for cx, tx in zip(c, tau)), tau
 
 def R3(n=3000):
-    g = rng("R3"); viol = 0; testes = 0; plancher_positif = 0; plancher_testes = 0; cross = 0
+    g = rng("R3"); viol = 0; testes = 0; plancher_positif = 0; plancher_testes = 0; cross = 0; sous_dvt = 0; sous_tmin = 0
     for _ in range(n):
         m = int(g.integers(2, 9))
         po = [F(int(x)) for x in g.integers(1, 1000, m)]; s = sum(po); po = [x/s for x in po]
@@ -209,14 +209,17 @@ def R3(n=3000):
         if testes <= 300:
             r = linprog([-float(x) for x in c], A_ub=[[-float(x) for x in po]], b_ub=[-float(tmin)], bounds=[(0, 1)]*m, method="highs")
             cross += abs(-r.fun - float(best)) > 1e-9
-        # plancher des attaques rares : tau_ord <= d_VT, concentrées où P_ord > P_piege
-        if dvt > 0:
-            plancher_testes += 1
-            tau_r = [F(1) if po[x] > pt[x] else F(0) for x in range(m)]
-            gain = sum(cx*tx for cx, tx in zip([(1-rho)*po[x]*dR + rho*pt[x]*(eps*dR-(1-eps)*C) for x in range(m)], tau_r))
-            plancher_positif += gain > 0
+        # hors du champ du théorème : meilleure politique sans contrainte de taux (tau_x = 1 si c_x > 0)
+        plancher_testes += 1
+        pos = [x for x in range(m) if c[x] > 0]
+        if pos:
+            plancher_positif += 1
+            t_opt = sum(po[x] for x in pos)
+            sous_dvt += t_opt <= dvt
+            sous_tmin += t_opt < tmin
     return dict(instances=testes, pire_gain_positif=viol, desaccords_scipy=cross,
-                plancher_instances=plancher_testes, plancher_gain_positif=plancher_positif)
+                instances_meilleure_politique_libre=plancher_testes, meilleure_politique_libre_gain_positif=plancher_positif,
+                dont_taux_ordinaire_au_plus_dVT=sous_dvt, dont_taux_ordinaire_sous_tau_min=sous_tmin)
 
 # ---------- 4. Contre-exemples aux lectures qui dépassent les énoncés ----------
 def contre_exemples():
