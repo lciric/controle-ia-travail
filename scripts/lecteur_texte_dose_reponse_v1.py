@@ -52,7 +52,13 @@ et exige l'égalité de ses constantes (traits, réglages, seuils) et l'identit�
 10. gardes ajoutées par le texte : registre (mode réel) `DESIGNATION-CRITERE-3`, `CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE`,
    `SONDES-LUES-CRITERE-3` et `CODE-MOTS-ET-COUT-T06` (et le code qu'elle cite intact), chacune unique et datée avant la
    création du manifeste du lancement ; `DOSES-JUGEES-CRITERE-3` absente ; seconde exécution après l'écriture du fichier
-   d'issue (ou des doses jugées) refusée ; colonnes par jeton (`ids`, `seq`) refusées au calcul des traits.
+   d'issue (ou des doses jugées) refusée (tout fichier d'issue ou de doses jugées de cette pièce déjà présent sous `diag/`
+   pour les mêmes entrées, ou en mode réel) ; manifeste du lancement réel exigé décisif, sous le préenregistrement
+   `2263c5c4…` et citant le texte de désignation ; colonnes par jeton (`ids`, `seq`) et colonnes d'étiquette propres à la
+   course (réplique, pas désigné, troncature, mentions, titre) ajoutées à la liste des colonnes refusées au calcul des
+   traits (liste `INTERDITES_ENTREE` étendue ; les colonnes permises, `ENTREES_A`, sont inchangées).
+11. sortie : le fichier `base-a-t08.json` et la sous-commande `etat-ba-l2` (propres à T0.8) ne sont pas repris ; fichier des
+   détails `lecteur-du-texte-dose-reponse-details.json` (modèles, vocabulaires, centres, comptes, taux de T0.6).
 
 **Écrit sans aucune vue des données d'organisme** (aucun `diag/`, `runs/`, `donnees/` d'une course, aucune pièce privée),
 sur données factices seulement (`scripts/fabrique_factice_lecteur_texte_dose_reponse_v1.py`).
@@ -469,7 +475,14 @@ def exiger_identite_t06(t06, M, ici=None) -> dict:
     if ecarts:
         raise ArretPiece(f"constantes différentes de la pièce de T0.6 : {ecarts} : rien n'est écrit")
     e = _echantillon_identite(M)
-    a, b = _calcul_identite(t06, M, e), _calcul_identite(ici, M, e)
+    r = {}
+    for nom, mod in (("pièce de T0.6", t06), ("cette pièce", ici)):
+        try:
+            r[nom] = _calcul_identite(mod, M, e)
+        except Exception as x:  # noqa: BLE001 — un calcul en échec sur l'échantillon fixe est un écart, jamais un repli
+            raise ArretPiece(f"calcul différent : {nom} en échec sur l'échantillon fixe ({type(x).__name__}) : rien n'est "
+                             "écrit") from None
+    a, b = r["pièce de T0.6"], r["cette pièce"]
     if json.dumps(a, sort_keys=True, default=str) != json.dumps(b, sort_keys=True, default=str):
         diff = [k for k in a if json.dumps(a[k], sort_keys=True, default=str) != json.dumps(b[k], sort_keys=True, default=str)]
         raise ArretPiece(f"calcul différent de celui de la pièce de T0.6 sur l'échantillon fixe ({diff}) : rien n'est écrit")
@@ -1797,7 +1810,7 @@ def executer(racine, run: str, lecture: str, mode: str, racine_entrees=None, reg
     if mode == "reel":
         reg = controler_registre_reel(racine, Path(registre) if registre else racine / REGISTRE_DEFAUT, instant,
                                       date_du_manifeste(lanc["manifeste"]))
-    progres("identité avec la pièce de T0.6")
+    progres("identité avec la pièce mots et coût reprise")
     t06 = charger_piece_t06(racine / PIECE_T06 if mode == "reel" else piece_t06)
     identite = exiger_identite_t06(t06, M)
     premiere = exiger_premiere_execution(racine, lanc["entrees_sha256"], mode)

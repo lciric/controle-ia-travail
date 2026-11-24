@@ -105,7 +105,6 @@ def fabriquer(racine, run: str, lecture: str | None = None, graine: int = 0, dec
     bloc.json, scellés) ; puis, si `lecture` est donné, `diag/<lecture>/lecture-cout-dose-reponse.json` (lecture du coût
     calculée par `lecture_v2.lire`, `imposer` appliqué)."""
     from controle_ia.dose_reponse import course_v2 as cr
-    from controle_ia.manifeste import generateur
 
     racine = Path(racine)
     rng = np.random.default_rng(int(graine))
@@ -148,7 +147,6 @@ def fabriquer(racine, run: str, lecture: str | None = None, graine: int = 0, dec
     sortie = {"run": run, "manifeste": chemin_m, "taches": taches, "ordre": ordre, "blocs": dossier / "blocs"}
     if lecture is not None:
         sortie["lecture"] = ecrire_lecture(racine, run, lecture, imposer, entropie, n_tirages_lecture)
-    _ = generateur
     return sortie
 
 
