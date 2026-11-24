@@ -1,0 +1,7 @@
+# Qui a lu quoi — session habilitée du coffre du compte 01Qi7 (v1)
+
+Pièce de travail (classe C). Inscription faite **avant toute lecture** d'une pièce de coffre, le 2026-11-24 à 10:54Z (`date -u`). Les lignes suivantes, ajoutées au fil des lectures, ne réécrivent pas celle-ci (nouvelle version du fichier si besoin, R12).
+
+| n° | session | compte | modèle | a lu | rôle | source | exclu de |
+|---|---|---|---|---|---|---|---|
+| à numéroter par la mère | `session_01Qi7Gr4qGhdorfC7VG4KA4b`, session habilitée du coffre ; inscrite le 2026-11-24 à 10:54Z | 01Qi7 | Opus 5.5, effort élevé | avant inscription : seulement la règle d'ouverture du coffre « choix des modes tenus à l'écart » (`REGLE-D-OUVERTURE-v1.md`) et la liste des chemins des branches `coffre/*` ; à lire ensuite : la pièce de choix (`choix-v1/piece-de-choix-modes-tenus-a-l-ecart-v1.md`) **hors de sa section 4** (réservée à Lazar et au gardien par la règle d'ouverture), le coffre qui porte la « famille aveugle de réserve du cycle 2 » une fois trouvé, les fichiers de tâches nommés par la mère ; détail exact versé en fin d'attestation | attestation de séparation pour le versant honnête de l'essai « jumeau contre jumeau » (GO-2026-11-24-17) | mandat de la mère (`session_01Qi7Gr3Ggccg85kjmP654WC`), habilitation par le mot de Lazar tapé le 24 novembre vers 10:50Z, à inscrire au registre par la mère | **à vie** : toute conception de moniteur, de sonde ou de saboteur (agrégateur, trait de texte, seuil compris), conception de l'instrument de vérité du dommage, et tout rôle aveugle |
