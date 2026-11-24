@@ -18,7 +18,7 @@ Steps:
    - Figure or table references (remove all [FIGURE N] blocks)
    - Any named contributions or contribution lists
    - Author names
-   Read the statement sentence by sentence. For each sentence, ask whether it tells the reader something about this paper's own method, approach or solution, its experimental setup, datasets or evaluation, or its results, findings or conclusions, rather than about the problem, why it matters or is hard, or the prior work that frames it (what prompt H9 says to keep). Remove or rephrase every sentence that reveals an item of the list; never add content. Save h9.json again if you changed it. Repeat this check whenever you edit research_questions later.
+   Read the statement sentence by sentence. For each sentence, ask whether it reveals any item of the list above: for example, something about this paper's own method, approach or solution, its experimental setup, datasets or evaluation, its results, findings or conclusions, a figure or table, a named contribution, or an author's name, rather than the problem, why it matters or is hard, or the prior work that frames it (what prompt H9 says to keep). Remove or rephrase every sentence that reveals an item of the list; never add content. Change only the "research_questions" field, and save h9.json again if you changed it. Repeat this check whenever you edit research_questions later.
 3. Answer prompt H10 in the same way. Save it in <<DOSSIER>>/sorties/h10.json.
 4. Answer prompt T in the same way. The problem statement it refers to is the "research_questions" field of your H9 answer, unchanged. Save it in <<DOSSIER>>/sorties/cibles.json.
 5. Run: python3 -I <<DOSSIER>>/verifier_sortie.py <<DOSSIER>>
@@ -30,4 +30,4 @@ Steps:
    - an ERROR about formatting (control character, line break inside a formula, lone surrogate) may be fixed by rewriting the characters concerned, without changing the content.
 6. After any change to an output file, run the checker again. Reply with the last line printed by that final run, and nothing else.
 
-Each file contains only the JSON object asked for by its prompt (UTF-8). Inside JSON strings, escape double quotes as \" and every backslash as \\ : a LaTeX command such as \theta or \frac must be written \\theta or \\frac, otherwise \t, \b, \f, \r and \n are read as control characters. Write all answers in English. Apart from the file names and the check in step 5, follow the prompts as written.
+Each file contains only the JSON object asked for by its prompt (UTF-8). Inside JSON strings, escape double quotes as \" and every backslash as \\ : a LaTeX command such as \theta or \frac must be written \\theta or \\frac, otherwise \t, \b, \f, \r and \n are read as control characters. Write all answers in English. Apart from the file names, the check in step 2b and the check in step 5, follow the prompts as written.

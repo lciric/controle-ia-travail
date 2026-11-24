@@ -1,4 +1,4 @@
-"""Version 2 (2026-11-24) : copie de `extraire_banque_dose_reponse_v2.py` dont seule change la consigne d'enveloppe
+"""Version 2 (2026-11-24) : copie de `extraire_banque_dose_reponse_v1.py` dont seule change la consigne d'enveloppe
 de l'extracteur (`CONSIGNE_EXTRACTEUR_V2`, étape 2b : relecture de l'énoncé contre la liste de ce que H.9 interdit,
 copiée de H.9). Repli (b) accordé par Lazar (GO-2026-11-24-27) après l'arrêt de seuil et trois diagnostics
 (`docs/notes/banque-dose-reponse-consigne-cachee-v1/`). Pièce de classe B. Tout le reste est inchangé.
@@ -112,6 +112,18 @@ class Chemins:
 
 
 CONSIGNE_EXTRACTEUR_V2 = "docs/procedures/banque-dose-reponse-consigne-v2/consigne-extracteur-v2.txt"
+MARQUE_V2 = "2b. Before going on, check the \"research_questions\" field"
+
+
+def consigne_extracteur_v2(racine: Path) -> str:
+    """Consigne d'enveloppe v2 de l'extracteur, sceau vérifié ; arrêt si la marque de l'étape 2b manque (garde contre
+    un retour silencieux à la v1)."""
+    chemin = Path(racine) / CONSIGNE_EXTRACTEUR_V2
+    verifier(chemin)
+    texte = chemin.read_text(encoding="utf-8")
+    if MARQUE_V2 not in texte:
+        raise GardeArret("consigne de l'extracteur sans l'étape 2b : ce n'est pas la version 2")
+    return texte
 FICHIERS_PROCEDURE = {"invite_cibles": "invite-cibles-v1.txt", "consigne_extracteur": "consigne-extracteur-v1.txt",
                       "consigne_contre_verificateur": "consigne-contre-verificateur-v1.txt",
                       "verifier_sortie": "verifier-sortie-v1.py", "verifier_avis": "verifier-avis-v1.py"}
@@ -521,7 +533,7 @@ def preparer(racine: Path, run_id: str, travail: Path, tentative: int, papiers: 
             raise GardeArret(f"tentative {tentative} : les papiers dus sont {dus[:8]}, tous à la fois, et eux seuls")
         choisis = [par_id[i] for i in dus]
         copies = {p["id"]: ex.copie_de_lecture(lire_texte(racine, ch, p)) for p in choisis}
-    modele = (racine / CONSIGNE_EXTRACTEUR_V2).read_text(encoding="utf-8")       # version 2 de la consigne
+    modele = consigne_extracteur_v2(racine)       # version 2 de la consigne
     fiches = {}
     for p in choisis:
         d = base / p["id"]

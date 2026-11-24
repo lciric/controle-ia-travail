@@ -1,5 +1,5 @@
 """Version 2 (2026-11-24) : essai de la consigne d'enveloppe v2 sur les 16 papiers de l'échantillon d'octobre. Copie de
-`reextraction_echantillon_96_v2.py` qui prend la consigne v2 par `extraire_banque_dose_reponse_v2` ; la lecture des avis
+`reextraction_echantillon_96_v1.py` qui prend la consigne v2 par `extraire_banque_dose_reponse_v2` ; la lecture des avis
 (recopiée de `rejeu_contre_verification_banque_v1.lire`, sans changement de fond) contrôle les fichiers épinglés de la
 v2. Contre-vérification inchangée (consigne v1 du contre-vérificateur).
 
@@ -85,14 +85,15 @@ def preparer(racine: Path, run_id: str, travail: Path, textes: str, commande: st
                                      "depuis la session"),
               "travail": str(travail), "racine": str(racine.resolve())}
     creer_manifeste(racine, run_id, config, [], commande=commande)
-    modele = (racine / eb.Chemins().dossier_procedure /
-              eb.FICHIERS_PROCEDURE["consigne_extracteur"]).read_text(encoding="utf-8")
+    modele = eb.consigne_extracteur_v2(racine)       # version 2 de la consigne (CV2-1)
     papiers = {}
     for pid in ech:
         d = base / pid
         papiers[pid] = eb._dossier_agent(racine, eb.Chemins(), ex.copie_de_lecture(t[pid]), d, modele,
                                          "verifier_sortie")
         (d / "sorties").mkdir()
+        if eb.MARQUE_V2 not in (d / "consigne.txt").read_text(encoding="utf-8"):
+            raise GardeArret(f"{pid} : consigne.txt sans l'étape 2b de la version 2")
     resultat = {"travail": str(base), "papiers": papiers,
                 "verdicts_octobre": {p: ronde["papiers"][p]["motifs"] for p in ech}}
     eb._ecrire(racine, run_id, "preparation-extraction", resultat)
