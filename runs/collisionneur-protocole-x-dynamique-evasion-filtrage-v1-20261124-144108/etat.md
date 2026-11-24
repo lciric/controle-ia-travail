@@ -6,4 +6,4 @@
 
 Absences acceptées par l'arbitre : aucune.
 Ligne : 20.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 1.65 USD.
-Dépense totale : 1.65 USD. Mis à jour 2026-11-24T15:14:22Z.
+Dépense totale : 1.65 USD. Mis à jour 2026-11-24T15:18:15Z.
