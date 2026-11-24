@@ -8,8 +8,8 @@
 | E3-T2-critique-croisee-A | OK | 1 | claude-fable-5-2 | 20650 | oui | 2.01 |
 | E3-T2-critique-croisee-B | OK | 1 | claude-opus-5-5 | 19483 | oui | 0.67 |
 | E3-T2-critique-croisee-C | OK | 1 | gpt-6.2-astra | 15514 | oui | 0.59 |
-| E3-T2-critique-croisee-D | INTERROMPU | 2 | None | 0 | non | 2.43 |
+| E3-T2-critique-croisee-D | INTERROMPU | 3 | None | 0 | non | 4.86 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 30.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 9.42 USD.
-Dépense totale : 9.42 USD. Mis à jour 2026-11-24T13:29:15Z.
+Ligne : 30.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 11.86 USD.
+Dépense totale : 11.86 USD. Mis à jour 2026-11-24T13:32:45Z.
