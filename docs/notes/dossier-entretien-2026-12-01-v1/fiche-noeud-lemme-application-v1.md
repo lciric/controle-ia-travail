@@ -1,6 +1,6 @@
 # Fiche pour Lazar — nœud : le lemme d'additivité dans son application au contrôle — v1
 
-2026-11-24, après 10:40Z (`date -u`). Session « dossier de l'entretien », reprise (Opus 5.5). Pièce de travail. Source : la contre-lecture de la table des revendications v2 par un Opus neuf, question 3 (`docs/notes/revendications-en-vigueur-v2/contre-lecture-table-revendications-v2-opus-v1.md`). **Nœud : pas de défaut.**
+2026-11-24, après 10:40Z (`date -u`). Session « dossier de l'entretien », reprise (Opus 5.5). Pièce de travail. Source : la contre-lecture de la table des revendications v2 par un Opus neuf, question 3 (`contre-lecture-table-revendications-v2-opus-v1.md`, même dossier). **Nœud : pas de défaut.**
 
 **Décision.** Le programme v3 doit-il dire du lemme qu'il n'est « plus revendiqué » sans réserve, ou garder son application au contrôle ?
 
