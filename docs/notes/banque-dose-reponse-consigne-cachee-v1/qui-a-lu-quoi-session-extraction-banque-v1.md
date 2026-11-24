@@ -18,3 +18,4 @@ Interdits tenus : aucune ouverture de `brouillons/g0-criteres-2-3-v1/consignes-p
 | 10 | `tests/test_extraire_t05.py` (fixtures et déroulé complet), `tests/conftest.py` (fixture du dépôt jetable) | code d'essai |
 
 Non lus, par discipline de la procédure d'extraction (section 0) : le contenu des sorties des sous-agents (énoncés, cibles, avis) ; seuls les codes d'anomalie, motifs mécaniques et compteurs sont lus.
+| 11 | réponse du sous-agent de la tentative 2 du papier 2602.07588v2 (lancement 2) | **exposition involontaire** : la réponse, hors de la forme demandée (une ligne), résumait le contenu des trois sorties (énoncé, classification, cibles, dont les directions) ; lue par la session à sa réception. La session ne prend part à aucune mesure ni lecture de la course ; déclaré pour la liste « qui a lu quoi » du programme |
