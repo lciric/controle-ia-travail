@@ -1,0 +1,8 @@
+# Reprise de la session de conception des sondes de la boîte blanche sur un autre compte (v1)
+
+- **Date (UTC)** : 2026-11-23T08:31Z (`date -u`). **Accord** : GO-2026-11-23-09. **Session qui reprend** : `session_016QhUrvozGuPrL4eYUqDJvi` ; mère : `session_016QhUrvi45g3jX5saFefVED`. Branche de travail : `prep/conception-sondes-boite-blanche-fable-v2`, partie de `75adf539`.
+- **Modèle servi** : vérifié par la fiche de la session (modèle configuré et dernier modèle servi : celui que la règle « Qui conçoit » réserve aux conceptions) ; attesté aussi par l'attribution des commits de cette branche.
+- **Routine courte** : empreintes des trois documents du lancement conformes ; passation `2026-11-23-0715-conception-sondes-boite-blanche.md` lue, avec ce qu'elle cite.
+- **Constat** : la session d'avant a commis après sa passation (`75adf539`, 08:02Z) une esquisse non scellée de la table de correspondance, écrite sous un autre modèle ; elle est gardée telle quelle, comme note de travail, et n'est pas la pièce décisive.
+- **Lu pour la table** : le seul extrait servi, `extrait-issues-et-phrases-gelees-b5f-v1.md` (commit `66ac7d78`), empreinte `c228c773e0ea94982d73a4a9c97e48305a3b77333874532655fb59a1818773cb` vérifiée avant lecture. Non ouverts : le texte scellé du test sur les adaptateurs jumeaux, son code, ses sorties, son verdict, le coffre, le bras d'attaque, le saboteur ; ni `registres/etat.md`, ni les registres communs.
+- **Ordre du travail** : table de correspondance des issues ; brouillon 3 de la note de conception ; réponses aux questions du développeur ; devis de l'épreuve publique. Aucune dépense.

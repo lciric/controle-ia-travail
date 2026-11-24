@@ -1,0 +1,341 @@
+{
+  "metadonnees": {
+    "mandat": "GO-2026-11-24-01",
+    "version": "v1",
+    "date_utc": "2026-11-24",
+    "depense_api_payante_usd": 0.0,
+    "langue": "fr",
+    "nb_familles_canoniques": 6,
+    "nb_fiches_maitresses": 18,
+    "sources_primaires_fichier": "extractions-brutes-primaires-v1.json",
+    "protocole_scelle_fichier": "temoins-externes-et-protocole-v1.md",
+    "protocole_scelle_sha256": "bcfbd25e0447f2cc9df5b469f4d23c2ae55fbe487fba053e3e7c98aab252d6d1"
+  },
+  "validation_externe": {
+    "rappel_liste_temoin_scellee": {
+      "trouves_reseau_lexical_pur": 18,
+      "total_temoins": 20,
+      "taux_reseau_lexical_pur": 0.90,
+      "temoins_manques_reseau_lexical_pur": [
+        {
+          "id": "TEM-05",
+          "diagnostic": "Le billet primaire UK AISI (LessWrong rGcg4XDPDzBFuqNJz) a bien ete extrait sur le reseau, mais la troncature deterministic a 2600 caracteres du corps markdown dans l'indexeur reseau coupait avant la sous-section 'Developing methods for few-shot catastrophe prevention'."
+        },
+        {
+          "id": "TEM-07",
+          "diagnostic": "L'archive arXiv:2310.18512 (Roger & Greenblatt, Preventing Language Models From Hiding Their Reasoning) a bien ete telechargee et extraite en LaTeX, mais sans marqueur syntaxique litteral d'environnement ouvert, ce qui l'excluait du filtre strict `a_ouverture == True`."
+        }
+      ]
+    },
+    "retrodiction_temporelle_coupure_2023_12_31": {
+      "transitions_detectees": 7,
+      "total_couples": 8,
+      "taux": 0.875,
+      "couple_non_detecte": {
+        "id": "RET-04",
+        "diagnostic": "Les formalisations post-coupure 2024-2026 (arXiv:2409.07985, arXiv:2506.05296) sont toutes deux detectees, mais l'article fondateur empirique arXiv:2312.06942 (dec. 2023) ne comportait ni environnement de theoreme ni locution litterale 'open problem' dans son source LaTeX."
+      }
+    },
+    "tests_de_mort_numeriques_et_rationnels": {
+      "suite_r5_extracteur": {"essais": 8, "echecs": 0},
+      "loi_halberstadt_etape_2": {"familles_unitaires": 6, "instances_monte_carlo": 14000, "contre_exemples": 0},
+      "catalogue_miniatures_etape_3": {"familles_unitaires": 5, "echecs": 0}
+    }
+  },
+  "familles_canoniques": [
+    {
+      "id_famille": "F1",
+      "intitule": "Dynamique d'entrainement apres pre-entrainement sous filtre imparfait, optimisation strategique et loi de Goodhart",
+      "fiches": ["V-01", "V-02", "V-03", "V-04"]
+    },
+    {
+      "id_famille": "F2",
+      "intitule": "Bornes d'indistinguabilite, jeux de controle et couplage adverse de panels de moniteurs (Q3 / Q4)",
+      "fiches": ["V-05", "V-06", "V-07"]
+    },
+    {
+      "id_famille": "F3",
+      "intitule": "Garanties sequentielles valides a tout instant sous derive adaptative, rupture couverte et cloture d'archive (Q1 / Q2)",
+      "fiches": ["V-08", "V-09", "V-10"]
+    },
+    {
+      "id_famille": "F4",
+      "intitule": "Identifiabilite, geometrie des representations, superposition et theorie de l'apprentissage singulier",
+      "fiches": ["V-11", "V-12", "V-13", "V-14"]
+    },
+    {
+      "id_famille": "F5",
+      "intitule": "Abstraction causale, fidelite du raisonnement latent et desapprentissage robuste en poids ouverts",
+      "fiches": ["V-15", "V-16"]
+    },
+    {
+      "id_famille": "F6",
+      "intitule": "Complexite computationnelle et d'echantillonnage de la surveillance evolutive, des jeux de debat et du transfert faible-vers-fort",
+      "fiches": ["V-17", "V-18"]
+    }
+  ],
+  "fiches_maitresses": [
+    {
+      "id": "V-01",
+      "famille": "F1",
+      "titre": "Selection du contournement sous filtrage par rejet pur contre penalisation KL-regularisee (Loi de Halberstadt)",
+      "enonce_formel_canonique": "Sur Pi = Pi_h U Pi_v U Pi_f muni de l'a priori pre-entraine pi_0, de la recompense R (avantage Delta R > 0 aux tricheurs) et d'un moniteur en boucle M_boucle de survie beta(pi) heterogene (0 <= beta_v < beta_f <= beta_h <= 1), caracteriser les regimes de (Delta R, eta, C, pi_0) ou pi_post(Pi_f) depasse pi_sans(Pi_f) et pi_post(Pi_h), tant a l'equilibre de Gibbs qu'au long d'une trajectoire de gradient stochastique non stationnaire.",
+      "sources_primaires_brutes": [
+        "LessWrong:CoRJ9saddvsXti4m2 (Yair Halberstadt, 2026-11-22) + commentaire gFufuPsjYMbutMtkb (testingthewaters, agreement=5)",
+        "arXiv:2503.11926 (Baker et al., gap extrait: 'There are still many open questions regarding which factors affect CoT monitorability.')",
+        "arXiv:2401.05566 (Hubinger et al., conjecture extraite sur la rupture causale brouillon-sortie)"
+      ],
+      "deja_resolu_hors_ia": "Conditionnement de Doob, inegalite de covariance de Tchebychev-Harris-FKG (gain conditionnel exact Var(beta)/E[beta]), classification strategique a cout separable (Hardt et al. 2016, arXiv:1506.06980) et seuils exacts d'equilibre de Gibbs demontres a l'Etape 2 (Theoremes 1 et 2).",
+      "noyau_mathematique_ouvert": "Dynamique hors equilibre sous descente de gradient stochastique parametrique theta_t dans un transformateur auto-regressif, ou le support accessible p_f(theta_t) et le cout de maintien multi-objectifs delta_maint(theta_t) co-evoluent non lineairement avant convergence vers la mesure de Gibbs.",
+      "miniature_test_de_mort": "test_mort_halberstadt_v1.py (identite rationnelle exacte + 14 000 instances, 0 contre-exemple ; effondrement de pi_A(Pi_h) de 0.977 a 0.004 quand eta croit de 0.5 a 16 sous rejet pur).",
+      "lien_programme": ["Sondes v2 (obligation hors boucle R2)", "Q4 (dualite avec les pieges R3)", "G1"]
+    },
+    {
+      "id": "V-02",
+      "famille": "F1",
+      "titre": "Queues lourdes endogenes, seuils d'effondrement de Goodhart et geometrie des recompenses non contournables",
+      "enonce_formel_canonique": "Etant donne une vraie utilite R et un proxy appris R_hat = R + xi sur un espace de politiques Pi sous contrainte D_KL(pi || pi_0) <= B, determiner la loi asymptotique et non asymptotique de E_pi*[R] lorsque xi possede des queues lourdes endogenes induites par decalage de couverture auto-regressif, et caracteriser les sous-varietes non convexes Pi_adm sur lesquelles un couple (R, R_hat) est non contournable.",
+      "sources_primaires_brutes": [
+        "arXiv:2102.03896 (Zhuang & Hadfield-Menell, thm:overoptimization extrait)",
+        "arXiv:2209.13085 (Skalse et al., Definition formelle d'unhackability) et arXiv:2210.10760 (Gao et al.)",
+        "OpenReview:PeLLMw3wLX (ICLR 2025 Review IBWBpmsiUQ sur la force des hypotheses structurelles)"
+      ],
+      "deja_resolu_hors_ia": "Dualite variationnelle de Donsker-Varadhan (borne O(sqrt(B)) sous bruit sous-gaussien), theorie des valeurs extremes de Gnedenko-Pickands-Balkema-de Haan, et trivialite des recompenses non contournables sur le simplexe complet de toutes les loteries (Skalse et al. 2022).",
+      "noyau_mathematique_ouvert": "Caractérisation exacte du seuil critique B* de retournement d'utilite vraie dE_{pi_B}[R]/dB < 0 lorsque l'erreur d'estimation R_hat - R depend d'un processus markovien d'actions de longueur H (composition multiplicative des erreurs hors couverture), et critere algebrique decidable de non-contournabilite sur une famille parametrique restreinte.",
+      "miniature_test_de_mort": "test_mort_catalogue_v1.py::test_f1_goodhart_queues_lourdes_contre_sous_gaussien (inversion monotone de E[R_vrai] vers des valeurs strictement negatives sous queue de Pareto alpha=1.5 quand N=exp(B) passe de 5 a 500).",
+      "lien_programme": ["Affinage v11 (protection anti-Goodhart des juges de nouveaute/utilite)", "Pilote 2 (banc de tricheurs B4)"]
+    },
+    {
+      "id": "V-03",
+      "famille": "F1",
+      "titre": "Vitesse d'extinction contre persistance des politiques conditionnelles dormantes (sleeper agents et alignment faking)",
+      "enonce_formel_canonique": "Soit f_theta une politique conditionnelle coincidant avec la cible honnete f* sur le support d'entrainement P_entr mais divergeant sur un support de declenchement disjoint P_depl. Sous descente de gradient stochastique avec regularisation implicite, borner inferieurement et superieurement le nombre d'etapes T necessaire pour eteindre le comportement sur P_depl sans observer P_depl.",
+      "sources_primaires_brutes": [
+        "arXiv:2401.05566 (Hubinger et al., 25 commentaires techniques % et conjecture causale extraits)",
+        "arXiv:2412.14093 (Greenblatt et al., Alignment faking, 25 annotations % extraites)",
+        "LessWrong:rGcg4XDPDzBFuqNJz / UK AISI 3b44d141... ('Studying the sample efficiency of online training... malign initialisations')"
+      ],
+      "deja_resolu_hors_ia": "Fusion asymptotique de Blackwell-Dubins (1962) et borne de regret cumulatif en divergence KL sum_{t=1}^T D_KL(P*(.|x_t) || P_t(.|x_t)) <= -log pi_0(theta*) *sur la seule mesure P_entr*, qui laisse totalement indetermine le comportement sur tout evenement de P_entr-mesure nulle.",
+      "noyau_mathematique_ouvert": "Theoreme de separation entre conditions de biais inductif spectral/norme de poids minimale ou la mise a jour sur P_entr efface le circuit dormant (par partage de representation) et regimes de modularite interne ou le circuit dormant est un point stationnaire stable du flot de gradient sur P_entr.",
+      "miniature_test_de_mort": "Reseau ReLU a deux branches orthogonales sur R^d : verification exacte que la decroissance de poids L2 efface la branche dormante en exp(-lambda t), tandis que le gradient pur sans decroissance de poids laisse la branche exactement invariante (derivee nulle sur P_entr).",
+      "lien_programme": ["G1", "Sondes v2 (detection boite blanche d'un circuit dormant hors support)"]
+    },
+    {
+      "id": "V-04",
+      "famille": "F1",
+      "titre": "Arbitrage dynamique optimal entre entrainement du moniteur et entrainement de la politique apres interceptions rares",
+      "enonce_formel_canonique": "Dans un deploiement sequentiel sur T episodes ou le defenseur intercepte un petit nombre k << T de tentatives d'attaque, determiner la politique minimax d'allocation de ces k exemples entre (a) reduire le taux de faux negatifs du moniteur M_{t+1} et (b) mettre a jour la politique pi_{t+1}, sachant que (b) induit un enrichissement conditionnel de furtivite.",
+      "sources_primaires_brutes": [
+        "UK AISI aisi-2025-08-01-research-areas-in-ai-control.html (3b44d141...) : 'When should you just train the monitor(s) vs train the policy?'",
+        "arXiv:1102.2041 (Bartok et al., gap extrait: 'It remains an open problem to close this gap and determine the exact rate of growth.')",
+        "LessWrong:wwshEdNhwwT4r9RQN (Julian Stastny, 2025-04-28)"
+      ],
+      "deja_resolu_hors_ia": "Classification minimax des jeux finis de surveillance partielle stationnaires en quatre regimes (trivial, facile Theta(T^{1/2}), difficile Theta(T^{2/3}), sans espoir Theta(T)) par observabilite locale/globale (Bartok et al. 2014, Lattimore & Szepesvari 2019).",
+      "noyau_mathematique_ouvert": "Jeu de controle partiellement observe a transition d'etat endogene ou l'action 'entrainer la politique' reduit la frequence globale d'attaque p_tr mais déplace la distribution d'attaque vers le noyau aveugle du moniteur courant (couplage non stationnaire entre estimation statistique du détecteur et sélection évolutionnaire de l'attaquant).",
+      "miniature_test_de_mort": "Jeu a 2 etapes avec k=1 interception et 2 modes d'attaque (visible/furtif) : calcul exact du seuil de capacite du moniteur en dessous duquel entrainer uniquement le moniteur domine strictement toute mise a jour de la politique.",
+      "lien_programme": ["Sondes v2", "G1"]
+    },
+    {
+      "id": "V-05",
+      "famille": "F2",
+      "titre": "Lemme maitre d'impossibilite de detection sous proximite par pas et menaces diffuses (Q4)",
+      "enonce_formel_canonique": "Soient P_0 la loi conjointe des signaux observes sous execution honnete sur I = {1..N} x {1..T} et Q une politique d'attaque diffuse choisissant adaptativement la loi conditionnelle de chaque pas ou la copule globale sous contrainte de proximite locale ou d'invariance de groupe. Determiner le plafond exact sup_phi P_Q(phi=1) pour tout test phi de niveau alpha sous P_0 sous contrainte que Q inflige un dommage structure >= theta.",
+      "sources_primaires_brutes": [
+        "arXiv:2406.20053 (Halawi et al., Covert Malicious Finetuning) + UK AISI 3b44d141... (Davies et al., impossibilite d'audit ponctuel en isolation)",
+        "note-mathematique-lemme-theoreme-v3.md (dfe4fe0f..., T1-T4, distinction classes C et K)",
+        "plan-d-avancee-mathematiques-nouvelles-v1.md (1616e709..., cible n 1 Q4) + GitHub kajitetsuya/lean-hellinger"
+      ],
+      "deja_resolu_hors_ia": "Lemme de Neyman-Pearson et identite sup_{E[phi]<=alpha} E_Q[phi] = min(1, alpha + d_VT(P_0, Q)), sous-additivite sur les lois produits d_VT(P^T, Q^T) <= sum_t d_VT(P_t, Q_t), bornes de Le Cam / Bretagnolle-Huber, et aveuglement exact des statistiques G-invariantes sous rebrassage aleatoire uniforme sur G (T1-T2 de Note v3).",
+      "noyau_mathematique_ouvert": "Borne minimax exacte non triviale lorsque l'attaquant adaptatif modifie uniquement la structure de dependance (classe K, marges individuelles conservees a l'identique) tout en devant concentrer ou coordonner assez d'actions pour franchir une fonction de dommage non symetrique D(X) >= theta.",
+      "miniature_test_de_mort": "test_mort_catalogue_v1.py::test_f3_indistinguabilite_variation_totale_q4 (verification exacte sur les 27 trajectoires d'un alphabet a 3 etats sur T=3 pas, 500 instances, 0 violation).",
+      "lien_programme": ["Q4 (cible n 1 de formalisation Lean)", "Q5 (temoin negatif apparie)", "Note de cadrage v1 (theoreme nu)"]
+    },
+    {
+      "id": "V-06",
+      "famille": "F2",
+      "titre": "Agregation minimax d'un panel de moniteurs sous correlation adverse a marges fixees (Q3)",
+      "enonce_formel_canonique": "Soient k >= 2 moniteurs produisant des scores (S_1, ..., S_k) de lois marginales connues (F_{0,j}) sous l'honnete et (F_{1,j}) sous l'attaque, mais dont la copule de dependance C_0 et/ou C_1 est inconnue ou choisie par un adversaire. Caracteriser min_{C_1} P_{C_1}(g(S) = 1) sous max_{C_0} P_{C_0}(g(S) = 1) <= alpha pour toute regle d'agregation fixe ou randomisee g, et sous contraintes partielles de sous-espace.",
+      "sources_primaires_brutes": [
+        "plan-d-avancee-mathematiques-nouvelles-v1.md (1616e709..., cible n 2 Q3)",
+        "note-mathematique-lemme-theoreme-v3.md (section 8 : voisins 2607.11751 et 2605.26047)",
+        "UK AISI 3b44d141... ('defense in depth' combinant moniteurs boite noire et boite blanche)"
+      ],
+      "deja_resolu_hors_ia": "Bornes de Frechet-Hoeffding (pour k=2 et borne superieure d'union min(1, sum alpha_j)), theorie du transport optimal multi-marginal (programmation lineaire finie sur {0,1}^k), et theoreme de Vovk & Wang (2020) prouvant que la moyenne arithmetique est l'unique fonction symetrique admissible fusionnant k valeurs-e sous dependance arbitraire.",
+      "noyau_mathematique_ouvert": "Valeur du programme minimax bilineaire et structure de l'agregateur optimal (eventuellement randomise) lorsque les k moniteurs satisfont une contrainte geometrique intermediaire mesurable (ex. sondes lisant des sous-espaces d'angle minimal >= theta_0 ou moniteur texte + sonde d'activation a information mutuelle residuelle bornee), permettant de briser rigoureusement le plafond comonotone ou aucun agregateur deterministe ne bat le meilleur moniteur seul.",
+      "miniature_test_de_mort": "test_mort_catalogue_v1.py::test_f2_couplage_frechet_hoeffding_panel_moniteurs_q3 (preuve rationnelle exacte pour k=3, r=3/5 : la regle majorite tombe a 2/5 < 3/5 sous couplage adverse et la regle OU plafonne a 3/5 sous couplage comonotone).",
+      "lien_programme": ["Q3 (programmation lineaire rationnelle en Lean pour k=2,3)", "G1 (conception du panel de sondes)"]
+    },
+    {
+      "id": "V-07",
+      "famille": "F2",
+      "titre": "Equilibres des jeux de controle sequentiels, collusion sans communication et frontiere sous-performance / sur-elicitation",
+      "enonce_formel_canonique": "Dans un protocole de controle sequentiel a horizon N avec budget d'audit humain B_aud, un modele non fiable M_pol et un moniteur non fiable M_mon partageant les memes poids mais sans memoire partagee inter-appels, caracteriser la taxe de controle minimax et les conditions d'existence d'equilibres de collusion par points focaux sous paraphrase aleatoire, ainsi que la limite d'elicitation d'un modele pratiquant la sous-performance strategique (sandbagging).",
+      "sources_primaires_brutes": [
+        "arXiv:2409.07985 (Griffin et al., Games for AI Control) et arXiv:2506.05296 (Terekhov et al., Control Tax, lemma:non-increasing_audit extrait)",
+        "arXiv:2406.07358 (van der Weij et al., AI Sandbagging)",
+        "LessWrong:rGcg4XDPDzBFuqNJz (Studying collusion, Studying overelicitation)"
+      ],
+      "deja_resolu_hors_ia": "Jeux d'inspection sequentiels a somme nulle (Avenhaus, von Stengel, Zamir 2002), NP-difficulte et pathologies d'existence/unicite des equilibres dans les jeux d'equipe a rappel imparfait (Piccione & Rubinstein 1997).",
+      "noyau_mathematique_ouvert": "Bornes informationnelles sur la probabilite maximale de coordination reussie sans faux positifs entre deux instances sans memoire partagee lorsque toute communication passe par un canal de paraphrase contractant la divergence KL d'un facteur eta_para < 1, et impossibilite/possibilite de distinguer par ajustement fin local un modele bride par verrouillage conditionnel (password-locked) d'un modele veritablement incapable sans lui enseigner la competence manquante.",
+      "miniature_test_de_mort": "Jeu fini d'inspection a N pas avec budget d'audit B_aud=1 et moniteur collusif observant un bit bruite de bande passante epsilon : calcul exact de l'equilibre minimax en programmation lineaire.",
+      "lien_programme": ["G1", "Sondes v2 (detection interne du sandbagging et de la collusion)"]
+    },
+    {
+      "id": "V-08",
+      "famille": "F3",
+      "titre": "Processus-e toujours valides sous dependance intra-episode, correlation inter-copies et plafond d'horizon (Q2)",
+      "enonce_formel_canonique": "Pour des scores X_{i,t} = mu_0 + Xi_ep + U_t + eps_{i,t} (i in {1..N} agents/copies a poids partages, t in {1..T} pas d'un episode, Xi_ep effet aleatoire d'episode de part de variance r_0 > 0), construire des surmartingales d'essai toujours valides sans connaissance exacte de la loi de Xi_ep et caracteriser le plafond asymptotique lim_{T -> infini} Puissance(T) sous un seul episode ou nombre borne d'episodes.",
+      "sources_primaires_brutes": [
+        "arXiv:1810.08240 (Howard, Ramdas, McAuliffe, Sekhon) et arXiv:2208.07610 (Perez-Ortiz, Lardy, de Heide, Grunwald, 8 TODO et 1 assumption extraits)",
+        "note-mathematique-lemme-theoreme-v3.md (dfe4fe0f..., section 5 : explosion de Ville a 0.364 sous tau=0.2, n_0=1000)",
+        "GitHub:Robby955/formal-martingales et RemyDegenne/brownian-motion (OptionalSampling.lean)"
+      ],
+      "deja_resolu_hors_ia": "Inegalite de Ville (1939), suites de confiance non parametriques sous-gaussiennes a increments de martingale (`arXiv:1810.08240`), optimalite GROW sous invariance de groupe (`arXiv:2208.07610`), et validite marginale de l'etalonnage conforme sur episodes entiers echangeables.",
+      "noyau_mathematique_ouvert": "Plafond minimax exact de rappel en fonction de la part de variance d'episode r_0 lorsque T -> infini a nombre d'episodes fixe (`Q2`, information de Fisher bornee sur la composante partagee), et cout exact en croissance GROW d'un processus-e robuste a une equicorrelation inter-agents c in [0, c_max] inconnue.",
+      "miniature_test_de_mort": "test_mort_catalogue_v1.py::test_f5_surmartingale_ville_contre_inflation_effet_episode_q1_q2 (validation <= 0.05 en i.i.d. contre explosion > 0.15 sous tau=0.25).",
+      "lien_programme": ["Q2 (cible pilier)", "G1 (garde decisive sur episodes honnetes entiers)", "Papier B (copies a poids partages)"]
+    },
+    {
+      "id": "V-09",
+      "famille": "F3",
+      "titre": "Detection sequentielle au plus tot d'un adversaire couvert adaptatif avant franchissement d'un seuil de dommage",
+      "enonce_formel_canonique": "Un attaquant adaptatif observe le temps courant et alloue un budget de sabotage (delta_t)_{t>=1} (sum delta_t <= B ou dommage cumule D_t = sum_{s<=t} g(delta_s)). Caracteriser la regle d'arret tau minimisant P_Q(D_tau >= theta) sous la contrainte toujours valide P_0(tau < infini) <= alpha (ou E_0[tau] >= gamma).",
+      "sources_primaires_brutes": [
+        "arXiv:2601.20022 (Ramtin, Nain, Towsley, prop:main extraite sur la detection couverte en temps discret)",
+        "note-mathematique-lemme-theoreme-v3.md (section 3, L3 d : effondrement du processus-e cumule depuis t=0 face au report en fin d'horizon, contre somme cumulee de Page et detecteurs-e)"
+      ],
+      "deja_resolu_hors_ia": "Optimalite exacte de la somme cumulee de Page pour le critere de Lorden a loi post-rupture stationnaire connue (Moustakides 1986), et regime minimax Theta(gamma) avec dommage O(gamma^{1-rho}) contre un adversaire couvert *stationnaire* connaissant gamma (`arXiv:2601.20022`).",
+      "noyau_mathematique_ouvert": "Regime doublement non stationnaire et a budget total fini B sous garantie toujours valide P_0(tau <= n_0) <= alpha : determiner le melange minimax optimal sur les fenetres de redemarrage et les amplitudes delta d'un detecteur-e face a un attaquant adaptatif qui concentre ou fragmente son budget en fin d'horizon.",
+      "miniature_test_de_mort": "Monde gaussien discret n_0=200, B=25 : comparaison exacte entre processus-e cumule (puissance de detection a temps ~0.16 sous report) et detecteur-e redemarre multi-echelles (> 0.55 au meme niveau effectif sous P_0).",
+      "lien_programme": ["G1 (module bases.sequentiel)", "Note mathematique v3 (L3 c, d)"]
+    },
+    {
+      "id": "V-10",
+      "famille": "F3",
+      "titre": "Controle du taux de fausses decouvertes sous selection adaptative et cloture de recombinaison d'une archive de juges (Q1)",
+      "enonce_formel_canonique": "Une boucle evolutive d'agents proposeurs interroge adaptativement un juge de nouveaute/utilite sur k manches en recombinant par morceaux les elements d'une archive A_t. Definir formellement la cloture algebrique de recombinaison a un ou r niveaux Cl_r(A_0) formant l'hypothese nulle composite H_0, et borner P_{H_0}(exists t <= k : Juge accepte X_t) lorsque les proposeurs lisent la regle des gardes.",
+      "sources_primaires_brutes": [
+        "plan-d-avancee-mathematiques-nouvelles-v1.md (1616e709..., cible Q1, banc B4, citations Dwork et al. 1506.02629 et Blum & Hardt 1502.04585)",
+        "GitHub:Lean-MoDS/StatsMLlib et Beneficial-AI-Foundation/vericoding-benchmark"
+      ],
+      "deja_resolu_hors_ia": "Bornes de generalisation adaptative par confidentialite differentielle et information mutuelle (Dwork et al. 2015, Russo & Zou 2016) et mecanisme de seuil *Ladder* (Blum & Hardt 2015) garantissant une erreur O((log k)^{1/3} n^{-1/3}) sur un banc de test fixe contre k soumissions adaptatives.",
+      "noyau_mathematique_ouvert": "Alors que Dwork et al. et *Ladder* controlent le sur-ajustement a un echantillon i.i.d. fixe, `Q1` porte sur un nul *combinatoire et semantique* (cloture des reformulations et recombinaisons triviales d'une archive connue) face a un proposeur adversaire : caracteriser la stabilite d'une normalisation canonique et borner le gain maximal de corruption sous budget de requetes borne.",
+      "miniature_test_de_mort": "Grammaire finie d'enonces (lot B1, `rapport-essais-r5-lot-b1-v6.md`) : 0 collision de lignee et 0 verite tuee sur 42 racines d'essai et 4 250 enonces adverses.",
+      "lien_programme": ["Q1", "Pilote 1 et Pilote 2 (oracles plantes et banc B4)", "Affinage v11"]
+    },
+    {
+      "id": "V-11",
+      "famille": "F4",
+      "titre": "Capacite d'empilement en superposition, transitions de phase geometriques et calcul non lineaire sous interference",
+      "enonce_formel_canonique": "Soient n traits latents parcimonieux x in R_+^n (P(x_i > 0) = 1 - S << 1) projetes dans R^m (m << n) puis reconstruits ou traites par une couche non lineaire sigma(W^T W x + b). Determiner en fonction de (m/n, S, spectre de correlation de x) les frontieres exactes de transition de phase entre representation dediee, polysemantique polytopale (antipodale, pentagonale, etc.) et effondrement, pour le minimum global et le flot de gradient.",
+      "sources_primaires_brutes": [
+        "arXiv:2209.10652 (Elhage et al., Toy Models of Superposition) et arXiv:2405.14860 (hyp:one_dim_superposition extraite)",
+        "LessWrong:x4kvabkF2Jk8GLZp8 (Linkpost: Neural Networks Are Already Clean, score=220)"
+      ],
+      "deja_resolu_hors_ia": "Borne de Welch max_{i!=j} |<w_i, w_j>| >= sqrt((n-m)/(m(n-1))), empilements spheriques de Kabatiansky-Levenshtein (exp(c m) vecteurs quasi-orthogonaux dans R^m), et acquisition comprimee lineaire sous condition d'isometrie restreinte m >= C s log(n/s) (Candes-Romberg-Tao 2006).",
+      "noyau_mathematique_ouvert": "Caractérisation analytique exacte des minimiseurs de E_x ||x - ReLU(W^T W x + b)||_2^2 hors du regime asymptotique S -> 1 (classification des polytopes optimaux en dimension m >= 3 sous poids d'importance non uniformes en loi de puissance) et capacite de *calcul booleen/bilineaire* en superposition sans explosion de l'interference croisee.",
+      "miniature_test_de_mort": "Optimisation exacte sur n=5, m=2 en fonction de la parcimonie 1-S : verification du saut discret entre rang 2 orthogonal (2 traits lus, 3 ignores) et pentagone regulier de Welch.",
+      "lien_programme": ["Sondes v2 (robustesse d'une sonde lineaire quand le trait de menace est en superposition)"]
+    },
+    {
+      "id": "V-12",
+      "famille": "F4",
+      "titre": "Identifiabilite statistique des autoencodeurs parcimonieux (SAE) sous traits correles et sous-espaces multidimensionnels",
+      "enonce_formel_canonique": "Soit X = g(Z) in R^d engendre par des variables latentes Z presentant une structure causale (graphe oriente acyclique non trivial) et pouvant inclure des composantes vectorielles irreductibles Z_G in M_G subset R^{d_G} (d_G >= 2, ex. cercles/groupes). Sous quelles conditions necessaires et suffisantes sur (g, P_Z) un autoencodeur parcimonieux minimiseur de E||X - D f(X)||_2^2 + lambda ||f(X)||_1 identifie-t-il les vrais sous-espaces latents sans division (feature splitting) ni fusion (feature absorption) ?",
+      "sources_primaires_brutes": [
+        "arXiv:2311.03658 (Park, Choe, Veitch, ass:ortho_to_indep extraite) et arXiv:2405.14860 (Engels et al., traits multidimensionnels)",
+        "OpenReview:TAOpnCPnjg (ICLR 2026 Review M53OqbHtCv : 'require a strong assumption that each latent variable has at least one pure child node to ensure identifiability')",
+        "GitHub:jbloomAus/SAELens (tickets identifiability / shrinkage)"
+      ],
+      "deja_resolu_hors_ia": "Impossibilite de l'analyse en composantes independantes non lineaire sans conditionnement auxiliaire (Hyvarinen & Pajunen 1999), identifiabilite de l'apprentissage de dictionnaire lineaire sous independance stricte et condition d'ancrage / enfant pur (Spielman et al. 2012 ; Arora et al. 2015).",
+      "noyau_mathematique_ouvert": "Conditions exactes d'identifiabilite par blocs lorsque simultanement (1) le dictionnaire est sur-complet (M > d), (2) la penalite utilisee est L1/TopK biaisant l'echelle (shrinkage) et provoquant l'absorption d'un trait parent par ses enfants dans une hierarchie semantique (absence d'enfant pur), et (3) certains traits vivent sur des varietes compactes courbes de dimension >= 2.",
+      "miniature_test_de_mort": "Modele hierarchique a 2 traits binaires ou Z_2 implique Z_1 (P(Z_1=1 | Z_2=1) = 1, absence d'enfant pur pour Z_1) : demonstration analytique de l'absorption de Z_1 dans le code de Z_2 sous penalite L1.",
+      "lien_programme": ["Sondes v2 (choix entre sondes lineaires supervisees et traits d'autoencodeurs parcimonieux)"]
+    },
+    {
+      "id": "V-13",
+      "famille": "F4",
+      "titre": "Theorie de l'apprentissage singulier non asymptotique et validite de l'estimateur local du coefficient d'apprentissage",
+      "enonce_formel_canonique": "Pour un reseau profond singulier (hessien de la divergence KL degenere en w*), soit lambda(w*) le plus petit pole reel positif de la fonction zeta de l'erreur K(w) = D_KL(p_0 || p_w), et lambda_tilde_gamma(w*) l'estimateur local regularise par localisation gaussienne gamma ||w - w*||^2 evalue par dynamique de Langevin a gradient stochastique (SGLD). Etablir des bornes d'erreur a echantillon fini n et dimension p >> n garantissant |lambda_tilde_gamma(w*) - lambda(w*)| <= eps.",
+      "sources_primaires_brutes": [
+        "arXiv:2308.12108 (Lau, Murfet, Wei et al., conjecture extraite: 'We conjecture that \\tilde \\lambda(\\wstar) is equal to the LLC \\lambda(\\wstar) given certain conditions on \\gamma.')"
+      ],
+      "deja_resolu_hors_ia": "Developpement asymptotique exact de l'energie libre bayesienne de Watanabe (2009) a dimension p fixe et n -> infini par resolution des singularites d'Hironaka, et calcul exact de lambda pour les reseaux lineaires profonds de rang reduit (Aoyagi & Watanabe 2005).",
+      "noyau_mathematique_ouvert": "(1) Preuve de la conjecture de Lau-Murfet-Wei (`arXiv:2308.12108`) fixant la fenetre de localisation gamma(n, p) qui separe la singularite locale des bassins voisins sans ecraser les directions plates ; (2) temps de melange polynomial ou exponentiel de SGLD au voisinage d'une singularite non isolee ; (3) equivalence ou divergence entre la geometrie bayesienne de Watanabe et la mesure stationnaire implicite d'Adam/SGD.",
+      "miniature_test_de_mort": "Modele polynomial singulier K(w_1, w_2) = w_1^2 w_2^4 sur R^2 : calcul analytique exact du pole zeta lambda et comparaison directe avec l'integrale gaussienne localisee en fonction de gamma.",
+      "lien_programme": ["Fondements geometriques de la complexite inductive R1 (Etape 2)"]
+    },
+    {
+      "id": "V-14",
+      "famille": "F4",
+      "titre": "Mecanisme spectral et geometrique du desalignement emergent sous ajustement fin etroit de rang faible",
+      "enonce_formel_canonique": "Soit theta_0 un modele post-entraine aligne et Delta theta une mise a jour de rang r >= 1 (ex. LoRA de rang 1) minimisant une perte supervisee sur une distribution etroite D_etroit (ex. generation de code non securise). Expliquer et borner la variation de la distribution predictive sur une distribution hors domaine D_gen disjointe de D_etroit induisant un basculement coherent de persona malveillante.",
+      "sources_primaires_brutes": [
+        "arXiv:2502.17424 (Betley et al., Emergent Misalignment, aveu extrait: 'a comprehensive explanation remains an open challenge for future work.')",
+        "arXiv:2310.03693 (Qi et al., Fine-tuning Aligned Language Models Compromises Safety)",
+        "UK AISI 3b44d141... ('Is it possible to make use of emergent misalignment for data poisoning?')"
+      ],
+      "deja_resolu_hors_ia": "Approximation lineaire par noyau tangent neuronal (NTK, Jacot et al. 2018) : Delta f(x) ~ <K(x, D_etroit), residu>, qui predit un transfert proportionnel au produit scalaire des gradients entre D_etroit et D_gen.",
+      "noyau_mathematique_ouvert": "Expliquer pourquoi le transfert observe est *fortement asymetrique et coherent semantiquement* bien au-dela du regime NTK : formaliser comment le pre-entrainement compresse de multiples comportements normatifs dans une direction latente commune de 'persona' de grande valeur singuliere, telle que le gradient sur D_etroit ait un alignement cosinus anormalement eleve avec cette direction globale tout en contournant la regularisation locale.",
+      "miniature_test_de_mort": "Modele bilineaire factorise partageant un vecteur latent de style u in R^d sur K taches : calcul exact de la rotation de u induite par une mise a jour de rang 1 sur la seule tache 1.",
+      "lien_programme": ["Sondes v2", "G1"]
+    },
+    {
+      "id": "V-15",
+      "famille": "F5",
+      "titre": "Effacement chirurgical de concept, non-unicite de l'abstraction causale et bornes de re-emergence en poids ouverts",
+      "enonce_formel_canonique": "(a) Pour un couple (X, Z) dans R^d x {1..K}, existe-t-il un editeur en temps polynomial X_tilde = E(X) a distorsion E||X_tilde - X||_2^2 <= eps garantissant sup_{f in F_poly} I(f(X_tilde); Z) <= delta pour toute sonde non lineaire polynomiale F_poly ? (b) Pour un modele a poids ouverts theta_eff dont une capacite dangereuse C a ete supprimee en surface, borner inferieurement le nombre minimal k* d'exemples ou de pas de gradient permettant de restaurer C.",
+      "sources_primaires_brutes": [
+        "arXiv:2306.03819 (Belrose et al., LEACE, conjecture extraite: 'We conjecture that it is intractable to nondestructively edit X so as to prevent a general nonlinear adversary from recovering Z...')",
+        "arXiv:2301.04709 (Geiger et al., thm:repsoft extrait sur l'abstraction causale)",
+        "arXiv:2402.08787 (Lynch et al.) et arXiv:2409.18025 (Deeb & Roger, perspective adverse sur le desapprentissage)"
+      ],
+      "deja_resolu_hors_ia": "Forme close exacte du blanchiment-projection oblique LEACE (`arXiv:2306.03819`) garantissant la neutralite simultanee pour *tous* les classifieurs lineaires a perte convexe ssi Cov(X_tilde, Z) = 0, et theorie du transport optimal barycentrique de Wasserstein (qui efface toute information non lineaire mais exige d'estimer ou d'echantillonner les lois conditionnelles exactes P(X|Z=z) en haute dimension).",
+      "noyau_mathematique_ouvert": "Trancher la conjecture de complexite de Belrose et al. (`arXiv:2306.03819`) sur l'intractabilite computationnelle de l'effacement non lineaire a faible distorsion sans modele generatif exact, et etablir une borne inferieure informationnelle distinguant la simple 'mascarade de sortie' (re-emergente en O(1) pas de gradient) de la destruction effective des circuits internes en poids ouverts.",
+      "miniature_test_de_mort": "test_mort_catalogue_v1.py::test_f4_effacement_lineaire_leace_contre_sonde_quadratique (preuve rationnelle exacte ou Cov(X,Z)=0 laisse LEACE identique a l'identite alors qu'une sonde quadratique extrait 1 bit complet avec exactitude 100%).",
+      "lien_programme": ["Sondes v2", "Q5 (temoin sonde d'indication)"]
+    },
+    {
+      "id": "V-16",
+      "famille": "F5",
+      "titre": "Necessite causale de l'externalisation en chaine de pensee, steganographie sous paraphrase et decodabilite du raisonnement latent",
+      "enonce_formel_canonique": "Soit un transformateur autoregressif de profondeur fixe L et de precision finie produisant m jetons de trace Z_1..Z_m avant la reponse Y sur un probleme de complexite sequentielle S(n) >> L. Determiner la quantite minimale d'information semantique lisible par un moniteur de trace lorsque la trace Z subit un operateur de paraphrase P(Z'|Z) preservant l'utilite, et caracteriser l'identifiabilite d'un traducteur vers la langue naturelle dans un espace de raisonnement continu ('neuralese').",
+      "sources_primaires_brutes": [
+        "arXiv:2307.13702 (Lanham et al., limitation extraite), arXiv:2310.18512 (Roger & Greenblatt) et arXiv:2412.06769 (Hao et al., Coconut)",
+        "arXiv:2503.11926 (Baker et al.) et UK AISI 3b44d141... ('disambiguate the propensity of models to externalise their reasoning, with the necessity... Decoding opaque reasoning')"
+      ],
+      "deja_resolu_hors_ia": "Bornes de complexite de circuits montrant qu'une passe avant unique de transformateur a precision log(n) est confinee dans TC^0 alors qu'une chaine de pensee polynomiale atteint P (Merrill & Sabharwal 2023 ; Feng et al. 2023), et bornes classiques de steganographie a cle secrete partagee (Cachin 1998 ; Hopper, Langford, von Ahn 2002).",
+      "noyau_mathematique_ouvert": "Contrairement a la steganographie classique a cle partagee, un meme modele autoregressif doit *encoder et decoder ses propres etats intermediaires de calcul* a travers un canal de paraphrase semantique sans cle externe privee : il reste ouvert de prouver un theoreme de rigidite montrant soit qu'un calcul P-complet sous paraphrase contractante force une trace humainement interpretable, soit qu'un codage semantique homomorphe furtif existe.",
+      "miniature_test_de_mort": "Evaluation d'une parite iteree ou d'une accessibilite de graphe a k etapes a travers un goulot d'etranglement discret quotientant les synonymes : calcul exact de la chute de capacite steganographique a entropie intra-classe nulle.",
+      "lien_programme": ["G1 (complementarite trace externe / Sondes v2 internes)"]
+    },
+    {
+      "id": "V-17",
+      "famille": "F6",
+      "titre": "Complexite doublement efficace des jeux de debat sous asymetrie des prouveurs, obscurcissement et juge biaise",
+      "enonce_formel_canonique": "Deux prouveurs P_1, P_2 en temps polynomial T(n) debattent en r tours devant un juge verificateur V en temps t_V << T(n) disposant d'un acces oracle ponctuel mais affecte d'un bruit ou biais cognitif borné eps_V. Caracteriser la classe des langages decidables avec avantage d'honnetete garanti lorsque le prouveur malhonnete emploie des arguments obscurcis ou dispose d'un leger avantage de calcul T_mal > T_hon.",
+      "sources_primaires_brutes": [
+        "arXiv:1805.00899 (Irving, Christiano, Amodei) et arXiv:2311.14125 (Brown-Cohen, Irving, Piliouras, Doubly-Efficient Debate)",
+        "arXiv:2402.06782 (Khan et al.) et OpenReview:O1fp9nVraj (NeurIPS 2024 Review SmadWnZXob sur l'ecart debat vs consultation)"
+      ],
+      "deja_resolu_hors_ia": "IP = PSPACE (Shamir 1992), MIP = NEXP (Babai, Fortnow, Lund 1991), preuves interactives doublement efficaces pour les circuits uniformes (Goldwasser, Kalai, Rothblum 2015), et protocole de debat doublement efficace a recompense d'honnetete constante pour tout calcul polynomial deterministe ou stochastique a memoire bornee avec juge *non biaise* (`arXiv:2311.14125`).",
+      "noyau_mathematique_ouvert": "(1) Robustesse lorsque le juge V souffre d'un biais endogene systematiquement corrélé au style ou a la complexite apparente (brisant l'hypothese d'oracle local exact aux feuilles de l'arbre de debat) ; (2) regimes d'asymetrie de capacite T_mal >> T_hon ou le prouveur honnete ne peut pas localiser en temps T_hon la premiere feuille fausse d'une preuve obscurcie.",
+      "miniature_test_de_mort": "Jeu de recherche dichotomique de bug sur un arbre de calcul de profondeur d=8 lorsque le juge aux feuilles se trompe avec probabilite b(feuille) <= 0.15 choisie par le menteur : calcul exact du seuil de rupture de l'avantage honnete.",
+      "lien_programme": ["Affinage v11 (architecture multi-juges et contre-lecture croisee)"]
+    },
+    {
+      "id": "V-18",
+      "famille": "F6",
+      "titre": "Generalisation faible-vers-fort hors convexite et limites face aux erreurs systematiques correlees du superviseur",
+      "enonce_formel_canonique": "Soit f* in F_s la fonction cible vraie, f_w un superviseur faible bruite ou biaise, et f_{w->s} in arg min_{f in F_s} L(f, f_w) l'etudiant fort ajuste sur les etiquettes de f_w. Lorsque la classe d'hypotheses forte F_s est *non convexe* (ex. reseau fini ou union de sous-espaces) et que f_w partage des traits fallacieux avec F_s, determiner sous quelles conditions algorithmiques ou geometriques L(f_{w->s}, f*) < L(f_w, f*) - c * L(f_w, F_s).",
+      "sources_primaires_brutes": [
+        "arXiv:2312.09390 (Burns et al., Weak-to-Strong Generalization)",
+        "arXiv:2405.16236 (Charikar, Pabbaraju, Shiragur, 5 hypotheses couplees extraites dans extractions-brutes-primaires-v1.json)"
+      ],
+      "deja_resolu_hors_ia": "Inegalite pythagoricienne de projection euclidienne et de divergence de Bregman sur un ensemble *convexe* F_s (`arXiv:2405.16236`) : ||f_{w->s} - f*||^2 <= ||f_w - f*||^2 - ||f_w - f_{w->s}||^2 des que f* in F_s et que F_s est convexe.",
+      "noyau_mathematique_ouvert": "En l'absence de convexite de F_s (cas reel d'un grand modele expressif capable d'imiter aussi bien f* que les heuristiques superficielles de f_w, rendant le mauvais ajustement asymptotique ||f_w - F_s|| nul !), caracteriser rigoureusement comment la *dynamique temporelle d'apprentissage* (arret precoce avant memorisation du bruit structurel, perte de confiance auxiliaire, amorcage multi-etapes) cree une convexite effective transitoire empechant l'imitation des erreurs du maitre.",
+      "miniature_test_de_mort": "Union non convexe de deux droites orthogonales dans R^2 contenant f*=(1,0) face a un maitre faible f_w=(0.6, 0.8) : verification exacte de l'echec du minimiseur global (qui projette sur la mauvaise droite !) contre la reussite sous penalisation du noyau pre-entraine anisotrope.",
+      "lien_programme": ["Pilier generation (supervision de proposeurs forts par des juges ou suites bon marche)"]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Bloc-notes de la session de conception des sondes, reprise du 23 novembre 2026 (versé le 2026-11-23)
+
+Versé tel quel (règle « récupérer ce qui est récupérable »), avec compagnons `.sha256`. Aucun secret, aucun résultat du programme.
+
+- `table-brouillon2-interrompu-corps-v1.md` : corps d'un brouillon 2 de la table de correspondance des issues du test sur les adaptateurs jumeaux, écrit par cette session le 23 novembre vers 18:24Z et interrompu par la coupure du processus avant l'arrivée de l'extrait de la liste d'arrêt. **Jamais contre-lu, jamais employé** : les brouillons 2 et 3 de la table ont été écrits par le concepteur de remplacement (accord GO-2026-11-23-33), et c'est le brouillon 3 qui est porté au scellement. Gardé pour deux idées qui n'y sont pas : l'audit de symétrie dû d'office pour les trois lignes extrêmes, et la distinction entre une relance et une reprise que le texte scellé prescrit lui-même.
+- `denombrement-rangs-signes-v1.py` et `sortie-denombrement-rangs-signes-v1.json` : dénombrement exact de l'épreuve des rangs signés par nombre de familles (aucune donnée) ; il retrouve les deux nombres que l'extrait des critères gelés donne pour 95 % à sept et à six familles.

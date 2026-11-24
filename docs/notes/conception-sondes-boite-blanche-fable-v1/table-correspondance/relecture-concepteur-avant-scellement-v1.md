@@ -1,0 +1,25 @@
+# Relecture par la session de conception avant le scellement — table de correspondance et note de conception des sondes (v1)
+
+- **Qui** : la session de conception `session_016QhUrvozGuPrL4eYUqDJvi`, servie par le modèle que la règle « Qui conçoit » réserve aux conceptions ; elle avait écrit le brouillon 1 de la table et le brouillon 3 de la note. **Date (UTC)** : 2026-11-23, 23:32 (`date -u`). Note de travail, sans résultat.
+- **Pourquoi** : les sections 1 à 8 de la table (brouillon 3, `9b0e2c1304ab914ef943c4e99693d1fd9b60e6d4e4b4bee6f392e02264d6bf42`) et le corps de la note (brouillon 5, `e9ad9d8af24e43724c5b99bda74981c8f896b248f46a833dc1c96613cdba0b8d`) ont été écrits par le concepteur de remplacement (accord GO-2026-11-23-33, écart déclaré à la règle « Qui conçoit »). Le mandat de scellement demande de les porter tels quels ; cette relecture dit ce que le concepteur titulaire en pense, pour que la mère et Lazar scellent en le sachant.
+- **Lu** : les deux pièces en entier ; l'extrait des critères gelés (`c228c773…`), l'attestation du conducteur (`24122337…`) et l'extrait de la liste d'arrêt (`b14e35ac…`), empreintes vérifiées avant lecture ; le script de contrôle formel (`092b9651…`), rejoué : 38 cas limites sur 38, 172 combinaisons sur 172, aucun trou, aucun recouvrement.
+
+## Verdict
+
+**Rien ne s'oppose au scellement.** La table range les six issues comme le faisait le brouillon 1 pour leurs classes, avec ce que les deux contre-lectures demandaient en plus (définition de la mention de niveau, effectifs lus au champ du verdict, manipulation toujours à « Non établi », gardes classées d'avance, relance unique). Le préclassement des quinze points de la liste d'arrêt a été comparé point par point au texte servi : il lui est fidèle. Cinq réserves suivent ; aucune ne change une ligne de la table, et aucune n'a besoin d'être levée avant le scellement.
+
+## Réserves sur la table (aucune ne change une classe)
+
+1. **Le point 7 de la liste d'arrêt prescrit lui-même une reprise** (« lecture invalide, version neuve »). Si un verdict « non interprétable » était scellé sur ce point, la table le rangerait « Non établi » (ligne 10), et le verdict de la version neuve serait traité par la règle 6 comme un écart au texte scellé, porté à Lazar, alors que c'est le texte scellé qui demande cette reprise. La conséquence est une montée à Lazar, non une erreur de classe. Lecture à tenir : sans verdict scellé sur la lecture invalide, la règle 5 s'applique et le verdict de la version neuve est le premier.
+2. **Un test clos sans aucun verdict n'a pas de classe** (règle 5). Les points 8 et 9 de la liste d'arrêt mènent à un refus et à un nœud : c'est alors la décision de Lazar sur ce nœud qui dit la suite, la table ne la dit pas. L'attente n'a pas de terme écrit dans ce cas ; la règle 8 ne borne que les lignes 9 et 11.
+3. **Cumul fictif « phrase de manipulation et garde 13 »** : le texte de la table l'enverrait aux lignes 10 et 12 à la fois, le script à la ligne 12 ; les deux mènent à « Non établi ». Déjà relevé par la vérification finale, sans suite.
+
+## Réserves sur la note, section 2 bis (marche causale par retrait d'une direction)
+
+4. **Le témoin de l'ablation est faible tel qu'il est écrit.** Vingt directions tirées au hasard dans un espace de 4 096 dimensions ne portent presque rien de la variance des activations : les retirer déplace bien moins les activations que retirer une direction apprise. « Même norme » n'y vaut que pour le vecteur unité, non pour le déplacement, que la note fait seulement consigner. Une direction quelconque de forte variance, sans lien avec le sabotage, battrait donc elle aussi les vingt témoins, et l'issue (a), « levier causal attesté », serait trop facile à obtenir. La garde de la capacité honnête n'y répond qu'en partie. La décision N-053 demande d'ailleurs, pour le bras de suppression, « une direction aléatoire de même variance ».
+   - *Correction proposée, sans toucher au scellement* : le texte court de la marche causale ajoute un second jeu de témoins, à déplacement égal — des directions tirées dans le sous-espace des premières composantes principales des activations honnêtes, rendues orthogonales à la direction de sabotage, dont la variance projetée égale celle de cette direction à dix pour cent près ; l'issue (a) exige de battre les deux jeux. Un texte court ne peut qu'ajouter un témoin : la phrase « un unique procédé fixé sans alternative » de la note vise la géométrie du premier jeu, elle n'interdit pas un second.
+5. **Vingt témoins ne suffisent pas à un seuil bilatéral de 5 % par le rang seul** : la plus petite probabilité atteignable est de 1 sur 21 d'un côté, 2 sur 21 des deux. Le texte court devra tester par tâche (différence appariée, que la note cite), ou tirer au moins 39 témoins.
+
+## Ce que je recommande
+
+Sceller maintenant : ce qui presse est la section 7 et la table, avant le verdict. Porter les réserves 4 et 5 dans le texte court de la marche causale, qui ne viendra qu'après une marche 1 réussie ; les réserves 1 et 2 se lisent comme dit ci-dessus si le cas se présente. Confiance : 0,85.

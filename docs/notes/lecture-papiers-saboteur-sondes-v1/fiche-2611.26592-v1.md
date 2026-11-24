@@ -1,0 +1,16 @@
+# Fiche de lecture — arXiv 2611.26592 — v1
+
+- **Titre** : Realized versus Population Reliability: Anytime-Valid Self-Consistency Certification under Correlated Reasoning. **Auteurs** : Terence D. Agbeyegbe (Hunter College et Graduate Center, CUNY), Toneukarin G. Agbeyegbe (Rutgers University).
+- **PDF** : `docs/sources/pdf/mecanisme-adjudant-v1/2611.26592v1.pdf`, sha256 `6c370de32726c764d0ceb3d58cca7433c88e5e0ec2dff8a968823a3214c5ee0c` (recalculée, R11). Registre : rang 16.
+- **Décisions lues** : `docs/decisions/decision-N-076-assurance-par-audit-et-reference-honnete-v1.md`, l. 63 (et l. 43-100), errata 1 et 2 (sans effet sur ce papier) ; `docs/decisions/decision-N-069-v1.md` (papier B), qui ne cite pas ce papier : le lien vient de N-076.
+- **Lecteur** : Claude Opus 5.5, effort élevé. **Date** : 2026-11-23T08:46Z (`date -u`). Pages lues : 1-3, 10-11, 17.
+
+---
+
+**(a) Ce que le papier établit.** Quand un état latent est tiré une fois par unité (une question, un préfixe de raisonnement), les tirages sont corrélés avec un coefficient ρ, et l'hypothèse nulle se dédouble : nul réalisé (cette unité) et nul de population (la moyenne) (p. 1-2 du PDF). Le processus par mises reste valide à tout instant, mais pour le nul réalisé (p. 1). Lu comme certificat de population, un mélange franchit le seuil avec probabilité au moins π = P(µ(Z) > 0), sans rapport avec le niveau nominal (proposition 4.5, p. 10). Théorème 5.1 : l'effectif équivalent de la moyenne dans l'unité vaut n/(1 + (n − 1)ρ) et tend vers 1/ρ, « not a universal information bound » (p. 10) ; c'est l'effet de plan de Kish, 1965 (p. 11). Remède : un processus construit au niveau des unités, une seule génération par question sous budget fixe (p. 1, 11). Sur Claude Haiku 4.5 : ρ estimé à 0,435 sur GSM8K, 0,480 sur AIME, où le certificat par unité franchit le seuil sur 24 % des questions contre un niveau nominal de 0,05 (p. 1). Seule la corrélation entre questions est mesurée ; la dépendance en série reste ouverte (p. 17).
+
+**(b) Ce que la décision voulait en tirer.** « Sous dépendance, l'effectif utile plafonne à l'inverse de la corrélation » (p. 1), pour toute accumulation du papier B sur plusieurs agents. **Le permet en partie** : le chiffre est exact (p. 1, 10), mais pour la moyenne dans l'unité, sous un modèle échangeable à corrélation égale, non pour toute dépendance (p. 10, 17).
+
+**(c) Usage.** Pour le papier B : des copies d'un même modèle sur un même épisode forment une unité à latent partagé. Une accumulation entre copies dans l'épisode certifie le nul réalisé de cet épisode ; pour conclure au-delà, il faut indexer par épisode. La co-élévation honnête (effet d'épisode commun, N-069, l. 78) se mesure donc sur des copies honnêtes ; l'outil est donné (corrélation intraclasse avec rééchantillonnage par grappes, p. 17). Pour l'entretien, phrase 2 : à ρ ≈ 0,45, une unité vaut environ deux tirages indépendants (p. 17) ; l'unité de la référence honnête est l'épisode, non l'action. Antériorité : classique, rien à revendiquer.
+
+**(d) Plus petite action.** Ajouter à l'inventaire par étiquettes de N-076 une colonne « unité indépendante, ρ honnête déclaré » ; la porter au préenregistrement du papier B. Coût : environ 20 minutes de session, aucune dépense.

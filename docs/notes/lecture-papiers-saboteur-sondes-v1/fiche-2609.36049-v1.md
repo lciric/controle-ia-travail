@@ -1,0 +1,16 @@
+# Fiche de lecture — arXiv 2609.36049 — v1
+
+- **Titre** : Improving Scalable Oversight with Co-Trained Monitors. **Auteurs** : Joseph H. Rudoler, Kevin Tan, Benedict Tessler, Timothy Kong, Enric Boix Adserà (University of Pennsylvania).
+- **PDF** : `docs/notes/protocole-x-attaquant-v1/opus-max-v1/sources/2609.36049v1.pdf`, sha256 `856b3857c20cbafd1be8c6f5c2901c6e139db371f9c9abcb97933e780104ed41` (recalculée, R11) ; copie identique à l'octet sous `docs/sources/pdf/asymetries-attaquant-v1/`, chemin que cite la décision (l. 302). Registre : rang 14.
+- **Décision lue** : `docs/decisions/decision-N-076-assurance-par-audit-et-reference-honnete-v1.md`, l. 169 (et l. 140-200), errata 1 et 2 (sans effet sur ce papier).
+- **Lecteur** : Claude Opus 5.5, effort élevé. **Date** : 2026-11-23T08:46Z (`date -u`). Pages lues : 1-4, 6-9, 13.
+
+---
+
+**(a) Ce que le papier établit.** Contre un ouvrier adverse, l'erreur et le taux de requêtes d'un moniteur co-entraîné tendent ensemble vers zéro si et seulement si la classe des jugements a une dimension de Littlestone finie (théorème 2.3, p. 3 du PDF) ; la note 1 la lit comme « un nombre fini d'exploits possibles » (p. 3). L'algorithme interroge la vérité avec probabilité t^(−1/2), et l'erreur moyenne est au plus B/√T (p. 4). Corollaire 2.5 : les tentatives de triche croissent au plus comme √T si le travail honnête rapporte (p. 4). Expériences : moniteur Qwen3-1.7B avec adaptateur de rang 16, ouvrier Qwen3-4B entraîné contre lui par renforcement (p. 13) ; au jeu de réparation, réparations correctes de 17 ± 5 % (moniteur fixe) à 66 ± 7 % (requête à chaque mise à jour) et 46 ± 9 % (requêtes éparses), mises à jour 71 à 80, trois graines (p. 7). Limite dite : l'erreur moyenne qui s'annule « does not preclude substantial harm before the monitor learns » (p. 8).
+
+**(b) Ce que la décision voulait en tirer.** Nommer un occupant du moniteur qui apprend sur des audits tirés au hasard face à un ouvrier adverse, et rétrécir le reste de la boucle audit, recapture, réapprentissage. **Le permet en partie** : l'occupation est réelle (théorie et expérience). Restent hors du papier : un moniteur sur états internes (ici un moniteur de texte) ; un plancher d'audit constant (ici le taux s'annule) ; la comparaison canal fermé contre canal ouvert (ici le canal est ouvert par construction) ; le rappel retrouvé avant un seuil de dommage toléré. Ce dernier point est une limite du papier, non un trou du champ (R8) : la littérature de la prédiction économe en étiquettes qu'il cite (Devulapalli et Hanneke 2024 ; Devulapalli et al. 2026, p. 3) peut l'occuper.
+
+**(c) Usage.** Pour l'entretien, objection « entraîner contre les détecteurs » : appui publié pour « le défenseur réapprend en dernier », avec sa réserve (exploits en nombre fini, peu plausible pour un sabotage diffus sur tâche floue). Pour le billet : trois bases à reprendre (moniteur fixe, réappris à chaque pas, réappris au hasard épars). Antériorité : la boucle sur moniteur de texte.
+
+**(d) Plus petite action.** Verser cette fiche comme la lecture accordée (`GO-2026-11-21-56`) ; faire lire les deux papiers de Devulapalli par un agent ayant le réseau avant toute revendication du rappel retrouvé avant le seuil. Coût : environ une heure de session, aucune dépense.
