@@ -17,3 +17,7 @@ Pièce de classe B (instrument). Rapport : `rapport-contre-lecture-code-banque-v
 | CL-11 réserve épuisée | `arret-assemblage` porte sa suite : nœud de Lazar ; suite du tirage existant, jamais un tirage nouveau ; essai |
 | CL-12 essais manquants | ajoutés (voir ci-dessus) ; le déroulé contient une exclusion de la sélection |
 | CL-13 finitions | entropie sans effet commentée ; fiches écrites au fil de l'eau (`fiches-au-fil.jsonl`, hors du dépôt) ; non-atomicité de `ecrire_resultat` : code scellé, résidu connu, inchangé |
+
+## Vérification des corrections (même contre-lecteur)
+
+Verdict : « utilisable en l'état » (`verification-corrections-code-banque-v1.md`). Restes traités en errata de classe B, sans nouvelle vérification (allègement de la procédure) : fiche écrite au fil de l'eau après l'attribution de son rang de garde ; « 16 » écrit depuis `TAILLE_RESERVE` dans la suite de l'arrêt d'assemblage. Laissés : lignes longues (forme) ; message hérité du module scellé ; essais dédiés restants (règle ou graine différentes dans la relecture du tirage, rangs de garde non contigus, sortie 2 sur candidats épuisés, papier de la marge exclu au-delà du 64e retenu), jugés non gênants par le contre-lecteur. Modèle servi, marge de 16 et arrêt sur trois indisponibilités (garde de chaîne, non règle d'exclusion) : déclarés à la ligne de registre.

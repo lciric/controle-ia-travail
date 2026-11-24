@@ -967,8 +967,9 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     except GardeArret as e:
         _ecrire(racine, run_id, "arret-assemblage", {
             "motif": str(e), "statuts": statuts,
-            "suite": ("plus de 16 papiers exclus (réserve épuisée) : nœud de Lazar ; la suite est la suite du tirage "
-                      "existant (sélection étendue, aucune graine), jamais un tirage nouveau ; autre motif : nœud")})
+            "suite": (f"si la réserve est épuisée (plus de {TAILLE_RESERVE} papiers exclus) : nœud de Lazar ; la "
+                      "suite est la suite du tirage existant (sélection étendue, aucune graine), jamais un tirage "
+                      "nouveau ; autre motif : nœud")})
         raise
     par_id = {p["id"]: p for p in papiers_du_corpus(racine, ch)}
     archives = {k: lire_archive(racine / "donnees" / run_id / f"sorties-tentative-{k}.tar",

@@ -158,9 +158,6 @@ def constituer_depuis(ordre: list[str], entrees: dict[str, dict], besoin: int, r
         if fiche.get("id") != pid or fiche.get("version") != entrees[pid]["version"]:
             raise GardeArret(f"{pid} : fiche sans l'identifiant ou la version des pages scellées")
         fiche["rang_tirage"] = rang
-        if au_fil is not None:
-            with open(au_fil, "a", encoding="utf-8") as f:
-                f.write(json.dumps(fiche, ensure_ascii=False, sort_keys=True) + "\n")
         indisponibles = indisponibles + 1 if str(fiche.get("motif", "")).startswith("source indisponible") else 0
         if indisponibles >= PANNES_D_ACCES_CONSECUTIVES:
             raise GardeArret(f"{indisponibles} sources indisponibles d'affilée (dernier rang {rang}) : panne d'accès "
@@ -169,6 +166,9 @@ def constituer_depuis(ordre: list[str], entrees: dict[str, dict], besoin: int, r
             fiche["rang_garde"] = gardes
             gardes += 1
         fiches.append(fiche)
+        if au_fil is not None:
+            with open(au_fil, "a", encoding="utf-8") as f:
+                f.write(json.dumps(fiche, ensure_ascii=False, sort_keys=True) + "\n")
     return fiches
 
 
