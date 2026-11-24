@@ -1,0 +1,277 @@
+{
+  "manifeste_sha256": "d7408c58b70ea7a1dc588461a92140da58c35a993a562590f3434d66879369d5",
+  "resultat": {
+    "papiers": {
+      "2509.22307v2": {
+        "anomalies": [],
+        "avis": {
+          "comment": "Statement keeps to background, prior work and open questions without revealing PWA, JLC, SDKT, data or results. Classification and domains correct. Targets mostly sound; S3 is a comparison baseline, not a sterile direction; C3 and S1 quotes differ from the paper only by a non-breaking space. The 800 GPU-hour estimate is a plausible order of magnitude.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote exact; broad baseline comparison (full-size, multimodal, lightweight) is a generic control.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; reporting cost metrics with accuracy is required by the efficiency/robustness framing.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "nnUNet reference is a standard strong baseline. Quote matches except a non-breaking space after 'nnUNet' in the paper, so a strict exact-match check may fail.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Pruning at matched size plus external test set is a sensible generic control; the quote only supports the external-test-set part, the pruning comparison is supported elsewhere in the paper.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Single-modality and early-fusion comparisons are a generic control for a multimodal problem; quote exact.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "The statement explicitly poses reconstruction-to-segmentation transfer, so no-transfer and standard transfer schemes are generic controls; quote supports loosely but adequately.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Core JLC idea; quote exact and supportive.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Multi-scale attention with cross-modal interaction; quote exact, gain shown in the paper.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Gram-matrix texture transfer from a self-supervised teacher; quote exact.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Pruning is the competing lightweighting route and is shown clearly worse on the external test set. Quote matches except a non-breaking space after 'pruning' in the paper.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Depthwise convolution is shown inferior across datasets (e.g. -6.25 Dice on Hecktor2022); quote exact.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "SAM-Med3D and DINOv3 are comparison baselines only (excluded by prompt T's definition), and heavy foundation models are not a plausible main approach for a lightweight-segmentation problem.",
+              "grounded": false,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2510.13328v4": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement mostly keeps to background, prior work and open questions, but the sentence saying the variational objective must be optimized approximately by gradient ascent on a parameterized policy gives away the core of the method (a parameterized policy fine-tuned by gradient on VBOS). Classification is right: substantial theory (regret bound, propositions with proofs) but mainly an empirical method paper; all rewards are computed proxies or simulations (cosine similarity to a made-up answer, instability index, simulated Hamiltonian energy), so synthetic_only. All targets have exact quotes and are checkable. The estimate of about 2,000 A100 GPU-hours is plausible given about 5 task and model-size settings, about 8 methods plus a sweep, 25 seeds and models up to 8B parameters.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "synthetic_only",
+          "domains_reasonable": true,
+          "leak_passages": [
+            "In combinatorially large domains, however, even almost-linear cost in |X| is prohibitive, so the objective can only be optimized approximately, for example by gradient ascent on a parameterized policy."
+          ],
+          "statement_leaks": true,
+          "targets": [
+            {
+              "comment": "Exact quote (Unguided Generation); a non-adaptive sampling baseline from the same prior is a needed control and easy to check.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Post-Generation TS); fixed-pool Bayesian optimization baseline is generic and checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; shared reward surrogate across methods is a sound fairness control.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; quote only covers the soft actor-critic part, but actor-critic and the coefficient sweep are stated in Baselines and Appendix. Generic RL fine-tuning baselines, not a component ablation.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote covers the in-context (FIBO) part; evolutionary baselines are supported in the same paragraph. Checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; multiple seeds with mean and standard error of best-seen reward is a checkable statistical control.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote from Preliminaries; core approach of the paper, recognizable in a plan.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote on weak context ablation; the learning-rate part is supported in the same section (Figure 7 discussion).",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; uncertainty-driven optimism versus plain actor-critic is a key finding, checkable in a plan.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; in-context Thompson sampling (FIBO) is a plausible main approach and shown significantly worse, with memory issues.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; generate-then-select Bayesian optimization is a published main approach and shown confined to the initial pool.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; uniform (non-pre-trained) policy initialization as in original VBOS is shown to fail to produce valid code.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2510.14560v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "Statement stays on background, problem and prior-work limitations (binary supervision conflict, fixed compression rates are framed as prior-work issues, a mild hint but not the method). Classification fine: no theorems, real Ego4D videos with LLM-generated, partly human-verified QA. Targets well grounded except S3, which is a comparison baseline rather than a sterile main approach. Compute estimate of about 300 GPU-hours for LoRA training of an 8B streaming model plus baseline evaluation is plausible as an order of magnitude.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote exact (Sec. 4.1); offline MLLM baselines under response-in-last and polling are a generic, checkable baseline requirement.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; existing online video LLM baselines with threshold sweep are a generic control.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; simple frame-query similarity trigger baseline is a reasonable, checkable baseline.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; recall-precision trade-off observation supports reporting precision against over-responding.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; joint efficiency (APS, memory) and performance reporting is generic and checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact (ablation); same-base-model baseline retrained on new data separates data from method, a generic control.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact (intro); supported by ablation gain of the ask-high-frame stage.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact (Sec. 3.2); graded interval supervision and staged training are the paper's core training approach.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact (Sec. 3.3); ablation shows large KV-cache reduction with improved performance.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; paper argues binary single-stage supervision causes training conflict and the LIVE baseline is clearly inferior.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact; response-in-last is shown inferior to polling and far below the proposed model. Mainly a comparison setting, but a plausible main approach.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact, but this is a comparison-only baseline whose zero reply score is set by construction, not shown as a failed main approach; a plan for open-ended QA would hardly adopt it as its main approach.",
+              "grounded": false,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "experiments_only"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      }
+    }
+  },
+  "run_id": "20261124-144844-banque-dose-reponse-extraction-v2"
+}
