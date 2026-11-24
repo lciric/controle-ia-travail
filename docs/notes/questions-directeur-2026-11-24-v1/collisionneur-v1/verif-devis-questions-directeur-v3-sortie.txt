@@ -1,0 +1,44 @@
+moteur collisionneur-v9-v8d b780383874598f12b24c79e4087d335c8e01cda685e295f5116898fa3b1715ac ; garde Google 923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91 ; relevé 52cd710fe10266efbcfa4b039584f7062aaa09c2cf1b17193e3ff5c563af4ecb
+=== 0. Entrées ===
+faits-neutres-questions-directeur-v1.md : octets=3333 caracteres=3235 mots=563 sha256=7926025cc499089b025ce302c2be557caeea1987a106953401295ab03de0c7c5
+question-neutre-groupee-questions-directeur-v3.md : octets=9197 caracteres=8872 mots=1483 sha256=0234875fe2df92cd42f11cecaa4ee3528ef707ab63d9fea7c220092c6910ef89
+question-temoin-neutre-questions-directeur-v2.md : octets=2740 caracteres=2646 mots=438 sha256=4a5a0aef549169a05d8086ed9863a2e3314486b3d5a97afbccc7fd339af4616d
+=== 1. Réglages de Google (garde commune v3), flux ===
+opus : max=64000 relance=64000 effort=high
+carbon E3-T1 : niveau=high max=65536 provision=49152 texte=16384 (>=16000 : True) mots=3500 -> 14700 jetons (< texte : True) ; problemes=[]
+carbon E3-T2 : niveau=high max=65536 provision=49152 texte=16384 (>=16000 : True) mots=3000 -> 12600 jetons (< texte : True) ; problemes=[]
+carbon E3-T3 : niveau=high max=65536 provision=49152 texte=16384 (>=16000 : True) mots=3500 -> 14700 jetons (< texte : True) ; problemes=[]
+carbon : limite hors flux 32768, exigée 65152 -> lot permis : False
+neon E3-T1 : niveau=xhigh max=65536 provision=32768 texte=32768 (>=16000 : True) mots=3500 -> 17850 jetons (< texte : True) ; problemes=[]
+neon E3-T2 : niveau=xhigh max=65536 provision=32768 texte=32768 (>=16000 : True) mots=3000 -> 15300 jetons (< texte : True) ; problemes=[]
+neon E3-T3 : niveau=xhigh max=65536 provision=32768 texte=32768 (>=16000 : True) mots=3500 -> 17850 jetons (< texte : True) ; problemes=[]
+neon : limite hors flux 65536, exigée 48768 -> lot permis : True
+=== 2. Bras principal ===
+devis natif du moteur, étage III, borne large, interface : 15.8922
+  E3-T1-conception-A         opus   in_att=   6405 out_med=  20722 out_p90=  28181 att=0.4401 haut=0.5892 pire=1.3041 avec_relances=2.6082 (relances=1) panne=0.0502 marge_kit=2.5841
+  E3-T1-conception-B         carbon in_att=   4092 out_med=  33819 out_p90=  37234 att=0.6927 haut=0.7610 pire=2.3178 avec_relances=6.9535 (relances=2) panne=0.2897
+  E3-T1-conception-C         neon   in_att=   4158 out_med=  34709 out_p90=  41581 att=0.5331 haut=0.6362 pire=1.4926 avec_relances=4.4779 (relances=2) panne=0.0574
+  E3-T2-critique-croisee-A   opus   in_att=  36833 out_med=  20871 out_p90=  25616 att=0.5648 haut=0.6968 pire=1.4470 avec_relances=2.8941 (relances=1) panne=0.0557 marge_kit=2.7270
+  E3-T2-critique-croisee-B   carbon in_att=  20374 out_med=  43090 out_p90=  50275 att=0.9433 haut=1.1015 pire=2.4323 avec_relances=7.2970 (relances=2) panne=0.3040
+  E3-T2-critique-croisee-C   neon   in_att=  20152 out_med=  42520 out_p90=  46942 att=0.6983 haut=0.7851 pire=1.5910 avec_relances=4.7730 (relances=2) panne=0.0612
+  E3-T3-reponse-A            opus   in_att=  52573 out_med=  25526 out_p90=  32150 att=0.7208 haut=0.8964 pire=1.4930 avec_relances=2.9859 (relances=1) panne=0.0574 marge_kit=2.7730
+  E3-T3-reponse-B            carbon in_att=  30792 out_med=  34491 out_p90=  40024 att=0.8130 haut=0.9559 pire=2.5032 avec_relances=7.5095 (relances=2) panne=0.3129
+  E3-T3-reponse-C            neon   in_att=  32061 out_med=  37488 out_p90=  41430 att=0.6585 haut=0.7350 pire=1.6240 avec_relances=4.8721 (relances=2) panne=0.0625
+ option A, Opus par l'abonnement : attendu=4.3389 panne=1.0877 attendu+pannes=5.4266 haut=4.9747 haut_2_coupures_carbon=9.7249 pire_sans_relance=11.9610 pire_avec_relances=35.8830 pointe=10.8070 (E3-T3-reponse-A) carbon_pire_max=2.5032 plafond_propose=16 attendu_carbon_facture_novembre=3.1144 pointe_parallele=14.9341 (lot E3-T3) plafond_parallele=20 attendu+pannes_carbon_13_sur_79=5.7136
+ option B, Opus par l'interface : attendu=6.0645 panne=1.2510 attendu+pannes=7.3155 haut=7.1572 haut_2_coupures_carbon=11.9073 pire_sans_relance=16.2051 pire_avec_relances=44.3712 pointe=12.7964 (E3-T3-reponse-C) carbon_pire_max=2.5032 plafond_propose=18 attendu_carbon_facture_novembre=4.8400 pointe_parallele=14.9402 (lot E3-T3) plafond_parallele=20 attendu+pannes_carbon_13_sur_79=7.6024
+=== 2. Bras temoin ===
+devis natif du moteur, étage III, borne large, interface : 15.8100
+  E3-T1-conception-A         opus   in_att=   3715 out_med=  20722 out_p90=  28181 att=0.4293 haut=0.5785 pire=1.2940 avec_relances=2.5881 (relances=1) panne=0.0498 marge_kit=2.5740
+  E3-T1-conception-B         carbon in_att=   2374 out_med=  33819 out_p90=  37234 att=0.6859 haut=0.7542 pire=2.3078 avec_relances=6.9234 (relances=2) panne=0.2885
+  E3-T1-conception-C         neon   in_att=   2412 out_med=  34709 out_p90=  41581 att=0.5279 haut=0.6309 pire=1.4851 avec_relances=4.4552 (relances=2) panne=0.0571
+  E3-T2-critique-croisee-A   opus   in_att=  34053 out_med=  20871 out_p90=  25616 att=0.5536 haut=0.6857 pire=1.4370 avec_relances=2.8740 (relances=1) panne=0.0553 marge_kit=2.7170
+  E3-T2-critique-croisee-B   carbon in_att=  18630 out_med=  43090 out_p90=  50275 att=0.9363 haut=1.0945 pire=2.4223 avec_relances=7.2669 (relances=2) panne=0.3028
+  E3-T2-critique-croisee-C   neon   in_att=  18402 out_med=  42520 out_p90=  46942 att=0.6930 haut=0.7798 pire=1.5835 avec_relances=4.7504 (relances=2) panne=0.0609
+  E3-T3-reponse-A            opus   in_att=  49578 out_med=  25526 out_p90=  32150 att=0.7088 haut=0.8845 pire=1.4829 avec_relances=2.9658 (relances=1) panne=0.0570 marge_kit=2.7629
+  E3-T3-reponse-B            carbon in_att=  28924 out_med=  34491 out_p90=  40024 att=0.8055 haut=0.9484 pire=2.4931 avec_relances=7.4793 (relances=2) panne=0.3116
+  E3-T3-reponse-C            neon   in_att=  30149 out_med=  37488 out_p90=  41430 att=0.6528 haut=0.7292 pire=1.6165 avec_relances=4.8495 (relances=2) panne=0.0622
+ option A, Opus par l'abonnement : attendu=4.3014 panne=1.0831 attendu+pannes=5.3844 haut=4.9371 haut_2_coupures_carbon=9.6672 pire_sans_relance=11.9082 pire_avec_relances=35.7246 pointe=10.7524 (E3-T3-reponse-A) carbon_pire_max=2.4931 plafond_propose=16 attendu_carbon_facture_novembre=3.0875 pointe_parallele=14.8620 (lot E3-T3) plafond_parallele=20 attendu+pannes_carbon_13_sur_79=5.6702
+ option B, Opus par l'interface : attendu=5.9931 panne=1.2452 attendu+pannes=7.2383 haut=7.0857 haut_2_coupures_carbon=11.8158 pire_sans_relance=16.1221 pire_avec_relances=44.1525 pointe=12.7031 (E3-T3-reponse-C) carbon_pire_max=2.4931 plafond_propose=18 attendu_carbon_facture_novembre=4.7793 pointe_parallele=14.8462 (lot E3-T3) plafond_parallele=20 attendu+pannes_carbon_13_sur_79=7.5240
+=== 3. Totaux des deux bras appariés ===
+option A : attendu=8.64 attendu+pannes=10.81 haut_2_coupures=19.39 pire_sans_relance=23.87 pire_avec_relances=71.61 plafonds=16+16=32 attendu_carbon_facture_novembre+pannes=8.37 plafonds_paralleles=20+20=40 attendu+pannes_carbon_13_sur_79=11.38
+option B : attendu=12.06 attendu+pannes=14.55 haut_2_coupures=23.72 pire_sans_relance=32.33 pire_avec_relances=88.52 plafonds=18+18=36 attendu_carbon_facture_novembre+pannes=12.12 plafonds_paralleles=20+20=40 attendu+pannes_carbon_13_sur_79=15.13
