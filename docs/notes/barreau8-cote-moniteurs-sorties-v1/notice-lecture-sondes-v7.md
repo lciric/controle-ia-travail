@@ -100,8 +100,8 @@ Dans cet ordre ; au premier manque, refus, rien n'est ouvert plus avant.
 1. Aucune sortie `lecture-sondes-barreau8-v1.json` sous `diag/`.
 2. Registre propre, **huit clés** : les trois lignes de scellement, une seule chacune, dans l'ordre (texte, additif 1, additif 2), strictement par le rang et par l'heure (`[5]`, `[18]`, `[30]`) ; pour les cinq clés comptées (`CODE-PASSE-IIB`, `CODE-LECTURE-SONDES-IIB`, `LIVRAISON-PASSE-IIB`, `ETATS-COURSE-IIB`, `LECTURE-SONDES-IIB`), exactement une ligne strictement postérieure à la ligne de l'additif 2 (une ligne antérieure ne compte pas et s'écrit telle dans la sortie ; une ligne de code seulement antérieure : `[23]`) ; clé hors des huit : `[5]` ; chaque fichier cité à l'empreinte de sa ligne ; chaque ligne antérieure à l'instant d'ouverture ; livraison après le code de la passe ; `LECTURE-SONDES-IIB` absente.
 3. Trois textes scellés, intacts, aux empreintes de leurs lignes (D-17) ; cellule F-3 égale à l'entropie donnée (`[1]`).
-4. Bordereau du code à neuf clés ; textes égaux à ceux des lignes ; rapport de conformité de la version 5 refusé ; modules chargés exactement ceux du bordereau.
-5. Table neuve à son empreinte, « report », quatre champs exactement « couvert par l'additif 2 » (`[21]`), cohérente avec les règles RP (`[20]`) ; constante de forme d'un cadre différente de la table : `[24]` ; pièces de la condition D-14 (`[20]`, `[21]`).
+4. Bordereau du code à neuf clés ; textes égaux à ceux des lignes ; rapport de conformité de la version 5 (scellé ou brouillon 1) refusé ; modules chargés exactement ceux du bordereau.
+5. Table neuve à son chemin de M-4 et à son empreinte, « report », quatre champs exactement « couvert par l'additif 2 » (`[21]`), cohérente avec les règles RP (`[20]`) ; constante de forme d'un cadre différente de la table : `[24]` ; pièces de la condition D-14 (`[20]`, `[21]`).
 6. Accord de lecture (D-4).
 7. Mandats (D-5).
 8. Attestation de l'ordre (D-6 lue avec M-3) : empreinte de M-3, citée par le mandat du lecteur, forme fermée, faits O-1, O-2, O-4, O-7 « tient », O-3, O-5, O-6 « non dit » au plus, aucun « ne tient pas », réponse « non » à la question E-1, ordre et pièces scellés, ligne de calcul `GO-2026-11-22-75` (`[16]`).
@@ -127,7 +127,7 @@ Dans cet ordre ; au premier manque, refus, rien n'est ouvert plus avant.
 |---|---|
 | `[16]` | attestation de l'ordre absente, d'une autre empreinte, non citée, hors forme ou n'attestant pas (M-3) |
 | `[18]` | ligne de l'additif 1 absente, répétée, ou bordereau sans additif 1 conforme |
-| `[20]` | table neuve ou pièce de la condition D-14 absente, d'une autre empreinte, sans compagnon ou hors de sa forme |
+| `[20]` | table neuve ou pièce de la condition D-14 absente, d'une autre empreinte, sans compagnon ou hors de sa forme ; table neuve citée hors de son chemin de M-4 ; structure des rôles (s1) à (s8) non tenue par les constantes de la table |
 | `[21]` | table neuve disant « nœud » ou champs « couvert par l'additif 2 » autres que les quatre ; pièce de comparaison v2 d'autres comptes ou d'autres champs |
 | `[22]` | attestation de la course et de l'oracle absente, non citée, hors forme, « écart », ou d'une autre course |
 | `[23]` | ligne de code (passe ou lecture) seulement antérieure à la ligne de l'additif 2 |

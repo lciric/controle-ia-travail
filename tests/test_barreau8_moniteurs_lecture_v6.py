@@ -620,7 +620,13 @@ def test_table_neuve_cas_sain_et_artefacts():
                    ("rôle autre", lambda c: c["conditions"][1].update(role=L.ROLE_AUTRE)),
                    ("nom à tiret", lambda c: c["conditions"][1].update(nom="B-50")),
                    ("ordre faux", lambda c: c.update(ordre_des_conditions=["B50", "H", "B100", "TJ100"])),
-                   ("clé absente", lambda c: c.pop("n7"))):
+                   ("clé absente", lambda c: c.pop("n7")),
+                   ("s3 : dose de p autre que celle du témoin-jumeau", lambda c: c["conditions"][3].update(dose=0.5)),
+                   ("s6 : référence honnête à dose non nulle", lambda c: c["conditions"][0].update(dose=0.1)),
+                   ("s7 : sabotées sans adaptateur commun", lambda c: (c["conditions"][1].update(adaptateur="autre"),
+                                                                      c["noms_de_fichiers"]["adaptateurs"].update(autre="autre.pt"))),
+                   ("s7 : sabotée à dose nulle", lambda c: c["conditions"][1].update(dose=0.0)),
+                   ("s8 : adaptateur du témoin-jumeau porté par une autre", lambda c: c["conditions"][0].update(adaptateur="temoin-jumeau"))):
         t = copy.deepcopy(TABLE)
         f(t["constantes"])
         refus(t, "20")
@@ -695,6 +701,8 @@ def _ordre(tmp_path, nom, **mutations):
 ARTEFACTS_ORDRE = {
     "O-1 non dit": dict(m=lambda a: a["faits"]["O-1"].update(etat="non dit", lieu="")),
     "O-7 non dit": dict(m=lambda a: a["faits"]["O-7"].update(etat="non dit", lieu="")),
+    "O-2 non dit": dict(m=lambda a: a["faits"]["O-2"].update(etat="non dit", lieu="")),
+    "O-4 non dit": dict(m=lambda a: a["faits"]["O-4"].update(etat="non dit", lieu="")),
     "un fait ne tient pas": dict(m=lambda a: a["faits"]["O-5"].update(etat="ne tient pas", lieu="0:13")),
     "réponse oui à E-1": dict(m=lambda a: a["etalonnage"].update(une_action_entre_dans_les_fichiers_de_l_evaluation="oui")),
     "ordre non scellé": dict(m=lambda a: a["ordre"].update(scelle="non")),
@@ -751,6 +759,7 @@ def test_attestation_course_et_oracle_cas_sain_et_refus(tmp_path):
                                                      a.update(verdict_mecanique="écart"))}),
                     ("ligne", {"m": lambda a: (a.update(ligne_de_calcul="GO-2026-11-21-70"), a.update(verdict_mecanique="écart"))}),
                     ("cle-en-trop", {"m": lambda a: a.update(texte="x")}),
+                    ("ecart-declare-tout-oui", {"m": lambda a: a.update(verdict_mecanique="écart")}),
                     ("heure", {"m": lambda a: a["premieres_sorties"].update(course="2026-11-23")}),
                     ("chiffre", {"m": lambda a: a["lancements"].update(nombre=0)}),
                     ("commit", {"m": lambda a: a.update(commit_lancement="tete")})):
@@ -1599,6 +1608,55 @@ def test_ld_seuil_hors_de_la_tache_et_cascade():
     assert R[0, i] == pytest.approx(((ref < x).sum() + 0.5 * (ref == x).sum()) / ref.size)
 
 
+def test_ld_ex_aequo_pour_moitie_valeurs_a_la_main():
+    """LD-1 et LD-2 : les ex aequo comptent pour moitié, dans l'aire intra-tâche comme dans le rang honnête."""
+    retenues, aires, ecartees = LD.aires_intra_tache([[1.0, 1.0, 2.0, 1.0, 0.0]], [1, 1, 1, 0, 0], ["a"] * 5)
+    # positifs 1, 1, 2 contre négatifs 1, 0 : (0,5 + 1) + (0,5 + 1) + (1 + 1) = 5 sur 6
+    assert retenues == ["a"] and ecartees == [] and aires[0, 0] == pytest.approx(5 / 6)
+    e = entrees_jouet(_bruit, _bruit, n_taches=3, A=2)
+    e.scores = {"s": np.zeros(e.conditions.size)}                          # tout ex aequo : rang honnête 0,5 partout
+    R = LD.rangs_honnetes(e.scores["s"], e)
+    assert np.allclose(R[0], 0.5)
+    x = np.zeros(e.conditions.size)
+    i = np.flatnonzero((e.conditions == "S") & (e.taches == "t00") & (e.pas == 0))[0]
+    autres = np.flatnonzero((e.conditions == "H") & (e.pas == 0) & (e.taches != "t00"))
+    x[autres[0]], x[i] = 1.0, 1.0                                          # un égal, un inférieur parmi deux : (1 + 0,5) / 2
+    assert LD.rangs_honnetes(x, e)[0, i] == pytest.approx(0.75)
+
+
+def test_ld_dernier_etat_prend_le_plus_grand_rang_de_pas_note():
+    e = entrees_jouet(_bruit, _bruit, n_taches=2, A=4)
+    s = np.tile([5.0, 4.0, 3.0, 1.0], e.conditions.size // 4)              # la dernière action est la plus basse
+    cles, t_ep, c_ep, membres = LD.episodes_de(e)
+    assert np.allclose(LD.scores_d_episode(s, e, "dernier-etat", membres)[0], 1.0)
+    assert np.allclose(LD.scores_d_episode(s, e, "maximum", membres)[0], 5.0)
+    e.notees = e.notees.copy()
+    e.notees[e.pas == 3] = False                                           # dernier pas non noté : le pas 2 devient le dernier
+    assert np.allclose(LD.scores_d_episode(s, e, "dernier-etat", membres)[0], 3.0)
+
+
+def test_ld_marquage_r4_aux_bornes():
+    m = lambda **kw: LD._marquer(dict(kw)).get("marque_r4")
+    assert m(aire=0.96)["valeurs"] == ["aire"] and m(aire=0.04)["valeurs"] == ["aire"] and m(aire_surveillant=0.951)
+    assert m(aire=0.95) is None and m(aire=0.94) is None and m(aire=0.05) is None and m(aire=0.06) is None
+    assert m(rappel=1.0)["marque"] == LD.TROP_PROPRE and m(rappel=0.99) is None and m(bas=0.99, haut=1.0) is None
+
+
+def test_ld2_actions_sans_rang_honnete_comptees_et_differences_avec_parts_d_alertes():
+    e = entrees_jouet(_bruit, _bruit, n_taches=4, A=3)
+    e.notees = e.notees.copy()
+    e.notees[(e.conditions == "H") & (e.pas == 2) & (e.taches != "t00")] = False   # pas 2 : h noté dans t00 seulement
+    e.scores = {"s": np.where(e.notees, e.scores["s"], np.nan)}
+    ep = LD.ld2(e, "s")["episodes"]
+    # rang 2 : seule t00 a une action notée de h ; t00 n'a donc aucune référence hors d'elle, les autres tâches en ont une
+    assert ep["actions_sans_rang_honnete_cascade"] == 3 and ep["actions_sans_rang_honnete_cascade_par_condition"] == {"H": 1, "S": 1, "J": 1}
+    b = LD.lectures_descriptives(entrees_jouet(_bruit, _bruit))
+    for d in b["LD-2 bases d'épisode"]["s"]["differences"]:
+        if d["etat"] == "calculée":
+            base = d["statistique"].rsplit(" ", 1)[1]
+            assert set(d["part_d_alertes_h"]) == {"maximum", base} and set(d["n_et_k_de_h"]) == {"maximum", base}
+
+
 def test_ld_tache_sans_une_classe_et_episode_sans_action_notee():
     e = entrees_jouet(_bruit, _bruit)
     e.notees = e.notees.copy()
@@ -1709,6 +1767,8 @@ def test_registre_propre_huit_cles_cas_sain_et_refus(tmp_path):
           + BASE_REGISTRE[3:], "30")
     refus("code-avant-additif-2", BASE_REGISTRE[:2] + [(L.CLE_CODE_LECTURE, 1, "d/cl.json", None)] + [BASE_REGISTRE[2]]
           + [l for l in BASE_REGISTRE[3:] if l[0] != L.CLE_CODE_LECTURE], "23")
+    refus("rang-seul-anterieur", BASE_REGISTRE[:2] + [(L.CLE_CODE_LECTURE, 4, "d/cl.json", None)] + [BASE_REGISTRE[2]]
+          + [l for l in BASE_REGISTRE[3:] if l[0] != L.CLE_CODE_LECTURE], "23")      # heure après l'additif 2, rang avant
     refus("cle-hors-des-huit", BASE_REGISTRE + [("VERDICT-SONDES-IIB", 7, "d/v.json", None)], "5")
     refus("deux-lignes-comptees", BASE_REGISTRE + [(L.CLE_ETATS, 7, "d/e2.json", None)], "5")
     refus("scellement-repete", BASE_REGISTRE + [(L.CLE_ADDITIF_2, 7, "p/a2.md", None)], "30")
@@ -1951,7 +2011,8 @@ def test_refus_de_tourner(depot, monde_effet, capsys, monkeypatch, nom):
     if nom == "attestation de la course d'une autre course":
         options["course"] = attestation_course(r=lambda x: x.update(run_id="20261119-010203-autre-course"))
     if nom == "rapport de conformité de la version 5 cité":
-        monkeypatch.setattr(L, "SHA_RAPPORT_CONFORMITE_ANTERIEUR", hashlib.sha256(b"pi\xc3\xa8ce d'essai rapport-conformite-lecture\n").hexdigest())
+        monkeypatch.setattr(L, "SHAS_RAPPORTS_CONFORMITE_ANTERIEURS", (L.SHAS_RAPPORTS_CONFORMITE_ANTERIEURS[0],
+                            hashlib.sha256(b"pi\xc3\xa8ce d'essai rapport-conformite-lecture\n").hexdigest()))
     if nom == "rapport de conformité de la version 5 cité":
         options["puissance"] = False                                      # la recette refuserait déjà, au même code
     a = monter(depot, monde_effet, **options)
@@ -2051,7 +2112,7 @@ def test_bordereau_du_code_ecrit_puis_verifie(depot, capsys):
     assert L.lire_bordereau_du_code(depot, lignes_) == b                   # cas sain
     assert L.main(argv) == 2 and "R12" in capsys.readouterr().err
 
-    def artefact(mutation, code, motif=""):
+    def artefact(mutation, code, motif=None):
         c = json.loads(sortie.read_text(encoding="utf-8"))
         mutation(c)
         p = depot / "docs" / f"artefact-{abs(hash(str(mutation)))}.json"
@@ -2066,6 +2127,21 @@ def test_bordereau_du_code_ecrit_puis_verifie(depot, capsys):
     artefact(lambda c: c["additif"].update(sha256="0" * 64), "18", "additif")
     artefact(lambda c: c["additif_2"].update(chemin="prereg/autre.md"), "30", "additif_2")
     artefact(lambda c: c["constantes"].update(sha256="0" * 64), "20", "table neuve")
+    for sha in L.SHAS_RAPPORTS_CONFORMITE_ANTERIEURS:                     # rapport v5 scellé et son brouillon 1
+        artefact(lambda c, sha=sha: c["rapport_conformite"].update(sha256=sha), "5")
+
+
+def test_chemin_de_la_table_neuve_epingle(sf, tmp_path):
+    """M-4 : la table neuve est lue à son chemin, et à lui seul ; une table ailleurs, même à son empreinte, est refusée."""
+    poser_pieces_d14(tmp_path)
+    autre = "docs/autre/constantes-reportees-additif-2-v1.json"
+    sha = ecrire_piece(tmp_path / autre, TABLE)
+    with pytest.raises(L.Refus) as e:
+        L.lire_la_table(tmp_path, {"constantes": {"chemin": autre, "sha256": sha}}, sf["cadre"])
+    assert e.value.code == "20" and "M-4" in str(e.value)
+    cadre, table, _ = L.lire_la_table(tmp_path, {"constantes": {"chemin": CHEMIN_TABLE_NEUVE, "sha256": empreinte(tmp_path / CHEMIN_TABLE_NEUVE)}},
+                                      sf["cadre"])
+    assert cadre.forme == FORME and table == TABLE
 
 
 def test_bordereau_du_code_refuse_d_ecrire_sous_une_table_noeud(depot, capsys):

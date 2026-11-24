@@ -144,7 +144,9 @@ TEMOIN_PLANTE = (("docs/verdicts/verdict-P3-bis-v1.md", "9b33c624fe9c4be2909cee9
 MODELE_I1 = {"nom": "meta-llama/Llama-3.1-8B-Instruct", "revision": "0e9e39f249a16976918f6564b8830bc894c89659"}
 
 # Rapport de conformité du code de version 5 au texte seul : antérieur à l'additif 1, il n'est cité par aucune ligne de code.
-SHA_RAPPORT_CONFORMITE_ANTERIEUR = "fa9158fbb1f3bc5859dbdd380104acbd4ef356ec2a06e483e3eeaf966240ae21"
+# rapports de conformité de la version 5 (scellé, puis son brouillon 1), antérieurs à l'additif 1 : cités par aucune ligne de code
+SHAS_RAPPORTS_CONFORMITE_ANTERIEURS = ("fa9158fbb1f3bc5859dbdd380104acbd4ef356ec2a06e483e3eeaf966240ae21",
+                                      "44aaa3da756097b2495661014a6547d4905a9185c0dc71b3faf322b207a55a7d")
 
 # ------------------------------------------------------------------------------------------------------------------------
 # Pièces des additifs (chemins et formes fixés par les textes ; empreintes de M-3 et de M-4)
@@ -175,6 +177,7 @@ class Pieces:
     attestation_course: str = "docs/notes/barreau8-cote-moniteurs-entrees-v1/attestation-course-et-oracle-additif-1-v1.json"
     reference: str = "docs/notes/barreau8-cote-moniteurs-entrees-v1/reference-boite-noire-course-lue-additif-1-v1.json"
     dossier_de_l_extrait: str = "docs/notes/barreau8-cote-moniteurs-entrees-v1"                             # D-12 ; RP-10
+    table_neuve: str = "docs/notes/barreau8-cote-moniteurs-sorties-v1/constantes-reportees-additif-2-v1.json"   # M-4
     table_additif_1: tuple = ("docs/notes/barreau8-cote-moniteurs-sorties-v1/constantes-reportees-additif-1-v1.json",
                               "f6e9c8d5830dc503e129bc7b0c631a65ec8b8b61b7d4e5ac6c330910f9882171")        # M-4
     comparaison: str = "docs/notes/barreau8-cote-moniteurs-sorties-v1/comparaison-interface-v6-v7-v2.json"     # M-4, « non attesté »
@@ -589,6 +592,16 @@ def forme_depuis_table(c: dict) -> Forme:
         j = [x.nom for x in conditions if x.role == ROLE_JUMEAU][0]
         sabotees = tuple(x.nom for x in conditions if x.role == ROLE_SABOTEE)
         p = c["condition_de_la_phrase_du_dommage"]
+        par_nom = {x.nom: x for x in conditions}
+        # structure des rôles, conditions (s3), (s6), (s7), (s8) de l'additif 1, rejouées ici (la table est aussi épinglée)
+        if p not in sabotees or par_nom[p].dose != par_nom[j].dose:
+            raise faux("condition de la phrase du dommage non sabotée ou d'une autre dose que le témoin-jumeau (s3)")
+        if par_nom[h].dose != 0.0:
+            raise faux("référence honnête à une dose autre que 0 (s6)")
+        if len({par_nom[s].adaptateur for s in sabotees}) != 1 or any(not par_nom[s].dose > 0.0 for s in sabotees):
+            raise faux("conditions sabotées sans adaptateur commun ou à dose non strictement positive (s7)")
+        if any(x.adaptateur == par_nom[j].adaptateur for x in conditions if x.nom != j):
+            raise faux("adaptateur du témoin-jumeau porté par une autre condition (s8)")
         T, E, A, J, L = (int(c[k]) for k in ("T", "E", "A", "J", "L"))
         if not all(_entier(c[k]) for k in ("T", "E", "A", "J", "L", "K", "m", "N", "N_c", "k", "n15", "n7")):
             raise faux("constantes entières attendues")
@@ -1575,7 +1588,7 @@ def lire_bordereau_du_code(racine, lignes: dict) -> dict:
     for champ, nom, code in (("rapport_conformite", "rapport du contrôle de conformité", "5"), ("notice", "notice", "5"),
                              ("constantes", "table neuve des constantes reportées", "20")):
         _sceau(racine, b[champ]["chemin"], b[champ]["sha256"], code, f"{nom} du bordereau du code")
-    if b["rapport_conformite"]["sha256"] == SHA_RAPPORT_CONFORMITE_ANTERIEUR:
+    if b["rapport_conformite"]["sha256"] in SHAS_RAPPORTS_CONFORMITE_ANTERIEURS:
         raise Refus("5", f"{quoi} : le rapport de conformité cité est celui de la version 5, antérieur à l'additif 1 ; il n'est cité "
                          "par aucune ligne de code")
     return b
@@ -1599,6 +1612,8 @@ def exiger_modules_de_la_lecture(bordereau: dict, charges: dict | None = None) -
 def lire_la_table(racine, bordereau: dict, cadre: Cadre) -> tuple:
     """Table neuve citée par le bordereau du code (clé `constantes`), présente à son empreinte (déjà contrôlée), lue en JSON
     strict ; pièces de la condition D-14 ; cadre aux constantes de forme de la table. Rend (cadre, table, pièces D-14)."""
+    if bordereau["constantes"]["chemin"] != cadre.pieces.table_neuve:
+        raise Refus("20", f"table neuve citée par le bordereau du code hors de son chemin de M-4 ({cadre.pieces.table_neuve})")
     table = _lire_json(Path(racine) / bordereau["constantes"]["chemin"], "20", "table neuve des constantes reportées")
     nouveau = cadre_depuis_table(cadre, table)
     pieces = exiger_pieces_d14(racine, table, cadre.pieces)
@@ -1630,8 +1645,10 @@ def ecrire_bordereau_du_code(racine, texte_scelle, additif, additif_2, constante
          "modules": {}, "commit": _gardes.etat_git(racine)["commit"],
          "rapport_conformite": cite(rapport_conformite, "rapport du contrôle de conformité"), "notice": cite(notice, "notice"),
          "accord_lecture": str(accord_lecture)}
-    if b["rapport_conformite"]["sha256"] == SHA_RAPPORT_CONFORMITE_ANTERIEUR:
+    if b["rapport_conformite"]["sha256"] in SHAS_RAPPORTS_CONFORMITE_ANTERIEURS:
         raise Refus("5", "rapport de conformité de la version 5 : il n'est cité par aucune ligne de code")
+    if b["constantes"]["chemin"] != Pieces().table_neuve:
+        raise Refus("20", f"table neuve citée hors de son chemin de M-4 ({Pieces().table_neuve})")
     forme_depuis_table(exiger_table_neuve(_lire_json(racine / b["constantes"]["chemin"], "20", "table neuve")))
     for nom, m in sorted(charges.items()):
         if not (racine / m["chemin"]).is_file() or empreinte(racine / m["chemin"]) != m["sha256"]:
