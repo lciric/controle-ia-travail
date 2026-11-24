@@ -1,0 +1,689 @@
+From 04ad636056350842d6c5959b280baa2a5465a272 Mon Sep 17 00:00:00 2001
+From: lciric <44092822+lciric@users.noreply.github.com>
+Date: Tue, 24 Nov 2026 06:12:20 +0000
+Subject: [PATCH] =?UTF-8?q?Sondes=20v2=20:=20lecteur=20natif=20sondes=5Fbb?=
+ =?UTF-8?q?is=5Fnpz=20et=20s=C3=A9lection=20par=20liste=20explicite=20dans?=
+ =?UTF-8?q?=20formats=5Fv1=20(corrections=20R2=201=20et=202,=20erratum=204?=
+ =?UTF-8?q?,=2017=20essais=20R5)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ ...spec-correspondance-rejeu-croise-v2-npz.md |  20 ++
+ ...rrespondance-rejeu-croise-v2-npz.md.sha256 |   1 +
+ src/controle_ia/sondes_v2/formats_v1.py       | 260 +++++++++++++++-
+ .../sondes_v2/formats_v1.py.sha256            |   2 +-
+ tests/test_sondes_v2_formats.py               | 285 ++++++++++++++++++
+ tests/test_sondes_v2_formats.py.sha256        |   2 +-
+ 6 files changed, 560 insertions(+), 10 deletions(-)
+ create mode 100644 docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md
+ create mode 100644 docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md.sha256
+
+diff --git a/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md b/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md
+new file mode 100644
+index 000000000..9f3937550
+--- /dev/null
++++ b/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md
+@@ -0,0 +1,20 @@
++# Erratum 4 à la spécification v2 de la table de correspondance du rejeu croisé : lecteur natif `sondes_bbis_npz` et sélection par liste sur colonnes structurelles
++
++- **Porte sur** `docs/notes/sondes-v2-concepteur-opus-v1/spec-correspondance-rejeu-croise-v2.md` (`31296b05…`), qui reste en vigueur ailleurs ; en cas d'écart, cet erratum prime. Classe B.
++- **Décision et motif** : corrections fermées 1 et 2 de la contre-lecture R2 (`docs/notes/sondes-v2-effectifs-et-correspondance-v1/contre-lecture-r2-note-effectifs-et-correspondance-v1.md`, `5d46ac87…`, sous `R-5209` point 2 et `R-5218`). L'index `SCORES-BBIS` (`diag/20261118-154143-bbis-t07-v1/sondes-bbis.json`, `645a172f…`, `sans_aucune_aire: true`) référence trois archives scellées `scores-bbis-000..002.npz` et non un fichier plat `.jsonl` ou `.csv` ; exporter un `.jsonl` avant l'ouverture toucherait les tableaux de scores avant l'étape 4, et l'exporter après contredirait `table_source.sha256`.
++- **Écrit par** le développeur des sondes v2 (sous-agent neuf de classe B `245d8f72ff2a9e2bece4bfdac5e3049e`, distinct du rédacteur v1 `83ff9523…` et du contre-lecteur R2 `2b0a91ec…`), le `2026-11-24T06:07:30Z`. **Aucun résultat** (zéro tableau de score réel ouvert, zéro activation ouverte).
++
++1. **§ 2, `table_source.format_fichier`** : outre `"jsonl"` et `"csv"`, la valeur `"sondes_bbis_npz"` est admise. Dans ce format, `table_source.chemin` et `table_source.sha256` désignent directement l'index scellé `sondes-bbis.json` inscrit à la ligne `SCORES-BBIS`.
++2. **§ 4, lecture et gardes d'empreintes de `"sondes_bbis_npz"` (`formats_v1._lire_table_bbis_npz`)** : à l'ouverture (étape 4 uniquement), `charger_table_bbis` vérifie le compagnon `.sha256` de `sondes-bbis.json`, l'égalité à `table_source.sha256` et `"sans_aucune_aire": true`, puis vérifie sur disque l'existence et l'empreinte `SHA-256` de chacun des morceaux `.npz` listés dans `fichiers_scores` (ainsi que leur compagnon `.npz.sha256` s'il est présent) **avant** d'extraire la moindre entrée `.npy`. La racine relative des chemins `fichiers_scores[*].fichier` est `chemin_table.parent.parent.parent` lorsque l'index réside sous `diag/<run>/sondes-bbis.json` (sinon `chemin_table.parent`) ; tout chemin absolu ou comportant `..` arrête (`GardeArret`).
++3. **§ 3 et § 4, colonnes structurelles natives (aucune colonne synthétique)** : sur l'union sans doublon des entrées `<source_bbis>__e<pli>__<groupe>__<champ>.npy` des morceaux `.npz` (autorisant un groupe réparti entre deux morceaux), les entrées hors évaluation (`app*`, `nul`, `o2`) sont écartées ; pour chaque groupe `<serie>-<condition>`, `<groupe>__cles.npy` et `<groupe>__taches.npy` doivent être des tableaux 1D de chaînes de même longueur non nulle, sans clé en double et inclus dans `sources[source_bbis][e<pli>].taches_lues` ; la dimension d'actions des matrices 2D (`plancher`, `nul`, `sc_plancher`) et des masques booléens 1D (`sc_valide`) est contrôlée contre `len(cles)` sans matérialisation de lignes. Tout tableau numérique 1D non booléen (`sonde`, `enc`, `sc_sonde`, `sonde_o2`, …) est matérialisé avec les **onze seules colonnes natives** suivantes :
++   - `source_bbis` (`"P-S25"`, `"P-S50"`, `"P-S75"`, `"P-S100"`, `"P-instruit"`) ;
++   - `dose` (`str(float(d))` pour `P-S<100d>` d'après `doses`, `""` pour `"P-instruit"`) ;
++   - `pli_lu` (`str(pli_lu)` de `sources[source_bbis][e<pli>]`) ;
++   - `serie` et `condition` (`groupe.split("-", 1)`) ;
++   - `groupe` (`"<serie>-<condition>"`) ;
++   - `couple_source_groupe` (`f"{source_bbis}/{groupe}"`) ;
++   - `champ_score` (`"<champ>"`) ;
++   - `tache`, `cle`, `score`.
++   La méta retournée par `charger_table_bbis` ajoute `"fichiers_scores": [{"fichier": …, "sha256": …}, …]`.
++4. **§ 2 et § 3, `selection` par valeur unique ou liste explicite** : chaque entrée `"<colonne>": <admis>` de `selection` accepte soit une chaîne non vide, soit une liste explicite non vide de chaînes non vides sans doublon. Lorsqu'une liste est fournie, toute valeur de la liste absente des lignes retenues après sélection lève `GardeArret` (aucune branche morte ni coquille silencieuse). Dans `correspondance-rejeu-croise-v2.json`, la sélection s'écrit sur les seules colonnes natives via `"champ_score": "sonde"` et la liste fermée des 16 couples `"P-S<d>/<groupe>"` des quatre doses et quatre cases.
++5. **§ 3, précision sur `score` et essais R5** : le tableau `*__sonde.npy` porte le score brut de la sonde gelée retenue en validation imbriquée sur le pli (agrégation `max` ou `attention` selon le réglage retenu dans `sondes-bbis.json`). Essais dans `tests/test_sondes_v2_formats.py` : cas sain synthétique à `10 240` lignes retenues sur 3 morceaux `.npz` à scores `0.0` (et `rejeu_croise` sur scores factices), clé sans jumelle (`10 239` lignes), et quinze artefacts de garde (`R5`).
+diff --git a/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md.sha256 b/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md.sha256
+new file mode 100644
+index 000000000..6c9511577
+--- /dev/null
++++ b/docs/notes/sondes-v2-developpeur-v1/raccordement-scores-bbis/erratum-4-spec-correspondance-rejeu-croise-v2-npz.md.sha256
+@@ -0,0 +1 @@
++789e438976b15fa8d54880fb066c0910f9c93d80a84803651e769b848cf4c5fe  erratum-4-spec-correspondance-rejeu-croise-v2-npz.md
+diff --git a/src/controle_ia/sondes_v2/formats_v1.py b/src/controle_ia/sondes_v2/formats_v1.py
+index 25eb4f613..c99b2bf70 100644
+--- a/src/controle_ia/sondes_v2/formats_v1.py
++++ b/src/controle_ia/sondes_v2/formats_v1.py
+@@ -13,13 +13,17 @@ fabriqués seulement.
+ from __future__ import annotations
+ 
+ import csv
++import io
+ import json
+ import math
+ import re
++import zipfile
+ from pathlib import Path
+ 
++import numpy as np
++
+ from ..gardes import GardeArret
+-from ..scellement import verifier
++from ..scellement import compagnon, empreinte, verifier
+ from . import statistiques_v2 as st
+ from .magasin_v1 import _CHEMIN_B5
+ 
+@@ -297,6 +301,220 @@ def charger_note_effectifs(chemin) -> dict:
+ 
+ # ------------------------------------------------------------------------- table des scores et correspondance
+ 
++def _lire_table_bbis_npz(chemin: Path) -> tuple[list[dict], list[dict]]:
++    """Lit l'index `sondes-bbis.json` et ses archives `scores-bbis-*.npz` (erratum 4 de la spécification v2 de la table
++    de correspondance, contre-lecture R2 5d46ac87…) : vérifie toutes les empreintes SHA-256 de `fichiers_scores` avant
++    toute lecture d'entrée `.npy`, puis matérialise uniquement les colonnes structurelles natives alignées sur
++    `<groupe>__cles.npy` et `<groupe>__taches.npy` (hors `app*`, `nul`, `o2`), sans aucune colonne synthétique."""
++    try:
++        doc = json.loads(chemin.read_text(encoding="utf-8"))
++    except json.JSONDecodeError as e:
++        raise GardeArret(f"table des scores : index JSON illisible ({e})") from None
++    if not isinstance(doc, dict):
++        raise GardeArret("sondes-bbis.json : objet JSON attendu")
++    if doc.get("sans_aucune_aire") is not True:
++        raise GardeArret("sondes-bbis.json : sans_aucune_aire: true attendu")
++    for cle_req in ("doses", "sources", "fichiers_scores"):
++        if cle_req not in doc:
++            raise GardeArret(f"sondes-bbis.json : clé {cle_req!r} manquante")
++    doses_raw = doc["doses"]
++    if not isinstance(doses_raw, list) or not doses_raw:
++        raise GardeArret("sondes-bbis.json.doses : liste non vide attendue")
++    dose_par_source: dict[str, str] = {}
++    for d in doses_raw:
++        if isinstance(d, bool) or not isinstance(d, (int, float)) or not math.isfinite(float(d)) or not (0.0 < float(d) <= 1.0):
++            raise GardeArret(f"sondes-bbis.json.doses : dose numérique dans ]0, 1] attendue ({d!r})")
++        fd = float(d)
++        cent = int(round(fd * 100))
++        if abs(cent - fd * 100) > 1e-9:
++            raise GardeArret(f"sondes-bbis.json.doses : centièmes entiers attendus ({d!r})")
++        src_d = f"P-S{cent}"
++        if src_d in dose_par_source:
++            raise GardeArret(f"sondes-bbis.json.doses : dose en double ({d!r})")
++        dose_par_source[src_d] = str(fd)
++    sources_doc = doc["sources"]
++    if not isinstance(sources_doc, dict) or not sources_doc:
++        raise GardeArret("sondes-bbis.json.sources : objet non vide attendu")
++    for src_d in dose_par_source:
++        if src_d not in sources_doc:
++            raise GardeArret(f"sondes-bbis.json.sources : source {src_d!r} absente")
++    taches_lues_par_pli: dict[tuple[str, str], set[str]] = {}
++    for src, par_pli in sources_doc.items():
++        if src == "P-instruit":
++            dose_par_source["P-instruit"] = ""
++        elif src not in dose_par_source:
++            raise GardeArret(f"sondes-bbis.json.sources : source {src!r} hors des doses et de P-instruit")
++        if not isinstance(par_pli, dict) or not par_pli:
++            raise GardeArret(f"sondes-bbis.json.sources.{src} : plis attendus")
++        for ek, meta_k in par_pli.items():
++            if not isinstance(ek, str) or not re.fullmatch(r"e\d+", ek):
++                raise GardeArret(f"sondes-bbis.json.sources.{src} : clé de pli {ek!r} invalide")
++            if not isinstance(meta_k, dict):
++                raise GardeArret(f"sondes-bbis.json.sources.{src}.{ek} : objet attendu")
++            pli_lu = _entier(meta_k.get("pli_lu"), f"sondes-bbis.json.sources.{src}.{ek}.pli_lu")
++            if pli_lu != int(ek[1:]):
++                raise GardeArret(f"sondes-bbis.json.sources.{src}.{ek} : pli_lu ({pli_lu}) ≠ {int(ek[1:])}")
++            tl = meta_k.get("taches_lues")
++            if not isinstance(tl, list) or not tl or not all(isinstance(t, str) and t for t in tl):
++                raise GardeArret(f"sondes-bbis.json.sources.{src}.{ek}.taches_lues : liste non vide de chaînes attendue")
++            taches_lues_par_pli[(src, ek)] = set(tl)
++    fs = doc["fichiers_scores"]
++    if not isinstance(fs, list) or not fs:
++        raise GardeArret("sondes-bbis.json.fichiers_scores : liste non vide attendue")
++    racine = chemin.parent.parent.parent if chemin.parent.parent.name == "diag" else chemin.parent
++    morceaux_verifies: list[dict] = []
++    chemins_npz: list[tuple[str, Path, set[str]]] = []
++    fichiers_vus: set[str] = set()
++    for i, f in enumerate(fs):
++        ou_f = f"sondes-bbis.json.fichiers_scores[{i}]"
++        _cles_exactes(f, ("fichier", "sha256", "sources"), ou_f)
++        rel_f = f["fichier"]
++        if not isinstance(rel_f, str) or not rel_f.strip():
++            raise GardeArret(f"{ou_f}.fichier : chemin relatif non vide attendu")
++        p_rel = Path(rel_f)
++        if p_rel.is_absolute() or ".." in p_rel.parts:
++            raise GardeArret(f"{ou_f}.fichier : chemin relatif propre attendu ({rel_f!r})")
++        if rel_f in fichiers_vus:
++            raise GardeArret(f"sondes-bbis.json.fichiers_scores : fichier en double ({rel_f!r})")
++        fichiers_vus.add(rel_f)
++        exp_sha = _hex(f["sha256"], f"{ou_f}.sha256")
++        srcs_f = f["sources"]
++        if not isinstance(srcs_f, list) or not srcs_f or not all(isinstance(s, str) and s in sources_doc for s in srcs_f):
++            raise GardeArret(f"{ou_f}.sources : liste non vide de sources connues attendue")
++        chemin_npz = racine / p_rel
++        if not chemin_npz.is_file():
++            raise GardeArret(f"sondes-bbis : fichier de scores absent ({rel_f})")
++        sha_npz = verifier(chemin_npz) if compagnon(chemin_npz).is_file() else empreinte(chemin_npz)
++        if sha_npz != exp_sha:
++            raise GardeArret(f"sondes-bbis : empreinte du fichier de scores {rel_f} différente de sondes-bbis.json")
++        morceaux_verifies.append({"fichier": rel_f, "sha256": sha_npz})
++        chemins_npz.append((rel_f, chemin_npz, set(srcs_f)))
++    entrees_vues: set[str] = set()
++    groupes_lus: dict[tuple[str, str, str], dict] = {}
++    for rel_f, chemin_npz, srcs_decl in chemins_npz:
++        try:
++            zf_ctx = zipfile.ZipFile(chemin_npz, "r")
++        except (zipfile.BadZipFile, OSError) as e:
++            raise GardeArret(f"sondes-bbis : archive .npz illisible ({rel_f} : {e})") from None
++        with zf_ctx as zf:
++            noms_zip = sorted(zf.namelist())
++            if not noms_zip:
++                raise GardeArret(f"sondes-bbis : archive .npz vide ({rel_f})")
++            srcs_vues_morceau: set[str] = set()
++            for membre in noms_zip:
++                if not membre.endswith(".npy"):
++                    raise GardeArret(f"sondes-bbis : entrée non .npy dans {rel_f} ({membre!r})")
++                nom = membre[:-4]
++                if nom in entrees_vues:
++                    raise GardeArret(f"sondes-bbis : entrée .npy en double ({nom!r})")
++                entrees_vues.add(nom)
++                parts = nom.split("__")
++                if len(parts) != 4 or not all(parts):
++                    raise GardeArret(f"sondes-bbis : nom de tableau mal formé ({nom!r})")
++                src, ek, grp, champ = parts
++                if src not in srcs_decl:
++                    raise GardeArret(f"sondes-bbis : source {src!r} non déclarée dans {rel_f}")
++                if (src, ek) not in taches_lues_par_pli:
++                    raise GardeArret(f"sondes-bbis : pli ({src!r}, {ek!r}) absent de sondes-bbis.json")
++                srcs_vues_morceau.add(src)
++                if grp.startswith("app") or grp in ("nul", "o2"):
++                    continue
++                if "-" not in grp:
++                    raise GardeArret(f"sondes-bbis : groupe {grp!r} mal formé (attendu <serie>-<condition>)")
++                try:
++                    with zf.open(membre, "r") as fp:
++                        ver = np.lib.format.read_magic(fp)
++                        if ver == (1, 0):
++                            shape, _, dtype = np.lib.format.read_array_header_1_0(fp)
++                        elif ver in ((2, 0), (3, 0)):
++                            shape, _, dtype = np.lib.format.read_array_header_2_0(fp)
++                        else:
++                            raise GardeArret(f"sondes-bbis : version .npy {ver} non supportée ({nom})")
++                except GardeArret:
++                    raise
++                except (ValueError, OSError) as e:
++                    raise GardeArret(f"sondes-bbis : en-tête .npy illisible pour {nom} ({e})") from None
++                if dtype.hasobject:
++                    raise GardeArret(f"sondes-bbis : tableau objet refusé ({nom})")
++                gdata = groupes_lus.setdefault(
++                    (src, ek, grp), {"cles": None, "taches": None, "tailles_annexes": {}, "scores": {}}
++                )
++                if champ in ("cles", "taches"):
++                    if len(shape) != 1 or dtype.kind not in ("U", "S"):
++                        raise GardeArret(f"sondes-bbis : {nom} doit être un tableau 1D de chaînes")
++                    with zf.open(membre, "r") as fp:
++                        arr = np.load(io.BytesIO(fp.read()), allow_pickle=False)
++                    gdata[champ] = [str(x) for x in arr.tolist()]
++                elif len(shape) == 2:
++                    if dtype.kind not in ("f", "i", "u"):
++                        raise GardeArret(f"sondes-bbis : matrice 2D non numérique {nom} ({dtype})")
++                    gdata["tailles_annexes"][champ] = int(shape[1])
++                elif len(shape) == 1:
++                    if dtype.kind == "b":
++                        gdata["tailles_annexes"][champ] = int(shape[0])
++                    elif dtype.kind in ("f", "i", "u"):
++                        with zf.open(membre, "r") as fp:
++                            arr = np.load(io.BytesIO(fp.read()), allow_pickle=False)
++                        gdata["scores"][champ] = [float(x) for x in arr.tolist()]
++                    else:
++                        raise GardeArret(f"sondes-bbis : type 1D inattendu pour {nom} ({dtype})")
++                else:
++                    raise GardeArret(f"sondes-bbis : dimension {len(shape)}D inattendue pour {nom}")
++            if srcs_vues_morceau != srcs_decl:
++                raise GardeArret(
++                    f"sondes-bbis : sources lues {sorted(srcs_vues_morceau)} ≠ déclarées {sorted(srcs_decl)} dans {rel_f}"
++                )
++    if not groupes_lus:
++        raise GardeArret("sondes-bbis : aucun groupe évalué dans les fichiers de scores")
++    out: list[dict] = []
++    for src, ek, grp in sorted(groupes_lus):
++        gdata = groupes_lus[(src, ek, grp)]
++        cles, taches = gdata["cles"], gdata["taches"]
++        if cles is None or taches is None:
++            raise GardeArret(f"sondes-bbis : clés ou tâches absentes pour {src}/{ek}/{grp}")
++        if not cles or len(cles) != len(taches):
++            raise GardeArret(
++                f"sondes-bbis : clés ({len(cles)}) et tâches ({len(taches)}) désalignées pour {src}/{ek}/{grp}"
++            )
++        if len(set(cles)) != len(cles):
++            raise GardeArret(f"sondes-bbis : clé en double dans {src}/{ek}/{grp}")
++        hors_tl = set(taches) - taches_lues_par_pli[(src, ek)]
++        if hors_tl:
++            raise GardeArret(f"sondes-bbis : tâche hors taches_lues dans {src}/{ek}/{grp} ({sorted(hors_tl)[0]!r})")
++        for ch_ann, n_ann in sorted(gdata["tailles_annexes"].items()):
++            if n_ann != len(cles):
++                raise GardeArret(f"sondes-bbis : tableau {src}__{ek}__{grp}__{ch_ann} de taille {n_ann} ≠ {len(cles)} clés")
++        if not gdata["scores"]:
++            raise GardeArret(f"sondes-bbis : aucun tableau de scores 1D pour {src}/{ek}/{grp}")
++        serie, condition = grp.split("-", 1)
++        if not serie or not condition:
++            raise GardeArret(f"sondes-bbis : groupe {grp!r} mal formé (attendu <serie>-<condition>)")
++        dose_str = dose_par_source[src]
++        pli_str = str(sources_doc[src][ek]["pli_lu"])
++        couple = f"{src}/{grp}"
++        for champ_sc in sorted(gdata["scores"]):
++            vals = gdata["scores"][champ_sc]
++            if len(vals) != len(cles):
++                raise GardeArret(
++                    f"sondes-bbis : scores {champ_sc} ({len(vals)}) et clés ({len(cles)}) désalignés pour {src}/{ek}/{grp}"
++                )
++            for cle, tache, sc_val in zip(cles, taches, vals):
++                out.append({
++                    "source_bbis": src,
++                    "dose": dose_str,
++                    "pli_lu": pli_str,
++                    "serie": serie,
++                    "condition": condition,
++                    "groupe": grp,
++                    "couple_source_groupe": couple,
++                    "champ_score": champ_sc,
++                    "tache": tache,
++                    "cle": cle,
++                    "score": sc_val,
++                })
++    return out, morceaux_verifies
++
++
+ def _lire_table(chemin: Path, fmt: str) -> list[dict]:
+     if fmt == "jsonl":
+         out = []
+@@ -310,6 +528,8 @@ def _lire_table(chemin: Path, fmt: str) -> list[dict]:
+     if fmt == "csv":
+         with open(chemin, newline="", encoding="utf-8") as f:
+             return list(csv.DictReader(f))
++    if fmt == "sondes_bbis_npz":
++        return _lire_table_bbis_npz(chemin)[0]
+     raise GardeArret(f"table des scores : format de fichier {fmt!r}")
+ 
+ 
+@@ -322,10 +542,11 @@ def _bool_brut(x) -> bool:
+ 
+ 
+ def charger_table_bbis(chemin_table, chemin_correspondance) -> tuple[list[dict], dict]:
+-    """Spécification v2 de la table de correspondance, § 4 : vérifie les deux empreintes ; lit la table ; applique
+-    `selection`, `colonnes`, règles et `valeurs` ; rend (lignes aux noms internes, contrôlées par
+-    `charger_table_scores`, méta) ; la méta porte les deux empreintes, les règles employées, les variables absentes et
+-    les clés sans jumelle sous l'autre poids."""
++    """Spécification v2 de la table de correspondance, § 4 (et erratum 4, `sondes_bbis_npz`) : vérifie les empreintes ;
++    lit la table ; applique `selection` (chaîne ou liste explicite de chaînes), `colonnes`, règles et `valeurs` ; rend
++    (lignes aux noms internes, contrôlées par `charger_table_scores`, méta) ; la méta porte les deux empreintes (et,
++    pour `sondes_bbis_npz`, celles des morceaux `.npz` vérifiés), les règles employées, les variables absentes et les
++    clés sans jumelle sous l'autre poids."""
+     sha_c = verifier(chemin_correspondance)
+     sha_t = verifier(chemin_table)
+     c = json.loads(Path(chemin_correspondance).read_text(encoding="utf-8"))
+@@ -338,18 +559,39 @@ def charger_table_bbis(chemin_table, chemin_correspondance) -> tuple[list[dict],
+     if c["table_source"]["sha256"] != sha_t:
+         raise GardeArret("correspondance : empreinte de la table source différente de la table lue")
+     _cles_exactes(c["colonnes"], st.CHAMPS_TABLE, "correspondance.colonnes")
+-    brut = _lire_table(Path(chemin_table), c["table_source"]["format_fichier"])
++    fmt_f = c["table_source"]["format_fichier"]
++    if fmt_f == "sondes_bbis_npz":
++        brut, morceaux_scores = _lire_table_bbis_npz(Path(chemin_table))
++    else:
++        brut, morceaux_scores = _lire_table(Path(chemin_table), fmt_f), None
+     if not brut:
+         raise GardeArret("table des scores : fichier vide")
+     noms = set().union(*(set(r) for r in brut))
+     if not isinstance(c["selection"], dict):
+         raise GardeArret("correspondance.selection : objet attendu")
+-    for col_sel in c["selection"]:
++    criteres_sel: dict[str, set[str]] = {}
++    listes_sel: dict[str, list[str]] = {}
++    for col_sel, val_sel in c["selection"].items():
+         if col_sel not in noms:
+             raise GardeArret(f"sélection : colonne {col_sel!r} absente du fichier")
+-    brut = [r for r in brut if all(str(r.get(col_sel)) == str(val_sel) for col_sel, val_sel in c["selection"].items())]
++        if isinstance(val_sel, str) and val_sel != "":
++            criteres_sel[col_sel] = {val_sel}
++        elif isinstance(val_sel, list) and val_sel:
++            if not all(isinstance(x, str) and x != "" for x in val_sel):
++                raise GardeArret(f"sélection : liste de chaînes non vides attendue pour {col_sel!r}")
++            if len(set(val_sel)) != len(val_sel):
++                raise GardeArret(f"sélection : valeur en double dans la liste {col_sel!r}")
++            criteres_sel[col_sel] = set(val_sel)
++            listes_sel[col_sel] = val_sel
++        else:
++            raise GardeArret(f"sélection : chaîne non vide ou liste non vide de chaînes attendue pour {col_sel!r}")
++    brut = [r for r in brut if all(str(r.get(col_sel)) in admises for col_sel, admises in criteres_sel.items())]
+     if not brut:
+         raise GardeArret("correspondance : aucune ligne retenue après sélection")
++    for col_sel, attendues_sel in listes_sel.items():
++        manq_sel = set(attendues_sel) - {str(r.get(col_sel)) for r in brut}
++        if manq_sel:
++            raise GardeArret(f"sélection : valeurs de {col_sel!r} absentes après sélection : {sorted(manq_sel)}")
+     regles, absentes = {}, []
+     col = {}
+     for champ, v in c["colonnes"].items():
+@@ -451,6 +693,8 @@ def charger_table_bbis(chemin_table, chemin_correspondance) -> tuple[list[dict],
+     sans_jumelle = sum(1 for v in cles.values() if len(v) == 1)
+     meta = {"table_sha256": sha_t, "correspondance_sha256": sha_c, "regles": regles, "variables_absentes": absentes,
+             "cles_sans_jumelle": sans_jumelle, "lignes": len(out)}
++    if morceaux_scores is not None:
++        meta["fichiers_scores"] = morceaux_scores
+     return out, meta
+ 
+ 
+diff --git a/src/controle_ia/sondes_v2/formats_v1.py.sha256 b/src/controle_ia/sondes_v2/formats_v1.py.sha256
+index 72593caa8..67d336e86 100644
+--- a/src/controle_ia/sondes_v2/formats_v1.py.sha256
++++ b/src/controle_ia/sondes_v2/formats_v1.py.sha256
+@@ -1 +1 @@
+-e2dd1e58b2df863c22bb721f0ead5013f88603d387dc1d60a7f08478757d8c02  formats_v1.py
++3be4e79d8cf8e66250922f9b568311f8929fa6c150a2e9bbd0158172a585f6f9  formats_v1.py
+diff --git a/tests/test_sondes_v2_formats.py b/tests/test_sondes_v2_formats.py
+index c1ad56c39..3336f077f 100644
+--- a/tests/test_sondes_v2_formats.py
++++ b/tests/test_sondes_v2_formats.py
+@@ -340,6 +340,291 @@ def test_bbis_cle_sans_jumelle(tmp_path):
+     assert meta["cles_sans_jumelle"] == 1
+ 
+ 
++COUPLES_REJEU_16 = [
++    "P-S25/O-S25", "P-S25/J25-S25", "P-S25/A25-honnete", "P-S25/O-honnete",
++    "P-S50/O-S50", "P-S50/J50-S50", "P-S50/A50-honnete", "P-S50/O-honnete",
++    "P-S75/O-S75", "P-S75/J75-S75", "P-S75/A75-honnete", "P-S75/O-honnete",
++    "P-S100/O-S100", "P-S100/J100-S100", "P-S100/A100-honnete", "P-S100/O-honnete",
++]
++
++
++def _corr_bbis_npz(sha_index, **change):
++    c = {
++        "format": "correspondance-rejeu-croise-v1",
++        "redigee_par": "session_essai",
++        "date_utc": "2026-11-24T06:00:00Z",
++        "attestation": "aucune colonne de score lue ; seules les colonnes de plan et leurs valeurs distinctes",
++        "table_source": {
++            "chemin": "diag/run-synth/sondes-bbis.json",
++            "sha256": sha_index,
++            "ligne_registre": "SCORES-BBIS (essai synthétique)",
++            "format_fichier": "sondes_bbis_npz",
++        },
++        "selection": {
++            "champ_score": "sonde",
++            "couple_source_groupe": list(COUPLES_REJEU_16),
++        },
++        "colonnes": {
++            "dose": "dose",
++            "pli": "pli_lu",
++            "source": "condition",
++            "poids": "groupe",
++            "chemin": {"regle": "quatre_cases_du_texte_scelle"},
++            "tache": "tache",
++            "cle": "cle",
++            "score": "score",
++            "longueur": {"absente": True},
++            "pas": {"absente": True},
++            "valeur_declaree": {"absente": True},
++            "tache_tenue": {"constante": True},
++        },
++        "valeurs": {
++            "source": {
++                "S25": "saboteur", "S50": "saboteur", "S75": "saboteur", "S100": "saboteur", "honnete": "honnete",
++            },
++            "poids": {
++                "O-S25": "adaptateur", "O-S50": "adaptateur", "O-S75": "adaptateur", "O-S100": "adaptateur",
++                "A25-honnete": "adaptateur", "A50-honnete": "adaptateur",
++                "A75-honnete": "adaptateur", "A100-honnete": "adaptateur",
++                "J25-S25": "nu", "J50-S50": "nu", "J75-S75": "nu", "J100-S100": "nu", "O-honnete": "nu",
++            },
++        },
++    }
++    for k, v in change.items():
++        c[k] = v
++    return c
++
++
++def _fabriquer_bbis_npz(
++    racine,
++    n_taches_pli=32,
++    n_actions=10,
++    tirer_scores=False,
++    omettre_cle=None,
++    muter_tableaux=None,
++    muter_doc=None,
++    sceller_npz=True,
++):
++    """Fabrique un jeu synthétique complet `diag/run-synth/sondes-bbis.json` + 3 morceaux `scores-bbis-000..002.npz`
++    sans aucun score réel (scores factices 0.0 par défaut, ou normaux tirés localement), incluant groupes hors rejeu
++    (`O-T100`, `AT-honnete`, `P-instruit` avec transferts `O-S25`, etc.), champs `enc`/`sc_sonde` (avec NaN masqués par
++    `sc_valide` booléen)/`sonde_o2`, matrices 2D `plancher`, tableaux `app__*`/`nul__*`/`o2__*`, et découpage à cheval
++    d'un groupe de `P-S50` entre `000.npz` et `001.npz`."""
++    rng = np.random.default_rng(12345)
++    run_id = "run-synth"
++    d_donnees = racine / "donnees" / run_id
++    d_diag = racine / "diag" / run_id
++    d_donnees.mkdir(parents=True)
++    d_diag.mkdir(parents=True)
++
++    specs_doses = [
++        (0.25, "P-S25", "S25", ("O-S25", "J25-S25", "A25-honnete", "O-honnete", "O-T100", "AT-honnete")),
++        (0.5, "P-S50", "S50", ("O-S50", "J50-S50", "A50-honnete", "O-honnete", "O-T100", "AT-honnete")),
++        (0.75, "P-S75", "S75", ("O-S75", "J75-S75", "A75-honnete", "O-honnete", "O-T100", "AT-honnete")),
++        (1.0, "P-S100", "S100", ("O-S100", "J100-S100", "A100-honnete", "O-honnete", "O-T100", "AT-honnete",
++                                 "O-saboteur", "Jinstruit-saboteur")),
++    ]
++    groupes_instruit = ("O-saboteur", "O-honnete", "Jinstruit-saboteur", "O-temoin",
++                        "O-S25", "J25-S25", "A25-honnete")
++
++    sources_meta = {}
++    morceaux_tabs = [{}, {}, {}]
++    morceaux_srcs = [set(), set(), set()]
++
++    def _placer(idx_m, src, nom, arr):
++        morceaux_tabs[idx_m][nom] = arr
++        morceaux_srcs[idx_m].add(src)
++
++    def _score_vec(n):
++        return rng.normal(0.0, 1.0, size=n).astype(np.float64) if tirer_scores else np.zeros(n, dtype=np.float64)
++
++    for _, src, cond_pos, groupes in specs_doses + [(None, "P-instruit", "saboteur", groupes_instruit)]:
++        sources_meta[src] = {}
++        for k in (0, 1):
++            ek = f"e{k}"
++            taches_lues = [f"t{k}_{i:03d}" for i in range(n_taches_pli)]
++            sources_meta[src][ek] = {"cellule": src, "pli_lu": k, "taches_lues": taches_lues}
++            for grp in groupes:
++                _, cond = grp.split("-", 1)
++                cles, taches = [], []
++                for t_id in taches_lues:
++                    for a in range(n_actions):
++                        cle = f"{cond}__{t_id}__p{a}"
++                        if omettre_cle == (src, ek, grp, cle):
++                            continue
++                        cles.append(cle)
++                        taches.append(t_id)
++                n = len(cles)
++                # Répartition réaliste en 3 morceaux, avec P-S50 et P-instruit à cheval entre morceaux
++                if src in ("P-S100", "P-S25"):
++                    idx_base = 0
++                elif src == "P-S50":
++                    idx_base = 0 if k == 0 else 1
++                elif src == "P-S75":
++                    idx_base = 1
++                else:
++                    idx_base = 1 if k == 0 else 2
++                # Pour P-S50/e0/O-S50, place __cles dans 000.npz et __taches/__sonde dans 001.npz (groupe coupé)
++                idx_suite = 1 if (src == "P-S50" and ek == "e0" and grp == "O-S50") else idx_base
++                _placer(idx_base, src, f"{src}__{ek}__{grp}__cles", np.array(cles, dtype="U32"))
++                _placer(idx_suite, src, f"{src}__{ek}__{grp}__taches", np.array(taches, dtype="U16"))
++                _placer(idx_suite, src, f"{src}__{ek}__{grp}__sonde", _score_vec(n))
++                _placer(idx_suite, src, f"{src}__{ek}__{grp}__sonde_o2", _score_vec(n))
++                _placer(idx_suite, src, f"{src}__{ek}__{grp}__plancher", np.zeros((2, n), dtype=np.float32))
++                if grp in (f"J25-S25", "O-honnete"):
++                    _placer(idx_suite, src, f"{src}__{ek}__{grp}__enc", _score_vec(n))
++                if cond == cond_pos and src != "P-instruit":
++                    sc_v = np.array([i % 2 == 0 for i in range(n)], dtype=bool)
++                    sc_s = np.where(sc_v, _score_vec(n), np.nan)
++                    _placer(idx_suite, src, f"{src}__{ek}__{grp}__sc_valide", sc_v)
++                    _placer(idx_suite, src, f"{src}__{ek}__{grp}__sc_sonde", sc_s)
++            idx_ann = 2 if src == "P-instruit" else (0 if src in ("P-S100", "P-S25") else 1)
++            _placer(idx_ann, src, f"{src}__{ek}__app__cles", np.array(["app__t999__p0"], dtype="U32"))
++            _placer(idx_ann, src, f"{src}__{ek}__app__y", np.array([1], dtype=np.int64))
++            _placer(idx_ann, src, f"{src}__{ek}__app__sonde", np.zeros(1, dtype=np.float64))
++            _placer(idx_ann, src, f"{src}__{ek}__nul__echanges", np.zeros((2, 2 * n_taches_pli), dtype=bool))
++            _placer(idx_ann, src, f"{src}__{ek}__o2__w", np.zeros(4, dtype=np.float64))
++
++    if muter_tableaux is not None:
++        muter_tableaux(morceaux_tabs, morceaux_srcs)
++
++    fichiers_scores = []
++    for idx_m in range(3):
++        ch_npz = d_donnees / f"scores-bbis-{idx_m:03d}.npz"
++        np.savez(ch_npz, **morceaux_tabs[idx_m])
++        sha_m = sceller(ch_npz) if sceller_npz else fm.empreinte(ch_npz)
++        fichiers_scores.append({
++            "fichier": f"donnees/{run_id}/scores-bbis-{idx_m:03d}.npz",
++            "sha256": sha_m,
++            "sources": sorted(morceaux_srcs[idx_m]),
++        })
++
++    doc = {
++        "run_id": run_id,
++        "sans_aucune_aire": True,
++        "doses": [0.25, 0.5, 0.75, 1.0],
++        "sources": sources_meta,
++        "fichiers_scores": fichiers_scores,
++    }
++    if muter_doc is not None:
++        muter_doc(doc, racine)
++
++    ch_index = d_diag / "sondes-bbis.json"
++    ch_index.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
++    sha_idx = sceller(ch_index)
++    ch_corr = _ecrire(racine / "correspondance-rejeu-croise-v2.json",
++                      json.dumps(_corr_bbis_npz(sha_idx), ensure_ascii=False, indent=1) + "\n")
++    return ch_index, ch_corr
++
++
++def test_bbis_npz_cas_sain_10240(tmp_path):
++    ch_idx, ch_corr = _fabriquer_bbis_npz(tmp_path / "sain_zero", n_taches_pli=32, n_actions=10, tirer_scores=False)
++    lignes, meta = fm.charger_table_bbis(ch_idx, ch_corr)
++    assert len(lignes) == 10_240
++    assert meta["lignes"] == 10_240 and meta["cles_sans_jumelle"] == 0
++    assert meta["regles"] == {"chemin": "quatre_cases_du_texte_scelle", "tache_tenue": "constante"}
++    assert meta["variables_absentes"] == ["longueur", "pas", "valeur_declaree"]
++    assert len(meta["fichiers_scores"]) == 3
++    assert {l["dose"] for l in lignes} == {"0.25", "0.5", "0.75", "1.0"}
++    for d in ("0.25", "0.5", "0.75", "1.0"):
++        assert sum(1 for l in lignes if l["dose"] == d) == 2_560
++    assert {(l["poids"], l["source"], l["chemin"]) for l in lignes} == {
++        ("adaptateur", "saboteur", "origine"), ("nu", "honnete", "origine"),
++        ("adaptateur", "honnete", "relu"), ("nu", "saboteur", "relu"),
++    }
++    # Rejeu croisé de bout en bout sur scores synthétiques non constants
++    ch_idx2, ch_corr2 = _fabriquer_bbis_npz(tmp_path / "sain_alea", n_taches_pli=8, n_actions=3, tirer_scores=True)
++    lignes2, _ = fm.charger_table_bbis(ch_idx2, ch_corr2)
++    rngs = {n: np.random.default_rng(0) for n in st.GRAINES_NOMMEES}
++    res = st.rejeu_croise(lignes2, rngs, {"alpha": 0.05}, n_tirages=20)
++    assert sorted(res["doses"]) == ["0.25", "0.5", "0.75", "1.0"]
++    assert all(res["doses"][d]["motif"] == "aucun" and res["doses"][d]["controle_chemin"] == st.CONTROLE_ABSENT
++               for d in ("0.25", "0.5", "0.75", "1.0"))
++
++
++def test_bbis_npz_cle_sans_jumelle(tmp_path):
++    ch_idx, ch_corr = _fabriquer_bbis_npz(
++        tmp_path / "sans_jumelle", n_taches_pli=32, n_actions=10,
++        omettre_cle=("P-S25", "e0", "J25-S25", "S25__t0_000__p0"),
++    )
++    lignes, meta = fm.charger_table_bbis(ch_idx, ch_corr)
++    assert len(lignes) == 10_239 and meta["cles_sans_jumelle"] == 1
++
++
++@pytest.mark.parametrize("nom_cas,kwargs_fab,muter_corr,post_disque,motif", [
++    ("sha_npz_faux_sans_compagnon",
++     {"sceller_npz": False, "muter_doc": lambda doc, _: doc["fichiers_scores"][1].update(sha256="b" * 64)},
++     None, None, "différente de sondes-bbis.json"),
++    ("npz_altere_avec_compagnon",
++     {}, None,
++     lambda r: (r / "donnees/run-synth/scores-bbis-002.npz").write_bytes(b"corrompu"),
++     "empreinte"),
++    ("npz_absent",
++     {}, None,
++     lambda r: (r / "donnees/run-synth/scores-bbis-001.npz").unlink(),
++     "fichier de scores absent"),
++    ("sans_aucune_aire_faux",
++     {"muter_doc": lambda doc, _: doc.update(sans_aucune_aire=False)},
++     None, None, "sans_aucune_aire"),
++    ("chemin_traversant",
++     {"muter_doc": lambda doc, _: doc["fichiers_scores"][0].update(fichier="../scores.npz")},
++     None, None, "chemin relatif propre"),
++    ("entree_npy_en_double",
++     {"muter_tableaux": lambda tabs, srcs: (
++         tabs[1].update({"P-S25__e0__O-S25__sonde": tabs[0]["P-S25__e0__O-S25__sonde"]}),
++         srcs[1].add("P-S25"),
++     )},
++     None, None, "en double"),
++    ("tache_hors_taches_lues",
++     {"muter_tableaux": lambda tabs, _: tabs[0].update({
++         "P-S25__e0__O-S25__taches": np.array(["hors_pli"] * len(tabs[0]["P-S25__e0__O-S25__cles"]), dtype="U16"),
++     })},
++     None, None, "hors taches_lues"),
++    ("scores_desalignes",
++     {"muter_tableaux": lambda tabs, _: tabs[0].update({
++         "P-S25__e0__O-S25__sonde": np.zeros(1, dtype=np.float64),
++     })},
++     None, None, "désalignés"),
++    ("plancher_2d_desaligne",
++     {"muter_tableaux": lambda tabs, _: tabs[0].update({
++         "P-S25__e0__O-S25__plancher": np.zeros((2, 1), dtype=np.float32),
++     })},
++     None, None, "≠"),
++    ("cle_en_double_dans_groupe",
++     {"muter_tableaux": lambda tabs, _: tabs[0].update({
++         "P-S25__e0__O-S25__cles": np.array(["S25__t0_000__p0"] * len(tabs[0]["P-S25__e0__O-S25__cles"]), dtype="U32"),
++     })},
++     None, None, "clé en double"),
++    ("score_nan_dans_sonde_retenue",
++     {"muter_tableaux": lambda tabs, _: tabs[0].update({
++         "P-S25__e0__O-S25__sonde": np.full(len(tabs[0]["P-S25__e0__O-S25__cles"]), np.nan),
++     })},
++     None, None, "non finie"),
++    ("selection_liste_vide",
++     {}, lambda c: c["selection"].update(couple_source_groupe=[]), None, "liste non vide"),
++    ("selection_liste_non_chaine",
++     {}, lambda c: c["selection"].update(couple_source_groupe=["P-S25/O-S25", 123]), None,
++     "liste de chaînes non vides"),
++    ("selection_liste_doublon",
++     {}, lambda c: c["selection"].update(couple_source_groupe=["P-S25/O-S25", "P-S25/O-S25"]), None,
++     "valeur en double"),
++    ("selection_couple_absent",
++     {}, lambda c: c["selection"].update(couple_source_groupe=list(COUPLES_REJEU_16) + ["P-S25/INTRUS-honnete"]),
++     None, "absentes après sélection"),
++])
++def test_bbis_npz_artefacts(tmp_path, nom_cas, kwargs_fab, muter_corr, post_disque, motif):
++    racine = tmp_path / nom_cas
++    ch_idx, ch_corr = _fabriquer_bbis_npz(racine, n_taches_pli=2, n_actions=2, **kwargs_fab)
++    if muter_corr is not None:
++        c = json.loads(ch_corr.read_text(encoding="utf-8"))
++        muter_corr(c)
++        ch_corr = _ecrire(racine / "corr-alt.json", json.dumps(c, ensure_ascii=False, indent=1) + "\n")
++    if post_disque is not None:
++        post_disque(racine)
++    with pytest.raises(GardeArret, match=motif):
++        fm.charger_table_bbis(ch_idx, ch_corr)
++
++
+ # ------------------------------------------------------------------------------------------- table de l'ouvreur
+ 
+ def _garde(tmp_path, series):
+diff --git a/tests/test_sondes_v2_formats.py.sha256 b/tests/test_sondes_v2_formats.py.sha256
+index ef2f81829..fd98acfa4 100644
+--- a/tests/test_sondes_v2_formats.py.sha256
++++ b/tests/test_sondes_v2_formats.py.sha256
+@@ -1 +1 @@
+-89bd1077d19068c964d5bd1948661a3a030f68031ecff863d3a8b3b4878cc3e1  test_sondes_v2_formats.py
++a37bb41d2f25c7621919b9c5f9cf19123fc54e4f8260adc2d36ddfdc37e490d3  test_sondes_v2_formats.py
+-- 
+2.56.1
+
