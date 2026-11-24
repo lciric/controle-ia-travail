@@ -1303,11 +1303,25 @@ def creer(a, client=None, aujourd_hui=None) -> int:
         return 2
 
 
+def resoudre_fiche(fiche: dict, client, journal: Journal) -> dict:
+    """Une fiche sans identifiant entier (création incertaine) se résout par l'étiquette exacte, une seule instance ; sinon
+    refus : jamais une surveillance « à vide » qui conclurait à l'absence."""
+    ident = fiche.get("identifiant")
+    if isinstance(ident, int) and not isinstance(ident, bool):
+        return fiche
+    trouvees = [i.get("id") for i in client.instances() if i.get("label") == fiche.get("etiquette") == ETIQUETTE]
+    if len(trouvees) != 1 or not isinstance(trouvees[0], int) or trouvees[0] in INTOUCHABLES:
+        raise Refus(f"fiche sans identifiant et {len(trouvees)} instance(s) à l'étiquette {ETIQUETTE} : vérifier à la main")
+    journal.ecrire(f"fiche sans identifiant : instance {trouvees[0]} retrouvée par l'étiquette exacte")
+    return {**fiche, "identifiant": trouvees[0]}
+
+
 def surveiller(fiche: dict, client, journal: Journal, periode_s: float = PERIODE_SURVEILLANCE_S,
                tours_max: int | None = None, attente_destruction_s: float = 10.0) -> dict:
     """Boucle externe (R10) : POURSUIVRE ou COUPER. L'horloge se juge même sans relevé ; une coupure manquée se retente
     à chaque tour (alarme) ; l'absence de l'instance n'est admise qu'après deux relevés lisibles consécutifs."""
-    ident, tours, absences = fiche["identifiant"], 0, 0
+    fiche = resoudre_fiche(fiche, client, journal)
+    ident, tours, absences, echecs = fiche["identifiant"], 0, 0, 0
     while tours_max is None or tours < tours_max:
         tours += 1
         inst, credit = None, None
@@ -1338,7 +1352,14 @@ def surveiller(fiche: dict, client, journal: Journal, periode_s: float = PERIODE
                 r = detruire(client, ident, fiche, raison, None, journal, attente_destruction_s)
                 return {"fin": "coupee", "raison": d["raison"], "destruction": r, "tours": tours}
             except Refus as e:
+                echecs += 1
                 journal.ecrire(f"ALARME : coupure non obtenue ({e}) ; nouvel essai au prochain tour")
+                if echecs >= 3 and ident not in INTOUCHABLES:  # relevés en échec : destruction par l'identifiant de la fiche
+                    try:
+                        client.detruire(ident)
+                        journal.ecrire(f"ALARME : destruction de l'instance {ident} demandée sans relevé (après {echecs} échecs)")
+                    except Refus as e2:
+                        journal.ecrire(f"ALARME : destruction sans relevé refusée ({e2})")
         time.sleep(periode_s)
     return {"fin": "tours", "tours": tours}
 
@@ -1467,6 +1488,8 @@ def main(argv=None) -> int:
             return creer(a, ClientVastJouet(Path(a.jouet)) if a.jouet else None)
         if a.cmd in ("surveiller", "detruire", "rapatrier"):
             fiche = json.loads(Path(a.fiche).read_text(encoding="utf-8"))
+            if a.cmd == "rapatrier" and not (isinstance(fiche.get("identifiant"), int) and not isinstance(fiche["identifiant"], bool)):
+                raise Refus("fiche sans identifiant entier : rapatriement refusé (résoudre la fiche d'abord)")
             j = Journal(Path(a.fiche).with_suffix(f".{a.cmd}.txt"), {k: os.environ.get(k, "") for k in SECRETS})
             if a.cmd == "surveiller":
                 r = surveiller(fiche, client_session(a.jouet), j, a.periode_s)

@@ -682,3 +682,27 @@ def test_creation_incertaine_retrouvee_par_l_etiquette(tmp_path, monkeypatch):
 def test_script_de_demarrage_porte_une_minuterie_de_secours():
     s = R.script_de_demarrage("a" * 40, "docs/x/ordre.json", "b" * 64)
     assert s.index("minuterie-secours") < s.index("git -c credential.helper") and "method='DELETE'" in s
+
+
+def test_fiche_sans_identifiant_resolue_ou_refusee(tmp_path):
+    fiche = {"identifiant": None, "etiquette": R.ETIQUETTE, "creation_demandee_s": time.time() - 5 * 3600,
+             "prix_horaire_usd": 1.17, "credit_avant": 20.0}
+    c = jouet(tmp_path)
+    r = R.surveiller(fiche, c, R.Journal(tmp_path / "s.txt", {}, echo=False), periode_s=0, tours_max=3,
+                     attente_destruction_s=0)
+    assert r["fin"] == "coupee" and r["destruction"]["identifiant"] == 91000001
+    (tmp_path / "b").mkdir()
+    c2 = jouet(tmp_path / "b", label="autre")                    # aucune instance à l'étiquette : refus, aucun geste
+    with pytest.raises(R.Refus, match="vérifier à la main"):
+        R.surveiller(fiche, c2, R.Journal(tmp_path / "s2.txt", {}, echo=False), periode_s=0, tours_max=3)
+    assert json.loads((tmp_path / "b/vast.json").read_text())["gestes"] == []
+
+
+def test_surveillance_detruit_sans_releve_apres_trois_echecs(tmp_path):
+    interne = jouet(tmp_path)
+    c = VastCapricieux(interne, erreurs_releve=10 ** 6)
+    fiche = {"identifiant": 91000001, "etiquette": R.ETIQUETTE, "creation_demandee_s": time.time() - 5 * 3600,
+             "prix_horaire_usd": 1.17, "credit_avant": 20.0}
+    R.surveiller(fiche, c, R.Journal(tmp_path / "s.txt", {}, echo=False), periode_s=0, tours_max=4, attente_destruction_s=0)
+    assert ["detruire", 91000001] in json.loads((tmp_path / "vast.json").read_text())["gestes"]
+    assert "sans relevé" in (tmp_path / "s.txt").read_text()
