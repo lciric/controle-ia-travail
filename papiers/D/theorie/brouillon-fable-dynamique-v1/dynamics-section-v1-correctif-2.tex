@@ -1,0 +1,1250 @@
+% ======================================================================
+% Finite-time dynamics: tabular strata and two-channel model
+% Self-contained fragment (no preamble). Assumes amsmath, amssymb, amsthm,
+% the macro \E (expectation symbol), and the environments
+% theorem, proposition, lemma, corollary, remark, definition, proof.
+% KL divergences are written \mathrm{KL}(\cdot\,\|\,\cdot) explicitly.
+% v1-correctif-1: corrections after the counter-reading by a fresh Opus
+%   (papiers/D/audits/contre-lecture-dynamique-v1/), written by the second daughter
+%   session (Opus), NOT by Fable. STATUS: A REVOIR PAR FABLE. Not for diffusion.
+% v1-correctif-2: retouches D1-D9 of Fable's review (papiers/D/audits/relecture-fable-correctifs-chantiers-1-3-v1.md).
+%   ALL citations, original and added, are A VERIFIER SUR PDF (R7) until the reference check.
+%   New citation keys (to verify on PDF, R7): kakade2001natural, hopfield1984,
+%   cohen1983, hofbauer2002, leonardos2022, wainwright2008,
+%   zelikman2022, dong2023raft, gulcehre2023rest.
+% ======================================================================
+
+\section{Finite-time dynamics}\label{sec:dynamics}
+
+The static results above describe Gibbs equilibria. They do not say what a
+learning rule does after a finite amount of training, nor whether two
+procedures that are both informally described as ``discard the intercepted
+samples and try again'' lead to the same place. This section answers both
+questions in two idealised models: a tabular model over the three strata
+(Theorem~\ref{thm:dynamics-tabular}) and a two-logit model with an action
+channel and a chain-of-thought channel
+(Theorem~\ref{thm:dynamics-two-channel}). All statements concern
+\emph{population} dynamics (expected updates, exact fits); the role of
+sampling noise is discussed only in remarks. Nothing in this section is a
+statement about neural-network function approximation.
+
+\subsection{Setting and conventions}\label{sec:dynamics-setting}
+
+Let $\mathcal X$ be a finite set of trajectories, partitioned into the
+three strata $\mathcal X_h,\mathcal X_v,\mathcal X_f$ (honest, visible
+cheating, stealthy cheating). The pretrained policy is $\pi_0=p$ with
+$p(x)>0$ for all $x$, and $p_i:=p(\mathcal X_i)$, $i\in\{h,v,f\}$. As in the
+static setting, the task reward $R$ and the survival probability $\beta$
+are constant on strata: $R=0$ on $\mathcal X_h$, $R=\Delta R>0$ on
+$\mathcal X_v\cup\mathcal X_f$, and
+$0\le\beta_v<\beta_f\le\beta_h\le 1$, $\beta_f>0$; the three strata are non-empty, so $p_i>0$ for each $i$; penalties satisfy $C\ge0$. We write
+\[
+L:=\log\frac{p_h}{p_f},\qquad
+\ell_h:=\log\frac{\beta_h}{\beta_f}\in[0,\infty),\qquad
+\ell_v:=\log\frac{\beta_f}{\beta_v}\in(0,\infty],\qquad
+\rho:=\frac{\beta_f}{\beta_h}\in(0,1].
+\]
+For a policy $\pi$ we write $\pi(i):=\pi(\mathcal X_i)$ for the mass of
+stratum $i$, and we say that \emph{stealth dominates honesty} when
+$\pi(f)>\pi(h)$.
+
+\paragraph{Tabular softmax and natural gradient.}
+The policy is $\pi_\theta(x)=e^{\theta_x}/\sum_{y}e^{\theta_y}$,
+$\theta\in\mathbb R^{\mathcal X}$, initialised at $\theta(0)=\log p$, so
+that $\pi_{\theta(0)}=\pi_0$. Its Fisher information matrix is
+\[
+F(\theta)=\E_{x\sim\pi_\theta}\bigl[\nabla_\theta\log\pi_\theta(x)\,
+\nabla_\theta\log\pi_\theta(x)^{\top}\bigr]
+=\operatorname{diag}(\pi_\theta)-\pi_\theta\pi_\theta^{\top}.
+\]
+For a
+function $V$ that is $C^1$ on a neighbourhood of the open simplex, the
+\emph{natural gradient flow} of $V$ is
+$\dot\theta=F(\theta)^{\dagger}\nabla_\theta (V\circ\pi_\theta)$ and the
+\emph{natural gradient ascent} with step $\gamma>0$ is
+$\theta_{k+1}=\theta_k+\gamma F(\theta_k)^{\dagger}\nabla_\theta
+(V\circ\pi_{\theta})(\theta_k)$, where $F^\dagger$ is the Moore--Penrose
+pseudo-inverse. We denote by $\mathbf 1$ the all-ones vector.
+
+\begin{lemma}[Natural gradient in the tabular softmax family]
+\label{lem:npg-softmax}
+Let $V$ be $C^1$ on a neighbourhood of the open simplex and let
+$G(\pi):=\nabla_\pi V(\pi)\in\mathbb R^{\mathcal X}$. Then
+\[
+F(\theta)^{\dagger}\nabla_\theta (V\circ\pi_\theta)
+= G(\pi_\theta)-\Bigl(\tfrac{1}{|\mathcal X|}\textstyle\sum_y G_y(\pi_\theta)\Bigr)\mathbf 1 .
+\]
+Consequently, along the natural gradient flow,
+$\frac{d}{dt}\log\pi_t(x)=G_x(\pi_t)-\E_{\pi_t}[G(\pi_t)]$ and
+$\frac{d}{dt}V(\pi_t)=\sum_x\pi_t(x)\bigl(G_x(\pi_t)-\E_{\pi_t}[G(\pi_t)]\bigr)^2\ge 0$;
+along natural gradient ascent,
+$\pi_{k+1}(x)\propto\pi_k(x)\exp\bigl(\gamma\,G_x(\pi_k)\bigr)$.
+\end{lemma}
+
+\begin{proof}
+Since $\partial\pi_\theta(y)/\partial\theta_x=\pi_\theta(y)(\mathbf 1\{x=y\}-\pi_\theta(x))$,
+the chain rule gives
+$\nabla_\theta(V\circ\pi_\theta)=(\operatorname{diag}(\pi_\theta)-\pi_\theta\pi_\theta^\top)G=F G$.
+The matrix $F$ is symmetric, and $(Fz)_x=\pi_\theta(x)(z_x-\E_{\pi_\theta}[z])$
+vanishes for all $x$ if and only if $z$ is constant, because $\pi_\theta(x)>0$;
+hence $\ker F=\operatorname{span}(\mathbf 1)$ and $F^\dagger F$ is the
+orthogonal projector $\Pi$ onto $\mathbf 1^{\perp}$, which gives the first
+identity. The policy $\pi_\theta$ is invariant under
+$\theta\mapsto\theta+c\mathbf 1$, and
+$\frac{d}{dt}\log\pi_\theta(x)=\dot\theta_x-\sum_y\pi_\theta(y)\dot\theta_y$,
+which gives the second identity; the third follows from
+$\frac{d}{dt}V=(FG)^\top\Pi G=G^\top F G$ (as $F\Pi=F$) and
+$G^\top FG=\sum_x\pi(x)(G_x-\E_\pi G)^2$. The discrete statement is the
+definition of the softmax applied to $\theta_{k+1}=\theta_k+\gamma\Pi G(\pi_k)$.
+\end{proof}
+
+\begin{definition}[Gibbs family]\label{def:gibbs-family}
+For $r:\mathcal X\to\mathbb R$ and $\zeta\ge 0$, let
+$\mathcal G_\zeta[r](x):=p(x)e^{\zeta r(x)}/\sum_y p(y)e^{\zeta r(y)}$.
+If $r$ is constant on strata, with values $r_h,r_v,r_f$, then
+$\mathcal G_\zeta[r](i)\propto p_i e^{\zeta r_i}$.
+\end{definition}
+
+The three static operators are members of this family at $\zeta=\eta$:
+$\pi_{\mathrm{no}}=\mathcal G_\eta[R]$,
+$\pi_B=\mathcal G_\eta[\bar r_C]$ with
+$\bar r_C=\beta R-(1-\beta)C$, and, when $\beta_v>0$,
+$\pi_A=\mathcal G_\eta[R+\eta^{-1}\log\beta]$.
+
+\paragraph{Convention for $\beta_v=0$ under operator~A.}
+When $\beta_v=0$ the effective reward $R+\eta^{-1}\log\beta$ equals
+$-\infty$ on $\mathcal X_v$. We then define every object attached to
+operator~A on the reduced space $\mathcal X_h\cup\mathcal X_f$ with $p$
+renormalised, and set the mass of $\mathcal X_v$ to zero for $t>0$. This is
+the pointwise limit, for each fixed $t>0$, of the formulas below as
+$\beta_v\downarrow 0$, and no ratio between the masses of $h$ and $f$ in
+those formulas depends on $\beta_v$. With this convention $\beta_v^{\lambda}:=0$
+for $\lambda>0$.
+
+\subsection{Tabular dynamics: three learning rules}
+
+We consider three learning rules. Only rules~(b) and~(c) discard intercepted samples during training; rule~(a) applied to operator~A acts through a bonus $\eta^{-1}\log\beta$ and equals a rejection only in the limit.
+
+\smallskip\noindent\textbf{(a) Regularised natural policy gradient.}
+For an effective reward $r:\mathcal X\to\mathbb R$, the rule is natural
+gradient flow or ascent on
+$V_r(\pi):=\E_\pi[r]-\eta^{-1}\mathrm{KL}(\pi\,\|\,\pi_0)$. The cases of
+interest are $r=R$ (no monitor), $r=\bar r_C$ (operator~B) and
+$r=R+\eta^{-1}\log\beta$ (operator~A, in its variational form). For operator~A this rule discards nothing during training: it ascends a reward augmented by the bonus $\eta^{-1}\log\beta(x)$ (infinite when $\beta_v=0$). Its limit is nevertheless a rejection: $\pi_A\propto\beta\,\pi_{\mathrm{no}}$ is the unmonitored optimum followed by a single rejection at inference (static remark on operator~A as a modelling choice). Two dynamic paths lead to it. The variational path studied here gives $\pi_t\propto p\,\beta^{\lambda(t)}e^{\eta\lambda(t)R}$. The other one, unmonitored training for a time $t$ followed by one rejection at inference, gives $p\,\beta\,e^{\eta\lambda(t)R}$, the static operator~A at pressure $\eta_{\mathrm{eff}}(t)$: dominance then requires $\eta\lambda(t)\Delta R>L+\ell_h$, so the filter delays dominance (by $\ell_h/\Delta R$ as $\eta\to\infty$), and amplification holds exactly when $\eta_{\mathrm{eff}}(t)\Delta R>T_{\mathrm{amp}}$, without re-entrance. Theorem~\ref{thm:dynamics-tabular}(a2), Corollary~\ref{cor:hitting-times}(iii) and Proposition~\ref{prop:equal-time} are statements about the variational path only. Running that path from binary interceptions needs an estimate of $\log\beta(x)$: none is unbiased with a fixed number of interceptions of $x$; resubmitting the same trajectory until it is accepted gives one when $\beta(x)>0$.
+
+\smallskip\noindent\textbf{(b) Iterated rejection fine-tuning.}
+At round $k$, trajectories are sampled from $\pi_k$, intercepted ones are
+discarded, the accepted ones are reweighted (or subsampled) with a
+selection weight $\omega(R)$, where $\omega:\{0,\Delta R\}\to(0,\infty)$ is
+nondecreasing, and $\pi_{k+1}$ is fitted exactly to the resulting
+distribution:
+\begin{equation}\label{eq:rejection-ft}
+\pi_{k+1}(x)\;\propto\;\pi_k(x)\,\beta(x)\,\omega(R(x)),\qquad \pi_0=p .
+\end{equation}
+We also consider the anchored variant, for $\alpha\in(0,1)$,
+\begin{equation}\label{eq:rejection-ft-anchored}
+\pi_{k+1}:=\arg\min_{\pi}\Bigl\{(1-\alpha)\,\mathrm{KL}(\pi\,\|\,\kappa_k)
++\alpha\,\mathrm{KL}(\pi\,\|\,\pi_0)\Bigr\},
+\qquad \kappa_k\propto\pi_k\,\beta\,\omega(R),
+\end{equation}
+the minimum being over distributions on the support of $\kappa_k$. With $\omega(R)=e^{\gamma R}$ the unanchored rule~\eqref{eq:rejection-ft} is the repeated rejection already discussed for the static model (remark on operator~A as a modelling choice, $\pi_T\propto\beta^T e^{T\eta_1R}\pi_0$); part~(b) below generalises it to arbitrary $\omega$, the anchored variant and best-of-$N$ selection. Rule~(b) is the population form of filter-then-fit loops~\cite{zelikman2022,dong2023raft,gulcehre2023rest} (their keep-or-drop filters are the limit $\omega(0)\to0$, excluded here by the positivity of $\omega$), and with $\omega=e^{\gamma R}$ of reward-weighted regression (Peters and Schaal 2007, to locate and verify).
+
+\smallskip\noindent\textbf{(c) Discard policy gradient.}
+Trajectories are drawn from $\pi_\theta$ until $N\ge 2$ have been accepted;
+call them $x_1,\dots,x_N$. The update direction is the REINFORCE estimator
+computed on accepted samples only, with the accepted-sample mean as
+baseline and the score of the \emph{sampling} policy:
+\begin{equation}\label{eq:discard-pg-estimator}
+\hat g:=\frac1N\sum_{n=1}^N\bigl(R(x_n)-\bar R_N\bigr)\nabla_\theta\log\pi_\theta(x_n),
+\qquad \bar R_N:=\frac1N\sum_{n=1}^N R(x_n).
+\end{equation}
+For a policy $\pi$ with $\E_\pi[\beta]>0$ define
+\begin{equation}\label{eq:accepted-mean}
+\bar Z(\pi):=\E_\pi[\beta],\qquad
+b(\pi):=\frac{\E_\pi[\beta R]}{\E_\pi[\beta]},\qquad
+a_x(\pi):=\frac{\beta(x)\bigl(R(x)-b(\pi)\bigr)}{\bar Z(\pi)} .
+\end{equation}
+Thus $b(\pi)$ is the mean reward conditional on acceptance, and
+$\E_\pi[a(\pi)]=0$.
+
+\paragraph{Geometry of rule (c).} Throughout, rule~(c) means the natural-gradient version: the parameter moves along $F(\theta)^{\dagger}\hat g$, where $F(\theta)$ is the Fisher information matrix of the sampling policy. By (c1) below its expected direction is $a(\pi_\theta)$ modulo $\mathbf 1$, up to the factor $(N-1)/N$. Applied without this preconditioning, the estimator follows the plain gradient flow $\dot\theta=F(\theta)a(\pi_\theta)$, which does not close on strata when a stratum has several trajectories, and for which the rate bound of (c2)(i) and (c2)(ii)--(iii) fail: with $p=(0.6,0.3,0.1)$, $\beta=(1,0.2,0.5)$, $\Delta R=1$ and one trajectory per stratum, the natural flow converges to $(0,0.548,0.452)$; under the plain flow the initial growth rate of the odds of stealth against honesty is $0.19<\rho\Delta R=0.5$, stealth overtakes honesty at $t\approx6.3>L/(\rho\Delta R)=3.58$, and the policy is at $(1.0\cdot10^{-6},0.9965,0.0035)$ at $t=10^{5}$, still drifting (the quantity conserved by the natural flow has moved from $0.754$ to $9.6$). The effect of the monitor must be read within one geometry. With one trajectory per stratum the plain flow preserves the sign of $\beta_f\pi_t(f)-\beta_v\pi_t(v)$; numerically the cheating mass then drifts entirely to the stealthy stratum if $\beta_fp_f>\beta_vp_v$ and to the visible one otherwise, against $p_f>p_v$ without monitor. The filter still favours stealth, by moving this threshold, not through the limit $x^\ast$ of (iii): in the example both runs end on visible cheating, with a stealthy share among cheaters of $0.0035$ with the monitor and $0.0010$ without, at $t=10^5$.
+
+\begin{theorem}[Tabular finite-time dynamics]\label{thm:dynamics-tabular}
+In the setting of Section~\ref{sec:dynamics-setting}:
+
+\smallskip\noindent\textup{(a) Time-slice identity.}
+Let $r:\mathcal X\to\mathbb R$ be arbitrary. The natural gradient flow of
+$V_r$ started at $\pi_0$ exists for all $t\ge 0$ and satisfies
+\begin{equation}\label{eq:time-slice}
+\pi_t=\mathcal G_{\eta\lambda(t)}[r],\qquad \lambda(t)=1-e^{-t/\eta}.
+\end{equation}
+Natural gradient ascent on $V_r$ with step $\gamma>0$ satisfies
+$\pi_k=\mathcal G_{\eta\lambda_k}[r]$ with
+$\lambda_k=1-(1-\gamma/\eta)^k$; the sequence $\lambda_k$ is nondecreasing
+with values in $[0,1]$ if and only if $\gamma\le\eta$, and $\lambda_1=1$ when
+$\gamma=\eta$. In particular:
+\begin{enumerate}
+\item[\textup{(a1)}] for $r=R$ and for $r=\bar r_C$, the trajectory is
+exactly the corresponding \emph{static} family evaluated at the effective
+pressure $\eta_{\mathrm{eff}}(t)=\eta\lambda(t)$;
+\item[\textup{(a2)}] for operator~A,
+$\pi_t(x)\propto p(x)\,\beta(x)^{\lambda(t)}\,e^{\eta\lambda(t)R(x)}$: the
+pressure is $\eta\lambda(t)$ but the filter enters with exponent
+$\lambda(t)<1$, so $\pi_t$ is \emph{not} the static operator~A at pressure
+$\eta_{\mathrm{eff}}(t)$.
+\end{enumerate}
+
+\smallskip\noindent\textup{(b) Iterated rejection fine-tuning.}
+Under \eqref{eq:rejection-ft}, $\pi_k\propto p\,\beta^{k}\,\omega(R)^k$, so
+that for every $k\ge 0$
+\begin{equation}\label{eq:rejection-logodds}
+\log\frac{\pi_k(f)}{\pi_k(h)}=-L+k\,\vartheta,\qquad
+\vartheta:=\log\frac{\omega(\Delta R)}{\omega(0)}-\ell_h,
+\qquad
+\log\frac{\pi_k(f)}{\pi_k(v)}=\log\frac{p_f}{p_v}+k\,\ell_v
+\end{equation}
+(the last quantity being $+\infty$ for $k\ge1$ if $\beta_v=0$). Under the
+anchored rule \eqref{eq:rejection-ft-anchored}, the same formulas hold with
+$k$ replaced by $c_k:=\frac{1-\alpha}{\alpha}\bigl(1-(1-\alpha)^k\bigr)$,
+which increases to $c_\infty=(1-\alpha)/\alpha$.
+
+\smallskip\noindent\textup{(c) Discard policy gradient.}
+\begin{enumerate}
+\item[\textup{(c1)}] \emph{Identification.} For every $\theta$,
+$\E[\hat g]=\frac{N-1}{N}\,\nabla_\theta\bigl(b\circ\pi_\theta\bigr)
+=\frac{N-1}{N}\,F(\theta)\,a(\pi_\theta)$ and $\nabla_\pi b(\pi)=a(\pi)$.
+Hence the expected discard policy gradient is, up to the factor $(N-1)/N$,
+the gradient of the accepted-sample mean reward $b$, and its natural
+gradient direction is $a(\pi_\theta)$ modulo $\mathbf 1$.
+\item[\textup{(c2)}] \emph{Unregularised flow.} Let $\pi_t$ be the natural
+gradient flow of $b$ started at $\pi_0$ (that is, $\dot\theta=a(\pi_\theta)$
+modulo $\mathbf 1$). It exists for all $t\ge0$, and, writing
+$m:=\beta_v\pi_t(v)+\beta_f\pi_t(f)$ and $\bar Z=\beta_h\pi_t(h)+m$,
+\begin{equation}\label{eq:discard-a}
+\frac{d}{dt}\log\pi_t(h)=-\frac{\beta_h\,m\,\Delta R}{\bar Z^{2}},\quad
+\frac{d}{dt}\log\pi_t(v)=\frac{\beta_v\beta_h\,\pi_t(h)\,\Delta R}{\bar Z^{2}},\quad
+\frac{d}{dt}\log\pi_t(f)=\frac{\beta_f\beta_h\,\pi_t(h)\,\Delta R}{\bar Z^{2}} ,
+\end{equation}
+the right-hand sides being $a_h(\pi_t)$, $a_v(\pi_t)$ and $a_f(\pi_t)$.
+Consequently:
+\begin{enumerate}
+\item[\textup{(i)}] $\displaystyle\frac{d}{dt}\log\frac{\pi_t(f)}{\pi_t(h)}
+=\frac{\beta_f\Delta R+(\beta_h-\beta_f)\,b(\pi_t)}{\bar Z(\pi_t)}
+\;\ge\;\rho\,\Delta R>0$. Hence
+$\pi_t(h)\le (p_h/p_f)\,e^{-\rho\Delta R\,t}$, and if $p_h>p_f$ stealth
+dominates honesty from a time $\tau\le L/(\rho\,\Delta R)$ onwards, for
+\emph{every} $\beta_f>0$.
+\item[\textup{(ii)}] $\displaystyle\frac{d}{dt}\log\frac{\pi_t(f)}{\pi_t(v)}
+=\frac{(\beta_f-\beta_v)\beta_h\,\pi_t(h)\,\Delta R}{\bar Z(\pi_t)^{2}}>0$,
+and the quantity $\pi_t(v)\,\pi_t(f)^{-\beta_v/\beta_f}$ is conserved:
+$\pi_t(v)=p_v\bigl(\pi_t(f)/p_f\bigr)^{\beta_v/\beta_f}$ for all $t$.
+\item[\textup{(iii)}] $\pi_t$ converges to $(\pi_\infty(h),\pi_\infty(v),\pi_\infty(f))=(0,1-x^\ast,x^\ast)$,
+where $x^\ast$ is the unique solution in $(p_f,1)$ of
+$x+p_v(x/p_f)^{\beta_v/\beta_f}=1$. Moreover
+$x^\ast>p_f/(p_f+p_v)$, the limit of the same flow without monitor
+($\beta\equiv1$); and $x^\ast=1-p_v$ when $\beta_v=0$.
+\end{enumerate}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{(a)} We have
+$\nabla_\pi V_r(\pi)=r-\eta^{-1}\bigl(\log(\pi/p)+\mathbf 1\bigr)$, and
+$\log(\pi_\theta/p)=\theta-\log p$ modulo $\mathbf 1$. By
+Lemma~\ref{lem:npg-softmax} the flow is
+$\dot\theta=\Pi\bigl(r-\eta^{-1}(\theta-\log p)\bigr)$, a linear equation,
+hence globally solvable. Put $\phi:=\theta-\log p$; then
+$\dot\phi=r-\phi/\eta+c(t)\mathbf 1$ for a continuous scalar function $c$,
+with $\phi(0)=0$, and variation of constants gives
+$\phi(t)=\eta(1-e^{-t/\eta})\,r+\bigl(\int_0^te^{-(t-s)/\eta}c(s)\,ds\bigr)\mathbf 1$.
+Since $\pi_t\propto p\,e^{\phi(t)}$, this is \eqref{eq:time-slice}. In
+discrete time, $\phi_{k+1}=(1-\gamma/\eta)\phi_k+\gamma r$ modulo
+$\mathbf 1$, and $\phi_k=\eta\lambda_kr$ modulo $\mathbf 1$ follows by
+induction from $\eta\lambda_{k+1}=(1-\gamma/\eta)\eta\lambda_k+\gamma$. The
+monotonicity statement is immediate. Items (a1) and (a2) are
+\eqref{eq:time-slice} for the stated $r$; for (a2),
+$\exp(\eta\lambda\cdot\eta^{-1}\log\beta)=\beta^{\lambda}$, and the case
+$\beta_v=0$ is covered by the convention above.
+
+\emph{(b)} The first claim is an induction on \eqref{eq:rejection-ft}, and
+\eqref{eq:rejection-logodds} follows by summing over strata, on which
+$\beta$ and $R$ are constant (for $f$ against $v$ the factor $\omega$
+cancels because $R$ takes the same value). For the anchored rule, the
+objective in \eqref{eq:rejection-ft-anchored} equals
+$\mathrm{KL}(\pi\,\|\,\mu_k)$ plus a constant, where
+$\mu_k\propto\kappa_k^{1-\alpha}\pi_0^{\alpha}$, so
+$\pi_{k+1}=\mu_k$. Writing $\psi:=\log\beta+\log\omega(R)$ and
+$\phi_k:=\log(\pi_k/p)$ modulo constants, this reads
+$\phi_{k+1}=(1-\alpha)(\phi_k+\psi)$, whence
+$\phi_k=\psi\sum_{j=1}^k(1-\alpha)^j=c_k\psi$.
+
+\emph{(c1)} Conditionally on acceptance, a draw from $\pi_\theta$ has law
+$\pi^{\mathrm{acc}}(x)=\pi_\theta(x)\beta(x)/\bar Z$, and the $N$ accepted
+samples are independent with this law. Let
+$s_n:=\nabla_\theta\log\pi_\theta(x_n)=e_{x_n}-\pi_\theta$ and
+$R_n:=R(x_n)$. By independence,
+\[
+\E\bigl[(R_n-\bar R_N)s_n\bigr]
+=\Bigl(1-\tfrac1N\Bigr)\E[R_ns_n]-\tfrac1N\sum_{m\ne n}\E[R_m]\,\E[s_n]
+=\tfrac{N-1}{N}\Bigl(\E[R_1s_1]-\E[R_1]\E[s_1]\Bigr),
+\]
+and the $y$-th coordinate of $\E[R_1s_1]-\E[R_1]\E[s_1]$ is the covariance,
+under $\pi^{\mathrm{acc}}$, of $R$ and $\mathbf 1\{x=y\}$, namely
+$\pi^{\mathrm{acc}}(y)(R(y)-b)=\pi_\theta(y)a_y(\pi_\theta)$. Thus
+$\E[\hat g]=\frac{N-1}{N}\,\pi_\theta\circ a$ (coordinatewise product), and
+$\pi_\theta\circ a=Fa$ because $\E_{\pi_\theta}[a]=0$. On the other hand the
+quotient rule gives
+$\partial b/\partial\pi(x)=\beta(x)R(x)/\bar Z-\E_\pi[\beta R]\beta(x)/\bar Z^{2}=a_x(\pi)$,
+and Lemma~\ref{lem:npg-softmax} gives
+$\nabla_\theta(b\circ\pi_\theta)=Fa$ and the natural gradient direction.
+
+\emph{(c2)} The vector $a(\pi)$ is constant on strata and depends on $\pi$
+only through the stratum masses, so by Lemma~\ref{lem:npg-softmax}
+(with $\E_\pi[a]=0$) $\frac{d}{dt}\log\pi_t(x)=a_x(\pi_t)$ and the stratum
+masses obey $\frac{d}{dt}\log\pi_t(i)=a_i(\pi_t)$. Inserting
+$b=m\Delta R/\bar Z$ and $\Delta R-b=\beta_h\pi(h)\Delta R/\bar Z$ in
+\eqref{eq:accepted-mean} gives \eqref{eq:discard-a}. In particular
+$\pi_t(f)$ is nondecreasing, so $\bar Z\ge\beta_fp_f>0$ along the solution,
+$a$ stays bounded, and the solution is global.
+
+(i) Subtracting, $a_f-a_h=\bigl(\beta_f(\Delta R-b)+\beta_hb\bigr)/\bar Z$,
+which is the stated expression. Since $b\ge0$, $\beta_h\ge\beta_f$ and
+$\bar Z\le\max_x\beta(x)=\beta_h$, it is at least
+$\beta_f\Delta R/\beta_h=\rho\Delta R$. Integrating,
+$\pi_t(h)/\pi_t(f)\le(p_h/p_f)e^{-\rho\Delta Rt}$, which gives both
+consequences.
+
+(ii) The rate is $a_f-a_v$ read off \eqref{eq:discard-a}. Since
+$a_v=(\beta_v/\beta_f)a_f$, the function
+$\log\pi_t(v)-(\beta_v/\beta_f)\log\pi_t(f)$ has zero derivative.
+
+(iii) By (i), $\pi_t(h)\to0$; $\pi_t(f)$ is nondecreasing and bounded, so it
+converges to some $x^\ast$, and by (ii) $\pi_t(v)\to p_v(x^\ast/p_f)^{\beta_v/\beta_f}$.
+The masses sum to one, which is the equation for $x^\ast$. Its left-hand
+side is continuous and strictly increasing in $x$, equals $p_f+p_v<1$ at
+$x=p_f$ and exceeds $1$ at $x=1$, so the solution is unique and lies in
+$(p_f,1)$. At $x^{\mathrm{no}}:=p_f/(p_f+p_v)$ the left-hand side equals
+$x^{\mathrm{no}}+p_v(p_f+p_v)^{-\beta_v/\beta_f}<x^{\mathrm{no}}+p_v(p_f+p_v)^{-1}=1$,
+because $\beta_v/\beta_f<1$ and $p_f+p_v<1$; hence
+$x^\ast>x^{\mathrm{no}}$. Without monitor, $a=R-b$ and the flow is
+$\pi_t\propto p\,e^{tR}$, with limit mass $x^{\mathrm{no}}$ on $f$. The case $\beta_v=0$ is read off the equation.
+\end{proof}
+
+\begin{remark}[Equivalent forms of rule (a)]\label{rem:mirror}
+The discrete rule in part~(a) is
+$\pi_{k+1}\propto\pi_k^{\,1-\gamma/\eta}\,\pi_0^{\,\gamma/\eta}\,e^{\gamma r}$,
+which is also the mirror-ascent step
+$\pi_{k+1}=\arg\max_\pi\{\langle\nabla_\pi V_r(\pi_k),\pi\rangle-\gamma^{-1}\mathrm{KL}(\pi\,\|\,\pi_k)\}$.
+This multiplicative form of regularised natural policy gradient, and its
+linear convergence, are known \cite{cen2022fast}; part~(a) is the
+observation that, started at the anchor $\pi_0$, the whole trajectory stays
+inside the one-parameter family
+$\{\mathcal G_\zeta[r]\}_{0\le\zeta\le\eta}$.
+\end{remark}
+
+\begin{corollary}[Exact dominance times]\label{cor:hitting-times}
+Assume $p_h>p_f$, i.e.\ $L>0$. For $\Delta\in\mathbb R$ let
+\[
+\tau(\Delta):=\begin{cases}
+-\eta\log\bigl(1-\dfrac{L}{\eta\Delta}\bigr) & \text{if }\eta\Delta>L,\\[1.5ex]
++\infty & \text{otherwise.}
+\end{cases}
+\]
+\begin{enumerate}
+\item[\textup{(i)}] Under rule \textup{(a)} with a reward $r$ constant on
+strata and $\Delta:=r_f-r_h$, one has $\pi_t(f)>\pi_t(h)$ if and only if
+$t>\tau(\Delta)$. In discrete time with $\gamma<\eta$, the first dominance
+step is
+$\bigl\lfloor\log(1-\tfrac{L}{\eta\Delta})/\log(1-\tfrac{\gamma}{\eta})\bigr\rfloor+1$
+when $\eta\Delta>L$ (it is $1$ when $\gamma=\eta$), and dominance never
+occurs otherwise.
+\item[\textup{(ii)}] The relevant values are
+$\Delta_{\mathrm{no}}=\Delta R$;
+$\Delta_B=\beta_f\Delta R-(\beta_h-\beta_f)C$; and
+$\Delta_A=\Delta R-\eta^{-1}\ell_h$ (also when $\beta_v=0$). Thus
+\begin{align*}
+\tau_A&=-\eta\log\Bigl(1-\frac{L}{\eta\Delta R-\ell_h}\Bigr)
+&&\text{if }\ \eta\Delta R>L+\ell_h,\\
+\tau_B&=-\eta\log\Bigl(1-\frac{L}{\eta\bigl(\beta_f\Delta R-(\beta_h-\beta_f)C\bigr)}\Bigr)
+&&\text{if }\ \eta\bigl(\beta_f\Delta R-(\beta_h-\beta_f)C\bigr)>L,
+\end{align*}
+and $+\infty$ otherwise; the finiteness conditions are exactly the static
+dominance thresholds.
+\item[\textup{(iii)}] $\tau$ is nonincreasing in $\Delta$, so
+$\tau_{\mathrm{no}}\le\tau_A$ and $\tau_{\mathrm{no}}\le\tau_B$. Moreover
+$\tau(\Delta)\ge L/\Delta$ for $\Delta>0$, and
+$\tau(\Delta)\to L/\Delta$ as $\eta\to\infty$ with $\Delta$ fixed. In
+particular $\tau_A\to L/\Delta R=\lim\tau_{\mathrm{no}}$ as
+$\eta\to\infty$: in this limit the filter of operator~A, read through the variational path of rule~(a), does not delay
+dominance, whereas $\tau_B\to L/\Delta_B$ if $\Delta_B>0$ and
+$\tau_B=+\infty$ for every $\eta$ if $\Delta_B\le0$.
+\item[\textup{(iv)}] Under rule \textup{(b)}, stealth dominates honesty at
+some round if and only if $\vartheta>0$, that is, if and only if
+$\log(\omega(\Delta R)/\omega(0))>\ell_h$, and then exactly from
+round $k^\ast=\lfloor L/\vartheta\rfloor+1$ onwards. Under the anchored rule
+the condition is $\vartheta>0$ and $c_\infty\vartheta>L$, and the first
+round is then
+\[
+\Bigl\lfloor\log\Bigl(1-\frac{\alpha L}{(1-\alpha)\vartheta}\Bigr)\Big/\log(1-\alpha)\Bigr\rfloor+1 .
+\]
+\item[\textup{(v)}] Under the unregularised rule \textup{(c)} (natural-gradient form), stealth
+dominates honesty from a time $\tau\le L/(\rho\Delta R)$ onwards, whatever
+$\beta_f>0$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+(i) By Theorem~\ref{thm:dynamics-tabular}(a) and
+Definition~\ref{def:gibbs-family},
+$\log(\pi_t(f)/\pi_t(h))=-L+\eta\lambda(t)\Delta$. Since $L>0$ and
+$\lambda$ increases from $0$ to $1$ (never reaching $1$), this is positive
+for some $t$ if and only if $\Delta>0$ and $\eta\Delta>L$, and then exactly
+for $\lambda(t)>L/(\eta\Delta)$, i.e.\ $t>\tau(\Delta)$. In discrete time
+the condition $\lambda_k>L/(\eta\Delta)$ reads
+$(1-\gamma/\eta)^k<1-L/(\eta\Delta)$, i.e.\
+$k>\log(1-L/(\eta\Delta))/\log(1-\gamma/\eta)$. (ii) The three differences
+are computed from the definitions:
+$\bar r_C(f)-\bar r_C(h)=\beta_f\Delta R-(1-\beta_f)C+(1-\beta_h)C$, and
+$(R+\eta^{-1}\log\beta)(f)-(R+\eta^{-1}\log\beta)(h)=\Delta R-\eta^{-1}\ell_h$.
+(iii) Monotonicity is clear; $-\log(1-z)\ge z$ gives
+$\tau(\Delta)\ge L/\Delta$, and $-\eta\log(1-L/(\eta\Delta))\to L/\Delta$ as
+$\eta\to\infty$. For operator~A, $\eta\Delta_A=\eta\Delta R-\ell_h$, so
+$\tau_A=-\eta\log(1-L/(\eta\Delta R-\ell_h))\to L/\Delta R$.
+(iv) By \eqref{eq:rejection-logodds} the log-odds are $-L+k\vartheta$,
+positive if and only if $\vartheta>0$ and $k>L/\vartheta$; in the anchored
+case, $c_k>L/\vartheta$ reads
+$(1-\alpha)^k<1-\alpha L/((1-\alpha)\vartheta)$. (v) is
+Theorem~\ref{thm:dynamics-tabular}(c2)(i).
+\end{proof}
+
+\paragraph{Absolute amplification at equal training time.}
+In the static setting, operator~A \emph{amplifies} stealth in absolute
+terms when $\pi_A(f)>\pi_{\mathrm{no}}(f)$; a direct computation shows that
+this holds if and only if
+$(\beta_f-\beta_v)\,p_v\,e^{\eta\Delta R}>(\beta_h-\beta_f)\,p_h$, i.e.\
+always when $\beta_h=\beta_f$, and otherwise if and only if
+$\eta\Delta R>T_{\mathrm{amp}}:=\log\frac{p_h(\beta_h-\beta_f)}{p_v(\beta_f-\beta_v)}$.
+The dynamic counterpart compares, at the \emph{same} time $t$ and the same
+$\eta$, the run $\pi^{A}_t$ of rule~(a) for operator~A with the unmonitored
+run $\pi^{\mathrm{no}}_t$ of rule~(a) for $r=R$. Both runs have the same
+$\lambda(t)$.
+
+\begin{proposition}[Equal-time amplification under operator~A]
+\label{prop:equal-time}
+Let $t>0$ and $\lambda=\lambda(t)\in(0,1)$.
+\begin{enumerate}
+\item[\textup{(i)}] \emph{Exact criterion.}
+$\pi^{A}_t(f)>\pi^{\mathrm{no}}_t(f)$ if and only if
+\begin{equation}\label{eq:equal-time-criterion}
+p_v\bigl(\beta_f^{\lambda}-\beta_v^{\lambda}\bigr)\,e^{\eta\lambda\Delta R}
+\;>\;p_h\bigl(\beta_h^{\lambda}-\beta_f^{\lambda}\bigr).
+\end{equation}
+\item[\textup{(ii)}] \emph{Explicit sufficient time.} If $\beta_h=\beta_f$,
+\eqref{eq:equal-time-criterion} holds for all $t>0$. If $\beta_h>\beta_f$,
+it holds at every $t>0$ such that
+$\eta_{\mathrm{eff}}(t)\,\Delta R\ge T_{\mathrm{amp}}$; that is, for all
+$t>0$ if $T_{\mathrm{amp}}\le0$, and for all
+$t\ge-\eta\log\bigl(1-T_{\mathrm{amp}}/(\eta\Delta R)\bigr)$ if
+$0<T_{\mathrm{amp}}<\eta\Delta R$.
+\item[\textup{(iii)}] \emph{Short times.} Let $\beta_h>\beta_f$. If
+$\beta_v=0$, or if $\beta_v>0$ and $p_v\ell_v>p_h\ell_h$, then
+\eqref{eq:equal-time-criterion} holds for all sufficiently small $t>0$; if
+$\beta_v>0$ and $p_v\ell_v<p_h\ell_h$, it fails for all sufficiently small
+$t>0$.
+\item[\textup{(iv)}] \emph{Structure.} Let $\beta_h>\beta_f$ and, for
+$\lambda>0$, let $g(\lambda)$ be the logarithm of the ratio of the two sides
+of \eqref{eq:equal-time-criterion}. Then $g$ is convex on $(0,\infty)$ if
+$\beta_f^2\ge\beta_v\beta_h$ and concave if
+$\beta_f^2\le\beta_v\beta_h$. Hence the set of $\lambda\in(0,1)$ at which
+amplification holds is an interval in the concave case, and the complement
+in $(0,1)$ of a relatively closed, possibly empty, subinterval in the convex case. If moreover
+$\eta\Delta R\ge\max\{\ell_h,\tfrac12(\ell_h+\ell_v)\}$, then $g$ is
+nondecreasing and the set of amplification times is empty, or all of
+$(0,\infty)$, or a half-line $(\tau_{\mathrm{amp}},\infty)$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(i) Put $z:=e^{\eta\lambda\Delta R}$. By
+Theorem~\ref{thm:dynamics-tabular}(a),
+$\pi^A_t(f)=p_f\beta_f^\lambda z/\bigl(p_h\beta_h^\lambda+(p_v\beta_v^\lambda+p_f\beta_f^\lambda)z\bigr)$
+and $\pi^{\mathrm{no}}_t(f)=p_fz/(p_h+(p_v+p_f)z)$. Cross-multiplying and
+cancelling the term $p_f\beta_f^\lambda z$ gives
+\eqref{eq:equal-time-criterion}.
+
+(ii) Divide \eqref{eq:equal-time-criterion} by $\beta_f^\lambda$ and write
+$\varrho_v:=\beta_v/\beta_f\in[0,1)$, $\varrho_h:=\beta_h/\beta_f\ge1$:
+the criterion is
+$p_v(1-\varrho_v^\lambda)z>p_h(\varrho_h^\lambda-1)$. If
+$\varrho_h=1$ the right-hand side vanishes and the left-hand side is
+positive. If $\varrho_h>1$, the weighted arithmetic--geometric mean
+inequality gives, for $\lambda\in(0,1)$,
+$\varrho_v^\lambda<1-\lambda+\lambda\varrho_v$ and
+$\varrho_h^\lambda<1-\lambda+\lambda\varrho_h$, i.e.\
+$1-\varrho_v^\lambda>\lambda(1-\varrho_v)$ and
+$\varrho_h^\lambda-1<\lambda(\varrho_h-1)$. Therefore the criterion holds
+as soon as $p_v(1-\varrho_v)z\ge p_h(\varrho_h-1)$, i.e.\
+$\eta\lambda\Delta R\ge T_{\mathrm{amp}}$. The two explicit cases follow
+from $\lambda(t)=1-e^{-t/\eta}$.
+
+(iii) and (iv). For $\beta_v>0$,
+$g(\lambda)=\log(p_v/p_h)+\eta\Delta R\,\lambda+\log(1-e^{-\ell_v\lambda})-\log(e^{\ell_h\lambda}-1)$,
+and $g(\lambda)\to\log\bigl(p_v\ell_v/(p_h\ell_h)\bigr)$ as
+$\lambda\downarrow0$, which gives (iii) for $\beta_v>0$. For $\beta_v=0$
+the left-hand side of the criterion tends to $p_v>0$ and the right-hand
+side to $0$. Let $\varphi(y):=y/(e^y-1)$, $\varphi(0):=1$. Using
+$\ell e^{\ell\lambda}/(e^{\ell\lambda}-1)=\ell+\varphi(\ell\lambda)/\lambda$,
+\[
+g'(\lambda)=\eta\Delta R-\ell_h+\frac{\varphi(\ell_v\lambda)-\varphi(\ell_h\lambda)}{\lambda}
+=\eta\Delta R-\ell_h+\int_{\ell_h}^{\ell_v}\varphi'(c\lambda)\,dc .
+\]
+The function $\varphi$ is convex: for $y\neq0$,
+$\varphi''(y)=e^y\,\mu(y)/(e^y-1)^3$ with $\mu(y)=(y-2)e^y+y+2$, and
+$\mu(0)=\mu'(0)=0$, $\mu''(y)=ye^y$, so $\mu$ has the sign of $y$, as has
+$(e^y-1)^3$. Hence $\lambda\mapsto\varphi'(c\lambda)$ is nondecreasing for
+each $c>0$, and $g'$ is nondecreasing if $\ell_v\ge\ell_h$ and
+nonincreasing if $\ell_v\le\ell_h$; the condition
+$\ell_v\ge\ell_h$ is $\beta_f^2\ge\beta_v\beta_h$. For $\beta_v=0$,
+$g'(\lambda)=\eta\Delta R-\ell_h-\varphi(\ell_h\lambda)/\lambda$, which is
+increasing because $\varphi(\ell_h\lambda)/\lambda=\ell_h/(e^{\ell_h\lambda}-1)$
+is decreasing; this is the convex case. The description of the amplification
+set $\{g>0\}$ follows from convexity or concavity. Finally
+$\varphi'(0)=-\tfrac12$ and $\varphi'(y)\to0$ as $y\to\infty$, so
+$g'(0^+)=\eta\Delta R-\tfrac12(\ell_h+\ell_v)$ and
+$g'(\infty)=\eta\Delta R-\ell_h$; $g'$ being monotone, it is bounded below
+by the smaller of the two, which is nonnegative under the stated
+condition (for $\beta_v=0$, $g'$ increases from $-\infty$, and the
+condition cannot hold).
+\end{proof}
+
+\begin{remark}[No closed form, and re-entrance]\label{rem:reentrance}
+Unlike the dominance times of Corollary~\ref{cor:hitting-times}, the
+amplification time is the root of the transcendental equation $g=0$ and
+has no closed form in general; part~(ii) shows that it is never later than
+the time at which the effective pressure reaches the static threshold. In
+the convex case the amplification set can be disconnected: for
+$\beta=(\beta_h,\beta_v,\beta_f)=(1,\,5\cdot10^{-4},\,0.5)$,
+$(p_h,p_v)=(0.8,\,0.084)$ and $\eta\Delta R=3$, a numerical evaluation gives
+$g(0^+)\approx0.045$, $\min g\approx-0.037$ (at $\lambda\approx0.210$) and $g(1)\approx0.745$, with zeros at $\lambda\approx0.068$ and $0.360$ ($t/\eta\approx0.071$ and $0.446$), so that
+operator~A amplifies stealth at very short times, then does not, then
+amplifies it again. The effect is real but tiny: $\pi_A(f)-\pi_{\mathrm{no}}(f)$ is at most about $5\cdot10^{-5}$ at short times and goes down to about $-8.5\cdot10^{-4}$ (at $\lambda\approx0.26$).
+\end{remark}
+
+\paragraph{The regularised discard policy gradient.}
+Part~(c2) of Theorem~\ref{thm:dynamics-tabular} has no anchor. With the
+same anchor as in rule~(a), the rule becomes the natural gradient flow of
+\[
+V_{\mathrm{acc}}(\pi):=b(\pi)-\eta^{-1}\mathrm{KL}(\pi\,\|\,\pi_0),
+\qquad\text{i.e.}\qquad
+\dot\theta=a(\pi_\theta)-\eta^{-1}(\theta-\log p)\ \ (\mathrm{mod}\ \mathbf 1),
+\quad\theta(0)=\log p .
+\]
+Its behaviour is qualitatively different from both rule~(a) and the
+unregularised case.
+
+\begin{proposition}[Regularised discard policy gradient]\label{prop:discard-kl}
+Let $\pi_t$ be the flow above, let
+$y(t):=\log\frac{\pi_t(f)}{\pi_t(h)}+L$ be the gain in log-odds of stealth
+against honesty, and let $c:=(p_v+p_f)/p_h$.
+\begin{enumerate}
+\item[\textup{(i)}] \emph{Well-posedness.} The flow exists for all
+$t\ge0$, $\bar Z(\pi_t)\ge\beta_fp_f/(p_f+p_v)$, and $\pi_t$ remains in a
+compact subset of the open simplex. Moreover
+$\pi_t(h)/p_h\le\pi_t(v)/p_v\le\pi_t(f)/p_f$ for all $t$.
+\item[\textup{(ii)}] \emph{Equilibria.} $V_{\mathrm{acc}}(\pi_t)$ is
+nondecreasing, and strictly increasing except at equilibria. The
+equilibria are exactly the solutions in the open simplex of the
+self-consistency equation
+\begin{equation}\label{eq:self-consistent}
+\pi(x)\;\propto\;p(x)\exp\bigl(\eta\,a_x(\pi)\bigr),
+\end{equation}
+equivalently the stationary points of $V_{\mathrm{acc}}$. The
+$\omega$-limit set of $\pi_t$ is a nonempty connected set of equilibria; in
+particular \eqref{eq:self-consistent} has a solution. Every solution
+satisfies $\log\frac{\pi(f)}{\pi(h)}\ge-L+\eta\rho\Delta R$ and
+$\log\frac{\pi(f)}{\pi(v)}=\log\frac{p_f}{p_v}+\eta(\beta_f-\beta_v)\beta_h\,\pi(h)\,\Delta R/\bar Z(\pi)^2$.
+\item[\textup{(iii)}] \emph{Guaranteed dominance.}
+$y(t)\ge\eta\lambda(t)\,\rho\,\Delta R$ for all $t$. Hence, if $L>0$ and
+$\eta\rho\Delta R>L$, stealth dominates honesty from a time
+$\tau\le-\eta\log\bigl(1-L/(\eta\rho\Delta R)\bigr)$ onwards.
+\item[\textup{(iv)}] \emph{Trapping.} If there is $\bar y>0$ with
+$\eta\rho\Delta R\,(1+c\,e^{\bar y})^2\le\bar y$, then $y(t)<\bar y$ for all
+$t\ge0$. In particular, if such a $\bar y$ exists with $\bar y\le L$,
+stealth never dominates honesty along the trajectory, nor at any of its
+limit points.
+\item[\textup{(v)}] \emph{Non-uniqueness and non-reachability.} Let
+$p=(p_h,p_v,p_f)=(1-2\cdot10^{-4},10^{-4},10^{-4})$, $\beta_h=1$,
+$\beta_f=0.1$, $\beta_v\in(0,0.1)$ and $\eta\Delta R=20$. Then the static
+operator~A and the unmonitored static policy both have stealth dominating
+honesty ($\eta\Delta R>L+\ell_h\approx11.51$), but \textup{(iv)} applies
+with $\bar y=3$: along the regularised discard flow
+$\log(\pi_t(f)/\pi_t(h))\le3-L<-6.2$ for all $t$. The global maximiser of
+$V_{\mathrm{acc}}$ is a different equilibrium, which the flow started at
+$\pi_0$ does not approach.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Work in the gauge $\phi:=\theta-\log p$, $\dot\phi=a(\pi)-\phi/\eta$,
+$\phi(0)=0$, which defines the same policy
+$\pi_t(x)\propto p(x)e^{\phi_x(t)}$; $\phi$ is constant on strata. On the
+maximal interval of existence,
+$\phi_i(t)=\int_0^te^{-(t-s)/\eta}a_i(\pi_s)\,ds$.
+
+(i) By \eqref{eq:discard-a} (which is an identity for $a$),
+$a_h\le0\le a_v\le a_f$. Hence $\phi_h\le0\le\phi_v\le\phi_f$, which is the
+chain of inequalities in the statement. It implies
+$\pi_t(f)\ge\frac{p_f}{p_f+p_v}(\pi_t(f)+\pi_t(v))$, so
+$\bar Z\ge\beta_h\pi_t(h)+\beta_f\pi_t(f)\ge\beta_f\bigl(\pi_t(h)+\tfrac{p_f}{p_f+p_v}(1-\pi_t(h))\bigr)\ge\beta_fp_f/(p_f+p_v)$.
+Since $|\beta(x)(R(x)-b)|\le\beta_h\Delta R$, we get
+$|a_x|\le M:=\beta_h\Delta R(p_f+p_v)/(\beta_fp_f)$ and $|\phi_x|\le\eta M$.
+The solution is therefore global and
+$\pi_t(x)\ge p(x)e^{-2\eta M}$.
+
+(ii) By Lemma~\ref{lem:npg-softmax} with $V=V_{\mathrm{acc}}$ and
+$\xi(\pi):=\nabla_\pi V_{\mathrm{acc}}=a(\pi)-\eta^{-1}\log(\pi/p)$ modulo
+$\mathbf 1$, we have $\frac{d}{dt}\log\pi_t=\xi-\E_{\pi_t}[\xi]$ and
+$\frac{d}{dt}V_{\mathrm{acc}}(\pi_t)=\sum_x\pi_t(x)(\xi_x-\E_{\pi_t}\xi)^2$.
+Both vanish if and only if $\xi$ is constant, which is
+\eqref{eq:self-consistent} and also the stationarity of
+$V_{\mathrm{acc}}$ on the simplex. By (i) the trajectory is precompact in
+the open simplex, where $V_{\mathrm{acc}}$ is continuous; by LaSalle's
+invariance principle \cite{lasalle1976stability} its $\omega$-limit set is
+nonempty, compact, connected, invariant and contained in the set where
+$\frac{d}{dt}V_{\mathrm{acc}}=0$. At a solution of
+\eqref{eq:self-consistent},
+$\log(\pi(f)/\pi(h))=-L+\eta(a_f-a_h)$ and
+$\log(\pi(f)/\pi(v))=\log(p_f/p_v)+\eta(a_f-a_v)$; the bound
+$a_f-a_h\ge\rho\Delta R$ and the value of $a_f-a_v$ were obtained in the
+proof of Theorem~\ref{thm:dynamics-tabular}(c2).
+
+(iii) $y=\phi_f-\phi_h=\int_0^te^{-(t-s)/\eta}(a_f-a_h)\,ds\ge\rho\Delta R\,\eta(1-e^{-t/\eta})$,
+and $\log(\pi_t(f)/\pi_t(h))=y(t)-L$.
+
+(iv) Let $\mu:=m/(\beta_h\pi(h))$ with $m=\beta_v\pi(v)+\beta_f\pi(f)$.
+From \eqref{eq:discard-a},
+$a_f-a_h=\beta_h\Delta R(\beta_f\pi(h)+m)/\bar Z^2
+=\Delta R\,(\rho+\mu)/\bigl(\pi(h)(1+\mu)^2\bigr)\le\Delta R(\rho+\mu)/\pi(h)$.
+Along the trajectory, (i) gives
+$\pi(v)/\pi(h)\le(p_v/p_h)e^{y}$ and $\pi(f)/\pi(h)=(p_f/p_h)e^{y}$, so
+$\mu\le\rho\,c\,e^{y}$ (using $\beta_v\le\beta_f$) and
+$1/\pi(h)\le1+c\,e^{y}$. Therefore
+$\dot y=(a_f-a_h)-y/\eta\le\Gamma(y):=\rho\Delta R(1+c\,e^{y})^2-y/\eta$.
+Since $\Gamma(0)>0\ge\Gamma(\bar y)$, $\Gamma$ has a smallest zero
+$z^\circ\in(0,\bar y]$. The solution $z$ of $\dot z=\Gamma(z)$, $z(0)=0$,
+stays below the constant solution $z^\circ$ by uniqueness, and the
+comparison lemma for scalar differential inequalities gives
+$y(t)\le z(t)<z^\circ\le\bar y$.
+
+(v) Here $L=\log(p_h/p_f)\approx9.2101$, $\ell_h=\log10$, $\rho=0.1$,
+$c\approx2.0004\cdot10^{-4}$, and
+$\eta\rho\Delta R(1+c\,e^{3})^2\approx2.016\le3$, so (iv) applies with
+$\bar y=3$. Let $\mathcal T$ be the set of policies with
+$\pi(f)/\pi(h)\le(p_f/p_h)e^{3}$ and $\pi(v)/\pi(h)\le(p_v/p_h)e^{3}$; by
+(i) and (iv) the trajectory and its limit points lie in $\mathcal T$. On
+$\mathcal T$, $b=\Delta R\,\mu/(1+\mu)\le\Delta R\,\rho\,c\,e^{3}$, so
+$\eta V_{\mathrm{acc}}\le\eta b\le20\cdot0.1\cdot c\,e^{3}<0.01$. On the
+other hand, for the policy $\pi^\circ:=p(\cdot\mid\mathcal X_f)$ (the
+pretrained policy conditioned on the stealth stratum) we get
+$b(\pi^\circ)=\Delta R$ and $\mathrm{KL}(\pi^\circ\|p)=\log(1/p_f)$, so
+$\eta V_{\mathrm{acc}}(\pi^\circ)=20-\log(10^{4})>10$. Since $\beta_v>0$,
+$\bar Z\ge\beta_v$ on the whole simplex, $b$ is $C^1$ on a neighbourhood of
+the closed simplex, and $V_{\mathrm{acc}}$ is continuous there; it attains
+its maximum at some $\pi^\star$. This maximiser is interior: if
+$\pi^\star(x)=0$ for some $x$, then along
+$\pi_\varepsilon:=(1-\varepsilon)\pi^\star+\varepsilon p$ the function $b$
+changes by $O(\varepsilon)$ while
+$\frac{d}{d\varepsilon}\mathrm{KL}(\pi_\varepsilon\|p)
+=\sum_{x'}(p(x')-\pi^\star(x'))\log\frac{\pi_\varepsilon(x')}{p(x')}\to-\infty$
+as $\varepsilon\downarrow0$, so $V_{\mathrm{acc}}(\pi_\varepsilon)>V_{\mathrm{acc}}(\pi^\star)$
+for small $\varepsilon$, a contradiction. Hence $\pi^\star$ is a stationary
+point, i.e.\ an equilibrium, with
+$\eta V_{\mathrm{acc}}(\pi^\star)>10$, so $\pi^\star\notin\mathcal T$,
+whereas all limit points of the trajectory are equilibria in $\mathcal T$.
+The static claims are $\eta\Delta R=20>L+\ell_h$ and $20>L$.
+\end{proof}
+
+\begin{remark}[What Theorem~\ref{thm:dynamics-tabular} says about the filter]
+\label{rem:taxonomy}
+Rules (a)--(c) are three different dynamical systems; they do not even
+share their limits. Several of them produce policies of the form
+$\pi\propto p\,\beta^{\,\mathsf a}\,e^{\mathsf bR}$, for which
+$\log(\pi(f)/\pi(h))=-L+\mathsf b\,\Delta R-\mathsf a\,\ell_h$ and
+$\log(\pi(f)/\pi(v))=\log(p_f/p_v)+\mathsf a\,\ell_v$. The pair
+$(\mathsf a,\mathsf b)$ (filter exponent, pressure) is
+$(1,\eta)$ for the static operator~A;
+$(\lambda(t),\eta\lambda(t))$ for rule~(a) applied to operator~A;
+$(k,k\gamma)$ for rule~(b) with $\omega(R)=e^{\gamma R}$; and
+$(c_k,c_k\gamma)$ for its anchored variant. Along the static operator
+$\mathsf a=1$ is fixed, so the filter term $\ell_h$ is eventually
+overwhelmed as $\eta$ grows. Along rule~(b) the ratio
+$\mathsf b/\mathsf a=\gamma$ is fixed: the filter \emph{compounds} at the
+same rate as the reward pressure, the sign of
+$\vartheta=\gamma\Delta R-\ell_h$ decides the outcome whatever the number
+of rounds, and the odds of stealth against visible cheating grow by
+$\beta_f/\beta_v$ at \emph{every} round. If $\vartheta<0$ the compounding
+works against stealth relative to honesty.
+
+Rule~(c), in its natural-gradient form, is of a different nature. By (c1) it ascends the accepted-sample
+mean reward, in which the filter multiplies the advantage of each stratum
+instead of tilting the target distribution. Without anchor, the growth rate of the odds of stealth against honesty is at least $\rho=\beta_f/\beta_h$ times $\Delta R$; the filter never reverses this growth and may even accelerate it (at $\pi=(0.01,0,0.99)$ with $\beta=(1,0,0.1)$, $a_f-a_h=8.4>\Delta R=1$); and it shifts mass from
+visible to stealthy cheating only by a bounded amount, at a rate
+proportional to the remaining honest mass
+(Theorem~\ref{thm:dynamics-tabular}(c2)). With the anchor, however, the
+statement ``stealth wins for every $\beta_f>0$'' is false
+(Proposition~\ref{prop:discard-kl}): heuristically, the filter then rescales the
+\emph{pressure}, dominance from the pretrained policy is guaranteed when
+$\eta\rho\Delta R>L$ and excluded when
+$\eta\rho\Delta R(1+ce^{\bar y})^2\le\bar y$ for some $\bar y\le L$, and
+several equilibria can coexist. In the instance of Proposition~\ref{prop:discard-kl}(v) with $\beta_v=0.05$, trapping is guaranteed for $\eta\rho\Delta R\le5.14$ and dominance for $\eta\rho\Delta R>L=9.21$; numerically the pretrained policy is still trapped at $5.5$ and dominates at $6$: the trapping condition is nearly sharp, the dominance guarantee is loose. The global maximiser in that instance is close to $(0,0.5,0.5)$, so it does not enrich stealth among cheaters. The identity
+$a_f-a_h=\bigl(\beta_f\Delta R+(\beta_h-\beta_f)b\bigr)/\bar Z$ shows where
+the multiplicity comes from: the first term is, up to the factor $1/\bar Z$, what operator~B with $C=0$
+would give, and the second is a positive feedback, absent from
+operator~B, which grows with the accepted-sample mean reward $b$ because
+intercepted samples are dropped rather than scored.
+
+For selection rules whose weights depend on the current policy, part~(b)
+extends with round-dependent increments. For best-of-$N$ selection (at each
+round, $N$ accepted samples are drawn, one of highest reward is kept, ties
+being broken uniformly, and $\pi_{k+1}$ is the law of the kept sample), the
+kept sample has the accepted law reweighted by
+$\omega_k(\Delta R)=(1-(1-\chi_k)^N)/\chi_k$ and
+$\omega_k(0)=(1-\chi_k)^{N-1}$, where $\chi_k\in(0,1)$ is the
+accepted-sample share of cheating at round $k$. The increment of
+$\log(\pi_k(f)/\pi_k(h))$ at round $k$ is therefore
+$\log\sum_{i=0}^{N-1}(1-\chi_k)^{-i}-\ell_h\ge\log N-\ell_h$, and
+stealth eventually dominates whenever $N>\beta_h/\beta_f$. We do not
+characterise the case $N\le\beta_h/\beta_f$, in which the outcome depends
+on the initial policy.
+\end{remark}
+
+% ----------------------------------------------------------------------
+\subsection{Two-channel dynamics: action and chain of thought}
+\label{sec:two-channel}
+
+We now let the policy act through two channels with separate parameters.
+The \emph{action channel} decides whether to hack, with probability
+$q=\sigma(u)$; the \emph{chain-of-thought channel} decides whether the
+reasoning is obfuscated, with probability $s=\sigma(w)$, independently of
+the action; here $\sigma(z)=1/(1+e^{-z})$. The pretrained model has
+$q_0=\sigma(u_0)$ and $s_0=\sigma(w_0)$, both in $(0,1)$. The monitor reads
+the chain of thought: a hack survives with probability $\beta_v$ if the
+reasoning is transparent and $\beta_f$ if it is obfuscated; an honest
+trajectory survives with probability $\beta_h$ in both cases. Obfuscation
+costs $\kappa\ge0$ whatever the action. The correspondence with the strata
+is: honest $=h$, transparent hack $=v$, obfuscated hack $=f$.
+
+Under operator~B the effective reward is $-(1-\beta_h)C$ for an honest
+trajectory, $\beta_v\Delta R-(1-\beta_v)C$ for a transparent hack and
+$\beta_f\Delta R-(1-\beta_f)C$ for an obfuscated hack, minus $\kappa$ when
+the reasoning is obfuscated. Up to the additive constant $-(1-\beta_h)C$,
+the regularised objective restricted to product policies is therefore
+\begin{equation}\label{eq:two-channel-J}
+\begin{gathered}
+J(q,s)=q\,(A_0+Ds)-\kappa s-\eta^{-1}\bigl[\mathrm{kl}(q\|q_0)+\mathrm{kl}(s\|s_0)\bigr],\\
+A_0:=\beta_v\Delta R-(\beta_h-\beta_v)C,\qquad
+D:=(\beta_f-\beta_v)(\Delta R+C)>0,
+\end{gathered}
+\end{equation}
+where $\mathrm{kl}(a\|b)=a\log\frac ab+(1-a)\log\frac{1-a}{1-b}$ (for
+$\beta_h=1$, $A_0=\beta_v\Delta R-(1-\beta_v)C$). The Fisher information of
+a Bernoulli variable with logit $u$ is $\sigma'(u)$, and
+$\partial_qJ=A_0+Ds-\eta^{-1}(u-u_0)$,
+$\partial_sJ=Dq-\kappa-\eta^{-1}(w-w_0)$, so the natural gradient flow of
+$J$ in the coordinates $x=(u,w)$ is
+\begin{equation}\label{eq:two-channel-flow}
+\dot u=f_1(u,w):=A_0+D\,\sigma(w)-\frac{u-u_0}{\eta},\qquad
+\dot w=f_2(u,w):=D\,\sigma(u)-\kappa-\frac{w-w_0}{\eta},
+\end{equation}
+started at $x_0=(u_0,w_0)$ unless stated otherwise. The vector field
+$f=(f_1,f_2)$ is \emph{cooperative}: $\partial_wf_1=D\sigma'(w)>0$ and
+$\partial_uf_2=D\sigma'(u)>0$. Inequalities between points of
+$\mathbb R^2$ are meant coordinatewise. Define the increasing maps
+\[
+U(w):=u_0+\eta\bigl(A_0+D\sigma(w)\bigr),\qquad
+W(u):=w_0+\eta\bigl(D\sigma(u)-\kappa\bigr),\qquad
+\Phi:=W\circ U .
+\]
+
+\begin{theorem}[Two-channel dynamics under operator~B]
+\label{thm:dynamics-two-channel}
+Consider the flow \eqref{eq:two-channel-flow} with $\eta>0$, $D>0$,
+$\kappa\ge0$ and $A_0\in\mathbb R$.
+
+\smallskip\noindent\textup{(a) Global behaviour.}
+Solutions exist for all $t\ge0$ from every initial condition and are
+bounded; the rectangle
+$[u_0+\eta A_0,\,u_0+\eta(A_0+D)]\times[w_0-\eta\kappa,\,w_0+\eta(D-\kappa)]$
+is forward invariant and attracts every solution. The function
+$\hat J(u,w):=J(\sigma(u),\sigma(w))$ satisfies
+$\frac{d}{dt}\hat J=\sigma'(u)f_1^2+\sigma'(w)f_2^2\ge0$, with equality
+only at equilibria. Every solution converges to an equilibrium.
+
+\smallskip\noindent\textup{(b) Equilibria.}
+\begin{enumerate}
+\item[\textup{(b1)}] The map $(u,w)\mapsto w$ is a bijection from the set
+of equilibria onto the set of fixed points of $\Phi$, with inverse
+$w\mapsto(U(w),w)$. Equilibria are totally ordered: if
+$(u,w)\ne(u',w')$ are equilibria then either $u<u'$ and $w<w'$, or $u>u'$
+and $w>w'$.
+\item[\textup{(b2)}] $\Phi'$ is strictly increasing on $(-\infty,w^\dagger]$
+and strictly decreasing on $[w^\dagger,\infty)$ for some
+$w^\dagger\in\mathbb R$. Consequently there are at least one and at most
+three equilibria.
+\item[\textup{(b3)}] The Jacobian of $f$ at an equilibrium $(U(w^\ast),w^\ast)$
+has the real eigenvalues $-\bigl(1\mp\sqrt{\Phi'(w^\ast)}\bigr)/\eta$. The
+equilibrium is a hyperbolic stable node if $\Phi'(w^\ast)<1$, a hyperbolic
+saddle if $\Phi'(w^\ast)>1$, and non-hyperbolic if $\Phi'(w^\ast)=1$. If
+there are exactly three equilibria $x_1<x_2<x_3$, then $x_1$ and $x_3$ are
+hyperbolic stable nodes and $x_2$ is a hyperbolic saddle.
+\item[\textup{(b4)}] If $\eta D<4$, the equilibrium $x^\ast$ is unique and
+every solution satisfies
+\[
+\|x(t)-x^\ast\|_\infty\le e^{-(1/\eta-D/4)\,t}\,\|x(0)-x^\ast\|_\infty .
+\]
+\end{enumerate}
+
+\smallskip\noindent\textup{(c) Order certificates.}
+Let $x(t)$ be the solution started at $x_0$.
+\begin{enumerate}
+\item[\textup{(c1)}] If $\bar x\ge x_0$ and $f(\bar x)\le0$, then
+$x(t)\le\bar x$ for all $t\ge0$. If $\underline x\le x_0$ and
+$f(\underline x)\ge0$, then $x(t)\ge\underline x$ for all $t\ge0$.
+\item[\textup{(c2)}] If $f(x_0)\le0$, then $x(t)$ is nonincreasing in both
+coordinates and converges to the largest equilibrium $\le x_0$.
+\item[\textup{(c3)}] If $f(x_0)\ge0$, then $x(t)$ is nondecreasing in both
+coordinates and converges to the smallest equilibrium $\ge x_0$.
+\end{enumerate}
+
+\smallskip\noindent\textup{(d) Local rates.}
+Let $x^\ast=(U(w^\ast),w^\ast)$ be an equilibrium with $\Phi'(w^\ast)<1$ and
+let $\mu^\ast:=\bigl(1-\sqrt{\Phi'(w^\ast)}\bigr)/\eta$. For every
+$\mu<\mu^\ast$ there are a neighbourhood $\mathcal N$ of $x^\ast$ and a
+constant $K$ such that $\|x(t)-x^\ast\|\le Ke^{-\mu t}\|x(0)-x^\ast\|$ for
+every solution started in $\mathcal N$. Here
+$\Phi'(w^\ast)=\eta^2D^2\,q^\ast(1-q^\ast)\,s^\ast(1-s^\ast)$ with
+$q^\ast=\sigma(U(w^\ast))$, $s^\ast=\sigma(w^\ast)$.
+\end{theorem}
+
+\begin{proof}
+\emph{(b1).} $f(u,w)=0$ if and only if $u=U(w)$ and $w=W(u)$, i.e.\ $w$ is a
+fixed point of $\Phi$ and $u=U(w)$. Since $U$ is strictly increasing, two
+distinct equilibria have distinct $w$-coordinates and their
+$u$-coordinates are ordered in the same way.
+
+\emph{(b2).} We have
+$\Phi'(w)=\eta D\,\sigma'(U(w))\cdot\eta D\,\sigma'(w)>0$. Using
+$(\log\sigma')'=1-2\sigma$ and $U'(w)=\eta D\sigma'(w)$,
+\[
+\frac{d}{dw}\log\Phi'(w)=\bigl(1-2\sigma(U(w))\bigr)\,\eta D\,\sigma'(w)+1-2\sigma(w)
+=s(1-s)\Bigl[\psi(s)-\eta D\tanh\!\Bigl(\tfrac{u_0+\eta A_0+\eta Ds}{2}\Bigr)\Bigr],
+\]
+where $s=\sigma(w)\in(0,1)$, $\psi(s):=\frac{1-2s}{s(1-s)}=\frac1s-\frac1{1-s}$,
+and we used $2\sigma(z)-1=\tanh(z/2)$. The function $\psi$ is strictly
+decreasing from $+\infty$ to $-\infty$ on $(0,1)$, while
+$s\mapsto\eta D\tanh((u_0+\eta A_0+\eta Ds)/2)$ is strictly increasing and
+bounded. Hence the bracket has exactly one zero $s^\dagger$, is positive
+for $s<s^\dagger$ and negative for $s>s^\dagger$; this is the claim with
+$w^\dagger=\sigma^{-1}(s^\dagger)$. It follows that $\Phi'-1$ has at most
+two zeros, and by Rolle's theorem $\Phi-\mathrm{id}$ has at most three.
+It has at least one because $\Phi$ is continuous and bounded, so that
+$\Phi(w)-w\to\pm\infty$ as $w\to\mp\infty$.
+
+\emph{(b3).} At an equilibrium $(u^\ast,w^\ast)$ the Jacobian of $f$ is
+\[
+\begin{pmatrix}-1/\eta& D\sigma'(w^\ast)\\ D\sigma'(u^\ast)&-1/\eta\end{pmatrix},
+\quad\text{with eigenvalues}\quad
+-\frac1\eta\pm D\sqrt{\sigma'(u^\ast)\sigma'(w^\ast)}
+=-\frac{1\mp\sqrt{\Phi'(w^\ast)}}{\eta},
+\]
+since $\Phi'(w^\ast)=\eta^2D^2\sigma'(u^\ast)\sigma'(w^\ast)$ by the
+formula in the proof of (b2). The classification follows. If
+$\Phi-\mathrm{id}$ has three zeros $w_1<w_2<w_3$, Rolle's theorem gives
+zeros $\xi_1\in(w_1,w_2)$ and $\xi_2\in(w_2,w_3)$ of $\Phi'-1$, which by
+(b2) are its only zeros, and $\Phi'-1>0$ exactly on $(\xi_1,\xi_2)$. Hence
+$\Phi'(w_1)<1$, $\Phi'(w_2)>1$, $\Phi'(w_3)<1$.
+
+\emph{(a).} The field $f$ is globally Lipschitz, so solutions are global.
+Variation of constants gives
+\[
+u(t)=u_0+e^{-t/\eta}(u(0)-u_0)+\int_0^te^{-(t-\varsigma)/\eta}\bigl(A_0+D\sigma(w(\varsigma))\bigr)\,d\varsigma ,
+\]
+and the integral lies in $\eta(1-e^{-t/\eta})[A_0,A_0+D]$; similarly for
+$w$ with $[-\kappa,D-\kappa]$. This proves boundedness and the statement
+on the rectangle. Next, $\partial_u\hat J=\sigma'(u)\,\partial_qJ=\sigma'(u)f_1$
+and $\partial_w\hat J=\sigma'(w)f_2$ by the formulas preceding
+\eqref{eq:two-channel-flow}, so
+$\frac{d}{dt}\hat J=\sigma'(u)f_1^2+\sigma'(w)f_2^2$, which vanishes only
+where $f=0$. By LaSalle's invariance principle
+\cite{lasalle1976stability}, the $\omega$-limit set of a (bounded) solution
+is nonempty, connected and made of equilibria; by (b2) there are at most
+three equilibria, so it is a single point.
+
+\emph{(b4).} If $\eta D<4$ then $\Phi'\le(\eta D)^2/16<1$, so
+$\Phi-\mathrm{id}$ is strictly decreasing and the equilibrium is unique.
+Let $x,\tilde x$ be two solutions and $\delta:=x-\tilde x$. By the mean
+value theorem $\dot\delta=-\delta/\eta+N(t)\delta$, where $N(t)$ has zero
+diagonal and off-diagonal entries in $[0,D/4]$ (as $0<\sigma'\le\frac14$).
+For $z:=e^{t/\eta}\delta$ we get
+$\|z(t)\|_\infty\le\|z(0)\|_\infty+\frac D4\int_0^t\|z\|_\infty$, and
+Gr\"onwall's lemma yields
+$\|\delta(t)\|_\infty\le e^{-(1/\eta-D/4)t}\|\delta(0)\|_\infty$. Take
+$\tilde x\equiv x^\ast$.
+
+\emph{(c1).} Let $\bar x=(\bar u,\bar w)\ge x_0$ with $f(\bar x)\le0$. For
+$\varepsilon>0$ let $x^\varepsilon$ solve
+$\dot x=f(x)-\varepsilon(1,1)$, $x^\varepsilon(0)=x_0$, and let
+$t_1:=\sup\{t\ge0:\ x^\varepsilon\le\bar x\text{ on }[0,t]\}$. Suppose
+$t_1<\infty$. Then $x^\varepsilon(t_1)\le\bar x$. For a coordinate in which
+equality holds, say $u^\varepsilon(t_1)=\bar u$, cooperativity gives
+$\dot u^\varepsilon(t_1)=f_1(\bar u,w^\varepsilon(t_1))-\varepsilon\le f_1(\bar u,\bar w)-\varepsilon<0$,
+so $u^\varepsilon<\bar u$ on some interval $(t_1,t_1+\delta]$; a coordinate
+in which the inequality is strict remains strictly below on such an
+interval by continuity. Hence $x^\varepsilon\le\bar x$ on
+$[0,t_1+\delta]$, contradicting the definition of $t_1$. Thus
+$x^\varepsilon(t)\le\bar x$ for all $t$, and letting $\varepsilon\downarrow0$
+(continuous dependence on parameters, on compact time intervals) gives
+$x(t)\le\bar x$. The second statement is symmetric.
+
+\emph{(c2) and (c3).} Let $y:=\dot x=f(x(t))$. Then
+$\dot y=Df(x(t))\,y=-y/\eta+N(t)y$ with
+$N(t)=\begin{pmatrix}0&D\sigma'(w(t))\\D\sigma'(u(t))&0\end{pmatrix}$
+entrywise nonnegative. For $z:=e^{t/\eta}y$ we have $\dot z=N(t)z$, and the
+Picard iterates $z^{(0)}\equiv z(0)$,
+$z^{(n+1)}(t)=z(0)+\int_0^tN(\varsigma)z^{(n)}(\varsigma)\,d\varsigma$
+converge to $z$. If $z(0)=f(x_0)\ge0$ all iterates are $\ge0$, hence
+$\dot x(t)\ge0$ for all $t$; if $f(x_0)\le0$, apply this to $-z$. In both
+cases $x(t)$ is monotone and bounded, so it converges, necessarily to an
+equilibrium $x^\ast$, with $x^\ast\ge x_0$ in case (c3) and $x^\ast\le x_0$
+in case (c2). In case (c3), any equilibrium $e\ge x_0$ satisfies
+$f(e)=0\le0$, so $x(t)\le e$ by (c1) and $x^\ast\le e$. Case (c2) is
+symmetric.
+
+\emph{(d).} By (b3) the Jacobian at $x^\ast$ has the two real, distinct,
+negative eigenvalues $-(1\mp\sqrt{\Phi'(w^\ast)})/\eta$, the larger being
+$-\mu^\ast$; the statement is the standard linearisation estimate for
+hyperbolic sinks. The formula for $\Phi'(w^\ast)$ is the one in the proof
+of (b2).
+\end{proof}
+
+\paragraph{Explicit certificates and the penalty window.}
+Let $\bar\beta_0:=\beta_v+s_0(\beta_f-\beta_v)$ be the survival probability
+of a hack under the pretrained chain-of-thought channel; note
+$\bar\beta_0<\beta_f\le\beta_h$. Define
+\[
+C_{\mathrm{low}}:=\frac{\bar\beta_0\,\Delta R}{\beta_h-\bar\beta_0},\qquad
+C_{\mathrm{high}}:=\frac{\kappa}{q_0(\beta_f-\beta_v)}-\Delta R,\qquad
+\kappa^\dagger:=\frac{q_0(\beta_f-\beta_v)\,\beta_h\,\Delta R}{\beta_h-\bar\beta_0}.
+\]
+We write $z^+:=\max(z,0)$.
+
+\begin{corollary}[Certificates from the pretrained model]
+\label{cor:penalty-window}
+Let $(q(t),s(t))=(\sigma(u(t)),\sigma(w(t)))$ be the solution of
+\eqref{eq:two-channel-flow} started at $x_0$.
+\begin{enumerate}
+\item[\textup{(i)}] Let $\bar u:=u_0+\eta(A_0+Ds_0)^+$. If
+$D\,\sigma(\bar u)\le\kappa$, then $q(t)\le\sigma(\bar u)$ and
+$s(t)\le s_0$ for all $t\ge0$.
+\item[\textup{(ii)}] Let $\bar w:=w_0+\eta(Dq_0-\kappa)^+$. If
+$A_0+D\,\sigma(\bar w)\le0$, then $q(t)\le q_0$ and
+$s(t)\le\sigma(\bar w)$ for all $t\ge0$.
+\item[\textup{(iii)}] \emph{Safe window.} The following are equivalent:
+\textup{(1)} $q(t)\le q_0$ and $s(t)\le s_0$ for all $t\ge0$;
+\textup{(2)} $A_0+Ds_0\le0$ and $Dq_0\le\kappa$;
+\textup{(3)} $C_{\mathrm{low}}\le C\le C_{\mathrm{high}}$. When they hold,
+$q(t)$ and $s(t)$ are nonincreasing.
+\item[\textup{(iv)}] \emph{Reverse window.} If
+$C_{\mathrm{high}}\le C\le C_{\mathrm{low}}$, then $q(t)$ and $s(t)$ are
+nondecreasing, and the limit equilibrium $(u^\ast,w^\ast)$ satisfies
+$u^\ast\ge u_0+\eta(A_0+Ds_0)$ and
+\[
+w^\ast\;\ge\;w_0+\eta\bigl(q_0(\beta_f-\beta_v)(\Delta R+C)-\kappa\bigr),
+\]
+a lower bound that increases linearly with the penalty $C$.
+\item[\textup{(v)}] \emph{Dichotomy.} The safe window is nonempty if and
+only if $\kappa\ge\kappa^\dagger$; the reverse window
+$[C_{\mathrm{high}}^+,C_{\mathrm{low}}]$ is nonempty if and only if
+$\kappa\le\kappa^\dagger$. For every state $(u,w)$,
+$\partial f_1/\partial C=-(\beta_h-\beta_v)+(\beta_f-\beta_v)\sigma(w)<0$ and
+$\partial f_2/\partial C=(\beta_f-\beta_v)\sigma(u)>0$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+(i) Take $\bar x=(\bar u,w_0)\ge x_0$. Then
+$f_1(\bar x)=(A_0+Ds_0)-(A_0+Ds_0)^+\le0$ and
+$f_2(\bar x)=D\sigma(\bar u)-\kappa\le0$; apply
+Theorem~\ref{thm:dynamics-two-channel}(c1). (ii) Take $\bar x=(u_0,\bar w)$:
+$f_1(\bar x)=A_0+D\sigma(\bar w)\le0$ and
+$f_2(\bar x)=(Dq_0-\kappa)-(Dq_0-\kappa)^+\le0$. (iii) Condition (2) is
+$f(x_0)\le0$, which implies (1) and the monotonicity by
+Theorem~\ref{thm:dynamics-two-channel}(c2). Conversely, if $f_1(x_0)>0$
+then $\dot u(0)>0$ and $q(t)>q_0$ for small $t>0$, and likewise for $w$; so
+(1) implies (2). Finally
+$A_0+Ds_0=\bar\beta_0\Delta R-(\beta_h-\bar\beta_0)C$, which is $\le0$ if
+and only if $C\ge C_{\mathrm{low}}$, and $Dq_0\le\kappa$ if and only if
+$\Delta R+C\le\kappa/(q_0(\beta_f-\beta_v))$. (iv) The hypothesis is
+$f(x_0)\ge0$; apply Theorem~\ref{thm:dynamics-two-channel}(c3). At the
+limit equilibrium $u^\ast=U(w^\ast)\ge U(w_0)$ and
+$w^\ast=W(u^\ast)\ge W(u_0)=w_0+\eta(Dq_0-\kappa)$. (v)
+$C_{\mathrm{low}}\le C_{\mathrm{high}}$ if and only if
+$\Delta R+C_{\mathrm{low}}=\beta_h\Delta R/(\beta_h-\bar\beta_0)\le\kappa/(q_0(\beta_f-\beta_v))$,
+i.e.\ $\kappa\ge\kappa^\dagger$; note $C_{\mathrm{low}}>0$. The derivatives
+are computed from \eqref{eq:two-channel-J}, and the first is negative
+because $\beta_v+(\beta_f-\beta_v)\sigma(w)<\beta_f\le\beta_h$.
+\end{proof}
+
+\begin{remark}[The rejection--penalty dilemma in dynamic form]
+\label{rem:dilemma}
+Corollary~\ref{cor:penalty-window}(v) is the differential form of the
+dilemma: raising the penalty always lowers the instantaneous drive towards
+hacking and always raises the instantaneous drive towards obfuscation, the
+latter in proportion to the current hack rate, because the penalty
+increases $D$, the payoff of obfuscating conditional on hacking. Its
+integrated consequences are the two windows. If obfuscation is costly
+enough ($\kappa\ge\kappa^\dagger$), penalties in
+$[C_{\mathrm{low}},C_{\mathrm{high}}]$ keep both the hack rate and the
+obfuscation rate below their pretrained values for all time, and by
+(iii) this property fails for every penalty outside the window. If
+$\kappa<\kappa^\dagger$, \emph{no} penalty has this property, and for
+penalties in the reverse window both rates grow monotonically, the
+obfuscation logit by at least an amount that increases linearly in $C$.
+
+We stress what is \emph{not} proved. For $C>C_{\mathrm{high}}$ (with
+$C\ge C_{\mathrm{low}}$) the obfuscation rate does exceed $s_0$ at small
+positive times, but this need not lead to the hack--obfuscated equilibrium:
+the same penalty also depresses the hack rate, and the excursion can be
+negligible; part~(ii) gives a quantitative bound in a range of such
+penalties. In the instance of Proposition~\ref{prop:nonreach}(iii) below
+($C_{\mathrm{high}}=9$), a numerical integration with $C=100$ gives
+$\sup_ts(t)\approx0.01007$ for $s_0=0.01$. The reverse window, where hacking is profitable on average under the pretrained model, is the regime in which obfuscation is \emph{proved} to grow in time, with a lower bound on its limit logit that increases linearly in $C$; monotonicity of the limit in $C$ is not proved. Below the reverse window ($C<C_{\mathrm{high}}<C_{\mathrm{low}}$: under the pretrained model hacking is profitable and obfuscation is not) a larger penalty can still move the limit from the honest equilibrium to the hack--obfuscated one: with $q_0=s_0=0.8$, $\beta=(1,0.04,0.85)$, $\Delta R=1$, $\kappa=1.2$ and $\eta=40$ ($C_{\mathrm{high}}=0.852$, $C_{\mathrm{low}}=2.205$), the limit is honest for $C\le0.43$ and has $q\approx1$ for $C\ge0.44$, a fold creating the upper pair of equilibria in between, with $s\approx0.51$, $0.59$, $0.88$ and $0.995$ at $C=0.44$, $0.45$, $0.50$ and $0.60$ (the first two below $s_0$). In this instance the pretrained model already hacks and obfuscates most of the time. In a random search such flips occurred in $13$ of $800$ draws with $q_0,s_0\in[0.01,0.95]$ and $\kappa\le1.5$, and in none of $1500$ draws with $q_0\le0.6$, $s_0\le0.4$, $\kappa\le0.5$, $\beta_f\ge0.6$.
+\end{remark}
+
+\begin{proposition}[Bistability]\label{prop:bistability}
+Suppose $0<\kappa<D$ and that the two inequalities
+\begin{align}
+\sigma\Bigl(u_0+\eta\bigl(A_0+D\,\sigma(w_0-\tfrac12\eta\kappa)\bigr)\Bigr)&<\frac{\kappa}{2D},
+\label{eq:cond-L}\\
+\sigma\Bigl(u_0+\eta\bigl(A_0+D\,\sigma(w_0+\tfrac12\eta(D-\kappa))\bigr)\Bigr)&>\frac{D+\kappa}{2D}
+\label{eq:cond-H}
+\end{align}
+hold. Then there are exactly three equilibria $x_1<x_2<x_3$, with
+$w_1<w_0-\frac12\eta\kappa<w_2<w_0+\frac12\eta(D-\kappa)<w_3$; $x_1$ and
+$x_3$ are hyperbolic stable nodes and $x_2$ is a hyperbolic saddle.
+Moreover, if $A_0<0<A_0+D$ and $0<\kappa<D$, then \eqref{eq:cond-L} and
+\eqref{eq:cond-H} hold for all sufficiently large $\eta$. In terms of the
+primitives, $A_0<0<A_0+D$ reads
+$\beta_v\Delta R<(\beta_h-\beta_v)C$ and
+$\beta_f\Delta R>(\beta_h-\beta_f)C$; when $\beta_f=\beta_h$ the second
+inequality always holds, and the bistable region contains
+$\{(\eta,C):\ C>\beta_v\Delta R/(\beta_h-\beta_v),\ \eta\ge\eta^\ast(C)\}$
+for some finite $\eta^\ast(C)$, provided $0<\kappa<(\beta_f-\beta_v)\Delta R$.
+\end{proposition}
+
+\begin{proof}
+Let $w_-:=w_0-\frac12\eta\kappa$ and $w_+:=w_0+\frac12\eta(D-\kappa)$, so
+$w_-<w_+$. Then
+$\Phi(w_-)-w_-=\eta D\bigl[\sigma(U(w_-))-\kappa/(2D)\bigr]<0$ by
+\eqref{eq:cond-L} and
+$\Phi(w_+)-w_+=\eta D\bigl[\sigma(U(w_+))-(D+\kappa)/(2D)\bigr]>0$ by
+\eqref{eq:cond-H}. Since $\Phi(w)-w\to\pm\infty$ as $w\to\mp\infty$, the
+intermediate value theorem gives a zero in each of $(-\infty,w_-)$,
+$(w_-,w_+)$ and $(w_+,\infty)$, and
+Theorem~\ref{thm:dynamics-two-channel}(b2)--(b3) gives the rest. For the
+asymptotic statement, as $\eta\to\infty$:
+$\eta D\sigma(w_0-\frac12\eta\kappa)\le\eta De^{w_0-\eta\kappa/2}\to0$ and
+$\eta A_0\to-\infty$, so the left-hand side of \eqref{eq:cond-L} tends to
+$0<\kappa/(2D)$; and $\sigma(w_0+\frac12\eta(D-\kappa))\to1$, so
+$A_0+D\sigma(\cdot)\to A_0+D>0$, the argument of the outer $\sigma$ in
+\eqref{eq:cond-H} tends to $+\infty$ and the left-hand side to
+$1>(D+\kappa)/(2D)$. The reformulations follow from
+\eqref{eq:two-channel-J}: $A_0+D=\beta_f\Delta R-(\beta_h-\beta_f)C$, and
+$D\ge(\beta_f-\beta_v)\Delta R$.
+\end{proof}
+
+\begin{proposition}[Non-reachability of the global maximiser]
+\label{prop:nonreach}
+Suppose
+\begin{equation}\label{eq:nonreach-cond}
+A_0+Ds_0\le0,\qquad Dq_0\le\kappa,\qquad
+A_0+D-\kappa>\eta^{-1}\log\frac{1}{q_0s_0}.
+\end{equation}
+\begin{enumerate}
+\item[\textup{(i)}] The solution started at the pretrained model satisfies
+$q(t)\le q_0$, $s(t)\le s_0$ for all $t$ and converges to an equilibrium
+$x_\star\le x_0$ with $J(x_\star)\le0$.
+\item[\textup{(ii)}] $J$ attains its maximum over $[0,1]^2$ at an interior
+point, which is an equilibrium $x^\star$ with $J(x^\star)>0$; and
+$x^\star>x_\star$ in both coordinates. Thus the global maximiser of the regularised
+objective is an equilibrium with strictly larger hack and obfuscation
+rates than $x_\star$, and it is not reached from the pretrained model.
+\item[\textup{(iii)}] The conditions \eqref{eq:nonreach-cond} hold for
+$\beta_h=\beta_f=1$, $\beta_v=0$, $\Delta R=C=1$, $\kappa=0.1$,
+$q_0=s_0=0.01$, $\eta=20$ (then $A_0=-1$, $D=2$,
+$A_0+Ds_0=-0.98$, $Dq_0=0.02$, $A_0+D-\kappa=0.9>\frac{1}{20}\log10^4\approx0.4605$).
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(i) The first two conditions are $f(x_0)\le0$, so
+Corollary~\ref{cor:penalty-window}(iii) and
+Theorem~\ref{thm:dynamics-two-channel}(c2) apply. For $q\le q_0$ and
+$s\le s_0$ we have $A_0+Ds\le A_0+Ds_0\le0$, hence
+$J(q,s)\le0$ by \eqref{eq:two-channel-J}. (ii) $J$ is continuous on
+$[0,1]^2$ (with $0\log0=0$) and
+$J(1,1)=A_0+D-\kappa-\eta^{-1}\log\frac1{q_0s_0}>0$. For fixed $s$,
+$q\mapsto J(q,s)$ is strictly concave with derivative
+$A_0+Ds-\eta^{-1}(\operatorname{logit}q-\operatorname{logit}q_0)$, which
+tends to $+\infty$ as $q\downarrow0$ and to $-\infty$ as $q\uparrow1$, so
+its maximum is interior; the same holds in $s$ for fixed $q$. A global
+maximiser $(q^\star,s^\star)$ maximises $J$ in each variable separately,
+hence is interior and satisfies $\partial_qJ=\partial_sJ=0$, i.e.\ it is an
+equilibrium $x^\star$, with $J(x^\star)\ge J(1,1)>0$. By (i),
+$x^\star\ne x_\star$ and $x^\star\not\le x_0$. By
+Theorem~\ref{thm:dynamics-two-channel}(b1) either $x^\star<x_\star$, which
+would give $x^\star\le x_0$, or $x^\star>x_\star$. (iii) is arithmetic.
+\end{proof}
+
+In the instance (iii), a numerical solution of $\Phi(w)=w$ gives three
+equilibria, at $(q,s)\approx(2.2\cdot10^{-11},\,1.37\cdot10^{-3})$,
+$(0.173,\,0.576)$ and $(1-2\cdot10^{-7},\,1-3\cdot10^{-15})$, with
+$J\approx-9.4\cdot10^{-4}$, $-0.147$ and $0.4395$ respectively; the
+conditions \eqref{eq:cond-L}--\eqref{eq:cond-H} also hold.
+
+\paragraph{Operator~A in the two-channel model.}
+Assume $\beta_v>0$. Under operator~A the effective reward is
+$R+\eta^{-1}\log\beta$, that is, $\eta^{-1}\log\beta_h$ for an honest
+trajectory, $\Delta R+\eta^{-1}\log\beta_v$ for a transparent hack and
+$\Delta R+\eta^{-1}\log\beta_f$ for an obfuscated hack. Up to an additive
+constant the objective on product policies is again of the form
+\eqref{eq:two-channel-J}, with
+\[
+A_0^{\mathsf A}:=\Delta R-\eta^{-1}\log\frac{\beta_h}{\beta_v},\qquad
+D^{\mathsf A}:=\eta^{-1}\ell_v,\qquad \ell_v=\log\frac{\beta_f}{\beta_v}>0,
+\]
+in place of $(A_0,D)$, so Theorem~\ref{thm:dynamics-two-channel} applies
+verbatim. The difference is that $\eta D^{\mathsf A}=\ell_v$ does not
+depend on $\eta$ or on any penalty.
+
+\begin{proposition}[Two-channel dynamics under operator~A]
+\label{prop:two-channel-A}
+Assume $\beta_v>0$ and consider \eqref{eq:two-channel-flow} with
+$(A_0^{\mathsf A},D^{\mathsf A})$.
+\begin{enumerate}
+\item[\textup{(i)}] If $\beta_f/\beta_v<e^{4}$, then for every $\eta>0$ and
+$\kappa\ge0$ there is a unique equilibrium, and every solution converges
+to it with
+$\|x(t)-x^\ast\|_\infty\le e^{-(1-\ell_v/4)t/\eta}\|x(0)-x^\ast\|_\infty$.
+\item[\textup{(ii)}] Every equilibrium satisfies
+$w^\ast=w_0-\eta\kappa+\ell_v\,q^\ast\le w_0+\ell_v$ and
+$u^\ast=u_0+\eta\Delta R-\log(\beta_h/\beta_v)+\ell_v\,s^\ast
+\ge u_0+\eta\Delta R-\log(\beta_h/\beta_v)$. Hence the odds of obfuscation
+at equilibrium are at most $\beta_f/\beta_v$ times the pretrained odds,
+whatever $\eta$, while $q^\ast\to1$ as $\eta\to\infty$.
+\item[\textup{(iii)}] The solution started at $x_0$ satisfies
+$q(t)\le q_0$ and $s(t)\le s_0$ for all $t$ if and only if
+$\eta\Delta R\le\log(\beta_h/\beta_v)-s_0\ell_v$ and
+$q_0\ell_v\le\eta\kappa$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(i) is Theorem~\ref{thm:dynamics-two-channel}(b4), since
+$\eta D^{\mathsf A}=\ell_v<4$ and
+$1/\eta-D^{\mathsf A}/4=(1-\ell_v/4)/\eta$. (ii) is the pair of equations
+$u^\ast=U(w^\ast)$, $w^\ast=W(u^\ast)$ with
+$\eta A_0^{\mathsf A}=\eta\Delta R-\log(\beta_h/\beta_v)$ and
+$\eta D^{\mathsf A}=\ell_v$. (iii) is
+Corollary~\ref{cor:penalty-window}(iii)(1)$\Leftrightarrow$(2).
+\end{proof}
+
+\begin{remark}[Basins under A and under B]\label{rem:A-vs-B}
+Under operator~B the coupling $\eta D=\eta(\beta_f-\beta_v)(\Delta R+C)$
+grows with the pressure and with the penalty, and
+Proposition~\ref{prop:bistability} gives two basins for large $\eta$ as
+soon as transparent hacking is deterred ($A_0<0$) and obfuscated hacking
+is profitable ($A_0+D>0$): the outcome then depends on the initial
+condition, the honest--transparent basin can contain the pretrained model
+at arbitrarily large pressure
+(Corollary~\ref{cor:penalty-window}), and the equilibrium reached need not
+be the maximiser of the objective (Proposition~\ref{prop:nonreach}). Under
+operator~A the coupling is the constant $\log(\beta_f/\beta_v)$: unless
+the monitor separates the two kinds of hack by a factor of more than
+$e^4\approx54.6$ there is a single basin and no history dependence; the
+amplification of obfuscation is capped by the factor $\beta_f/\beta_v$,
+but hacking is not deterred at large pressure, in agreement with the
+static threshold. We have not analysed operator~A for
+$\beta_f/\beta_v\ge e^4$ beyond the general statements of
+Theorem~\ref{thm:dynamics-two-channel}, but the threshold is not vacuous: for $\beta=(1,10^{-3},0.5)$, $\Delta R=1$, $\eta=6$, $q_0=s_0=0.1$ and $\kappa=0.3$ there are three equilibria, $(0.050,0.024)$, $(0.788,0.711)$ and $(0.866,0.799)$, and three equilibria occur in $73$ of $3000$ random draws with $\beta_v=10^{-3}$.
+\end{remark}
+
+\begin{remark}[Bifurcations]\label{rem:saddle-node}
+By the implicit function theorem, a hyperbolic equilibrium persists and
+depends smoothly on the parameters $(\eta,C,\kappa,\dots)$, and all
+equilibria lie in the bounded rectangle of
+Theorem~\ref{thm:dynamics-two-channel}(a). Hence the number of equilibria
+is locally constant on the open set of parameters at which every
+equilibrium is hyperbolic, and can change only at parameters for which
+$\Phi$ has a fixed point with $\Phi'=1$. By (b2), such a tangency is a fold
+(two equilibria merge, the generic saddle--node scenario) unless it occurs
+at the inflection point $w^\dagger$, where the three equilibria merge. We
+do not verify the transversality conditions of the saddle--node theorem
+along specific paths in the $(\eta,C)$ plane; the existence of the
+bistable region itself is Proposition~\ref{prop:bistability}, and
+uniqueness for $\eta D<4$ is (b4).
+\end{remark}
+
+\begin{remark}[Factorisation is what creates the second basin]
+\label{rem:mean-field}
+If the policy were tabular over the four joint outcomes (hack or not,
+obfuscated or not), Theorem~\ref{thm:dynamics-tabular}(a) would apply with
+rewards $0$, $-\kappa$, $A_0$ and $A_0+D-\kappa$: the trajectory would be
+the unique Gibbs path and would converge to the unique maximiser, with no
+bistability. The two basins of Theorem~\ref{thm:dynamics-two-channel}
+arise because the two channels have separate parameters, so that the
+propensity to obfuscate is shared between honest and hacking episodes and
+the objective restricted to product policies is not concave. Which of the
+two idealisations is closer to a given trained model is an empirical
+question that this section does not address.
+\end{remark}
+
+\begin{remark}[Time scales and noise]\label{rem:noise}
+Parts (b4) and (d) give the time to reach an $\varepsilon$-neighbourhood of
+a stable node: of order $(1/\eta-D/4)^{-1}\log(1/\varepsilon)$ globally
+when $\eta D<4$, and asymptotically $(\mu^\ast)^{-1}\log(1/\varepsilon)$ in
+general; at the two nodes of the large-$\eta$ bistable regime
+$\Phi'(w^\ast)$ is close to $0$ and $\mu^\ast$ is close to $1/\eta$, the
+relaxation rate of the anchor. With stochastic (finite-batch) gradients,
+the order certificates of Theorem~\ref{thm:dynamics-two-channel}(c) no
+longer hold pathwise, and a transition from the honest--transparent basin
+to the hack--obfuscated one becomes a noise-activated event, whose
+frequency should depend on the batch size, the step size and the height
+of the barrier $\hat J(x_1)-\hat J(x_2)$ in the Fisher geometry. We make no
+quantitative claim about this rate.
+\end{remark}
+
+\begin{remark}[What is known and what is specific to this section]
+\label{rem:known-vs-new}
+The mathematical tools and several of the models are standard. The multiplicative form and linear
+convergence of entropy-regularised natural policy gradient are due to
+\cite{cen2022fast} (see also \cite{agarwal2021theory} for the
+unregularised case), and convergence rates of softmax policy gradient to
+\cite{mei2020global}; Theorem~\ref{thm:dynamics-tabular}(a) is a direct
+consequence of the known update in the bandit case. The order-theoretic
+arguments in Theorem~\ref{thm:dynamics-two-channel}(c) are elementary
+instances of the theory of cooperative systems
+\cite{smith1995monotone,hirsch2006monotone}, proved here directly, and the
+convergence arguments use LaSalle's invariance principle
+\cite{lasalle1976stability}. The tabular natural-gradient lemma goes back to \cite{kakade2001natural} (tabular softmax form in \cite{agarwal2021theory}). The two-channel system is a two-unit additive network with symmetric excitatory coupling, and $-\hat J$ is its Hopfield energy~\cite{hopfield1984,cohen1983}; bistability and fold bifurcations are classical for such networks, and we prove the count of at most three equilibria directly. Its equilibria are the logit (quantal-response) equilibria, relative to the prior, of a $2\times2$ identical-interest game, and the flow is the smooth Q-learning dynamic of that game, whose bifurcations in the temperature are studied in~\cite{leonardos2022}; convergence of perturbed best-response dynamics in potential games is in~\cite{hofbauer2002}, and the non-concavity of the objective restricted to product policies is the classical mean-field phenomenon~\cite{wainwright2008}. What is specific to this section is only the
+application of these tools and models to in-loop filters during post-training and the comparison of learning rules in their presence: the time-slice form of operators~A and~B and the resulting
+exact dominance times; the distinction between distribution-matching and
+advantage-based readings of rejection
+(Theorem~\ref{thm:dynamics-tabular}(b)--(c),
+Proposition~\ref{prop:discard-kl}), including the identification of the
+discard policy gradient with ascent on the accepted-sample mean reward;
+and the two-channel analysis (count and ordering of equilibria,
+certificates, penalty windows, non-reachability). We have not conducted a
+systematic literature search establishing that these specific statements
+are absent from prior work.
+\end{remark}
