@@ -7,6 +7,7 @@ La continuité vit dans les fichiers, jamais dans la mémoire de conversation.
 ## Documents qui font foi
 - `docs/brief-claude-code-programme-complet-v2.md` — prime pour l'exécution (missions, phases, portes, arrêts).
 - `docs/programme-controle-ia-v2.md` — prime sur le fond (hypothèses, expériences, portes).
+- `docs/programme-controle-ia-v3.md` (`fcc27171…`) — **scellé provisoirement le 24 novembre 2026 à 18:32Z** (GO-2026-11-23-17, GO-2026-11-24-15, -18, -21) ; il remplace la v2 sur les seuls points qu'il change (thèse du papier A, statut du lemme et du théorème négatif, H1, H2, H3, E1.3, E3.1, premier critère de succès) ; il se lit avec son erratum 1, variante B, qui prime (`docs/notes/dossier-entretien-2026-12-01-v1/erratum-1-programme-v3-lemme-application-v3.md`) ; deux passages « sous simulation » (section 3, H3) ; second scellement après les simulations. La v2 reste archivée ; les décisions de `docs/decisions/` priment sur lui pour les revendications jusqu'à la table des revendications v2.
 - `docs/etat-de-l-art-controle-ia-v1.md` — pris, ouvert, à battre ; aucun chiffre opposable avant vérification (R7).
 - Empreintes : `docs/sha256sums-lancement-v2.txt` ; brief v1 remplacé, archivé sans modification : `docs/brief-claude-code-phase0-v1.md`.
 - Toute nouvelle version transmise par Lazar remplace la précédente, qui reste archivée dans `docs/`.

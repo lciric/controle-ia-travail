@@ -1,0 +1,18 @@
+# Corrections après la contre-lecture de conformité (Sonnet 5.5) — passe v6 et programme de comparaison — v1
+
+Rapport traité : `docs/notes/barreau8-code-passe-additif-2-v1/contre-lecture-conformite-passe-v6-comparaison-v2-sonnet-v1.md` (conclusion « à corriger » ; aucun bloquant, deux moyens, sept mineurs ou remarques). Écrit par le développeur du côté des moniteurs le 2026-11-24. Aucun constat n'est refusé. **Règle R12** : aucun fichier scellé n'est réécrit. Le programme de comparaison change de code : il passe en **version 3** sous un nom nouveau. **Le code de la passe v6 (`passe_recalcul_v6.py`, empreinte inchangée) n'est pas modifié** : les corrections qui la concernent sont des essais de plus, dans un fichier neuf, ou des déclarations. Le nom du module transmis à l'exécutante reste valable.
+
+| constat | gravité | traitement | où |
+|---|---|---|---|
+| 1 | moyen | `ecrire` refuse d'abord si l'une des deux pièces ou son compagnon existe (aucune écriture partielle), puis rejoue en mémoire `controler_contre_la_version_1` et `ecarts_aux_valeurs_attendues` ; tout écart : code 2, rien d'écrit | `src/controle_ia/barreau8_moniteurs/comparer_interface_v6_v7_v3.py`, `principal` |
+| 2 | mineur | trois artefacts ajoutés : `controler_contre_la_version_1` (état d'un bloc changé, table de l'additif 1 aux champs « nœud » autres que les quatre, statut d'un autre champ), `ecarts_aux_valeurs_attendues` sur T = 32 et sous « nœud », `ecrire` → code 2 sans rien écrire ; plus le cas sain d'écriture puis refus d'écraser | `tests/test_barreau8_comparer_interface_v6_v7_v3.py` |
+| 3 | mineur | `note.chemin` de la fiche comparé à `CHEMIN_NOTE_V7`, refus sinon ; essai ajouté | programme v3, `construire` |
+| 4 | remarque | gardé tel quel : la commande `controler` lit la pièce v1 et la table de l'additif 1 parce que M-4 impose la comparaison à la v1 ; déclaré en tête du module ; la commande `calculer` et le calcul ne lisent que les notes, la fiche et leurs compagnons | — |
+| 5 | moyen | essais à heure égale : ligne de code à la seconde de la ligne de l'additif 2 (ne compte pas) ; additif 2 à la seconde de l'additif 1 (refus) ; additif 1 à la seconde du texte (refus) ; essai unitaire de `_posterieure` (même seconde, même rang) | `tests/test_barreau8_moniteurs_passe_v6_complements_v1.py` |
+| 6 | mineur | garde E = 1 de `garde_p3_structure` éprouvée seule (spécification à E = 2 : « non tenue ») ; la redondance avec `exiger_table_neuve` est gardée, voulue (défense en profondeur) | même fichier |
+| 7 | mineur | déclaré, sans changer le code : la passe ne refuse par empreinte que le rapport de conformité de la version 5 (`fa9158fb…`) ; que le rapport cité par le bordereau soit la nouvelle conformité, postérieure à l'additif 1, repose sur la session mère, qui écrit la ligne de code ; à redire au rapport scellé | ce fichier ; notice |
+| 8 | mineur | déclaré, sans changer le code : conforme à la lettre de M-5 (table « présente à son empreinte, disant report ») ; le chemin de la table n'est pas épinglé par la passe ; le bordereau le fixe, la ligne de code fixe le bordereau | ce fichier |
+| 9 | mineur | trois variantes ajoutées : additif 2 altéré après sa ligne ; clé `transformers` seule absente de l'extrait ; adaptateur (élève, témoin-jumeau) d'une autre empreinte que l'extrait, et sans compagnon | `tests/test_barreau8_moniteurs_passe_v6_complements_v1.py` |
+| 10 | remarque | l'égalité des versions de l'extrait réel aux versions installées a été contrôlée par programme par le développeur (sans affichage du contenu) ; la passe la recontrôle sur la machine (garde P3) | notice |
+
+Essais : programme v3, 49 passés ; passe v6, 145 passés (inchangés) ; compléments, 10 passés.

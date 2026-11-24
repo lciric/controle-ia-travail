@@ -98,3 +98,17 @@
 | COURSE-T08 | 2026-11-24T04:47:17Z | diag/20261123-060509-t08-reel/course-t08.json | 67ebcb2f1b22fce05103ae4145b3a9d203d171273f5165e786c2ac48f29bef2a |
 | LECTURE-T08 | 2026-11-24T05:04:45Z | diag/20261124-045444-t08-lecture/lecture-t08.json | cefb6d2cc9b3f7d4faff01717b5a96a7ea5b1aa4d89c8cd6dfb4bbdcf99e30f9 |
 | VERDICT-T08-V3 | 2026-11-24T05:13:18Z | verdict-t08-v3/verdict-T0.8-bases-boite-noire-v3-v1.md | 38817ad5360ae3219f36ff06a4bf365b8049505988c7659164976be470c95f79 |
+| BANQUE-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T15:08:47Z | donnees/20261124-144844-banque-dose-reponse-extraction-v2/taches-banque.json | 0065065b8958968235f13c48d4e423708fd5aaebb64f8eed6ec553e3c56459e4 |
+| CODE-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T15:08:47Z | registres/code-dose-reponse-consigne-cachee/CODE-DOSE-REPONSE-CONSIGNE-CACHEE-a02b6540070aa5731875d07fbbe124f2dbe27f3b-v1.json | 1521cbc9ba259b289883cfa0985f063eed7c2657397347326b1e7a578b2c0b63 |
+| DESIGNATION-CRITERE-3 | 2026-11-24T15:26:34Z | prereg/G0-critere-3-designation-course-v1.md | 19dbc99edb551a4e1bbbef0ea28a5a860bd739b69d84d60ccf43c2de03125c31 |
+| SONDES-LUES-CRITERE-3 | 2026-11-24T15:36:55Z | registres/sondes-lues-critere-3/SONDES-LUES-CRITERE-3-v1.md | b354fc38608d62cb2036d61104508032f0656d374260497ba2d5e44158be9773 |
+| SCELLEMENT-VERSANT-HONNETE | 2026-11-24T16:34:12Z | prereg/versant-honnete-jumeau-v3.md | a505fa4e18419d2f14b4554ec9ff52321f5174c7e0c3b7b80d509d5d516acbf0 |
+| SCELLEMENT-VERSANT-HONNETE-ERRATUM-1 | 2026-11-24T16:34:12Z | prereg/versant-honnete-jumeau-v3-erratum-1.md | 1e8c29448f019d16aa66d7354929746f2bad4cf7bc97cd1bc03d739def3b152e |
+| SCELLEMENT-VERSANT-HONNETE-ERRATUM-2 | 2026-11-24T16:34:12Z | prereg/versant-honnete-jumeau-v3-erratum-2.md | e30526e99f4efb25fb6115c43c7ebd1c92ba74e8b3d1674abf4a13d24bbf89bd |
+| REGLAGES-CENTRE-VERSANT-HONNETE | 2026-11-24T16:34:12Z | prereg/versant-honnete-jumeau-v3-reglages-centre.json | bf1ae564abc54de697eeeb7f843859d0894b427eef62f30c96a116cd528e7911 |
+| CODE-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T16:50:12Z | registres/code-dose-reponse-consigne-cachee/CODE-DOSE-REPONSE-CONSIGNE-CACHEE-6b2b821a28f8bebebae2188d9f020ce731464306-v2.json | 79358ccbfc50be27f053e0666759bc7ddc99ca41bc48e6a5ffdc2629bca0d109 |
+| CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE | 2026-11-24T16:50:12Z | registres/code-lecteur-du-texte-dose-reponse/CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE-6b2b821a28f8bebebae2188d9f020ce731464306-v1.json | f6bc347aeaa424127d0a6614dd5cf2d7d55de524f1c7f132f1532e099b053013 |
+| ORDRE-LANCEMENT-DOSE-REPONSE | 2026-11-24T16:57:27Z | docs/notes/code-dose-reponse-consigne-cachee-v1/ordre-de-lancement-dose-reponse-v6-scelle.md | 08cb2b355c595254750819db4d7fdf0bf9b46593abf2f77ed5fd1e62bfaf68cc |
+| DECLARATION-LANCEMENT-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T16:59:06Z | registres/code-dose-reponse-consigne-cachee/DECLARATION-SESSION-LANCEMENT-DOSE-REPONSE-v1.json | 05f987b9b1ce3c1fc79e411446df6b928cde09bc8f83966fe645c3623e5d1a5a |
+| PROGRAMME-V3-PROVISOIRE | 2026-11-24T18:32:00Z | docs/programme-controle-ia-v3.md | fcc27171bb87e35a42a6e200bb7ddf8c3df9106141b6eace541e283beb5458c9 |
+| NOTE-PROBLEMATIQUES-PROGRAMME-V2 | 2026-11-24T18:32:00Z | docs/notes/note-problematiques-programme-v2/note-problematiques-programme-v2.md | e74ce16fb07a714ddbeb0d0a4684fbce420dff56700f267bb919ce134301f4c6 |

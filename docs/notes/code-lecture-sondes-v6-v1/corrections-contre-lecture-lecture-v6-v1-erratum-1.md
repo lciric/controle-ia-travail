@@ -1,0 +1,7 @@
+# Erratum 1 aux corrections après la contre-lecture du code de la lecture des sondes v6
+
+Écrit le 2026-11-24 par le développeur du côté des moniteurs, après la vérification des corrections (`verification-corrections-lecture-v6-sonnet-v1.md`, verdict « conforme », remarque 11 « portée en partie »).
+
+**Remarque 11, essais.** La vérification a montré que l'artefact ajouté à `test_bordereau_du_code_ecrit_puis_verifie` ne prouvait rien (le refus y venait du contrôle d'empreinte du fichier cité) et que deux mutants survivaient : refus retiré à l'écriture du bordereau, seconde empreinte remplacée par des zéros. Correction, **essais seulement** (aucun module du code changé, empreintes des deux modules inchangées : `8b39af4b…`, `1135731c…`) : l'artefact sans portée est retiré ; un essai neuf, `test_rapports_de_conformite_de_la_version_5_refuses`, exige que les deux empreintes du code soient celles des deux vrais fichiers du rapport v5 (scellé et brouillon 1), et éprouve le refus à chaque rang de la liste, à l'écriture du bordereau (rien n'est écrit) comme à sa lecture, avec le cas sain entre les deux. Les deux mutants survivants ont été rejoués : tués.
+
+Pas de nouveau tour de vérification : la correction ne touche que les essais, d'une pièce jugée conforme (allègement de la procédure, une seule vérification courte par lot de corrections) ; elle est portée à la connaissance de la session mère.
