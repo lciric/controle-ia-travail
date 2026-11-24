@@ -1,0 +1,8 @@
+| Cellule | Statut | Essais | Modèle servi | Caractères | Marqueur | Coût USD |
+|---|---|---|---|---|---|---|
+| E3-T1-conception-A | OK | 1 | claude-opus-5-5 | 24638 | oui | 0.42 |
+| E3-T1-conception-B | INTERROMPU | 1 | None | 0 | non | 2.31 |
+
+Absences acceptées par l'arbitre : aucune.
+Ligne : 21.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 2.73 USD.
+Dépense totale : 2.73 USD. Mis à jour 2026-11-24T12:00:46Z.
