@@ -2,8 +2,18 @@
 |---|---|---|---|---|---|---|
 | E3-T1-conception-A | OK | 1 | claude-opus-5-5 | 26407 | oui | 0.52 |
 | E3-T1-conception-B | OK | 1 | gpt-6.2-astra | 17839 | oui | 0.26 |
-| E3-T1-conception-C | ENTREE_HORS_GARDE | 1 | gemini-4-carbon | 40772 | oui | 0.87 |
+| E3-T1-conception-C | OK (rejugement de l'essai 1) | 1 | gemini-4-carbon | 40772 | oui | 0.87 |
+| E3-T1-conception-D | OK | 1 | gemini-4-neon | 39116 | oui | 0.53 |
+| E3-T2-critique-croisee-A | OK | 1 | claude-opus-5-5 | 21336 | oui | 0.63 |
+| E3-T2-critique-croisee-B | OK | 1 | gpt-6.2-astra | 15402 | oui | 0.55 |
+| E3-T2-critique-croisee-C | OK | 1 | gemini-4-carbon | 31148 | oui | 1.08 |
+| E3-T2-critique-croisee-D | OK | 1 | gemini-4-neon | 36129 | oui | 0.80 |
+| E3-T3-reponse-A | OK | 1 | claude-opus-5-5 | 21771 | oui | 0.65 |
+| E3-T3-reponse-B | OK | 1 | gpt-6.2-astra | 18363 | oui | 0.58 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-carbon | 29477 | oui | 1.12 |
+| E3-T3-reponse-D | OK | 1 | gemini-4-neon | 30882 | oui | 0.55 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 20.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 1.65 USD.
-Dépense totale : 1.65 USD. Mis à jour 2026-11-24T15:18:15Z.
+Ligne : 20.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 8.13 USD.
+Ligne de reprise (GO-2026-11-24-30) : 28.35 USD, ouverte à 1.65 USD de dépense ; dépensé depuis : 6.48 USD.
+Dépense totale : 8.13 USD. Mis à jour 2026-11-24T16:14:26Z.
