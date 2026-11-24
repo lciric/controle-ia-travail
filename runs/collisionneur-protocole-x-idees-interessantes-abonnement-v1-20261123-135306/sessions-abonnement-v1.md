@@ -22,3 +22,12 @@
 |---|---|---|---|---|---|
 | E3-T2-critique-croisee-A | kits-abonnement/idees-interessantes-E3-T2-critique-croisee-A-v1 (1cec6d3c) | session_016QhUrrftjpwzN2LPKQ98Vs | claude-fable-5-2 | high | 2026-11-24T15:49:33Z |
 | E3-T2-critique-croisee-B | kits-abonnement/idees-interessantes-E3-T2-critique-croisee-B-v1 (85a7c3c2) | session_016QhUrrjUJUdqxPeS2Ex88e | claude-opus-5-5 | high | 2026-11-24T15:49:35Z |
+
+- Recueil du tour 2 (2026-11-24, vers 16:05Z) : A versée (d20dd78e…), B versée (9654a058…).
+
+## Tour 3 (réponse), effort élevé
+
+| cellule | branche du kit | session | modèle | effort lu à la création | créée (UTC) |
+|---|---|---|---|---|---|
+| E3-T3-reponse-A | kits-abonnement/idees-interessantes-E3-T3-reponse-A-v1 (cbf1e7eb) | **non créée** : limite hebdomadaire de Fable atteinte sur ce compte (mère, 16:04Z) ; attend la remise à zéro du 2026-11-28 vers 04:00Z | claude-fable-5-2 | — | — |
+| E3-T3-reponse-B | kits-abonnement/idees-interessantes-E3-T3-reponse-B-v1 (346a1da9) | session_016QhUrvMkCBbjUzQD6qyWA6 | claude-opus-5-5 | high | 2026-11-24T21:49:05Z |
