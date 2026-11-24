@@ -2127,8 +2127,6 @@ def test_bordereau_du_code_ecrit_puis_verifie(depot, capsys):
     artefact(lambda c: c["additif"].update(sha256="0" * 64), "18", "additif")
     artefact(lambda c: c["additif_2"].update(chemin="prereg/autre.md"), "30", "additif_2")
     artefact(lambda c: c["constantes"].update(sha256="0" * 64), "20", "table neuve")
-    for sha in L.SHAS_RAPPORTS_CONFORMITE_ANTERIEURS:                     # rapport v5 scellé et son brouillon 1
-        artefact(lambda c, sha=sha: c["rapport_conformite"].update(sha256=sha), "5")
 
 
 def test_chemin_de_la_table_neuve_epingle(sf, tmp_path):
@@ -2143,6 +2141,40 @@ def test_chemin_de_la_table_neuve_epingle(sf, tmp_path):
                                       sf["cadre"])
     assert cadre.forme == FORME and table == TABLE
 
+
+
+def test_rapports_de_conformite_de_la_version_5_refuses(depot, capsys, monkeypatch):
+    """Remarque 11 : le rapport v5 scellé et son brouillon 1 sont refusés, à la lecture du bordereau comme à son écriture.
+    Les deux empreintes du code sont celles des vrais fichiers ; le refus est éprouvé à chaque rang de la liste."""
+    dossier = RACINE_DU_DEPOT / "docs/notes/barreau8-cote-moniteurs-sorties-v1"
+    assert L.SHAS_RAPPORTS_CONFORMITE_ANTERIEURS == (empreinte(dossier / "rapport-conformite-codes-passe-v5-lecture-v5-v1.md"),
+                                                     empreinte(dossier / "rapport-conformite-codes-passe-v5-lecture-v5-brouillon1.md"))
+    argv = _depot_du_code(depot)
+    sha_rapport = empreinte(depot / "docs" / "rapport.md")
+    vraies = L.SHAS_RAPPORTS_CONFORMITE_ANTERIEURS
+    for rang in (0, 1):
+        liste = list(vraies)
+        liste[rang] = sha_rapport                                          # le rapport d'essai prend la place de l'un des deux
+        monkeypatch.setattr(L, "SHAS_RAPPORTS_CONFORMITE_ANTERIEURS", tuple(liste))
+        assert L.main(argv) == 2 and "version 5" in capsys.readouterr().err   # écriture refusée
+        assert not (depot / "docs" / "bordereau-code-lecture-v1.json").exists()
+    monkeypatch.setattr(L, "SHAS_RAPPORTS_CONFORMITE_ANTERIEURS", vraies)
+    assert L.main(argv) == 0                                               # cas sain : écrit
+    capsys.readouterr()
+    sortie = depot / "docs" / "bordereau-code-lecture-v1.json"
+    b = json.loads(sortie.read_text(encoding="utf-8"))
+    lignes_ = {L.CLE_SCELLEMENT: {"chemin": "prereg/texte-barreau8.md", "sha256": b["texte_scelle"]["sha256"]},
+               L.CLE_ADDITIF_1: {"chemin": "prereg/additif-1.md", "sha256": b["additif"]["sha256"]},
+               L.CLE_ADDITIF_2: {"chemin": "prereg/additif-2.md", "sha256": b["additif_2"]["sha256"]},
+               L.CLE_CODE_LECTURE: {"chemin": "docs/bordereau-code-lecture-v1.json", "sha256": empreinte(sortie)}}
+    assert L.lire_bordereau_du_code(depot, lignes_) == b
+    for rang in (0, 1):
+        liste = list(vraies)
+        liste[rang] = sha_rapport
+        monkeypatch.setattr(L, "SHAS_RAPPORTS_CONFORMITE_ANTERIEURS", tuple(liste))
+        with pytest.raises(L.Refus, match="version 5") as e:              # lecture refusée
+            L.lire_bordereau_du_code(depot, lignes_)
+        assert e.value.code == "5"
 
 def test_bordereau_du_code_refuse_d_ecrire_sous_une_table_noeud(depot, capsys):
     t = copy.deepcopy(TABLE)
