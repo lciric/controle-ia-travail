@@ -62,7 +62,7 @@ from pathlib import Path
 VERSION = "rejeu-activations-voie-a-v1"
 GO_ATTENDU = "GO-2026-11-24-13"  # accord de calcul (remplace GO-2026-11-24-06, type « dépense », pour le garde-fou ; R-5261)
 FEU_ATTENDU = "feu, additif 2 scellé"
-PLAFOND_USD = 11.00            # ligne d'accord GO-2026-11-24-06
+PLAFOND_USD = 11.00            # ligne d'accord GO-2026-11-24-13
 COUPURE_USD = 10.00            # coupure externe tout compris (devis § 3.4)
 DECLENCHEMENT_USD = 9.60       # coupure moins un quart d'heure au pire tarif horaire (0,40 USD)
 P9_HORAIRE_MAX_USD = 7.00      # borne passée à la passe (--depense-max-usd), nette de réseau
@@ -1053,11 +1053,11 @@ class Machine:
             self.r["ordre"] = {**ordre, "branche_versement": br + "-refus-" + str(int(maintenant()))}
             return self.finir("REFUS DE DÉPART", f"branche de versement {br} déjà présente ou illisible (R12 : nom neuf)")
         v = r["valeurs"]
-        env_prep = {**{k: x for k, x in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")},
-                    "HF_TOKEN": self.secrets["HF_TOKEN"]}
-        # 2. préparation, tirages
-        for p in ordre["preparation"]:  # la préparation voit HF_TOKEN (téléchargement du modèle) ; la passe ne voit aucun secret
-            if self.commande(f"preparation-{p['nom']}", remplir(p["argv"], v), p["delai_s"], env_prep, self.clone) != 0:
+        env_prep = {k: x for k, x in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")}
+        # 2. préparation, tirages ; seul le téléchargement du modèle voit HF_TOKEN (aucun secret pour pip ni pour la passe)
+        for p in ordre["preparation"]:
+            env_p = {**env_prep, "HF_TOKEN": self.secrets["HF_TOKEN"]} if p["nom"] == "modele" else env_prep
+            if self.commande(f"preparation-{p['nom']}", remplir(p["argv"], v), p["delai_s"], env_p, self.clone) != 0:
                 return self.finir("REFUS DE DÉPART", f"préparation {p['nom']} en échec")
         for t in ordre["tirages"]:
             motifs = self.tirer(t)

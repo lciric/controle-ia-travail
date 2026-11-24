@@ -395,7 +395,10 @@ def banc(tmp_path, monkeypatch):
                     "--depense-max-usd", "7.00", "--duree-max-heures", "4.5", "--identifiant-instance",
                     "{IDENTIFIANT_INSTANCE}", "--prix-horaire-usd", "{PRIX_HORAIRE_USD}", "--appareil", "cuda",
                     "--mode-bouchon", mode]
-        o["preparation"] = [{"nom": "rien", "argv": [sys.executable, "-c", "pass"], "delai_s": 60}]
+        temoin = ("import os, sys; open(sys.argv[1], 'a').write(sys.argv[2] + ':' + "
+                  "('HF' if os.environ.get('HF_TOKEN') else '-') + ('GH' if os.environ.get('GH_TOKEN') else '-') + '\\n')")
+        o["preparation"] = [{"nom": n, "argv": [sys.executable, "-c", temoin, str(tmp_path / "secrets-preparation.txt"), n],
+                             "delai_s": 60} for n in ("bibliotheques", "modele")]
         o["tirages"] = [{"branche": "donnees/entrees-essai", "fichiers": [f"donnees/e/f.bin.morceau-00{k}" for k in range(3)] +
                          ["donnees/e/f.bin.sha256"], "assembler": [{"cible": "donnees/e/f.bin", "morceaux":
                          [f"donnees/e/f.bin.morceau-00{k}" for k in (range(3) if not tirage_faux else (0, 2, 1))]}],
@@ -736,3 +739,9 @@ def test_controle_des_fichiers_de_la_course(tmp_path):
     (d / "ids-actions-evaluation-iib-v5.json.sha256").write_text("7eceb1615c6e00dc028fcbf42d4f32a83e2673d0a033a94b30820c32f198aea2  x\n")
     r = subprocess.run([sys.executable, *argv[1:]], cwd=tmp_path, capture_output=True, text=True)
     assert r.returncode == 1                                             # empreinte fausse : refus
+
+
+def test_seul_le_telechargement_du_modele_voit_le_jeton(banc):
+    m, code, br = banc["lancer"]("sain")
+    assert code == 0
+    assert (banc["tmp"] / "secrets-preparation.txt").read_text().split() == ["bibliotheques:--", "modele:HF-"]

@@ -10,7 +10,7 @@
     "-I",
     "-B",
     "-c",
-    "import hashlib, sys; from pathlib import Path; d = Path('diag/20261122-202132-iib-reel'); attendu = {'ids-actions-evaluation-iib-v5.json': '7eceb1615c6e00dc028fcbf42d4f32a83e2673d0a033a94b30820c32f198aea2', 'adaptateur-eleve-iib-v5.pt': '9c7808fb1b4372c3a81af97456cf611b24b8cbe4ef45856e818923717957b14e', 'adaptateur-temoin-jumeau-iib-v5.pt': '67ea25de4962c51dfccc2544c6bc3c1c07112e97eaa9018ba5fdf099b2043546'}; h = lambda f: hashlib.sha256(f.read_bytes()).hexdigest(); ko = [n for n, e in attendu.items() if not (d / n).is_file() or h(d / n) != e or not (d / (n + '.sha256')).is_file() or (d / (n + '.sha256')).read_text().split()[0] != e]; print('fichiers de la course : ' + ('conformes' if not ko else 'NON CONFORMES ' + ', '.join(ko))); sys.exit(1 if ko else 0)"
+    "import hashlib, sys; from pathlib import Path; d = Path('diag/20261122-202132-iib-reel'); attendu = {'ids-actions-evaluation-iib-v5.json': '7eceb1615c6e00dc028fcbf42d4f32a83e2673d0a033a94b30820c32f198aea2', 'adaptateur-eleve-iib-v5.pt': '9c7808fb1b4372c3a81af97456cf611b24b8cbe4ef45856e818923717957b14e', 'adaptateur-temoin-jumeau-iib-v5.pt': '67ea25de4962c51dfccc2544c6bc3c1c07112e97eaa9018ba5fdf099b2043546'}; h = lambda f: hashlib.sha256(f.read_bytes()).hexdigest(); ko = [n for n, e in attendu.items() if not (d / n).is_file() or h(d / n) != e or not (d / (n + '.sha256')).is_file() or ((d / (n + '.sha256')).read_text().split() or ['compagnon-vide'])[0] != e]; print('fichiers de la course : ' + ('conformes' if not ko else 'NON CONFORMES ' + ', '.join(ko))); sys.exit(1 if ko else 0)"
    ],
    "delai_s": 120
   },
@@ -43,6 +43,15 @@
    "delai_s": 3600
   },
   {
+   "nom": "carte-torch",
+   "argv": [
+    "{PYTHON}",
+    "-c",
+    "import sys, torch; ok = torch.cuda.is_available(); p = torch.cuda.get_device_properties(0) if ok else None; ok = ok and 'A100' in p.name and p.total_memory > 79e9; print('carte : ' + (p.name + ', ' + str(p.total_memory) + ' octets' if p is not None else 'aucune carte vue par torch') + (' : conforme' if ok else ' : NON CONFORME')); sys.exit(0 if ok else 1)"
+   ],
+   "delai_s": 300
+  },
+  {
    "nom": "versions-jetonisation",
    "argv": [
     "{PYTHON}",
@@ -56,7 +65,7 @@
    "argv": [
     "{PYTHON}",
     "-c",
-    "import os; from huggingface_hub import snapshot_download as s; s('meta-llama/Llama-3.1-8B-Instruct', revision='0e9e39f249a16976918f6564b8830bc894c89659', cache_dir='{CACHE_MODELE}', token=os.environ['HF_TOKEN'])"
+    "import os; from huggingface_hub import snapshot_download as s; s('meta-llama/Llama-3.1-8B-Instruct', revision='0e9e39f249a16976918f6564b8830bc894c89659', cache_dir='{CACHE_MODELE}', token=os.environ['HF_TOKEN'], ignore_patterns=['original/*'])"
    ],
    "delai_s": 3600
   }
