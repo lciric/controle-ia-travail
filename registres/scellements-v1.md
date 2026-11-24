@@ -110,3 +110,5 @@
 | CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE | 2026-11-24T16:50:12Z | registres/code-lecteur-du-texte-dose-reponse/CODE-LECTEUR-DU-TEXTE-DOSE-REPONSE-6b2b821a28f8bebebae2188d9f020ce731464306-v1.json | f6bc347aeaa424127d0a6614dd5cf2d7d55de524f1c7f132f1532e099b053013 |
 | ORDRE-LANCEMENT-DOSE-REPONSE | 2026-11-24T16:57:27Z | docs/notes/code-dose-reponse-consigne-cachee-v1/ordre-de-lancement-dose-reponse-v6-scelle.md | 08cb2b355c595254750819db4d7fdf0bf9b46593abf2f77ed5fd1e62bfaf68cc |
 | DECLARATION-LANCEMENT-DOSE-REPONSE-CONSIGNE-CACHEE | 2026-11-24T16:59:06Z | registres/code-dose-reponse-consigne-cachee/DECLARATION-SESSION-LANCEMENT-DOSE-REPONSE-v1.json | 05f987b9b1ce3c1fc79e411446df6b928cde09bc8f83966fe645c3623e5d1a5a |
+| PROGRAMME-V3-PROVISOIRE | 2026-11-24T18:32:00Z | docs/programme-controle-ia-v3.md | fcc27171bb87e35a42a6e200bb7ddf8c3df9106141b6eace541e283beb5458c9 |
+| NOTE-PROBLEMATIQUES-PROGRAMME-V2 | 2026-11-24T18:32:00Z | docs/notes/note-problematiques-programme-v2/note-problematiques-programme-v2.md | e74ce16fb07a714ddbeb0d0a4684fbce420dff56700f267bb919ce134301f4c6 |
