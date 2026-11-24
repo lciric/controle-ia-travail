@@ -9,6 +9,6 @@
 | E3-T1-conception-G | OK | 1 | gemini-4-neon | 31508 | oui | 0.67 |
 
 Absences acceptées par l'arbitre : aucune.
-Refus avant l'envoi : 1 (COMPTE_IMPOSSIBLE, détail au journal).
+Refus avant l'envoi : 2 (COMPTE_IMPOSSIBLE, détail au journal).
 Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 14.27 USD.
-Dépense totale : 14.27 USD. Mis à jour 2026-11-24T09:03:51Z.
+Dépense totale : 14.27 USD. Mis à jour 2026-11-24T09:18:15Z.
