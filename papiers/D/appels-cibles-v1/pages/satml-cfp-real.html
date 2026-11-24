@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html class="theme-light" lang="en">
+  <head>
+    <title>
+IEEE SaTML 2027 · Call for Papers    </title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://satml.org//css/bulma.min.css" />
+    <link rel="stylesheet" href="https://satml.org//css/custom.css" />
+    <link rel="icon" href="https://satml.org//images/favicon.ico" />
+  </head>
+  <body>
+<style>
+  * {
+    --bulma-navbar-burger-color: #333;
+    --bulma-navbar-padding-horizontal: 4rem !important;
+    --bulma-navbar-padding-vertical: 0rem !important;
+    --bulma-navbar-item-background-l-delta: transparent !important;
+  }
+
+  .navbar-start a.navbar-item {
+    color:  hsl(0, 0%, 45%) !important;
+  }
+  
+  .navbar-start a.navbar-item:hover {
+    color: hsl(0, 0%, 10%) !important;
+  }
+</style>
+
+<header>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const $navbarBurgers = Array.prototype.slice.call(
+        document.querySelectorAll('.navbar-burger'),
+        0
+      );
+
+      $navbarBurgers.forEach(el => {
+        el.addEventListener('click', () => {
+          const target = el.dataset.target;
+          const $target = document.getElementById(target);
+
+          el.classList.toggle('is-active');
+          $target.classList.toggle('is-active');
+        });
+      });
+    });
+  </script>
+
+  <nav class="navbar has-shadow is-spaced" role="navigation" aria-label="main navigation">
+    
+    <div class="navbar-brand">
+      <a class="navbar-item pr-6" style="font-size: 1.2rem; font-weight: 500;" href="https://satml.org">
+        IEEE SaTML 2027
+      </a>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbar">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar" class="navbar-menu">
+
+      <div class="navbar-start">
+          <a href="https://satml.org/" class="navbar-item" style="font-weight: 420;">Home</a>
+          <a href="https://satml.org/call-for-papers/" class="navbar-item" style="font-weight: 420;">Call for Papers</a>
+          <a href="https://satml.org/competitions/" class="navbar-item" style="font-weight: 420;">Competitions</a>
+          <a href="https://satml.org/workshops/" class="navbar-item" style="font-weight: 420;">Workshops</a>
+          <a href="https://satml.org/attend/" class="navbar-item" style="font-weight: 420;">Attend</a>
+          <a href="https://satml.org/organization/" class="navbar-item" style="font-weight: 420;">Organization</a>
+          <a href="https://satml.org/past/" class="navbar-item" style="font-weight: 420;">Past Editions</a>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item px-4">
+          <a href="mailto:contact@satml.org">
+            <img src="https://satml.org//images/social/envelope.svg" alt="Email" style="margin-top: 7px; height: 1rem;" />
+          </a>
+        </div>
+        <div class="navbar-item px-4 pr-6">
+          <a href="https://bsky.app/profile/satml.org" target="_blank" rel="noopener noreferrer">
+            <img src="https://satml.org//images/social/bluesky.svg" alt="Bluesky" style="margin-top: 7px; height: 1rem;" />
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+</header>    <main>
+
+
+<style>
+  /* Clicking a rail link glides to the section instead of jumping... */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* ...and lands with some air above the heading. */
+  .cfp-body h2 {
+    scroll-margin-top: 1.5rem;
+  }
+
+  /* The content renders exactly like on every other page (centered 1100px
+     container). The rail is absolutely positioned into the left gutter
+     that the centering leaves free, so it takes up no layout space — and
+     it only appears when that gutter is wide enough to hold it. */
+  .cfp-layout {
+    position: relative;
+  }
+
+  .toc-rail {
+    display: none;
+  }
+
+  @media screen and (min-width: 1472px) {
+    .toc-rail {
+      display: block;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      /* Exactly the gutter left of the centered 1100px container. */
+      width: calc((100% - 1100px) / 2);
+    }
+
+    .toc-rail nav {
+      /* Sticks to the top edge while the content scrolls past. */
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      overflow-y: auto;
+      /* Top padding lines the label up with the "Call for Papers" <h1>
+         (1rem section + 1rem h1 padding + font-size difference). The left
+         padding lines the rail up with the "IEEE SaTML" navbar brand (4rem
+         navbar padding + 0.75rem navbar-item padding) when the gutter has
+         room for that, and shrinks down to 1.5rem when it does not, so
+         the links keep a readable width on smaller screens. Inside this
+         nav, 100% is the width of the aside, i.e. the gutter. */
+      padding: 2.2rem 1rem 2rem clamp(1.5rem, 100% - 13rem, 4.75rem);
+      font-size: 0.9rem;
+    }
+  }
+
+  .toc-rail-label {
+    font-weight: 500;
+    margin-bottom: 0.6rem;
+  }
+
+  .toc-rail ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid #ededed;
+  }
+
+  .toc-rail li {
+    margin: 0;
+  }
+
+  /* Same treatment as the navbar links: quiet grey, darken on hover.
+     Each link paints its own segment of the left border so the one being
+     read can accent it. */
+  .toc-rail a {
+    display: block;
+    padding: 0.22rem 0 0.22rem 0.9rem;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    color: hsl(0, 0%, 45%);
+    text-decoration: none;
+    font-weight: 420;
+  }
+
+  .toc-rail a:hover {
+    color: hsl(0, 0%, 10%);
+  }
+
+  /* The section currently on screen, set by the script below. Brown to
+     match the section headings. */
+  .toc-rail a.is-active {
+    color: brown;
+    border-left-color: brown;
+  }
+</style>
+
+<div class="cfp-layout">
+
+  <aside class="toc-rail">
+    <nav aria-label="On this page">
+      <p class="toc-rail-label">On this page</p>
+      <ul>
+        <li><a href="#new-from-last-year">New from last year</a></li>
+        <li><a href="#areas-of-interest">Areas of interest</a></li>
+        <li><a href="#important-dates">Important dates</a></li>
+        <li><a href="#submission-categories">Submission categories</a></li>
+        <li><a href="#submission-information">Submission information</a></li>
+        <li><a href="#usage-of-llms">Usage of LLMs</a></li>
+        <li><a href="#reviewing-process">Reviewing process</a></li>
+        <li><a href="#interactive-discussion-revision-phase">Interactive discussion &amp; revision phase</a></li>
+        <li><a href="#submission-decisions">Submission decisions</a></li>
+        <li><a href="#conflicts-of-interest-policy">Conflicts of Interest policy</a></li>
+        <li><a href="#distinguished-paper-award">Distinguished paper award</a></li>
+        <li><a href="#attendance-for-accepted-papers">Attendance for accepted papers</a></li>
+        <li><a href="#planning-for-growth-in-submissions">Planning for growth in submissions</a></li>
+        <li><a href="#checklist">Checklist</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="cfp-body">
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h1>Call for Papers</h1>
+          <p class="news-date">Last updated: Sep 28, 2026 &mdash; see <a href="/call-for-papers/changes/">what changed</a>.</p>
+
+<div class="callout">
+<p>⚠️ <strong>Different requirements are due at different times, so we have prepared a <a href="/call-for-papers/checklist/">summary checklist</a> to help you keep track.</strong> It gathers in one page what is due at abstract registration, what is due at paper submission, and what can lead to desk rejection. It is only a summary: the Call for Papers below takes precedence.</p>
+</div>
+
+          <h2 id="new-from-last-year">New from last year</h2>
+          
+<p>We have introduced some new additions compared to last year:</p>
+<ul>
+<li>Introduced Abstract Registration Deadline  </li>
+<li>Requirement to release artifacts at submission, unless a valid reason is provided  </li>
+<li>Revised review process: introduced initial review phase (inspired by PETS), and Area Chairs to support the review process</li>
+<li>Requirement for ORCID and Author Certification by the abstract registration deadline</li>
+<li>Added section in CfP “Planning for growth in submissions”  </li>
+<li>Introduced a withdrawal policy: a submitted paper cannot be withdrawn before the final decision is notified  </li>
+<li>Introduced clarifications on: scope of SoK papers, attendance policy, conflict of interest policy  </li>
+<li>“Best paper award” is now called “Distinguished paper award”; the “Major Revision” outcome is now called “Revision”</li>
+</ul>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="areas-of-interest">Areas of interest</h2>
+          
+<p>IEEE SaTML expands upon the theoretical and practical understandings of vulnerabilities inherent to machine learning (ML), explores the robustness of learning algorithms and systems, and aids in developing a unified, coherent scientific community aiming to establish trustworthy machine learning. Topics of interest include (but are not limited to):</p>
+<ul>
+<li>Novel attacks on machine learning</li>
+<li>Novel defenses for machine learning</li>
+<li>Secure and safe machine learning in practice</li>
+<li>Verification of algorithms and systems</li>
+<li>Machine learning system security</li>
+<li>Privacy in machine learning</li>
+<li>Forensic analysis of machine learning</li>
+<li>Fairness and interpretability</li>
+<li>Trustworthy machine learning in cybersecurity applications  </li>
+<li>Trustworthy data curation</li>
+</ul>
+<h3>Scope and Initial Review</h3>
+<p>SaTML is the home for work on safe and trustworthy machine learning, theoretical, empirical, or applied alike. The guidelines below explain what we look for at initial review (see “Reviewing Process”). If you are unsure whether your paper fits, ask the PC chairs before the abstract registration deadline.</p>
+<ul>
+<li>We look for substantive engagement with safety and trustworthiness, developed throughout the paper rather than stated only in the introduction.  </li>
+<li>Theoretical contributions are welcome. A brief discussion of what the results imply for real systems or threat models could help reviewers place the work.  </li>
+<li>Empirical papers should make clear which safety or trustworthiness question the evaluation answers.  </li>
+<li>Papers whose only link to the area is incidental, such as using a particular dataset without engaging deeper into trustworthiness, are likely to be desk rejected.</li>
+</ul>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="important-dates">Important dates</h2>
+          
+<p>The main dates for SaTML 2027 are listed below. Please also see the <a href="#planning-for-growth-in-submissions">Planning for growth in submissions</a> section, which describes the circumstances under which this timeline may need to be adjusted.</p>
+<div class="dates">
+<ul>
+<li>Mandatory abstract registration deadline: <strong data-due="2026-09-22">Tue,&nbsp;Sep&nbsp;22,&nbsp;2026</strong><ul>
+<li>Tentative non-blank title, tentative non-blank abstract, fixed authors, fixed affiliations, and fixed topics (bidding may start at abstract registration; hence, no substantial changes are allowed to abstract or title). Authors and affiliations cannot be changed after the abstract registration deadline, not even in the camera-ready version in case of acceptance (see <a href="#change-of-affiliation">Change of affiliation</a> for exceptions). Adding or removing authors or affiliations is otherwise grounds for desk rejection.</li>
+</ul>
+</li>
+<li>Paper submission deadline: <strong data-due="2026-09-29">Tue,&nbsp;Sep&nbsp;29,&nbsp;2026</strong><ul>
+<li>Anonymized artifact(s) updated by: <strong data-due="2026-10-02">Fri,&nbsp;Oct&nbsp;2,&nbsp;2026</strong></li>
+</ul>
+</li>
+<li>Early reject notification: <strong data-due="2026-11-04" data-day="">Wed,&nbsp;Nov&nbsp;4,&nbsp;2026</strong></li>
+<li>Interactive discussion &amp; revision phase: <strong data-due="2026-11-25" data-end="2026-12-09">Wed,&nbsp;Nov&nbsp;25 &ndash; Wed,&nbsp;Dec&nbsp;9,&nbsp;2026</strong></li>
+<li>Decision notification: <strong data-due="2026-12-16" data-day="">Wed,&nbsp;Dec&nbsp;16,&nbsp;2026</strong><ul>
+<li>Final artifacts (of accepted papers) on Zenodo due by: <strong data-due="2027-01-14">Thu,&nbsp;Jan&nbsp;14,&nbsp;2027</strong></li>
+</ul>
+</li>
+<li>Revisions due by: <strong data-due="2027-01-21">Thu,&nbsp;Jan&nbsp;21,&nbsp;2027</strong></li>
+<li>Revision notification: <strong data-due="2027-02-01" data-day="">Mon,&nbsp;Feb&nbsp;1,&nbsp;2027</strong><ul>
+<li>Final artifacts (of accepted revised papers) on Zenodo due by: camera-ready deadline</li>
+</ul>
+</li>
+<li>Camera-Ready Paper Submissions and Copyrights Due: <strong>mid-Feb 2027 (exact date TBC)</strong></li>
+<li>Conference dates: <strong data-due="2027-05-03" data-end="2027-05-06">Mon,&nbsp;May&nbsp;3 &ndash; Thu,&nbsp;May&nbsp;6,&nbsp;2027</strong></li>
+</ul>
+</div>
+<p>All deadlines are set to 11:59 PM AoE (Anywhere on Earth), which corresponds to UTC-12 time zone.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="submission-categories">Submission categories</h2>
+          
+<p>We solicit research papers, systematization of knowledge papers, and position papers:</p>
+<ul>
+<li>
+<p><strong>Research Papers:</strong> These papers should present new work, evidence, or ideas related to secure and trustworthy machine learning. Submission must be up to 12 pages of body text. Research papers must be well-argued and worthy of publication and​ ​citation,​ ​on​ ​one of the​ ​topics listed​ ​above.​ See the “Areas of interest” section for more information on the scope of the CfP.  </p>
+</li>
+<li>
+<p><strong>Systematization of Knowledge (SoK) Papers:</strong> These papers should either consolidate and clarify ideas in a major research area within secure and trustworthy machine learning or provide compelling evidence to support or challenge long-held beliefs in such areas. SoK papers go beyond simply summarizing previous research (as in a survey). They also include a thorough examination and analysis of existing approaches (in some cases, even experimentally), identify gaps and limitations, and offer insights or new perspectives on a major research area. For examples, please see the list of SoK papers at <a href="http://oaklandsok.github.io">oaklandsok.github.io</a>. Submissions must be up to 12 pages of body text.   </p>
+<ul>
+<li><em>SoK papers must include "SoK:" at the beginning of their title.</em>  </li>
+</ul>
+</li>
+<li>
+<p><strong>Position Papers:</strong> These papers should cover broader issues and visions related to secure and trustworthy machine learning, including open challenges, technical perspectives, educational aspects, societal impact, or notable research results. Submissions must be very well-argued and consist of 5 to 12 pages of body text.  </p>
+<ul>
+<li><em>Position papers must include "Position:" at the beginning of their title.</em></li>
+</ul>
+</li>
+</ul>
+<p><span id="new-insights"></span>⚠️ <strong>"New Insights” HotCRP section</strong>: SoK and Position paper submissions will be required to summarize their "new insights" in a dedicated HotCRP submission field (e.g., 300 words), to support the initial review phase. This field is mandatory in HotCRP and cannot be left blank, so research papers should simply enter "N/A". 
+For SoK papers, this field should highlight the novelty and significance of the insights derived from the systematization. For Position papers, it should summarize the key position(s), the prior assumptions they challenge, and the impact they may have on the community.</p>
+<p>There is no limit on references and appendices. However, reviewers are not required to read appendices, and papers are assessed on the body text. Do not rely on an appendix to carry a claim that is central to the paper.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="submission-information">Submission information</h2>
+          
+<p>All submissions must be received by 11:59 PM AoE (UTC-12) on the day of the deadline.</p>
+<div class="callout">
+<p>Submissions are handled through HotCRP: <a href="https://satml27.hotcrp.com">https://satml27.hotcrp.com</a></p>
+</div>
+<ul>
+<li>
+<p><strong>Policy against double submissions:</strong> Submitted papers must not substantially overlap with papers that have been published or accepted for publication, or that are simultaneously under submission to a journal, conference, or workshop with published proceedings. If the paper is already under review elsewhere, authors may still register the abstract at SaTML, but they must not submit the full paper unless that other submission has been resolved (rejected or withdrawn) <strong>by the SaTML paper submission deadline</strong>. Violations of this policy count as "double submission" and will be reported to IEEE.   </p>
+</li>
+<li>
+<p>⚠️ <strong>Withdrawal policy (new):</strong> By submitting a paper to SaTML 2027, the authors commit to the full review process: the paper stays under review until a decision is notified, and cannot be withdrawn in the meantime, including after the authors have seen the reviews. Reviewing is volunteer work, and a withdrawal mid-cycle discards the effort already spent on the paper. We encourage authors to keep the same considerations in mind at other venues. At SaTML 2027, abstracts are exempt: a registered abstract can be withdrawn freely, but cannot be revived after the abstract registration deadline. Authors receiving a "Revision" outcome may exceptionally request to withdraw (e.g., if they believe they are unable to complete the revision requirements), but must contact the Program Chairs within one week of receiving the notification; otherwise the paper remains under review, and the double submissions policy applies.   </p>
+</li>
+<li>
+<p><strong>ORCID:</strong> All authors MUST provide their ORCIDs through the profile page on HotCRP <strong>by the abstract registration deadline</strong>.   </p>
+</li>
+<li>
+<p><strong>Author Certification:</strong> All authors MUST confirm the submission terms within HotCRP via the Author Certification field <strong>by the abstract registration deadline</strong>.   </p>
+</li>
+<li>
+<p><strong>Double-blind review:</strong> SaTML follows a double-blind reviewing process. Submitted papers <em>must be properly anonymized!</em> They must (a) omit any reference to the authors' names or their institutions, and (b) cite the authors' own related work in the third person. It is important, however, to ensure that efforts to maintain anonymity do not compromise the quality of the submission or complicate the review process. Essential background references, for example, should not be omitted or anonymized. Even if a paper is anonymised, it should not make statements such as "our artifacts are already available as open source tools", as it may deanonymize them. In general, any material referenced in the paper should be anonymized, and de-anonymization through additional material such as artifacts are grounds for rejection. Please see this <a href="https://secdev.ieee.org/2019/double-blind-faq/">double-blind FAQ</a> for the answers to many common concerns about double-blind reviewing.   </p>
+</li>
+<li>
+<p><strong>Preprint/disclosure policy:</strong> Authors may choose to give talks about their work, post a preprint of the paper online, and disclose security vulnerabilities to vendors. However, authors should take care of avoiding behaviors that intentionally aim to inform reviewers of their identity (e.g., publicly advertising their work on social media), as such behaviors may lead to desk rejection of the paper. If in doubt, the authors should contact the PC chairs at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a>.   </p>
+</li>
+<li>
+<p><strong>Previous reviews:</strong> If a paper was previously submitted to another venue and received reviews (e.g., rejected, withdrawn, or accepted in non-archival venues), authors <em>must append the most recent set of reviews received</em>, unedited, along with a description of how the reviews were addressed and what changed in the paper since then. The reviews must be anonymized, placed at the very end of the paper, after all appendices, and do not count towards the page limit. <em>Optional:</em> the rebuttal or discussion messages, the name of the venue, and the reviews from earlier submissions if the paper was submitted more than once. The most recent set of reviews received remains compulsory to attach unedited and discuss. Authors who try to circumvent this rule (e.g., by changing the title of the paper without significantly changing the contents) may have their papers rejected without further consideration, at the discretion of the PC chairs.  </p>
+</li>
+<li>
+<p><span id="open-science"></span><strong>Open Science:</strong> All submissions must include an "Open Science" section immediately before the references, which does not count towards the page limit. In it, the authors should describe which artifacts they are releasing, or explain why sharing is not possible. The section is required for every submission category: Position papers, for instance, often have nothing to release, but the section is still compulsory and should say so. We require all authors to share their artifacts <strong>within 3 days after the submission deadline</strong>, using a fully-anonymized repository (for example, <a href="https://anonymous.4open.science/">https://anonymous.4open.science/</a>). After this deadline, the artifact(s) needs to be accessible throughout the review process, and should not be edited. Any violation of the Open Science policy may result in desk rejection. Authors of accepted papers will be required to share their artifacts on <a href="https://zenodo.org">https://zenodo.org</a> (see “Important Dates”), and acceptance is conditional on their availability (unless a valid reason is provided). Chairs and reviewers may check that the artifacts are consistent with the claims made in the paper.  </p>
+</li>
+<li>
+<p><strong>⚠️Usage of AI/LLM:</strong> If any LLM was used, an "LLM usage considerations" section is required, placed after the Open Science section. See the dedicated section below (“Usage of LLMs”) for what it must contain.  </p>
+</li>
+<li>
+<p><span id="ethical-considerations"></span><strong>Ethical Considerations:</strong> Each paper may optionally include an "Ethical Considerations" section, placed immediately before the references. This section does not count towards the page limit. In this section, the authors may discuss if they believe the work poses any ethical risk and the steps that are taken to mitigate such risk, also referring to ethics frameworks such as those offered by the Menlo report. If the authors believe that their work does not pose any ethical considerations, this section is not necessary. </p>
+</li>
+<li>
+<p><strong>Submission template:</strong> Submissions must be a PDF file in two-column <a href="https://www.ieee.org/conferences/publishing/templates.html">IEEE proceedings style</a>. That is, authors must use <code>\documentclass[conference]{IEEEtran}</code> when preparing their paper, with the default 10pt font size and page geometry. Using a different template, or modifying font size, margins, or spacing to fit more content, is grounds for desk rejection. The number of allowed pages for a submission depends on the submission category, see above.</p>
+</li>
+</ul>
+<p>Authors need to closely follow these rules and precisely adhere to the format guidelines. Failure to comply with these rules is grounds for rejection.</p>
+<p>For questions or clarifications, the authors should contact the PC Chairs at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a>.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="usage-of-llms">Usage of LLMs</h2>
+          
+<p>Authors are permitted to use LLMs when preparing their paper. However, while the conference does not ban authors from using LLMs or researching their security and privacy properties, authors must (a) carefully consider their decision to use LLMs and (b) are required to disclose and motivate the use of LLMs in their submission. If the authors choose to use LLMs in their work, they must use a separate and well-marked section titled <em>“LLM usage considerations”</em> before the references (after Open Science), to make the relevant disclosures. This section will not count towards the page limit.</p>
+<p>We ask that authors adhere to three key criteria with regards to their use of LLMs in the scientific process: </p>
+<ul>
+<li>
+<p><strong>Accountability and Correctness:</strong> Human authors are ultimately responsible for all submitted content and results, ensuring their accuracy, originality, and integrity. Works submitted should constitute self-respecting work that respects the importance of scientific inquiry and integrity and respects the time and energy of reviewers. Authors are responsible for the thoroughness of their literature review and must determine relevant prior work and cite it to ensure proper credit. Upon submitting to SaTML 2027, authors acknowledge that they have reviewed all content that was generated by AI as if they had written it themselves, including text, code, experimental data, and references. Any violation to this policy which results in fabrications or hallucinations, including non-existing references or incorrect authors, invented claims, and falsified results is considered academic misconduct and might lead to the paper being desk rejected or other sanctions. Authors are encouraged to evaluate their submissions using the same open-source tools that we will use (e.g., <a href="https://hallucinator.science/">https://hallucinator.science/</a>). If the authors have used LLMs to improve their writing, they should state: ‘LLMs were used for editorial purposes in this manuscript, and all outputs were inspected by the authors to ensure accuracy and originality.’  </p>
+</li>
+<li>
+<p><strong>Transparency:</strong> Second, authors should carefully reason about the implications of using LLMs in their work. If LLMs are integral to the paper’s methodology, their use should be explicitly detailed. Any idea generated by an LLM should be independently developed and validated by the authors. Furthermore, authors must elaborate on how they handled limitations introduced in their work by their use of LLMs. Such limitations could for instance include difficulties to obtain results that are reproducible when the LLM used is not open sourced.   </p>
+</li>
+<li>
+<p><strong>Responsibility:</strong> Third, authors should take care to develop LLMs (and ML models in general) responsibly. Any data collection towards training models should take into account relevant ethical considerations such as consent and data holder rights, including intellectual property. Authors also have to justify the need for the environmental footprint of their experiments to achieve their goals and support their methodology. We recognize calculating such a footprint is a technical challenge in itself. We refer the authors to the work of <a href="https://mlco2.github.io/impact/">Lacoste et al.</a> but welcome to hear any other good references (pcchairs@satml.org). We emphasize that the goal here is not to calculate the exact footprint but rather explain experimental choices made as part of the scientific process (e.g., why was an LLM necessary, why was a particular model size selected, how the authors minimized the volume of queries made, which hardware was used to run experiments).</p>
+</li>
+</ul>
+<p>Failure to comply with these rules is grounds for desk rejection without further review of the submission. We note that generative AI technology is rapidly evolving. Authors are encouraged to reach out proactively to the PC chairs should they face uncertainties about the above rules or how they apply to their research.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="reviewing-process">Reviewing process</h2>
+          
+<p>All submissions to the conference will be evaluated on their merits, particularly their relevance to the conference's areas of interest, novelty, quality of execution, and presentation.</p>
+<p>To manage the reviewing load on PC members, SaTML implements a three-stage reviewing process: initial review, Round 1 reviews, and Round 2 reviews. Papers receiving a Revision decision will be invited to revise and will then be reviewed again.</p>
+<p>This year, we are also appointing <strong>Area Chairs</strong> to help manage the submissions, by coordinating discussions and checking review quality. They can make recommendations for papers, but the final decisions remain up to the Program Chairs. Moreover, they will be a key part of the newly-introduced ‘Initial Review phase’.</p>
+<p>⚠️ <strong>Initial Review Phase (new)</strong>: Shortly after the submission deadline, the PC Chairs together with the Area Chairs will review each submission and may desk-reject papers that:</p>
+<ul>
+<li>violate any of the submission guidelines, for example the anonymity requirements;  </li>
+<li>fall outside the scope and areas of interest listed above;  </li>
+<li>are clearly below the quality standard expected at SaTML.</li>
+</ul>
+<p>The PC Chairs will make the final decisions on desk rejections after initial review. While we recognise that a decision taken without full reviews is disappointing for authors, we aim to provide a justification for authors to improve towards passing the bar next time. We consider initial review necessary: submission numbers continue to grow, and reviewer effort spent on papers with no realistic path to acceptance is effort taken away from the papers that have one. Authors who are uncertain whether their work falls within scope are welcome to contact the PC Chairs at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a> before the abstract registration deadline.</p>
+<p><strong>Two review rounds:</strong> Papers passing initial review are initially assigned two reviewers (Round 1). If the PC Chairs conclude, on the basis of these initial reviews, that there is no path to acceptance at SaTML, the paper is early-rejected: no further reviews are assigned and the authors are notified that the paper will not be included in the conference. Then there will be a second review round (Round 2), after which the authors will have the chance to interactively discuss with reviewers (see “Author discussion phase” below).</p>
+<p><strong>LLMs and reviewing:</strong> For SaTML 2027, we are not planning to run any LLM reviewing experiment. All Program Committee members must follow the <a href="https://journals.ieeeauthorcenter.ieee.org/submit-your-article-for-peer-review/become-an-ieee-reviewer/">IEEE reviewer guidelines</a>. In particular, submissions are treated as confidential, and must not be uploaded to public services, including generative AI tools. The assessment of the paper (novelty, correctness, strengths and weaknesses) must be the reviewer's own judgement, and reviewers remain fully responsible for everything their review states. Violation of these guidelines may lead to immediate removal from the Program Committee and to a report to IEEE for misconduct.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="interactive-discussion-revision-phase">Interactive discussion &amp; revision phase</h2>
+          
+<p>SaTML will have a discussion period during which authors can exchange messages with reviewers, respond to their questions, and address their comments through direct changes to the paper. To facilitate this, we will use an anonymous communication feature to enable interaction between authors and reviewers. Authors should primarily focus on correcting factual errors in the reviews and answering specific questions posed by the reviewers. New research results may also be discussed if they help clarify open questions. More instructions will be sent to the authors at the beginning of the discussion phase.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="submission-decisions">Submission decisions</h2>
+          
+<p>For each submission, one of the following decisions will be made: </p>
+<ul>
+<li>
+<p><strong>Accept</strong>: Papers in this category will be accepted for publication in the proceedings and presentation at the conference. All accepted papers must submit a camera-ready copy by the corresponding deadline. The papers will be published in the IEEE Computer Society Digital Library, and authors are encouraged to also make them freely available via arXiv.  </p>
+<ul>
+<li><strong>Note:</strong> Acceptance is conditional on artifact availability on <a href="http://zenodo.org">zenodo.org</a> (see “Open Science”), or a valid justification for why this is not possible.</li>
+</ul>
+</li>
+<li>
+<p><strong>Revision</strong>: A limited number of papers will be invited to submit a revision; such papers will receive a detailed summary of expectations for revision, in addition to standard reviewer comments. Requested changes may be textual, experimental, or a combination of both. Authors will have a limited time window to submit a revision after the notification is sent. The authors should clearly explain in a well-marked appendix how the revisions address the comments of the reviewers. The revised paper will then be re-evaluated, and either accepted or rejected. We will assign the same set of reviewers. Authors can request to withdraw their paper and not submit a revision, but must contact the Program Chairs within one week of receiving the notification (see "Withdrawal policy").  </p>
+</li>
+<li>
+<p><strong>Reject</strong>: Papers in this category are declined for inclusion in the conference.</p>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="conflicts-of-interest-policy">Conflicts of Interest policy</h2>
+          
+<p>The conference requires cooperation from both authors and program committee members to ensure a fair review process. For this purpose, authors must report all program-committee members and chairs who, in their opinion, have a conflict of interest and therefore may not be able to provide an unbiased review. <strong>Conflicts must be declared by the abstract registration deadline, and updated in the last 24 hours before the paper submission deadline, since program-committee members may be added in the meantime.</strong> The current committee is listed on the <a href="/organization/">Organization</a> page. We will send out a list of the committee members added since the previous update on two occasions: 24 hours before the abstract registration deadline, and 24 hours before the paper submission deadline. </p>
+<p>Mandatory conflicts of interest to declare include the following people:</p>
+<p><strong>Advisor/Advisee</strong></p>
+<ul>
+<li>who was the advisor or advisee of an author at any time in the past  </li>
+</ul>
+<p><strong>Recent Collaboration</strong></p>
+<ul>
+<li>with whom an author has published within the past 12 months  </li>
+<li>with whom an author had more than one publication in common within the past 24 months  </li>
+<li>with whom an author has had an active research collaboration within the past 12 months (including work-in-progress papers and funding applications)  </li>
+</ul>
+<p><strong>Institutional</strong></p>
+<ul>
+<li>who shares an institutional affiliation with an author at the time of submission or within the 12 months before that (including secondary affiliations and consulting work)  </li>
+</ul>
+<p><strong>Financial</strong>  </p>
+<ul>
+<li>who is a co-PI or holds a sub-award on the same grant or funding of an author in the last 12 months  </li>
+<li>who is affiliated with a party that provided research funding to an author in the last 12 months, including unrestricted gifts   </li>
+</ul>
+<p><strong>Personal</strong></p>
+<ul>
+<li>with whom you have a close personal relationship</li>
+</ul>
+<p>For any “<strong>Other</strong>” or “<strong>Personal</strong>” declared conflict, authors are required to explain the nature of the conflict in HotCRP, to the Program Chairs and the Area Chairs. The PC Chairs reserve the right to request further explanation and can remove non-mandatory conflicts at their discretion.</p>
+<p>Program-committee members who have a genuine conflict of interest with a paper, including the Program and Area Chairs, will be excluded from evaluation and discussion of that paper. When a Program Chair is conflicted, the other Co-Chair will be responsible for managing that paper. When both Program Chairs are in conflict, an Area Chair will be appointed to handle the paper. </p>
+<p>⚠️ <strong>A Special Note on “Fake Conflicts”</strong>: Declaring conflicts of interest to avoid certain (otherwise non-conflicting) PC members is not allowed and can constitute grounds for rejection. The PC Chairs reserve the right to request additional explanation for any declared conflict. If authors have concerns about the fair treatment of their submissions, they should instead contact the chairs and provide convincing arguments for any special consideration that they are requesting.</p>
+<p>Area Chairs can author or co-author submissions. Program Chairs are not allowed to be authors or co-authors of any submissions. </p>
+<h3 id="change-of-affiliation">⚠️ Change of affiliation</h3>
+<p>Affiliations are fixed at abstract registration, since they determine institutional conflicts, and we strongly discourage changing them afterwards. If an author may change affiliation by the decision notification, for example because they are interviewing for a new position, and would potentially like the new affiliation to appear in the paper, the authors should:</p>
+<ul>
+<li>let the PC Chairs know <strong>before the submission deadline</strong> at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a> (this is treated confidentially), and</li>
+<li>also declare the conflicts of interest that the prospective affiliation would bring.</li>
+</ul>
+<p>Changes flagged this way may be reflected in the camera-ready version. If an unforeseen change of affiliation occurs during the review period, contact the PC Chairs immediately; such cases are handled case by case, and we expect them to be rare.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="distinguished-paper-award">Distinguished paper award</h2>
+          
+<p>Outstanding paper(s) will be selected by the Program Committee, with input from the Steering Committee, for the distinguished paper award. The award will be announced at the conference. Distinguished paper awards are intended to highlight papers which significantly challenge the state of the art in research areas relevant to SaTML.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="attendance-for-accepted-papers">Attendance for accepted papers</h2>
+          
+<p>⚠️ <strong>In-person presentations only:</strong> We are planning for all presentations at SaTML 2027 to take place in person at the conference. In this edition, we are not planning any remote or virtual presentation option. An accepted paper appears in the conference's formal IEEE proceedings on two conditions: at least one author registers (with the full non-student registration fee) by the specified registration deadline, and the paper is presented in person, on site. If none of the authors of a paper is able to attend, for example because of visa difficulties or other exceptional circumstances, the authors must inform the PC Chairs and the General Chair in advance and obtain approval. Exceptions are handled case by case. Where an exception is granted, the chairs may permit a non-author to present the paper on site (e.g., a colleague of the authors attending SaTML), or in rare cases allow the paper to be included without a presentation.</p>
+<p>⚠️ <strong>Important:</strong> Papers with no registered author by the deadline, or that are not presented on site without prior approval, will not appear in the IEEE proceedings.</p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="planning-for-growth-in-submissions">Planning for growth in submissions</h2>
+          
+<p>SaTML has grown steadily along with the community it serves, and we expect that trend to continue. The Program Committee for 2027 is being sized to absorb a 2x increase over last year's submission volume, while preserving the timeline and review standards described above, and we will expand it further if abstract registration indicates that is necessary.</p>
+<p>If submissions exceed even that, we may need to adjust parts of the process in order to protect review quality. In that case, we will consider one or more of the following:</p>
+<ul>
+<li>Expanding the Program Committee once abstract registration gives us a firm picture of volume. If we do, the updated committee will be in place no later than 24 hours before the submission deadline, and authors should re-check their conflicts of interest against it.  </li>
+<li>Moving the early-reject notification to a later date.  </li>
+<li>Postponing decision notifications, and reducing revision window for the "Revision" timeline. Authors would still have the opportunity to revise their papers during the interactive discussion phase.</li>
+<li>Requiring authors of submitted papers to contribute to reviewing, as is increasingly common at venues of large size. Nominations are collected from every submission so that we are ready, but we will only call on them if the volume requires it, which we confirm after abstract registration closes.  <ul>
+<li><strong>At abstract registration</strong>, every paper must nominate one author to review on its behalf, and that author must list their full conflicts in their HotCRP profile (see <a href="#conflicts-of-interest-policy">Conflicts of Interest policy</a>). <strong>The nomination cannot be changed afterwards.</strong>  </li>
+<li>The load is cumulative: up to three papers for each submission the author is nominated on.  </li>
+<li>Reviews that are missing, late, or of inadequate quality may result in desk rejection of any paper the author was nominated on. Nominees are never assigned their own or conflicted papers, and the nomination does not affect a paper's evaluation.  </li>
+</ul>
+</li>
+</ul>
+<p>Abstract registration has been introduced precisely so that we can anticipate volume early and plan accordingly. We will confirm whether any of these measures are necessary before the early reject notification date and will communicate any changes to authors promptly. If the timeline change is substantial, the PC Chairs may offer the option to withdraw the paper within a specified time window, before any reviews have been released. Small changes, such as delays of about one or two weeks, do not warrant this option (see "Withdrawal policy").</p>
+<p>We would rather set out this contingency plan in advance than surprise anyone mid-cycle. We hope and expect that none of it will be needed.</p>
+<!-- ::: callout
+**Interested in reviewing for SaTML 2027?** We may further expand the Program Committee, also depending on the volume of abstract registrations. If you have published and peer-reviewed in security, privacy and machine learning venues, [let us know if you would like to be considered for the Program Committee](https://forms.gle/iQFaQpg4rwqh79qL8). Junior researchers welcome; an invitation is not guaranteed.
+::: -->
+<div class="callout">
+<p><strong>The Program Committee for SaTML 2027 is now finalized.</strong> Many thanks to everyone who reached out! The full list is on the <a href="/organization/">Organization</a> page.</p>
+</div>
+<p>If you have any questions, please email us at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a> </p>
+
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <h2 id="checklist">Checklist</h2>
+          
+<p>Authors should read and comply with the full CfP. We have drafted a <a href="/call-for-papers/checklist/">brief checklist</a> to help you double-check, but it may not capture every detail, so the full CfP takes precedence. If you think we have missed something important from the CfP in the checklist, we welcome your feedback at <a href="mailto:pcchairs@satml.org">pcchairs@satml.org</a>.</p><style>
+.dates {
+  margin: 1.5rem 0;
+}
+
+.dates > ul {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.dates > ul > li {
+  margin-bottom: 0.25em;
+}
+
+.dates ul ul {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.dates ul ul li {
+  margin: 0.2rem 0;
+  font-size: 0.92em;
+  color: #6a6a6a;
+}
+
+.dates li.is-past {
+  color: #a8a8a8;
+}
+
+.dates li.is-past > strong {
+  color: inherit;
+  font-weight: 400;
+}
+
+.dates li.is-next::marker {
+  color: brown;
+}
+
+.due-chip {
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.02em 0.6em 0.06em;
+  border: 1px solid brown;
+  border-radius: 999px;
+  color: brown;
+  font-size: 0.78em;
+  white-space: nowrap;
+  vertical-align: 0.12em;
+}
+
+@media screen and (max-width: 768px) {
+  .dates > ul {
+    margin-left: 0.9em !important;
+  }
+
+  .dates ul ul {
+    margin-left: 0.9em !important;
+  }
+}
+</style><script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const AOE = 'T23:59:59-12:00';
+    const now = new Date();
+    const due = el => new Date(el.dataset.due + AOE);
+    const end = el => new Date((el.dataset.end || el.dataset.due) + AOE);
+
+    document.querySelectorAll('.dates').forEach(block => {
+      const marks = Array.from(block.querySelectorAll('strong[data-due]'));
+
+      marks.forEach(el => {
+        if (end(el) < now) el.closest('li')?.classList.add('is-past');
+      });
+
+      // Undated detail lines under a past deadline dim with it.
+      block.querySelectorAll('li.is-past > ul > li').forEach(li => {
+        if (!li.querySelector('strong[data-due]')) li.classList.add('is-past');
+      });
+
+      const next = marks
+        .filter(el => !('quiet' in el.dataset))
+        .filter(el => !el.closest('li')?.classList.contains('is-past'))
+        .sort((a, b) => due(a) - due(b))[0];
+      if (!next) return;
+      next.closest('li')?.classList.add('is-next');
+
+      // The chip counts in calendar days ("tomorrow", "in 5 days"), and
+      // switches to hours for the last 48h before the AoE deadline moment.
+      // Days follow the visitor's calendar, so they match the printed date;
+      // hours are timezone-independent, so the final stretch is exact.
+
+      // Days until the printed date, in the visitor's timezone.
+      const [y, m, d] = next.dataset.due.split('-').map(Number);
+      const days = Math.round(
+        (new Date(y, m - 1, d) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+
+      // Time to the deadline moment, floored so "in N hours" never
+      // promises more time than actually remains.
+      const msLeft = due(next) - now;
+      const hoursLeft = Math.floor(msLeft / 3600e3);
+
+      const chip = document.createElement('span');
+      chip.className = 'due-chip';
+      const inDays = days === 1 ? 'tomorrow' : `in ${days} days`;
+      if ('end' in next.dataset) {
+        // Ranges get phase words instead of a countdown.
+        chip.textContent =
+          days < 0 ? 'in progress' :
+          days === 0 ? 'starts today (AoE)' : inDays;
+      } else if ('day' in next.dataset) {
+        // Conference-side dates ((...)): whole days only.
+        chip.textContent = days <= 0 ? 'today (AoE)' : inDays;
+      } else {
+        // Author deadlines [[...]]: hours over the final stretch.
+        chip.textContent =
+          msLeft < 3600e3 ? 'under 1 hour' :
+          msLeft <= 48 * 3600e3 ? `in ${hoursLeft} hour${hoursLeft === 1 ? '' : 's'}` :
+          inDays;
+      }
+      next.after(chip);
+    });
+  });
+</script><style>
+.callout {
+  margin: 1.5rem 0 !important;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e6dcdc;
+  border-left: 3px solid brown;
+  border-radius: 4px;
+  background: #fbf8f8;
+}
+
+.callout > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.callout:last-child {
+  margin-bottom: 0 !important;
+}
+</style>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<script>
+  // Highlight the rail link of the section currently being read: the last
+  // heading that has scrolled up past the top quarter of the window.
+  document.addEventListener('DOMContentLoaded', () => {
+    const links = Array.from(document.querySelectorAll('.toc-rail a[href^="#"]'));
+    const headings = links
+      .map(a => document.getElementById(decodeURIComponent(a.hash.slice(1))))
+      .filter(Boolean);
+    if (!headings.length) return;
+    let active = null;
+
+    const update = () => {
+      let current = headings[0];
+      for (const h of headings) {
+        if (h.getBoundingClientRect().top <= window.innerHeight / 4) {
+          current = h;
+        } else {
+          break;
+        }
+      }
+      const link = links[headings.indexOf(current)];
+      if (link !== active) {
+        if (active) active.classList.remove('is-active');
+        link.classList.add('is-active');
+        active = link;
+      }
+    };
+
+    document.addEventListener('scroll', update, { passive: true });
+    update();
+  });
+</script>
+
+    </main>
+<style>
+  footer a {
+    color: #888 !important;
+  }
+  * {
+    --bulma-footer-background-color: white !important;
+    --bulma-footer-padding: 3rem 1.5rem 3rem !important;
+  }
+</style>
+
+<footer class="footer">
+  <div class="content has-text-centered">
+    <p>
+      This conference follows the 
+      <a
+        href="https://www.ieee.org/about/corporate/governance/code-of-conduct"
+        target="_blank"
+        rel="noopener"
+        class="has-text-weight-semibold"
+      >
+        IEEE Code of Conduct
+      </a>
+      &middot;
+      <a
+        href="https://www.ieee.org/security-privacy.html"
+        target="_blank"
+        rel="noopener"
+        class="has-text-weight-semibold"
+      >
+        IEEE Privacy Policy
+      </a>
+    </p>
+  </div>
+</footer>  </body>
+</html>

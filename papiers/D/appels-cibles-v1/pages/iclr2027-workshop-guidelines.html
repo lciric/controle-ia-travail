@@ -1,0 +1,1690 @@
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en"> 
+
+<head>
+    <style>html { scroll-padding-top: 70px; /* height of sticky header plus extra */ }</style>
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/virtual/js/virtual.js"></script>
+    <meta name="google-site-verification" content="0jwPnVXIAk4FvFdT37dwMmd-kjHF86e5DKwvqlStUW0">
+
+
+    
+    <link rel="stylesheet" href="/static/core/css/core.css" type="text/css">
+    <link rel="stylesheet" href="/static/virtual/css/virtual.css" type="text/css">
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/static/core/css/custom.css" type="text/css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Exo:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <script nonce="tRVNx2LNtkYs7432nNkVMg==">
+        window.MathJax = {
+          tex: {
+            // Workshop/competition imports store inline formulas with doubled dollars.
+            inlineMath: [['$$', '$$'], ['$', '$'], ['\\(', '\\)']],
+            displayMath: [['\\[', '\\]']],
+            processEscapes: true,
+          },
+          options: {
+            ignoreHtmlClass: 'no-mathjax',
+          }
+        };
+    </script>
+
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+            nonce="tRVNx2LNtkYs7432nNkVMg==" >
+    </script>
+
+    <!--This script keeps local links inside the web app rather than opening them
+in Safari, and has nothing to do with editing or Aloha.-->
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+    (function (document, navigator, standalone) {
+
+        if ((standalone in navigator) && navigator[standalone]) {
+            var curnode, location = document.location, stop = /^(a|html)$/i;
+            document.addEventListener('click', function (e) {
+                curnode = e.target;
+                while (!(stop).test(curnode.nodeName)) {
+                    curnode = curnode.parentNode;
+                }
+
+                if (
+                    'href' in curnode && // is a link
+                    (chref = curnode.href).replace(location.href, '').indexOf('#') && // is not an anchor
+                    (!(/^[a-z\+\.\-]+:/i).test(chref) ||                       // either does not have a proper scheme (relative links)
+                        chref.indexOf(location.protocol + '//' + location.host) === 0) // or is in the same protocol and domain
+                ) {
+                    e.preventDefault();
+                    location.href = curnode.href;
+                }
+            }, false);
+        }
+    })(document, window.navigator, 'standalone');
+</script>
+
+
+<style>
+
+    @media screen and (min-width: 767px) {
+        .blurb {
+            min-height: 260px;
+        }
+    }
+</style>
+    
+
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous">
+</script>
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+    if (typeof jQuery === 'undefined') {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = "/static/core/js/jquery-3.6.1.min.js";
+        document.head.appendChild(script);
+    }
+</script>
+
+    
+    <script nonce="tRVNx2LNtkYs7432nNkVMg==">
+        var $ = jQuery;
+    </script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+    <script src="/static/core/js/ajax-csrf-snippet.js"></script>
+    
+    <link rel="stylesheet" href="/static/fontawesomefree/css/all.min.css">
+    <script src="/static/fontawesomefree/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+
+    <style nonce="tRVNx2LNtkYs7432nNkVMg==">
+        body {
+            font-family: Exo;}
+    </style>
+
+
+
+
+
+
+
+
+        
+
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
+    <link href="https://fonts.googleapis.com/css2?family=Exo:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/virtual/css/virtual.css">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.3.1/typeahead.bundle.min.js" integrity="sha512-lEb9Vp/rkl9g2E/LdHIMFTqz21+LA79f84gqP75fbimHqVTu6483JG1AwJlWLLQ8ezTehty78fObKupq3HSHPQ==" crossorigin="anonymous"></script>
+    <script src="/static/core/js/moment/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="/static/core/js/ajax-csrf-snippet.js" ></script>
+    <script src="/static/virtual/js/virtual.js"></script>
+    
+
+    
+
+    
+    <link rel="canonical" href="https://iclr.cc/Conferences/2027/WorkshopGuidelines">
+
+    <title>ICLR 2027 Workshop Guidance</title>
+</head>
+
+<body>
+<!-- <h1><a href="#" onclick="alert('CSP Test');">CSP Test</a></h1> -->
+
+
+
+
+<div class="noprint">
+    
+        
+            <!--Navbar start-->
+<header>
+    <a href="#child-menu" class="off-screen">Skip to yearly menu bar</a>
+    <a href="#main" class="off-screen">Skip to main content</a>
+    <div id="id_navbar" class="navbar navbar-expand-sm navbar-dark" aria-label="Main Navigation"
+         style="background-color:#212529">
+        <h2 class="off-screen">Main Navigation</h2>
+        <div class="container-fluid">
+            <div><a class="navbar-brand" href="/" aria-label="Home">
+
+                <img src="/static/core/img/iclr-navbar-logo.svg" alt="conference_logo" height="40"></a></div>
+
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarToggler1"
+                    aria-expanded="false" aria-label="Toggle main navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarToggler1">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    
+    <li class="dropdown-item dropdown pe-3">
+        <a class="nav-link dropdown-toggle  p-1" 
+           href="#"
+           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            ICLR
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark">
+            
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/FAQ">
+                    <span >
+                        Help/FAQ
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Help/Contact">
+                    <span >
+                        Contact ICLR
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Profile/create">
+                    <span >
+                        Create Profile
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/public/CodeOfConduct">
+                    <span >
+                        Code of Conduct
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/public/JournalToConference">
+                    <span >
+                        Journal To Conference Track
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/public/DiversityInclusion">
+                    <span >
+                        Diversity &amp; Inclusion
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="https://openreview.net/group?id=ICLR.cc">
+                    <span >
+                        Proceedings at OpenReview
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/FutureMeetings">
+                    <span >
+                        Future Meetings
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2025/Press">
+                    <span >
+                        Press
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Sponsors/sponsorinfo">
+                    <span >
+                        Exhibitor Information
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="https://blog.iclr.cc/">
+                    <span >
+                        ICLR Blog
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="https://twitter.com/iclr_conf?ref_src=twsrc%5Etfw">
+                    <span >
+                        ICLR Twitter
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/About">
+                    <span >
+                        About ICLR
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Downloads">
+                    <span >
+                        Downloads
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/public/PrivacyPolicy">
+                    <span >
+                        Privacy Policy
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/resetpassword">
+                    <span >
+                        Reset Password
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+        </ul>
+    </li>
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/MyStuff">
+                    <span >
+                        My Stuff
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+                    
+                </ul>
+
+                
+                <form class="d-flex mx-2" aria-label="Search" role="search" action="/search">
+                    <div class="input-group" role="search" style="outline-color:green;">
+                        <input type="text" class="form-control" placeholder="Search" name="q"
+                               value=""
+                               aria-label="Search" aria-describedby="btnGroupAddon"
+                                id="navbar-search">
+                        <div class="input-group-text btn-primary" id="btnGroupAddon">
+                            <button style="border: none; background-color: transparent; padding: 0;" type="submit" aria-label="execute search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+
+                
+                    <a href="/accounts/login?nextp=/ " class="navbar-brand"><span
+                            class="fa-solid fa-right-to-bracket"></span> Login</a>
+                
+
+            </div>
+        </div>
+    </div>
+</header>
+<!--Navbar end-->
+        
+    
+</div><!--noprint div-->
+
+<!--This holds the whole page including the navbar-->
+<main id="main">
+    
+        
+            <div class="container-fluid">
+                
+<!--Navbar start-->
+
+
+
+
+<div class="container-fluid">
+
+    <div class="dropdown" id="child-menu">
+        <nav class="align-middle navbar navbar-expand-md mx-4 border border-3 border-top-0 rounded-bottom"
+             style="min-height: 57px; background-color: #F6f6f6;">
+            <div class="container-fluid">
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarToggler1359"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarToggler1359">
+                    <ul class="navbar-nav me-auto mb-lg-0">
+                        
+
+
+    <li class="dropdown-item dropdown pe-3">
+        <a class="nav-link dropdown-toggle border-3  btn btn-primary text-white p-1" style= "background-color: #070bff; font-size: 1.2 em;"
+           href="#"
+           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Select Year: (2027)
+        </a>
+        <ul class="dropdown-menu">
+            
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2027/index.html">2027
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2026">2026
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2025">2025
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2024">2024
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2023">2023
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2022">2022
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2021">2021
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2020">2020
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2019">2019
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/Conferences/2018">2018
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/archive/www/2017.html">2017
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/archive/www/2016.html">2016
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/archive/www/2015.html">2015
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/archive/2014/">2014
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item " >
+                <a class="dropdown-item p-1"
+                   href="/archive/2013/">2013
+                </a>
+                
+            </li>
+        
+
+    
+
+
+
+        </ul>
+    </li>
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/Dates">
+                    <span >
+                        Dates
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+    <li class="dropdown-item dropdown pe-3">
+        <a class="nav-link dropdown-toggle  p-1" 
+           href="#"
+           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Calls
+        </a>
+        <ul class="dropdown-menu">
+            
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/CallForPapers">
+                    <span >
+                        Call for Papers
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/CallForWorkshops">
+                    <span >
+                        Call for Workshops
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/WorkshopGuidelines">
+                    <span style="font-size: .8em;">
+                        &nbsp;&nbsp;&nbsp;&nbsp;Workshop Proposal Guide
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/CallForBlogPosts">
+                    <span >
+                        Call For Blog Posts
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+        </ul>
+    </li>
+    
+
+
+
+    <li class="dropdown-item dropdown pe-3">
+        <a class="nav-link dropdown-toggle  p-1" 
+           href="#"
+           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Guides
+        </a>
+        <ul class="dropdown-menu">
+            
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/AuthorGuidelines">
+                    <span >
+                        Author Guide
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/AreaChairGuidelines">
+                    <span >
+                        Area Chair Guide
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/SeniorAreaChairGuidelines">
+                    <span >
+                        Senior Area Chair Guide
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/ReviewerGuidelines">
+                    <span >
+                        Reviewer Guide
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/AIPolicyForReviewers">
+                    <span >
+                        AI Policy for Reviewers
+                    </span>
+                </a>
+                
+                    <hr class="dropdown-divider" aria-hidden="true">
+                
+            </li>
+
+        
+
+    
+
+
+
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/AIPolicyForAuthors">
+                    <span >
+                        AI Policy for Authors
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+        </ul>
+    </li>
+    
+
+
+
+    <li class="dropdown-item dropdown pe-3">
+        <a class="nav-link dropdown-toggle  p-1" 
+           href="#"
+           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Organization
+        </a>
+        <ul class="dropdown-menu">
+            
+    
+        
+            <li class="dropdown-item  pe-2" >
+                <a class="nav-link p-1"  href="/Conferences/2027/Board">
+                    <span >
+                        Board
+                    </span>
+                </a>
+                
+            </li>
+
+        
+
+    
+
+
+
+        </ul>
+    </li>
+    
+
+
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!--Navbar end-->
+
+
+            </div>
+            <br><br>
+        
+    
+    
+        
+        <div class="container">
+    
+    
+    
+
+    
+    <div class="container">
+        
+            <!--JUst above the HTML in document-snippet.html-->
+            <div> <div>
+<h1>ICLR 2027 Workshop Proposal Guide<span><span><span><span><span> </span></span></span></span></span></h1>
+
+<p><a href="/Conferences/2027/CallForWorkshops">ICLR 2027 - Call for Workshops</a></p>
+
+<p><span><span><span><span><span><span>ICLR Workshop Co-Chairs </span></span></span></span></span></span></p>
+
+<p><span><span><span><span><span><span>Nezihe Merve Gürel (TU Delft)</span></span></span></span></span></span><br>
+<span><span><span><span><span><span>Yuanqi Du (Microsoft Research)</span></span></span></span></span></span><br>
+<span><span><span><span><span><span>Chulin Xie (Google DeepMind)</span></span></span></span></span></span><br>
+<span><span><span><span><span><span>Antonio Vergari (University of Edinburgh)</span></span></span></span></span></span></p>
+
+<p><span><span><span><span><span><span>This is the ninth year that ICLR will have workshops. With the rapid growth and interest in ICLR and its associated workshops, the competition for workshops has grown. To guide and support submissions,  the workshop chairs have agreed on the following guidance for proposals to hold a workshop at ICLR 2027. Organizers of workshop proposals should take care to respect every piece of guidance provided here, and provide explicit answers to the questions implied throughout, as well as explicitly addressing the selection criteria listed below.</span></span></span></span></span></span></p>
+
+<p><span><span><span><strong><span><span>Timeline </span></span></strong></span></span></span></p>
+
+<ul>
+	<li><span><span><span><strong><span><span>Workshop Application Open</span></span></strong></span></span></span><span><span><span><span><span><span>: 8 September 2026</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Workshop Application Deadline</span></span></strong></span></span></span><span><span><span><span><span><span>: 9 October 2026, 11.59pm AoE</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Workshop Acceptance Notification</span></span></strong></span></span></span><span><span><span><span><span><span>: 7 December 2026</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Suggested Submission Deadline for Workshop Contributions:</span></span></strong></span></span></span><span><span><span><span><span><span> 1 Feb 2027</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Mandatory Accepted Paper Notification Date*:</span></span></strong></span></span></span><span><span><span><span><span><span> 26 February 2027, 11.59pm AoE</span></span></span></span></span></span><br>
+	<span><span><span><span><span><span>*</span></span></span></span></span></span><span><span><span><strong><em><span>By this deadline, workshop organizers must (1) notify authors of acceptance decisions, (2) make all accepted papers publicly available on OpenReview, and (3) import all accepted papers into iclr.cc.</span></em></strong></span></span></span><span><span><span><span><span><span> </span></span></span></span></span></span><span><span><span><span><em><span>Meeting this deadline is particularly important for workshop contributors who plan to apply for ICLR financial assistance or require a visa letter.</span></em></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Update Workshop Schedule with Opening and Closing Times on iclr.cc:</span></span></strong></span></span></span><span><span><span><span><span><span> 26 March 2027, 11:59 p.m. AoE</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Complete and Finalize Workshop Schedules in the Organizer Portal:</span></span></strong></span></span></span><span><span><span><span><span><span> 14 April 2027, 11:59 p.m. AoE</span></span></span></span></span></span></li>
+</ul>
+
+<p><strong><span><span><span><span><span><span>The mandatory author notification deadline of 26 February 2027 will not be extended.</span></span></span></span></span></span></strong></p>
+ 
+
+<p><span><span><span><strong><span><span>Note that all proposal organizers, speakers and panelists are required to have an OpenReview profile. Please create an OpenReview Profile at least two weeks before the workshop application deadline on 9 October 2026.</span></span></strong></span></span></span></p>
+ 
+
+<p><span><span><span><strong><span><span>Selection Criteria</span></span></strong></span></span></span></p>
+
+<ol>
+	<li><span><span><span><span><span><span>Degree to which the proposal is focused on an important and topical problem, and the degree to which it is expected that the community will find the workshop interesting, exciting, and valuable. </span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Intellectual excitement of the topic. Is it likely to break new ground, or reiterate past debates?</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Diversity and inclusion. (See expectations below under </span></span></span></span></span></span><span><span><span><span><em><span>Other Guidance and Expectations for Workshop Proposals.</span></em></span></span></span></span><span><span><span><span><span><span>)</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Degree to which the proposed program offers an opportunity for discussion.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Degree to which the proposal creates opportunities for under-represented, under-resourced, and budding researchers to engage with the community. (See requirements below under </span></span></span></span></span></span><span><span><span><span><em><span>Platform for Tiny or Short Papers</span></em></span></span></span></span><span><span><span><span><span><span>.)</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Quality of proposed invited speakers (including expertise, scientific achievements, and presentation ability). Workshop organizers are required to confirm tentative interest from proposed invited speakers and mention this in their proposal.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Degree to which the organizers have offered means to engage in the workshop for those unable to physically attend given that the workshops will be in-person.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Organizational experience of the team.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Other dimensions in the expectations listed below. </span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Points of difference. What makes this workshop enticingly different to the ICLR workshops held previously?</span></span></span></span></span></span></li>
+</ol>
+ 
+
+<p><span><span><span><strong><span><span>Assessment Process</span></span></strong></span></span></span></p>
+
+<p><span><span><span><span><span><span>The workshop chairs will appoint a number of reviewers who will provide written assessments of the proposals against the criteria listed above. Reviews will be released to authors. Their reports will be considered by the workshop chairs who will jointly decide upon the selected workshops (subject to the notes on COIs listed below). The final decisions will be made by the workshop chairs via consensus and judgment. </span></span></span></span></span></span></p>
+
+<p><span><span><span><span><span><span>Note that in contrast to the number of papers accepted at most conferences there is a natural limit to the number of workshops that can be accepted, dictated by the number of available rooms at the conference venue. </span></span></span></span></span></span><br>
+ </p>
+
+<p><span><span><span><strong><span><span>Workshop Requirements</span></span></strong></span></span></span></p>
+
+<ol>
+	<li><span><span><span><strong><span><span>Honor the Global Notification Deadline Prior until 26 February 2027 </span></span></strong></span></span></span>
+
+	<ol>
+		<li><span><span><span><span><span><span>By submitting a workshop proposal, workshop organizers commit to notifying those who submit contributions (including talks and posters) to their workshop of their acceptance status before 11.59pm, 26 February 2027 (AOE). In addition, the organizers must make the accepted papers publicly visible on OpenReview and import them into </span></span></span></span></span></span><a href="/"><span><span><span><span><span><u><span>iclr.cc</span></u></span></span></span></span></span></a><span><span><span><span><span><span> by this date. A timeline should be included in the proposal that will allow for this. </span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Platform Contributed Work</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Ensure that contributed work is well-featured in the program, and is given visibility through presentation slots and poster sessions. Additionally, your workshop program should effectively engage the audience by allowing for interactive components.</span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Platform for Tiny or Short Papers</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>We encourage each workshop to establish a tiny or short paper track to encourage the submission of late-breaking developments that would most benefit from feedback at ICLR, as well to make their workshops more accessible to potential authors outside the ML conference publication circuit.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>This tiny or short paper track should prioritize less-than-full-conference papers, welcoming submissions that, for example, present an implementation and evaluation of an unpublished but simple idea, a modest but self-contained theoretical result, a follow-up experiment or re-analysis of a previously published paper, or a fresh perspective on an existing publication.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>To assist workshop organizers with the OpenReview setup of this track in addition to others that the workshop may host, we will provide a venue configuration template that supports this feature.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Because ICLR tiny and short papers are a participatory initiative, </span></span></span></span></span></span><span><span><span><strong><span><span>AI-generated</span></span></strong></span></span></span><span><span><span><span><span><span> papers are not allowed for these formats. AI </span></span></span></span></span></span><span><span><span><strong><span><span>assistance</span></span></strong></span></span></span><span><span><span><span><span><span> is permitted, but submissions must be primarily human-authored, reflecting original thought and analysis. See guidance from </span></span></span></span></span></span><a href="https://guides.nyu.edu/data/ai-governance#s-lg-box-30635021"><span><span><span><span><span><u><span>NYU</span></u></span></span></span></span></span></a><span><span><span><span><span><span> and </span></span></span></span></span></span><a href="https://library.mit.edu.au/c.php?g=968719&amp;p=7043705"><span><span><span><span><span><u><span>MIT</span></u></span></span></span></span></span></a><span><span><span><span><span><span> on the distinction between AI-generated and AI-assisted work. </span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>See </span></span></span></span></span></span><a href="/Conferences/2025/CallForTinyPapers"><span><span><span><span><span><u><span>this page</span></u></span></span></span></span></span></a><span><span><span><span><span><span> for a history of the ICLR tiny papers initiative.</span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Participation Limits</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Each individual may be listed as an organizer on no more than </span></span></span></span></span></span><span><span><span><strong><span><span>two</span></span></strong></span></span></span><span><span><span><span><span><span> submitted workshop proposals, and must disclose any other workshop proposals they are involved in organizing.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Each individual may be listed as a speaker or panelist in no more than </span></span></span></span></span></span><span><span><span><strong><span><span>two</span></span></strong></span></span></span><span><span><span><span><span><span> distinct workshop proposals. </span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Each workshop proposal may include a maximum of </span></span></span></span></span></span><span><span><span><strong><span><span>eight</span></span></strong></span></span></span><span><span><span><span><span><span> organizers. Each role, whether an advisory role or a student volunteer role, counts toward the limit of eight organizers. </span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Reviewer nomination</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>As a new requirement this year, we ask each workshop to nominate one or more mid-career or senior researchers who are not among the workshop organizers to serve on the workshop proposal review committee. This will help us accommodate the growing number of submissions and encourage workshops to contribute back to the broader ICLR workshop community.</span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Managing Chair and Reviewer Conflicts of Interest</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Workshop chairs cannot be organizers nor give invited talks at any workshop, but can submit papers and give contributed talks.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Workshop reviewers cannot review any proposal on which they are listed as an organizer or invited speaker, and may not accept invitations to speak at any workshop they have reviewed after the workshop is accepted.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Workshop chairs and reviewers cannot review or shape acceptance decisions about workshops with organizers from within their organization. (For large corporations, this means anyone in the corporation world-wide).</span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Managing Organizer Conflicts of Interest</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Workshop organizers cannot give talks at the workshops they organize. They can give a brief introduction to the workshop and/or act as a panel moderator.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>Workshop organizers should state in their proposal how they will manage conflicts of interest in assessing submitted contributions. At a minimum, an organizer should not be involved in the assessment of a submission from someone within the same organization. </span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>Plan Well for In-Person</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Workshop organizers should strictly aim for hosting an in-person event. However, we strongly encourage the organizers to account for exceptional circumstances, such as visa issues or other constraints.</span></span></span></span></span></span></li>
+	</ol>
+	</li>
+	<li><span><span><span><strong><span><span>LLM usage policy</span></span></strong></span></span></span>
+	<ol>
+		<li><span><span><span><span><span><span>Workshop organizers are recommended to follow the Policies on Large Language Model Usage at ICLR 2027 </span></span></span></span></span></span><a href="/Conferences/2027/AIPolicyForAuthors"><span><span><span><span><span><u><span>AIPolicyForAuthors</span></u></span></span></span></span></span></a><span><span><span><span><span><span>, but have the flexibility to establish their own AI usage policies. The only exception is the Tiny Papers track, which does not permit AI-generated content due to requirements associated with its funding. In this iteration of ICLR workshops, the conference will provide tools to flag AI-generated papers, reviews, and meta-reviews.</span></span></span></span></span></span></li>
+		<li><span><span><span><span><span><span>For workshops open to AI serving as primary authors and/or reviewers of workshop papers, please claim the role of AI participation in the workshop proposal. </span></span></span></span></span></span></li>
+	</ol>
+	</li>
+</ol>
+ 
+
+<p><span><span><span><strong><span><span>Closer to the workshop date, organizers will be sent a form to confirm they meet the requirements outlined above. Failure to comply with these requirements may result in early rejection of the proposal or, if the proposal has already been accepted, cancellation of the workshop. Final decisions are at the discretion of the ICLR 2027 Workshop Chairs.</span></span></strong></span></span></span></p>
+ 
+
+<p><span><span><span><strong><span><span>Other Guidance and Expectations for Workshop Proposals </span></span></strong></span></span></span></p>
+
+<ol>
+	<li><span><span><span><span><span><span>We encourage, and expect, diversity in the organizing team, speakers, and other invited participants. This includes diversity of viewpoint and thinking regarding the topics discussed at the workshop, gender, ethnicity, affiliations, seniority, geographic location, etc. If a workshop is part of a series, organizers are encouraged to include and identify organizers, speakers, and other invited participants who have not organized or participated in previous editions. Organizers should articulate how they have addressed diversity in their proposal in each of these senses</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Since the goal of the workshop is to generate discussion, sufficient time and structure needs to be included in the program for this. Proposals should explicitly articulate how they will encourage broad discussion. </span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Workshop proposals should list explicitly what the problems are they would like to see solved, or at least advances made, as part of their workshop. They should explain why these are important problems and how the holding of their proposed workshop will contribute to their solution.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Workshops should not primarily be a venue for work that has been previously published in other conferences on machine learning, including the ICLR main track. Organizers should make this clear in their calls and explain in their proposal how they will encourage the presentation of ongoing or novel machine learning work.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>We encourage workshop submissions of varying lengths and scopes, in particular as an avenue for junior and new researchers to start participating in the ICLR community. Organizers should articulate what they hope to achieve from the format proposal beyond the talks listed. </span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>With the extraordinary growth of ICLR, and noting the impossibility of accurately predicting attendance and time zone differences, organizers should explain how they will provide access to the content of the workshop for those who cannot attend in person. This might include recording of talks, publishing short working papers or posters on the web, having a follow-up special issue of a journal, curating and maintaining a web page with a range of content, or other ideas.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Workshops should allow for choice of attendance based on content. Good workshops will put talk titles up publicly prior to site publication and note the archival status of their submissions. Organizers should articulate how they will do this.</span></span></span></span></span></span></li>
+	<li><span><span><span><span><span><span>Organizing a workshop is a complex task, and proposals should outline the organizational experience and skills of the proposed organizers (as a team). We encourage junior researchers to be involved in workshop organization, but prefer some collective experience in organizing a complex event.</span></span></span></span></span></span></li>
+</ol>
+ 
+
+<p><span><span><span><strong><span><span>Minimum Information Requirements</span></span></strong></span></span></span></p>
+
+<ul>
+	<li><span><span><span><strong><span><span>Workshop summary</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Tentative schedule</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Invited speakers/panelists</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Organizers and biographies</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>​​Anticipated audience size</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Plan to get an audience for a workshop (advertising, reaching out, etc.)</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Diversity commitment</span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Virtual access to workshop materials and outcome </span></span></strong></span></span></span></li>
+	<li><span><span><span><strong><span><span>Previous related workshops</span></span></strong></span></span></span></li>
+</ul>
+ 
+
+<p><span><span><span><strong><span><span>Example Successful Proposals</span></span></strong></span></span></span></p>
+
+<p><span><span><span><span><span><span>Successful proposals of the past year here can be found here:</span></span></span></span></span></span></p>
+
+<p><a href="https://openreview.net/group?id=ICLR.cc/2026/Workshop_Proposals#tab-accept"><span><span><span><span><span><u><span>https://openreview.net/group?id=ICLR.cc/2026/Workshop_Proposals#tab-accept</span></u></span></span></span></span></span></a><span><span><span><span><span><span> </span></span></span></span></span></span></p>
+ 
+
+<p><span><span><span><strong><span><span>Frequently Asked Questions From Past Workshops</span></span></strong></span></span></span></p>
+
+<ol>
+	<li><span><span><span><strong><span><span>Workshop Series</span></span></strong></span></span></span><br>
+	<span><span><span><span><span><span>We neither encourage nor discourage workshops on topics that have appeared before. Membership of an existing sequence of workshops is irrelevant in the assessment of a workshop proposal (it neither helps or hinders). Workshop proposals will be evaluated solely on their merits for this year’s conference. Please indicate if your workshop is part of an ongoing series (ICLR or other conferences).</span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Overlapping Proposals</span></span></strong></span></span></span><br>
+	<span><span><span><span><span><span>We will </span></span></span></span></span></span><span><span><span><span><em><span>not</span></em></span></span></span></span><span><span><span><span><span><span> forcibly merge proposals.  If multiple strong proposals are submitted on similar topics, we will choose a single proposal to accept. We may then choose to reach out to the organizers of the rejected proposals to ask whether they would like us to share their proposals with the organizers of the accepted workshop. The organizers of the accepted workshop may then optionally initiate a merge. </span></span></span></span></span></span></li>
+	<li><span><span><span><strong><span><span>Workshop Modality</span></span></strong></span></span></span></li>
+</ol>
+
+<p><span><span><span><span><span><span>This year, ICLR will host only in-person workshops. While all arrangements should be focused on the in-person format, organizers should be ready to accommodate situations where an author or speaker is unable to attend due to exceptional circumstances. For example, organizers could display posters on behalf of authors who cannot be present, or allow them to publicize their work through pre-recorded videos on the workshop website.</span></span></span></span></span></span><br>
+<br>
+ </p>
+</div>
+</div>
+        
+    </div>
+
+
+
+    
+        </div>
+    
+
+</main>
+<!--END BLOCK CONTENT-->
+
+
+<!--Footer for the edit button-->
+
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+
+    $(function () {
+        if ($(".editable").length == 0) {
+            $("#editFooter").hide();
+        }
+
+        // Event bindings for edit buttons
+        $('.startEditBtn').on('click', function() {
+            start_edit();
+        });
+        
+        $('.stopEditBtn').on('click', function() {
+            stop_edit();
+        });
+        $('#id_accepted_terms_and_conditions').on('change', function() {
+            this.form.submit();
+        });
+        $('.accepted_terms_and_conditions').on('change', function() {
+            this.form.submit();
+        });
+        $('.workshopstatus').on('change', function() {
+            changeStatus(this);
+        });
+        $('.action-select').on('change', function() {
+            actionChanged(this);
+        });
+        $('.extra').on('change', function() {
+            extraChanged(this);
+        });
+        $('.filter_workshop').on('change', function() {
+            this.form.submit();
+        });
+        $('.volunteer-status, .recommendation-letter-status').on('change', function() {
+            setStatus(this);
+        });
+        $('.status-form-show').on('change', function() {
+            this.form.submit();
+        });
+        $('.download-form-download').on('change', function() {
+            this.form.submit();
+        });
+        $('.presentation-type-form-presentation-type').on('change', function() {
+            this.form.submit();
+        });
+        $('.export-form-resource').on('change', function() {
+            showFieldsForResource(this.value);
+        });
+        $('.import-form-resource').on('change', function() {
+            showFieldsForResource(this.value);
+        });
+        $('.vol-email-form-to, .vol-email-form-template').on('change', function() {
+            this.form.submit();
+        });
+        $('.organizer-alert').on('click', function() {
+            getUserCreateForm(this.href);
+        });
+    })
+</script>
+
+<script src="/static/core/js/fastclick.min.js" ></script>
+
+<!--We don't know if there are editable tags on the page until after the django template engine has rendered the page. So,
+test in javascript for "editable" tags and if present, load the ckeditor engine dynamically. -->
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+    if (document.getElementsByClassName('editable').length > 0) {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "/static/core/ckeditor/4.18/ckeditor.js";    // use this for linked script
+      script.onload = function () {
+        console.log("ckeditor loaded");
+        // Initial setup when each editor is ready
+        CKEDITOR.on("instanceReady", function (e) {
+          updateToggleDocName(e.editor);
+        });
+
+        // React to any editor entering/leaving read-only
+        CKEDITOR.on("readOnly", function (e) {
+          updateToggleDocName(e.editor);
+        });
+      };
+        document.body.appendChild(script);
+    }
+
+    function updateToggleDocName(editor) {
+      var id = editor && editor.name;
+      if (!id || id.indexOf("id_") !== 0) return;
+
+      var doc_name_element = document.getElementById("document_name_" + id.slice(3));
+      console.log(doc_name_element);
+      if (!doc_name_element) return;
+
+      doc_name_element.style.display = editor.readOnly ? "none" : "block";
+    }
+
+</script>
+
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+    function fetchContent() {
+        $(".editable").each(function (index) {
+            var myself = this;
+            var docvID = this.getAttribute('id').replace("id_", "");
+            var blurbtext = this.getAttribute("blurbtext");
+            $.ajax({
+                url: "/Admin/RetrieveDocumentVersion",
+                type: "POST",
+                data: {
+                    docvID: docvID,
+                    blurbtext: blurbtext,
+                    csrfmiddlewaretoken: csrftoken,
+                },
+                success: function (data, textStatus, jqXHR) {
+                    myself.setAttribute("contenteditable", "true");
+                    myself.innerHTML = data;
+                    CKEDITOR.inline(myself.id);
+                },
+            });
+        })
+    }
+
+    $("#nopageedit").hide();
+
+    function start_edit() {
+
+        $(".editable").addClass("warning-ring");
+
+        //At the beginning of an edit, we need to replace the content of the
+        //editable div with it's databased content in order to preserve the
+        //template tags. We want the tag, not the rendered tag.
+
+        /* You must remove any countdown.js timers on the page before replacing the page with it's
+        document version otherwise, Javascript will throw an exception.  */
+
+
+        $("[class$='-countdown']").parent().remove();
+        fetchContent();
+        $(".editable").attr("onblur", "ckeditorsave(this)");
+        window.status.bold();
+        window.status = "Click outside the editable area to save. Changes are LIVE!! Refresh page to discard changes.";
+        $("#editpage").hide();
+        $("#noeditpage").show();
+    }
+
+
+    function stop_edit() {
+        ckeditorsave();
+        $("#noeditpage").hide();
+        $("#editpage").show();
+        window.location.reload();
+    }
+
+    function ckeditorsave(event) {
+        for (var name in CKEDITOR.instances) {
+            if (CKEDITOR.instances[name].checkDirty()) {
+                editor = CKEDITOR.instances[name];
+                saveEditable(editor);
+            }
+        }
+    }
+
+    function saveEditable(editor) {
+        var content = editor.getData();
+        var contentId = editor.name;
+        var pageId = window.location.pathname;
+        var originalContent = "N/A";
+        var documentversion = editor.container.getAttribute("id").replace("id_", "");
+        var blurbtext = editor.container.getAttribute("blurbtext");
+        if (contentId.match(/-aloha$/gi)) {
+            contentId = contentId.replace(/-aloha/gi, '');
+        }  /*I'm not sure what this does but it seems like it would matter*/
+        var request = jQuery.ajax({
+            url: "/Admin/SaveDocument",
+            type: "POST",
+            async: false,
+            data: {
+                content: content,
+                originalContent: originalContent,
+                contentId: contentId,
+                pageId: pageId,
+                documentversion: documentversion,
+                blurbtext: blurbtext,
+                csrfmiddlewaretoken: csrftoken
+            },
+            success: function (data) {
+                if (data['message']) {
+                    alert(data['message']);
+                }
+            },
+            error: function (xqXHR, textStatus) {
+                window.status = textStatus;
+                debugger;
+            }
+
+        });
+
+    };
+
+
+</script>
+
+<script nonce="tRVNx2LNtkYs7432nNkVMg==">
+    jQuery(document).ajaxSend(function (event, xhr, settings) {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function sameOrigin(url) {
+            // url could be relative or scheme relative or absolute
+            var host = document.location.host; // host + port
+            var protocol = document.location.protocol;
+            var sr_origin = '//' + host;
+            var origin = protocol + sr_origin;
+            // Allow absolute or scheme relative URLs to same origin
+            return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+                (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+                // or any other URL that isn't scheme relative or absolute i.e relative.
+                !(/^(\/\/|http:|https:).*/.test(url));
+        }
+
+        function safeMethod(method) {
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        if (!safeMethod(settings.type) && sameOrigin(settings.url)) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    });
+</script>
+
+
+
+
+
+<div id="successful-page-load" class='hidden'>Successful Page Load</div>
+
+
+
+
+
+    
+        <link href="/static/conf_gdpr/css/conf_gdpr.css" rel="stylesheet">
+        <div id="cookie-bar" style="z-index: 8">
+            <table class="gdpr-statement">
+                <col>
+                <col style="width:120px">
+                <tr>
+                    <td style="padding:5px">
+                        ICLR uses cookies for essential functions only. We do not sell your personal
+                        information.
+                        <a href="/public/PrivacyPolicy">Our Privacy Policy &raquo;&nbsp;</a>
+                    </td>
+                    <td>
+                        <button float-end class="btn btn-light btn-sm btn btn-outline-dark" id="accept_cookies_button" >Accept</button>
+                           
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <script nonce="tRVNx2LNtkYs7432nNkVMg==">
+            function accept_cookies() {
+
+                $.ajax({
+                    method: "POST",
+                    url: "/conf_gdpr/accept",
+                    data: {
+                        csrfmiddlewaretoken: csrftoken,
+                    },
+                }).done(function (data) {
+                    console.log(data);
+                    $("#cookie-bar").fadeOut();
+                }).fail(function (jqXHR, textStatus) {
+                    alert(textStatus);
+                });
+            }
+            $("#accept_cookies_button").on("click", () => {
+                accept_cookies();
+            });
+        </script>
+
+    
+
+
+
+
+
+
+
+<br>
+<div class="noprint">
+    <footer id="bootstrap-footer" class="text-center text-lg-start bg-light text-muted noprint">
+
+        <div class="text-center p-1 border-top border-dark">
+        </div>
+        <!-- Section: Links  -->
+        <section class="pt-1">
+            <div class="container text-center text-md-start mt-3">
+                <!-- Grid row -->
+                <div class="row mt-3">
+                    <!-- Grid column -->
+                    <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mb-3">
+                        <!-- Content -->
+                        <h6 class="text-uppercase fw-bold mb-4">
+                            <img src="/static/core/img/ICLR-logo.svg" alt="ICLR logo" height='30'>
+                        </h6>
+                        <p>
+                            The ICLR Logo above may be used on presentations. Right-click and choose
+                            download. It is a vector graphic and may be used at any scale.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Grid column -->
+                    <div class="col-md-5 col-lg-4 col-xl-3 mx-auto mb-4" style="max-width: 300px;">
+                        <!-- Links -->
+                        <h6 class="text-uppercase fw-bold mb-4 text-center">
+                            Useful links
+                        </h6>
+                        <div>
+             <ul>
+	<li><a href="/About">About ICLR</a></li>
+	<li><a href="https://iclr.cc/Sponsors/sponsorinfo">Sponsor / Exhibitor Information</a></li>
+	<li><a href="https://iclr.cc/Conferences/2025/Press">Press</a></li>
+</ul>
+
+            </div>
+                    </div>
+                    <!-- Grid column -->
+
+                    <!-- Grid column -->
+                    <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+                        <!-- Links -->
+                        <h6 class="text-uppercase fw-bold mb-4">Contact</h6>
+                        
+                            <p>
+                                <i class="fas fa-home me-3"></i> 2710 E Corridor Dr, Appleton WI 54913
+                            </p>
+                        
+                        <p>
+                            <i class="fas fa-envelope me-3"></i> <a href="/Help/Contact">Email</a>
+                        </p>
+                        
+                            <p><i class="fas fa-phone me-3"></i> Phone: +1-920-268-4789</p>
+                        
+                        
+
+
+                    </div>
+                    <!-- Grid column -->
+                </div>
+                <!-- Grid row -->
+            </div>
+        </section>
+        <!-- Section: Links  -->
+
+        <!-- Copyright -->
+        <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.05);">
+            <div>
+             <p><a href="https://openreview.net/group?id=ICLR.cc">ICLR Proceedings at OpenReview</a></p>
+
+            </div>
+        </div>
+        <!-- Copyright -->
+    </footer>
+</div>
+<!-- Footer -->
+
+
+<!-- Footer -->
+
+</body>
+</html>
