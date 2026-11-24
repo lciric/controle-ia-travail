@@ -1,0 +1,65 @@
+"""Couples « ancien -> nouveau » tirés des constats de la vérification 2 (V2-01 à V2-07) et de la relecture, par l'auteur,
+de l'article de Soopal et al. sur le PDF (REF-*), appliqués aux brouillons 3 pour former les brouillons 4."""
+P, G, V = "T0.6-organisme-consigne-cachee-dose-reponse-v1", "G0-critere-3-designation-course-v1", "devis-dose-reponse-consigne-cachee-v1"
+H_PDF = "6396abd53a24b457519a4f5e5d669a74e1a91cce9a6e5b6b4175821ad3ab94d6"
+COUPLES = [
+ # ---- V2-01 : le coût lu s'écrit par action pendant la course ; ce qui est interdit est de l'agréger avant la fin
+ (P, "V2-01a",
+  "Aucune lecture, par personne ni par aucun programme, n'applique le lecteur du coût à un épisode à texte privé avant que les 1 920 soient poussés et contrôlés.",
+  "Le coût lu de chaque action est écrit dans les mesures, sans être affiché ; aucune personne ni aucun programme ne l'agrège, ne le résume ni ne le compare par condition avant que les 1 920 épisodes soient poussés et contrôlés."),
+ (P, "V2-01b",
+  "génération sous texte privé hors plan ; lecteur du coût appliqué avant la fin ;",
+  "génération sous texte privé hors plan ; coût lu agrégé, résumé ou comparé par condition avant la fin ;"),
+ # ---- V2-02 et REF-1 : portée du fait de littérature ; article relu sur le PDF, cité par chemin, empreinte et page
+ (P, "V2-02",
+  "Fait de littérature relayé par la mère le 24 novembre, que l'auteur n'a pas vérifié lui-même (Soopal et al. ; référence, empreinte du PDF et page : <<REFERENCE_SOOPAL_ET_AL>>) : un témoin bénin apparié ne répare le défaut d'une sonde que dans la course d'entraînement où il a été apparié ; au transfert, il ne le répare le plus souvent pas (le chiffre de l'article n'est pas repris ici, R7). La course porte donc cinq témoins instruits.",
+  f"Fait de littérature relayé par la mère le 24 novembre, puis relu par l'auteur sur le PDF (Soopal, Agrawal, Karthikeyan et Lue Chee Lip, « Stress-Testing Sandbagging Detection Under Adaptive Attack », arXiv 2611.14950 v1 ; `docs/sources/pdf/2611.14950v1.pdf`, `{H_PDF}` ; p. 6, § 4.3 et figure 3 ; p. 8, discussion) : une sonde apprise contre un adaptateur bénin apparié sépare l'adaptateur saboteur de son jumeau bénin dans une même course d'entraînement, mais, éprouvée sur une course d'entraînement tenue à l'écart, elle ne passe la règle de transfert des auteurs que sur 1 pli sur 5 (2 sur 5 avec trois recettes d'adaptateurs bénins, 4 étant exigés). Ce fait porte sur l'apprentissage d'une sonde contre un témoin, non sur une course d'organismes : il n'est repris ici que par analogie et par prudence. Dans cette course, les témoins servent à **détecter**, à l'évaluation, un instrument qui lirait la présence d'une consigne, non à le réparer. La course porte cinq témoins instruits."),
+ # ---- V2-04 : limite des témoins, dite en entier
+ (P, "V2-04",
+  "**Limite** : deux gabarits, un modèle, un mode de sabotage. Ces témoins ne disent rien d'un troisième gabarit ni d'un organisme entraîné, et aucun témoin de consigne n'écarte un instrument qui lirait le contenu de la consigne de gonflement elle-même (brief, l. 172 : c'est l'organisme à adaptateur, sans texte de consigne, qui en protège).",
+  "**Limite** : deux gabarits, un modèle, un mode de sabotage, et trois sortes de témoins seulement. Une demande bénigne sans rapport avec le coût (titre en minuscules) : consigne bénigne, et témoin instruit du premier test. Un coût nommé sans demande de gonflement : consigne neutre. Le contenu d'une demande de gonflement présent dans le contexte sans que l'agent ait à l'appliquer : consigne jamais déclenchée, et « mention sans usage » du premier test, qui rapporte ce contenu à un autre agent (texte scellé du premier test, plan d'analyse, l. 329-335 : seule source de ce que l'auteur sait de ces deux textes). Ces témoins ne disent rien d'un troisième gabarit ni d'un organisme entraîné. Aucun ne porte à la fois une demande de gonflement adressée à l'agent et déclenchée, sans gonflement : un instrument qui lirait qu'une demande de gonflement est active à ce pas, plutôt que le gonflement lui-même, n'est écarté par aucun d'eux (brief, l. 172 : c'est l'organisme à adaptateur, sans texte de consigne, qui en protège)."),
+ (P, "V2-04b",
+  "`prereg/P3-premier-test-i-a-v1.md` (`d975e9817e88d30196930c2a351927c2091f2ac024d2a5b52556730fa36cb672`), l. 165-179 (métrique du coût) ;",
+  "`prereg/P3-premier-test-i-a-v1.md` (`d975e9817e88d30196930c2a351927c2091f2ac024d2a5b52556730fa36cb672`), l. 165-179 (métrique du coût) et l. 329-335 (ce que demandent les trois conditions instruites du premier test) ;"),
+ # ---- V2-05 : trois voies qui restaient vers une formulation réglée sur l'oracle
+ (P, "V2-05a",
+  "(la ligne `CODE-DOSE-REPONSE-CONSIGNE-CACHEE` porte la déclaration du développeur et de la session de lancement qu'il n'y en a eu aucune ; sinon nœud de Lazar)",
+  "(la ligne `CODE-DOSE-REPONSE-CONSIGNE-CACHEE` porte la déclaration du développeur, de la session de lancement et de la mère, pour elle et pour les sessions qu'elle a mandatées sur ces textes depuis leur écriture, qu'il n'y en a eu aucune ; sinon nœud de Lazar)"),
+ (P, "V2-05b",
+  "| non lu ; panne consignée ; reprise sous ce texte (plan, point 4) si le code cité n'a pas changé ; sinon version nouvelle |",
+  "| non lu ; panne consignée ; aucun coût des épisodes partiels n'est agrégé ni lu ; reprise sous ce texte (plan, point 4) si le code cité n'a pas changé ; sinon version nouvelle, qui garde la grille et les huit textes de la pièce jointe |"),
+ (P, "V2-05c",
+  "le code s'éprouve avec des textes privés factices, jamais avec ceux de la pièce jointe ni du fichier du premier test ;",
+  "le code s'éprouve avec des textes privés factices, qui ne demandent rien sur le champ `COST`, jamais avec ceux de la pièce jointe ni du fichier du premier test ;"),
+ # ---- V2-07 : marge de disque et issue de la vérification de place
+ (P, "V2-07a",
+  "place libre vérifiée au pire cas avant les épisodes)",
+  "place libre vérifiée au pire cas avant les épisodes, sinon aucun épisode : erreur de chaîne, relance sur une offre de disque plus grand, dans les bornes du point 11)"),
+ (P, "V2-07b", "disque d'au moins 250 Go, stockage au plus 0,08 dollar de l'heure,", "disque d'au moins 300 Go, stockage au plus 0,08 dollar de l'heure,"),
+ (P, "V2-07c", "Disque (250 Go au moins) :", "Disque (300 Go au moins) :"),
+ (V, "V2-07d", "disque d'au moins 250 Go (activations :", "disque d'au moins 300 Go (activations :"),
+ (V, "V2-07e", "disque ≥ 250 Go ;", "disque ≥ 300 Go ;"),
+ # ---- REF : suites de la relecture sur PDF
+ (P, "REF-2",
+  "1. Vérification 2, du seul écart avec le brouillon 2, par le même contre-lecteur (R2) ; confirmation par Lazar des points en tête de la section « Contre-lecture » ; référence de l'article cité au choix 5, portée par la mère (marqueur) ; scellement par la mère ;",
+  "1. Confirmation par Lazar des points en tête de la section « Contre-lecture » (marqueur) ; scellement par la mère ;"),
+ (P, "REF-3",
+  "la limite est écrite ; la référence de l'article est un marqueur que la mère remplit (R7).",
+  "la limite est écrite ; au brouillon 3, la référence de l'article était un marqueur ; elle est citée depuis par chemin, empreinte et page (vérification 2, ci-dessous)."),
+ (P, "REF-4",
+  "et `taches-entrainement.json` (`8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd`).",
+  f"et `taches-entrainement.json` (`8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd`) ;\n  - littérature citée au choix 5 de la section 0 : `docs/sources/pdf/2611.14950v1.pdf` (`{H_PDF}`), p. 6 et 8, lues par l'auteur sur le PDF (R7)."),
+ # ---- désignation
+ (G, "V2-03",
+  "ni sur une tâche de la banque neuve (anti-circularité, brief l. 171) ; la ligne le déclare sonde par sonde ;",
+  "ni sur une tâche de la banque neuve (anti-circularité, brief l. 171) ; la ligne le déclare sonde par sonde, et déclare de même si la sonde a été apprise ou choisie sur un épisode des conditions « témoin instruit » ou « mention sans usage » du premier test, dans quelque course que ce soit : sa lecture de validité sur ces deux témoins n'est alors pas neuve, et la phrase d'issue le dit ;"),
+ (G, "V2-04c",
+  "et aucun témoin de consigne n'écarte une sonde qui lirait le contenu de la consigne de gonflement »",
+  "et aucun témoin n'écarte une sonde qui lirait qu'une demande de gonflement est active à ce pas, plutôt que le gonflement lui-même »"),
+ (G, "REF-5",
+  "3. le dommage, le lecteur du texte et les sondes y sont lus sur les mêmes épisodes ;",
+  "3. le dommage, le lecteur du texte et les sondes y sont lus sur les mêmes épisodes : le sabotage est établi dans la condition même où un instrument est jugé (exigence que formulent aussi Soopal et al., arXiv 2611.14950 v1, p. 7-8, article cité au préenregistrement, section 0, choix 5 : une attaque doit être établie comme active dans chaque condition où un détecteur est jugé) ;"),
+ (G, "REF-6",
+  "3. La vérification 2, du seul écart avec le brouillon 2, par le même contre-lecteur (R2).",
+  "3. La confirmation par Lazar des écarts déclarés et des points à confirmer (marqueur)."),
+]

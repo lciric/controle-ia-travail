@@ -1,0 +1,26 @@
+"""Couples « ancien -> nouveau » de l'auteur pour le brouillon 3 (AU-4*) : renvois d'en-tête, points à confirmer,
+marqueur de confirmation de Lazar (constat V1-02), avis du contre-lecteur rapporté."""
+P, G, V = "T0.6-organisme-consigne-cachee-dose-reponse-v1", "G0-critere-3-designation-course-v1", "devis-dose-reponse-consigne-cachee-v1"
+COUPLES = [
+ (P, "AU-4a",
+  "`src/controle_ia/manifeste.py` (`1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d`).",
+  "`src/controle_ia/manifeste.py` (`1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d`), `src/controle_ia/premier_test_ia/conditions.py` (`dda641175fa595c95ee648bb82af21035154ab25180ce46250beb6330710ac63` ; chargement des textes du premier test par empreinte, mesures d'action)."),
+ (P, "AU-4b",
+  "tâche T0.6 (l. 160-164), porte G0 (l. 190-199) ;",
+  "tâche T0.6 (l. 160-164), test de validité des sondes (l. 172), porte G0 (l. 190-199) ;"),
+ (P, "AU-4c",
+  "4. les options du devis : une ou deux répliques ; deux contrôles croisés de plus ou non.",
+  "4. les options du devis : une ou deux répliques ; deux contrôles croisés de plus ou non ; les deux témoins instruits du premier test gardés ou retirés.\n\n**Confirmation de Lazar** (points 1 à 4 ; inscrite par la mère avec ses mots, avant le scellement) : <<CONFIRMATION_DE_LAZAR>>."),
+ (P, "AU-4d",
+  "Aucun de ces mots ne vaut accord de dépense : la dépense attend son mot sur le devis.",
+  "Aucun de ces mots ne vaut accord de dépense : la dépense attend son mot sur le devis.\n- Points de conception relayés par la mère le 24 novembre 2026 vers 11:36 UTC, venus du protocole de demande approfondie (faits de littérature et de méthode, sans aucun résultat) : (1) grille et formulations fixées et scellées avant toute génération, aucun essai pilote lu par l'oracle ; (2) un seul témoin ne suffit pas : plusieurs témoins, ou la limite dite."),
+ (P, "AU-4e",
+  "1. Vérification des corrections par le même contre-lecteur (R2) ; confirmation par Lazar des points en tête de la section « Contre-lecture » ;",
+  "1. Vérification 2, du seul écart avec le brouillon 2, par le même contre-lecteur (R2) ; confirmation par Lazar des points en tête de la section « Contre-lecture » ; référence de l'article cité au choix 5, portée par la mère (marqueur) ;"),
+ (G, "AU-4f",
+  "c'est la seule protection de la partie (i) contre une sonde qui ne lirait que la présence d'une consigne.",
+  "c'est la seule protection de la partie (i) contre une sonde qui ne lirait que la présence d'une consigne. Avis du contre-lecteur : en faire une condition si le lancement 2 tombe, la laisser rapportée sinon.\n\n**Confirmation de Lazar** (points 2 à 4 ; le point 1 a son marqueur en en-tête ; inscrite par la mère avec ses mots, avant le scellement) : <<CONFIRMATION_DE_LAZAR>>."),
+ (G, "AU-4g",
+  "3. La vérification des corrections par le même contre-lecteur (R2).",
+  "3. La vérification 2, du seul écart avec le brouillon 2, par le même contre-lecteur (R2)."),
+]
