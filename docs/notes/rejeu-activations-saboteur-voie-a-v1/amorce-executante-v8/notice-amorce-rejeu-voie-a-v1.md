@@ -5,7 +5,7 @@ Pièce d'instrument (classe B), écrite le 2026-11-24 par l'exécutante v8 (Opus
 ## Pièces
 - Code : `src/controle_ia/rejeu_activations_voie_a_v1.py` (bibliothèque standard seulement ; tourne dans la session et sur la machine).
 - Essais : `tests/test_rejeu_activations_voie_a_v1.py` (52 essais, chaque garde sur un cas sain et un faux cas ; machine simulée de bout en bout, passe remplacée par un bouchon qui écrit des zéros aux noms de la notice v6).
-- Contre-lecture (classe B, agent neuf Sonnet) : `contre-lecture-amorce-rejeu-v1.md` (à corriger : 3 bloquants, 7 majeurs, 7 moyens), vérification des corrections `contre-lecture-amorce-rejeu-v1-verification-1.md` (tout fermé sauf un défaut neuf, corrigé ensuite ; voir la passation).
+- Contre-lecture (classe B, agent neuf Sonnet) : `contre-lecture-amorce-rejeu-v1.md` (à corriger : 3 bloquants, 7 majeurs, 7 moyens), vérification des corrections `contre-lecture-amorce-rejeu-v1-verification-1.md` (tout fermé sauf un défaut neuf), puis `contre-lecture-amorce-rejeu-v1-verification-2.md` : **corrections vérifiées**.
 - Ordre de lancement à remplir : `ordre-lancement-rejeu-voie-a-v1-gabarit.json`. Il porte encore des valeurs « A_FIXER » (entropie du texte scellé, extrait du côté exposé, entrées de la course selon l'additif 2) : le code refuse de partir tant qu'il en reste une.
 
 ## Gardes, et leur essai (R5)
@@ -48,4 +48,5 @@ Suite des gestes (bloc-notes `S`, outil `S/vast11/bin/vastai` 1.11.0) :
 - La dépense « lue » est la baisse du crédit du compte : une dépense parallèle d'une autre session sur le même compte la grossit et peut couper tôt (sens prudent).
 - La machine se met elle-même à l'arrêt après son versement : si la session pilote meurt, seul le stockage reste facturé (≈ 0,03 USD/h) jusqu'à la destruction par la routine de reprise.
 - Restent de la contre-lecture, acceptés : la minuterie de la machine ne relit pas sa destruction (la surveillance externe le fait) ; la poussée s'arrête au premier lot refusé après cinq essais (ce qui précède est poussé) ; une passe déjà finie mais non récoltée fait attendre la coupure 60 s sans effet ; les secrets de création passent par la ligne de commande d'un sous-processus de la session (forme du dépôt).
+- La destruction sans relevé, après trois coupures manquées, ne recontrôle pas l'étiquette : l'identifiant vient de la fiche ou d'une résolution par l'étiquette exacte (remarque de la vérification 2).
 - Une coupure de dépense externe détruit la machine sans attendre le versement ; sous le filtre du devis, la dépense ne peut atteindre 9,60 USD avant 4,5 h (8,21 USD au plus).
