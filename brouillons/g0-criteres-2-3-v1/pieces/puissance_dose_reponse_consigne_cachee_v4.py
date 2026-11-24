@@ -1,5 +1,7 @@
-"""Puissance, par simulation, des lectures du préenregistrement « dose–réponse de l'organisme à consigne cachée » (v3).
+"""Puissance, par simulation, des lectures du préenregistrement « dose–réponse de l'organisme à consigne cachée » (v4).
 
+Version 4 (après la contre-lecture 1, constat CL1-01) : la réponse en une seule marche est simulée aux six positions
+possibles de la grille et à deux hauteurs (1,5227 et 0,5), sur une grille de scénarios réduite.
 Version 3 : l'échelle de proportion est placée à l'intensité écrite la plus forte (10) et non plus à 3.
 Version 2 : la gradation n'est plus « l'intensité la plus forte dépasse la plus faible » mais « il existe une intensité
 intermédiaire à effet partiel » (au-dessus du zéro de l'échelle et au-dessous de son sommet), corrigée du nombre
@@ -23,7 +25,7 @@ rééchantillonnage des tâches ; (2) tendance par 200 permutations au lieu de 1
 réduite au coût seul et à son aire vraie (sans mots, sans intervalle ni plancher) : optimiste pour « le texte échoue ».
 
 Graines (R9) : `numpy.random.SeedSequence` d'entropie fixe, une clé dérivée par scénario.
-Usage : python3 puissance_dose_reponse_consigne_cachee_v3.py > puissance-dose-reponse-consigne-cachee-v3.txt
+Usage : python3 puissance_dose_reponse_consigne_cachee_v4.py > puissance-dose-reponse-consigne-cachee-v4.txt
 """
 from __future__ import annotations
 
@@ -97,10 +99,12 @@ def effets(reponse: str, presence: float, fuite: float) -> np.ndarray:
     """Effet vrai de chaque condition par rapport à l'honnête (log10)."""
     if reponse == "nulle":
         gonfle = [0.0] * len(FACTEURS)
-    elif reponse == "marche":
-        gonfle = [EFFET_PREMIER_TEST] * len(FACTEURS)
-    elif reponse == "marche-milieu":   # rien jusqu'à l'intensité 2, tout à partir de 3
-        gonfle = [0.0 if k < 3.0 else EFFET_PREMIER_TEST for k in FACTEURS]
+    elif reponse.startswith("marche-"):   # une seule marche : « marche-<position>-<haute|basse> »
+        _, position, hauteur = reponse.split("-")
+        h = EFFET_PREMIER_TEST if hauteur == "haute" else 0.5
+        # position 0 : entre la consigne neutre et 1,25 (toutes les intensités gonflent) ; position k : entre la k-ième et
+        # la (k+1)-ième intensité ; position 5 : entre 5 et 10 (seule l'intensité 10 gonfle)
+        gonfle = [h if i >= int(position) else 0.0 for i in range(len(FACTEURS))]
     elif reponse == "saturation":      # amplification du premier test jusqu'à l'intensité 3, plafond au-delà
         gonfle = [min(AMPLIFICATION * math.log10(k), EFFET_PREMIER_TEST) for k in FACTEURS]
     else:
@@ -144,7 +148,7 @@ def une_simulation(e: np.ndarray, r: int, part: float, rng: np.random.Generator)
 
 def main() -> int:
     racine = np.random.SeedSequence(ENTROPIE)
-    print("# Puissance par simulation — dose–réponse de l'organisme à consigne cachée — v3")
+    print("# Puissance par simulation — dose–réponse de l'organisme à consigne cachée — v4")
     print(f"# numpy {np.__version__} ; entropie {ENTROPIE} ; {N_SIMULATIONS} simulations, {N_PERMUTATIONS} permutations, "
           f"{N_TACHES} tâches")
     print(f"# sigma_d (une réplique) = {SIGMA_D:.4f} ; amplification du premier test = {AMPLIFICATION:.3f} ; "
@@ -158,12 +162,17 @@ def main() -> int:
                   f"effet minimal détectable {emd:.3f}")
     print("reponse\tpresence\tfuite\trepliques\tpart_interaction\tDR1\techelle_intensite\techelle_proportion\tcritere_2_i\t"
           "doses_etablies_moy\tau_moins_une_dose_admissible")
+    repliques = ((1, 0.0), (2, 0.0), (2, 0.5))   # à une réplique, la part d'interaction ne change rien
     scenarios = [(rep, pres, fuite, r, part)
-                 for rep in ("nulle", "exacte", "double", "premier-test", "saturation", "marche", "marche-milieu")
+                 for rep in ("nulle", "exacte", "double", "premier-test", "saturation")
                  for pres in (0.0, EFFET_PRESENCE)
                  for fuite in (0.0, 0.5)
-                 for r in (1, 2)
-                 for part in ((0.0,) if r == 1 else (0.0, 0.5))]   # à une réplique, la part d'interaction ne change rien
+                 for r, part in repliques]
+    scenarios += [(f"marche-{position}-{hauteur}", pres, 0.0, r, part)
+                  for hauteur in ("haute", "basse")
+                  for position in range(6)
+                  for pres in (0.0, EFFET_PRESENCE)
+                  for r, part in repliques]
     for rep, pres, fuite, r, part in scenarios:
         nom = f"{rep}|{pres}|{fuite}|{r}|{part}"
         cle = int.from_bytes(hashlib.sha256(nom.encode("utf-8")).digest()[:8], "big")
