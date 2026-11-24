@@ -1,0 +1,40 @@
+# État des lieux du créneau sur processeur du Plan Turing — v1
+
+Classe C (pièce de travail, non contre-lue). Session fille `session_01Qi7Gr2q6V9wjeURTpATxrp` de la mère `session_01Qi7Gr3Ggccg85kjmP654WC`, sur le mot de Lazar du 24 novembre vers 13:10Z (« go », option (a), R-5285). Écrit le 2026-11-24 vers 13:25Z (`date -u`). Lecture seule : rien lancé, rien payé, aucun coffre, aucun score, rien sous `archives-reponses-modeles/`.
+
+## (i) Collisionneur groupé sur la naissance des idées scientifiques fécondes et les dossiers 1 à 6
+
+- **Lancé** le 24 à 06:42:04Z par le chef d'orchestre de l'autre compte (`session_016QhUrr36AdEhsW2so9rjvZ`, introuvable d'ici), sous GO-2026-11-24-03, `collisionneur_v9_v8d.py` (`b7803838…`), deux bras (principal et témoin), Opus 5.5 par la clé `RR_ANTHROPIC_API_KEY_LUC`, Carbon et Neon par `GEMINI_API_KEY` ; 18 USD au plus par bras.
+- **Seule trace distante** : branche `idees/lot-8-chef-d-orchestre-v1`, tête `86c0acbb2` (06:43:59Z, « état de départ des deux bras (en cours) ») ; sous `runs/collisionneur-groupe-naissance-idees-fecondes-v1/`, chaque bras n'a que la question, les faits, les espèces, l'invite de la première cellule (`E3-T1-conception-A`, Opus, essai 1) et un journal à une ligne (`depense_avant 0`). **Cellules valides versées : 0 sur 9 par bras, 0 sur 18 en tout.** Aucune réponse, aucun coût consigné.
+- **Dépense comptée** : 0 USD au registre. **Dépense possible non vérifiable d'ici** : les deux premiers appels à Opus (un par bras, 64 000 jetons de sortie au plus chacun), partis à 06:42:04Z, dans un conteneur sans doute arrêté avec la limite d'usage vers 06:47Z. Seule la console de la clé de Luc (usage entre 06:42Z et 07:00Z) peut dire s'ils ont été facturés.
+- **Ligne d'engagement** (`registres/depenses.md`, ligne datée 06:41:47Z) : **sur la branche du chef d'orchestre seulement, absente de main**.
+- **Pour qu'aucune relance ne paie deux fois** : il n'y a rien à reprendre (aucune cellule payée n'est versée) ; une relance repart de l'état `86c0acbb2` et paie tout. Avant elle : (1) verser sur main la ligne d'engagement de 06:41:47Z ; (2) relever l'usage de la clé de Luc entre 06:42Z et 07:00Z, et compter au pire ces deux appels dans l'enveloppe de GO-2026-11-24-03 ; (3) la clé de Luc rend 401 depuis le compte 01Qi7 (R-5258) : la relance passe par une autre clé, donc une ligne d'engagement neuve. Rien n'indique qu'une autre session l'ait relancé.
+
+## (ii) Course principale d'auto-conception de l'organisme
+
+- **Le plan v2** (`7cf3c78d…`, R-4428) **a été contre-lu** : « à corriger » (R-4434, `0b041dab…`). Suivi des plans v3 (contrôle, R-4438), v4 (vérifié « conforme sous deux retouches de lettre », R-4450, `804a6675…`) et **v5, vérifié « Conforme »** (`ff18bacd…`, branche `lot/compte-organisme-v2`, tête `757e5e0ed`, `docs/notes/organisme-auto-conception-v1/plan-experimentateur-course-principale-v5/`). Notes de conception corrigées par les errata 1 et 2 (sur main, `docs/notes/experimentateurs-et-tests-de-mort-v1/`).
+- **Décisions prises depuis** : N1 (a) sans le pont des 94 cartes, N2, N5, N6, N7, D1 (a) allumage sur devis, D5 (a), D6 (a) pour l'ordre, D7 texte neuf (GO-2026-11-21-29) ; N3 (a) et D8 « la borne de 92 cartes tient lieu de compte, aucun accès neuf aux réponses de modèles » (GO-2026-11-21-36) ; expérimentateur Sonnet 5.5 (R-4533).
+- **Table d'admission : non écrite, non scellée.** Elle fait partie du texte de la porte (lot C1, classe A, 3,5 à 39 heures), qui n'existe pas. Selon le plan v5 : table scellée et durée du rejeu mesurée à 0 USD « trois à quatre jours après le mot sur N1 ».
+- **Manque avant le premier dollar** (ligne 1, mesure de l'expérimentateur sur les seuls témoins, 0,57 à 16,40 USD pour 4 témoins) : le code jusqu'au premier dollar (lots E0, E1-AC, C3, E8, E9 : 18,25 à 20,25 heures ; plus le socle C2 : banc noteur, contre-calcul à l'octet, porte des lots, registre des tentatives) ; le texte de la porte C1 avec la table d'admission (Fable) ; le sommet d'AC-1 et son additif ; le bac ; un devis contre-lu et une ligne d'accord. Aucun de ces lots n'a de trace sur les branches lues. Rien ne part avant le dégel du 1er décembre (gel de la dépense lourde de l'organisme, plan directeur, en-tête).
+
+## (iii) Tâches du Plan Turing T-4, T-5, T-6
+
+| tâche | ce qui existe | où | ce qui manque |
+|---|---|---|---|
+| T-4, épreuve « le pont suit-il la carte ? » sur PubTator 3 (IDE-2026-11-23-027) | préenregistrement **brouillon 1** (`94556efa…`, 145 lignes), **rédigé par Carbon** (sous-agent Antigravity), non contre-lu | main, `prereg/pas0-organisme-v1/` | contre-lecture R2 ; le script d'épreuve plantée qu'il cite (`epreuve_plantee_pubtator3_v1.py`) est **introuvable** sur main et sur la branche de l'étalonnage ; le fichier public de relations n'a **pas de date** (fiche de faisabilité) : l'horloge par identifiant PubMed est à fixer dans le texte |
+| T-4, « surface et structure » sur les 2 996 idées notées par 110 directeurs d'équipe de Gu et Krenn 2026, bras A et C (IDE-2026-11-23-028) | **aucun préenregistrement**. Fiche de faisabilité des données publiques et script de téléchargement non exécuté (`1f05ef25c`) : licences MIT et CC BY 4.0, identité des paires de concepts probablement **non publique** | branche `idees/rang4-etalonnage-pont-v1` | le texte entier (classe A). Le préenregistrement Gu et Krenn 2024 de main (`docs/notes/gu-krenn-v1/…-v2.md`, 31 octobre) porte sur une autre question (reproduction de l'aire sous la courbe) et se dit lui-même non scellable |
+| T-5, macros LaTeX et arbres d'équations avant les algèbres amassées (IDE-2026-11-23-032) | script d'épreuve plantée et gardes (`4a8ce254…`), classe B | main, `docs/notes/lot8-etape2-macros-scissions-v1/` | **aucun préenregistrement** ; aucune contre-lecture du script |
+| T-5, scissions conceptuelles (IDE-2026-11-23-033, essai T5) ; audit Stitch et DreamCoder (IDE-031) ; modèle à coupure pré-1900 | rien d'autre que les fiches du registre des idées | main, registre des idées du 23 | tout |
+| T-5, contre-lecture du préenregistrement de l'affinage des mentors v11 | candidat 1 scellable, non scellé (`d93527262`) ; deux contre-lectures attendues le 23 au matin, non retrouvées | `prep/preenregistrement-affinage-v11-opus-v1` | hors de ce mandat (chantier de l'organisme) |
+| T-6, cartes de cible finies (lemme d'impossibilité de détection en version finie, agrégation de panneaux de moniteurs, conjecture d'évasion sous filtrage après pré-entraînement) et code des 8 à 12 mondes plantés | catalogue de 18 verrous (`catalogue-verrous-v1.json`, 5/5 tests de mort) ; élucidation et test de mort de la conjecture d'évasion ; audit « tient avec réserves » (R-5254) | main, `docs/notes/cartographie-mathematiques-ouvertes-v1/`, `docs/notes/audit-evasion-post-entrainement-v1/` | aucune carte de cible finie, aucun code des mondes (les `monde_plante_v3` de `src/controle_ia/sondes_v2/` servent les sondes, pas ce banc) |
+
+## Conséquence pour les étapes 2 et 3 (à trancher par la mère)
+
+- **Un seul texte existe pour l'étape 2** (PubTator 3, brouillon 1). Je le fais contre-lire par un Opus neuf ; je ne le corrige pas (classe A).
+- **Pour Gu et Krenn bras A et C, pour les macros et pour les scissions, il n'y a pas de préenregistrement.** Les écrire est du ressort de Fable (« Qui conçoit ») ; ce mandat l'exclut. Sans texte scellé, aucune exécution (R1), même sur monde planté synthétique. Ces trois pistes s'arrêtent donc à l'étape « texte manquant », sauf mot contraire de Lazar.
+- **Écart de conception déclaré** : le brouillon PubTator 3 a été rédigé par Carbon, pas par Fable ; la contre-lecture le dira, la décision d'en faire la base reste à la mère et à Lazar.
+
+## Routine de reprise, relevée
+
+- Empreintes du lancement : 3 sur 3. Arbre : 12 problèmes **préexistants sur main** (compagnons absents ou à chemin non nu sous `registres/passations/` et dans deux dossiers de `runs/` et `docs/notes/`), aucun dans mes fichiers. Tests : suite en cours.
+- Instances : aucune clé de loueur ni d'hébergeur dans ce conteneur ; aucune machine lancée par cette session.

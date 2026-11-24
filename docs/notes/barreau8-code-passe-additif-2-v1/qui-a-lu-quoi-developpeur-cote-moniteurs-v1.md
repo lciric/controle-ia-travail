@@ -1,0 +1,9 @@
+# Inscription « qui a lu quoi » — développeur du côté des moniteurs, code de la passe sous l'additif 2 de format
+
+Écrite avant toute lecture de pièce, le 2026-11-24 à 10:41Z (`date -u`), sur la branche `barreau8/code-passe-additif-2-v1`.
+
+| Session | Compte | Modèle | Lu ou à lire | Rôle | Mandat | Exclu de |
+|---|---|---|---|---|---|---|
+| session fille de la mère `session_01Qi7Gr3Ggccg85kjmP654WC` (développeur du côté des moniteurs, barreau 8) | compte de la mère | Opus 5.5, effort élevé | à l'inscription : `CLAUDE.md` ; noms des fichiers de `registres/qui-a-lu-quoi/` et en-tête de `registres/qui-a-lu-quoi-v22.md` ; la ligne AD2-3 de l'additif 2 vue par une recherche du mot « qui a lu quoi ». À lire : texte scellé `prereg/lecture-sondes-barreau8-v1.md`, additif 1 `prereg/lecture-sondes-barreau8-v1-addendum-organisme-change-v1.md`, additif 2 `prereg/lecture-sondes-barreau8-v1-addendum-2-format-entrees-v1.md` ; note d'interface v7 `docs/notes/barreau8-cote-moniteurs-entrees-v1/interface-passe-cote-moniteurs-v7.md` (comptes d'identifiants et de jetons : exposition déclarée et acceptée, GO-2026-11-24-14) ; `docs/notes/barreau8-cote-moniteurs-sorties-v1/` ; code `src/controle_ia/barreau8_moniteurs/` et branches `sondes-v2/code-v1`, `sondes-v2/code-v2`. Jamais : consigne privée du saboteur, épisode, score, sortie de course, `diag/`, `donnees/`, branches `claude/iib-executante-*` et `essai/iib-explo-*` | développeur du côté des moniteurs (classe B) : table neuve des constantes de M-4 écrite par programme, programme de comparaison version nouvelle, codes de la passe et de la lecture versions nouvelles, essais, notice, ligne CODE-PASSE-IIB proposée ; aucune machine, aucune dépense | message de la mère du 2026-11-24 vers 10:40Z | contre-lecture de son propre code ; tout rôle aveugle ou de verdict du barreau 8 |
+
+Les lectures effectives seront complétées en fin de travail, dans une version nouvelle de ce fichier (R12).

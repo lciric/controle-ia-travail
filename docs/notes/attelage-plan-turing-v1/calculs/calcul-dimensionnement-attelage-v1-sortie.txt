@@ -1,0 +1,79 @@
+== 1. Hasard dans le meme espace : N tirages independants de masse w ==
+   P(decouverte) = 1 - (1 - w)^N ; facteur r = multiplication de la masse par appel par l'attelage
+   w=0.01  N=   50  hasard= 0.395   r= 2:  0.636   r= 5:  0.923   r=20:  1.000
+   w=0.01  N=  200  hasard= 0.866   r= 2:  0.982   r= 5:  1.000   r=20:  1.000
+   w=0.01  N= 1000  hasard= 1.000   r= 2:  1.000   r= 5:  1.000   r=20:  1.000
+   w=0.001  N=   50  hasard= 0.049   r= 2:  0.095   r= 5:  0.222   r=20:  0.636
+   w=0.001  N=  200  hasard= 0.181   r= 2:  0.330   r= 5:  0.633   r=20:  0.982
+   w=0.001  N= 1000  hasard= 0.632   r= 2:  0.865   r= 5:  0.993   r=20:  1.000
+   w=0.0001  N=   50  hasard= 0.005   r= 2:  0.010   r= 5:  0.025   r=20:  0.095
+   w=0.0001  N=  200  hasard= 0.020   r= 2:  0.039   r= 5:  0.095   r=20:  0.330
+   w=0.0001  N= 1000  hasard= 0.095   r= 2:  0.181   r= 5:  0.394   r=20:  0.865
+
+== 2. Mondes par bras pour distinguer deux probabilites de decouverte (unilateral 5 %, puissance 80 %) ==
+   unite = le monde, bras independants ; a multiplier par l'effet de grappe si l'unite est la famille
+   p0=0.18  p1=0.33  mondes par bras = 104
+   p0=0.18  p1=0.63  mondes par bras = 14
+   p0=0.05  p1=0.10  mondes par bras = 343
+   p0=0.05  p1=0.22  mondes par bras = 49
+   p0=0.02  p1=0.04  mondes par bras = 899
+   p0=0.02  p1=0.10  mondes par bras = 108
+
+== 3. Effet de grappe : F familles de m mondes, correlation intra-famille rho ==
+   effectif efficace = F*m / (1 + (m-1)*rho)
+   rho=0.05  F= 8  m=25  mondes= 200  efficace=  90.9
+   rho=0.05  F=12  m=25  mondes= 300  efficace= 136.4
+   rho=0.05  F=12  m=50  mondes= 600  efficace= 173.9
+   rho=0.05  F=30  m=10  mondes= 300  efficace= 206.9
+   rho=0.20  F= 8  m=25  mondes= 200  efficace=  34.5
+   rho=0.20  F=12  m=25  mondes= 300  efficace=  51.7
+   rho=0.20  F=12  m=50  mondes= 600  efficace=  55.6
+   rho=0.20  F=30  m=10  mondes= 300  efficace= 107.1
+   rho=0.50  F= 8  m=25  mondes= 200  efficace=  15.4
+   rho=0.50  F=12  m=25  mondes= 300  efficace=  23.1
+   rho=0.50  F=12  m=50  mondes= 600  efficace=  23.5
+   rho=0.50  F=30  m=10  mondes= 300  efficace=  54.5
+
+== 4. Garantie disjonctive : zero succes sur n tirages => p <= 1 - delta^(1/n) au niveau 1 - delta ==
+   n=  100  borne a 95 % = 0.02951
+   n=  300  borne a 95 % = 0.00994
+   n= 1000  borne a 95 % = 0.00299
+   n= 3000  borne a 95 % = 0.00100
+   tirages uniformes necessaires pour certifier p <= eps a 95 % avec zero succes : n >= ln(0,05)/ln(1-eps)
+   eps=0.05  n=59
+   eps=0.01  n=299
+   eps=0.001  n=2995
+
+== 5. Enumerateur mecanique des transferts : M lois de bibliotheque, T traits, renommage de k traits ==
+   candidats = M * T^k ; evidence requise (unites naturelles) ~ ln(M*T^k) + ln(1/alpha), alpha = 0,05
+   M=  100 T= 20 k=1  candidats=      2 000  evidence=10.60
+   M=  100 T= 20 k=2  candidats=     40 000  evidence=13.59
+   M=  100 T= 20 k=3  candidats=    800 000  evidence=16.59
+   M= 1000 T= 20 k=2  candidats=    400 000  evidence=15.89
+   M= 1000 T= 30 k=3  candidats= 27 000 000  evidence=20.11
+
+== 6. Plancher d'exploration au hasard : part gamma du budget tiree uniformement ==
+   decouvertes attendues perdues au pire = gamma (si le selecteur est parfait) ; gain = base sans biais
+   gamma=0.05  N=  200  tirages uniformes=  10  borne a 95 % sur p si zero succes=0.2589
+   gamma=0.05  N= 1000  tirages uniformes=  50  borne a 95 % sur p si zero succes=0.0582
+   gamma=0.10  N=  200  tirages uniformes=  20  borne a 95 % sur p si zero succes=0.1391
+   gamma=0.10  N= 1000  tirages uniformes= 100  borne a 95 % sur p si zero succes=0.0295
+   gamma=0.20  N=  200  tirages uniformes=  40  borne a 95 % sur p si zero succes=0.0722
+   gamma=0.20  N= 1000  tirages uniformes= 200  borne a 95 % sur p si zero succes=0.0149
+
+== 7. Chaine de marchepieds : attente moyenne = somme des 1/w_i (en appels), tirages independants ==
+   masses (0.01,)  attente moyenne =    100.0 appels ; generations minimales = 1
+   masses (0.01, 0.01)  attente moyenne =    200.0 appels ; generations minimales = 2
+   masses (0.1, 0.1, 0.1)  attente moyenne =     30.0 appels ; generations minimales = 3
+   masses (0.001,)  attente moyenne =   1000.0 appels ; generations minimales = 1
+   masses (0.03, 0.03)  attente moyenne =     66.7 appels ; generations minimales = 2
+
+== 8. Faux positifs du resolveur dans la queue : precision = p(1-b) / (p(1-b) + (1-p)a) ==
+   p=0.01  fausse acceptation a=0.01  faux rejet b=0.2  precision des acceptes=0.447
+   p=0.01  fausse acceptation a=0.001  faux rejet b=0.2  precision des acceptes=0.890
+   p=0.01  fausse acceptation a=0.0001  faux rejet b=0.2  precision des acceptes=0.988
+   p=0.001  fausse acceptation a=0.01  faux rejet b=0.2  precision des acceptes=0.074
+   p=0.001  fausse acceptation a=0.001  faux rejet b=0.2  precision des acceptes=0.445
+   p=0.001  fausse acceptation a=0.0001  faux rejet b=0.2  precision des acceptes=0.889
+
+controle exact : 1 - 0,999^200 est entre 0,18 et 0,19 : OK

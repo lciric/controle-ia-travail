@@ -1,0 +1,3 @@
+# Scellement de l ordre de lancement du rejeu des activations (voie A), v2
+
+Scellé par la mère du compte 01Qi7 (session_01Qi7Gr3Ggccg85kjmP654WC) à 2026-11-24T11:32:44Z (`date -u`). Ordre : `docs/notes/rejeu-activations-saboteur-voie-a-v1/amorce-executante-v8/ordre-lancement-rejeu-voie-a-v2.json`, sha256 07db499deb2528a6a5a7087e6cd8c88bade4e1e3a533f29108c60879af7f1ac6. Accord GO-2026-11-24-13. Préalables tenus sur main au commit c3e81879 : additif 2 scellé (8e930aba…, R-5264), CODE-PASSE-IIB inscrite (bordereau 74736c49…, R-5268), table neuve de M-4 (d576c16b…), contrôle M-3 fait. La notice de la passe est la v8 ; sa commande est celle de la v7 citée par l ordre (seule l option --notice du bordereau change).
