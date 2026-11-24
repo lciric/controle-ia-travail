@@ -1,0 +1,16 @@
+REFS = [
+ ("Boden2004", "book", ("The Creative Mind", "Margaret Boden")),
+ ("HofstadterSander2013", "book", ("Surfaces and essences", "Douglas Hofstadter")),
+ ("HofstadterSanderFR", "book", ("L'analogie", "Hofstadter")),
+ ("HofstadterFARG1995", "book", ("Fluid Concepts and Creative Analogies", "Hofstadter")),
+ ("Mitchell1993", "book", ("Analogy-making as perception", "Melanie Mitchell")),
+ ("Kauffman1995", "book", ("At home in the universe", "Stuart Kauffman")),
+ ("Koestler1964", "book", ("The Act of Creation", "Koestler")),
+ ("Kuhn1962", "book", ("The Structure of Scientific Revolutions", "Thomas Kuhn")),
+ ("Merton1961", "q", "Merton Singletons and multiples in scientific discovery Proceedings of the American Philosophical Society 105"),
+ ("Peyre2016", "q", "Peyré Cuturi Solomon Gromov-Wasserstein averaging of kernel and distance matrices ICML 2016"),
+ ("Poincare1908b", "book", ("Science et méthode", "Henri Poincaré")),
+ ("Simonton2004b", "q", "Simonton Creativity in Science Chance Logic Genius and Zeitgeist"),
+ ("HofstadterMitchell1994", "q", "Hofstadter Mitchell The Copycat project: A model of mental fluidity and analogy-making"),
+ ("Wadden", "q", "Mikolov Sutskever Chen Corrado Dean Distributed representations of words and phrases compositionality NIPS"),
+]
