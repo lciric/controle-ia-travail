@@ -1,0 +1,1 @@
+Autorisable : l'essai corrigé (essais2, 22 essais verts, empreinte OK) rougit sous mes deux mutations de m3 (except ValueError neutralisé ; ValueError refondue dans le premier except) ; code v5 inchangé.
