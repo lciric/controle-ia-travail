@@ -33,3 +33,10 @@ Un seul sous-agent à la fois, et aucune dépense sans le mot de Lazar.
 - Si le quota de Fable manque, faire les étapes Opus et laisser les étapes Fable en attente, notées « en attente de Fable ».
 - Ne pas toucher à ce que tient la mère 01Qi7 : collisionneur groupé, étalonnages, macros et scissions, cahier des charges des mondes plantés, dose-réponse, avis de Fable sur l'organisme, protocole X sur la dynamique. Voir registres/passations/*-mere-016Qh-a-mere-01Qi7-partage-organisme.md.
 - Rien n'est publié. Les références sont vérifiées sur PDF avant toute citation (R7, R8).
+
+## Mise à jour du 2026-11-24T16:04:13Z (mère 016Qh, en autonomie)
+- Fable a atteint sa limite hebdomadaire sur le compte 016Qh. Remise à zéro le 28 novembre vers 04:00Z.
+- L'agent Fable de Q6 et Q8 a été coupé sans réponse. C'est un faux échec : des scripts partiels sont versés dans partiel-fable-q6-q8-coupe-quota-v1/.
+- Q5 et les reformulations de Q8 à Q11 sont faites par Opus.
+- Q6, Q8 et Q10 attendent Fable après le 28 à 04:00Z. Un autre compte peut les prendre s'il a du quota de Fable non réservé à l'entretien.
+- La part Opus continue : Q9, la contre-lecture, la note LaTeX v1 et la question neutre avec son devis.
