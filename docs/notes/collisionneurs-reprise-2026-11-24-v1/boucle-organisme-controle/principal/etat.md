@@ -8,8 +8,8 @@
 | E3-T2-critique-croisee-C | OK | 1 | gemini-4-neon | 35391 | oui | 0.67 |
 | E3-T3-reponse-A | OK | 1 | claude-opus-5-5 | 23427 | oui | 0.84 |
 | E3-T3-reponse-B | OK | 1 | gemini-4-carbon | 32700 | oui | 0.86 |
-| E3-T3-reponse-C | INTERROMPU | 3 | gemini-4-neon | 0 | non | 4.70 |
+| E3-T3-reponse-C | INTERROMPU | 4 | None | 0 | non | 6.26 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 18.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 10.79 USD.
-Dépense totale : 10.79 USD. Mis à jour 2026-11-24T06:41:03Z.
+Ligne : 18.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 12.36 USD.
+Dépense totale : 12.36 USD. Mis à jour 2026-11-24T06:42:50Z.
