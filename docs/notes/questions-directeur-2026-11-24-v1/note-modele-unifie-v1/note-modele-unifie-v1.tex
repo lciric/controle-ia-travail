@@ -1,0 +1,1777 @@
+% Note du modèle mathématique unifié de l'idée intéressante et de sa naissance (v1)
+% Compilation : xelatex deux fois.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{french}
+\setmainfont{Linux Libertine O}
+\setsansfont{DejaVu Sans}
+\setmonofont[Scale=0.85]{DejaVu Sans Mono}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{csquotes}
+\usepackage{booktabs,tabularx,longtable,array}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,decorations.pathmorphing}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\renewcommand{\arraystretch}{1.18}
+\setlength{\emergencystretch}{2em}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Définition}[section]
+\newtheorem{exemple}[definition]{Exemple}
+\newtheorem{remarque}[definition]{Remarque}
+\newtheorem{test}[definition]{Épreuve}
+\theoremstyle{plain}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{corollaire}[definition]{Corollaire}
+\renewcommand{\qedsymbol}{$\square$}
+
+\newcommand{\R}{\mathcal{R}}
+\newcommand{\Inc}{\mathcal{I}}
+\newcommand{\dom}{\operatorname{dom}}
+\newcommand{\chemin}[1]{\nolinkurl{#1}}
+\newcommand{\vg}{\,{,}\,}
+
+% Encadré des trois statuts
+\newtcolorbox{statuts}[1][]{enhanced,breakable,colback=black!3,colframe=black!55,
+  boxrule=0.6pt,arc=1.5pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  fonttitle=\bfseries\small,title={#1}}
+\newcommand{\demontre}{\par\noindent\textbf{Ce qui est démontré.}~}
+\newcommand{\mesure}{\par\smallskip\noindent\textbf{Ce qui est mesuré.}~}
+\newcommand{\conjecture}{\par\smallskip\noindent\textbf{Ce qui est conjecturé.}~}
+
+\newtcolorbox{attente}{enhanced,breakable,colback=orange!6,colframe=orange!60!black,
+  boxrule=0.9pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  fonttitle=\bfseries,title={En attente de Fable, après le 28 novembre 2026 à {\NoAutoSpacing 04:00} UTC}}
+
+\hypersetup{pdftitle={Modèle mathématique unifié de l'idée intéressante et de sa naissance (v1)},
+  pdfauthor={Claude Opus 5.5, sous-agent de la session des questions du directeur},
+  pdflang={fr}}
+
+\title{\textbf{Un modèle mathématique unifié de l'idée intéressante\\ et de sa naissance}\\[4pt]
+\large Note de travail, version 1}
+\author{Claude Opus 5.5 (effort élevé), sous-agent de la session fille des questions du directeur}
+\date{24 novembre 2026, {\NoAutoSpacing 16:52} UTC}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\begin{minipage}{0.92\textwidth}\small
+\textbf{Nature.} Pièce de travail (classe C), livrable (b) du dossier
+\chemin{docs/notes/questions-directeur-2026-11-24-v1/}. Aucune dépense, aucun appel à un modèle
+externe, aucune course. Rien n'a été ouvert sous \chemin{coffre/}, \chemin{docs/verdicts/},
+\chemin{runs/}, \chemin{diag/}, \chemin{donnees/}.
+
+\textbf{Matière.} Les réponses aux questions 1, 2, 3, 4, 5, 7 et 9 du directeur et leurs errata,
+qui priment ; la contre-lecture ; les trois compléments transmis par la mère ; la réponse de Fable
+(partie 2) et les réponses de Carbon. Empreintes en annexe~\ref{annexe:sources}. Tout chiffre de
+la note renvoie à une pièce empreintée, à une page d'une source, ou à un calcul refait ici et
+dit tel ; sinon il est marqué \enquote{à vérifier}.
+
+\textbf{Règle de lecture.} Rien n'est présenté comme neuf (section~\ref{sec:neuf}). Le mot
+\enquote{démontré} ne qualifie qu'un énoncé dont les hypothèses sont écrites et la preuve donnée ou
+citée ; presque toutes les preuves de la note sont courtes et élémentaires, et leur intérêt est de
+fixer les hypothèses, non d'établir un résultat profond.
+\end{minipage}
+\end{center}
+
+\begin{attente}
+Trois questions du directeur n'ont pas encore de réponse : l'agent Fable qui les traitait a été
+arrêté par la limite hebdomadaire de son quota (faux échec, panne technique ; travail partiel
+versé dans \chemin{partiel-fable-q6-q8-coupe-quota-v1/}, non relu, non réemployé ici).
+\begin{itemize}
+\item \textbf{Question 6} : peut-on \emph{démontrer}, à partir du modèle unifié, comment maximiser la
+probabilité d'une découverte ; conditions d'émergence ; critères qui aident l'organisme
+d'idéation à faire de vraies découvertes profondes.
+\item \textbf{Question 8} : la \enquote{plasticité} d'une région du graphe d'un domaine (sa capacité de
+restructuration compatible avec les relations existantes) prédit-elle une zone de découverte,
+et quel est son lien avec les anomalies, les équilibres et les bifurcations ?
+\item \textbf{Question 10} : que peut-on prédire du rôle de l'objet manquant à partir de la
+\emph{forme} de l'anomalie, démonstration à l'appui ?
+\end{itemize}
+\textbf{Ce que la note en dit seulement : le cadre, sans démonstration neuve.}
+Pour la question 6, la note pose les objets et le taux de naissance sur lesquels une politique de
+recherche serait optimisée (sections~\ref{sec:objets} à \ref{sec:cinetique}) ; les théorèmes
+classiques que la demande reformulée nomme (indice de Gittins, règle de Weitzman, théorie de la
+recherche optimale, garantie gloutonne des fonctions sous-modulaires, criticalité d'un processus
+de branchement) ne sont ni énoncés ni vérifiés ici. Pour la question 8, la note donne seulement les
+deux perturbations (des faits, de la correspondance) qui serviraient de briques à une définition de
+la plasticité (section~\ref{sec:perturbations}) ; les trois définitions candidates de la demande
+reformulée (dégénérescence du paysage des partitions, susceptibilité de la structure optimale à
+l'ajout d'une relation, mollesse d'une énergie de frustration) ne sont pas traitées. Pour la
+question 10, la note donne seulement le \enquote{profil} qu'une correspondance impose à un objet
+manquant (définition~\ref{def:profil}) : c'est le type des relations que l'objet doit porter, non le
+type de l'objet ; la thèse \enquote{la forme de l'anomalie prédit le type de l'objet} reste
+entière. Les trois réponses de Fable primeront sur tout ce que la note dit à leur sujet.
+\end{attente}
+
+\tableofcontents
+
+%======================================================================
+\section{Guide de lecture}
+\label{sec:guide}
+
+\subsection{Trois questions qu'il ne faut pas confondre}
+La réponse de Fable \cite{fable} sépare trois questions, et toute la note les garde séparées.
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{Intéressant pour un public} : une propriété relative à un état de croyances daté ;
+une thèse intéresse quand elle nie une part de ce que son public tient pour acquis, ennuie quand
+elle le confirme, paraît absurde quand elle en nie tout le fond \cite{davis1971}.
+\item \textbf{Vrai et fécond} : une propriété du monde, connue après coup.
+\item \textbf{Produire} : un processus de recherche, avec son taux.
+\end{enumerate}
+Elles divergent : des évaluateurs affectés au hasard notent plus bas les projets très
+nouveaux \cite{boudreau2016}, alors que la surprise prédit l'impact ultérieur
+\cite{shievans2023}. Dans la note, (a) est l'intérêt $I$ estimé avant (section~\ref{sec:surprise}),
+(b) la portée réalisée et la fécondité (sections~\ref{sec:surprise} et \ref{sec:fecondite}), (c) le
+taux de naissance $\lambda$ (sections~\ref{sec:objets} et \ref{sec:cinetique}).
+
+\subsection{Trois statuts}
+Chaque section finit par un encadré à trois rubriques. \emph{Démontré} : énoncé à hypothèses
+écrites, preuve donnée ou citée. \emph{Mesuré} : chiffre sorti d'une pièce du dossier, à sa page
+ou à son empreinte. \emph{Conjecturé} : énoncé plausible, avec l'épreuve qui le réfuterait. Une
+épreuve décrite ici n'est ni préenregistrée ni lancée : toute épreuve décisive exige un
+préenregistrement scellé et contre-lu, et un accord sur devis.
+
+\subsection{Conventions de notation}
+L'erratum transversal \cite{erratumkappa} fixe une notation pour tout le dossier ; la note la suit
+(tableau~\ref{tab:notations}). Deux choix propres à la note : le type d'une relation s'écrit $r$
+(et non $\rho$, homonyme chez Fable), et le coefficient de la surprise dans la crédibilité s'écrit
+$\vartheta$ (Fable l'écrit $\rho$).
+
+\begin{table}[ht]
+\centering\small
+\caption{Notations du dossier, d'après l'erratum transversal \cite{erratumkappa}.}
+\label{tab:notations}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+Symbole & Sens \\
+\midrule
+$c(\varphi)$ & couverture : part des relations du voisinage source dont l'image existe avec le même type \\
+$\kappa(\varphi)$ & \textbf{part des conflits} : part des relations dont l'image existe avec un type incompatible ; jamais une \enquote{cohérence} \\
+$K_r$, $Z_r$ & score serrure-clé $\max_\varphi[c-\kappa]$ au rayon $r$, et son écart \emph{réduit} sous recâblage \\
+$c_C$, $\chi_C$, $\gamma_C$, $K_C$ & couverture pondérée, taux de conflits, pénalité et score serrure-clé \emph{chez Carbon} \\
+$\psi$, $k_0$, $w_m$ & coefficient de la voie catalytique, constante de rencontre, poids de la méthode $m$ (question 3) \\
+$\beta_E$, $\delta_E$ & coefficients de la barrière $E_{ab}=E_0-\beta_E Z_{ab}-\delta_E P_{ab}$ \\
+$G(t)$, $\Delta G(t)$ & part des auteurs dans la plus grande composante, son excès sur le nul (question 4) \\
+$P_{ab}$, $\delta$ & terme des problèmes ouverts et son coefficient dans le taux de naissance \\
+$r$ & type d'une relation $(x,r,y)$ \\
+$\vartheta$ & coefficient de la surprise $S$ dans la crédibilité $q$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+L'accord entre lecteurs (kappa pondéré, alpha de Krippendorff) s'écrit toujours en toutes lettres.
+
+%======================================================================
+\section{Les objets : l'hypergraphe fusionné}
+\label{sec:objets}
+
+L'objet commun du dossier est \emph{l'hypergraphe fusionné} : celui de la question~7, section~5
+\cite{q7}, qui réunit le cœur de Fable \cite{fable}, la résolvante et la couche typée de
+Carbon \cite{carbonmeta,carbonhomo}, plus des poids, des anomalies empiriques, un ancrage et un
+couplage au taux de naissance. La comparaison qui y conduit (sept critères fixés d'avance) conclut
+qu'aucun des deux modèles ne domine \cite[section~4]{q7}, ce que l'erratum transversal fixe
+pour tout le dossier \cite[section~2]{erratumkappa}. Carbon n'écrit nulle part
+\enquote{hypergraphe} ; le mot est de Fable et de Neon \cite[section~2]{q7}.
+
+\begin{definition}[Hypergraphe orienté]
+\label{def:hypergraphe}
+Un \emph{hypergraphe orienté} sur un ensemble de nœuds $V$ est un ensemble d'\emph{hyperarcs}
+$e=(T(e),h(e))$, où la queue $T(e)\subseteq V$ est un ensemble fini non vide de prémisses et la tête
+$h(e)\in V$ une conclusion \cite{gallo1993}. Un arc ordinaire est un hyperarc à queue singleton.
+Un \emph{hyperchemin} de $X$ vers $y$ est une suite d'hyperarcs dont chaque queue est contenue dans
+$X$ augmenté des têtes précédentes, la dernière tête étant $y$.
+\end{definition}
+
+\begin{definition}[Relations typées, alphabet et incompatibilité]
+\label{def:alphabet}
+Un \emph{alphabet des relations} est un ensemble fini $\R$ de types (\enquote{est loi sur},
+\enquote{active}, \enquote{inhibe}, \enquote{divise}\dots), muni d'une relation symétrique
+d'\emph{incompatibilité} $\Inc\subseteq\R\times\R$ (par exemple \enquote{active} et
+\enquote{inhibe}, \enquote{vérifie} et \enquote{réfute}). Une \emph{structure relationnelle typée}
+est un couple $G=(V,E)$ avec $E\subseteq V\times\R\times V$ ; chaque $(x,r,y)\in E$ est une
+\emph{relation} de source $x$, de but $y$, de type $r$. Les types sont communs à tous les
+domaines \cite[partie~2]{fable} ; seuls les noms des nœuds sont propres à un domaine.
+\end{definition}
+
+\begin{definition}[Hypergraphe fusionné daté]
+\label{def:fusionne}
+À chaque date $t$, l'\emph{hypergraphe fusionné} $\mathcal{H}_t$ porte, sur les concepts $V_t$
+(dont les cadres $M\subseteq V_t$ : méthodes, instruments, formalismes), quatre couches :
+\begin{enumerate}
+\item \textbf{usage} $U_t$ : chaque document antérieur à $t$ est un hyperarc qui relie l'ensemble de
+ses concepts (cooccurrence) ;
+\item \textbf{structure} $R_t$ : relations typées, signées, orientées (définition~\ref{def:alphabet}),
+les équations devenant des arbres d'opérateurs \cite[partie~2]{fable} ;
+\item \textbf{humains} $A_t$ : qui a travaillé sur quoi (matrice d'incidence auteurs-concepts) ;
+\item \textbf{problèmes} $Q_t$ : questions ouvertes et anomalies, hyperarcs \enquote{prémisses
+$\to$ cible} pondérés (définitions~\ref{def:problemes} et \ref{def:poids}).
+\end{enumerate}
+Toute grandeur indexée par $t$ se calcule sur les seules données antérieures à $t$.
+\end{definition}
+
+\begin{definition}[Couche des problèmes]
+\label{def:problemes}
+D'après la question~7, section~5 \cite{q7} :
+\begin{itemize}
+\item un \emph{résultat} est un hyperarc établi ; une \emph{question} est un hyperarc demandé, sans
+témoin connu, noté $(\Gamma,\tau,\text{date},\text{auteurs},\text{statut})$ (le séquent
+\enquote{$\Gamma\vdash^{?}\tau$} de Carbon \cite[section~3]{carbonmeta}) ; une \emph{réduction} est un
+hyperarc entre problèmes ; une \emph{dérivation} est un hyperchemin ;
+\item une \emph{anomalie} oppose un hyperarc de prédiction (théorie $T$, hypothèses auxiliaires
+$H\to$ grandeur $q$) à un hyperarc de mesure (instrument $M\to q$) ; son écart est
+\[ z=\frac{|\text{prédit}-\text{mesuré}|}{\sqrt{\sigma_p^2+\sigma_m^2}}, \]
+avec ouverture à $z\ge 3$ (seuil à geler), une durée et un mode de fermeture (idée, remesure,
+recalcul) ;
+\item un \emph{objet en gestation} est, en mathématiques, une macro des sources définie par plusieurs
+groupes non cosignataires, à même arbre d'expansion près, avec ses axiomes partiels.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Poids d'un problème]
+\label{def:poids}
+Le poids $w_j(t)$ du problème $j$ combine cinq facteurs mesurés avant $t$ \cite[section~5]{q7} :
+(1) l'écart $z_j$ ; (2) la résistance : groupes d'auteurs disjoints qui citent $j$ sans le fermer ;
+(3) la portée : problèmes que la solution de $j$ ferait avancer par les réductions ; (4) la
+centralité des prémisses mises en cause, rapportée avec et sans (elle ramène le degré) ; (5) la
+maturation : croissance des cadres employés par les documents ancrés à $j$. Règle fixée d'avance :
+$\log w_j$ est la moyenne des rangs centrés réduits des cinq facteurs, par champ et par année ;
+fermeture : $w_j=0$, mode consigné.
+\end{definition}
+
+Les facteurs du poids sont occupés depuis Laudan 1977 (discordance, âge, généralité ; pages
+rapportées par Moser \cite{moser1991}, livre non vu \cite{erratamineurs}) et Kuhn
+\cite[p.~52 et 81-82]{kuhn1962} ; restent leur mesure datée et le couplage.
+
+\begin{definition}[Taux de naissance fusionné]
+\label{def:taux}
+Pour une paire de concepts $(a,b)$ jamais reliée avant $t$, le taux instantané de naissance du lien
+est
+\begin{equation}\label{eq:taux}
+\lambda_{ab}(t)=p^0_t(a,b)\,\exp\bigl(\beta Z_{ab}+\gamma F_t(a,b)+\delta P_t(a,b)\bigr),
+\end{equation}
+où $p^0_t(a,b)$ est la probabilité de surface (modèle appris avant $t$ sur la proximité d'usage, la
+popularité et les experts communs), $Z_{ab}$ le score serrure-clé réduit
+(section~\ref{sec:correspondance}), $F_t(a,b)=\sum_{k\in M}\Delta h_k(t)\,s_a(k)\,s_b(k)$ le terme
+des cadres ($\Delta h_k$ : croissance récente de la part des documents qui emploient le cadre $k$ ;
+$s_a(k)$ : affinité de $a$ pour $k$ mesurée avant $t$) \cite[partie~2]{fable}, et
+\begin{equation}\label{eq:P}
+P_t(a,b)=\log\Bigl(1+\sum_j w_j(t)\,\mathbf{1}\bigl[\text{un parent ancré à }j\text{, l'autre non}\bigr]\Bigr)
+\end{equation}
+le terme des problèmes \cite[section~5]{q7}. La forme $\log\lambda=\log p^0+\beta Z+\gamma F+\delta P$
+concorde dans les questions 3, 5, 7 et 9 \cite[contradictions, point~3]{contrelecture}.
+\end{definition}
+
+\begin{remarque}[Lecture des coefficients]
+L'hypothèse \enquote{serrure et clé} dit $\beta>0$, l'hypothèse du champ $\gamma>0$, la couche des
+problèmes $\delta>0$ à surface, structure et cadres égaux. La question~3 montre que $F$ se lit mieux
+comme un catalyseur que comme un champ au sens physique (section~\ref{sec:cinetique}) : le nom
+\enquote{champ} est gardé par usage. Un déplacement uniforme de toutes les barrières (effet
+d'époque) est le taux de base $\lambda_0(t)$ d'un modèle de Cox, déjà absorbé.
+\end{remarque}
+
+\begin{exemple}[Une anomalie fermée par recalcul]
+Le moment magnétique du muon était à 4,2 écarts types du modèle standard en 2021 \cite{abi2021}
+(résumé) ; une mise à jour du calcul théorique ramène l'écart à $38(63)\times10^{-11}$, \enquote{no
+tension}, en 2025 \cite{aliberti2025} (résumé). Dans la couche des problèmes : un hyperarc de
+prédiction contre un hyperarc de mesure, ouvert à $z\ge3$, fermé par recalcul. La question~7 en
+tire une prédiction (P4) : une idée née sur une anomalie fermée ensuite par recalcul ou remesure
+est moins féconde \cite[section~5]{q7}.
+\end{exemple}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,
+  nd/.style={circle,fill=black,inner sep=1.3pt},
+  lab/.style={font=\small\itshape,anchor=west}]
+\foreach \yy/\nm in {0/humains $A_t$,1.6/usage $U_t$,3.2/structure $R_t$,4.8/problèmes $Q_t$}{
+  \draw[black!45,fill=black!4] (0,\yy) -- (7,\yy) -- (8,\yy+0.9) -- (1,\yy+0.9) -- cycle;
+  \node[lab] at (8.2,\yy+0.45) {\nm};}
+% structure
+\node[nd] (s1) at (2,3.6) {}; \node[nd] (s2) at (3.5,3.75) {}; \node[nd] (s3) at (5,3.55) {}; \node[nd] (s4) at (6.2,3.8) {};
+\draw[-{Stealth[length=4pt]}] (s1) -- node[above,font=\tiny]{$r$} (s2);
+\draw[-{Stealth[length=4pt]}] (s2) -- node[above,font=\tiny]{$r'$} (s3);
+\draw[-{Stealth[length=4pt]},dashed] (s3) -- (s4);
+% usage : hyperarête
+\draw[black!60,fill=black!12,rounded corners=6pt] (1.7,1.85) -- (3.8,2.2) -- (3.2,2.4) -- (1.6,2.2) -- cycle;
+\node[nd] at (2,2.05) {}; \node[nd] at (3.3,2.2) {}; \node[nd] at (2.6,2.25) {};
+% humains
+\node[nd] (h1) at (2.4,0.45) {}; \node[nd] (h2) at (4.6,0.5) {};
+\draw (h1) -- (2,1.6); \draw (h2) -- (4.4,1.6);
+% problème : hyperarc prémisses -> cible
+\node[nd] (p1) at (2.2,5.2) {}; \node[nd] (p2) at (3.0,5.4) {}; \node[draw,circle,inner sep=1.6pt] (pc) at (5.6,5.3) {?};
+\draw[thick] (p1) -- (4,5.3); \draw[thick] (p2) -- (4,5.3);
+\draw[thick,-{Stealth[length=5pt]}] (4,5.3) -- node[above,font=\tiny]{question} (pc);
+\draw[dotted,thick] (pc) -- (5,3.55);
+\draw[dotted,thick] (p1) -- (2,3.6);
+\end{tikzpicture}
+\caption{Les quatre couches de l'hypergraphe fusionné. En haut, une question : hyperarc demandé,
+sans témoin, ancré (pointillés) aux concepts de la couche de structure. Le couplage $\delta P$ fait
+peser le problème sur la naissance des liens dont un seul parent lui est ancré.}
+\label{fig:couches}
+\end{figure}
+
+\begin{statuts}[Section 2 : statuts]
+\demontre Rien : la section définit.
+\mesure Rien ici ; les chiffres cités (muon) sont lus sur résumé par la question~7.
+\conjecture $\delta>0$ (prédiction P1 de la question~7) ; la rupture datée P2 (les naissances
+ancrées à $j$ montent après son ouverture, retombent après sa fermeture) ; P3 à P5 \cite[section~5]{q7}.
+Épreuve proposée : greffée sur l'expérience de Fable (PubTator~3, gel fin 2010, naissances
+2011-2015), rapport de risques par écart type de $P$ au moins 1,10, borne basse à 95~\% au-dessus
+de 1, effet nul sous permutation des signes ; réfutation si la borne haute reste sous 1,05, gardes
+tenues \cite[section~6]{q7}. Garde de mesurabilité d'abord : sur la base de prédications SemMedDB,
+58 des 2\,236 paires candidates étaient des contradictions apparentes, surtout expliquées par le
+contexte \cite{rosemblat2019} (résumé).
+\end{statuts}
+
+%======================================================================
+\section{La correspondance comme homomorphisme partiel}
+\label{sec:correspondance}
+
+\subsection{Définitions}
+
+\begin{definition}[Voisinage typé]
+Pour un concept $a$ et un rayon $r\in\{1,2\}$, le voisinage typé $R^r_a=(V^r_a,E^r_a)$ est la
+sous-structure de $R_t$ formée des relations à distance au plus $r$ de $a$, \emph{noms des nœuds
+effacés, types gardés} \cite[partie~2]{fable}. On note $N=|E^r_a|$.
+\end{definition}
+
+\begin{definition}[Correspondance]
+Une \emph{correspondance} de $a$ vers $b$ est une injection partielle
+$\varphi:V^r_a\rightharpoonup V^r_b$ de domaine $\dom\varphi$, avec $\varphi(a)=b$.
+\end{definition}
+
+\begin{definition}[Homomorphisme partiel ; transport des relations]
+\label{def:homo}
+Soit $D\subseteq E^r_a$. On dit que $\varphi$ est un \emph{homomorphisme partiel sur $D$} si, pour toute
+$(x,r,y)\in D$, on a $x,y\in\dom\varphi$ et $(\varphi x,r,\varphi y)\in E^r_b$. L'application de
+transport $\varphi_E:D\to E^r_b$, $(x,r,y)\mapsto(\varphi x,r,\varphi y)$, vérifie alors
+\[ \mathrm{src}_B\circ\varphi_E=\varphi\circ\mathrm{src}_A,\qquad
+   \mathrm{but}_B\circ\varphi_E=\varphi\circ\mathrm{but}_A,\qquad
+   \mathrm{type}_B\circ\varphi_E=\mathrm{type}_A \quad\text{sur } D : \]
+\emph{les relations transportées commutent avec $\varphi$}. C'est la seule \enquote{conservation}
+que le dossier retient : le théorème de Noether exige une action et un groupe continu de
+symétries, que l'espace des concepts n'a pas \cite[partie~2]{fable} ; Carbon arrive à la même
+séparation \cite[section~3]{carbonhomo}.
+\end{definition}
+
+\begin{definition}[Les quatre cas d'une relation]
+\label{def:quatrecas}
+Pour $e=(x,r,y)\in E^r_a$ et une correspondance $\varphi$, exactement un des cas suivants a lieu
+\cite[correction (2)]{complement89} :
+\begin{enumerate}[label=(C\arabic*)]
+\item \textbf{confirmée} : $x,y\in\dom\varphi$ et $(\varphi x,r,\varphi y)\in E^r_b$ ; elle compte dans $c$ ;
+\item \textbf{contredite} : $x,y\in\dom\varphi$, non confirmée, et il existe $r'$ avec
+$(\varphi x,r',\varphi y)\in E^r_b$ et $(r,r')\in\Inc$ ; elle compte dans $\kappa$ ;
+\item \textbf{absente} : $x,y\in\dom\varphi$, ni confirmée ni contredite ; c'est une
+\emph{prédiction de relation} $(\varphi x,r,\varphi y)$ ;
+\item \textbf{extrémité sans image} : $x\notin\dom\varphi$ ou $y\notin\dom\varphi$ ; c'est la
+\emph{prédiction d'un objet manquant}, un \enquote{trou}, comme les cases vides du tableau de
+Mendeleïev.
+\end{enumerate}
+\end{definition}
+
+Le cas (C3) contient aussi une relation d'un autre type, compatible, entre $\varphi x$ et
+$\varphi y$ ; on peut l'en séparer si l'alphabet le demande, sans rien changer à ce qui suit.
+
+\begin{proposition}[Partition]
+\label{prop:partition}
+Soient $c,\kappa,a,m$ les parts des relations de $E^r_a$ dans les cas (C1) à (C4). Alors
+$c+\kappa+a+m=1$, et la même identité vaut pour des parts pondérées par des poids positifs
+quelconques.
+\end{proposition}
+\begin{proof}
+Les quatre conditions sont exclusives par construction (C4 se lit sur le domaine ; C1, C2, C3 se
+lisent, pour une relation dont les deux extrémités ont une image, dans cet ordre, chacune excluant
+les précédentes) et leur réunion épuise les cas. Toute mesure positive additive sur $E^r_a$,
+normalisée, donne donc des parts de somme 1.
+\end{proof}
+
+\begin{proposition}[Homomorphisme exact]
+\label{prop:homoexact}
+L'ensemble $D_\varphi$ des relations confirmées est le plus grand $D$ sur lequel $\varphi$ est un
+homomorphisme partiel. En particulier $c(\varphi)=1$ si et seulement si $\varphi$ est un
+homomorphisme partiel sur tout $E^r_a$, et alors $\kappa=a=m=0$.
+\end{proposition}
+\begin{proof}
+Une relation appartient à un $D$ admissible si et seulement si elle vérifie (C1) ; la réunion des
+$D$ admissibles est donc $D_\varphi$, lui-même admissible. Si $c=1$, toutes les relations sont
+confirmées ; la proposition~\ref{prop:partition} donne $\kappa=a=m=0$. La réciproque est la
+définition.
+\end{proof}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,
+  nd/.style={circle,draw,fill=white,inner sep=1.6pt,font=\small},
+  rel/.style={-{Stealth[length=4pt]},thick},
+  phi/.style={-{Stealth[length=4pt]},dashed,black!55}]
+\node[font=\bfseries] at (1.3,4.3) {domaine $A$};
+\node[font=\bfseries] at (7.3,4.3) {domaine $B$};
+\node[nd] (x) at (0,2) {$x$};
+\node[nd] (y1) at (2.4,3.6) {$y_1$}; \node[nd] (y2) at (2.6,2.4) {$y_2$};
+\node[nd] (y3) at (2.6,1.2) {$y_3$}; \node[nd] (y4) at (2.4,0) {$y_4$};
+\draw[rel] (x) -- node[above,font=\tiny,sloped]{$r_1$} (y1);
+\draw[rel] (x) -- node[above,font=\tiny,sloped]{$r_2$} (y2);
+\draw[rel] (x) -- node[above,font=\tiny,sloped]{$r_3$} (y3);
+\draw[rel] (x) -- node[below,font=\tiny,sloped]{$r_4$} (y4);
+\node[nd] (X) at (6,2) {$\varphi x$};
+\node[nd] (Y1) at (8.6,3.6) {$\varphi y_1$}; \node[nd] (Y2) at (8.8,2.4) {$\varphi y_2$};
+\node[nd] (Y3) at (8.8,1.2) {$\varphi y_3$};
+\node[draw,dashed,circle,inner sep=1.6pt,font=\small] (Y4) at (8.6,0) {?};
+\draw[rel] (X) -- node[above,font=\tiny,sloped]{$r_1$} (Y1);
+\draw[rel,red!70!black] (X) -- node[above,font=\tiny,sloped]{$r_2'$} (Y2);
+\draw[phi] (x) to[bend left=12] (X);
+\draw[phi] (y1) to[bend left=10] (Y1);
+\draw[phi] (y2) to[bend left=6] (Y2);
+\draw[phi] (y3) to[bend right=6] (Y3);
+\node[font=\small,anchor=west] at (9.5,3.6) {(C1) confirmée : compte dans $c$};
+\node[font=\small,anchor=west] at (9.5,2.4) {(C2) $(r_2,r_2')\in\Inc$ : dans $\kappa$};
+\node[font=\small,anchor=west] at (9.5,1.2) {(C3) absente : prédiction de relation};
+\node[font=\small,anchor=west] at (9.5,0) {(C4) sans image : objet manquant};
+\end{tikzpicture}
+\caption{Les quatre cas d'une relation $x\xrightarrow{r}y$ sous une correspondance $\varphi$
+(flèches en tirets). En (C3), $\varphi$ prédit la relation $(\varphi x,r_3,\varphi y_3)$ ; en (C4),
+elle prédit un objet de $B$ qui porterait la relation $r_4$ depuis $\varphi x$.}
+\label{fig:quatrecas}
+\end{figure}
+
+\subsection{L'objet manquant et son profil}
+
+\begin{definition}[Profil d'un objet manquant]
+\label{def:profil}
+Soit $y\in V^r_a\setminus\dom\varphi$. Son \emph{profil sous $\varphi$} est l'ensemble des relations
+qu'un objet de $B$ devrait porter pour que les relations de $y$ soient confirmées :
+\[ \Pi_\varphi(y)=\{(\varphi x,r,\star):(x,r,y)\in E^r_a,\ x\in\dom\varphi\}
+\cup\{(\star,r,\varphi z):(y,r,z)\in E^r_a,\ z\in\dom\varphi\}, \]
+où $\star$ désigne l'objet cherché.
+\end{definition}
+
+\begin{proposition}[Combler un trou]
+\label{prop:combler}
+Soit $y$ un nœud sans image dont toutes les relations ont leur autre extrémité dans $\dom\varphi$.
+Ajoutons à $B$ un nœud neuf $y^\star$ portant exactement les relations de $\Pi_\varphi(y)$ (avec
+$\star=y^\star$) et prolongeons $\varphi$ par $\varphi(y)=y^\star$. Alors la couverture croît de la
+part des relations incidentes à $y$, et $\kappa$ ne change pas.
+\end{proposition}
+\begin{proof}
+Seules changent de cas les relations incidentes à $y$ ; chacune passe de (C4) à (C1), puisque son
+image est, par construction, une relation de même type de $B$. Aucune relation ne passe en (C2) :
+les relations ajoutées ont toutes $y^\star$ pour extrémité et ne sont images que de relations
+incidentes à $y$, toutes confirmées.
+\end{proof}
+
+\begin{remarque}[Le prix d'un trou]
+La proposition~\ref{prop:combler} dit aussi le danger : ajouter des objets fait monter $c$ sans
+rien coûter. Un score honnête doit donc faire payer l'objet ajouté, par exemple par sa longueur de
+description \cite{rissanen1978} ; c'est l'objet de la \enquote{réification} de la question~9 et du
+gain de longueur de description chez Carbon \cite[section~2.4]{carbon}. Le profil dit quelles
+relations l'objet doit porter ; il ne dit pas ce qu'est l'objet (question~10, en attente).
+\end{remarque}
+
+\subsection{Le score serrure-clé, et le jouet de la question 9}
+
+\begin{definition}[Score serrure-clé réduit]
+$K_r(a,b)=\max_\varphi[c(\varphi)-\kappa(\varphi)]$, les relations entre relations pesant
+davantage ; $Z_r=(K_r-\text{moyenne})/\text{écart-type}$ sous un recâblage qui préserve degrés et
+types, par paire de domaines \cite[partie~2]{fable}. Critère : $Z_1$ et $Z_2$ élevés.
+\end{definition}
+
+\begin{exemple}[Permutations des racines et classes de formes quadratiques]
+\label{ex:jouet}
+La question~9 code les permutations des racines ($A$, huit relations typées) et les classes de
+formes quadratiques binaires ($B$, six relations) \cite[section~3]{q9}. La correspondance
+historique $\varphi$ a cinq relations confirmées, une contredite (la composition réfute la
+commutativité dans $A$, la vérifie dans $B$), une absente (\enquote{le nombre de valeurs divise
+l'ordre total} : prédiction de relation, juste) et une extrémité sans image (la résolvante) :
+$c=5/8$, $\kappa=1/8$, $c-\kappa=0{,}500$. Sur les 362\,880 bijections des neuf nœuds appariables,
+huit battent $\varphi$ (maximum $0{,}625$) en envoyant la commutativité sur un nœud sans relation
+avec la composition : \emph{le conflit devient une absence, qui ne coûte rien}
+\cite[section~5]{q9}. La conclusion tient sous la contrainte $\varphi(\text{composition})=
+\text{composition}_B$ et pour les injections partielles \cite[mineur~1]{erratumq9}.
+\end{exemple}
+
+\begin{proposition}[Aucune pondération des cas ne fait de $\varphi$ l'unique optimum du jouet]
+\label{prop:jouet}
+Dans le jouet de l'exemple~\ref{ex:jouet}, soit un score $\Sigma(\varphi')$ qui ne dépend que des
+nombres de relations dans les cas (C1) à (C4). Alors $\varphi$ n'est jamais l'unique maximum de
+$\Sigma$. Pour le score $c-\kappa-\eta a$ avec $0\le\eta<1$, $\varphi$ est strictement battue.
+\end{proposition}
+\begin{proof}
+La sortie de la version 2 du script \cite[section~2]{sortieq9v2} donne, pour la transposition qui
+échange les images de l'associativité et de la commutativité (elle conserve le type des nœuds),
+les mêmes nombres que $\varphi$ : cinq confirmées, une contredite, une absente, une sans image ; de
+même pour l'échange du nombre de valeurs et de l'ordre total. Tout score fonction de ces nombres
+leur donne la valeur de $\varphi$ : celle-ci n'est pas unique. Pour le score
+$c-\kappa-\eta a$, la même sortie donne, pour les transpositions qui échangent la commutativité
+avec le nombre de valeurs ou avec l'ordre total, cinq confirmées, aucune contredite, deux absentes,
+une sans image ; leur score $(5-2\eta)/8$ dépasse celui de $\varphi$, $(4-\eta)/8$, si et seulement
+si $\eta<1$.
+\end{proof}
+
+Leçon : faire payer l'absence ne suffit pas (à $\eta=1$, absence et conflit coûtent autant, et
+l'on n'obtient qu'une égalité ; au-delà, une absence coûterait plus qu'un conflit) ; les types de nœuds non plus, puisque les deux transpositions
+qui égalent $\varphi$ conservent les types. Dans ce jouet, la structure seule ne distingue pas
+l'associativité de la commutativité \cite[section~5]{q9}. Il faut le nul du recâblage, des relations
+plus nombreuses, ou un oracle extérieur (monde planté, assistant de preuve).
+
+\subsection{Ce que Carbon propose}
+
+Carbon écrit le même transport avec d'autres choix, que l'erratum transversal renomme pour ne pas
+confondre son $\kappa$ (une couverture) avec celui de Fable (des conflits) \cite{erratumkappa}.
+\begin{itemize}
+\item \textbf{Couverture pondérée} \cite[section~2.2, l.~36-38]{carbon} :
+\[ c_C(\varphi)=\frac{\sum_{(z_1,r,z_2)\in E_u(S)}\omega(z_1,z_2)\,\mathbf{1}\bigl[(\varphi z_1,\pi(r),\varphi z_2)\in\pi(E_v)\bigr]}{\sum_{(z_1,r,z_2)\in E_u}\omega(z_1,z_2)}, \]
+où $S=\dom\varphi$, $E_u(S)$ les relations à deux
+extrémités dans $S$, $\omega>0$ décroît avec la distance à $u$, et $\pi$ projette les types
+disciplinaires sur un alphabet abstrait.
+\item \textbf{Taux de conflits} : $\chi_C(\varphi)$, part des relations de $E_u(S)$ dont l'image porte
+un type incompatible, rapportée à $|E_u(S)|$ et non à $|E_u|$.
+\item \textbf{Score} \cite[l.~39-40]{carbon} : $K_C(u,v)=\max_\varphi c_C(\varphi)\,e^{-\gamma_C\chi_C(\varphi)}\in[0,1]$,
+distance de structure $1-K_C$.
+\item \textbf{Puits} \cite[l.~62]{carbon} : énergie d'alignement $E_C(\varphi)=-\log c_C(\varphi)+\gamma_C\chi_C(\varphi)$,
+de sorte que $K_C=\max_\varphi e^{-E_C(\varphi)}$ ; la \enquote{profondeur} d'une analogie est
+l'écart $\Delta E_C=E_C(\varphi_{(2)})-E_C(\varphi_{(1)})$ entre le second alignement et l'optimum.
+\item \textbf{Fausse identité} : deux concepts confondus en surface se séparent quand
+$|K_C(u,v)-K_C(u',v)|\gg0$ pour un concept sonde $v$.
+\item \textbf{Critique de l'homomorphisme} \cite[verdict et section~1]{carbonhomo} : un homomorphisme
+envoie une relation sur une relation, alors qu'une analogie envoie souvent une relation sur une
+\emph{chaîne} ; d'où des foncteurs partiels entre catégories de chemins et, pour la détection, un
+transport de Gromov et Wasserstein partiel calculé sur les résolvantes $(I-\alpha\tilde A)^{-1}$.
+Les références de Carbon ne sont pas vérifiées ici.
+\end{itemize}
+
+\begin{proposition}[Quand les deux scores coïncident, et quand ils divergent]
+\label{prop:fablecarbon}
+Si $\omega\equiv1$, $\pi$ est l'identité et $\dom\varphi$ contient toutes les extrémités, alors
+$c_C=c$ et $\chi_C=\kappa$. Même alors, les deux scores peuvent classer différemment deux
+correspondances.
+\end{proposition}
+\begin{proof}
+Sous ces hypothèses, $E_u(S)=E_u$ : les deux numérateurs et dénominateurs coïncident. Pour la
+divergence, prenons $\gamma_C=1$, $\varphi_1$ avec $(c,\kappa)=(0{,}60\vg0{,}20)$ et $\varphi_2$
+avec $(0{,}45\vg0)$. Fable : $c-\kappa$ vaut $0{,}40$ et $0{,}45$, $\varphi_2$ gagne. Carbon :
+$c\,e^{-\kappa}$ vaut $0{,}60\,e^{-0{,}2}\approx0{,}491$ et $0{,}45$, $\varphi_1$ gagne (calcul
+de l'auteur).
+\end{proof}
+Le choix de la forme (différence ou produit) n'est donc pas neutre ; il se fixe avant tout
+préenregistrement. Les deux notions de \enquote{profondeur} diffèrent aussi : l'écart $\Delta E_C$
+de Carbon mesure l'isolement du meilleur alignement, une grandeur de paysage, proche de la
+largeur et de la rareté de la section~\ref{sec:perturbations} ; la profondeur du dossier est la
+surprise retirée ailleurs (section~\ref{sec:surprise}).
+
+\begin{proposition}[La résolvante voit les chaînes]
+\label{prop:resolvante}
+Soit $\tilde A\ge0$ une matrice d'adjacence pondérée et $0<\alpha<1/\varrho(\tilde A)$, où
+$\varrho$ est le rayon spectral. Alors $(I-\alpha\tilde A)^{-1}=\sum_{k\ge0}\alpha^k\tilde A^k$, et
+s'il existe un chemin $i\to k\to j$ de poids $\tilde A_{ik}\tilde A_{kj}>0$, l'entrée $(i,j)$ de la
+résolvante est au moins $\alpha^2\tilde A_{ik}\tilde A_{kj}>0$, même sans relation directe $i\to j$.
+\end{proposition}
+\begin{proof}
+Pour $\alpha\varrho(\tilde A)<1$ la série de Neumann converge et vaut l'inverse. Tous ses termes sont
+positifs ou nuls ; le terme $k=2$ contient $\alpha^2\tilde A_{ik}\tilde A_{kj}$.
+\end{proof}
+C'est la seconde épreuve de la question~7 : dans un monde planté où une relation de $A$ correspond
+à une chaîne de deux relations de $B$, le score $Z$ de Fable reste au nul, la résolvante retrouve
+la correspondance \cite[section~4]{q7}.
+
+\subsection{Deux perturbations distinctes}
+\label{sec:perturbations}
+
+\begin{definition}[Perturber les faits : robustesse]
+Pour $\varepsilon\in(0,1)$, une \emph{perturbation des faits} retire chaque relation de $B$ (ou de $A$)
+avec probabilité $\varepsilon$, ou en ajoute de fausses au même taux. La \emph{robustesse} de $\varphi$
+est la loi de $c-\kappa$ sous ces perturbations, résumée par sa médiane et ses quantiles à 5~\% et
+95~\%. Elle éprouve la \emph{profondeur} au sens de la tenue du score \cite[correction (3)]{complement89}.
+\end{definition}
+
+\begin{definition}[Perturber la correspondance : largeur locale et rareté au hasard]
+\label{def:largeur}
+Soit $d(\varphi,\varphi')$ le nombre minimal de transpositions qui mènent de $\varphi$ à $\varphi'$
+(distance de Cayley). Pour une tolérance $\tau\ge0$ :
+\[ L_\tau(\varphi;d)=\frac{|\{\varphi':d(\varphi,\varphi')=d,\ \Sigma(\varphi')\ge\Sigma(\varphi)-\tau\}|}{|\{\varphi':d(\varphi,\varphi')=d\}|},\qquad
+   \mathrm{Rar}_\tau(\varphi)=\frac{|\{\varphi':\Sigma(\varphi')\ge\Sigma(\varphi)-\tau\}|}{|\{\varphi'\}|}. \]
+$L_\tau(\varphi;1)$ et $L_\tau(\varphi;2)$ sont la \emph{largeur locale} (un puits \emph{étroit} a une
+petite largeur locale) ; $\mathrm{Rar}_\tau$ est la \emph{rareté au hasard} \cite{erratumq9}.
+\end{definition}
+
+\begin{proposition}[Une transposition ne bouge le score que par les relations qu'elle touche]
+\label{prop:lipschitz}
+Soit $\Sigma=c-\kappa$ non pondéré, et $\varphi'$ obtenue en échangeant les images de deux nœuds
+$u,v$. Soit $d_u$ le nombre de relations de $E^r_a$ incidentes à $u$. Alors
+\[ |\Sigma(\varphi')-\Sigma(\varphi)|\le\frac{2(d_u+d_v)}{N}. \]
+En conséquence, si $2(d_u+d_v)\le\tau N$ pour toute paire, alors $L_\tau(\varphi;1)=1$ : le puits
+ne peut être localement étroit que si quelques nœuds portent une part notable des relations.
+\end{proposition}
+\begin{proof}
+Le cas d'une relation $(x,r,y)$ ne dépend que de $\varphi x$ et $\varphi y$. L'échange ne modifie
+ces images que si $x$ ou $y$ appartient à $\{u,v\}$ : au plus $d_u+d_v$ relations changent de cas.
+Chacune contribue $+1$ (C1), $-1$ (C2) ou $0$ (C3, C4) au numérateur $N\Sigma$, donc change sa
+contribution d'au plus 2. Pour des poids, remplacer les comptes par les poids.
+\end{proof}
+
+\begin{proposition}[Coût d'une recherche au hasard]
+\label{prop:hasard}
+Si l'on tire des correspondances uniformément et indépendamment, le nombre de tirages nécessaire
+pour en trouver une à $\tau$ près de $\varphi$ avec probabilité $0{,}95$ est
+$\lceil\ln0{,}05/\ln(1-\mathrm{Rar}_\tau)\rceil\approx3/\mathrm{Rar}_\tau$.
+\end{proposition}
+\begin{proof}
+Le premier succès suit une loi géométrique de paramètre $\mathrm{Rar}_\tau$ :
+\[ \Pr(\text{aucun succès en }n\text{ tirages})=(1-\mathrm{Rar}_\tau)^n, \]
+et $\ln(1-x)\approx-x$ pour $x$ petit.
+\end{proof}
+
+\begin{table}[ht]
+\centering\small
+\caption{Largeur locale et rareté au hasard dans le jouet (tolérance $\tau=1/8$), d'après
+l'erratum 1 de la question~9 \cite{erratumq9} et sa sortie \cite[section~1]{sortieq9v2}. Les deux
+dernières lignes sont calculées ici par la proposition~\ref{prop:hasard}.}
+\label{tab:largeur}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Distance à $\varphi$ & correspondances & à $\tau$ près de $\varphi$ & égalent ou battent $\varphi$ \\
+\midrule
+1 (une transposition) & 36 & 16 (0,444) & 7 (0,194) \\
+2 & 546 & 99 (0,181) & 31 (0,057) \\
+3 & 4\,536 & 272 (0,060) & 43 (0,009) \\
+toutes & 362\,880 & 768 ($2{,}12\times10^{-3}$) & 100 ($2{,}76\times10^{-4}$) \\
+\midrule
+\multicolumn{4}{@{}l}{Tirages pour 95~\% de chances d'en trouver une à $\tau$ près : 1\,414 ; sous
+$\varphi(\text{composition})$ fixée, 156.}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Localement, le puits du jouet est \emph{large} ; ce qui est petit, c'est la part des bonnes
+correspondances dans tout l'espace. Largeur locale et rareté au hasard sont deux grandeurs
+distinctes, et la phrase \enquote{le puits est étroit} de la question~9 tombe \cite{erratumq9}. La
+proposition~\ref{prop:lipschitz} explique en partie cette largeur : huit relations, plusieurs nœuds
+de faible degré.
+
+\begin{statuts}[Section 3 : statuts]
+\demontre La partition en quatre cas et $c+\kappa+a+m=1$ (proposition~\ref{prop:partition}) ;
+la caractérisation de l'homomorphisme exact (\ref{prop:homoexact}) ; combler un trou fait monter $c$
+sans toucher $\kappa$ (\ref{prop:combler}) ; dans le jouet, aucun score fonction des seuls cas ne
+rend $\varphi$ unique (\ref{prop:jouet}) ; les scores de Fable et de Carbon peuvent classer
+différemment (\ref{prop:fablecarbon}) ; la résolvante voit les chaînes (\ref{prop:resolvante}) ;
+la borne de la transposition (\ref{prop:lipschitz}) ; le coût d'une recherche au hasard
+(\ref{prop:hasard}).
+\mesure Sur le jouet : les comptes du tableau~\ref{tab:largeur} ; sous perturbation des faits
+(retrait à 0,15, 2\,000 tirages), $c-\kappa$ vaut 0,430 en moyenne, entre 0,250 et 0,625 aux quantiles
+5~\% et 95~\% : retirer un fait peut \emph{relever} le score en cachant un conflit
+\cite[section~5]{q9}.
+\conjecture Que, sur de vrais domaines, les correspondances qui ont mené à des découvertes soient
+à la fois profondes et étroites (section~\ref{sec:puits}).
+\end{statuts}
+
+%======================================================================
+\section{Coordonnées spectrales et applications fonctionnelles}
+\label{sec:spectral}
+
+\subsection{Les harmoniques d'un graphe}
+Soit un graphe non orienté pondéré, de matrice d'adjacence symétrique $W\ge0$ et de matrice des
+degrés $D=\operatorname{diag}(W\mathbf{1})$. Le \emph{laplacien} est $L=D-W$, et le laplacien
+normalisé $\mathcal{L}=D^{-1/2}LD^{-1/2}$ \cite{chung1997}. Pour toute fonction $f$ sur les nœuds,
+\[ f^\top Lf=\sum_{\{i,j\}}W_{ij}(f_i-f_j)^2\ \ge0. \]
+$L$ est symétrique positif ; il s'écrit $L=\Phi\Lambda\Phi^\top$ avec $\Phi$ orthogonale (ses colonnes,
+les \emph{modes propres}) et $\Lambda=\operatorname{diag}(\lambda_1\le\dots\le\lambda_n)$. Un mode de
+petite valeur propre varie peu le long des arêtes : c'est une \enquote{basse fréquence}. La
+multiplicité de la valeur propre 0 est le nombre de composantes connexes, et la deuxième valeur
+propre mesure la connexité algébrique \cite{fiedler1973}. Une \emph{coordonnée spectrale} d'un nœud
+est sa valeur dans un mode : une dimension est un \emph{mode de structure}, non une propriété d'un
+nœud \cite[point (1)]{complementspectral}.
+
+\subsection{Une correspondance comme matrice entre bases propres}
+
+\begin{definition}[Application fonctionnelle]
+\label{def:fmap}
+Soient deux graphes $A$ et $B$ à $n$ nœuds, de bases propres orthonormées $\Phi_A,\Phi_B$, et une
+bijection $\varphi:V_A\to V_B$ de matrice $P$ ($P_{xy}=1$ si $y=\varphi(x)$). L'application
+$g\mapsto Pg=g\circ\varphi$ ramène les fonctions de $B$ sur $A$. Dans les bases propres elle s'écrit
+\[ C=\Phi_A^\top P\,\Phi_B,\qquad C_{ij}=\langle\phi^A_i,\,\phi^B_j\circ\varphi\rangle . \]
+C'est la représentation d'Ovsjanikov et collègues \cite{ovsjanikov2012} : les contraintes sur
+$\varphi$ deviennent linéaires en $C$, l'estimation tient en \enquote{a single linear solve}
+\cite[p.~1-2]{ovsjanikov2012} ; pour des formes presque isométriques, $C$ est \enquote{close to being
+sparse and diagonally dominant}, sans être diagonale \cite[p.~3]{ovsjanikov2012} ; la commutation
+avec des opérateurs conservés, $R_FC=CS_F$, donne des équations linéaires en $C$
+\cite[p.~6]{ovsjanikov2012}. (Leur convention transporte les fonctions dans l'autre sens ; rien
+ne change à ce qui suit.)
+\end{definition}
+
+\begin{proposition}[Isomorphisme : $C$ commute avec les spectres]
+\label{prop:fmapiso}
+Si $\varphi$ est un isomorphisme de graphes pondérés ($W^B_{\varphi x,\varphi y}=W^A_{xy}$), alors
+$\Lambda_AC=C\Lambda_B$, donc $C_{ij}=0$ dès que $\lambda^A_i\ne\lambda^B_j$. Si de plus le spectre est
+simple, $C$ est diagonale, à coefficients $\pm1$.
+\end{proposition}
+\begin{proof}
+L'isomorphisme s'écrit $W_A=PW_BP^\top$ ; comme $P$ est une permutation, $D_A=PD_BP^\top$ et
+$P^\top P=I$, d'où $L_AP=PL_B$. Alors
+\[ \Lambda_AC=\Phi_A^\top L_AP\Phi_B=\Phi_A^\top PL_B\Phi_B=C\Lambda_B, \]
+soit $(\lambda^A_i-\lambda^B_j)C_{ij}=0$. Deux graphes isomorphes ont le même spectre ; s'il est simple,
+seuls les $C_{ii}$ peuvent être non nuls ; $C$ est orthogonale (produit de trois matrices
+orthogonales), donc $C_{ii}=\pm1$.
+\end{proof}
+
+\begin{proposition}[Presque isomorphisme : $C$ presque diagonale, sauf entre modes proches]
+\label{prop:fmapproche}
+Soit $\varepsilon=\|L_AP-PL_B\|_2$ le défaut de commutation de $\varphi$. Pour tous $i,j$ tels que
+$\lambda^A_i\ne\lambda^B_j$,
+\[ |C_{ij}|\le\frac{\varepsilon}{|\lambda^A_i-\lambda^B_j|}. \]
+\end{proposition}
+\begin{proof}
+$(\Lambda_AC-C\Lambda_B)_{ij}=(\lambda^A_i-\lambda^B_j)C_{ij}$, et cette entrée vaut
+$(\phi^A_i)^\top(L_AP-PL_B)\phi^B_j$, majorée en valeur absolue par $\varepsilon$ puisque les deux
+vecteurs sont unitaires.
+\end{proof}
+
+La proposition~\ref{prop:fmapproche} donne un sens précis à \enquote{presque diagonale si $\varphi$
+conserve la structure} \cite[point (1)]{complementspectral} : la masse hors diagonale est bornée
+par le défaut de commutation \emph{divisé par l'écart spectral}. Quand deux valeurs propres sont
+proches, la borne ne dit plus rien.
+
+\begin{exemple}[Le cycle : des modes égaux, une matrice par blocs]
+\label{ex:cycle}
+Sur le cycle à $n$ nœuds, les valeurs propres du laplacien sont $2-2\cos(2\pi k/n)$, doubles pour
+$0<k<n/2$, d'espaces propres engendrés par $x\mapsto\cos(2\pi kx/n)$ et $x\mapsto\sin(2\pi kx/n)$.
+La rotation $\varphi(x)=x+1$ est un automorphisme. Avec $\theta=2\pi k/n$,
+\[ \cos(\theta(x+1))=\cos\theta\cos\theta x-\sin\theta\sin\theta x,\qquad
+   \sin(\theta(x+1))=\sin\theta\cos\theta x+\cos\theta\sin\theta x, \]
+donc, dans ces bases, $C$ est diagonale \emph{par blocs}, chaque bloc étant la rotation d'angle
+$\theta$. Une correspondance qui conserve exactement la structure n'a donc pas une matrice
+diagonale ; elle a une matrice qui respecte les espaces propres.
+\end{exemple}
+
+\begin{remarque}[Instabilité des modes proches]
+\label{rem:daviskahan}
+Si deux valeurs propres sont égales, le choix des vecteurs dans leur plan est arbitraire ; si elles
+sont proches, un petit bruit les fait tourner dans ce plan. Le théorème de Davis et Kahan
+\cite{daviskahan1970} borne l'angle entre un \emph{sous-espace} propre et son perturbé par la
+perturbation divisée par l'écart qui sépare ce sous-espace du reste du spectre : les sous-espaces
+bien séparés sont stables, les vecteurs individuels d'un groupe de valeurs proches ne le sont pas.
+Toute comparaison mode à mode entre deux domaines doit donc regrouper les modes proches.
+\end{remarque}
+
+\subsection{La \enquote{dimension cachée} : l'analogie des corrélations canoniques}
+
+L'analyse des corrélations canoniques \cite{hotelling1936} cherche, pour deux jeux de variables
+mesurés sur les mêmes individus, les combinaisons $a^\top X$ et $b^\top Y$ de corrélation maximale.
+Elle peut faire ressortir une composante \emph{faible dans chaque jeu pris seul}, que l'analyse en
+composantes principales de chaque jeu ne voit pas.
+
+\begin{exemple}[Une composante faible partout, parfaitement partagée]
+\label{ex:cca}
+Soient $G,H,Z$ indépendantes, centrées, de variance 1, et $0<\epsilon<1$. Posons $X=(G,\epsilon Z)$ et
+$Y=(H,\epsilon Z)$. La première composante principale de $X$ est $G$ (variance $1>\epsilon^2$), non
+corrélée à $Y$. Or
+\[ \operatorname{corr}(a^\top X,b^\top Y)=\frac{a_2b_2\epsilon^2}{\sqrt{(a_1^2+a_2^2\epsilon^2)(b_1^2+b_2^2\epsilon^2)}}\le1, \]
+avec égalité si et seulement si $a_1=b_1=0$ : la première paire canonique est $(Z,Z)$, de
+corrélation 1.
+\end{exemple}
+\begin{proof}[Vérification]
+La covariance croisée vaut $a_2b_2\epsilon^2$, et
+\[ |a_2b_2|\epsilon^2=\sqrt{a_2^2\epsilon^2}\,\sqrt{b_2^2\epsilon^2}\le\sqrt{(a_1^2+a_2^2\epsilon^2)(b_1^2+b_2^2\epsilon^2)}, \]
+l'inégalité étant stricte dès que $a_1\neq0$ ou $b_1\neq0$ (si $a_2b_2=0$, la corrélation est nulle).
+\end{proof}
+
+\textbf{L'analogie, dite comme telle} \cite[correction (4)]{complement89}. Les \enquote{individus} sont
+les nœuds appariés par $\varphi$ ; les \enquote{variables} sont les coordonnées spectrales de chaque
+graphe. La \enquote{dimension cachée} serait une paire de combinaisons de modes, peu marquée dans
+chaque graphe seul (pas parmi ses modes dominants), mais alignée par $\varphi$ :
+$u_A\approx Pu_B$. Seule $\varphi$ la révèle, comme seul l'appariement des individus révèle $Z$ dans
+l'exemple~\ref{ex:cca}. Ce n'est qu'une analogie : aucun résultat de l'analyse des corrélations
+canoniques ne se transporte ici sans démonstration.
+
+\subsection{Où l'analogie casse}
+\begin{enumerate}
+\item \textbf{Graphes typés et orientés.} Le laplacien ci-dessus exige une matrice symétrique et
+positive. Un graphe orienté a un laplacien de Chung, défini pour un graphe fortement connexe à
+partir du vecteur de Perron d'une marche aléatoire \cite{chung2005} ; un graphe signé (activation,
+inhibition) a un laplacien signé \cite{kunegis2010} ; pour des relations de plusieurs types, il
+faut choisir une combinaison des types ou un opérateur par type. Aucun de ces choix n'est canonique,
+et chacun change les modes.
+\item \textbf{Modes proches} (exemple~\ref{ex:cycle}, remarque~\ref{rem:daviskahan}) : comparer des
+vecteurs propres un à un est instable ; comparer des sous-espaces séparés l'est moins.
+\item \textbf{Domaines éloignés.} Deux domaines éloignés ne sont pas presque isométriques : c'est la
+définition même du mariage éloigné \cite[section~7]{q5}. Le défaut de commutation $\varepsilon$ de la
+proposition~\ref{prop:fmapproche} n'a aucune raison d'être petit.
+\item \textbf{Les premiers modes codent la surface.} Les modes grossiers d'un graphe de concepts
+codent communautés et popularité, comme les premières composantes des plongements de mots codent
+la fréquence \cite[p.~4]{mu2018} : un alignement du grossier au fin aligne d'abord la surface
+\cite[section~7]{q5}. Il faut des opérateurs typés, normalisés par le degré, et le nul de $Z$.
+\item \textbf{Tailles différentes, correspondances partielles.} $P$ n'est plus une permutation :
+$C$ perd l'orthogonalité, la proposition~\ref{prop:fmapiso} ne s'applique plus telle quelle.
+\end{enumerate}
+
+\begin{statuts}[Section 4 : statuts]
+\demontre Sous isomorphisme, $C$ commute avec les spectres et est diagonale si le spectre est simple
+(\ref{prop:fmapiso}) ; sous presque isomorphisme, la borne $\varepsilon/|\lambda^A_i-\lambda^B_j|$
+(\ref{prop:fmapproche}) ; le cycle donne une matrice par blocs (\ref{ex:cycle}) ; une composante
+faible peut être parfaitement partagée (\ref{ex:cca}). Résultats élémentaires ; la remarque sur
+Davis et Kahan est citée, non redémontrée.
+\mesure Rien sur des graphes de domaines.
+\conjecture Qu'une \enquote{dimension cachée} commune existe en général entre deux domaines qui ont
+donné une découverte, et qu'un appariement spectral grossier-fin, typé et normalisé, la retrouve
+plus souvent qu'un appariement paire à paire, à coût égal, sur un banc de correspondances plantées
+(section~\ref{sec:recherche}).
+\end{statuts}
+
+%======================================================================
+\section{Surprise, intérêt, portée et profondeur}
+\label{sec:surprise}
+
+\begin{definition}[Surprise de surface]
+$S_t(a,b)=-\log p^0_t(a,b)$, où $p^0_t$ est le modèle de surface appris avant $t$
+\cite[partie~2]{fable}.
+\end{definition}
+
+\begin{definition}[Crédibilité et intérêt]
+\label{def:interet}
+La crédibilité est $q=\sigma(q_0+\beta'Z-\vartheta S)$, $\sigma$ la fonction logistique,
+$\beta',\vartheta>0$ ; l'intérêt est $I=q\,(S+W)$, gain d'information espéré, où $W$ est la portée
+(définition~\ref{def:portee}) \cite[partie~2]{fable}. Absurde quand $q\to0$, évident quand $S\to0$.
+\end{definition}
+
+\begin{proposition}[La distance optimale recule quand la structure s'emboîte]
+\label{prop:optimum}
+Supposons $W$ indépendant de $S$, et $\partial W/\partial Z<\beta'q(S+W)$ (en particulier $W$
+indépendant de $Z$). Posons $g(S,Z)=\vartheta(1-q)(S+W)-1$. Alors :
+(i) $\partial I/\partial S=-q\,g$ ;
+(ii) $g$ est strictement croissante en $S$, donc $I$ a au plus un maximum intérieur $S^\ast$, défini
+par $\vartheta(S^\ast+W)(1-q)=1$, et c'est un maximum ;
+(iii) là où il existe, $dS^\ast/dZ>0$.
+\end{proposition}
+\begin{proof}
+(i) $\partial q/\partial S=-\vartheta q(1-q)$, donc $\partial I/\partial S=q-\vartheta q(1-q)(S+W)=-q\,g$.
+(ii) $\partial g/\partial S=\vartheta\bigl[(1-q)+\vartheta q(1-q)(S+W)\bigr]>0$. Au zéro de $g$,
+$\partial^2I/\partial S^2=-q\,\partial g/\partial S<0$. Si $g(0,Z)>0$ (portée très grande), $I$
+décroît partout et il n'y a pas d'optimum intérieur.
+(iii) $\partial q/\partial Z=\beta'q(1-q)$, donc
+$\partial g/\partial Z=\vartheta(1-q)\bigl[\partial W/\partial Z-\beta'q(S+W)\bigr]<0$ par hypothèse ;
+le théorème des fonctions implicites donne $dS^\ast/dZ=-g_Z/g_S>0$.
+\end{proof}
+La question~5 a refait cette dérivation et relevé que l'hypothèse \enquote{$W$ indépendant de $S$}
+n'est pas dite chez Fable \cite[section~4, point~5]{q5} ; la condition sur $\partial W/\partial Z$
+est ajoutée ici. Le score de Carbon, $I=d\cdot K$, n'a pas d'optimum intérieur. Épreuve : notation
+à l'aveugle, plan $2\times2$ (surprise forte ou faible, serrure forte ou faible) \cite[section~4]{q7}.
+
+\begin{definition}[Portée : surprise retirée ailleurs]
+\label{def:portee}
+Pour un lecteur de loi $P$ (modèle du public, lecteur figé, ou loi d'un monde planté), une idée $x$
+et des faits $Y=(y_1,\dots,y_n)$ \emph{hors de son voisinage},
+\[ W(x;Y)=\log P(Y\mid x)-\log P(Y), \]
+information mutuelle ponctuelle \cite[section~2]{q2}. \enquote{Ailleurs} exclut le lien et ses
+parents, les faits qui nomment un parent ou un voisin immédiat, ceux qui partagent avec le texte de
+l'idée des entités au-delà d'un seuil fixé d'avance, et ceux qui ont servi à produire, choisir ou
+valider l'idée.
+\end{definition}
+
+\begin{proposition}[Trois propriétés de la portée]
+\label{prop:portee}
+Sous une même loi $P$, avec $S(x)=-\log P(x)$ et $S(x\mid Y)=-\log P(x\mid Y)$ :
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{symétrie} : $W(x;Y)=S(x)-S(x\mid Y)$ ;
+\item \textbf{borne} : si $P$ est une loi de probabilité sur un ensemble discret, $W(x;Y)\le S(x)$ ;
+\item \textbf{décomposition} : $W(x;Y)=\sum_jW(x;y_j)+U(x;Y)$, où
+\[ U(x;Y)=\Bigl[\log P(Y\mid x)-\textstyle\sum_j\log P(y_j\mid x)\Bigr]-\Bigl[\log P(Y)-\textstyle\sum_j\log P(y_j)\Bigr] \]
+est ce que l'idée ajoute à la dépendance entre les faits (l'unification de Myrvold \cite{myrvold2003}).
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(i) Par la formule de Bayes, $\log P(Y\mid x)-\log P(Y)=\log P(x\mid Y)-\log P(x)$.
+(ii) $P(x\mid Y)\le1$, donc $S(x\mid Y)\ge0$ et $W=S(x)-S(x\mid Y)\le S(x)$.
+(iii) Ajouter et retrancher $\sum_j\log P(y_j\mid x)$ et $\sum_j\log P(y_j)$ ; le reste est
+$\sum_jW(x;y_j)$.
+\end{proof}
+
+\begin{exemple}[Une unification sans aucune prédiction lien par lien]
+\label{ex:unification}
+Deux faits binaires $y_1,y_2$, indépendants et équiprobables sous $P$. Sous l'idée $x$, chacun reste
+équiprobable mais $y_1=y_2$. On observe $Y=(1,1)$ : $W(x;y_j)=0$ pour chaque fait, mais
+$P(Y)=1/4$, $P(Y\mid x)=1/2$, d'où $W(x;Y)=U=\log2>0$. Une somme lien par lien, comme la formule de
+Fable \cite[partie~2]{fable}, ne voit pas ce gain \cite[section~2]{q2}.
+\end{exemple}
+
+\begin{remarque}[Bruit et paraphrase ; pondération]
+D'après l'erratum de la question~2 \cite{erratamineurs} : \emph{$W$, borné par $S$, écarte la
+paraphrase} (peu surprenante, elle ne retire presque rien) ; \emph{le rapport $W/S$ écarte le bruit}
+(très surprenant, il ne retire rien). La borne (ii) vaut pour un lecteur cohérent (monde planté),
+non pour un lecteur figé. Pondérer $W$ par la centralité des faits fait revenir le degré des parents
+par construction : $W$ principal non pondéré, version pondérée en second, avec sa corrélation
+partielle au degré \cite[section~2]{q2}.
+\end{remarque}
+
+\begin{test}[La portée explique-t-elle l'effet du nœud chez Gu et Krenn ?]
+\label{test:gukrenn}
+\emph{Fait de départ} : sur 2\,996 idées bâties sur une paire de concepts (4\,451 notes, 110
+responsables d'équipe), l'intérêt décroît avec le degré du concept de l'évaluateur,
+$\rho=-0{,}166$ (PageRank $-0{,}176$, distance $-0{,}223$) \cite[v4, p.~8]{gukrenn2026} ; c'est un
+fait sur le \emph{parent}, non sur l'idée fille, et il ne pèse qu'environ 3~\% de la variance des
+rangs \cite[section~1]{q2}. \emph{Statistique} : corrélation partielle de rang entre $W$ estimé
+(lecteur figé, cent titres de 2024-2025 hors voisinage, faux appariés) et la note, à degré,
+PageRank, citations, distance, longueur et évaluateur fixés. \emph{Nul} : réaffectations
+idée-faits permutées. \emph{Prédiction} : au moins $+0{,}05$, borne basse à 95~\% (rééchantillonnage
+par évaluateur) au-dessus de 0, et le coefficient du degré perd au moins un quart. \emph{Réfutation} :
+borne haute sous $+0{,}02$, gardes tenues ; indécidable si $W$ estimé est corrélé au degré au-delà
+de 0,5 \cite[section~6]{q2}. Demi-largeur sans grappes environ 0,036 : le seuil frôle la limite,
+puissance à calculer au préenregistrement.
+\end{test}
+
+\begin{statuts}[Section 5 : statuts]
+\demontre L'optimum de surprise et son recul quand $Z$ croît, sous des hypothèses dites
+(\ref{prop:optimum}) ; symétrie, borne et décomposition de la portée (\ref{prop:portee}) ;
+l'exemple d'unification pure (\ref{ex:unification}).
+\mesure Les chiffres de Gu et Krenn, lus à la page par la question~2 et confirmés par la
+contre-lecture \cite[section~Q2]{contrelecture}.
+\conjecture Que $W$ estimé explique l'intérêt au-delà du nœud (épreuve~\ref{test:gukrenn}) ; que
+l'optimum de distance soit mobile (Fable) plutôt que fixe (Carbon) \cite[section~4]{q7}.
+Dans l'organisme d'idéation, $W$ estimé n'est qu'une mesure rapportée tant qu'un monde planté à
+portée connue ne l'a pas validé ; il n'entre jamais dans un choix de proposeur ni dans une
+récompense (règle de la décision N-053, point~5, citée par la question~2).
+\end{statuts}
+
+%======================================================================
+\section{Le puits profond et étroit, et la fécondité}
+\label{sec:puits}
+
+Le complément du 24 novembre demande trois grandeurs, distinctes, avec pour chacune une définition
+formelle et une épreuve falsifiable sur données datées, avec son nul
+\cite{complementspectral}. Pour l'organisme : la profondeur comme récompense, l'étroitesse comme
+difficulté, la fécondité comme critère différé.
+
+\subsection{Profondeur d'un puits}
+
+Le complément définit la profondeur comme la surprise retirée ailleurs, réalisée par trois
+canaux : les relations transportées, les faits importés comme prédictions, la stabilité sous de
+petites perturbations \cite[point (2)]{complementspectral}. La question~2 réserve
+\enquote{ailleurs} aux faits hors du voisinage. Les deux ne coïncident pas : les prédictions de
+$\varphi$ (cas C3 et C4) tombent \emph{dans} le voisinage de $b$. La note garde donc deux échelles,
+nommées et rapportées à part.
+
+\begin{definition}[Profondeur locale et profondeur à distance]
+\label{def:profondeur}
+Pour une correspondance $\varphi$ gelée à la date $t$ et un horizon $h$ :
+\begin{enumerate}
+\item \textbf{transport} : $Z_r(\varphi)$, le score $c-\kappa$ réduit sous recâblage ;
+\item \textbf{importations} : l'ensemble $\Pi_t(\varphi)$ des prédictions de $\varphi$ (relations
+absentes, cas C3 ; profils des objets manquants, cas C4), et leur \emph{taux de confirmation}
+$\pi_{t,h}(\varphi)$, part de $\Pi_t(\varphi)$ affirmée dans $(t,t+h]$ ;
+\item \textbf{robustesse} : $\rho_\varepsilon(\varphi)$, probabilité que $c-\kappa$ reste à $\tau$
+près sous une perturbation des faits de taux $\varepsilon$ ;
+\item \textbf{portée} : $W$ sur des faits hors du voisinage (définition~\ref{def:portee}).
+\end{enumerate}
+La \emph{profondeur locale} est le triplet $(Z_r,\pi_{t,h},\rho_\varepsilon)$ ; la \emph{profondeur à
+distance} est $W$. Aucune combinaison n'est fixée ici ; elle se fixe avant un préenregistrement.
+\end{definition}
+
+\begin{test}[Les prédictions d'une correspondance profonde se confirment-elles ?]
+\label{test:profondeur}
+\emph{Données} : relations typées et datées de PubTator~3 \cite{pubtator2024}, gel fin 2010
+(l'expérience de Fable \cite[partie~7]{fable}). \emph{Unités} : paires $(a,b)$ avec leur meilleure
+correspondance $\varphi$ (criblage par signatures de rôle, puis transport sur liste courte) et ses
+prédictions $\Pi_{2010}(\varphi)$. \emph{Issue} : première affirmation d'une relation prédite en
+2011-2015. \emph{Statistique} : rapport des taux de confirmation des prédictions des correspondances
+du tiers supérieur de profondeur locale, contre deux témoins appariés sur la popularité des
+extrémités et les types : (i) prédictions de correspondances tirées sous recâblage (même degrés,
+mêmes types) ; (ii) prédictions des correspondances voisines (une transposition) des mêmes paires.
+\emph{Prédiction} (seuil proposé, à geler) : rapport au moins 1,5, borne basse à 95~\% au-dessus de 1
+(rééchantillonnage par concept). \emph{Réfutation} : borne haute sous 1,1, gardes tenues.
+\emph{Gardes} : sur un monde planté (correspondance et prédictions plantées, dévoilées après le gel),
+le rapport doit être grand ; après permutation des types à degrés constants, il doit tomber à 1,
+sinon la mesure lit la popularité. \emph{Volet robustesse} : à transport égal, les prédictions des
+correspondances robustes se confirment plus que celles des fragiles.
+\end{test}
+
+\subsection{Étroitesse}
+
+\begin{definition}[Étroitesse]
+\label{def:etroitesse}
+L'\emph{étroitesse} de $\varphi$ est $\mathrm{Etr}_\tau(\varphi)=1-L_\tau(\varphi;1)$, complétée par
+$1-L_\tau(\varphi;2)$ (définition~\ref{def:largeur}) : la petite part des correspondances voisines
+qui marchent encore \cite[point (2)]{complementspectral}. On la rapporte avec la rareté au hasard
+$\mathrm{Rar}_\tau(\varphi)$, qui est une autre grandeur (section~\ref{sec:perturbations}).
+\end{definition}
+
+Le couple \enquote{profond et étroit} est l'aiguille : un puits que peu de tirages touchent et
+qu'une petite erreur de correspondance fait perdre. D'où l'intérêt de partir des anomalies, qui
+réduisent l'espace à explorer (section~\ref{sec:recherche}).
+
+\begin{test}[L'étroitesse retarde-t-elle la découverte ?]
+\label{test:etroitesse}
+\emph{Données} : les naissances de 2011-2020 dont les deux voisinages typés ont atteint une taille
+fixée d'avance à une date de maturité $t_0$ antérieure. \emph{Issue} : délai entre $t_0$ et la
+naissance. \emph{Statistique} : modèle de Cox avec étroitesse, profondeur locale, $S$, $F$, $P$,
+erreurs groupées par concept. \emph{Nul} : permutation de l'étroitesse dans des strates de
+profondeur et de surprise. \emph{Prédiction} : rapport de risques par écart type d'étroitesse
+inférieur à 1 (les puits étroits naissent plus tard), seuil proposé 0,9, borne haute sous 1.
+\emph{Réfutation} : borne basse au-dessus de 0,95, gardes tenues. \emph{Version dans l'organisme} :
+sur un banc de correspondances plantées où l'étroitesse est plantée (leurres proches de $\varphi$) à
+rareté fixée, le coût en jetons pour retrouver $\varphi$ doit croître avec l'étroitesse ; à
+étroitesse fixée, avec la rareté.
+\end{test}
+
+\subsection{Fécondité}
+\label{sec:fecondite}
+
+La fécondité est ce que l'idée rend possible après elle : en cinétique, un catalyseur qui abaisse
+la barrière d'autres réactions \cite[point (3)]{complementspectral} (section~\ref{sec:cinetique}).
+
+\begin{definition}[Fécondité]
+\label{def:fecondite}
+Pour une naissance $(a,b)$ à la date $t_b$, de correspondance $\varphi$, et un horizon $h$ :
+\begin{enumerate}
+\item \textbf{gain de prédiction des liens futurs} : $\Phi_h=\mathrm{PM}_1-\mathrm{PM}_0$, où
+$\mathrm{PM}$ est la précision moyenne, sur l'ensemble à risque, de la prédiction des liens nés dans
+$(t_b,t_b+h]$, par un modèle de base ($\mathrm{PM}_0$) et par le même modèle augmenté du trait
+\enquote{paire alignée par $\varphi$} ($\mathrm{PM}_1$) : c'est le \enquote{cortège} de Fable
+\cite[partie~7, C]{fable} ;
+\item \textbf{indice de rupture} de l'article de naissance : avec $N_A$ les travaux ultérieurs qui
+citent l'article sans citer ses références, $N_B$ ceux qui citent l'article et ses références,
+$N_C$ ceux qui ne citent que ses références,
+$\mathcal{D}=(N_A-N_B)/(N_A+N_B+N_C)\in[-1,1]$ \cite[p.~7, légende de la figure~1 ; p.~18]{wu2019}.
+C'est la forme employée par Wu, Wang et Evans ; l'indice de Funk et Owen-Smith \cite{funk2017}, dont
+il dérive, est lu sur notice et résumé, sa définition exacte est à vérifier sur la source.
+\end{enumerate}
+\end{definition}
+
+\begin{remarque}[Profondeur et fécondité sont distinctes]
+Une unification qui ne prédit rien de neuf (toutes ses conséquences déjà connues) a une portée
+$W$ réalisée nulle sur l'avenir mais peut avoir un fort transport ; un instrument nouveau, sans
+aucune correspondance, peut multiplier les naissances voisines (fécondité forte, profondeur nulle).
+Les deux grandeurs se mesurent donc séparément. La validité de l'indice de rupture contre le
+jugement des pairs reste discutée \cite{bornmann2020,leibel2024} ; c'est une covariable, non un
+critère \cite[section~2]{q2}. Une baisse séculaire de la rupture est rapportée par Park, Leahey et
+Funk \cite{park2023} (titre et notice) : toute comparaison entre périodes doit en tenir compte.
+\end{remarque}
+
+\begin{test}[La profondeur mesurée à la naissance prédit-elle la fécondité ?]
+\label{test:fecondite}
+\emph{Données} : naissances de 2011-2015 de l'expérience de Fable, liens de 2016-2025.
+\emph{Statistiques} : (i) cortège : rapport des taux de naissance des paires alignées par $\varphi$
+contre des paires croisées non alignées, appariées (types, popularité, proximité de surface) ;
+prédiction de Fable au moins 1,5, borne basse au-dessus de 1 \cite[partie~7]{fable} ; (ii) régression
+de $\Phi_{10}$ et de $\mathcal{D}$ sur la profondeur locale à $t_b$, à $S$, $Z$, $F$, $P$ fixés.
+\emph{Nul} : placebo temporel, la même mesure sur la fenêtre \emph{précédant} la naissance doit
+donner zéro ; permutation des naissances entre paires de même strate. \emph{Réfutation} : cortège à
+borne haute sous 1,1 ; coefficient de la profondeur à borne haute sous 0, gardes tenues. Les deux
+issues instruisent : si la profondeur ne prédit pas la fécondité, les deux sont confirmées
+distinctes.
+\end{test}
+
+\subsection{Usage dans l'organisme d'idéation}
+\begin{itemize}
+\item \textbf{Profondeur comme récompense} : seulement là où elle est connue par construction, dans
+un monde planté dont l'orchestrateur seul tient la graine ; la composition des proposeurs se juge
+sur l'oracle du monde planté et le coût, jamais sur un juge (règle de la décision N-058, rappelée
+par la question~2) ; la profondeur \emph{estimée} reste une mesure rapportée.
+\item \textbf{Étroitesse comme difficulté} : elle fixe le budget d'exploration et le choix des
+méthodes de recherche (section~\ref{sec:recherche}), non la note d'une fiche.
+\item \textbf{Fécondité comme critère différé} : jugée sur des liens apparus après coup ; dans un
+monde planté, sur des faits cachés dévoilés plus tard par l'orchestrateur.
+\item \textbf{Gonflement} : un proposeur peut gonfler le transport en ajoutant des objets
+(proposition~\ref{prop:combler}), l'étroitesse en choisissant des leurres, la portée en amorçant la
+batterie de faits \cite[section~5]{q2}. Parades : coût de description des objets ajoutés, batterie
+scellée et renouvelée, valeurs jamais rendues aux proposeurs.
+\end{itemize}
+
+\begin{statuts}[Section 6 : statuts]
+\demontre Rien de neuf : la section définit et renvoie aux propositions des sections 3 et 5.
+\mesure La forme de l'indice de rupture, lue à la page \cite{wu2019}.
+\conjecture Les épreuves~\ref{test:profondeur}, \ref{test:etroitesse} et \ref{test:fecondite}, avec
+leurs seuils proposés, à geler.
+\end{statuts}
+
+%======================================================================
+\section{Le test qui reste sur la résonance}
+\label{sec:resonance}
+
+Fable écarte la résonance comme mécanisme et garde un test : la co-accélération d'activité des deux
+voisinages prédit-elle la naissance au-delà du champ $F$ ? \cite[partie~2]{fable}. Carbon l'écarte
+explicitement, faute de phase mesurable \cite[l.~64]{carbon}. La note écrit le test.
+
+\begin{definition}[Activité, croissance, co-accélération]
+\label{def:coacc}
+Pour un concept $x$, soit $n_x(t)$ le nombre de documents de l'année $t$ qui emploient un concept du
+voisinage $N(x)$ (rayon 1, dans la couche d'usage). Croissance : $g_x(t)=\Delta\log(1+n_x(t))$ ;
+accélération : $\alpha_x(t)=g_x(t)-g_x(t-1)$, centrée réduite par champ et année. La
+\emph{co-accélération} de $(a,b)$ sur une fenêtre de $w$ ans finissant à $t-\ell$ (décalage $\ell\ge1$
+pour exclure l'anticipation de la découverte) est
+\[ \mathrm{CoA}_{ab}(t)=\frac1w\sum_{s=t-\ell-w+1}^{t-\ell}\alpha_a(s)\,\alpha_b(s). \]
+\end{definition}
+
+\begin{test}[Résonance]
+\label{test:resonance}
+\emph{Énoncé} : dans le modèle de Cox
+\[ \log\lambda_{ab}(t)=\log\lambda_0(t)+\log p^0_t(a,b)+\beta Z_{ab}+\gamma F_t(a,b)+\delta P_t(a,b)+\zeta\,\mathrm{CoA}_{ab}(t), \]
+$\zeta>0$. \emph{Données} : l'ensemble à risque de l'expérience de Fable, naissances 2011-2015, gel
+fin 2010 pour $Z$, séries d'activité annuelles avant chaque date. \emph{Statistique} : rapport de
+risques par écart type de $\mathrm{CoA}$, intervalle à 95~\% par rééchantillonnage par concept ;
+rapport de vraisemblance pour $\zeta$. \emph{Nuls} : (i) décalage circulaire, tiré au hasard, de la
+série de $b$ (conserve les accélérations marginales, brise la synchronie) ; (ii) remplacement de
+$b$ par un concept $b'$ de même champ et de même accélération moyenne. \emph{Contrôles} : $F$ (les
+cadres communs accélèrent ensemble les deux voisinages), $P$ (une cible commune), effets fixes
+champ-année (un choc commun), accélérations marginales $\alpha_a$, $\alpha_b$ seules.
+\emph{Prédiction} (seuil proposé, à geler) : rapport de risques au moins 1,10, borne basse au-dessus
+de 1, et effet réel supérieur à 95~\% des effets sous le nul (i). \emph{Réfutation} : borne haute sous
+1,05, gardes tenues ; ou effet sous nul aussi fort que l'effet réel ; ou effet absorbé par $F$.
+\emph{Garde} : un monde planté où deux voisinages co-accélèrent sans pont (le témoin doit mourir) et
+un autre où la co-accélération est plantée comme cause.
+\end{test}
+
+\begin{statuts}[Section 7 : statuts]
+\demontre Rien.
+\mesure Rien.
+\conjecture $\zeta>0$ au-delà de $F$ ; à défaut, la \enquote{résonance} n'a aucun contenu propre et
+le mot doit sortir du modèle.
+\end{statuts}
+
+%======================================================================
+\section{Cinétique et émergence}
+\label{sec:cinetique}
+
+\subsection{La cinétique des collisions d'idées}
+
+La question~3 relit le taux fusionné comme une cinétique chimique \cite{q3}, et son erratum en
+corrige les budgets \cite{erratumq3}. Le taux~\eqref{eq:taux} est déjà une loi d'Arrhenius
+$k=A\,e^{-E/\Theta}$ \cite{arrhenius1889}, avec $E/\Theta=S-\beta Z-\gamma F-\delta P$ et l'unité
+d'énergie fixée par le coefficient 1 de $S$ (un nat de surprise du public).
+
+\begin{table}[ht]
+\centering\small
+\caption{Dictionnaire de la cinétique, abrégé d'après la question~3, section~1 \cite{q3}.}
+\label{tab:dico}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+Terme & Grandeur mesurable & Statut \\
+\midrule
+Concentration & $n_a(t)$ : auteurs actifs sur $a$ ; dans l'organisme, contextes où $a$ figure & ajoute (ordre) \\
+Collision & rencontre sans prise (coprésence sans relation extraite) & ajoute \\
+Facteur d'orientation & $e^{\beta Z}$ & redonne $Z$ \\
+Énergie d'activation & corpus : seulement $E/\Theta$ ; organisme : pente d'Arrhenius & organisme seulement \\
+Température & organisme : température d'échantillonnage (forme de Boltzmann \cite[éq.~(1), p.~2-3]{hinton2015}) & ajoute dans l'organisme \\
+Catalyseur & méthode présente, non consommée, ouvrant une voie parallèle & ajoute ; $F$ en est un \\
+Champ physique & déplacement uniforme des barrières & écarté (taux de base) \\
+Autocatalyse & multiplicateur des paires alignées, rapport de branchement & redonne ; précurseur \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,st/.style={draw,rounded corners,inner sep=4pt,font=\small}]
+\node[st] (s0) at (0,0) {séparés $a+b$};
+\node[st] (s1) at (4.2,0) {rencontre $\{a,b\}$};
+\node[st] (s2) at (8.4,0) {idée née};
+\draw[-{Stealth[length=5pt]}] ($(s0.east)+(0,0.12)$) -- node[above,font=\small]{$k_D$} ($(s1.west)+(0,0.12)$);
+\draw[-{Stealth[length=5pt]}] ($(s1.west)+(0,-0.12)$) -- node[below,font=\small]{$k_{\mathrm{sep}}$} ($(s0.east)+(0,-0.12)$);
+\draw[-{Stealth[length=5pt]}] (s1) -- node[above,font=\small]{$k_r$} (s2);
+\end{tikzpicture}
+\caption{Le schéma \enquote{rencontre, séparation, prise} de la question~3, prédiction~1.}
+\label{fig:schema}
+\end{figure}
+
+\begin{proposition}[Temps moyen et étape limitante]
+\label{prop:tempsmoyen}
+Dans la chaîne de Markov de la figure~\ref{fig:schema} (taux constants), le temps moyen jusqu'à la
+naissance depuis l'état séparé est
+\[ \frac1\lambda=\frac1{k_D}+\frac1{k_r}+\frac{k_{\mathrm{sep}}}{k_D\,k_r}. \]
+Rencontres brèves ($k_{\mathrm{sep}}\gg k_D,k_r$) : $\lambda\approx(k_D/k_{\mathrm{sep}})\,k_r$, un
+produit, c'est le taux fusionné. Rencontres durables ($k_{\mathrm{sep}}\to0$) :
+$\lambda=k_Dk_r/(k_D+k_r)$, forme en série \cite{collins1949} (page à vérifier).
+\end{proposition}
+\begin{proof}
+Soient $T_0$ et $T_1$ les temps moyens depuis les états séparé et rencontre. Par l'analyse au
+premier pas,
+\[ T_0=\frac1{k_D}+T_1,\qquad T_1=\frac1{k_{\mathrm{sep}}+k_r}+\frac{k_{\mathrm{sep}}}{k_{\mathrm{sep}}+k_r}\,T_0 . \]
+D'où
+\[ T_0\,\frac{k_r}{k_{\mathrm{sep}}+k_r}=\frac1{k_D}+\frac1{k_{\mathrm{sep}}+k_r},\qquad
+   T_0=\frac{k_{\mathrm{sep}}+k_r}{k_Dk_r}+\frac1{k_r}, \]
+qui est la formule annoncée. Les deux limites s'en lisent.
+\end{proof}
+
+\begin{proposition}[Le signe de l'interaction dit le régime]
+\label{prop:interaction}
+Dans la forme générale,
+\[ \frac{\partial^2\log\lambda}{\partial\log k_D\,\partial\log k_r}=\frac{k_Dk_r}{(k_D+k_r+k_{\mathrm{sep}})^2}>0 . \]
+En régime durable, l'élasticité au contact vaut $k_r/(k_D+k_r)$, celle de la prise $k_D/(k_D+k_r)$,
+de somme 1.
+\end{proposition}
+\begin{proof}
+$\lambda=k_Dk_r/(k_D+k_r+k_{\mathrm{sep}})$, donc $\log\lambda=\log k_D+\log k_r-\log\Sigma$ avec
+$\Sigma=k_D+k_r+k_{\mathrm{sep}}$. Alors $\partial\log\lambda/\partial\log k_D=(k_r+k_{\mathrm{sep}})/\Sigma$,
+puis $\partial/\partial\log k_r$ de cette expression vaut
+$[k_r\Sigma-(k_r+k_{\mathrm{sep}})k_r]/\Sigma^2=k_Dk_r/\Sigma^2$. Avec $k_{\mathrm{sep}}=0$ on lit les
+élasticités.
+\end{proof}
+Un signe négatif de l'interaction contact $\times$ structure réfute donc toute la famille ; un signe
+nul dit que la cinétique n'ajoute rien au taux fusionné sur ce point \cite[section~2]{q3}. Dans la
+simulation du régime durable (partie~B, non touchée par l'erratum), l'interaction vaut $+0{,}118$
+(écart type 0,006), l'élasticité au contact $0{,}30$, $0{,}42$, $0{,}55$ du tiers bas au tiers haut de
+$Z$ \cite[section~2]{q3} (sortie \texttt{500e94df…}).
+
+\begin{proposition}[Le terme des cadres est le premier ordre d'un catalyseur]
+\label{prop:catalyseur}
+Soit la voie catalytique de la question~3 corrigée par son erratum \cite[mineur~2]{erratumq3} :
+\[ \lambda=p^0\Bigl[e^{\beta Z+\delta P}+\psi\sum_mw_m\,h_a(m)h_b(m)\,e^{\beta_cZ+\delta P}\Bigr]. \]
+Avec $\tilde F=\sum_mw_mh_a(m)h_b(m)$ :
+$\log\lambda=\log p^0+\beta Z+\delta P+\log\bigl(1+\psi\tilde F e^{(\beta_c-\beta)Z}\bigr)$. Au premier
+ordre en $\psi\tilde F$, on retrouve $\gamma F$ avec $\gamma=\psi$, $F=\tilde F$, si et seulement si
+$\beta_c=\beta$. De plus $\log\lambda$ est concave en $\tilde F$, et si $\beta_c<\beta$ le gain relatif
+$\psi\tilde Fe^{(\beta_c-\beta)Z}$ décroît avec $Z$.
+\end{proposition}
+\begin{proof}
+Factoriser $e^{\beta Z+\delta P}$ ; $\log(1+x)=x+O(x^2)$ ; le terme d'ordre un vaut
+$\psi\tilde Fe^{(\beta_c-\beta)Z}$, indépendant de $Z$ si et seulement si $\beta_c=\beta$ ;
+$\log(1+x)$ est concave ; la dérivée en $Z$ du gain relatif est $(\beta_c-\beta)$ fois ce gain.
+Sans le facteur $e^{\delta P}$ sur la voie catalytique, le terme d'ordre un garderait $e^{-\delta P}$.
+\end{proof}
+
+\begin{proposition}[À température constante, la barrière n'est pas identifiable]
+\label{prop:identif}
+Si $\lambda=\nu\,e^{-E/\Theta}$ avec $E=E_0-\beta_EZ-\delta_EP$, la transformation
+$(E_0,\beta_E,\delta_E,\Theta)\mapsto(sE_0,s\beta_E,s\delta_E,s\Theta)$, $s>0$, laisse $\lambda$
+inchangé : seuls les rapports $E_0/\Theta$, $\beta_E/\Theta$, $\delta_E/\Theta$ sont identifiables, et
+$E_0/\Theta$ se confond avec $\log\nu$.
+\end{proposition}
+\begin{proof}
+$E/\Theta$ est invariant par la transformation ; $\log\lambda=\log\nu-E_0/\Theta+\dots$ ne sépare pas
+$\log\nu$ de $E_0/\Theta$.
+\end{proof}
+La barrière s'identifie, à une unité près, si une variable de strate multiplie tous les
+coefficients de barrière par un même facteur $1/\Theta_s$ (matrice des coefficients par strate de
+rang 1), ou dans l'organisme, où $\Theta=T$ est la température d'échantillonnage, fixée par
+l'expérimentateur \cite[section~3]{q3}.
+
+\begin{table}[ht]
+\centering\small
+\caption{Budgets corrigés de la mesure de la barrière dans l'organisme (barrière de 2,5 nats),
+d'après l'erratum 1 de la question~3 et sa sortie (\texttt{dc98b08f…}) \cite{erratumq3}. Forme
+posée : $\ln k=\ln A+m\ln T-E/T$, empruntée à Eyring, à éprouver.}
+\label{tab:budgets}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & 1\,600 collisions & 6\,400 & 25\,600 \\
+\midrule
+Ancien plan (4 températures, 0,4 à 1,3), sans le terme en $\ln T$ & 0,56 & -- & -- \\
+Ancien plan, avec le terme & 2,96 & 1,48 & 0,74 \\
+Plan large (6 températures, 0,25 à 2,0), avec le terme, $m=0$ & 1,87 & 0,93 & 0,47 \\
+Plan large, avec le terme, $m=1$ & 2,25 & 1,12 & 0,56 \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+\begin{minipage}{0.92\textwidth}\footnotesize
+Écarts types asymptotiques de l'estimation de $E$. Corrélation entre $\ln T$ et $-1/T$ : 0,987
+(ancien plan), 0,962 (plan large). Omettre le terme s'il existe ($m=1$) biaise la lecture d'environ un
+nat (3,44 à 3,85 au lieu de 2,5), sans baisse avec le budget. Test du catalyseur contre le
+préfacteur à 12\,800 collisions : puissance 0,81 à 0,99 selon le plan et $m$, faux positifs 0,02 à
+0,06, si le catalyseur ne change pas la dépendance du préfacteur en température. Au moins cinq
+températures, non trois.
+\end{minipage}
+\end{table}
+
+\textbf{Les autres prédictions de forme} \cite[section~2]{q3}, toutes supposées :
+\emph{ordre en porteurs} ($\lambda\propto n_a^{m_a}n_b^{m_b}n_{ab}^{m_{ab}}$, trois mécanismes, trois
+signatures ; réfutée si les ordres sont non entiers et instables entre champs) ; \emph{précurseur
+structural de l'avalanche} (la taille du plus grand ensemble réflexivement autocatalytique nourri
+par les concepts établis \cite{hordijk2004} prédit-elle un rapport de branchement d'au moins 1 sur la
+période suivante ? forme occupée, test prédictif à faire) ; \emph{réversibilité} (pente entre 0 et 1
+entre taux de naissance et survie des ponts, selon Evans et Polanyi \cite{evanspolanyi1938}, page à
+vérifier). La question~3 conclut \enquote{garder en partie}, confiance 0,6, verdict maintenu par
+l'erratum, la barrière se mesurant dans l'organisme \enquote{avec environ seize à vingt-huit fois
+plus de collisions que la v1 ne le disait} \cite{erratumq3}.
+
+\subsection{L'émergence}
+
+La question~4 sépare deux hypothèses de sens opposés sur le contact \cite[section~1]{q4} :
+\textbf{(a)} la structure d'un champ (le taux de naissance change quand le graphe des coauteurs
+acquiert une composante géante ; en 2009, la transition \emph{suit} l'invention selon ses auteurs
+\cite[p.~5 et 14 du manuscrit]{bettencourt2009}) ; \textbf{(b)} le processus d'un petit groupe
+(l'interaction pendant la génération réduit le nombre d'idées distinctes ; chez Diehl et Stroebe,
+le groupe nominal est devant dans 18 expériences sur 22, la cause retenue est le blocage de
+production \cite[p.~497]{diehlstroebe1987}, absent chez des agents qui écrivent en parallèle).
+L'écriture $D=D_{\mathrm{seul}}+D_{\mathrm{composé}}$ les rend complémentaires sous condition :
+$D_{\mathrm{seul}}$ décroît avec le contact si les producteurs convergent, $D_{\mathrm{composé}}$
+(idées qui exigent des pièces détenues par d'autres) est nul sans contact et croît avec la
+connectivité.
+
+\begin{proposition}[Cascades sous-critiques]
+\label{prop:branchement}
+Si chaque naissance en induit un nombre aléatoire de moyenne $n<1$, indépendamment, la taille
+moyenne totale d'une cascade issue d'une naissance est $1/(1-n)$ ; si $n>1$, la cascade est
+infinie avec une probabilité positive.
+\end{proposition}
+\begin{proof}
+La génération $k$ a une taille moyenne $n^k$ (récurrence et indépendance) ; la somme
+$\sum_kn^k=1/(1-n)$. Le second point est le théorème classique d'extinction d'un processus de
+Galton et Watson \cite[chapitre~I]{harris1963} (page à vérifier).
+\end{proof}
+
+\begin{proposition}[Dilution d'arêtes et seuil]
+\label{prop:dilution}
+Dans un graphe aléatoire où chaque arête possible est présente avec probabilité $c/(N-1)$
+indépendamment, conserver chaque arête avec probabilité $f$ indépendamment donne un graphe de même
+loi avec $cf/(N-1)$ : le degré moyen devient $cf$, et le seuil d'apparition d'une composante géante,
+en taille infinie, est $cf=1$. Dans le graphe biparti de Fable (degrés croisés moyens $c_A$, $c_B$),
+le processus d'exploration qui alterne les deux côtés a pour moyenne en deux pas $c_Ac_Bf^2$, d'où le
+seuil $c_Ac_Bf^2=1$.
+\end{proposition}
+\begin{proof}
+Une arête est présente après dilution si et seulement si elle l'était et a été conservée, avec
+probabilité $\frac{c}{N-1}f$, indépendamment des autres. Le seuil $cf=1$ pour un graphe de degrés de
+Poisson est classique \cite{molloyreed1995,newman2001pre} (résumés). Pour le biparti : depuis un
+nœud de $A$, le nombre de voisins conservés dans $B$ a pour moyenne $c_Af$ ; depuis chacun, $c_Bf$ ;
+le processus de branchement à deux étapes a pour moyenne $c_Ac_Bf^2$, et la proposition
+\ref{prop:branchement} donne le seuil. Le passage du processus de branchement au graphe (graphe
+localement arborescent) est admis, non redémontré ici ; dérivation de la question~4
+\cite[section~4]{q4}.
+\end{proof}
+
+\textbf{Deux définitions du saut} \cite{erratumq4}. Dans l'épreuve de relais (chaînes de $L$
+sauts), la lecture \enquote{arête} donne $r(L)=h\,f^L$ pour $L=0$ à 4 ($L=0$ : un agent tient les deux
+moitiés), $h=r(0)$ ; la lecture \enquote{relais} donne $r(0)=h$ et $r(L)=hf^{L-1}$ pour $L\ge1$ (contact
+direct sans perte). Le rapport $r(1)/r(0)$ les sépare : il vaut $f$ dans la première, 1 dans la
+seconde ; à 50 essais par longueur, son écart type est 0,127 pour $f=0{,}8$, il faut environ 200 essais
+à $L=0$ et $L=1$. La formule de la v1, $r(L)=hf^{L-1}$ appliquée avec la percolation diluée, aurait
+pris $h=r(1)=hf$ et sous-estimé la courbe d'environ 20~\%.
+
+\begin{table}[ht]
+\centering\small
+\caption{Courbes de dose prédites à 16 agents, $f=0{,}8$, d'après l'erratum 1 de la question~4 et
+sa sortie (\texttt{a31ee52c…}) \cite{erratumq4}.}
+\label{tab:dose}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Degré moyen $c$ & 1 & 2 & 4 \\
+\midrule
+Lecture \enquote{arête}, percolation & 0,111 & 0,353 & 0,656 \\
+Lecture \enquote{arête}, voisins directs seuls & 0,056 & 0,093 & 0,165 \\
+Lecture \enquote{relais}, percolation & 0,129 & 0,382 & 0,660 \\
+Lecture \enquote{relais}, voisins directs seuls & 0,065 & 0,111 & 0,201 \\
+Formule fautive ($h=r(1)$) & 0,092 & 0,284 & 0,525 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La prédiction de percolation est \enquote{sans paramètre ajusté sur la courbe de dose, sous quatre
+hypothèses posées} : $f$ ne dépend pas du degré (d'où une épreuve de relais à la charge de chaque
+dose), les sauts sont indépendants, la prise $h$ est la même après un relais, le graphe réel de
+chaque course est connu \cite{erratumq4}. Si l'une tombe, c'est la courbe \enquote{percolation avec
+$f$ tiré des chaînes} qui est réfutée, non l'hypothèse d'émergence. Trois courses par dose, à quatre
+composites chacune, départagent percolation et voisins directs dans environ 98~\% des cas, dans les
+deux lectures. Ordre recommandé : réplique de Bettencourt et collègues sur OpenAlex (processeur,
+gratuite) ; épreuve de relais puis courbe de dose (environ 130 dollars aux tarifs posés, non
+engagés) ; contraste séparés contre interaction (le plus cher) \cite[section~6]{q4}.
+
+\begin{statuts}[Section 8 : statuts]
+\demontre Temps moyen et limites (\ref{prop:tempsmoyen}) ; signe de l'interaction
+(\ref{prop:interaction}) ; premier ordre du catalyseur (\ref{prop:catalyseur}) ; non-identifiabilité
+à température constante (\ref{prop:identif}) ; taille moyenne des cascades (\ref{prop:branchement}) ;
+dilution d'arêtes (\ref{prop:dilution}, le seuil étant cité).
+\mesure Par simulation, sous paramètres posés : budgets (tableau~\ref{tab:budgets}), courbes de dose
+(tableau~\ref{tab:dose}). Rien sur des données réelles.
+\conjecture Que les naissances d'idées obéissent à une cinétique ; que la barrière plantée en nats
+représente la difficulté d'une vraie idée ; que la percolation prédise le recouvrement des
+composites dans l'organisme.
+\end{statuts}
+
+%======================================================================
+\section{Chercher dans un puits étroit ; amender le Plan Turing}
+\label{sec:recherche}
+
+\subsection{Deux niveaux}
+La question~5 sépare deux niveaux \cite[section~7]{q5}. \emph{Quelle paire, quelle idée essayer} :
+réglé le 22 novembre (sans minorant de la fréquence des bonnes idées, rien ne garantit de les
+trouver ; les méthodes savantes sont des paris sur une structure). \emph{Pour une paire, trouver la
+bonne correspondance} : un problème d'affectation quadratique, difficile même à approcher
+\cite{sahni1976} (résumé), dont le paysage a des puits étroits. C'est à ce second niveau que
+s'appliquent les méthodes candidates.
+
+\subsection{Les méthodes, une par une}
+\begin{itemize}
+\item \textbf{Partir des anomalies} : conditionner sur un problème réduit l'espace ; pari de
+structure, testable par les prédictions P1 et P3 de la question~7.
+\item \textbf{Du grossier au fin par les modes propres} : la matrice $C$ rend les contraintes
+linéaires (section~\ref{sec:spectral}) ; la montée spectrale raffine $C$ mais exige une
+initialisation et échoue quand elle est mauvaise \cite[p.~11, figure~25, d'après la question~5]{melzi2019}. Les modes grossiers
+codent la surface : le grossier lisse le paysage sans rien garantir.
+\item \textbf{Relâcher, puis arrondir} : la distance de Gromov et Wasserstein \cite{memoli2011},
+régularisée par l'entropie, est non convexe, ne trouve qu'un point stationnaire, à coût
+$O(N_1^2N_2+N_2^2N_1)$ au lieu de $O(N_1^2N_2^2)$ \cite[p.~3-4]{peyre2016} ; l'arrondi n'a pas de
+garantie. Relâcher, recuire et arrondir sont réunis depuis 1996 dans l'affectation graduée
+\cite{goldrangarajan1996} (résumé).
+\item \textbf{Recuit} : convergence si et seulement si le refroidissement est logarithmique, de
+constante au moins la profondeur du plus profond minimum local non global \cite{hajek1988} (résumé) :
+temps exponentiel ; pics très étroits et très larges de masse comparable donnent un mélange lent
+\cite[p.~780]{woodard2009}.
+\item \textbf{Chercheurs nombreux et divers} : des proposeurs au corpus commun sont corrélés ; générer
+séparément, confronter ensuite (section~\ref{sec:cinetique}).
+\end{itemize}
+
+La proposition~\ref{prop:lipschitz} précise ce que coûte l'étroitesse locale à une recherche par
+transpositions : si le puits est localement large, une montée par transpositions suffit près de
+$\varphi$ ; s'il est étroit, il faut des sauts (relâchement, recuit, départs multiples), et la
+proposition~\ref{prop:hasard} donne le coût d'un départ au hasard.
+
+\subsection{Amendements proposés (propositions, rien n'est modifié)}
+
+\begin{table}[ht]
+\centering\small
+\caption{Amendements du Plan Turing proposés par la question~5, section~8 \cite{q5} ; l'erratum de
+la question~5 n'en change aucun \cite{erratumq5}.}
+\label{tab:amendements}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+ & Quoi & Nature \\
+\midrule
+A1 & une section \enquote{comment chercher} à deux niveaux, qui renvoie aux décisions du 22 novembre et rend obligatoire la base sans modèle & coût nul \\
+A2 & un banc de correspondances plantées : $\varphi$ isolée près d'un leurre large de même masse ; relation contre chaîne de deux ; leurre de popularité (modes grossiers communs, structure fine différente) ; bras : énumération exacte sur petits voisinages, criblage de Weisfeiler et Lehman, transport entropique et arrondi, spectral grossier-fin, recuit, proposeurs divers ; mesure : $\varphi$ retrouvées et coût par $\varphi$ & proposer avec recommandation \\
+A3 & dans l'épreuve \enquote{le pont suit-il la carte ?}, avant scellement : une spline de distance dans le modèle des naissances, et la permutation des signes à côté de celle des types & coût nul \\
+A4 & écrire que \enquote{les cinq signaux localisent les objets nouveaux} est l'énoncé d'un seul modèle, réfuté sous forme lexicale ; toute version relationnelle passe d'abord par un monde de signaux plantés & coût nul \\
+A5 & errata de provenance (transition de 2009, jumeaux de Bikard à vérifier, Galison non \enquote{démontré}) & coût nul \\
+A6 & les chiffres du bilan de Carbon sont des illustrations, jamais opposables & coût nul \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le résultat négatif du dépôt pèse sur A4 : la rétrodiction des foyers de tension par extraction
+lexicale est réfutée (502 articles, onze sous-domaines, aire sous la courbe 0,1667, intervalle à
+95~\% de 0 à 0,4667, signal dominé par le registre disciplinaire) ; il réfute un comptage de mots, non
+une mesure relationnelle \cite[question~8, point (1)]{reformq8}. Ce qui ne doit pas changer : la file
+critique de l'entretien du 1\textsuperscript{er} décembre d'abord ; aucune dépense au premier pas ;
+la composition des proposeurs jugée sur l'oracle du monde planté et le coût, jamais sur un juge
+\cite[section~8]{q5}.
+
+\begin{statuts}[Section 9 : statuts]
+\demontre Rien de neuf (renvois aux propositions~\ref{prop:lipschitz} et \ref{prop:hasard}).
+\mesure Rien.
+\conjecture Qu'une méthode batte la base sans modèle sur le banc A2, à coût égal ; la question~5 ne
+l'affirme pas et n'en fait pas une garantie.
+\end{statuts}
+
+%======================================================================
+\section{Ce qui est neuf ou non}
+\label{sec:neuf}
+
+Règle R8 : une zone qui semble vierge est une question ; la limite d'un article n'est pas un trou du
+champ. Rien n'est présenté comme neuf. Les recherches d'antériorité sont celles des pièces sources
+(en général deux recherches par question), non refaites ici, sauf pour les références ajoutées par
+la note, vérifiées en ligne (notices).
+
+\begin{longtable}{@{}p{0.30\textwidth}p{0.36\textwidth}p{0.28\textwidth}@{}}
+\caption{Occupé, ou question ouverte.}\label{tab:neuf}\\
+\toprule
+Élément & Occupé par & Reste une question \\
+\midrule
+\endfirsthead
+\toprule
+Élément & Occupé par & Reste une question \\
+\midrule
+\endhead
+Serrure et clé, systématicité & Gentner 1983 \cite{gentner1983} ; moteur de mise en correspondance \cite{falkenhainer1989} ; équivalence régulière (à vérifier) & l'interaction $S\times Z$ sur la fécondité \\
+Cascades A--B, B--C & Swanson 1986 \cite{swanson1986} ; inférence sur prédications \cite{cohen2012} & -- \\
+Portée, unification & Friedman 1974 \cite{friedman1974}, Kitcher 1981 \cite{kitcher1981}, Myrvold 2003 \cite{myrvold2003} ; progrès de compression \cite{schmidhuber2010} & leur réunion validée sur monde planté \\
+Applications fonctionnelles & Ovsjanikov et collègues 2012 \cite{ovsjanikov2012} ; montée spectrale \cite{melzi2019} & leur emploi entre graphes de domaines typés \\
+Appariement relâché & Mémoli 2011 \cite{memoli2011} ; Peyré et collègues 2016 \cite{peyre2016} ; affectation graduée 1996 \cite{goldrangarajan1996} & -- \\
+Rupture & Funk et Owen-Smith 2017 \cite{funk2017} ; Wu et collègues 2019 \cite{wu2019} ; Park et collègues 2023 \cite{park2023} & -- \\
+Liens manquants & Clauset, Moore et Newman 2008 \cite{clauset2008} & la prédiction d'objets par le cas (C4) \\
+Équilibre structurel & Cartwright et Harary 1956 \cite{cartwright1956} ; paysage d'énergie \cite{marvel2009} & lien à la plasticité (question~8) \\
+Signaux précurseurs & Scheffer et collègues 2009 \cite{scheffer2009} & sur des graphes de domaines datés (question~8) \\
+Poids des problèmes & Laudan 1977 (par Moser \cite{moser1991}) ; Kuhn \cite{kuhn1962} ; questions de Wiśniewski \cite{wisniewski2001} & mesure datée, couplage $\delta P$, monde planté \\
+Cinétique, autocatalyse & Arrhenius \cite{arrhenius1889} ; ensembles autocatalytiques \cite{hordijk2004} ; urnes à déclenchement \cite{tria2014} & tracé d'Arrhenius sur des naissances d'idées \\
+Transition des coauteurs & Bettencourt, Kaiser et Kaur 2009 \cite{bettencourt2009} & percolation prédite d'une fidélité mesurée \\
+Perte des groupes & Diehl et Stroebe 1987 \cite{diehlstroebe1987} & chez des agents parallèles, à coût égal \\
+Le pont suit la carte (cortège) & -- (deux recherches de Fable, rien trouvé) & une question, non un trou \\
+Co-accélération (résonance) & -- (non cherché ici) & une question ; recherche à faire \\
+Clair de lune monstrueux & Conway et Norton 1979 \cite{conwaynorton1979} ; Frenkel, Lepowsky et Meurman 1988 \cite{flm1988} ; Borcherds 1992 \cite{borcherds1992} & question~10, en attente \\
+\bottomrule
+\end{longtable}
+
+Sur le clair de lune monstrueux, la note vérifie seulement l'arithmétique du complément de Lazar :
+$196\,883+1=196\,884$ et $21\,296\,876+196\,883+1=21\,493\,760$ ; le sens des nombres (coefficients de
+la fonction modulaire $j$, dimensions de représentations du groupe Monstre) est rapporté, à vérifier
+sur la source \cite{conwaynorton1979}.
+
+%======================================================================
+\section{Ce que la note ne permet pas de conclure}
+\label{sec:limites}
+
+\begin{itemize}
+\item Qu'aucune grandeur du modèle prédise de vraies découvertes : aucune épreuve n'a tourné sur
+des données réelles ; les seuls chiffres mesurés viennent d'un jouet et de simulations sous
+paramètres posés.
+\item Que la fusion batte les modèles de Fable et de Carbon ; que les seuils proposés aient la
+puissance voulue.
+\item Que la \enquote{dimension cachée} existe : l'analogie des corrélations canoniques est une
+analogie.
+\item Que la profondeur estimée puisse servir de récompense hors d'un monde planté.
+\item Quoi que ce soit sur les questions 6, 8 et 10, au-delà du cadre.
+\end{itemize}
+
+%======================================================================
+\appendix
+\section{Sources du dossier et empreintes}
+\label{annexe:sources}
+
+\begin{small}
+\begin{longtable}{@{}p{0.70\textwidth}l@{}}
+\toprule
+Pièce (dossier \chemin{docs/notes/}) & empreinte (début) \\
+\midrule
+\endhead
+\chemin{idee-interessante-v1/reponse-fable-max-v1.md} & \texttt{8ec4f9e0b2f8} \\
+\chemin{idee-interessante-v1/reponses-google-v1/reponse-carbon-v1.md} & \texttt{a9532fbb60c3} \\
+\chemin{idee-interessante-v1/reponses-google-v1/reponse-carbon-homomorphisme-v1.md} & \texttt{3f92cede1557} \\
+\chemin{idee-interessante-v1/reponses-google-v1/reponse-carbon-meta-espace-v1.md} & \texttt{01f859c08cb4} \\
+\multicolumn{2}{@{}l}{Dans \chemin{questions-directeur-2026-11-24-v1/} :}\\
+\chemin{reponse-q1-quatre-etapes-oracles-organisme-v1.md} & \texttt{2cc296327b88} \\
+\chemin{reponse-q2-profondeur-surprise-retiree-v1.md} & \texttt{7f4cf73f08f8} \\
+\chemin{reponse-q3-cinetique-collisions-idees-v1.md} & \texttt{af126ebffbb9} \\
+\chemin{reponse-q3-cinetique-collisions-idees-v1-erratum-1.md} & \texttt{6018b27395e6} \\
+\chemin{reponse-q4-emergence-transition-et-groupes-v1.md} & \texttt{249c611c35c9} \\
+\chemin{reponse-q4-emergence-transition-et-groupes-v1-erratum-1.md} & \texttt{b359bf154fc3} \\
+\chemin{reponse-q5-carbon-fable-et-plan-turing-v1.md} & \texttt{0bdc9810873f} \\
+\chemin{reponse-q5-carbon-fable-et-plan-turing-v1-erratum-1.md} & \texttt{7bcaec6f6286} \\
+\chemin{reponse-q7-couche-problemes-hypergraphe-v1.md} & \texttt{937e3e693371} \\
+\chemin{reponse-q9-expose-graphe-meta-mathematique-v1.md} & \texttt{e981c88c47f4} \\
+\chemin{reponse-q9-expose-graphe-meta-mathematique-v1-erratum-1.md} & \texttt{c4a93d16ad13} \\
+\chemin{erratum-notations-kappa-et-hypergraphe-v1.md} & \texttt{72afe6930d58} \\
+\chemin{errata-mineurs-q1-q2-q7-v1.md} & \texttt{fcac74f59f3d} \\
+\chemin{contre-lecture-reponses-q1-q5-q7-q9-v1.md} & \texttt{9cefaa1fab6d} \\
+\chemin{complement-note-latex-spectral-puits-fecondite-v1.md} & \texttt{b2dc5ebef071} \\
+\chemin{complement-questions-8-9-et-corrections-note-v1.md} & \texttt{58d2e517b07d} \\
+\chemin{complement-questions-10-11-et-apport-q5-v1.md} & \texttt{43716a8a79bb} \\
+\chemin{demandes-reformulees-quatre-points-q8-q11-v1.md} & \texttt{632c7af28673} \\
+\chemin{exemple-graphe-meta-mathematique-v2-sortie.txt} & \texttt{a9d506544bcd} \\
+\chemin{simulation-cinetique-barriere-v1-sortie.txt} & \texttt{500e94df2986} \\
+\chemin{simulation-cinetique-barriere-v2-sortie.txt} & \texttt{dc98b08f5460} \\
+\chemin{simulation-emergence-organisme-v2-sortie.txt} & \texttt{a31ee52ca0c8} \\
+\bottomrule
+\end{longtable}
+\end{small}
+
+Fichiers lus hors du dépôt par la note (bloc-notes de la session, droits des éditeurs) : Wu, Wang et
+Evans, arXiv 1709.02445v1 (\texttt{51a48bd3909a}), p.~7 et 18 ; Ovsjanikov et collègues 2012
+(\texttt{7d7fb34a3e61}), p.~1 à 6.
+
+%======================================================================
+\begin{thebibliography}{99}\small
+\setlength{\itemsep}{1pt}
+
+\bibitem{fable} Fable 5.2 (23 novembre 2026). Réponse : modèle testable de l'idée intéressante et
+de sa naissance, v1. \chemin{docs/notes/idee-interessante-v1/reponse-fable-max-v1.md}
+(\texttt{8ec4f9e0…}).
+\bibitem{carbon} Carbon. Réponse sur le modèle de l'idée intéressante, v1.
+\chemin{docs/notes/idee-interessante-v1/reponses-google-v1/reponse-carbon-v1.md} (\texttt{a9532fbb…}) ;
+références de Carbon non vérifiées ici.
+\bibitem{carbonhomo} Carbon. Réponse sur l'homomorphisme, v1. Même dossier,
+\chemin{reponse-carbon-homomorphisme-v1.md} (\texttt{3f92cede…}).
+\bibitem{carbonmeta} Carbon. Réponse sur le méta-espace mathématique, v1. Même dossier,
+\chemin{reponse-carbon-meta-espace-v1.md} (\texttt{01f859c0…}).
+\bibitem{q2} Réponse à la question 2 (profondeur comme surprise retirée), v1 (\texttt{7f4cf73f…}).
+\bibitem{q3} Réponse à la question 3 (cinétique des collisions d'idées), v1 (\texttt{af126ebf…}).
+\bibitem{erratumq3} Erratum 1 de la question 3 (\texttt{6018b273…}).
+\bibitem{q4} Réponse à la question 4 (émergence), v1 (\texttt{249c611c…}).
+\bibitem{erratumq4} Erratum 1 de la question 4 (\texttt{b359bf15…}).
+\bibitem{q5} Réponse à la question 5 (Carbon contre Fable ; Plan Turing), v1 (\texttt{0bdc9810…}).
+\bibitem{erratumq5} Erratum 1 de la question 5 (\texttt{7bcaec6f…}).
+\bibitem{q7} Réponse à la question 7 (couche des problèmes, hypergraphe), v1 (\texttt{937e3e69…}).
+\bibitem{q9} Exposé du graphe méta-mathématique (question 9), v1 (\texttt{e981c88c…}).
+\bibitem{erratumq9} Erratum 1 de la question 9 (\texttt{c4a93d16…}).
+\bibitem{sortieq9v2} Sortie de \chemin{exemple-graphe-meta-mathematique-v2.py} (\texttt{a9d50654…}).
+\bibitem{erratumkappa} Erratum transversal : une seule notation pour $\kappa$, hypergraphe fusionné
+(\texttt{72afe693…}).
+\bibitem{erratamineurs} Errata mineurs des questions 1, 2 et 7 (\texttt{fcac74f5…}).
+\bibitem{contrelecture} Contre-lecture des réponses aux questions 1 à 5, 7 et 9 (\texttt{9cefaa1f…}).
+\bibitem{complementspectral} Complément : coordonnées spectrales, puits profond et étroit,
+fécondité (\texttt{b2dc5ebe…}).
+\bibitem{complement89} Complément : questions 8 et 9, corrections pour la note (\texttt{58d2e517…}).
+\bibitem{reformq8} Demandes reformulées en quatre points, questions 8 à 11 (\texttt{632c7af2…}).
+
+\bibitem{abi2021} Abi, B. et al. (2021). Measurement of the positive muon anomalous magnetic moment
+to 0.46 ppm. \emph{Physical Review Letters} 126, 141801. \url{https://doi.org/10.1103/PhysRevLett.126.141801}
+(résumé, lu par la question 7).
+\bibitem{aliberti2025} Aliberti, R. et al. (2025). The anomalous magnetic moment of the muon in the
+Standard Model: an update. \emph{Physics Reports} 1143, 1-158.
+\url{https://doi.org/10.1016/j.physrep.2025.08.002} (résumé, lu par la question 7).
+\bibitem{arrhenius1889} Arrhenius, S. (1889). Über die Reaktionsgeschwindigkeit bei der Inversion von
+Rohrzucker durch Säuren. \emph{Zeitschrift für Physikalische Chemie} 4, 226-248.
+\url{https://doi.org/10.1515/zpch-1889-0416} (notice).
+\bibitem{bettencourt2009} Bettencourt, L. M. A., Kaiser, D. I. et Kaur, J. (2009). Scientific discovery
+and topological transitions in collaboration networks. \emph{Journal of Informetrics} 3(3), 210-221.
+\url{https://doi.org/10.1016/j.joi.2009.03.001} (manuscrit d'auteur lu par la question 4, p.~5 et 14).
+\bibitem{borcherds1992} Borcherds, R. E. (1992). Monstrous moonshine and monstrous Lie superalgebras.
+\emph{Inventiones Mathematicae} 109(1), 405-444. \url{https://doi.org/10.1007/BF01232032} (notice
+Crossref vérifiée le 24 novembre 2026).
+\bibitem{bornmann2020} Bornmann, L., Devarakonda, S., Tekles, A. et Chacko, G. (2020). Are disruption
+index indicators convergently valid? \emph{Quantitative Science Studies} 1(3), 1242-1259.
+\url{https://doi.org/10.1162/qss_a_00068} (résumé, lu par la question 2).
+\bibitem{boudreau2016} Boudreau, K. J. et al. (2016). Looking across and looking beyond the knowledge
+frontier. \emph{Management Science} 62, 2765-2783. \url{https://doi.org/10.1287/mnsc.2015.2285}
+(cité par Fable).
+\bibitem{cartwright1956} Cartwright, D. et Harary, F. (1956). Structural balance: a generalization of
+Heider's theory. \emph{Psychological Review} 63(5), 277-293. \url{https://doi.org/10.1037/h0046049}
+(notice Crossref vérifiée).
+\bibitem{chung1997} Chung, F. R. K. (1997). \emph{Spectral Graph Theory}. CBMS Regional Conference
+Series in Mathematics 92, American Mathematical Society. \url{https://doi.org/10.1090/cbms/092}
+(notice Crossref vérifiée, datée de décembre 1996 ; définitions rappelées, pages non citées).
+\bibitem{chung2005} Chung, F. (2005). Laplacians and the Cheeger inequality for directed graphs.
+\emph{Annals of Combinatorics} 9(1), 1-19. \url{https://doi.org/10.1007/s00026-005-0237-z} (notice
+Crossref vérifiée ; contenu rappelé, à vérifier sur le texte).
+\bibitem{clauset2008} Clauset, A., Moore, C. et Newman, M. E. J. (2008). Hierarchical structure and the
+prediction of missing links in networks. \emph{Nature} 453, 98-101.
+\url{https://doi.org/10.1038/nature06830} (notice Crossref vérifiée).
+\bibitem{cohen2012} Cohen, T. et al. (2012). Discovering discovery patterns with predication-based
+semantic indexing. \emph{Journal of Biomedical Informatics} 45, 1049-1065.
+\url{https://doi.org/10.1016/j.jbi.2012.07.003} (cité par Fable).
+\bibitem{collins1949} Collins, F. C. et Kimball, G. E. (1949). Diffusion-controlled reaction rates.
+\emph{Journal of Colloid Science} 4, 425-437. \url{https://doi.org/10.1016/0095-8522(49)90023-9}
+(notice ; forme rapportée, page à vérifier).
+\bibitem{conwaynorton1979} Conway, J. H. et Norton, S. P. (1979). Monstrous moonshine. \emph{Bulletin of
+the London Mathematical Society} 11(3), 308-339. \url{https://doi.org/10.1112/blms/11.3.308} (notice
+Crossref vérifiée ; contenu à vérifier).
+\bibitem{davis1971} Davis, M. S. (1971). That's interesting! \emph{Philosophy of the Social Sciences} 1,
+309-344. \url{https://doi.org/10.1177/004839317100100211} (cité par Fable).
+\bibitem{daviskahan1970} Davis, C. et Kahan, W. M. (1970). The rotation of eigenvectors by a
+perturbation. III. \emph{SIAM Journal on Numerical Analysis} 7(1), 1-46.
+\url{https://doi.org/10.1137/0707001} (notice Crossref vérifiée ; énoncé rappelé, page à vérifier).
+\bibitem{diehlstroebe1987} Diehl, M. et Stroebe, W. (1987). Productivity loss in brainstorming groups:
+toward the solution of a riddle. \emph{Journal of Personality and Social Psychology} 53(3), 497-509.
+\url{https://doi.org/10.1037/0022-3514.53.3.497} (PDF lu par la question 4, p.~497).
+\bibitem{evanspolanyi1938} Evans, M. G. et Polanyi, M. (1938). Inertia and driving force of chemical
+reactions. \emph{Transactions of the Faraday Society} 34, 11. \url{https://doi.org/10.1039/tf9383400011}
+(notice ; relation rapportée, page à vérifier).
+\bibitem{falkenhainer1989} Falkenhainer, B., Forbus, K. D. et Gentner, D. (1989). The structure-mapping
+engine. \emph{Artificial Intelligence} 41, 1-63. \url{https://doi.org/10.1016/0004-3702(89)90077-5}
+(cité par Fable).
+\bibitem{fiedler1973} Fiedler, M. (1973). Algebraic connectivity of graphs. \emph{Czechoslovak
+Mathematical Journal} 23(2), 298-305. \url{https://doi.org/10.21136/CMJ.1973.101168} (notice Crossref
+vérifiée).
+\bibitem{flm1988} Frenkel, I., Lepowsky, J. et Meurman, A. (1988). \emph{Vertex Operator Algebras and
+the Monster}. Pure and Applied Mathematics 134, Academic Press. Notice Crossref de la préface :
+\url{https://doi.org/10.1016/S0079-8169(08)62324-7} (vérifiée ; contenu à vérifier).
+\bibitem{friedman1974} Friedman, M. (1974). Explanation and scientific understanding. \emph{The Journal
+of Philosophy} 71(1), 5-19. \url{https://doi.org/10.2307/2024924} (texte lu par la question 2, p.~15).
+\bibitem{funk2017} Funk, R. J. et Owen-Smith, J. (2017). A dynamic network measure of technological
+change. \emph{Management Science} 63(3), 791-817. \url{https://doi.org/10.1287/mnsc.2015.2366} (notice
+Crossref vérifiée, résumé lu par la question 2 ; définition exacte de l'indice à vérifier).
+\bibitem{gallo1993} Gallo, G., Longo, G., Pallottino, S. et Nguyen, S. (1993). Directed hypergraphs and
+applications. \emph{Discrete Applied Mathematics} 42(2-3), 177-201.
+\url{https://doi.org/10.1016/0166-218X(93)90045-P} (notice Crossref vérifiée ; résumé).
+\bibitem{gentner1983} Gentner, D. (1983). Structure-mapping: a theoretical framework for analogy.
+\emph{Cognitive Science} 7, 155-170. \url{https://doi.org/10.1207/s15516709cog0702_3} (cité par Fable).
+\bibitem{goldrangarajan1996} Gold, S. et Rangarajan, A. (1996). A graduated assignment algorithm for
+graph matching. \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence} 18(4), 377-388.
+\url{https://doi.org/10.1109/34.491619} (résumé, lu par la question 5).
+\bibitem{gukrenn2026} Gu, X. et Krenn, M. (2026). Generating interesting scientific ideas using
+knowledge graphs and LLMs: evaluations with 100 research group leaders. \emph{Proceedings of the
+National Academy of Sciences} 123(46), e2611349123. \url{https://doi.org/10.1073/pnas.2611349123} ;
+arXiv 2405.17044v4 (PDF lu par la question 2, p.~8 ; chiffres confirmés par la contre-lecture).
+\bibitem{hajek1988} Hajek, B. (1988). Cooling schedules for optimal annealing. \emph{Mathematics of
+Operations Research} 13(2), 311-329. \url{https://doi.org/10.1287/moor.13.2.311} (résumé, lu par la
+question 5).
+\bibitem{harris1963} Harris, T. E. (1963). \emph{The Theory of Branching Processes}. Springer.
+\url{https://doi.org/10.1007/978-3-642-51866-9} (notice Crossref vérifiée ; théorème d'extinction
+rappelé, page à vérifier).
+\bibitem{hinton2015} Hinton, G., Vinyals, O. et Dean, J. (2015). Distilling the knowledge in a neural
+network. arXiv 1503.02531v1 (PDF lu par la question 3, éq.~(1), p.~2-3).
+\bibitem{hordijk2004} Hordijk, W. et Steel, M. (2004). Detecting autocatalytic, self-sustaining sets in
+chemical reaction systems. \emph{Journal of Theoretical Biology} 227, 451-461.
+\url{https://doi.org/10.1016/j.jtbi.2003.11.020} (résumé, lu par la question 3).
+\bibitem{hotelling1936} Hotelling, H. (1936). Relations between two sets of variates. \emph{Biometrika}
+28(3/4), 321-377. \url{https://doi.org/10.2307/2333955} (notice Crossref vérifiée ; définition
+rappelée, texte non lu).
+\bibitem{kitcher1981} Kitcher, P. (1981). Explanatory unification. \emph{Philosophy of Science} 48(4),
+507-531. \url{https://doi.org/10.1086/289019} (texte lu par la question 2, p.~514 et 526-529).
+\bibitem{kuhn1962} Kuhn, T. S. (1962 ; 2\textsuperscript{e} éd. 1970). \emph{The Structure of Scientific
+Revolutions}. University of Chicago Press. \url{https://doi.org/10.7208/chicago/9780226458106.001.0001}
+(extraits lus par la question 7, p.~52-53 et 81-82).
+\bibitem{kunegis2010} Kunegis, J., Schmidt, S., Lommatzsch, A., Lerner, J., De Luca, E. W. et Albayrak,
+S. (2010). Spectral analysis of signed graphs for clustering, prediction and visualization.
+\emph{Proceedings of the 2010 SIAM International Conference on Data Mining}, 559-570.
+\url{https://doi.org/10.1137/1.9781611972801.49} (notice Crossref vérifiée).
+\bibitem{leibel2024} Leibel, C. et Bornmann, L. (2024). What do we know about the disruption index in
+scientometrics? \emph{Scientometrics} 129, 601-639. \url{https://doi.org/10.1007/s11192-023-04873-5}
+(résumé, lu par la question 2).
+\bibitem{marvel2009} Marvel, S. A., Strogatz, S. H. et Kleinberg, J. M. (2009). Energy landscape of
+social balance. \emph{Physical Review Letters} 103, 198701.
+\url{https://doi.org/10.1103/PhysRevLett.103.198701} (notice Crossref vérifiée).
+\bibitem{melzi2019} Melzi, S., Ren, J., Rodolà, E., Sharma, A., Wonka, P. et Ovsjanikov, M. (2019).
+ZoomOut: spectral upsampling for efficient shape correspondence. \emph{ACM Transactions on Graphics}
+38(6). \url{https://doi.org/10.1145/3355089.3356524} ; arXiv 1904.07865 (PDF lu par la question 5).
+\bibitem{memoli2011} Mémoli, F. (2011). Gromov-Wasserstein distances and the metric approach to object
+matching. \emph{Foundations of Computational Mathematics} 11(4), 417-487.
+\url{https://doi.org/10.1007/s10208-011-9093-5} (notice).
+\bibitem{molloyreed1995} Molloy, M. et Reed, B. (1995). A critical point for random graphs with a given
+degree sequence. \emph{Random Structures and Algorithms} 6(2-3), 161-180.
+\url{https://doi.org/10.1002/rsa.3240060204} (résumé, lu par la question 4).
+\bibitem{moser1991} Moser, P. K. (1991). Scientific rationality and progress: a paradox in Laudan's
+account. \emph{Theoria et Historia Scientiarum} 1, 75-81. \url{https://doi.org/10.12775/ths.1991.006}
+(PDF lu par la question 7, p.~76-78 ; Laudan 1977, livre non vu).
+\bibitem{mu2018} Mu, J., Bhat, S. et Viswanath, P. (2018). All-but-the-top: simple and effective
+postprocessing for word representations. \emph{ICLR 2018}. arXiv 1702.01417v2 (p.~4, lue par Fable).
+\bibitem{myrvold2003} Myrvold, W. C. (2003). A Bayesian account of the virtue of unification.
+\emph{Philosophy of Science} 70(2), 399-423. \url{https://doi.org/10.1086/375475} (équations lues dans
+le manuscrit d'auteur par la question 2 ; pages publiées à vérifier).
+\bibitem{newman2001pre} Newman, M. E. J., Strogatz, S. H. et Watts, D. J. (2001). Random graphs with
+arbitrary degree distributions and their applications. \emph{Physical Review E} 64, 026118.
+\url{https://doi.org/10.1103/PhysRevE.64.026118} (résumé, lu par la question 4).
+\bibitem{ovsjanikov2012} Ovsjanikov, M., Ben-Chen, M., Solomon, J., Butscher, A. et Guibas, L. (2012).
+Functional maps: a flexible representation of maps between shapes. \emph{ACM Transactions on
+Graphics} 31(4), 30. \url{https://doi.org/10.1145/2185520.2185526} (PDF lu, p.~1-6 ; empreinte
+\texttt{7d7fb34a…}).
+\bibitem{park2023} Park, M., Leahey, E. et Funk, R. J. (2023). Papers and patents are becoming less
+disruptive over time. \emph{Nature} 613, 138-144. \url{https://doi.org/10.1038/s41586-022-05543-x}
+(notice Crossref vérifiée ; texte non lu).
+\bibitem{peyre2016} Peyré, G., Cuturi, M. et Solomon, J. (2016). Gromov-Wasserstein averaging of kernel
+and distance matrices. \emph{ICML 2016}, PMLR 48, 2664-2672 (PDF lu par la question 5, p.~2-4).
+\bibitem{pubtator2024} Wei, C.-H. et al. (2024). PubTator 3.0: an AI-powered literature resource for
+unlocking biomedical knowledge. \emph{Nucleic Acids Research} 52, W540-W546.
+\url{https://doi.org/10.1093/nar/gkae235} (texte lu par la question 7).
+\bibitem{rissanen1978} Rissanen, J. (1978). Modeling by shortest data description. \emph{Automatica}
+14(5), 465-471. \url{https://doi.org/10.1016/0005-1098(78)90005-5} (notice).
+\bibitem{rosemblat2019} Rosemblat, G., Fiszman, M., Shin, D. et Kilicoglu, H. (2019). Towards a
+characterization of apparent contradictions in the biomedical literature using context analysis.
+\emph{Journal of Biomedical Informatics} 98, 103275. \url{https://doi.org/10.1016/j.jbi.2019.103275}
+(résumé, lu par la question 7).
+\bibitem{sahni1976} Sahni, S. et Gonzalez, T. (1976). P-complete approximation problems. \emph{Journal of
+the ACM} 23(3), 555-565. \url{https://doi.org/10.1145/321958.321975} (résumé, lu par la question 5).
+\bibitem{scheffer2009} Scheffer, M. et al. (2009). Early-warning signals for critical transitions.
+\emph{Nature} 461, 53-59. \url{https://doi.org/10.1038/nature08227} (notice Crossref vérifiée).
+\bibitem{schmidhuber2010} Schmidhuber, J. (2010). Formal theory of creativity, fun, and intrinsic
+motivation (1990-2010). \emph{IEEE Transactions on Autonomous Mental Development} 2(3), 230-247.
+\url{https://doi.org/10.1109/TAMD.2010.2056368} (prépublication lue par la question 2, p.~3 et 5).
+\bibitem{shievans2023} Shi, F. et Evans, J. (2023). Surprising combinations of research contents and
+contexts are related to impact and emerge with scientific outsiders from distant disciplines.
+\emph{Nature Communications} 14, 1641. \url{https://doi.org/10.1038/s41467-023-36741-4} (résumé).
+\bibitem{swanson1986} Swanson, D. R. (1986). Fish oil, Raynaud's syndrome, and undiscovered public
+knowledge. \emph{Perspectives in Biology and Medicine} 30, 7-18.
+\url{https://doi.org/10.1353/pbm.1986.0087} (cité par Fable).
+\bibitem{tria2014} Tria, F., Loreto, V., Servedio, V. D. P. et Strogatz, S. H. (2014). The dynamics of
+correlated novelties. \emph{Scientific Reports} 4, 5890. \url{https://doi.org/10.1038/srep05890} (PDF lu
+par la question 3, p.~3, légende de la figure~1).
+\bibitem{wisniewski2001} Wiśniewski, A. (2001). Questions and inferences. \emph{Logique et Analyse}
+173-175, 5-43 (PDF lu par la question 7, définition 8, p.~17).
+\bibitem{woodard2009} Woodard, D. B., Schmidler, S. C. et Huber, M. (2009). Sufficient conditions for
+torpid mixing of parallel and simulated tempering. \emph{Electronic Journal of Probability} 14,
+780-804. \url{https://doi.org/10.1214/EJP.v14-638} (p.~780 vérifiée sur PDF par une pièce antérieure,
+d'après la question 5).
+\bibitem{wu2019} Wu, L., Wang, D. et Evans, J. A. (2019). Large teams develop and small teams disrupt
+science and technology. \emph{Nature} 566, 378-382. \url{https://doi.org/10.1038/s41586-019-0941-9} ;
+prépublication arXiv 1709.02445v1 (PDF lu par la note, p.~7, légende de la figure~1, et p.~18,
+figure~S3 ; empreinte \texttt{51a48bd3…} ; version publiée non lue).
+
+\end{thebibliography}
+
+\end{document}

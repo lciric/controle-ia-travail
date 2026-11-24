@@ -1,0 +1,58 @@
+# sortie de exemple-graphe-meta-mathematique-v1.py, 2026-11-24T16:15:27Z ; script sha256 16e6bb1e33c72a489878f1350d62e87ffc68ae41ffdb87a2ea174ce349d65287
+# mathlib4 commit 41e07aa72723cccf73caa3351d8e57d3797b8d97 (2026-11-24T14:47:11Z) ; MSC_2020.csv sha256 f7c889354c202551fe01f89bad2ae95ccadec4c57ac1f6f9de38bbd658d3c78c ; A000001 JSON sha256 9b56e1785530e7d20f48f7bee10b558769efdfe8a291c7ddb18612b65991f7a2
+numpy 2.5.3 ; python 3.13.18 ; graine racine 20261124
+== Partie 1 : correspondance jouet A (permutations) -> B (classes de formes)
+      composition -est_loi_sur-> substitutions   : confirmee
+         identite -neutre_pour-> composition     : confirmee
+          inverse -inverse_pour-> composition     : confirmee
+      composition -verifie-> associativite   : confirmee
+      composition -refute-> commutativite   : contredite
+   nombre_valeurs -divise-> ordre_total     : absente
+    ensemble_clos -sous_ensemble_de-> substitutions   : confirmee
+       resolvante -invariant_sous-> ensemble_clos   : extremite_sans_image
+  comptes : {'confirmee': 5, 'contredite': 1, 'absente': 1, 'extremite_sans_image': 1}
+  couverture c = 0.625 ; conflits kappa = 0.125 ; c - kappa = 0.500
+  bijections examinées : 362880 ; maximum de c - kappa : 0.625
+  bijections au maximum : 8
+  bijections à un huitième du maximum ou mieux : 100 (part 2.76e-04)
+  bijections strictement au-dessus de phi : 8 ; à égalité avec phi : 92
+  un maximum : écart à phi {commutativite->nombre_classes, nombre_valeurs->commutativite_B, ordre_total->ordre_classe} ; cas {'confirmee': 5, 'absente': 2, 'extremite_sans_image': 1}
+  un maximum : écart à phi {commutativite->nombre_classes, ordre_total->commutativite_B} ; cas {'confirmee': 5, 'absente': 2, 'extremite_sans_image': 1}
+  un maximum : écart à phi {commutativite->ordre_classe, nombre_valeurs->commutativite_B} ; cas {'confirmee': 5, 'absente': 2, 'extremite_sans_image': 1}
+  bijections qui conservent le type des nœuds : 16 ; maximum 0.500 ; au maximum : 4 (phi en fait partie : True)
+  faits de B retirés (p = 0,15, 2000 tirages, graine 20261124, tâche 0) : c - kappa moyen 0.430, quantiles 5 % et 95 % 0.250 et 0.625
+  réification : nœud 'groupe' ajouté ; (sous_groupe, ordre_divise, groupe) remplace r6 et la relation prédite dans B ; le conflit sur la commutativité devient un paramètre (commutatif ou non), plus un conflit
+== Exercices vérifiables
+  E1 paires ordonnées non commutantes dans S3 : 18 sur 36
+  E2 formes réduites de discriminant -23 : [(1, 1, 6), (2, -1, 3), (2, 1, 3)] -> nombre de classes 3
+  E3 ordres des éléments de S3 : [1, 2, 2, 2, 3, 3] ; tous divisent 6 : True
+== Partie 2a : graphe des importations de Mathlib/GroupTheory
+  fichiers (nœuds) : 174 ; importations internes (arêtes) : 240
+  importations venues d'ailleurs : 317 ; par section : [('Algebra', 176), ('Data', 60), ('Tactic', 25), ('Order', 14), ('SetTheory', 8), ('LinearAlgebra', 8), ('Basic', 6), ('RingTheory', 5)]
+  fichiers les plus importés dans le sous-graphe : [('Mathlib.GroupTheory.QuotientGroup.Defs', 9), ('Mathlib.GroupTheory.Index', 8), ('Mathlib.GroupTheory.GroupAction.Defs', 8), ('Mathlib.GroupTheory.GroupAction.Hom', 6), ('Mathlib.GroupTheory.Abelianization.Defs', 5)]
+  plus longue chaîne d'importations internes (fichiers) : 21
+  déclarations 'theorem' ou 'lemma' (comptage textuel, approché) : 4330
+== Partie 2b : classification des sujets mathématiques 2020, renvois « See also » et « For … see »
+  rubriques (nœuds) : 6603 ; renvois (arêtes) : 2880
+  renvois vers une autre section de premier niveau : 2431 (84.4%)
+  depuis la théorie des groupes (20), sections visées : [('22', 13), ('03', 8), ('51', 6), ('16', 5), ('57', 4), ('11', 4), ('05', 3), ('68', 3)]
+  rubrique 13F60 présente : True
+== Partie 2c : renvois de l'OEIS depuis A000001
+  A000001 « Number of groups of order n. », révision 347, 2026-11-02T10:31:57-05:00
+  suites renvoyées (lignes de renvoi) : 20
+== Partie 2d : zbMATH Open, documents portant la rubrique 13F60 (algèbres amassées), par année
+  2000 : 0
+  2001 : 0
+  2002 : 1
+  2003 : 0
+  2004 : 0
+  2005 : 0
+  2006 : 0
+  2007 : 2
+  2008 : 11
+  2009 : 19
+  2010 : 47
+  2011 : 70
+  2012 : 63
+  titres contenant « cluster algebras », 2003-2006 : 17 ; portant 13F60 : 0 ; sans rubrique : 1
+  sections de premier niveau touchées (une fois par document) : 10 -> [('05', 8), ('14', 7), ('15', 1), ('16', 9), ('17', 8), ('18', 4), ('20', 3), ('22', 7), ('52', 1), ('53', 2)]

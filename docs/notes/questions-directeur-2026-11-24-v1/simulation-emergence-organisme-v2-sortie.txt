@@ -1,0 +1,23 @@
+# sortie de simulation-emergence-organisme-v2.py, 2026-11-24T16:36:51Z ; script sha256 66cfc63ef9a76498b082236f427fc1cec0ef9923ba31b6c6489906ffa8ecec6d
+numpy 2.5.3 ; python 3.13.18 ; graine racine 20261124 ; v1 sha256 4b71ba517986177acbd245eae101ccc97b86f41c3484f9986d953442f6746446
+posés : N = 16, h = 0.7, eps = 0.02, 4 composites par course
+C1. Lecture « arête », r(L) = h f^L, L = 0 à 4 (h = r(0)) : estimation par maximum de vraisemblance
+  f_vrai  n/longueur  moyenne(f_est)  écart type(f_est)  écart type(h_est)  écart type de r(1)/r(0) observé
+  0.8     25           0.800           0.053              0.079              0.190 (moyenne 0.816)
+  0.8     50           0.798           0.038              0.057              0.127 (moyenne 0.804)
+  0.8     100          0.801           0.027              0.042              0.091 (moyenne 0.805)
+  0.6     25           0.599           0.067              0.092              0.185 (moyenne 0.626)
+  0.6     50           0.596           0.045              0.060              0.114 (moyenne 0.599)
+  0.6     100          0.598           0.033              0.044              0.082 (moyenne 0.598)
+C2. Recouvrement attendu d'une composite, N = 16, f = 0.8 :
+  c     arête:perco  arête:direct  mêlée(v1):perco  relais:perco  relais:direct
+  0.5      0.050        0.038         0.044            0.055         0.043
+  1.0      0.111        0.056         0.092            0.129         0.065
+  2.0      0.353        0.093         0.284            0.382         0.111
+  4.0      0.656        0.165         0.525            0.660         0.201
+C3. Justesse du choix percolation contre voisins directs (vraisemblance), f = 0.8, sous chaque lecture :
+  lecture  M courses/dose  vrai = percolation  vrai = voisins directs
+  arete    3                0.986               0.990
+  arete    5                0.997               1.000
+  relais   3                0.986               0.981
+  relais   5                0.996               0.997

@@ -1,0 +1,19 @@
+# Devinettes écrites avant toute autre lecture (seules lues : faits neutres, question groupée, question témoin)
+
+Faits neutres — 0,35. Thèse espérée : un concept de départ très connecté donne des idées moins intéressantes, prémisse de la partie 2. Orientent : choix d'une seule source et d'un seul résultat (fait 3), citation mot pour mot de la lecture des auteurs. Contrepoids présents : corrélation de rang faible au niveau de l'idée (−0,166 / −0,176), avertissement « tout le reste est hypothèse ». Passe.
+
+Cadre de la question groupée — 0,25. Ouvert (« tu peux conclure qu'une piste est vide »). Passe.
+
+Partie 1 (quatre étapes comme oracles) — 0,45. Réponse attendue devinée : (ii) répétition générale = l'oracle des mondes plantés rejoué sur la chaîne, peu d'apport propre ; (iii) témoin sans effet = contrôle négatif ; (i) vérification indépendante = recalcul par programme ; (iv) lecteur d'une autre famille = avis de modèle, mesure seulement, jamais choix ; contradiction attendue entre « jugé par un juge statistique » et « aucun score de juge n'entre dans le choix ». Orientent : « et lesquelles ne doivent servir qu'à mesurer » (présuppose qu'il y en a), « si les règles du cadre se contredisent, dis-le sans trancher » (signale une contradiction). Passe de justesse ; retouche facultative : « si certaines ne doivent servir qu'à mesurer ».
+
+Partie 2 (profondeur = surprise retirée ailleurs) — 0,40. Réponse attendue devinée : le fait 3 est compatible mais n'établit pas la thèse (corrélation sur moyennes de classes, intérêt et non profondeur, premier concept seul, propositions rédigées par GPT-4) ; surprise retirée = baisse de perte logarithmique de prédiction de liens sur les autres liens ; « ailleurs » exclut le voisinage propre ; pondération par centralité en tension avec le fait 3 ; usage : mesure rapportée, pas tri, risque de gonflement. Oriente : juxtaposition fait 3 / thèse. Contrepoids : (a) demande ce que le fait n'établit pas. Passe.
+
+Partie 3 (cinétique chimique) — 0,55. ÉCHEC. Réponse attendue devinée : la cinétique est pour l'essentiel le modèle existant renommé (rencontre × exp(compatibilité + champ) = forme d'Arrhenius / théorie des collisions) ; garder en partie au mieux (catalyseurs, énergie d'activation identifiable seulement avec une variable de type température, par exemple la température d'échantillonnage du système) ; confiance moyenne. Orientent : la description du modèle existant déjà calquée sur la théorie des collisions, et le présupposé « et où ce dictionnaire redonne le modèle existant sous un autre nom » (« où », pas « si »). Retouche : « et si, et où, ce dictionnaire redonne… » ; décrire le modèle existant par ses termes sans la forme produit-exponentielle, ou ajouter « dis aussi où il s'en écarte ».
+
+Partie 4 (couche de problèmes et d'anomalies, hypergraphe) — 0,35. Réponse attendue devinée : listes datées de problèmes ouverts et tensions mesure-théorie ; poids âge, tentatives, citations ; troisième terme du taux ; l'hypergraphe est équivalent au graphe biparti d'incidence sauf à exiger des relations d'ordre supérieur. Oriente : prémisse non sourcée « Or beaucoup d'idées naissent d'une anomalie ». Contrepoids : critères fixés avant comparaison, au moins deux structures. Passe.
+
+Partie 5 (tensions par relations) — 0,40. Réponse attendue devinée : liens attendus absents (prédiction de liens) et relations de signe opposé ou citations de désaccord essayées d'abord ; contrôle par recâblage. Orientent : la liste de six exemples (ancrage du choix final), le gras sur « relations ». Contrepoids : « sans t'y limiter », réfutation contre le comptage de vocabulaire. Passe.
+
+Partie 6 (liens et ordre) — 0,25. Passe.
+
+Question témoin — 0,30. Orientent légèrement : « On veut qu'il fasse de vraies découvertes » ; « concept très connecté » en écho au fait 3. Pas de présupposé de redondance en piste 3. Passe.

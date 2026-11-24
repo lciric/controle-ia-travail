@@ -1,0 +1,141 @@
+# sortie de simulation-emergence-organisme-v3.py, 2026-11-24T17:59:26Z ; processeur, environ 26 secondes
+# script sha256 7ac344e5eea634d1e65fa8414fa6ac4876a3a69bfe5014f894977cc9ca0265ce
+numpy 2.5.3 ; python 3.13.18 ; graine racine 20261124, clé (5,)
+posés : N = 16, h = 0.7, eps = 0.02, 4 composites par course, 20000 graphes par case
+
+C0. Contrôle contre la v2 (lecture « arête », commune, illimité, f = 0,8) : c = 0.5 : 0.048 ; c = 1 : 0.108 ; c = 2 : 0.355 ; c = 4 : 0.656   [v2 : 0,050 ; 0,111 ; 0,353 ; 0,656]
+    lecture « relais », commune, illimité : c = 0.5 : 0.056 ; c = 1 : 0.125 ; c = 2 : 0.380 ; c = 4 : 0.659   [v2 : 0,055 ; 0,129 ; 0,382 ; 0,660]
+
+C1. Recouvrement attendu d'une composite, eps + (h - eps) x réunion ; partielle : pi_comm = 0.5
+  f = 0.8
+  lecture  modèle          tours    c=0.5    c=1      c=2      c=4      écart relatif à la commune illimitée, c = 1 / 2 / 4
+  arête    commune         1         0.045    0.081    0.186    0.419   -25.1 % / -47.5 % / -36.1 %
+  arête    commune         2         0.048    0.102    0.313    0.641    -4.8 % / -11.9 % /  -2.4 %
+  arête    commune         3         0.048    0.107    0.348    0.656    -0.3 % /  -1.9 % /  -0.1 %
+  arête    commune         4         0.048    0.108    0.354    0.656    +0.0 % /  -0.2 % /  +0.0 %
+  arête    commune         5         0.048    0.108    0.355    0.656    +0.0 % /  +0.0 % /  +0.0 %
+  arête    commune         6         0.048    0.108    0.355    0.656    +0.0 % /  +0.0 % /  +0.0 %
+  arête    commune         illim.    0.048    0.108    0.355    0.656    +0.0 % /  +0.0 % /  +0.0 %
+  arête    partielle       1         0.048    0.084    0.189    0.428   -21.5 % / -46.7 % / -34.9 %
+  arête    partielle       2         0.052    0.112    0.332    0.649    +4.2 % /  -6.5 % /  -1.2 %
+  arête    partielle       3         0.053    0.121    0.378    0.667   +12.3 % /  +6.6 % /  +1.6 %
+  arête    partielle       4         0.053    0.123    0.393    0.671   +14.5 % / +10.9 % /  +2.2 %
+  arête    partielle       5         0.053    0.124    0.399    0.672   +15.4 % / +12.5 % /  +2.4 %
+  arête    partielle       6         0.053    0.125    0.401    0.672   +15.7 % / +13.1 % /  +2.4 %
+  arête    partielle       illim.    0.053    0.125    0.402    0.672   +15.8 % / +13.5 % /  +2.4 %
+  arête    indépendantes   1         0.050    0.087    0.196    0.437   -18.9 % / -44.7 % / -33.5 %
+  arête    indépendantes   2         0.056    0.120    0.348    0.656   +11.4 % /  -2.0 % /  -0.1 %
+  arête    indépendantes   3         0.057    0.131    0.404    0.675   +21.9 % / +13.9 % /  +2.8 %
+  arête    indépendantes   4         0.057    0.136    0.424    0.680   +26.0 % / +19.6 % /  +3.6 %
+  arête    indépendantes   5         0.057    0.138    0.433    0.681   +28.1 % / +22.2 % /  +3.8 %
+  arête    indépendantes   6         0.057    0.138    0.437    0.682   +28.5 % / +23.2 % /  +3.8 %
+  arête    indépendantes   illim.    0.057    0.139    0.439    0.682   +28.7 % / +23.9 % /  +3.9 %
+  arête    renouvelées     1         0.049    0.087    0.196    0.439   -19.1 % / -44.7 % / -33.2 %
+  arête    renouvelées     2         0.058    0.129    0.377    0.669   +20.2 % /  +6.3 % /  +2.0 %
+  arête    renouvelées     3         0.060    0.148    0.450    0.685   +37.1 % / +26.8 % /  +4.4 %
+  arête    renouvelées     4         0.060    0.153    0.472    0.686   +42.6 % / +33.0 % /  +4.5 %
+  arête    renouvelées     5         0.060    0.155    0.477    0.686   +44.2 % / +34.6 % /  +4.5 %
+  arête    renouvelées     6         0.060    0.156    0.478    0.686   +44.7 % / +34.9 % /  +4.5 %
+  arête    renouvelées     illim.    0.060    0.156    0.479    0.686   +44.8 % / +35.0 % /  +4.5 %
+  relais   commune         1         0.052    0.095    0.218    0.480   -23.8 % / -42.5 % / -27.2 %
+  relais   commune         2         0.055    0.119    0.351    0.650    -4.4 % /  -7.6 % /  -1.3 %
+  relais   commune         3         0.056    0.124    0.377    0.658    -0.3 % /  -0.7 % /  -0.0 %
+  relais   commune         4         0.056    0.125    0.380    0.659    -0.0 % /  -0.0 % /  +0.0 %
+  relais   commune         5         0.056    0.125    0.380    0.659    +0.0 % /  +0.0 % /  +0.0 %
+  relais   commune         6         0.056    0.125    0.380    0.659    +0.0 % /  +0.0 % /  +0.0 %
+  relais   commune         illim.    0.056    0.125    0.380    0.659    +0.0 % /  +0.0 % /  +0.0 %
+  relais   partielle       1         0.051    0.092    0.207    0.460   -26.2 % / -45.4 % / -30.2 %
+  relais   partielle       2         0.055    0.122    0.354    0.653    -2.5 % /  -6.9 % /  -0.9 %
+  relais   partielle       3         0.056    0.131    0.398    0.668    +4.8 % /  +4.6 % /  +1.4 %
+  relais   partielle       4         0.056    0.134    0.410    0.671    +7.0 % /  +7.9 % /  +1.9 %
+  relais   partielle       5         0.057    0.135    0.414    0.672    +7.8 % /  +9.0 % /  +2.0 %
+  relais   partielle       6         0.057    0.135    0.415    0.672    +8.1 % /  +9.3 % /  +2.1 %
+  relais   partielle       illim.    0.057    0.135    0.416    0.672    +8.2 % /  +9.5 % /  +2.1 %
+  relais   indépendantes   1         0.050    0.090    0.201    0.441   -28.3 % / -47.1 % / -33.1 %
+  relais   indépendantes   2         0.057    0.123    0.356    0.656    -1.3 % /  -6.3 % /  -0.4 %
+  relais   indépendantes   3         0.058    0.137    0.413    0.677    +9.8 % /  +8.7 % /  +2.7 %
+  relais   indépendantes   4         0.059    0.142    0.434    0.681   +13.7 % / +14.1 % /  +3.4 %
+  relais   indépendantes   5         0.059    0.143    0.441    0.682   +14.8 % / +16.1 % /  +3.5 %
+  relais   indépendantes   6         0.059    0.144    0.444    0.682   +15.4 % / +16.9 % /  +3.5 %
+  relais   indépendantes   illim.    0.059    0.144    0.446    0.682   +15.7 % / +17.3 % /  +3.6 %
+  f = 0.6
+  lecture  modèle          tours    c=0.5    c=1      c=2      c=4      écart relatif à la commune illimitée, c = 1 / 2 / 4
+  arête    commune         1         0.036    0.063    0.127    0.301   -15.2 % / -40.6 % / -47.1 %
+  arête    commune         2         0.037    0.072    0.193    0.524    -1.8 % / -10.0 % /  -7.9 %
+  arête    commune         3         0.037    0.074    0.211    0.564    +0.0 % /  -1.4 % /  -0.8 %
+  arête    commune         4         0.037    0.074    0.214    0.568    +0.0 % /  -0.1 % /  -0.1 %
+  arête    commune         5         0.037    0.074    0.214    0.569    +0.0 % /  +0.0 % /  +0.0 %
+  arête    commune         6         0.037    0.074    0.214    0.569    +0.0 % /  +0.0 % /  +0.0 %
+  arête    commune         illim.    0.037    0.074    0.214    0.569    +0.0 % /  +0.0 % /  +0.0 %
+  arête    partielle       1         0.039    0.067    0.137    0.316    -9.3 % / -36.3 % / -44.4 %
+  arête    partielle       2         0.041    0.083    0.226    0.553   +12.4 % /  +5.4 % /  -2.8 %
+  arête    partielle       3         0.042    0.087    0.261    0.602   +17.5 % / +21.7 % /  +5.8 %
+  arête    partielle       4         0.042    0.088    0.275    0.616   +19.7 % / +28.2 % /  +8.4 %
+  arête    partielle       5         0.042    0.089    0.281    0.622   +20.5 % / +31.1 % /  +9.4 %
+  arête    partielle       6         0.042    0.089    0.283    0.624   +20.6 % / +32.0 % /  +9.8 %
+  arête    partielle       illim.    0.042    0.089    0.284    0.625   +20.7 % / +32.4 % / +10.0 %
+  arête    indépendantes   1         0.042    0.073    0.148    0.332    -0.4 % / -31.1 % / -41.6 %
+  arête    indépendantes   2         0.046    0.096    0.253    0.579   +30.7 % / +18.1 % /  +1.8 %
+  arête    indépendantes   3         0.047    0.103    0.302    0.630   +40.0 % / +40.8 % / +10.8 %
+  arête    indépendantes   4         0.047    0.105    0.321    0.646   +42.9 % / +49.9 % / +13.7 %
+  arête    indépendantes   5         0.047    0.106    0.330    0.653   +43.8 % / +53.8 % / +14.8 %
+  arête    indépendantes   6         0.047    0.106    0.333    0.655   +44.0 % / +55.4 % / +15.2 %
+  arête    indépendantes   illim.    0.047    0.106    0.334    0.656   +44.1 % / +56.1 % / +15.4 %
+  arête    renouvelées     1         0.042    0.072    0.149    0.333    -2.6 % / -30.4 % / -41.4 %
+  arête    renouvelées     2         0.051    0.112    0.300    0.623   +51.5 % / +39.8 % /  +9.5 %
+  arête    renouvelées     3         0.055    0.135    0.396    0.675   +83.5 % / +85.0 % / +18.7 %
+  arête    renouvelées     4         0.056    0.147    0.443    0.683   +99.3 % / +106.6 % / +20.2 %
+  arête    renouvelées     5         0.057    0.153    0.462    0.684   +107.0 % / +115.8 % / +20.4 %
+  arête    renouvelées     6         0.057    0.155    0.472    0.685   +109.9 % / +120.1 % / +20.4 %
+  arête    renouvelées     illim.    0.057    0.157    0.477    0.685   +112.4 % / +122.6 % / +20.5 %
+  relais   commune         1         0.047    0.090    0.192    0.428   -14.5 % / -32.1 % / -27.3 %
+  relais   commune         2         0.049    0.104    0.269    0.578    -1.3 % /  -4.5 % /  -1.7 %
+  relais   commune         3         0.049    0.106    0.281    0.588    -0.0 % /  -0.3 % /  -0.1 %
+  relais   commune         4         0.049    0.106    0.282    0.588    +0.0 % /  -0.0 % /  +0.0 %
+  relais   commune         5         0.049    0.106    0.282    0.588    +0.0 % /  +0.0 % /  +0.0 %
+  relais   commune         6         0.049    0.106    0.282    0.588    +0.0 % /  +0.0 % /  +0.0 %
+  relais   commune         illim.    0.049    0.106    0.282    0.588    +0.0 % /  +0.0 % /  +0.0 %
+  relais   partielle       1         0.046    0.085    0.175    0.394   -19.8 % / -37.8 % / -33.0 %
+  relais   partielle       2         0.050    0.106    0.276    0.589    +0.8 % /  -2.0 % /  +0.2 %
+  relais   partielle       3         0.050    0.112    0.311    0.622    +6.2 % / +10.3 % /  +5.8 %
+  relais   partielle       4         0.051    0.114    0.323    0.631    +7.8 % / +14.6 % /  +7.3 %
+  relais   partielle       5         0.051    0.114    0.327    0.633    +8.2 % / +16.1 % /  +7.7 %
+  relais   partielle       6         0.051    0.115    0.328    0.634    +8.4 % / +16.4 % /  +7.8 %
+  relais   partielle       illim.    0.051    0.115    0.329    0.634    +8.4 % / +16.6 % /  +7.8 %
+  relais   indépendantes   1         0.046    0.081    0.160    0.351   -23.3 % / -43.4 % / -40.3 %
+  relais   indépendantes   2         0.051    0.110    0.278    0.591    +4.1 % /  -1.5 % /  +0.5 %
+  relais   indépendantes   3         0.053    0.120    0.332    0.640   +13.7 % / +17.6 % /  +8.9 %
+  relais   indépendantes   4         0.053    0.123    0.351    0.652   +16.6 % / +24.6 % / +10.9 %
+  relais   indépendantes   5         0.053    0.124    0.358    0.655   +17.5 % / +27.0 % / +11.3 %
+  relais   indépendantes   6         0.053    0.124    0.360    0.655   +17.8 % / +27.8 % / +11.4 %
+  relais   indépendantes   illim.    0.053    0.125    0.361    0.655   +17.8 % / +28.0 % / +11.5 %
+
+C2. Tours à budget égal (modèle de coût de la partie E de la v1 : vue 1 500, mémoire 750, sortie 500, réflexion 2 000 jetons par tour ; tarifs de Neon 3/15 USD par million) :
+  plan réduit (budget = dose la plus chère, 4 tours) : 3.22 USD par course ; tours par dose : c = 0.5 : 4, c = 1 : 4, c = 2 : 4, c = 4 : 4
+  plan complet (budget = interaction complète, 4 tours) : 4.27 USD par course ; tours par dose : c = 0.5 : 5, c = 1 : 5, c = 2 : 5, c = 4 : 5
+
+C3. Rejet de la courbe prédite « commune illimitée » par le test d'adéquation (4 doses, 4 degrés de liberté, seuil 0,05), f = 0,8, 4 000 répétitions par case
+  lecture « arête » ; prédiction : 0.048, 0.108, 0.355, 0.656
+    vérité                                   M = 3    M = 5    M = 10   (courses par dose)
+    commune illimitée (taille du test)        0.053   0.062   0.055
+    indépendantes, 4 tours                    0.079   0.091   0.138
+    indépendantes, 5 tours                    0.091   0.104   0.151
+    indépendantes, illimité                   0.096   0.109   0.178
+    partielle 0,5, illimité                   0.071   0.074   0.083
+    renouvelées, 4 tours                      0.120   0.159   0.295
+    renouvelées, 5 tours                      0.132   0.177   0.304
+    formule fautive de E0 (h pris à h f)      0.108   0.179   0.346
+  lecture « relais » ; prédiction : 0.056, 0.125, 0.380, 0.659
+    vérité                                   M = 3    M = 5    M = 10   (courses par dose)
+    commune illimitée (taille du test)        0.057   0.057   0.064
+    indépendantes, 4 tours                    0.064   0.072   0.102
+    indépendantes, 5 tours                    0.070   0.081   0.110
+    indépendantes, illimité                   0.071   0.090   0.111
+    partielle 0,5, illimité                   0.060   0.070   0.073
+
+C4. Choix percolation commune contre voisins directs (vraisemblance, comme la v1 C3), quand la vérité est un autre modèle de transmission ; f = 0,8, lecture « arête », 2 000 répétitions
+    vérité                         M = 3    M = 5   (part des cas où la percolation est choisie)
+    commune illimitée               0.985   0.999
+    indépendantes, 4 tours          0.995   1.000
+    renouvelées, 4 tours            0.999   1.000
+    voisins directs                 0.011   0.001

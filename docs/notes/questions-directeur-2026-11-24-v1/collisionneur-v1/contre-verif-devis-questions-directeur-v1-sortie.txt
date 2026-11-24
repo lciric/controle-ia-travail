@@ -1,0 +1,57 @@
+moteur collisionneur-v9-v8d b780383874598f12b24c79e4087d335c8e01cda685e295f5116898fa3b1715ac ; garde v3 923679b51cfc84b65ff7cfc65296378d08e6d4e64f6b427823d23ba24f4afe91 ; script du brouillon 7d16c136aa5e2101d486970c9425940a7b7f4b7d5e617f87955ada412298689b
+=== 1. Tarifs relus à la source ===
+  page-prix-gemini-api-20261124T171900Z.md.txt sha256=3d7b87d69e839c4b969a0d953ff29f4b8f4ce5e5771f37fb95beb01459c2cfcc
+  page-modele-gemini-4-carbon-20261124T172051Z.md.txt sha256=c880e69c4d58a592ecc61a01c4ebc074abfec82cc9d67a94c933d45a36f1b3a7
+  page-modele-gemini-4-neon-20261124T172051Z.md.txt sha256=b841dd32c44500d13b17c4e3760d572dfdabb8da5060ee0a1c49a3d7a12f5460
+  page-prix-anthropic-docs-20261122T104128Z.md sha256=488e03e9cc17c794593348133aa9869d650964d599af58604a9838a0ae47e816
+  gemini-thinking-generate-content-2026-11-21-v1.md.txt sha256=fe0b8d8820b2ab7b8079bf1477e7871f850f6f5450f92f6b844866cade105892
+  Carbon, Standard : entrée [2.0, 4.0], sortie [10.0, 20.0] ; Neon : [3.0], [15.0] ; Opus 5.5 : (4.0, 20.0)
+  ok    Carbon au barème haut (4.0, 20.0)
+  ok    Carbon facturé 2 / 10 jusqu'au 30 novembre, 4 / 20 dès le 1er décembre
+  ok    Neon (3.0, 15.0)
+  ok    Opus 5.5 (4.0, 20.0)
+  ok    carbon : sortie maximale 65 536 (page du modèle)
+  ok    neon : sortie maximale 65 536 (page du modèle)
+=== 2. Réglages de Google : règle écrite ici, et garde commune v3 ===
+  niveaux les plus hauts admis (page de réflexion) : {'carbon': 'high', 'neon': 'xhigh'}
+  ok    carbon E3-T1 premier envoi : plafond 65536, provision 49152, texte 16384, mots 3500 -> 14700 jetons, marge 1684 ; règle ici [] ; v3 []
+  ok    carbon E3-T1 relance : plafond 65536, provision 49152, texte 16384, mots 3500 -> 14700 jetons, marge 1684 ; règle ici [] ; v3 []
+  ok    carbon E3-T2 premier envoi : plafond 65536, provision 49152, texte 16384, mots 3000 -> 12600 jetons, marge 3784 ; règle ici [] ; v3 []
+  ok    carbon E3-T2 relance : plafond 65536, provision 49152, texte 16384, mots 3000 -> 12600 jetons, marge 3784 ; règle ici [] ; v3 []
+  ok    carbon E3-T3 premier envoi : plafond 65536, provision 49152, texte 16384, mots 3500 -> 14700 jetons, marge 1684 ; règle ici [] ; v3 []
+  ok    carbon E3-T3 relance : plafond 65536, provision 49152, texte 16384, mots 3500 -> 14700 jetons, marge 1684 ; règle ici [] ; v3 []
+  ok    carbon, artefact « sans réglage de réflexion » : refusé ici True, refusé par v3 True ['réflexion : thinkingConfig.thinkingLevel absent du corps']
+  ok    carbon, artefact « budget et niveau ensemble » : refusé ici True, refusé par v3 True ['réflexion : thinkingBudget présent (déprécié chez Gemini 4 ; 400 avec un niveau)']
+  ok    carbon, artefact « plafond sous réflexion + 16 000 » : refusé ici True, refusé par v3 True ['plafond : 65151 − réflexion 49152 = 15999 jetons de texte < 16000']
+  ok    carbon, artefact « limite de mots trop longue » : refusé ici True, refusé par v3 True ['limite de mots : 3950 mots × 4.2 = 16590 jetons ≥ plafond de texte 16384']
+  ok    carbon, artefact « niveau sous le plus haut » : refusé ici True, refusé par v3 True ["réflexion : niveau envoyé 'medium' au lieu de 'high'"]
+  carbon hors flux : limite 32768, exigé 65152 -> lot permis False
+  ok    neon E3-T1 premier envoi : plafond 65536, provision 32768, texte 32768, mots 3500 -> 17850 jetons, marge 14918 ; règle ici [] ; v3 []
+  ok    neon E3-T1 relance : plafond 65536, provision 32768, texte 32768, mots 3500 -> 17850 jetons, marge 14918 ; règle ici [] ; v3 []
+  ok    neon E3-T2 premier envoi : plafond 65536, provision 32768, texte 32768, mots 3000 -> 15300 jetons, marge 17468 ; règle ici [] ; v3 []
+  ok    neon E3-T2 relance : plafond 65536, provision 32768, texte 32768, mots 3000 -> 15300 jetons, marge 17468 ; règle ici [] ; v3 []
+  ok    neon E3-T3 premier envoi : plafond 65536, provision 32768, texte 32768, mots 3500 -> 17850 jetons, marge 14918 ; règle ici [] ; v3 []
+  ok    neon E3-T3 relance : plafond 65536, provision 32768, texte 32768, mots 3500 -> 17850 jetons, marge 14918 ; règle ici [] ; v3 []
+  ok    neon, artefact « sans réglage de réflexion » : refusé ici True, refusé par v3 True ['réflexion : thinkingConfig.thinkingLevel absent du corps']
+  ok    neon, artefact « budget et niveau ensemble » : refusé ici True, refusé par v3 True ['réflexion : thinkingBudget présent (déprécié chez Gemini 4 ; 400 avec un niveau)']
+  ok    neon, artefact « plafond sous réflexion + 16 000 » : refusé ici True, refusé par v3 True ['plafond : 48767 − réflexion 32768 = 15999 jetons de texte < 16000']
+  ok    neon, artefact « limite de mots trop longue » : refusé ici True, refusé par v3 True ['limite de mots : 6475 mots × 5.1 = 33023 jetons ≥ plafond de texte 32768']
+  ok    neon, artefact « niveau sous le plus haut » : refusé ici True, refusé par v3 True ["réflexion : niveau envoyé 'medium' au lieu de 'xhigh'"]
+  neon hors flux : limite 65536, exigé 48768 -> lot permis True
+=== 3. Cellules recalculées, chemins et pointes ===
+  ok    bras principal : attendu, haut et pire recalculés aux tarifs relus, écart max 0.00e+00
+  ok    bras principal, option A, séquentiel : chemin 9.7253, pointe 10.8074 (E3-T3-reponse-A) ; brouillon 9.7253, 10.8074
+  bras principal, option A, parallèle : chemin 9.7253, pointe 14.9347 (E3-T3-reponse-A+E3-T3-reponse-B+E3-T3-reponse-C) ; plafond séquentiel 16, parallèle 20 ; coupures de Carbon de plus tolérées sous 16 en parallèle : 0
+  ok    bras principal, option B, séquentiel : chemin 11.9081, pointe 12.7971 (E3-T3-reponse-C) ; brouillon 11.9081, 12.7971
+  bras principal, option B, parallèle : chemin 11.9081, pointe 14.9410 (E3-T3-reponse-A+E3-T3-reponse-B+E3-T3-reponse-C) ; plafond séquentiel 18, parallèle 20 ; coupures de Carbon de plus tolérées sous 18 en parallèle : 1
+  ok    bras temoin : attendu, haut et pire recalculés aux tarifs relus, écart max 0.00e+00
+  ok    bras temoin, option A, séquentiel : chemin 9.6668, pointe 10.7521 (E3-T3-reponse-A) ; brouillon 9.6668, 10.7521
+  bras temoin, option A, parallèle : chemin 9.6668, pointe 14.8616 (E3-T3-reponse-A+E3-T3-reponse-B+E3-T3-reponse-C) ; plafond séquentiel 16, parallèle 20 ; coupures de Carbon de plus tolérées sous 16 en parallèle : 0
+  ok    bras temoin, option B, séquentiel : chemin 11.8153, pointe 12.7025 (E3-T3-reponse-C) ; brouillon 11.8153, 12.7025
+  bras temoin, option B, parallèle : chemin 11.8153, pointe 14.8456 (E3-T3-reponse-A+E3-T3-reponse-B+E3-T3-reponse-C) ; plafond séquentiel 18, parallèle 20 ; coupures de Carbon de plus tolérées sous 18 en parallèle : 1
+  option A : plafonds séquentiels 16+16=32 ; parallèles 20+20=40
+  option B : plafonds séquentiels 18+18=36 ; parallèles 20+20=40
+=== 4. Tableaux du brouillon (sections 4.1 et 4.2) contre le calcul, au centime ===
+  ok    bras principal : 9 lignes lues, écarts []
+  ok    bras temoin : 9 lignes lues, écarts []
+VERDICT : toutes les vérifications tiennent = True
