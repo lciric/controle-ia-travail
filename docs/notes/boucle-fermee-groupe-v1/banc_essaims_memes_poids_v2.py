@@ -89,9 +89,12 @@ def main(sortie):
     try:
         commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
                                 cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
+        sale = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True,
+                              cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
     except OSError:
-        commit = "inconnu"
-    res = {"code_sha256": hashlib.sha256(code).hexdigest(), "commit": commit, "python": platform.python_version(),
+        commit, sale = "", "git absent"
+    commit = commit or "inconnu"
+    res = {"code_sha256": hashlib.sha256(code).hexdigest(), "commit": commit, "arbre_modifie": bool(sale), "python": platform.python_version(),
            "cles_graines": {n: list(g.spawn_key) for n, g in graines.items()},
            "graine": GRAINE, "numpy": np.__version__, "K": K, "n_paires": N_PAIRES, "n_audit": N_AUDIT,
            "n_rep": N_REP, "seuil_naif": seuil_naif, "configs": {}}
@@ -111,7 +114,7 @@ def main(sortie):
     if not c["C4_alea_partage_permutee"]["juste_conforme"]:
         res["lecture"] = "banc mort : le témoin vrai (aléa partagé) n'est pas vu ; aucune lecture"
     elif all(c[k]["juste_conforme"] for k in ("C1_honnete_ordre_commun", "C2_honnete_permutee", "C3_focale_permutee")):
-        res["lecture"] = "la frontière tient sur le banc"
+        res["lecture"] = "l'étalonnage de la statistique juste tient sur le banc (portée : erratum 1, point 4)"
     else:
         res["lecture"] = "alarme juste au-delà de 10 % sur une configuration sans aléa partagé : frontière ou code à auditer"
     taux = [v[k] for v in c.values() for k in ("alarme_juste", "alarme_naif")]
