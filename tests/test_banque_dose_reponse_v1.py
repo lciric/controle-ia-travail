@@ -454,3 +454,40 @@ def test_reserve_epuisee_arret_consigne(depot, tmp_path_factory, monkeypatch):
         eb.assembler(depot, RUN, ch=ch)
     arret = json.loads((depot / "diag" / RUN / "arret-assemblage.json").read_text())["resultat"]
     assert "suite du tirage existant" in arret["suite"]
+
+
+def test_lecture_tronquee_reprise_puis_arret_sans_exclusion(monkeypatch):
+    import http.client
+    from controle_ia.environnements import corpus_arxiv as ca
+
+    appels = []
+
+    def ouvrir_tronque(url, delai_s=120.0):
+        appels.append(url)
+        if len(appels) < 3:
+            raise http.client.IncompleteRead(b"x", 10)
+        return b"octets"
+    monkeypatch.setattr(ca, "ouvrir_https", ouvrir_tronque)
+    journal = []
+    assert ca._avec_reprises(sel.ouvrir_https_reprenable, "u", 4, 0.0, lambda s: None, journal) == b"octets"
+    assert len(appels) == 3 and len(journal) == 2                       # deux reprises consignées
+
+    def toujours_tronque(url, delai_s=120.0):
+        raise http.client.IncompleteRead(b"x", 10)
+    monkeypatch.setattr(ca, "ouvrir_https", toujours_tronque)
+    with pytest.raises(GardeArret, match="rien n'est exclu"):
+        ca._avec_reprises(sel.ouvrir_https_reprenable, "u", 4, 0.0, lambda s: None, [])
+    # sans l'erratum, le code scellé laissait passer l'exception (arrêt brut, sans reprise)
+    with pytest.raises(http.client.IncompleteRead):
+        ca._avec_reprises(toujours_tronque, "u", 4, 0.0, lambda s: None, [])
+
+
+def test_http_403_et_404_remontent_inchanges(monkeypatch):
+    import urllib.error
+    from controle_ia.environnements import corpus_arxiv as ca
+
+    def refuse(url, delai_s=120.0):
+        raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+    monkeypatch.setattr(ca, "ouvrir_https", refuse)
+    with pytest.raises(urllib.error.HTTPError):
+        sel.ouvrir_https_reprenable("u")

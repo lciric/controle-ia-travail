@@ -22,6 +22,8 @@ Les textes vivent sous `donnees/` (ignoré par git) ; le dépôt garde les fiche
 from __future__ import annotations
 
 import argparse
+import functools
+import http.client
 import json
 import sys
 import time
@@ -127,6 +129,18 @@ def ordre_scelle(racine: Path) -> list[str]:
     return verifier_resultat(racine, racine / RUN_TIRAGE / "tirage.json")["resultat"]["ordre"]
 
 
+def ouvrir_https_reprenable(url: str, delai_s: float = 120.0) -> bytes:
+    """`corpus_arxiv.ouvrir_https`, dont une lecture tronquée ou une réponse HTTP illisible (`http.client.HTTPException`,
+    que le code scellé ne compte pas comme panne réseau) devient une `ConnectionError`, qu'il reprend (quatre tentatives,
+    puis arrêt sans exclusion). Erratum du 2026-11-24 après la lecture tronquée du run interrompu
+    20261124-125253-banque-dose-reponse-selection (règle de sélection, section 7 : toute autre panne arrête, sans
+    exclusion ; une panne technique n'est pas un résultat). Les codes 403 et 404 remontent inchangés."""
+    try:
+        return ca.ouvrir_https(url, delai_s)
+    except http.client.HTTPException as e:
+        raise ConnectionError(f"{type(e).__name__} : lecture tronquée ou réponse illisible") from None
+
+
 def exiger_hors_banque_initiale(rang: int, pid: str, initiaux: set[str], deja: set[str]) -> None:
     """Garde par papier, avant tout téléchargement : rang au moins 125, identifiant hors des 96 et hors des fiches
     du corpus initial."""
@@ -220,7 +234,8 @@ def _main(argv: list[str]) -> int:
     filtre = donnees / "sans-figures.lua"
     filtre.write_text(ca.FILTRE_LUA, encoding="utf-8")
     fiches = constituer_depuis(tirage["ordre"], tirage["entrees"], a.besoin, donnees, filtre, initiaux,
-                               tirage["deja_examines"], journal=journal, au_fil=donnees / "fiches-au-fil.jsonl")
+                               tirage["deja_examines"], journal=journal, au_fil=donnees / "fiches-au-fil.jsonl",
+                               traiter=functools.partial(ca.traiter_papier, ouvrir=ouvrir_https_reprenable))
     gardes = [f for f in fiches if f["statut"] == "gardé"]
     motifs: dict[str, int] = {}
     for f in fiches:
