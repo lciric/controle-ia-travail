@@ -1,0 +1,308 @@
+{
+  "script": "verifier_exemples_papier_v3.py",
+  "exact_rational_variance_identity": {
+    "E0_beta": "1/3",
+    "Var0_beta": "37/450",
+    "Epost_beta": "29/50",
+    "delta_exact": "37/150",
+    "ratio_exact": "37/150"
+  },
+  "exact_checks_v3": {
+    "decoupling_off_loop_counterexample_A": {
+      "beta_loop": [
+        "1/10",
+        "9/10"
+      ],
+      "beta_audit": [
+        "2/10",
+        "8/10"
+      ],
+      "audit_survival_before": "1/2",
+      "audit_survival_after": "37/50",
+      "shift": "6/25",
+      "cov_over_mean": "6/25"
+    },
+    "decoupling_in_loop_counterexample_A": {
+      "audit_survival_before": "3/4",
+      "audit_survival_after": "7/12"
+    },
+    "decoupling_zero_cov_counterexample_B": {
+      "cov_exact": "0",
+      "k": 4.0,
+      "audit_survival_before": "19/30",
+      "audit_survival_after_float": 0.770023
+    },
+    "niche_equal_odds_exact": {
+      "draws": 2000,
+      "claim": "f:h odds identical under A and B; pi_B(f) > pi_A(f) iff pi_B(h) > pi_A(h) iff q < beta_v; total cheating then lower under B"
+    },
+    "collapse_limit_stealth_share_A": {
+      "priors": [
+        "49/100",
+        "1/2",
+        "1/100"
+      ],
+      "betas": [
+        "1",
+        "1/2",
+        "3/5"
+      ],
+      "limit_stealth_share_among_cheaters": "3/128",
+      "limit_visible_share_among_cheaters": "125/128"
+    },
+    "operator_A_exact": {
+      "amplification_draws": 5000,
+      "dominance_draws": 5000,
+      "note": "E := exp(eta*DeltaR) treated as a free positive rational; 20% of draws have beta_f == beta_h"
+    },
+    "repeated_rejection_sensitivity": {
+      "params": {
+        "p_h": 0.85,
+        "p_f": 0.01,
+        "beta_h": 1.0,
+        "beta_f": 0.75,
+        "eta_1": 0.2,
+        "delta_r": 1.0,
+        "T": 1000
+      },
+      "total_eta": 200.0,
+      "logodds_f_over_h_paper_operator_A": 195.27,
+      "logodds_f_over_h_repeated_rejection": -92.125,
+      "limit_criterion": "as T -> inf, stealth beats honesty iff eta_1 * DeltaR > log(beta_h / beta_f)"
+    },
+    "heterogeneous_reward_B_counterexample": {
+      "mean_cheater_survival_unmonitored": 0.881,
+      "under_B": 0.8748
+    }
+  },
+  "float_regression_checks": {
+    "status": "regression checks only; the proofs carry the results",
+    "families": [
+      {
+        "name": "theorem_1_float",
+        "draws": 10000,
+        "violations": 0,
+        "what_is_tested": "direction of conditional enrichment under A and B (two strata, equal reward); amplification criterion under A and under B; dominance criterion under B; each compared with direct Gibbs computation in floats. Not tested here: dominance threshold under A, the barrier under A, the limiting-case proposition (see exact_checks). Narrow domain: beta_f >= 0.20, beta_h >= 0.55, eta <= 8, no draw with beta_f == beta_h."
+      },
+      {
+        "name": "perfect_niche_float",
+        "draws": 2000,
+        "violations": 0,
+        "what_is_tested": "pi_A(f) > pi_no(f) and the inversion criterion; priors fixed at (0.70, 0.25, 0.05)."
+      },
+      {
+        "name": "regime_r2_float",
+        "draws": 1000,
+        "violations": 0,
+        "what_is_tested": "SPECIAL CASE ONLY: audit survival is the exactly counter-monotone rearrangement of loop survival (a case of negative association), four equiprobable atoms; the sign then follows from Chebyshev's sum inequality. Neither the covariance identity, nor independence, nor 'non-positive covariance without negative association' is tested."
+      },
+      {
+        "name": "regime_r3_float",
+        "draws": 1000,
+        "violations": 0,
+        "what_is_tested": "TAUTOLOGICAL: one extremal policy 1{P_ord >= P_trap} per draw, for which the gap equals the total variation exactly; the threshold uses tau_min = tau_ord of that same policy, so the check recomputes the inequality defining C*. Ordinary-episode monitor always blind."
+      }
+    ]
+  },
+  "verified_examples": {
+    "thresholds_table1": {
+      "dr_amp_A": 0.257992,
+      "dr_dom_A": 1.576778,
+      "dr_asymp_B": 0.833333,
+      "dr_dom_B": 2.807845
+    },
+    "table1_phase_transition": [
+      {
+        "delta_r": 0.2,
+        "pi_no_f": 0.016221,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.015593,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.969854,
+        "pi_B_f": 0.002821,
+        "cond_B_f": 0.953953,
+        "pi_B_h": 0.997043
+      },
+      {
+        "delta_r": 0.258,
+        "pi_no_f": 0.018451,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.018451,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.964329,
+        "pi_B_f": 0.003213,
+        "cond_B_f": 0.959017,
+        "pi_B_h": 0.99665
+      },
+      {
+        "delta_r": 0.8,
+        "pi_no_f": 0.044031,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.081869,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.841721,
+        "pi_B_f": 0.010795,
+        "cond_B_f": 0.986493,
+        "pi_B_h": 0.989057
+      },
+      {
+        "delta_r": 1.2,
+        "pi_no_f": 0.057728,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.198806,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.615641,
+        "pi_B_f": 0.02614,
+        "cond_B_f": 0.994124,
+        "pi_B_h": 0.973706
+      },
+      {
+        "delta_r": 1.5768,
+        "pi_no_f": 0.063492,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.340917,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.340894,
+        "pi_B_f": 0.058966,
+        "cond_B_f": 0.997328,
+        "pi_B_h": 0.940876
+      },
+      {
+        "delta_r": 2.2,
+        "pi_no_f": 0.066157,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.47904,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.073856,
+        "pi_B_f": 0.20297,
+        "cond_B_f": 0.999277,
+        "pi_B_h": 0.796883
+      },
+      {
+        "delta_r": 3.0,
+        "pi_no_f": 0.06662,
+        "cond_no_f": 0.066667,
+        "pi_A_f": 0.513526,
+        "cond_A_f": 0.517241,
+        "pi_A_h": 0.007182,
+        "pi_B_f": 0.606385,
+        "cond_B_f": 0.999865,
+        "pi_B_h": 0.393533
+      }
+    ],
+    "table2_eta_divergence": [
+      {
+        "eta": 0.5,
+        "pi_A_h": 0.977491,
+        "pi_A_f": 0.011642,
+        "pi_B_h": 0.941823,
+        "pi_B_f": 0.010152
+      },
+      {
+        "eta": 1.0,
+        "pi_A_h": 0.969854,
+        "pi_A_f": 0.015593,
+        "pi_B_h": 0.97498,
+        "pi_B_f": 0.009629
+      },
+      {
+        "eta": 2.0,
+        "pi_A_h": 0.946399,
+        "pi_A_f": 0.027725,
+        "pi_B_h": 0.990292,
+        "pi_B_f": 0.00821
+      },
+      {
+        "eta": 4.0,
+        "pi_A_h": 0.841721,
+        "pi_A_f": 0.081869,
+        "pi_B_h": 0.994178,
+        "pi_B_f": 0.005808
+      },
+      {
+        "eta": 8.0,
+        "pi_A_h": 0.325433,
+        "pi_A_f": 0.348914,
+        "pi_B_h": 0.997107,
+        "pi_B_f": 0.002893
+      },
+      {
+        "eta": 16.0,
+        "pi_A_h": 0.003955,
+        "pi_A_f": 0.515196,
+        "pi_B_h": 0.999285,
+        "pi_B_f": 0.000715
+      }
+    ],
+    "table3_perfect_niche_inversion": {
+      "params": {
+        "p_h": 0.85,
+        "p_v": 0.14,
+        "p_f": 0.01,
+        "beta_v": 0.1,
+        "beta_f": 1.0,
+        "beta_h": 1.0,
+        "eta": 2.0,
+        "delta_r": 1.0
+      },
+      "threshold_eta_dr_plus_C": 2.558428,
+      "C_crossover": 0.279214,
+      "rows": [
+        {
+          "C": 0.0,
+          "eta_times_dr_plus_C": 2.0,
+          "pi_no_f": 0.037731,
+          "pi_A_f": 0.071924,
+          "pi_B_f": 0.067487,
+          "pi_B_h": 0.776336
+        },
+        {
+          "C": 0.2792,
+          "eta_times_dr_plus_C": 2.5584,
+          "pi_no_f": 0.037731,
+          "pi_A_f": 0.071924,
+          "pi_B_f": 0.071924,
+          "pi_B_h": 0.827379
+        },
+        {
+          "C": 1.0,
+          "eta_times_dr_plus_C": 4.0,
+          "pi_no_f": 0.037731,
+          "pi_A_f": 0.071924,
+          "pi_B_f": 0.077603,
+          "pi_B_h": 0.892711
+        },
+        {
+          "C": 2.5,
+          "eta_times_dr_plus_C": 7.0,
+          "pi_no_f": 0.037731,
+          "pi_A_f": 0.071924,
+          "pi_B_f": 0.079814,
+          "pi_B_h": 0.918135
+        }
+      ]
+    },
+    "example_R1": {
+      "p_h": 0.9,
+      "p_v": 0.09,
+      "p_f": 0.01,
+      "beta_h": 1.0,
+      "beta_v": 0.1,
+      "beta_f": 0.9,
+      "eta": 20.0,
+      "delta_r_v": 1.0,
+      "delta_r_f_net": -0.25,
+      "C": 2.0,
+      "pi_B_h": 0.999998,
+      "pi_B_v_plus_f": 2e-06
+    },
+    "example_R3": {
+      "rho": 0.2,
+      "eps_trap": 0.02,
+      "delta_ind": 0.05,
+      "tau_min": 0.2,
+      "delta_r": 1.0,
+      "C_star_R3": 5.462585
+    }
+  }
+}
