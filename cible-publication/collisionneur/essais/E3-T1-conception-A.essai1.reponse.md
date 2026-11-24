@@ -1,0 +1,210 @@
+# Proposition A : positionnement, expériences décisives et ancrage matériel
+
+**Préalables.**
+- Le bloc FAITS n'attribue aucun statut explicite. Je traite tout son contenu comme **RAPPORTÉ** : je n'ai audité ni les preuves ni le script.
+- Je ne vérifie pas les empreintes sha256.
+- Le symbole $\tau_{\mathrm{ord}}$, qui figure dans la borne des épisodes pièges, n'est pas défini dans les faits. Je n'en invente pas la définition.
+- Le bloc QUESTION fixe la limite à 3 000 mots ; je m'y tiens.
+
+---
+
+## (a) Ce que la question suppose sans que ce soit établi
+
+| # | Présupposé | Statut | Commentaire |
+|---|---|---|---|
+| P1 | Les résultats du manuscrit sont corrects (seuils, plancher, amplification sous B, trois mécanismes). | **RAPPORTÉ** | 14 000 tirages sans contre-exemple et une vérification en arithmétique exacte sont rapportés, mais ce ne sont pas des preuves auditées. Il n'existe pas de formalisation compilée (RAPPORTÉ). |
+| P2 | L'équilibre de Gibbs statique décrit ce que produit réellement un entraînement par PPO, GRPO ou rejet itéré. | **HYPOTHÈSE** | C'est le maillon le plus fragile. Les optimiseurs réels n'atteignent pas nécessairement l'optimum régularisé, et l'opérateur A n'a pas d'implémentation épisodique canonique (voir E1). |
+| P3 | La partition en trois régimes, avec un $\beta$ constant par politique, est une abstraction pertinente. | **HYPOTHÈSE** | En pratique, $\beta$ varie selon l'épisode et la frontière entre « visible » et « furtif » est graduelle. |
+| P4 | Le détecteur en boucle est fixe et ne co-évolue pas avec la politique. | **HYPOTHÈSE** (implicite dans les opérateurs A et B tels que rapportés) | Dans les pipelines réels, le détecteur est souvent un modèle réentraîné. |
+| P5 | Le manuscrit apporte une nouveauté par rapport aux travaux empiriques existants sur l'obfuscation induite par un moniteur en boucle. | **HYPOTHÈSE** | Exemple : Baker et al., 2025, *Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation*. Les détails sont à revérifier avant citation. Aucun positionnement bibliographique ne figure dans les faits. |
+| P6 | Il existe un positionnement « optimal » et des extensions au « gain décisif ». | **HYPOTHÈSE** | Ce n'est pas mesurable avant soumission. Seul le nombre de prédictions réfutables est contrôlable. |
+| P7 | Faire émerger une stéganographie spontanée à petite échelle est difficile. | **RAPPORTÉ** (par la question, pas par les faits) | Cela converge avec Roger et Greenblatt, 2023, *Preventing Language Models From Hiding Their Reasoning*, mais le résultat précis est à revérifier. Les autres travaux sur la collusion stéganographique : référence à vérifier. |
+| P8 | Les enceintes visées ont des critères différents (profondeur des preuves, expériences, anonymat). | **RAPPORTÉ** (faits §2, en termes généraux) | Les règles précises de chaque appel sont à vérifier pour l'année visée. Je ne les donne pas de mémoire comme des faits. |
+| P9 | Un billet public lié au manuscrit existe déjà. | **Non établi** | Les faits ne mentionnent que des règles « vis-à-vis de billets publics préalables » en général. |
+
+---
+
+## Réponses aux quatre questions
+
+### Q1. Où le manuscrit statique est-il déjà compétitif, et quelles objections rédhibitoires essuierait-il ?
+
+**Compétitif aujourd'hui (HYPOTHÈSE de positionnement) :**
+- **Ateliers non archivistiques** de NeurIPS, ICML ou ICLR consacrés à la sûreté, à l'alignement ou à la supervision des modèles. Le format court et la thèse falsifiable s'y prêtent : « un filtre en boucle enrichit le furtif ; sous pénalité, il peut l'amplifier plus que le rejet ». Le statut non archivistique préserve la soumission ultérieure, à vérifier par appel.
+- **TMLR**, sous réserve de vérifier les critères en vigueur. Si l'enceinte privilégie la justesse des affirmations plutôt que l'ampleur, un manuscrit théorique correct, honnête sur ses limites et accompagné du script exact y est plausible.
+- **IEEE SaTML, piste de positionnement ou article court** (existence d'une telle piste à vérifier). Le cadrage « un instrument de sécurité placé en boucle se dégrade » correspond au modèle de menace de cette communauté.
+
+**Objections probables en conférence principale :**
+1. **Trivialité perçue.** Les opérateurs A et B sont des repondérations de Gibbs du prior. L'optimum d'une récompense régularisée par KL est la loi inclinée (voir Korbak, Perez et Buckley, 2022, *RL with KL penalties is better viewed as Bayesian inference*). Un relecteur dira que « l'enrichissement conditionnel est une sélection bayésienne évidente ». Les résultats les moins évidents sont la défense à mettre en avant : le plancher sous B, et l'inversion A/B en présence d'une niche parfaitement furtive (RAPPORTÉ).
+2. **Absence de dynamique.** Rien ne garantit que l'optimiseur atteigne l'équilibre (P2), ni ne quantifie le temps passé hors équilibre.
+3. **Absence d'expérience** (RAPPORTÉ : aucune expérience sur réseaux réels). Pour une affirmation sur les pipelines d'après pré-entraînement, c'est probablement rédhibitoire dans les pistes principales.
+4. **Abstraction grossière** (P3, P4) : $\beta$ par politique, détecteur fixe, trois régimes discrets.
+5. **Positionnement** (P5) : si des résultats empiriques montrent déjà l'obfuscation induite, la contribution doit être présentée comme une *explication quantitative avec prédictions nouvelles*, pas comme une découverte du phénomène.
+6. **Borne des épisodes pièges inopérante** quand $\tau_{\mathrm{ord}} \le \delta_{\mathrm{ind}}$ (RAPPORTÉ). Un relecteur demandera si ce cas est le cas typique.
+
+### Q2. Cible la plus ambitieuse réellement atteignable
+
+**Ma proposition (HYPOTHÈSE)** : piste principale de NeurIPS, ICLR ou ICML, *à condition* que l'expérience E1 ci-dessous valide ou réfute nettement au moins deux prédictions quantitatives : le seuil $\Delta R_{\mathrm{A}}^*(\eta)$ et l'inversion A/B. Le critère de décision est le suivant : sans résultat net sur E1, rester sur TMLR ou SaTML.
+
+**Mauvais ajustements :**
+- **COLT, ALT.** Ces enceintes attendent des bornes d'apprentissage : complexité d'échantillon, regret, minimax séquentiel. L'algèbre de Gibbs finie n'en est pas, et la question l'indique elle-même (faits §2, RAPPORTÉ). Y aller exigerait une borne inférieure séquentielle nouvelle, avec un risque d'impasse élevé et un gain thématique faible pour la communauté de sûreté.
+- **Conférences de sécurité informatique généralistes.** Elles attendent des attaques ou défenses sur systèmes réels et un modèle de menace adversarial explicite. Sans système déployé, l'ajustement est faible. SaTML est l'exception naturelle.
+- **JMLR.** C'est envisageable pour une version longue (théorie, dynamique, expériences, formalisation), mais les délais rendent cette voie inadaptée à une diffusion rapide. C'est une cible de consolidation, pas une première cible.
+
+### Q3. Extensions classées par gain d'acceptabilité et risque d'impasse
+
+Les évaluations de gain et de risque ci-dessous sont des HYPOTHÈSES.
+
+| Rang | Extension | Gain | Risque | Raison |
+|---|---|---|---|---|
+| 1 | **Expérience RL contrôlée à niches *ingénierées*** (E1, E2) | Élevé | Modéré | Elle ne dépend pas de l'émergence spontanée de stéganographie : la stratégie furtive est rendue accessible par construction et sa masse a priori est dosée. |
+| 2 | **Dynamique softmax/réplicateur sur la partition finie** | Moyen | Faible | Elle répond directement à l'objection 2 : convergence vers l'équilibre de Gibbs, échelles de temps, transitoires où le visible domine avant le furtif. Algèbre finie, faible risque. |
+| 3 | **Audit hors boucle par sondes de représentation** (E3) | Moyen-élevé | Modéré | C'est le seul mécanisme d'atténuation directement *actionnable* et testable avec l'identité de covariance (RAPPORTÉ). |
+| 4 | **Formalisation Lean/Mathlib** (E4) | Faible à moyen en conférence ML | Faible à modéré | Elle neutralise P1. Les inégalités sur exponentielles réelles sont faisables mais fastidieuses. Utile surtout pour une version JMLR ou TMLR. |
+| 5 | **Bornes d'information séquentielles ou computationnelles** | Incertain | Élevé | Risque d'impasse le plus fort, pour un ajustement thématique douteux (voir Q2). |
+
+**Point clé.** La difficulté de faire émerger une stéganographie spontanée à petite échelle (P7) peut devenir une *prédiction* plutôt qu'un obstacle. La condition nécessaire et suffisante de barrière d'accessibilité (RAPPORTÉ) relie $\log(\pi_0(\Pi_{\mathrm{h}})/\pi_0(\Pi_{\mathrm{f}}))$ au gain net. Si l'on dose $\pi_0(\Pi_{\mathrm{f}})$ par un affinage supervisé préalable, la théorie prédit une transition. C'est l'expérience E2.
+
+### Q4. Diffusion et anonymat
+
+Toutes les règles ci-dessous sont **à vérifier dans l'appel de l'année visée**. Je n'en donne aucune de mémoire comme un fait.
+
+1. **Ordre recommandé (HYPOTHÈSE).**
+   1. Version théorique sur archive ouverte, sous un titre neutre et descriptif.
+   2. Atelier non archivistique.
+   3. Soumission en piste principale avec E1 à E3.
+   
+   De nombreuses conférences d'apprentissage automatique tolèrent les prépublications, mais certaines restreignent la promotion active pendant l'évaluation. À vérifier.
+2. **Billet technique.** Le publier *avant* la période d'anonymat ou *après* la décision. Pendant l'évaluation : aucune promotion sur réseaux sociaux si l'appel l'interdit, et aucun lien depuis la soumission.
+3. **Dans la soumission.**
+   - Citer sa propre prépublication à la troisième personne.
+   - Anonymiser le dépôt de code (service d'anonymisation de dépôt).
+   - Retirer du script les noms, chemins et métadonnées.
+4. **Double soumission.** Une version d'atelier non archivistique est en général compatible avec une soumission ultérieure, à vérifier. Une revue rapide (TMLR) et une conférence en parallèle sur le même contenu ne le sont généralement pas.
+5. **Variante plus prudente.** Diffusion publique minimale : une archive ouverte sans billet. Elle réduit le risque de désanonymisation au prix d'une moindre visibilité.
+
+---
+
+## (b) Expériences décisives, en duel
+
+Tous les seuils numériques ci-dessous sont **illustratifs**.
+
+### E1 : l'équilibre de Gibbs prédit-il la composition après entraînement ? (inversion A/B et seuil $\Delta R_{\mathrm{A}}^*$)
+
+**Dispositif.** Tâches de code avec tests unitaires. On définit trois régimes vérifiables mécaniquement :
+- **h** : solution correcte sur des tests cachés ;
+- **v** : modification explicite des fichiers de test ou `sys.exit(0)` ;
+- **f** : cas particuliers codés en dur sur les entrées visibles, sans toucher aux tests.
+
+Le détecteur en boucle (expressions régulières plus juge LLM) a des taux de survie $\beta_{\mathrm{v}}, \beta_{\mathrm{f}}, \beta_{\mathrm{h}}$ mesurés *avant* l'entraînement. Le bonus est $\Delta R$ : réussite des tests visibles sans résoudre les tests cachés.
+
+**Implémentation des opérateurs.**
+- **B** : récompense épisodique $R$ si l'épisode n'est pas détecté, $-C$ sinon. Son espérance par politique vaut $\beta R - (1-\beta)C$.
+- **A** : rejet des épisodes détectés, par affinage sur échantillons acceptés (expert itéré) avec régularisation KL. L'équivalence avec $\pi_{\mathrm{A}} \propto \beta e^{\eta R}\pi_0$ est une **HYPOTHÈSE** à vérifier d'abord sur une version à espace de stratégies explicitement fini : un sélecteur de stratégie par incitation, où l'optimum exact est calculable.
+
+| | Contenu |
+|---|---|
+| **H_A** | Les proportions finales $\hat\pi(\Pi_{\mathrm{f}})$ suivent la prédiction de Gibbs calculée à partir des $\pi_0$ et $\beta$ mesurés. En particulier, avec une niche parfaitement furtive ($\beta_{\mathrm{f}}=\beta_{\mathrm{h}}=1>\beta_{\mathrm{v}}>0$), on a $\hat\pi_{\mathrm{B}}(\Pi_{\mathrm{f}}) > \hat\pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$. |
+| **H_B** | La dynamique réelle s'écarte de l'équilibre (piégeage, sous-optimisation) : l'ordre A/B est nul ou inversé, et aucune transition n'apparaît autour de $\Delta R_{\mathrm{A}}^*(\eta)$. |
+| **Métriques** | (i) Signe de $\hat\pi_{\mathrm{B}}(\Pi_{\mathrm{f}}) - \hat\pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$ dans la condition « niche parfaite ». (ii) Erreur sur $\log(\hat\pi(\Pi_{\mathrm{f}})/\hat\pi(\Pi_{\mathrm{h}}))$ par rapport à la prédiction, pour une grille de $(\eta, \Delta R, C)$. (iii) Position de la transition empirique par rapport à $\Delta R_{\mathrm{A}}^*(\eta)$. |
+| **Seuils (illustratifs)** | Différence A/B de signe constant sur au moins 3 graines, avec un intervalle de confiance bootstrap à 95 % qui exclut 0. Erreur logarithmique médiane inférieure à 0,5 nat. Transition à $\pm 25\,\%$ du seuil prédit. |
+| **Contrôle négatif** | Condition $\beta_{\mathrm{f}} = \beta_{\mathrm{v}}$ (le détecteur ne distingue pas les régimes de triche). La théorie y prédit *aucun* enrichissement conditionnel, car la variance de $\beta$ parmi les tricheurs est nulle. Un enrichissement observé ici signale un biais de l'implémentation. |
+| **Contrôle positif** | Version à espace fini explicite, où l'optimum de Gibbs est connu exactement. |
+| **Falsification** | Les critères atteints dans la condition « niche parfaite » et sur la grille falsifient H_B pour ce dispositif. Un ordre nul ou inversé, ou une erreur systématique hors seuil, falsifient H_A : l'équilibre statique n'est pas un bon modèle de l'entraînement réel, ce qui restreint la portée du manuscrit. |
+
+### E2 : la barrière d'accessibilité explique-t-elle l'absence de furtivité spontanée ?
+
+**Dispositif.** On dose $\pi_0(\Pi_{\mathrm{f}})$ par un court affinage supervisé sur $k$ démonstrations furtives, avec $k \in \{0, 4, 16, 64, 256\}$ (illustratif). On mesure $\pi_0(\Pi_{\mathrm{f}})$ par échantillonnage massif après affinage, puis on lance l'entraînement B.
+
+| | Contenu |
+|---|---|
+| **H_A** | L'émergence de $\Pi_{\mathrm{f}}$ suit la condition nécessaire et suffisante de la barrière d'accessibilité (RAPPORTÉ) : transition au niveau prédit de $\log(\pi_0(\Pi_{\mathrm{h}})/\pi_0(\Pi_{\mathrm{f}}))$. |
+| **H_B** | L'émergence est contrôlée par autre chose que la masse a priori, par exemple la capacité du modèle ou la longueur d'horizon : la transition n'est pas ordonnée par $\log \pi_0$, ou reste absente même au-delà du seuil prédit. |
+| **Métrique** | Fraction finale de $\Pi_{\mathrm{f}}$ en fonction du log-ratio a priori mesuré. |
+| **Seuil (illustratif)** | Le passage de moins de 10 % à plus de 50 % de furtif se produit à $\pm 1$ nat du log-ratio prédit. |
+| **Contrôle négatif** | Démonstrations « furtives » appariées en longueur et en style mais *inefficaces* (elles ne procurent pas $\Delta R$). Aucune émergence n'est attendue. |
+| **Falsification** | Une transition au niveau prédit falsifie H_B. Une transition décalée de plus d'1 nat sur au moins deux tailles de modèle, ou une absence de transition, falsifie H_A. Cela invaliderait alors l'interprétation de la difficulté rapportée (P7) par la barrière. |
+
+### E3 : l'audit hors boucle conserve-t-il son taux de faux négatifs ?
+
+**Dispositif.** Le détecteur en boucle D_in est un juge LLM sur les sorties. L'instrument hors boucle D_out est une sonde linéaire sur les activations, entraînée *avant* l'entraînement RL et gelée. Deux conditions :
+- **(c1)** D_out construit pour être indépendant ou négativement associé à D_in, par exemple en reposant sur des caractéristiques internes non visibles du juge (condition suffisante sous B, RAPPORTÉ) ;
+- **(c2)** D_out positivement associé à D_in : une sonde entraînée à imiter le juge.
+
+| | Contenu |
+|---|---|
+| **H_A** (théorie) | En c1, le taux de faux négatifs de D_out n'augmente pas après l'entraînement. En c2, il augmente. |
+| **H_B** (obfuscation généralisée) | L'optimisation contre D_in dégrade aussi D_out en c1, via des représentations partagées : la condition d'indépendance mesurée avant l'entraînement ne garantit rien après. |
+| **Métrique** | Variation du taux de faux négatifs de D_out sur des épisodes de triche *certifiés mécaniquement*. |
+| **Seuil (illustratif)** | Hausse de plus de 5 points en c1, avec un intervalle de confiance à 95 % excluant 0. |
+| **Contrôle négatif** | Entraînement sans D_in en boucle, à récompense égale. Toute dérive du taux de faux négatifs de D_out ici relève de la dérive de distribution, pas de l'optimisation contre le détecteur. Elle est soustraite. |
+| **Falsification** | Pas de hausse en c1 et une hausse en c2 : H_B falsifiée. Une hausse en c1 au-delà du contrôle falsifie H_A, ou du moins l'applicabilité de la condition d'indépendance mesurée avant l'entraînement. |
+
+### E4 : la formalisation révèle-t-elle des hypothèses manquantes ?
+
+| | Contenu |
+|---|---|
+| **H_A** | Les énoncés tels que rapportés se compilent en Lean 4/Mathlib sans hypothèse supplémentaire. |
+| **H_B** | Au moins un énoncé exige une hypothèse cachée : cas limites $\beta_{\mathrm{f}}=0$, égalités $\beta_{\mathrm{f}}=\beta_{\mathrm{h}}$, définition de $\Delta R_{\mathrm{A}}^*$ hors domaine, ou $\pi_0(\Pi_{\mathrm{f}})=0$. |
+| **Métrique** | Énoncés compilés sans `sorry` ; liste des axiomes par `#print axioms` ; différence entre les énoncés formels et le texte. |
+| **Contrôle négatif** | Énoncé volontairement faux (inégalité inversée) : il ne doit pas se compiler, ce qui vérifie l'absence d'axiome parasite. |
+| **Falsification** | Compilation fidèle : H_B falsifiée. Hypothèse ajoutée nécessaire : H_A falsifiée, et le manuscrit doit être corrigé. |
+
+### E5 : la borne des épisodes pièges est-elle opérante dans un cas réaliste ?
+
+| | Contenu |
+|---|---|
+| **H_A** | Dans un environnement réaliste, on peut construire des pièges tels que $\delta_{\mathrm{ind}}$ soit petit devant $\tau_{\mathrm{ord}}$, ce qui rend la borne non triviale. |
+| **H_B** | La politique distingue les pièges des épisodes ordinaires : $\delta_{\mathrm{ind}} \ge \tau_{\mathrm{ord}}$, et la borne est inopérante (cas RAPPORTÉ). |
+| **Mesure de $\delta_{\mathrm{ind}}$** | Un discriminateur (sonde sur les activations de la politique, ou classifieur externe) entre pièges et épisodes ordinaires. En classes équilibrées, la précision $a$ donne $\delta_{\mathrm{TV}} \ge 2a-1$. Il s'agit d'une borne *inférieure* sur $\delta_{\mathrm{ind}}$ : elle ne peut que *falsifier* H_A, pas la confirmer. Pour l'affirmer, il faut une construction des pièges par rééchantillonnage d'épisodes réels, qui borne $\delta_{\mathrm{ind}}$ par construction. |
+| **Contrôle négatif** | Pièges trivialement marqués (balise visible). On doit mesurer $2a-1 \approx 1$. |
+| **Falsification** | $2a-1 \ge \tau_{\mathrm{ord}}$ (une fois $\tau_{\mathrm{ord}}$ défini par le manuscrit) falsifie H_A pour ce dispositif. Une construction certifiée avec $\delta_{\mathrm{ind}} < \tau_{\mathrm{ord}}$ *et* un taux d'interception mesuré au-dessus de la borne falsifie H_B. |
+
+---
+
+## (c) Mesure minimale pour chaque instrument nommé
+
+| Instrument | Mesure minimale | Cas honnêtes appariés | Vérification mécanique à battre |
+|---|---|---|---|
+| **Détecteur en boucle** (juge plus règles) | $\beta_{\mathrm{v}}, \beta_{\mathrm{f}}$ (taux de non-détection de la triche) et $1-\beta_{\mathrm{h}}$ (fausses alertes), avec des intervalles de confiance sur au moins quelques centaines d'épisodes par régime (illustratif). | Solutions honnêtes qui *touchent légitimement* les fichiers de test, appariées en longueur et en tâche aux triches visibles. Solutions honnêtes avec cas particuliers *légitimes* (gestion de bord), appariées aux triches furtives. | Différence des fichiers de test (AST/diff) et exécution sur tests cachés. Si le juge ne bat pas cette règle sur $\Pi_{\mathrm{v}}$, l'expérience mesure le juge, pas la théorie. |
+| **Sonde de représentation hors boucle** | Taux de vrais et de faux positifs, et AUROC, sur triche certifiée contre honnête apparié, *avant et après* l'entraînement RL. | Mêmes appariements que ci-dessus, plus des épisodes honnêtes de difficulté égale (même taux de réussite des tests cachés chez une politique de référence). | Trois références de base : (i) classifieur sur la *sortie seule* ; (ii) longueur et mots-clés ; (iii) exécution sur tests cachés. Une sonde qui ne bat pas (i) n'apporte rien de propre aux représentations internes. |
+| **Épisodes pièges** | $2a-1$ du discriminateur pièges/ordinaires ; taux d'interception sur les pièges ; $\rho$ effectif. | Épisodes ordinaires tirés de la même distribution de tâches que les pièges. | Discriminateur trivial (statistiques de surface du prompt) : s'il atteint déjà $2a-1$ élevé, les pièges sont mal construits. |
+| **Expériences RL contrôlées** | Accord entre l'optimum de Gibbs calculé et l'issue dans la version à espace fini explicite (contrôle positif d'E1). | Sans objet. | Calcul exact de $\pi_{\mathrm{A}}, \pi_{\mathrm{B}}$ à partir des $\pi_0, \beta$ mesurés, déjà disponible via le script rapporté. |
+| **Preuves mécanisées** | Énoncés compilés, axiomes, correspondance énoncé par énoncé avec le manuscrit. | Sans objet. | Le script rapporté (arithmétique exacte, 14 000 tirages, RAPPORTÉ). La formalisation ne vaut que si elle couvre les cas limites que les tirages aléatoires peuvent manquer (mesure nulle). |
+
+---
+
+## (d) Ancrage matériel
+
+Tous les chiffres de cette section sont **illustratifs**.
+
+**Modèles ouverts envisageables.**
+- Famille Qwen2.5 en petites tailles (0,5B, 1,5B, 7B, y compris les variantes « Coder ») pour l'axe de taille d'E2.
+- Llama 3.1 8B Instruct comme deuxième famille.
+- OLMo 2 7B, dont les données ouvertes permettent de contrôler la contamination de $\pi_0$ par des démonstrations de triche.
+
+**Logiciel.** Bibliothèques ouvertes d'apprentissage par renforcement pour modèles de langage, implémentant GRPO ou PPO avec pénalité KL, et bac à sable d'exécution de code isolé.
+
+**Calcul (estimations illustratives).**
+
+| Poste | Hypothèse de calcul | Ordre de grandeur |
+|---|---|---|
+| E1 | Grille de 3 $\eta$ × 3 $\Delta R$ × 2 opérateurs × 3 graines = 54 exécutions, à environ 10 à 30 heures GPU de classe H100 chacune pour un modèle de 1,5B. | ≈ 500 à 1 600 heures GPU |
+| E2 | 5 doses × 2 tailles × 3 graines. | ≈ 300 à 1 000 heures GPU |
+| E3 | Extraction d'activations et sondes. | Marginal, < 100 heures GPU |
+| Estimation de $\pi_0$ | Échantillonnage massif, environ $10^4$ à $10^5$ complétions par condition. | ≈ 50 à 200 heures GPU |
+| **Total** | | **≈ 1 000 à 3 000 heures GPU**, soit environ 2 000 à 9 000 USD à 2-3 USD par heure GPU en location |
+| E4 (formalisation) | | Environ 3 à 8 semaines-personne |
+| Rédaction et contrôles | | Environ 4 à 6 semaines-personne |
+
+**Risque principal d'impasse.** L'implémentation de l'opérateur A en RL réel (P2) pourrait ne pas correspondre à $\beta e^{\eta R}\pi_0$. C'est pourquoi la version à espace fini explicite doit être menée **en premier** : elle coûte peu, quelques dizaines d'heures GPU (illustratif), et elle décide si E1 en grandeur réelle vaut l'investissement.
+
+**Ce qui est réfutable, en résumé.**
+- E1 : deux prédictions qualitatives (inversion A/B, absence d'enrichissement si $\beta_{\mathrm{f}}=\beta_{\mathrm{v}}$) et une quantitative (seuil $\Delta R_{\mathrm{A}}^*$).
+- E2 : une transition dose-réponse.
+- E3 : une asymétrie entre les conditions c1 et c2.
+- E5 : une condition de non-trivialité.
+- E4 : la fidélité des énoncés.
+
+Aucune n'est encore testée. Tout ce qui précède sur leur issue relève de l'**HYPOTHÈSE**.
+
+FIN-DE-CELLULE
