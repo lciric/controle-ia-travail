@@ -1,0 +1,25 @@
+# Corrections appliquées après la vérification des corrections des projets de mandats version 3 (lecture des sondes sur le saboteur à budget, barreau 8) — v1
+
+Pièce de travail (classe C), écrite le 2026-11-24 entre 16:34Z et 16:37Z (heures lues par `date -u`) par le rédacteur des projets de mandats (sous-agent Opus 5.5 de la conductrice du côté des moniteurs). Pour chaque remarque de la vérification des corrections par le même contre-lecteur, `verification-corrections-mandats-v3-v1.md` (`544f07b02070bbd5cd46264e899eb8d3e31e9e4c3e58017106915fee3ac1e15a`, « à corriger » : 2 majeures, 3 mineures) : appliquée (où) ou écartée (pourquoi). Complète `corrections-contre-lecture-mandats-v3-v1.md` (`832f0601…5b135`), qui reste tel quel.
+
+Pièces neuves (même dossier, règle R12) : `projet-mandat-lecteur-sondes-v3-brouillon3.md`, `projet-mandat-juge-lecture-sondes-v3-brouillon3.md`, `projet-mandat-auditeur-lecture-sondes-v3-brouillon3.md`, faites à partir des brouillons 2 par des remplacements dont chaque occurrence a été comptée par programme ; rien d'autre n'y change. **Aucune remarque n'est écartée.**
+
+| remarque | état | où, et comment |
+|---|---|---|
+| V-1 (majeure) — le contrôle du déclenchement lève une exception quand la sortie n'évalue aucun déclencheur | appliquée | juge et auditeur, « Pour la session mère » : `['declencheurs_de_l_audit'].get('audit_de_symetrie_declenche') is True`, avec la phrase « la clé est absente sous les lignes S1, S3, S4 et L5 […] : le contrôle rend alors « False » » (et, chez le juge, « et le juge est lancé ») ; juge, étape 4 : « (clé absente, sous les lignes S1, S3, S4 et L5 : vaut faux ; tu écris alors « clé absente : vaut faux ») ». Essai du rédacteur sur trois sorties factices de même forme : clé absente « False », `false` « False », `true` « True » |
+| V-2 (majeure) — refus de lancer invisible, verrou non atomique | appliquée | lecteur, étapes 1 (`1-reception`) et 3 (`3-lecture`) ; auditeur, étape 3 (`3-audit`) : `mkdir <DOSSIER_JOURNAL>/<n>-<nom>.verrou && { setsid nohup bash -c '…' < /dev/null > /dev/null 2>&1 & } && echo LANCE || echo "RIEN N'EST LANCÉ"`, contenu de `bash -c '…'` inchangé ; règles récrites (« le lancement crée d'abord le verrou […] ; « RIEN N'EST LANCÉ » imprimé : arrêt et report, aucune autre tentative ») ; phrase d'introduction du lancement et lecture de « RIEN N'EST LANCÉ » ajoutées. **Ajout du rédacteur**, constaté à l'essai : quand le `cd` intérieur échoue, « LANCE » s'imprime (le lancement a eu lieu), aucun `.pid` n'est écrit et le `.code` vaut 99 ; les mandats disent de lire le `.code` si le `.pid` manque (99 : racine du dépôt introuvable, arrêt et report). Et l'inventaire du journal passe à `find <DOSSIER_JOURNAL> -type f` : le verrou est un dossier, que `sha256sum` refuserait |
+| V-3 (mineure) — « relance-le » à côté de « aucune relance » | appliquée | lecteur et auditeur, attente : « relance alors **l'appel d'attente**, jamais l'étape, tant que l'étape n'est pas finie » |
+| V-4 (mineure) — pas de procédure pour une relance décidée par la mère | appliquée | lecteur et auditeur, « Pour la session mère » : constater par `kill -0` sur l'identifiant de l'ancien `.pid` que le processus ne vit plus ; verser l'ancien journal (inventaire scellé) ; le renommer `<DOSSIER_JOURNAL>-tentative-<k>`, jamais l'effacer ; relancer l'agent avec le même mandat |
+| V-5 (mineure) — cas de la relecture arrêtée | appliquée | auditeur, étape 4, paragraphe « Relecture arrêtée » placé avant « Relecture inégale » (et non à l'intérieur de la liste numérotée, pour ne pas en casser la numérotation) : `relectures` valant « relecture arrêtée : voir le défaut D3 » : points 4 et 5 non relus, pas une relecture inégale, issue AU-a par le défaut D3 (code, ligne 2717) |
+
+## Essais du rédacteur (bloc-notes, aucun code de la lecture lancé, aucun fichier du dépôt touché)
+
+- **Verrou, cas sain** : commande factice `python3 -c` (sommeil de six secondes, code 2) lancée par la forme de V-2 : « LANCE » imprimé ; `.pid` écrit, égal à l'identifiant du processus de calcul ; `.code` écrit, valeur 2.
+- **Verrou déjà présent** : la même forme relancée sur le même journal : `mkdir` refuse, « RIEN N'EST LANCÉ » imprimé ; aucun `.pid` du second lancement ; aucun processus `python3` lancé (compte avant et après : zéro).
+- **`cd` intérieur impossible** : « LANCE » imprimé, aucun `.pid`, `.code` à 99 (d'où l'ajout ci-dessus).
+- **Syntaxe** : chaque bloc de commandes des trois brouillons 3, chevrons remplacés par une valeur factice, passe `bash -n` (rien n'est exécuté).
+- **Booléen du déclenchement** : voir V-1.
+
+## Ce que la vérification laissait « non vérifié par moi »
+
+Les trois points (lieu de la sixième réserve au texte scellé, ligne 282 ; ordre des champs dans la table neuve ; ligne 6 du texte scellé) ont été vérifiés par le rédacteur, sur les pièces elles-mêmes, au tour précédent : `corrections-contre-lecture-mandats-v3-v1.md`, section « Vérifications que la contre-lecture laissait à la mère », et remarque m-14.
