@@ -11,9 +11,11 @@
 | E3-T1-conception-I | OK | 1 | claude-fable-5-1 | 17407 | oui | 2.34 |
 | E3-T2-critique-croisee-A | OK | 2 | claude-fable-5-2 | 18820 | oui | 11.22 |
 | E3-T2-critique-croisee-B | OK | 2 | claude-opus-5-5 | 17344 | oui | 4.04 |
-| E3-T2-critique-croisee-C | INTERROMPU | 1 | None | 0 | non | 1.85 |
+| E3-T2-critique-croisee-C | OK | 2 | gemini-4-argon | 46256 | oui | 2.71 |
+| E3-T2-critique-croisee-D | OK | 1 | kimi-k3.1-pro | 16453 | oui | 0.30 |
+| E3-T2-critique-croisee-E | INTERROMPU | 1 | gpt-6.2-astra | 0 | non | 6.99 |
 
 Absences acceptées par l'arbitre : aucune.
 Refus avant l'envoi : 2 (COMPTE_IMPOSSIBLE, détail au journal).
-Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 34.15 USD.
-Dépense totale : 34.15 USD. Mis à jour 2026-11-24T10:33:59Z.
+Ligne : 120.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 42.29 USD.
+Dépense totale : 42.29 USD. Mis à jour 2026-11-24T11:03:03Z.
