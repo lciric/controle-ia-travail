@@ -168,11 +168,35 @@ def test_garde_activations_fausses(tmp_path, faute):
 
 def test_garde_rapport_essai(tmp_path):
     r = tmp_path / "rapport.json"
-    r.write_text(json.dumps({"tailles": {a: 10 for a in ARCHIVES}}))
+
+    def ecrire(contenu, sceller=True):
+        r.write_text(json.dumps(contenu))
+        c = Path(str(r) + ".sha256")
+        if sceller:
+            R.ecrire_compagnon(r)
+        elif c.exists():
+            c.unlink()
+    ecrire({"tailles": {a: 10 for a in ARCHIVES}})
     assert R.garde_rapport_essai(r, ARCHIVES) == []
-    r.write_text(json.dumps({"tailles": {a: 10 for a in ARCHIVES if "activite" not in a}}))
+    ecrire({"fichiers": [{"nom": a, "taille_octets": 10} for a in ARCHIVES]})        # autre forme admise
+    assert R.garde_rapport_essai(r, ARCHIVES) == []
+    ecrire({"tailles": {a: 10 for a in ARCHIVES if "activite" not in a}})
     assert len(R.garde_rapport_essai(r, ARCHIVES)) == 3
+    ecrire({"non_ecrits": ARCHIVES, "tailles": {a: 10 for a in ARCHIVES if "activite" not in a}})  # nommé sans taille
+    assert len(R.garde_rapport_essai(r, ARCHIVES)) == 3
+    ecrire({"tailles": {a: 0 for a in ARCHIVES}})
+    assert len(R.garde_rapport_essai(r, ARCHIVES)) == 3
+    ecrire({"tailles": {a: 10 for a in ARCHIVES}}, sceller=False)
+    assert R.garde_rapport_essai(r, ARCHIVES)                                        # compagnon absent
     assert R.garde_rapport_essai(tmp_path / "absent.json", ARCHIVES)
+
+
+def test_garde_activations_morceaux_mal_formes(tmp_path):
+    liv = ecrire_livraison(tmp_path)
+    d = liv / "activite-brute-c7-passe-barreau8-v1.npz.morceaux.json"
+    d.write_text(json.dumps({"fichier": "x", "taille": 10, "morceaux": [1, 2]}))
+    R.ecrire_compagnon(d)
+    assert any("mal formée" in m for m in R.garde_activations(tmp_path, 0, ATTENDU))
 
 
 # --- 6. Ordre de lancement -----------------------------------------------------------------------------------------------
@@ -241,7 +265,8 @@ def test_destruction_saine_et_fausses(tmp_path):
     for ident, raison, attestation, motif in ((58936096, "rapatriement-verifie", att, "intouchable"),
                                               (91000002, "rapatriement-verifie", att, "pas la mienne"),
                                               (91000001, "rapatriement-verifie", None, "non attesté"),
-                                              (91000001, "au-hasard", att, "liste fermée")):
+                                              (91000001, "au-hasard", att, "liste fermée"),
+                                              (91000001, "refus-depart", None, "liste fermée")):
         with pytest.raises(R.Refus, match=motif):
             R.detruire(c, ident, fiche, raison, attestation, j, 0)
     att_non = tmp_path / "att-non.txt"
@@ -305,6 +330,8 @@ BOUCHON = textwrap.dedent('''
     (sortie / "environnement.txt").write_text("GH_TOKEN present" if "GH_TOKEN" in os.environ else "aucun secret")
     if mode == "passe-lente":
         time.sleep(120)
+    if mode == "gros-fichier":
+        (sortie / "archive-entiere-laissee.bin").write_bytes(b"\\0" * 120000)
     liv = sortie / "livraison"
     liv.mkdir()
     for x in ARCH:
@@ -358,7 +385,7 @@ def banc(tmp_path, monkeypatch):
     bouchon.write_text(BOUCHON)
     machines = []
 
-    def lancer(mode="sain", echeance_s=3600, marge_s=60, tirage_faux=False, branche=None):
+    def lancer(mode="sain", echeance_s=3600, marge_s=60, tirage_faux=False, branche=None, **retouches):
         o = json.loads(GABARIT.read_text())
 
         def cmd(action, sortie, run, debut):
@@ -391,7 +418,7 @@ def banc(tmp_path, monkeypatch):
                        "identifiant_instance": 91000001, "echeance_utc_s": time.time() + echeance_s, "marge_s": marge_s,
                        "depot_url": str(distant), "valeurs": valeurs, "etiquette_course": "essai-rejeu",
                        "vast_jouet": travail / "vast.json", "jouet": True, "place_min": 1, "taille_sonde": 10_000,
-                       "attente_poussee_s": 0, "pas_minuterie_s": 0.2})
+                       "attente_poussee_s": 0, "pas_minuterie_s": 0.2, "temps_min_passe_s": 0, **retouches})
         machines.append(m)
         code = m.executer()
         return m, code, o["branche_versement"]
@@ -499,3 +526,159 @@ def test_script_de_demarrage_sans_secret():
     for args in (("a" * 39, "o.json", "b" * 64), ("a" * 40, "../o.json", "b" * 64), ("a" * 40, "o.json; rm", "b" * 64)):
         with pytest.raises(R.Refus):
             R.script_de_demarrage(*args)
+
+
+# --- 9. Faux cas ajoutés après la contre-lecture (B1 à B3, M1 à M7, m3, m5) -------------------------------------------------
+
+def test_minuterie_detruit_meme_avec_un_pid_illisible(tmp_path):
+    c = jouet(tmp_path)
+    (tmp_path / "passe.pid").write_text("")
+    code = R.minuterie(tmp_path, time.time() + 1.0, 0.5, 91000001, 0.1, c)
+    assert code == 0 and ["detruire", 91000001] in json.loads((tmp_path / "vast.json").read_text())["gestes"]
+    assert "illisible" in (tmp_path / "minuterie.txt").read_text()
+
+
+def test_minuterie_refuse_une_intouchable(tmp_path):
+    c = jouet(tmp_path)
+    assert R.minuterie(tmp_path, time.time() + 0.2, 0.1, 58936096, 0.05, c) == 3
+    assert json.loads((tmp_path / "vast.json").read_text())["gestes"] == []
+
+
+def test_minuterie_morte_refuse_le_depart(banc):
+    m, code, br = banc["lancer"]("sain", minuterie_executable="/bin/false")
+    journal = (m.travail / "journal-machine.txt").read_text()
+    assert code == 1 and "REFUS DE DÉPART" in journal and "minuterie non vivante" in journal
+    assert "passe : lancée" not in journal and ["arreter", 91000001] in gestes(m)
+
+
+def test_sans_cle_d_instance_refuse_le_depart(banc, monkeypatch):
+    monkeypatch.delenv("CONTAINER_API_KEY", raising=False)
+    m, code, br = banc["lancer"]("sain", vast_jouet=None)
+    journal = (m.travail / "journal-machine.txt").read_text()
+    assert code == 1 and "CONTAINER_API_KEY" in journal and "passe : lancée" not in journal
+
+
+def test_filet_erreur_inattendue(banc, monkeypatch):
+    def casse(self, t):
+        raise OSError("disque perdu")
+    monkeypatch.setattr(R.Machine, "tirer", casse)
+    m, code, br = banc["lancer"]("sain")
+    journal = (m.travail / "journal-machine.txt").read_text()
+    assert code == 1 and "ÉTAT ERREUR INATTENDUE" in journal and "VERSEMENT POUSSÉ" in journal
+    assert ["arreter", 91000001] in gestes(m)
+
+
+def test_passe_trop_tardive_ne_part_pas(banc):
+    m, code, br = banc["lancer"]("sain", temps_min_passe_s=10 ** 6)
+    journal = (m.travail / "journal-machine.txt").read_text()
+    assert code == 1 and "trop peu pour la passe" in journal and "passe : lancée" not in journal
+
+
+def test_gros_fichier_coupe_pour_le_versement(banc, monkeypatch):
+    monkeypatch.setattr(R, "FICHIER_MAX_OCTETS", 50_000)
+    monkeypatch.setattr(R, "MORCEAU_OCTETS", 20_000)
+    m, code, br = banc["lancer"]("gros-fichier")
+    journal = (m.travail / "journal-machine.txt").read_text()
+    assert code == 0 and "archive-entiere-laissee.bin coupé en" in journal
+    commit = journal.split("VERSEMENT POUSSÉ commit=")[1].split()[0]
+    j = R.Journal(banc["tmp"] / "rap.txt", {}, echo=False)
+    r = R.rapatrier(str(banc["distant"]), br, banc["tmp"] / "rap-gros", commit, 91000001, j)
+    assert r["verifie"] and r["etat_verse"] == "LIVRAISON VERSÉE"
+    base = next((banc["tmp"] / "rap-gros").glob("versement/*/sortie-passe"))
+    assert not (base / "archive-entiere-laissee.bin").exists() and (base / "archive-entiere-laissee.bin.decoupe.json").is_file()
+
+
+class VastCapricieux:
+    """Relevés en erreur, puis destruction qui échoue une fois : la surveillance doit retenter."""
+
+    def __init__(self, interne, erreurs_releve=0, echecs_destruction=0, vide_une_fois=False):
+        self.i, self.er, self.ed, self.vide = interne, erreurs_releve, echecs_destruction, vide_une_fois
+
+    def instances(self):
+        if self.er > 0:
+            self.er -= 1
+            raise R.Refus("HTTP 500")
+        if self.vide:
+            self.vide = False
+            return []
+        return self.i.instances()
+
+    def credit(self):
+        raise R.Refus("HTTP 500")
+
+    def detruire(self, ident):
+        if self.ed > 0:
+            self.ed -= 1
+            raise R.Refus("HTTP 502")
+        self.i.detruire(ident)
+
+
+def test_surveillance_releve_vide_n_est_pas_une_absence(tmp_path):
+    c = VastCapricieux(jouet(tmp_path), vide_une_fois=True)
+    fiche = {"identifiant": 91000001, "etiquette": R.ETIQUETTE, "creation_demandee_s": time.time() - 60,
+             "prix_horaire_usd": 1.17, "credit_avant": 20.0}
+    r = R.surveiller(fiche, c, R.Journal(tmp_path / "s.txt", {}, echo=False), periode_s=0, tours_max=3)
+    assert r["fin"] == "tours"
+
+
+def test_surveillance_coupe_l_horloge_malgre_releves_en_erreur_et_retente(tmp_path):
+    interne = jouet(tmp_path)
+    c = VastCapricieux(interne, erreurs_releve=3, echecs_destruction=1)
+    fiche = {"identifiant": 91000001, "etiquette": R.ETIQUETTE, "creation_demandee_s": time.time() - 5 * 3600,
+             "prix_horaire_usd": 1.17, "credit_avant": 20.0}
+    r = R.surveiller(fiche, c, R.Journal(tmp_path / "s.txt", {}, echo=False), periode_s=0, tours_max=8,
+                     attente_destruction_s=0)
+    texte = (tmp_path / "s.txt").read_text()
+    assert r["fin"] == "coupee" and "ALARME : coupure non obtenue" in texte
+    assert ["detruire", 91000001] in json.loads((tmp_path / "vast.json").read_text())["gestes"]
+
+
+class VastCreationIncertaine(R.ClientVastJouet):
+    def creer(self, offre_id, corps, secrets=None):
+        super().creer(offre_id, corps, secrets)
+        raise R.Refus("délai dépassé")
+
+
+def args_creation(tmp_path, **k):
+    import argparse
+    o, sha = ordre_rempli(tmp_path)
+    offres_f = tmp_path / "offres.json"
+    offres_f.write_text(json.dumps({"offers": offres()}))
+    base = dict(fiche=str(tmp_path / "fiche.json"), feu=R.FEU_ATTENDU, go=R.GO_ATTENDU,
+                registre=str(registre(tmp_path, "calcul")), garde=str(RACINE / ".claude/hooks/garde_calcul.py"),
+                ordre=str(o), ordre_rel="docs/ordre.json", ordre_sha256=sha, offres=str(offres_f), commit="a" * 40,
+                outil="vastai", verifier_seulement=False, attente_s=0.0, jouet=None)
+    base.update(k)
+    return argparse.Namespace(**base)
+
+
+def test_creation_saine_et_refus(tmp_path, monkeypatch):
+    monkeypatch.setenv("GO_ID", R.GO_ATTENDU)
+    monkeypatch.setenv("GH_TOKEN", SECRET)
+    monkeypatch.setenv("HF_TOKEN", "hf_FAUXsecretPourEssai987654")
+    jour = dt.date(2026, 11, 24)
+    c = R.ClientVastJouet(tmp_path / "vast.json")
+    assert R.creer(args_creation(tmp_path, feu="feu"), c, jour) == 2                     # mot de feu inexact
+    assert R.creer(args_creation(tmp_path), c, jour) == 0
+    fiche = json.loads((tmp_path / "fiche.json").read_text())
+    assert fiche["identifiant"] and fiche["offre"] == 29019348 and SECRET not in (tmp_path / "fiche.json").read_text()
+    inst = c.instances()[0]
+    assert inst["label"] == R.ETIQUETTE and "GH_TOKEN" in inst["env"]                    # noms seulement dans le jouet
+    assert R.creer(args_creation(tmp_path), c, jour) == 2                                # fiche déjà présente (R12)
+    (tmp_path / "fiche.json").unlink()
+    assert R.creer(args_creation(tmp_path), c, jour) == 2                                # étiquette déjà prise
+
+
+def test_creation_incertaine_retrouvee_par_l_etiquette(tmp_path, monkeypatch):
+    monkeypatch.setenv("GO_ID", R.GO_ATTENDU)
+    monkeypatch.setenv("GH_TOKEN", SECRET)
+    monkeypatch.setenv("HF_TOKEN", "hf_FAUXsecretPourEssai987654")
+    c = VastCreationIncertaine(tmp_path / "vast.json")
+    assert R.creer(args_creation(tmp_path), c, dt.date(2026, 11, 24)) == 2
+    fiche = json.loads((tmp_path / "fiche.json").read_text())
+    assert fiche["identifiant"] == c.instances()[0]["id"] and fiche["etat"] == "retrouvée par l'étiquette"
+
+
+def test_script_de_demarrage_porte_une_minuterie_de_secours():
+    s = R.script_de_demarrage("a" * 40, "docs/x/ordre.json", "b" * 64)
+    assert s.index("minuterie-secours") < s.index("git -c credential.helper") and "method='DELETE'" in s

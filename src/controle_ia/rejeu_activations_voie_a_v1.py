@@ -81,6 +81,8 @@ SECRETS = ("GH_TOKEN", "HF_TOKEN", "CONTAINER_API_KEY", "VAST_API_KEY")
 MOTIFS_PRIVES = ("iib", "ii-b", "consigne-privee", "extrait_cote_moniteurs")  # refusés par la passe dans --sortie, --run-id
 PREFIXES_NON_OUVERTS = ("scores-par-action-", "scores-par-jeton-", "activite-brute-")
 LOT_POUSSEE_OCTETS = 400_000_000
+FICHIER_MAX_OCTETS = 95_000_000   # GitHub refuse un fichier de plus de 100 Mo
+MORCEAU_OCTETS = 50_000_000
 PLACE_MIN_OCTETS = 3_100_000_000 + 2_000_000_000  # P9 de la passe + livraison entière (marge)
 SONDE_ECRITURE_OCTETS = 64_000_000
 
@@ -345,7 +347,10 @@ class ClientVastRest:
             raise Refus(f"Vast {methode} {chemin} : {type(e).__name__}") from None
 
     def instances(self) -> list[dict]:
-        return self._requete("GET", "/instances/").get("instances", [])
+        rep = self._requete("GET", "/instances/")
+        if not isinstance(rep, dict) or not isinstance(rep.get("instances"), list):
+            raise Refus("relevé des instances illisible (liste « instances » absente) : jamais pris pour une absence")
+        return rep["instances"]
 
     def credit(self) -> float | None:
         v = self._requete("GET", "/users/current/").get("credit")
@@ -448,7 +453,8 @@ class ClientVastJouet:
 
 # --- Destruction par l'identifiant (R10) ---------------------------------------------------------------------------------
 
-RAISONS_DESTRUCTION = ("rapatriement-verifie", "coupure-horloge", "coupure-depense", "refus-depart", "machine-arretee-en-echec")
+RAISONS_DESTRUCTION = ("rapatriement-verifie", "coupure-horloge", "coupure-depense")
+# un refus de départ ou un arrêt en échec est versé comme une livraison : sa destruction passe aussi par l'attestation
 
 
 def detruire(client, ident: int, fiche: dict, raison: str, attestation: Path | None, journal: Journal,
@@ -462,7 +468,7 @@ def detruire(client, ident: int, fiche: dict, raison: str, attestation: Path | N
         raise Refus(f"instance {ident} intouchable : aucun geste")
     if fiche.get("identifiant") != ident:
         raise Refus(f"instance {ident} absente de la fiche de création ({fiche.get('identifiant')!r}) : pas la mienne")
-    if raison == "rapatriement-verifie":
+    if raison not in ("coupure-horloge", "coupure-depense"):
         if attestation is None or not attestation.is_file():
             raise Refus("rapatriement non attesté : aucune destruction (sauf coupure nommée)")
         texte = attestation.read_text(encoding="utf-8")
@@ -471,8 +477,13 @@ def detruire(client, ident: int, fiche: dict, raison: str, attestation: Path | N
     avant = [champs_filtres(i) for i in client.instances()]
     moi = [i for i in avant if i.get("id") == ident]
     if not moi:
-        journal.ecrire(f"destruction : instance {ident} déjà absente de l'inventaire (rien à faire)")
-        return {"identifiant": ident, "etat": "absente", "relectures": 0}
+        time.sleep(attente_s)
+        if not any(i.get("id") == ident for i in client.instances()):
+            journal.ecrire(f"destruction : instance {ident} absente de deux relevés (rien à faire)")
+            return {"identifiant": ident, "etat": "absente", "relectures": 2}
+        moi = [champs_filtres(i) for i in client.instances() if i.get("id") == ident]
+        if not moi:
+            raise Refus(f"instance {ident} : relevés contradictoires ; aucun geste")
     if moi[0].get("label") != fiche.get("etiquette"):
         raise Refus(f"étiquette {moi[0].get('label')!r} ≠ {fiche.get('etiquette')!r} : aucun geste")
     autres_avant = sorted(i["id"] for i in avant if i.get("id") != ident)
@@ -633,37 +644,56 @@ def garde_ecriture(dossier: Path, place_min: int = PLACE_MIN_OCTETS, taille_sond
     return motifs
 
 
-def _chaines(x):
+def _taille_nommee(x, nom: str) -> bool:
+    """Vrai si la structure associe au nom de l'archive une taille strictement positive : clé contenant le nom et valeur
+    numérique positive (ou objet portant une valeur numérique positive), ou objet dont un champ texte contient le nom et
+    dont un champ « taille » ou « octets » est positif. Une simple mention du nom ne suffit pas."""
     if isinstance(x, dict):
         for k, v in x.items():
-            yield str(k)
-            yield from _chaines(v)
-    elif isinstance(x, list):
-        for v in x:
-            yield from _chaines(v)
-    elif isinstance(x, str):
-        yield x
+            if nom in str(k):
+                if _nombre(v) and v > 0:
+                    return True
+                if isinstance(v, dict) and any(("taille" in kk or "octets" in kk) and _nombre(vv) and vv > 0
+                                               for kk, vv in v.items()):
+                    return True
+        if any(isinstance(v, str) and nom in v for v in x.values()) and \
+                any(("taille" in k or "octets" in k) and _nombre(v) and v > 0 for k, v in x.items()):
+            return True
+        return any(_taille_nommee(v, nom) for v in x.values())
+    if isinstance(x, list):
+        return any(_taille_nommee(v, nom) for v in x)
+    return False
 
 
 def garde_rapport_essai(rapport: Path, archives: list[str]) -> list[str]:
-    """Le rapport de l'essai à blanc (aucun score) existe, son compagnon tient, et il nomme chaque archive d'activité brute."""
+    """Le rapport de l'essai à blanc (aucun score) existe, son compagnon existe et tient, et il donne à chaque archive
+    d'activité brute une taille écrite strictement positive (une simple mention du nom ne suffit pas)."""
     if not rapport.is_file():
         return [f"rapport de l'essai à blanc absent ({rapport.name})"]
     comp = Path(str(rapport) + ".sha256")
-    if comp.is_file():
-        ok, m = compagnon_tenu(comp)
-        if not ok:
-            return [f"rapport de l'essai à blanc : {m}"]
+    if not comp.is_file():
+        return ["rapport de l'essai à blanc sans compagnon .sha256"]
+    ok, m = compagnon_tenu(comp)
+    if not ok:
+        return [f"rapport de l'essai à blanc : {m}"]
     try:
         contenu = json.loads(rapport.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
         return [f"rapport de l'essai à blanc illisible ({type(e).__name__})"]
-    vues = " ".join(_chaines(contenu))
-    return [f"l'essai à blanc n'a pas écrit {a}" for a in archives if a.startswith("activite-brute-") and a not in vues]
+    return [f"l'essai à blanc n'a pas écrit {a} (aucune taille positive à son nom)" for a in archives
+            if a.startswith("activite-brute-") and not _taille_nommee(contenu, a)]
 
 
 def garde_activations(sortie: Path, code: int, attendu: dict) -> list[str]:
-    """Livraison complète et activations écrites : noms, tailles, compagnons ; aucun fichier de scores ouvert. Vide : tenue."""
+    """Livraison complète et activations écrites : noms, tailles, compagnons ; aucun fichier de scores ouvert. Vide : tenue.
+    Une erreur imprévue est un motif, jamais un passage."""
+    try:
+        return _garde_activations(sortie, code, attendu)
+    except Exception as e:
+        return [f"garde des activations en erreur ({type(e).__name__})"]
+
+
+def _garde_activations(sortie: Path, code: int, attendu: dict) -> list[str]:
     motifs = []
     if code != 0:
         motifs.append(f"passe sortie en code {code}")
@@ -691,6 +721,9 @@ def garde_activations(sortie: Path, code: int, attendu: dict) -> list[str]:
             continue
         if not morceaux or total <= 0:
             motifs.append(f"{a} : aucun morceau, taille {total}")
+            continue
+        if not isinstance(morceaux, list) or not all(isinstance(mc, dict) for mc in morceaux):
+            motifs.append(f"{a} : liste des morceaux mal formée")
             continue
         somme = 0
         for mc in morceaux:
@@ -770,19 +803,29 @@ class Machine:
 
     def env_sans_secret(self) -> dict:
         env = {k: v for k, v in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")}
-        env.update({"PYTHONPATH": "src", "HF_HUB_OFFLINE": "1",  # forme de la notice : PYTHONPATH=src, depuis la racine "TRANSFORMERS_OFFLINE": "1",
+        # forme de la notice : PYTHONPATH=src, depuis la racine du dépôt ; modèle lu dans le cache local seulement
+        env.update({"PYTHONPATH": "src", "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
                     "PYTHONDONTWRITEBYTECODE": "1"})
         return env
 
     def armer_minuterie(self) -> int:
-        cmd = [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "minuterie", "--travail", str(self.travail),
+        cmd = [self.r.get("minuterie_executable", sys.executable), "-I", "-B", str(Path(__file__).resolve()), "minuterie", "--travail", str(self.travail),
                "--echeance", str(self.r["echeance_utc_s"]), "--marge-s", str(self.r["marge_s"]),
                "--identifiant", str(self.ident), "--pas-s", str(self.r.get("pas_minuterie_s", 5))]
         if self.r.get("vast_jouet"):
             cmd += ["--vast-jouet", str(self.r["vast_jouet"])]
+        elif not os.environ.get("CONTAINER_API_KEY"):
+            raise Refus("clé d'instance (CONTAINER_API_KEY) absente : la minuterie ne pourrait pas détruire la machine")
+        journal_min = self.travail / "minuterie.txt"
+        taille_avant = journal_min.stat().st_size if journal_min.is_file() else 0
         p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True, env={**os.environ})
+                             start_new_session=True, env={**os.environ, **self.r.get("env_minuterie", {})})
         (self.travail / "minuterie.pid").write_text(f"{p.pid}\n")
+        fin = maintenant() + 15
+        while maintenant() < fin and not (journal_min.is_file() and journal_min.stat().st_size > taille_avant):
+            time.sleep(0.1)
+        if p.poll() is not None or not (journal_min.is_file() and journal_min.stat().st_size > taille_avant):
+            raise Refus(f"minuterie non vivante après son lancement (code {p.poll()!r}) : rien ne part sans elle")
         self.j.ecrire(f"minuterie armée : PID {p.pid}, coupure de la passe à {iso(self.r['echeance_utc_s'] - self.r['marge_s'])}, "
                       f"destruction par l'identifiant {self.ident} à {iso(self.r['echeance_utc_s'])}")
         return p.pid
@@ -849,9 +892,12 @@ class Machine:
         sources.append(([self.journaux], dest / "journaux-commandes"))
         manquants = []
         for srcs, cible in sources:
-            presentes = [s for s in srcs if s.is_dir()]
+            presentes = [x for x in srcs if x.is_dir()]
             for src in presentes:
-                shutil.copytree(src, cible, dirs_exist_ok=True, symlinks=False)
+                try:
+                    shutil.copytree(src, cible, dirs_exist_ok=True, symlinks=False)
+                except (OSError, shutil.Error) as e:  # copie partielle gardée ; la cause est dite, la suite continue
+                    self.j.ecrire(f"ALARME : copie partielle de {cible.relative_to(dest)} ({type(e).__name__})")
             if not presentes:
                 manquants.append(str(cible.relative_to(dest)))
         self.j.ecrire(f"versement ({motif}) : chemins absents (non produits) : {sorted(set(manquants))}")
@@ -867,6 +913,22 @@ class Machine:
         if retires:
             self.j.ecrire(f"ALARME : {len(retires)} fichier(s) portant un secret retirés du versement : {retires}")
             shutil.copy2(self.j.chemin, dest / "journal-machine.txt")
+        # 2 bis. tout fichier au-delà de la limite de GitHub (une archive entière laissée par un arrêt) est coupé en morceaux
+        #        de 50 Mo, décrits par noms, tailles et empreintes ; l'original reste sur la machine, la copie est retirée
+        for f in sorted(p for p in dest.rglob("*") if p.is_file() and p.stat().st_size > FICHIER_MAX_OCTETS):
+            decrire = {"fichier": f.name, "taille": f.stat().st_size, "sha256": sha256_fichier(f), "morceaux": []}
+            with open(f, "rb") as g:
+                for k, bloc in enumerate(iter(lambda: g.read(MORCEAU_OCTETS), b"")):
+                    m = f.with_name(f"{f.name}.decoupe-{k:03d}")
+                    m.write_bytes(bloc)
+                    decrire["morceaux"].append({"nom": m.name, "taille": len(bloc), "sha256": ecrire_compagnon(m)})
+            d = f.with_name(f"{f.name}.decoupe.json")
+            d.write_text(json.dumps(decrire, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+            ecrire_compagnon(d)
+            f.unlink()
+            self.j.ecrire(f"versement : {f.relative_to(dest)} coupé en {len(decrire['morceaux'])} morceaux (au-delà de "
+                          f"{FICHIER_MAX_OCTETS} octets)")
+        shutil.copy2(self.j.chemin, dest / "journal-machine.txt")
         # 3. inventaire scellé : noms, tailles, empreintes (aucun contenu lu au-delà du hachage)
         fichiers = sorted(p for p in dest.rglob("*") if p.is_file())
         inv = {"version": VERSION, "motif": motif, "etat": self.etat, "instance": self.ident,
@@ -932,23 +994,54 @@ class Machine:
     def finir(self, etat: str, motif: str) -> int:
         self.etat = etat
         self.j.ecrire(f"ÉTAT {etat} : {motif}")
-        commit = self.verser(etat)
+        try:
+            commit = self.verser(etat)
+        except Exception as e:  # le versement ne fait jamais sauter l'arrêt de la machine
+            commit = None
+            self.j.ecrire(f"ALARME : versement en erreur ({type(e).__name__}: {e})")
         self.j.ecrire(f"FIN etat={etat} versement={'oui commit=' + commit if commit else 'NON'}")
         if not self.r.get("ne_pas_arreter"):
             self.arreter_machine(etat)
         return 0 if etat == "LIVRAISON VERSÉE" and commit else 1
 
     def executer(self) -> int:
+        """Filet : toute erreur inattendue finit par un versement de ce qui est récupérable et l'arrêt de la machine."""
+        try:
+            return self._executer()
+        except Exception as e:
+            try:
+                self.j.ecrire(f"ERREUR INATTENDUE : {type(e).__name__}: {e}")
+            except Exception:
+                pass
+            if self.passe_vivante():
+                couper_passe(self.travail, self.j.ecrire)
+            return self.finir("ERREUR INATTENDUE", f"{type(e).__name__}")
+
+    def passe_vivante(self) -> bool:
+        try:
+            os.kill(int((self.travail / "passe.pid").read_text().strip()), 0)
+            return True
+        except (OSError, ValueError):
+            return False
+
+    def _executer(self) -> int:
         r, j = self.r, self.j
-        # 0. un redémarrage du conteneur ne relance rien
+        # 0. un redémarrage du conteneur ne relance rien (la minuterie est réarmée sur la même échéance)
         compteur = self.travail / "demarrages.txt"
         n = int(compteur.read_text().strip() or 0) if compteur.is_file() else 0
         compteur.write_text(f"{n + 1}\n")
         if n >= 1:
             j.ecrire(f"REDÉMARRAGE {n + 1} : rien n'est relancé ; versement de l'état tel quel")
+            try:
+                self.armer_minuterie()
+            except Refus as e:
+                j.ecrire(f"ALARME : minuterie non réarmée ({e}) ; la surveillance externe reste")
             return self.finir("INTERROMPUE (redémarrage)", "redémarrage du conteneur")
-        # 1. minuterie en tout premier
-        self.armer_minuterie()
+        # 1. minuterie en tout premier ; sans elle, rien ne part
+        try:
+            self.armer_minuterie()
+        except Refus as e:
+            return self.finir("REFUS DE DÉPART", str(e))
         try:
             ordre = lire_ordre(Path(r["ordre_chemin"]), r["ordre_sha256"])
         except (Refus, OSError, ValueError, KeyError, TypeError) as e:
@@ -960,7 +1053,8 @@ class Machine:
             self.r["ordre"] = {**ordre, "branche_versement": br + "-refus-" + str(int(maintenant()))}
             return self.finir("REFUS DE DÉPART", f"branche de versement {br} déjà présente ou illisible (R12 : nom neuf)")
         v = r["valeurs"]
-        env_prep = {**os.environ, "HF_TOKEN": self.secrets["HF_TOKEN"]}
+        env_prep = {**{k: x for k, x in os.environ.items() if k not in SECRETS and not k.startswith("CONTAINER_")},
+                    "HF_TOKEN": self.secrets["HF_TOKEN"]}
         # 2. préparation, tirages
         for p in ordre["preparation"]:  # la préparation voit HF_TOKEN (téléchargement du modèle) ; la passe ne voit aucun secret
             if self.commande(f"preparation-{p['nom']}", remplir(p["argv"], v), p["delai_s"], env_prep, self.clone) != 0:
@@ -1001,12 +1095,17 @@ class Machine:
             return self.finir("REFUS DE DÉPART", "; ".join(motifs))
         if self.coupe():
             return self.finir("COUPURE À L'ÉCHÉANCE", "avant la passe")
+        reste = r["echeance_utc_s"] - r["marge_s"] - maintenant()
+        if reste < r.get("temps_min_passe_s", 1800):
+            return self.finir("COUPURE À L'ÉCHÉANCE", f"{reste:.0f} s avant la coupure : trop peu pour la passe")
         # 4. passe, sans secret dans son environnement ; PID consigné pour la minuterie
         j.ecrire("passe : lancée")
         with open(self.journaux / "passe.txt", "ab") as f:
             p = subprocess.Popen(remplir(ordre["passe"]["argv"], v), cwd=self.clone, env=env_passe, stdout=f,
                                  stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
             (self.travail / "passe.pid").write_text(f"{p.pid}\n")
+            if self.coupe():  # coupure tombée entre le dernier contrôle et l'écriture du PID
+                couper_passe(self.travail, j.ecrire)
             try:
                 code = p.wait(timeout=ordre["passe"]["delai_s"])
             except subprocess.TimeoutExpired:
@@ -1031,42 +1130,73 @@ class Machine:
 
 
 def minuterie(travail: Path, echeance: float, marge_s: float, ident: int, pas_s: float, client) -> int:
-    """Processus détaché : à l'échéance moins la marge, coupe la passe par son PID ; à l'échéance, détruit la machine."""
+    """Processus détaché : à l'échéance moins la marge, coupe la passe par son PID ; à l'échéance, détruit la machine par son
+    identifiant. Toute erreur est rattrapée : la destruction à l'échéance est tentée quoi qu'il arrive (bloc `finally`)."""
     j = Journal(travail / "minuterie.txt", {}, echo=False)
-    j.ecrire(f"minuterie {os.getpid()} : coupure à {iso(echeance - marge_s)}, destruction à {iso(echeance)}, instance {ident}")
-    coupee = False
-    while maintenant() < echeance:
-        if not coupee and maintenant() >= echeance - marge_s:
-            (travail / "coupure-echeance").write_text(iso(maintenant()) + "\n")
-            coupee = True
-            pid_f = travail / "passe.pid"
-            if pid_f.is_file():
-                pid = int(pid_f.read_text().strip())
-                try:
-                    os.kill(pid, signal.SIGTERM)
-                    j.ecrire(f"COUPURE : passe signalée par son PID {pid} (SIGTERM)")
-                    fin_attente = maintenant() + 60
-                    while maintenant() < fin_attente:
-                        time.sleep(0.5)
-                        os.kill(pid, 0)
-                    os.kill(pid, signal.SIGKILL)
-                    j.ecrire(f"COUPURE : passe {pid} encore vivante, SIGKILL par son PID")
-                except ProcessLookupError:
-                    j.ecrire(f"COUPURE : passe {pid} finie")
-            else:
-                j.ecrire("COUPURE : passe non lancée")
-        time.sleep(pas_s)
-    j.ecrire(f"ÉCHÉANCE : destruction de l'instance {ident} par son identifiant")
-    for essai in range(10):
+
+    def ecrire(t):
         try:
-            client.detruire(ident)
-            j.ecrire(f"destruction demandée (essai {essai + 1}) : réponse reçue")
-            return 0
-        except Refus as e:
-            j.ecrire(f"destruction refusée (essai {essai + 1}) : {e}")
-            time.sleep(min(30, pas_s * 6))
-    j.ecrire("ALARME : destruction non obtenue par la minuterie ; la surveillance externe reste")
-    return 4
+            j.ecrire(t)
+        except Exception:  # disque plein ou dossier perdu : la minuterie continue sans journal
+            pass
+
+    if ident in INTOUCHABLES:
+        ecrire(f"REFUS : instance {ident} intouchable ; la minuterie ne fera aucun geste")
+        return 3
+    ecrire(f"minuterie {os.getpid()} : coupure à {iso(echeance - marge_s)}, destruction à {iso(echeance)}, instance {ident}")
+    coupee = False
+    try:
+        while maintenant() < echeance:
+            try:
+                if not coupee and maintenant() >= echeance - marge_s:
+                    coupee = True
+                    (travail / "coupure-echeance").write_text(iso(maintenant()) + "\n")
+                    couper_passe(travail, ecrire)
+            except Exception as e:
+                ecrire(f"ALARME : coupure de la passe en erreur ({type(e).__name__}) ; destruction maintenue à l'échéance")
+            time.sleep(min(pas_s, max(0.05, echeance - maintenant())))
+    except BaseException as e:  # même un signal ne saute pas la destruction
+        ecrire(f"ALARME : minuterie interrompue ({type(e).__name__}) : destruction immédiate")
+    finally:
+        ecrire(f"ÉCHÉANCE : destruction de l'instance {ident} par son identifiant")
+        for essai in range(10):
+            try:
+                client.detruire(ident)
+                ecrire(f"destruction demandée (essai {essai + 1}) : réponse reçue")
+                break
+            except Exception as e:
+                ecrire(f"destruction refusée (essai {essai + 1}) : {e}")
+                time.sleep(min(30, pas_s * 6))
+        else:
+            ecrire("ALARME : destruction non obtenue par la minuterie ; la surveillance externe reste")
+    return 0
+
+
+def couper_passe(travail: Path, ecrire) -> None:
+    """Passe arrêtée par son PID (SIGTERM, puis SIGKILL après 60 s). Fichier de PID illisible : alarme, jamais une erreur."""
+    pid_f = travail / "passe.pid"
+    if not pid_f.is_file():
+        ecrire("COUPURE : passe non lancée")
+        return
+    try:
+        pid = int(pid_f.read_text().strip())
+    except ValueError:
+        ecrire("ALARME : fichier de PID de la passe illisible ; la destruction à l'échéance arrêtera tout")
+        return
+    if pid <= 1:
+        ecrire(f"ALARME : PID {pid} refusé")
+        return
+    try:
+        os.kill(pid, signal.SIGTERM)
+        ecrire(f"COUPURE : passe signalée par son PID {pid} (SIGTERM)")
+        fin_attente = maintenant() + 60
+        while maintenant() < fin_attente:
+            time.sleep(0.5)
+            os.kill(pid, 0)
+        os.kill(pid, signal.SIGKILL)
+        ecrire(f"COUPURE : passe {pid} encore vivante, SIGKILL par son PID")
+    except ProcessLookupError:
+        ecrire(f"COUPURE : passe {pid} finie")
 
 
 # --- Partie session : création, surveillance, rapatriement -----------------------------------------------------------------
@@ -1078,7 +1208,14 @@ def script_de_demarrage(commit: str, ordre_rel: str, ordre_sha: str) -> str:
         raise Refus("commit (40) et empreinte de l'ordre (64) en hexadécimal exigés")
     if not re.fullmatch(r"[A-Za-z0-9/._-]+", ordre_rel) or ".." in ordre_rel:
         raise Refus("chemin de l'ordre : caractères simples, relatif au dépôt")
+    secours = ("import os, urllib.request as u; "
+               "u.urlopen(u.Request('https://console.vast.ai/api/v0/instances/' + os.environ['CONTAINER_ID'] + '/', "
+               "method='DELETE', headers={'Authorization': 'Bearer ' + os.environ['CONTAINER_API_KEY']}), timeout=60)")
     return ("set -u; cd /root; "
+            # minuterie de secours, indépendante du clone et du module : destruction 120 s après l'échéance
+            "N=$(( ${ECHEANCE_UTC_S} + 120 - $(date +%s) )); [ \"$N\" -lt 1 ] && N=1; "
+            f"( sleep \"$N\"; for k in 1 2 3 4 5; do python3 -I -B -c \"{secours}\" && break; sleep 30; done ) "
+            ">/root/minuterie-secours.log 2>&1 & "
             "if [ ! -d /root/depot/.git ]; then "
             "A='!f() { echo username=x-access-token; echo \"password=${GH_TOKEN}\"; }; f'; "
             "git -c credential.helper=\"$A\" clone -q \"$DEPOT_URL\" /root/depot && "
@@ -1094,6 +1231,8 @@ def creer(a, client=None, aujourd_hui=None) -> int:
     try:
         if t.exists():
             raise Refus(f"fiche {t} déjà présente : une création par fiche (R12)")
+        if not RE_COMMIT.fullmatch(a.commit):
+            raise Refus("commit de lancement : 40 caractères hexadécimaux exigés")
         if a.feu != FEU_ATTENDU:
             raise Refus(f"mot de feu {a.feu!r} ≠ « {FEU_ATTENDU} » : rien ne se crée")
         if os.environ.get("GO_ID") != a.go:
@@ -1128,7 +1267,30 @@ def creer(a, client=None, aujourd_hui=None) -> int:
         if a.verifier_seulement:
             j.ecrire("vérification seulement : rien créé (variables : " + ", ".join(sorted(env)) + ")")
             return 0
-        ident = client.creer(o["id"], corps, secrets)
+        provisoire = {"identifiant": None, "etiquette": ETIQUETTE, "offre": o["id"], "creation_demandee_utc": iso(demande),
+                      "creation_demandee_s": demande, "echeance_utc_s": echeance, "prix_horaire_usd": prix_h,
+                      "credit_avant": credit, "go": a.go, "etat": "création demandée, identifiant inconnu"}
+        t.write_text(json.dumps(provisoire, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        try:
+            ident = client.creer(o["id"], corps, secrets)
+        except Refus as e:  # création incertaine : l'instance est cherchée par son étiquette, jamais laissée sans fiche
+            trouvees = []
+            for _ in range(3):
+                time.sleep(a.attente_s)
+                try:
+                    trouvees = [i.get("id") for i in client.instances() if i.get("label") == ETIQUETTE]
+                except Refus:
+                    continue
+                if trouvees:
+                    break
+            if len(trouvees) == 1 and isinstance(trouvees[0], int):
+                t.write_text(json.dumps({**provisoire, "identifiant": trouvees[0], "etat": "retrouvée par l'étiquette"},
+                                        ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+                j.ecrire(f"ALARME : création incertaine ({e}) ; instance {trouvees[0]} retrouvée par l'étiquette et "
+                         "portée à la fiche : lancer la surveillance externe")
+            else:
+                j.ecrire(f"ALARME : création incertaine ({e}) ; {len(trouvees)} instance(s) à l'étiquette : vérifier à la main")
+            raise
         fiche = {"identifiant": ident, "etiquette": ETIQUETTE, "offre": o["id"], "carte": o["gpu_name"],
                  "creation_demandee_utc": iso(demande), "creation_demandee_s": demande, "echeance_utc_s": echeance,
                  "prix_horaire_usd": prix_h, "credit_avant": credit, "go": a.go, "commit": a.commit,
@@ -1143,28 +1305,40 @@ def creer(a, client=None, aujourd_hui=None) -> int:
 
 def surveiller(fiche: dict, client, journal: Journal, periode_s: float = PERIODE_SURVEILLANCE_S,
                tours_max: int | None = None, attente_destruction_s: float = 10.0) -> dict:
-    """Boucle externe (R10) : POURSUIVRE ou COUPER ; coupure = destruction par l'identifiant ; fin quand l'instance est absente."""
-    ident, tours = fiche["identifiant"], 0
+    """Boucle externe (R10) : POURSUIVRE ou COUPER. L'horloge se juge même sans relevé ; une coupure manquée se retente
+    à chaque tour (alarme) ; l'absence de l'instance n'est admise qu'après deux relevés lisibles consécutifs."""
+    ident, tours, absences = fiche["identifiant"], 0, 0
     while tours_max is None or tours < tours_max:
         tours += 1
+        inst, credit = None, None
         try:
             inst = [champs_filtres(i) for i in client.instances() if i.get("id") == ident]
+        except Refus as e:
+            journal.ecrire(f"relevé des instances impossible ({e})")
+        try:
             credit = client.credit()
         except Refus as e:
-            journal.ecrire(f"relevé impossible ({e}) ; nouvel essai")
+            journal.ecrire(f"relevé du crédit impossible ({e}) : dépense estimée seule")
+        if inst is not None and not inst:
+            absences += 1
+            if absences >= 2:
+                journal.ecrire(f"instance {ident} absente de deux relevés : surveillance finie")
+                return {"fin": "absente", "tours": tours}
             time.sleep(periode_s)
             continue
-        if not inst:
-            journal.ecrire(f"instance {ident} absente : surveillance finie")
-            return {"fin": "absente", "tours": tours}
+        absences = 0
         d = decision_surveillance(fiche["creation_demandee_s"], maintenant(), fiche["prix_horaire_usd"],
                                   fiche.get("credit_avant"), credit)
-        journal.ecrire(f"{d['decision']} statut={inst[0].get('actual_status')} heures={d['heures']} "
-                       f"depense={d['depense']} (estimée {d.get('depense_estimee')}, lue {d.get('depense_lue')}) {d['raison']}")
+        statut = inst[0].get("actual_status") if inst else "relevé illisible"
+        journal.ecrire(f"{d['decision']} statut={statut} heures={d['heures']} depense={d['depense']} "
+                       f"(estimée {d.get('depense_estimee')}, lue {d.get('depense_lue')}) {d['raison']}")
         if d["decision"] == "COUPER":
             raison = "coupure-horloge" if "horloge" in d["raison"] else "coupure-depense"
-            r = detruire(client, ident, fiche, raison, None, journal, attente_destruction_s)
-            return {"fin": "coupee", "raison": d["raison"], "destruction": r, "tours": tours}
+            try:
+                r = detruire(client, ident, fiche, raison, None, journal, attente_destruction_s)
+                return {"fin": "coupee", "raison": d["raison"], "destruction": r, "tours": tours}
+            except Refus as e:
+                journal.ecrire(f"ALARME : coupure non obtenue ({e}) ; nouvel essai au prochain tour")
         time.sleep(periode_s)
     return {"fin": "tours", "tours": tours}
 
@@ -1176,7 +1350,7 @@ def rapatrier(depot_url: str, branche: str, dossier: Path, commit_attendu: str |
     if dossier.exists():
         raise Refus(f"dossier de rapatriement {dossier} déjà présent (dossier neuf exigé)")
     r = git(["clone", "-q", "--single-branch", "--branch", branche, depot_url, str(dossier)], gh_token=gh_token)
-    motifs, n_ok, n = [], 0, 0
+    motifs, n_ok, n, etat_verse = [], 0, 0, None
     if r.returncode != 0:
         motifs.append(f"clone de {branche} : code {r.returncode}")
         tete = ""
@@ -1197,6 +1371,10 @@ def rapatrier(depot_url: str, branche: str, dossier: Path, commit_attendu: str |
             if inv.get("instance") != ident:
                 motifs.append(f"inventaire de l'instance {inv.get('instance')!r}, pas {ident}")
             attendus = {e["chemin"]: e for e in inv["fichiers"]}
+            etat_verse = inv.get("etat")
+            for chemin in attendus:
+                if chemin.startswith("/") or ".." in Path(chemin).parts:
+                    motifs.append(f"chemin d'inventaire hors du versement : {chemin!r}")
             n = len(attendus)
             for chemin, e in sorted(attendus.items()):
                 f = base / chemin
@@ -1219,11 +1397,13 @@ def rapatrier(depot_url: str, branche: str, dossier: Path, commit_attendu: str |
     verifie = not motifs
     att = dossier.parent / f"attestation-rapatriement-{ident}.txt"
     att.write_text("\n".join([f"RAPATRIEMENT_VERIFIE={'oui' if verifie else 'non'}", f"instance={ident}",
-                              f"branche={branche}", f"commit={tete}", f"fichiers={n_ok}/{n}", f"heure={iso(maintenant())}",
+                              f"branche={branche}", f"commit={tete}", f"fichiers={n_ok}/{n}", f"etat_verse={etat_verse}",
+                              f"heure={iso(maintenant())}",
                               *[f"motif={m}" for m in motifs[:50]]]) + "\n", encoding="utf-8")
     journal.ecrire(f"rapatriement : {'VÉRIFIÉ' if verifie else 'NON VÉRIFIÉ'} ; commit {tete} ; {n_ok}/{n} fichiers ; "
                    f"{len(motifs)} motif(s)")
-    return {"verifie": verifie, "commit": tete, "fichiers": f"{n_ok}/{n}", "motifs": motifs, "attestation": str(att)}
+    return {"verifie": verifie, "commit": tete, "fichiers": f"{n_ok}/{n}", "etat_verse": etat_verse, "motifs": motifs,
+            "attestation": str(att)}
 
 
 # --- Ligne de commande ---------------------------------------------------------------------------------------------------
@@ -1240,6 +1420,7 @@ def main(argv=None) -> int:
         c.add_argument(k, required=True)
     c.add_argument("--outil", default="vastai")
     c.add_argument("--verifier-seulement", action="store_true")
+    c.add_argument("--attente-s", type=float, default=20.0)
     c.add_argument("--jouet")
     c = s.add_parser("surveiller")
     c.add_argument("--fiche", required=True)
@@ -1249,7 +1430,7 @@ def main(argv=None) -> int:
     for k in ("--fiche", "--branche", "--dossier"):
         c.add_argument(k, required=True)
     c.add_argument("--depot-url", default=DEPOT_PRIVE)
-    c.add_argument("--commit-attendu")
+    c.add_argument("--commit-attendu", required=True)
     c = s.add_parser("detruire")
     c.add_argument("--fiche", required=True)
     c.add_argument("--identifiant", type=int, required=True)
@@ -1313,6 +1494,9 @@ def main(argv=None) -> int:
                 print("REFUS : identifiant d'instance illisible (CONTAINER_ID)")
                 return 3
             ech = int(os.environ["ECHEANCE_UTC_S"])
+            if os.environ.get("DEPOT_URL", DEPOT_PRIVE) != DEPOT_PRIVE:
+                print("REFUS : DEPOT_URL différent du dépôt de travail")
+                return 3
             stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
             valeurs = {"CLONE": a.clone, "CACHE_MODELE": "/root/cache-modele", "PYTHON": f"{a.clone}/.venv/bin/python",
                        "SORTIE_VERIF": f"/root/sorties/{stamp}-verification", "SORTIE_ESSAI": f"/root/sorties/{stamp}-essai",
