@@ -1,0 +1,3 @@
+# Passation, complément d'arrêt — fille des questions du directeur (2026-11-24T14:13:58Z)
+
+Complète `2026-11-24-1412-fille-questions-directeur.md` (0a3f6529…), sans la réécrire. Sur l'ordre de la mère (14:12Z et 14:13Z ; mot de Lazar R-5297 « garde le quota de Fable pour l'entretien, on fera ça plus tard » ; organisme d'idéation passé à l'autre compte, R-5285) : la question 5 n'est pas relancée ; l'agent relancé à 14:13Z a été arrêté par son identifiant aussitôt, sans fichier écrit. Session arrêtée proprement ; la file restante est celle de la passation de 14:12, à reprendre par l'autre compte après l'entretien.
