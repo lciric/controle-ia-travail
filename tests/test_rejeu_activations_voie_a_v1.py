@@ -208,6 +208,7 @@ def test_gabarit_refuse_tant_qu_il_n_est_pas_rempli():
 
 def ordre_rempli(tmp_path, **retouches) -> tuple[Path, str]:
     o = json.loads(GABARIT.read_text())
+    o["go"] = R.GO_ATTENDU                     # le gabarit porte l'accord d'avant (GO-2026-11-24-06)
     o["tirages"] = [o["tirages"][0]]
 
     def sans(argv):
@@ -387,6 +388,7 @@ def banc(tmp_path, monkeypatch):
 
     def lancer(mode="sain", echeance_s=3600, marge_s=60, tirage_faux=False, branche=None, **retouches):
         o = json.loads(GABARIT.read_text())
+        o["go"] = R.GO_ATTENDU
 
         def cmd(action, sortie, run, debut):
             return [sys.executable, str(bouchon), action, "--sortie", sortie, "--run-id", run, "--debut-location", debut,
@@ -706,3 +708,31 @@ def test_surveillance_detruit_sans_releve_apres_trois_echecs(tmp_path):
     R.surveiller(fiche, c, R.Journal(tmp_path / "s.txt", {}, echo=False), periode_s=0, tours_max=4, attente_destruction_s=0)
     assert ["detruire", 91000001] in json.loads((tmp_path / "vast.json").read_text())["gestes"]
     assert "sans relevé" in (tmp_path / "s.txt").read_text()
+
+
+ORDRE = RACINE / "docs/notes/rejeu-activations-saboteur-voie-a-v1/amorce-executante-v8/ordre-lancement-rejeu-voie-a-v1.json"
+
+
+def test_ordre_rempli_refuse_tant_que_le_module_est_a_fixer_et_passe_sinon(tmp_path):
+    with pytest.raises(R.Refus, match="A_FIXER"):
+        R.lire_ordre(ORDRE, R.sha256_fichier(ORDRE))
+    texte = ORDRE.read_text()
+    assert texte.count("A_FIXER") == 3
+    copie = tmp_path / "ordre.json"
+    copie.write_text(texte.replace("A_FIXER : module de la passe conforme aux deux additifs (ligne CODE-PASSE-IIB)",
+                                   "controle_ia.barreau8_moniteurs.module_essai"))
+    o = R.lire_ordre(copie, R.sha256_fichier(copie))
+    assert o["go"] == "GO-2026-11-24-13" and o["preparation"][0]["nom"] == "fichiers-course"
+
+
+def test_controle_des_fichiers_de_la_course(tmp_path):
+    o = json.loads(ORDRE.read_text())
+    argv = o["preparation"][0]["argv"]
+    d = tmp_path / "diag/20261122-202132-iib-reel"
+    d.mkdir(parents=True)
+    r = subprocess.run([sys.executable, *argv[1:]], cwd=tmp_path, capture_output=True, text=True)
+    assert r.returncode == 1 and "NON CONFORMES" in r.stdout          # fichiers absents : refus (le cas sain se joue
+    (d / "ids-actions-evaluation-iib-v5.json").write_text("{}")         # sur la machine, aux vrais fichiers)
+    (d / "ids-actions-evaluation-iib-v5.json.sha256").write_text("7eceb1615c6e00dc028fcbf42d4f32a83e2673d0a033a94b30820c32f198aea2  x\n")
+    r = subprocess.run([sys.executable, *argv[1:]], cwd=tmp_path, capture_output=True, text=True)
+    assert r.returncode == 1                                             # empreinte fausse : refus

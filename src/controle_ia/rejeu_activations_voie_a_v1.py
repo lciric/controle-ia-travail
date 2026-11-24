@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Amorce du rejeu des activations internes du saboteur à budget, voie (A) — v1 (exécutante v8, GO-2026-11-24-06).
+"""Amorce du rejeu des activations internes du saboteur à budget, voie (A) — v1 (exécutante v8, GO-2026-11-24-13).
 
 Devis : `docs/notes/rejeu-activations-saboteur-voie-a-v1/devis-passe-activations-saboteur-voie-a-v2.md` (9a4a794c…) ;
 3,01 USD attendus, plafond 11,00 USD ; coupure externe tout compris 10,00 USD déclenchée à 9,60 USD ; horloge 4,5 h ;
@@ -60,7 +60,7 @@ from contextlib import redirect_stderr
 from pathlib import Path
 
 VERSION = "rejeu-activations-voie-a-v1"
-GO_ATTENDU = "GO-2026-11-24-06"
+GO_ATTENDU = "GO-2026-11-24-13"  # accord de calcul (remplace GO-2026-11-24-06, type « dépense », pour le garde-fou ; R-5261)
 FEU_ATTENDU = "feu, additif 2 scellé"
 PLAFOND_USD = 11.00            # ligne d'accord GO-2026-11-24-06
 COUPURE_USD = 10.00            # coupure externe tout compris (devis § 3.4)
@@ -225,7 +225,7 @@ def charger_garde(chemin_garde: Path, chemin_registre: Path):
 def verifier_go(chemin_registre: Path, chemin_garde: Path, go_id: str, aujourd_hui: dt.date) -> dict:
     """Accord de calcul valide selon le crochet du dépôt (type « calcul », Lazar, validité, révocation), plafond exact."""
     if go_id != GO_ATTENDU:
-        raise Refus(f"accord {go_id} : le devis v2 et l'ordre nomment {GO_ATTENDU}, aucun autre")
+        raise Refus(f"accord {go_id} : l'ordre et la ligne d'accord de calcul nomment {GO_ATTENDU}, aucun autre")
     garde = charger_garde(chemin_garde, chemin_registre)
     tampon = io.StringIO()
     try:
