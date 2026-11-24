@@ -3,7 +3,13 @@
 | E3-T1-conception-A | OK | 1 | claude-opus-5-5 | 23252 | oui | 0.34 |
 | E3-T1-conception-B | OK | 1 | gemini-4-carbon | 32503 | oui | 0.52 |
 | E3-T1-conception-C | OK | 1 | gemini-4-neon | 28947 | oui | 0.47 |
+| E3-T2-critique-croisee-A | OK | 1 | claude-opus-5-5 | 20888 | oui | 0.79 |
+| E3-T2-critique-croisee-B | OK | 1 | gemini-4-carbon | 34684 | oui | 1.18 |
+| E3-T2-critique-croisee-C | OK | 1 | gemini-4-neon | 36566 | oui | 0.90 |
+| E3-T3-reponse-A | OK | 1 | claude-opus-5-5 | 20893 | oui | 0.74 |
+| E3-T3-reponse-B | OK | 1 | gemini-4-carbon | 30183 | oui | 0.96 |
+| E3-T3-reponse-C | OK | 1 | gemini-4-neon | 28654 | oui | 0.58 |
 
 Absences acceptées par l'arbitre : aucune.
-Ligne : 18.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 1.33 USD.
-Dépense totale : 1.33 USD. Mis à jour 2026-11-24T06:41:03Z.
+Ligne : 18.00 USD, ouverte à 0.00 USD de dépense ; dépensé sur la ligne : 6.48 USD.
+Dépense totale : 6.48 USD. Mis à jour 2026-11-24T12:54:55Z.
