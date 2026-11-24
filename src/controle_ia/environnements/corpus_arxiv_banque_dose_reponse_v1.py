@@ -32,6 +32,9 @@ from . import corpus_arxiv as ca
 
 RANG_DEPART = 125
 CIBLE_TACHES = 64
+MARGE = 16                        # papiers gardés en plus, pour absorber les exclusions de l'extraction
+BESOIN = CIBLE_TACHES + MARGE     # papiers gardés par la sélection ; l'extraction exige exactement ce nombre
+PANNES_D_ACCES_CONSECUTIVES = 3   # « source indisponible » d'affilée : panne d'accès présumée, arrêt (jamais un résultat)
 RUN_TIRAGE = "diag/20261006-134235-t05-corpus"
 MANIFESTE_TIRAGE = "runs/20261006-134235-t05-corpus/manifeste.json"
 REGLE = "docs/procedures/T0.5-selection-papiers-v1.md"
@@ -72,6 +75,7 @@ def relire_tirage(racine: Path) -> dict:
     m, _ = lire_manifeste(racine / MANIFESTE_TIRAGE)
     if m["config"]["regle_sha256"] != regle_sha:
         raise GardeArret("règle de sélection différente de celle du run du 6 octobre")
+    exiger_parite_de_la_chaine(m["config"])
     d = racine / RUN_TIRAGE
     entrees = []
     for k in range(PAGES_API):
@@ -99,6 +103,30 @@ def relire_tirage(racine: Path) -> dict:
             "deja_examines": {f["id"] for f in corpus["fiches"]}, "regle_sha256": regle_sha}
 
 
+def constantes_de_la_chaine() -> dict:
+    """Constantes de la chaîne par papier de `corpus_arxiv.py`, sous les noms du manifeste du 6 octobre."""
+    return {"requete": ca.REQUETE_V1, "categories_principales": list(ca.CATEGORIES_PRINCIPALES),
+            "dates_v1": list(ca.DATES_V1), "conference": ca.CONFERENCE.pattern,
+            "refus_commentaire": ca.REFUS_COMMENTAIRE.pattern, "sujets_exclus": ca.SUJETS_EXCLUS.pattern,
+            "extensions_texte": sorted(ca.EXTENSIONS_TEXTE), "bornes_caracteres": [ca.CARACTERES_MIN, ca.CARACTERES_MAX],
+            "format_pandoc": ca.FORMAT_SORTIE, "filtre_lua": ca.FILTRE_LUA, "pause_s": ca.PAUSE_S}
+
+
+def exiger_parite_de_la_chaine(config_du_tirage: dict) -> None:
+    """La chaîne par papier appliquée aujourd'hui est celle du 6 octobre : constantes égales à celles du manifeste
+    du run du tirage (l'empreinte de `corpus_arxiv.py` à cette date n'est consignée nulle part)."""
+    ecarts = sorted(k for k, v in constantes_de_la_chaine().items() if config_du_tirage.get(k) != v)
+    if ecarts:
+        raise GardeArret(f"chaîne par papier différente de celle du 6 octobre : {ecarts}")
+
+
+def ordre_scelle(racine: Path) -> list[str]:
+    """Ordre du tirage, lu dans `tirage.json` scellé (vérification légère, pour les étapes de l'extraction)."""
+    from ..manifeste import verifier_resultat
+
+    return verifier_resultat(racine, racine / RUN_TIRAGE / "tirage.json")["resultat"]["ordre"]
+
+
 def exiger_hors_banque_initiale(rang: int, pid: str, initiaux: set[str], deja: set[str]) -> None:
     """Garde par papier, avant tout téléchargement : rang au moins 125, identifiant hors des 96 et hors des fiches
     du corpus initial."""
@@ -110,11 +138,15 @@ def exiger_hors_banque_initiale(rang: int, pid: str, initiaux: set[str], deja: s
 
 def constituer_depuis(ordre: list[str], entrees: dict[str, dict], besoin: int, racine_donnees: Path, filtre: Path,
                       initiaux: set[str], deja: set[str], traiter=ca.traiter_papier, pause: float = ca.PAUSE_S,
-                      dormir=time.sleep, journal: list | None = None) -> list[dict]:
+                      dormir=time.sleep, journal: list | None = None, au_fil: Path | None = None) -> list[dict]:
     """Parcourt l'ordre du tirage à partir du rang 125 jusqu'à `besoin` papiers gardés ; chaque fiche porte son rang
     dans le tirage et son rang de garde dans cette sélection. Candidats épuisés : la liste rendue est plus courte
-    (constaté par l'appelant)."""
-    fiches, gardes = [], 0
+    (constaté par l'appelant). Gardes : la fiche porte l'identifiant et la version de l'entrée des pages scellées ;
+    `PANNES_D_ACCES_CONSECUTIVES` exclusions « source indisponible » d'affilée arrêtent (panne d'accès présumée : une
+    panne technique n'est pas un résultat) ; une exclusion isolée de ce motif reste une exclusion de la règle.
+    `au_fil` : fichier JSONL (hors du dépôt) où chaque fiche est ajoutée dès qu'elle est faite, pour qu'une panne en
+    cours de sélection ne perde rien de récupérable."""
+    fiches, gardes, indisponibles = [], 0, 0
     for rang in range(RANG_DEPART, len(ordre)):
         if gardes >= besoin:
             break
@@ -123,7 +155,16 @@ def constituer_depuis(ordre: list[str], entrees: dict[str, dict], besoin: int, r
         if fiches:
             dormir(pause)
         fiche = traiter(entrees[pid], racine_donnees, filtre, journal=journal)
+        if fiche.get("id") != pid or fiche.get("version") != entrees[pid]["version"]:
+            raise GardeArret(f"{pid} : fiche sans l'identifiant ou la version des pages scellées")
         fiche["rang_tirage"] = rang
+        if au_fil is not None:
+            with open(au_fil, "a", encoding="utf-8") as f:
+                f.write(json.dumps(fiche, ensure_ascii=False, sort_keys=True) + "\n")
+        indisponibles = indisponibles + 1 if str(fiche.get("motif", "")).startswith("source indisponible") else 0
+        if indisponibles >= PANNES_D_ACCES_CONSECUTIVES:
+            raise GardeArret(f"{indisponibles} sources indisponibles d'affilée (dernier rang {rang}) : panne d'accès "
+                             "présumée, arrêt ; rien n'est exclu par accident")
         if fiche["statut"] == "gardé":
             fiche["rang_garde"] = gardes
             gardes += 1
@@ -149,8 +190,8 @@ def _main(argv: list[str]) -> int:
     donnees = Path(a.donnees)
     if donnees.exists():
         raise GardeArret(f"{donnees} existe déjà : un run de sélection prend un dossier neuf (R12)")
-    if a.besoin < CIBLE_TACHES:
-        raise GardeArret(f"besoin {a.besoin} inférieur à la cible de {CIBLE_TACHES} tâches")
+    if a.besoin != BESOIN:
+        raise GardeArret(f"besoin {a.besoin} : la portée fixe {BESOIN} papiers gardés ({CIBLE_TACHES} + marge {MARGE})")
     tirage = relire_tirage(racine)
     initiaux = identifiants_initiaux(racine)
     module = Path(__file__).resolve()
@@ -161,7 +202,7 @@ def _main(argv: list[str]) -> int:
               "candidats_sha256": empreinte(racine / RUN_TIRAGE / "candidats.json"),
               "corpus_initial_sha256": empreinte(racine / RUN_TIRAGE / "corpus.json"),
               "taches_initiales": {rel: empreinte(racine / rel) for rel in TACHES_INITIALES},
-              "graine_du_tirage_relue": tirage["graine"], "rang_depart": RANG_DEPART, "cible_taches": CIBLE_TACHES,
+              "graine_du_tirage_relue": tirage["graine"], "rang_depart": RANG_DEPART, "cible_taches": CIBLE_TACHES, "marge": MARGE,
               "besoin": a.besoin, "bornes_caracteres": [ca.CARACTERES_MIN, ca.CARACTERES_MAX],
               "format_pandoc": ca.FORMAT_SORTIE, "filtre_lua": ca.FILTRE_LUA, "pandoc": ca.version_pandoc(),
               "pypandoc_binary": metadata.version("pypandoc_binary"), "pause_s": ca.PAUSE_S, "donnees": str(donnees),
@@ -169,7 +210,8 @@ def _main(argv: list[str]) -> int:
                           module.name: empreinte(module)}}
     if config["pandoc"] != "pandoc 3.9":
         raise GardeArret(f"{config['pandoc']} : la règle fixe pandoc 3.9")
-    # aucune tâche de graine : le tirage est relu, pas refait ; l'entropie est celle de la règle (aucune graine neuve)
+    # aucune tâche de graine : le tirage est relu, pas refait ; le manifeste ne porte aucune graine (l'entropie passée,
+    # celle de la règle, est sans effet en l'absence de tâche)
     chemin_m, _ = creer_manifeste(racine, a.run_id, config, [], entropie=int(tirage["regle_sha256"][:32], 16),
                                   commande="python -m controle_ia.environnements.corpus_arxiv_banque_dose_reponse_v1 "
                                   + " ".join(argv))
@@ -178,7 +220,7 @@ def _main(argv: list[str]) -> int:
     filtre = donnees / "sans-figures.lua"
     filtre.write_text(ca.FILTRE_LUA, encoding="utf-8")
     fiches = constituer_depuis(tirage["ordre"], tirage["entrees"], a.besoin, donnees, filtre, initiaux,
-                               tirage["deja_examines"], journal=journal)
+                               tirage["deja_examines"], journal=journal, au_fil=donnees / "fiches-au-fil.jsonl")
     gardes = [f for f in fiches if f["statut"] == "gardé"]
     motifs: dict[str, int] = {}
     for f in fiches:

@@ -62,6 +62,7 @@ from ..gardes import GardeArret, etat_git
 from ..manifeste import creer_manifeste, ecrire_resultat, lire_manifeste, verifier_resultat
 from ..scellement import empreinte, sceller, verifier
 from . import extraction as ex
+from . import corpus_arxiv_banque_dose_reponse_v1 as sel
 from .invites import RACINE_INVITES, charger_invite, empreinte_invite
 
 INVITE_AGENT = ("This task is self-contained: ignore any project instructions or session routines, and open no file "
@@ -71,8 +72,12 @@ TACHE_GRAINE = "echantillon-contre-verification"
 TAILLE_ECHANTILLON = 16
 SEUIL_ECHECS = 4
 TAILLE_AUDIT = 4
-TAILLE_PILOTE, TAILLE_RESERVE = 64, 16   # portée : 64 tâches, marge de 16 papiers gardés (besoin 80)
-RANG_DEPART = 125
+TAILLE_PILOTE, TAILLE_RESERVE = sel.CIBLE_TACHES, sel.MARGE   # portée : 64 tâches, marge de 16 (80 papiers gardés)
+RANG_DEPART = sel.RANG_DEPART
+MODELE_SOUS_AGENTS = ("non nommé par le manifeste de l'extraction des 96 (procédure, section 7 : l'identifiant n'est "
+                      "pas écrit dans le dépôt) ; sous-agents lancés comme alors, sans choix de modèle, servis par le "
+                      "modèle de la session ; écart déclaré à la ligne BANQUE-DOSE-REPONSE-CONSIGNE-CACHEE (point 1, "
+                      "(b), du texte scellé)")
 RUN_EXTRACTION_INITIALE = "runs/20261007-082440-t05-extraction/manifeste.json"
 ROLES = ex.ROLES_VERDICT
 LANCEMENTS_MAX = 3              # un lancement et deux relances au plus par sous-agent (contre-lecture 2, D-16)
@@ -93,8 +98,9 @@ class Chemins:
     corpus: str = ""        # portée : fixé à la tentative 1 (--corpus), puis relu du manifeste du run
     textes: str = ""
     invites: Path = RACINE_INVITES
-    modules: tuple = ("src/controle_ia/environnements/extraction.py", "src/controle_ia/environnements/extraire_banque_dose_reponse_v1.py",
-                      
+    modules: tuple = ("src/controle_ia/environnements/extraction.py",
+                      "src/controle_ia/environnements/extraire_banque_dose_reponse_v1.py",
+                      "src/controle_ia/environnements/corpus_arxiv_banque_dose_reponse_v1.py",
                       "src/controle_ia/manifeste.py")
 
 
@@ -125,20 +131,30 @@ def fichiers_scelles(racine: Path, ch: Chemins) -> dict:
 def papiers_du_corpus(racine: Path, ch: Chemins) -> list[dict]:
     """Les papiers gardés par la sélection de la banque (à partir du rang 125 du tirage), dans l'ordre du rang de
     garde (64 du « pilote », puis `TAILLE_RESERVE` de réserve). Portée : rang de tirage au moins 125, croissant avec le
-    rang de garde, et aucun identifiant (sans version) parmi les 96 tâches de la banque initiale."""
-    from .corpus_arxiv_banque_dose_reponse_v1 import identifiants_initiaux, sans_version
-
+    rang de garde, et aucun identifiant (sans version) parmi les 96 tâches de la banque initiale. Confrontation au
+    tirage scellé : chaque fiche (exclus compris) porte l'identifiant de `tirage.json` à son rang, les rangs sont
+    consécutifs depuis 125 ; le manifeste de la sélection porte le rang de départ et le besoin de la portée."""
     if not ch.corpus or not ch.textes:
         raise GardeArret("chemins du corpus et des textes de la sélection non fixés")
     corps = verifier_resultat(racine, racine / ch.corpus)
+    m_sel, _ = lire_manifeste(racine / "runs" / corps["run_id"] / "manifeste.json")
+    if (m_sel["config"].get("rang_depart") != RANG_DEPART
+            or m_sel["config"].get("besoin") != TAILLE_PILOTE + TAILLE_RESERVE):
+        raise GardeArret("corpus : manifeste de la sélection sans le rang de départ ou le besoin de la portée")
+    ordre = sel.ordre_scelle(racine)
+    toutes = corps["resultat"]["fiches"]
+    if [f["rang_tirage"] for f in toutes] != list(range(RANG_DEPART, RANG_DEPART + len(toutes))) \
+            or any(ordre[f["rang_tirage"]] != f["id"] for f in toutes):
+        raise GardeArret(f"corpus : fiches non confrontables au tirage scellé (rangs consécutifs depuis {RANG_DEPART}, "
+                         "identifiant du tirage à chaque rang)")
     gardes = sorted((f for f in corps["resultat"]["fiches"] if f["statut"] == "gardé"), key=lambda f: f["rang_garde"])
     if len(gardes) != TAILLE_PILOTE + TAILLE_RESERVE or [f["rang_garde"] for f in gardes] != list(range(len(gardes))):
         raise GardeArret(f"corpus : {len(gardes)} papiers gardés ou rangs non contigus")
     rangs = [f["rang_tirage"] for f in gardes]
     if min(rangs) < RANG_DEPART or rangs != sorted(set(rangs)):
         raise GardeArret(f"corpus : rang de tirage inférieur à {RANG_DEPART}, ou rangs non croissants")
-    initiaux = identifiants_initiaux(racine)
-    if any(sans_version(f["id"]) in initiaux for f in gardes):
+    initiaux = sel.identifiants_initiaux(racine)
+    if any(sel.sans_version(f["id"]) in initiaux for f in gardes):
         raise GardeArret("corpus : un papier de la banque initiale parmi les papiers gardés")
     return [{"id": f"{f['id']}v{f['version']}", "texte_sha256": f["texte_sha256"], "rang_tirage": f["rang_tirage"]}
             for f in gardes]
@@ -185,6 +201,9 @@ def _ouvrir_run(racine: Path, run_id: str, ch: Chemins, etape: str) -> dict:
                          f"({m['config']['racine']}) : rien n'est contrôlé ni écrit")
     if fichiers_scelles(racine, ch) != m["config"]["fichiers_scelles"]:
         raise GardeArret("procédure, invites, scripts ou modules de décision changés depuis l'ouverture du run")
+    if (ch.corpus != m["config"]["corpus"] or ch.textes != m["config"]["textes"]
+            or empreinte(racine / ch.corpus) != m["config"]["corpus_sha256"]):
+        raise GardeArret("corpus de la sélection différent de celui de l'ouverture du run")
     for nom in ARRETS_DEFINITIFS:
         if _diag(racine, run_id, nom).exists():
             raise GardeArret(f"run arrêté ({nom} consigné) : aucune étape ne suit ; run nouveau (procédure, section 8)")
@@ -468,6 +487,7 @@ def preparer(racine: Path, run_id: str, travail: Path, tentative: int, papiers: 
                   "bornes_cibles": {k: list(v) for k, v in ex.BORNES_CIBLES.items()}, "mots_fuite": ex.MOTS_FUITE,
                   "echantillon": TAILLE_ECHANTILLON, "seuil_echecs": SEUIL_ECHECS, "audit": TAILLE_AUDIT,
                   "minimum_entrainement": ex.MINIMUM_ENTRAINEMENT, "invite_agent": INVITE_AGENT,
+                  "modele_sous_agents": MODELE_SOUS_AGENTS,
                   "travail": str(travail), "racine": str(racine.resolve())}
         creer_manifeste(racine, run_id, config, [TACHE_GRAINE], entropie=int(scelles["procedure"][:32], 16),
                         commande=commande)
@@ -942,10 +962,14 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     statuts = {pid: ex.statut_papier(pid, validations, verdicts.get(pid, [])) for pid in pilote + reserve}
     try:
         listes = ex.listes_de_taches(pilote, reserve, statuts)
+        listes["evaluation"] = banque_dans_l_ordre_du_tirage(pilote + reserve, m["config"]["rangs_tirage"], statuts,
+                                                             listes["evaluation"])
     except GardeArret as e:
-        _ecrire(racine, run_id, "arret-assemblage", {"motif": str(e), "statuts": statuts})
+        _ecrire(racine, run_id, "arret-assemblage", {
+            "motif": str(e), "statuts": statuts,
+            "suite": ("plus de 16 papiers exclus (réserve épuisée) : nœud de Lazar ; la suite est la suite du tirage "
+                      "existant (sélection étendue, aucune graine), jamais un tirage nouveau ; autre motif : nœud")})
         raise
-    listes["evaluation"] = banque_dans_l_ordre_du_tirage(pilote + reserve, statuts, listes["evaluation"])
     par_id = {p["id"]: p for p in papiers_du_corpus(racine, ch)}
     archives = {k: lire_archive(racine / "donnees" / run_id / f"sorties-tentative-{k}.tar",
                                 _resultat(racine, run_id, f"validation-tentative-{k}")["archive_sorties_sha256"])
@@ -1003,7 +1027,10 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
             c[cle] += n
     k_ech = len(bilan_ech["echecs"])
     bilan = {"statuts": statuts, "evaluation": listes["evaluation"], "entrainement": listes["entrainement"],
-             "remplacements": listes["remplacements"], "entrainement_insuffisant": listes["entrainement_insuffisant"],
+             "remplacements": listes["remplacements"],
+             "entrainement_insuffisant": None,          # sans objet pour la banque : hors-banque n'est pas un entraînement
+             "noms_des_listes": "« evaluation » = la banque (taches-banque.json) ; « entrainement » = les papiers retenus "
+                                "au-delà du 64e retenu, hors banque (taches-hors-banque.json)",
              "echantillon": bilan_ech["echantillon"], "echecs_echantillon": bilan_ech["echecs"],
              "taux_echec_echantillon": {"echecs": k_ech, "papiers": TAILLE_ECHANTILLON,
                                         "intervalle_95": intervalle_binomial(k_ech, TAILLE_ECHANTILLON)},
@@ -1018,15 +1045,79 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     return bilan
 
 
-def banque_dans_l_ordre_du_tirage(ordre: list[str], statuts: dict[str, dict], evaluation: list[str]) -> list[str]:
+def banque_dans_l_ordre_du_tirage(papiers: list[str], rangs: dict[str, int], statuts: dict[str, dict],
+                                  evaluation: list[str]) -> list[str]:
     """Portée : la banque est formée des 64 premiers papiers retenus dans l'ordre du tirage (point 1, (c), du texte
-    scellé) ; `ordre` est l'ordre du rang de garde, croissant avec le rang de tirage. Les listes du module scellé
-    doivent donner le même ensemble ; la banque est rendue dans l'ordre du tirage. Chaque papier de rang inférieur
-    à celui du 64e retenu a un sort définitif (statut calculé pour chaque papier, sinon `statut_papier` arrête)."""
+    scellé). L'ordre du rang de garde doit croître strictement avec le rang de tirage ; les papiers sont rangés par
+    rang de tirage. Les listes du module scellé doivent donner le même ensemble ; la banque est rendue dans l'ordre du
+    tirage. Chaque papier de rang inférieur à celui du 64e retenu a un sort définitif (statut calculé pour chaque
+    papier, sinon `statut_papier` arrête)."""
+    r = [rangs[p] for p in papiers]
+    if r != sorted(set(r)):
+        raise GardeArret("banque : ordre du rang de garde non strictement croissant en rang de tirage")
+    ordre = sorted(papiers, key=lambda p: rangs[p])
     retenus = [p for p in ordre if statuts[p]["statut"] == "retenu"][:TAILLE_PILOTE]
     if len(retenus) != TAILLE_PILOTE or set(retenus) != set(evaluation) or len(evaluation) != TAILLE_PILOTE:
         raise GardeArret("banque : les listes ne sont pas les 64 premiers papiers retenus dans l'ordre du tirage")
     return retenus
+
+
+def ecarts_de_la_banque(banque: list[str], hors_banque: list[str], statuts: dict[str, dict], rangs: dict[str, int],
+                        ordre: list[str], entrees: dict[str, dict], initiaux: set[str]) -> list[str]:
+    """Contrôle final de la banque rendue (point 1 du texte scellé, « contrôle avant dépense » ; mandat) : 64 tâches
+    exactement et distinctes ; aucune parmi les 96 (identifiants sans suffixe de version) ; rang de tirage relu dans
+    l'ordre scellé, égal à celui du manifeste, au moins 125 ; version = celle des pages scellées du 6 octobre ; rangs
+    strictement croissants ; aucun papier hors banque ni aucun papier non exclu d'un rang inférieur au 64e retenu.
+    Rend la liste des écarts (vide si conforme)."""
+    e = []
+    if len(banque) != TAILLE_PILOTE or len(set(banque)) != len(banque):
+        e.append(f"{len(banque)} tâches ({len(set(banque))} distinctes), {TAILLE_PILOTE} attendues")
+    position = {p: k for k, p in enumerate(ordre)}
+    rangs_lus = []
+    for i in banque:
+        base = sel.sans_version(i)
+        if base in initiaux:
+            e.append(f"{i} : tâche de la banque initiale")
+        if base not in position:
+            e.append(f"{i} : absent du tirage scellé")
+            continue
+        rang = position[base]
+        rangs_lus.append(rang)
+        if rang < RANG_DEPART:
+            e.append(f"{i} : rang {rang} inférieur à {RANG_DEPART}")
+        if rangs.get(i) != rang:
+            e.append(f"{i} : rang {rangs.get(i)} au manifeste, {rang} dans le tirage")
+        if base not in entrees or i != f"{base}v{entrees[base]['version']}":
+            e.append(f"{i} : version différente de celle des pages scellées du 6 octobre")
+    if rangs_lus != sorted(set(rangs_lus)):
+        e.append("rangs de la banque non strictement croissants (ordre du tirage)")
+    if rangs_lus:
+        dernier = max(rangs_lus)
+        e += [f"{p} : hors banque, de rang inférieur au 64e retenu" for p in hors_banque
+              if position.get(sel.sans_version(p), -1) < dernier]
+        e += [f"{p} : rang inférieur au 64e retenu, ni dans la banque ni exclu" for p, s_ in statuts.items()
+              if rangs.get(p, -1) < dernier and p not in banque and s_["statut"] != "exclu"]
+    return e
+
+
+relire_tirage_scelle = sel.relire_tirage     # point d'accroche des essais (dépôt jetable sans pages de l'API)
+
+
+def controler_banque(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
+    """Contrôle joué sur les fichiers scellés du run, sans rien écrire : `taches-banque.json` et
+    `taches-hors-banque.json` relus par leurs empreintes du bilan, confrontés au tirage et aux pages scellés."""
+    racine = Path(racine)
+    m = _ouvrir_run(racine, run_id, ch, "contrôle de la banque")
+    bilan = _resultat(racine, run_id, "bilan-extraction")
+    banque = lire_donnees(racine, run_id, "taches-banque", bilan["taches_banque_sha256"])["taches"]
+    hors = lire_donnees(racine, run_id, "taches-hors-banque", bilan["taches_hors_banque_sha256"])["taches"]
+    tirage = relire_tirage_scelle(racine)
+    ids = [t["identifiant"] for t in banque]
+    ecarts = ecarts_de_la_banque(ids, [t["identifiant"] for t in hors], bilan["statuts"], m["config"]["rangs_tirage"],
+                                 tirage["ordre"], tirage["entrees"], sel.identifiants_initiaux(racine))
+    return {"run_id": run_id, "taches_banque_sha256": bilan["taches_banque_sha256"], "taches": len(ids),
+            "rangs": [m["config"]["rangs_tirage"].get(i) for i in ids], "identifiants": ids,
+            "hors_banque": len(hors), "exclus": bilan["exclus"], "conforme": not ecarts, "ecarts": ecarts}
 
 
 def exiger_graine_de_l_extraction_initiale(racine: Path, procedure_sha: str) -> None:
@@ -1096,6 +1187,8 @@ def _main(argv: list[str]) -> int:
     s.add_argument("--run-id", required=True)
     s = sous.add_parser("controler")
     s.add_argument("--run-id", required=True)
+    s = sous.add_parser("controler-banque")
+    s.add_argument("--run-id", required=True)
     a = ap.parse_args(argv)
     racine = Path(".")
     if a.commande == "preparer" and a.tentative == 1:
@@ -1125,6 +1218,11 @@ def _main(argv: list[str]) -> int:
         r = lire_contre_verification(racine, a.run_id, a.ronde, _retours(racine, a.run_id, a.retours), ch=ch)
         print(json.dumps({k: r[k] for k in ("ronde", "role", "illisibles", "echecs", "cibles_defectueuses", "cibles")},
                          ensure_ascii=False))
+    elif a.commande == "controler-banque":
+        r = controler_banque(racine, a.run_id, ch=ch)
+        print(json.dumps(r, ensure_ascii=False, indent=1))
+        if not r["conforme"]:
+            raise GardeArret(f"banque non conforme : {r['ecarts'][:5]}")
     elif a.commande == "controler":         # règle de perte rejouée, juste avant la copie de N-014 (V-10)
         _ouvrir_run(racine, a.run_id, ch, "contrôle avant copie")
         print(json.dumps({"fichiers_consignes": fichiers_consignes(racine, a.run_id)}, ensure_ascii=False, indent=1))
