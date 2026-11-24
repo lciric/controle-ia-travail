@@ -1,0 +1,1504 @@
+{
+  "manifeste_sha256": "d7408c58b70ea7a1dc588461a92140da58c35a993a562590f3434d66879369d5",
+  "resultat": {
+    "note": "papiers retenus examinés au-delà du 64e retenu : n'entrent pas dans la banque (point 1, (c), du texte scellé)",
+    "taches": [
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper states: \"Training is performed on a cluster of 32 NVIDIA A100 GPUs within one week.\" 32 GPUs x 7 days x 24 h = 5,376 A100 GPU-hours (upper bound for training; evaluation inference with a ~2.7 s/image refiner on a few thousand images is negligible, while running the base diffusion models for evaluation adds only a small amount).",
+            "reference_gpu_hours": 5376
+          },
+          "controls": [
+            {
+              "description": "Apply and evaluate the artifact-correction approach on several different latent diffusion editing models with different latent spaces (e.g., Stable Diffusion variants and FLUX-Fill), comparing each base model with and without the correction.",
+              "evidence": "PixPerfect is evaluated on latent diffusion-based inpainting models including SDv1.5, SDv2, and FLUX-Fill, across MISATO and Places2 datasets",
+              "id": "C1",
+              "section": "Comparison results - Inpainting"
+            },
+            {
+              "description": "Include a simple paste-back baseline (restoring unmasked pixels from the original image) to separate background distortion from boundary/in-mask artifacts.",
+              "evidence": "Applying a simple *paste-back* operation, which restores the unmasked regions from the original image, already yields substantial reductions in LPIPS and L1.",
+              "id": "C2",
+              "section": "Ablation Studies"
+            },
+            {
+              "description": "Compare against existing artifact-mitigation baselines from both families: a background-conditioned latent decoder (e.g., Asymmetric VQGAN) and a pixel-space harmonization method (e.g., DiffHarmony++), applied to the same base model outputs.",
+              "evidence": "We further compare PixPerfect with the decoder-based method Asymmetric VQ-GAN[@zhu2023designing] and the harmonization-based method DiffHarmony++ [@zhou2024diffharmonypp].",
+              "id": "C3",
+              "section": "Comparison results - Inpainting"
+            },
+            {
+              "description": "Evaluate on multiple editing tasks (inpainting, object removal, object insertion) on standard benchmarks, not just one task.",
+              "evidence": "We evaluate PixPerfect on three major tasks---inpainting, object removal, and object insertion.",
+              "id": "C4",
+              "section": "Experiment Settings - Evaluation Dataset"
+            },
+            {
+              "description": "Report both perceptual/distributional metrics (FID, LPIPS) and pixel-level fidelity metrics (L1, PSNR), and use no-reference quality metrics where ground truth is unreliable (e.g., object insertion).",
+              "evidence": "for the object insertion task where ground truth composite image is not reliable, we report no-reference image quality scores such as MUSIQ [@ke2021musiq] and MANIQA [@yang2022maniqa]",
+              "id": "C5",
+              "section": "Experiment Settings - Benchmark"
+            },
+            {
+              "description": "Measure the runtime overhead added by the correction step relative to the diffusion sampling time of the base editing model.",
+              "evidence": "we analyze the computational cost of PixPerfect in comparison to the underlying latent diffusion sampling process",
+              "id": "C6",
+              "section": "Appendix - Efficiency Analysis"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Correct local-editing artifacts with a model-agnostic post-hoc refiner operating directly in pixel space (rather than modifying the latent decoder), so it plugs into any latent diffusion editing model.",
+              "evidence": "we formulate the refinement process as **pixel-level refinement** as opposed to latent decoding compared to prior works",
+              "id": "F1",
+              "section": "Introduction"
+            },
+            {
+              "description": "Train the refiner with a loss computed in a transformed, discrepancy-amplifying color space (sample-specific tone mapping that magnifies subtle hue/texture differences between edited region and background).",
+              "evidence": "The key performance leap comes from adding the *enhancement loss* in the proposed discriminative pixel space.",
+              "id": "F2",
+              "section": "Ablation Studies"
+            },
+            {
+              "description": "Build training pairs by synthetically simulating realistic editing artifacts (non-uniform color shifts, texture/noise mismatch, VAE reconstruction artifacts, boundary discontinuities, soft/hard seams) on clean images, instead of relying on real diffusion outputs without ground truth.",
+              "evidence": "we design a synthetic artifact simulation pipeline that generates training pairs",
+              "id": "F3",
+              "section": "Simulating Local Editing Artifacts"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Fixing artifacts inside the latent space / latent decoder (e.g., background-conditioned decoding), which is limited because the latent representation is spatially entangled and local changes cause global shifts.",
+              "evidence": "local modifications can induce unintended global effects due to entangled representations",
+              "id": "S1",
+              "section": "Appendix - The Latent Space Spatial Disentanglement Issue"
+            },
+            {
+              "description": "Using classical Poisson (gradient-domain) blending as the main correction method; it needs ground-truth gradients and still fails on texture and complex artifacts.",
+              "evidence": "These results highlight that Poisson blending falls short in correcting complex local editing artifacts.",
+              "id": "S2",
+              "section": "Appendix - Comparisons with Poisson Blending"
+            },
+            {
+              "description": "Relying on off-the-shelf image harmonization models (designed for composited foreground objects) to fix diffusion editing artifacts.",
+              "evidence": "Both Asymmetric VQ-GAN and DiffHarmony++ show noticeable color shifts or texture inconsistency, particularly around mask boundaries or semantically complex regions.",
+              "id": "S3",
+              "section": "Comparison results - Inpainting"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "image inpainting",
+            "object removal in photographs",
+            "object insertion / image compositing"
+          ],
+          "theory_experiment": "experiments_only"
+        },
+        "couts_rapportes": {
+          "splits": [
+            {
+              "cost": "approximately 5,376 GPU hours",
+              "resource": "Refiner training (32 NVIDIA A100 GPUs, within one week)"
+            }
+          ],
+          "total": "approximately 5,376 A100 GPU hours (32 NVIDIA A100 GPUs for one week)"
+        },
+        "empreintes": {
+          "cibles": "81948a8f348a2e465362cf00f6ddefc880f05e8f1a2d991fda75bdec9eb1abde",
+          "h10": "1012542c797c930f440e7e25c9265ae9d64fcd5337b91bd877df05199a36ed52",
+          "h9": "69c82af918f9d7c2d8adbf4521a1214b55a683f7186d8f8d5a27163a64c96434"
+        },
+        "identifiant": "2512.03247v1",
+        "questions": "Image inpainting and local editing aim to modify a specified image region according to high-level instructions, such as a text prompt or a reference image, while ensuring coherence with the surrounding pixels. As an atomic operation for interactive image editing, it plays a fundamental role in applications ranging from object removal and insertion to creative content regeneration. Recent advances in text-to-image generation, particularly latent diffusion models (LDMs), have driven remarkable progress in inpainting and local editing. These methods perform diffusion in a low-dimensional, semantically compressed latent space and can generate complex, semantically coherent content guided by textual or structural cues.\n\nHowever, latent local editing methods often struggle to maintain pixel-level consistency between synthesized regions and their surrounding context. The latent encoding and decoding inherent in these approaches introduces low-level compression errors, such as color and texture mismatches, that hinder pixel-level matching with the original background. When the edited region is pasted back into the source image, small visual differences tend to become more pronounced, producing visible mismatches at the boundaries. Such artifacts are a mixture of (i) chromatic shifts at editing boundaries, (ii) misaligned textures and inconsistent noise or grain patterns, and (iii) visible seams arising from content discontinuities. They typically persist across diverse inpainting and local editing methods and undermine both perceptual fidelity and practical usability.\n\nSeveral approaches have been explored to mitigate these artifacts. Latent-space modifications integrate background information during generation or decoding: Asymmetric-VQGAN enriches the latent decoder with partial background inputs for context-aware decoding, and ASUKA introduces color augmentation during decoder training to simulate uniform chromatic discrepancies. Post-hoc pixel-level harmonization methods refine the synthesized region after generation: Poisson blending solves for seamless gradient transitions, while learning-based harmonization models such as DiffHarmony++ perform pixel-level adjustment. Yet subtle hue shifts, texture mismatches and content discontinuities often persist, because human perception remains sensitive to minute discrepancies at editing boundaries. Methods that rely on a specific latent space are also limited in how well they generalize to other latent representations and editing scenarios. Moreover, existing harmonization methods are typically designed for manually composited inputs in which a complete, well-defined foreground object is pasted into a clean background, whereas diffusion-based inpainting involves arbitrarily shaped masked regions with potentially complex semantics; many harmonization models also focus on adjusting the foreground appearance without explicitly enforcing background consistency.\n\nThis raises three open problems. First, subtle visual differences: how can persistent boundary artifacts caused by subtle but perceptible pixel-value differences or noise-pattern discrepancies be eliminated? Second, the complexity of local-editing artifacts: how can one handle artifacts that mix chromatic shifts, inconsistent noise or grain patterns, and content discontinuities? Third, generalization: how can a unified solution be developed that works across diverse latent diffusion models, latent spaces and editing applications such as inpainting, object removal and object insertion?",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no compute. Runs: ResNet18 on 5,000 CIFAR-10 images for 100 epochs (batch 64), 20 seeds x 2 optimizers = 40 runs, plus 10 extra seeds for the non-renormalized variant (about 5 minutes each on a modern GPU, ~4 GPU-hours); two single-seed 1000-epoch ResNet18 runs (~1 hour each, ~2 GPU-hours); WideResNet-28-10, 5 seeds x 2 optimizers, 100 epochs (~10x ResNet18 FLOPs, ~0.5 hour each, ~5 GPU-hours); CIFAR-10C inference (750k images per model) for ~60 models plus temperature scaling (~3-5 GPU-hours). Total roughly 15-20 GPU-hours; 20 taken as a rounded upper estimate.",
+            "reference_gpu_hours": 20
+          },
+          "controls": [
+            {
+              "description": "A standard-optimizer baseline (e.g., plain SGD with momentum) trained with identical architecture, data, hyperparameters and augmentation, compared on both accuracy and calibration metrics (ECE, Brier score, test loss, predictive entropy, confidence statistics).",
+              "evidence": "The base optimizer was PyTorch's SGD, which we compared to $\\perp$Grad following the implementation in [@prieto2025grokking].",
+              "id": "C1",
+              "section": "4.1 Training on CIFAR-10"
+            },
+            {
+              "description": "Multiple independent random seeds (including resampled training subsets) per condition, with statistical tests, effect sizes or confidence intervals for the differences between optimizers.",
+              "evidence": "Using 20 different seeds, we selected a random $10\\%$ of the training dataset, for a total of $500$ images per class.",
+              "id": "C2",
+              "section": "4.1 Training on CIFAR-10"
+            },
+            {
+              "description": "Apply post-hoc temperature scaling to both the baseline and the proposed models and compare optimal temperatures and post-scaling calibration, to check compatibility with (and added value beyond) post-hoc calibration.",
+              "evidence": "Next, we evaluated the impact of temperature scaling on model calibration between the two optimizer choices.",
+              "id": "C3",
+              "section": "4.2 Temperature Scaling"
+            },
+            {
+              "description": "Evaluate calibration and accuracy under distribution shift, e.g., on a corrupted test set such as CIFAR-10C across corruption types and severity levels.",
+              "evidence": "Finally, we turn to examining how the resulting models behaved under input corruption using the CIFAR-10C dataset.",
+              "id": "C4",
+              "section": "4.3 CIFAR-10C Evaluation"
+            },
+            {
+              "description": "Repeat the comparison on at least a second architecture (e.g., a wide residual network in addition to ResNet18) to check that effects are not architecture-specific.",
+              "evidence": "We additionally ran a 5 seed experiment using WideResNet-28-10.",
+              "id": "C5",
+              "section": "5.2 WideResNet-28-10"
+            },
+            {
+              "description": "Test an alternative explanation of any calibration gain as mere implicit regularization, e.g., by comparing final weight norms between optimizers.",
+              "evidence": "The final weight vector norms did not differ significantly between the two optimization methods",
+              "id": "C6",
+              "section": "4.1 Training on CIFAR-10"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Constrain the optimizer's descent direction by projecting each layer's gradient orthogonally to that layer's weight vector (removing the radial, pure-rescaling component), aiming to reduce overconfidence without changing accuracy or architecture.",
+              "evidence": "projecting gradients orthogonally to layer weight vectors during training",
+              "id": "F1",
+              "section": "1 Introduction"
+            },
+            {
+              "description": "Analyze theoretically, using positive homogeneity of the network, how loss can be reduced by scaling confidence versus by moving the decision boundary, and characterize the stationary points of the constrained optimizer.",
+              "evidence": "Hence, $\\perp$Grad reaches stationary points w.r.t. the decision boundary and avoids reducing loss by simply inflating confidence.",
+              "id": "F2",
+              "section": "3 Theoretical Analysis"
+            },
+            {
+              "description": "Measure overconfidence through confidence statistics (predictive entropy, maximum softmax, maximum logit, logit variance) in addition to ECE and Brier score, since these reveal significant effects where ECE alone does not.",
+              "evidence": "While not reaching statistical significance, $\\perp$Grad showed consistent trends toward improved ECE and Brier Score",
+              "id": "F3",
+              "section": "4.1 Training on CIFAR-10"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Relying on reduced weight-norm growth (implicit regularization) as the mechanism through which the optimizer change improves calibration.",
+              "evidence": "While orthogonalization has been hypothesized to introduce implicit regularization by reducing weight norm growth, our experiments do not support this effect.",
+              "id": "S1",
+              "section": "4.1 Training on CIFAR-10"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "real_only",
+          "domains": [],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "2ca06483c6b79006a32bff514466e6d29ce064f5c4e8b422ba296050ca6aec4d",
+          "h10": "85df89989c9688093ba50764aa5d374013a8ec74748396040194d6d52f18a945",
+          "h9": "1cd18bdaf6217420a0e76d6847abf53451be7c4e6d9054540274acb1244a1983"
+        },
+        "identifiant": "2506.04487v3",
+        "questions": "Neural networks are increasingly deployed in settings where prediction confidence must be reliable. A classifier is said to be calibrated when its predicted confidence scores reflect the true likelihood of correctness, a property that is critical whenever predictive uncertainty informs downstream decisions. Modern neural networks, however, are often poorly calibrated despite high accuracy: they tend to be overconfident.\n\nCalibration techniques fall into two categories. Intrinsic methods improve calibration during training, for example through loss modifications, data augmentation, or mixup. Post-hoc methods, including temperature scaling, Platt scaling, and isotonic regression, adjust model outputs after training without changing the weights. Post-hoc methods depend on held-out validation data and cannot correct uncertainty misestimation rooted in model internals, while some training-time regularizers have been reported to conflict with post-hoc calibration. Most intrinsic methods target the design of the loss function or regularization; the role of the optimization procedure itself, and of the trajectory it follows through parameter space, has received little attention as a lever for calibration.\n\nSeparately, geometric constraints such as orthogonality have been explored to improve deep networks, primarily for generalization and training stability, for instance through orthogonal convolutional filters, inter-layer gradient orthogonality, and orthogonalized descent schemes used to stabilize training. To our knowledge, the link between such geometric constraints on gradient-based optimization and calibration has not been investigated.\n\nThis raises several questions. Can a modification of the optimizer, with no change to the architecture or the loss, reduce overconfidence and improve calibration metrics such as expected calibration error and predictive entropy without harming accuracy? Would such a change remain compatible with standard post-hoc calibration, rather than conflicting with it? And can one explain, theoretically, by what mechanism the geometry of the descent direction would affect calibration?",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no GPU-hours; experiments run on NVIDIA H100 GPUs, and the offline graph construction is described as negligible (full-generation passes on about 20 prompts on 8 GPUs). The bulk is evaluation: three video models (Open-Sora 1.2, Latte, CogVideoX-2B), each with the uncached reference plus roughly 6-8 method configurations (Delta-DiT, T-GATE, PAB, TeaCache slow/fast, LeMiCa slow/fast), evaluated on VBench prompts (standard practice of several thousand videos per configuration) at roughly 10-60 s per video, i.e. on the order of 20-50 GPU-hours per configuration and ~600-900 GPU-hours for the main table, plus ablations (budget sweep, 20 repetitions of sample-size study on 50 prompts, trajectory scaling, resolution/length tests, OOD and Qwen-Image extension). Total on the order of 1,000 H100 GPU-hours; highly uncertain because the number of evaluation videos is not stated.",
+            "reference_gpu_hours": 1000
+          },
+          "controls": [
+            {
+              "description": "Measure fidelity of accelerated videos against the uncached, full-step output of the same model (reference-based metrics such as LPIPS, SSIM, PSNR) in addition to a perceptual/human-preference quality benchmark, and report efficiency as FLOPs and wall-clock latency.",
+              "evidence": "Efficiency is measured by FLOPs and latency. Visual quality is evaluated using VBench [@huang2024vbench] (human preference), LPIPS [@zhang2018unreasonable] (perceptual similarity), SSIM [@wang2002universal] (structural consistency), and PSNR (pixel-level accuracy).",
+              "id": "C1",
+              "section": "4.1 Experimental Setup (Metrics)"
+            },
+            {
+              "description": "Compare against existing training-free caching baselines for diffusion models, including video-specific ones (e.g., threshold-based local-error caching such as TeaCache, attention broadcasting such as PAB) and image-oriented ones (e.g., T-GATE, Delta-DiT).",
+              "evidence": "Baselines include $\\Delta$-DiT [@chen2024delta], T-GATE [@zhang2024cross], PAB [@zhao2024real], and TeaCache [@DBLP:journals/corr/abs-2411-19108].",
+              "id": "C2",
+              "section": "4.1 Experimental Setup (Baselines and Compared Methods)"
+            },
+            {
+              "description": "Compare methods at matched computational budgets / speedups, sweeping several acceleration levels to produce a quality-latency trade-off curve rather than a single operating point.",
+              "evidence": "To ensure comparable computational budgets, LeMiCa is configured with 19, 12, 9, and 7 inference steps (i.e., inference budget $B$), corresponding to TeaCache thresholds of 0.1, 0.2, 0.3, and 0.5, respectively.",
+              "id": "C3",
+              "section": "4.3 Ablation Studies (Acceleration vs. Performance trade-off)"
+            },
+            {
+              "description": "Use disjoint prompt sets for any offline calibration of the caching schedule and for evaluation (including an out-of-distribution evaluation set), with multiple random seeds.",
+              "evidence": "The DAG construction and forward inference use distinct datasets to ensure fair and robust evaluation. Sampling is repeated 10 times with different seeds, and results are averaged to reduce bias.",
+              "id": "C4",
+              "section": "4.1 Experimental Setup (Implementation Details)"
+            },
+            {
+              "description": "Evaluate on several different diffusion-based video generation models (not a single base model) to test model-agnosticism.",
+              "evidence": "We evaluate our method on representative diffusion-based video models: Open-Sora [@Open-Sora], Latte [@ma2025latte], and CogVideoX [@yang2024cogvideox].",
+              "id": "C5",
+              "section": "4.1 Experimental Setup (Baselines and Compared Methods)"
+            },
+            {
+              "description": "Test robustness of the caching schedule when the denoising trajectory / sampling schedule changes, and across video resolutions and lengths.",
+              "evidence": "we vary the trajectory scale parameter in the sampling schedule from its default value of 1.0 to several alternative values (0.5, 0.75, 1.25, 1.5), introducing different diffusion paths during inference",
+              "id": "C6",
+              "section": "4.3 Ablation Studies (Trajectory Robustness)"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Measure the error of each candidate cache segment by its effect on the final generated output (relative to the uncached output), rather than by local differences between adjacent steps, to capture timestep-dependent error propagation.",
+              "evidence": "LeMiCa takes a global view of error by introducing the *Global Outcome-Aware error*, which quantifies the impact of each cache segment on the final output, effectively eliminating temporal heterogeneity and mitigating error propagation.",
+              "id": "F1",
+              "section": "1 Introduction"
+            },
+            {
+              "description": "Formulate cache scheduling as budget-constrained path selection on a DAG of candidate cache segments and choose the path that lexicographically minimizes the largest segment errors (worst-case control) rather than the sum of errors.",
+              "evidence": "we adopt a *lexicographic minimax* criterion that explicitly minimizes the highest cache error along the path, followed by the second highest, and so on.",
+              "id": "F2",
+              "section": "3.3 Lexicographic Minimax Path Caching"
+            },
+            {
+              "description": "Precompute a static, offline cache schedule from a small number of calibration samples, removing runtime decision overhead while generalizing to unseen prompts.",
+              "evidence": "LeMiCa achieves strong performance with a single sample (e.g., PSNR 24.51), rapidly approaching the upper bound with 10 samples and essentially saturating at 20 samples across all metrics.",
+              "id": "F3",
+              "section": "4.3 Ablation Studies (Sample Requirements for Graph Construction)"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Local-greedy caching that decides reuse by thresholding the difference between adjacent-step outputs with a fixed threshold (e.g., TeaCache-style), which ignores error accumulation and yields worse fidelity at matched speed.",
+              "evidence": "Across all latency regimes, LeMiCa consistently achieves a superior quality-efficiency balance, outperforming TeaCache on all reference-based metrics.",
+              "id": "S1",
+              "section": "4.3 Ablation Studies (Acceleration vs. Performance trade-off)"
+            },
+            {
+              "description": "Choosing the cache schedule as a shortest path that minimizes the additive sum of segment errors, which is outperformed by worst-case (minimax) path selection because segment errors are not independent.",
+              "evidence": "the *MiniMax Path* strategy consistently outperforms the baseline *Shortest Path* strategy in both VBench scores and reconstruction metrics",
+              "id": "S2",
+              "section": "4.3 Ablation Studies (Shortest Path vs. Lexicographic MiniMax Path)"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "real_only",
+          "domains": [
+            "text-to-video generation"
+          ],
+          "theory_experiment": "experiments_only"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "4e21017b77c900b9e70c8d09b52a5d86adb5a892222c8ca0f33613c3797ff243",
+          "h10": "f621cfe356de53231205cb295c0c771bdb41e4d2e9d9a557f6ba6104e1cca3cc",
+          "h9": "2dcccd76aa96cf6bd189bc9d19011e71f6148fb02496228b9f5124396aa5e631"
+        },
+        "identifiant": "2511.00090v3",
+        "questions": "Diffusion models have made significant advances in video generation, particularly with DiT-based architectures, which greatly enhance visual quality. However, these models are often hindered by high memory usage, substantial computational costs, and long inference latencies, which limit their use in interactive applications. This has led to growing interest in more efficient and cost-effective generation strategies.\n\nApproaches such as model distillation, pruning, and quantization have been widely adopted to accelerate inference. While effective, they require careful architectural design and retraining on large datasets, incurring high costs. Caching mechanisms, in contrast, offer a retraining-free alternative: the core idea is to reuse model outputs from specific timesteps during sampling to reduce redundant computation. Prior caching methods have used manually set rules for U-Net structures, have been extended to DiT-based image models, and, for video, have exploited patterns in attention differences across timesteps, redundancy in classifier-free guidance, or the correlation between timestep embeddings and model outputs combined with threshold-based indicators. Yet selecting which timesteps to cache, while balancing video quality and inference speed, remains an open problem in video generation.\n\nIdeally, a lossless video acceleration method should meet two criteria: (i) high visual quality and (ii) consistency between accelerated and original videos. Existing cache-based methods maintain a certain level of visual quality, but they often introduce content deviations and loss of high-frequency details, increasing the risk of uncontrolled degradation.\n\nTwo limitations of prevailing caching strategies stand out. First, representative methods typically compute local errors between adjacent timesteps, often a relative L1 distance between consecutive model outputs, and apply a fixed threshold to decide whether to cache, implicitly assuming that all timesteps are equally important. However, the diffusion denoising process is temporally heterogeneous: noise levels and semantic richness vary across timesteps, with early steps shaping global structure and later steps refining details. A uniform threshold applied throughout the process can therefore lead to inaccurate caching decisions. Second, these methods focus on minimizing local differences between consecutive steps. While this may reduce short-term discrepancies, it overlooks how small errors accumulate and propagate over the sampling trajectory, potentially degrading both video quality and content consistency.\n\nThis raises several questions. How can caching decisions account for the way errors introduced at different timesteps accumulate and propagate over the sampling trajectory, rather than only the local change between adjacent steps? Given a fixed budget of full model evaluations, how should one decide which timesteps to compute and which to reuse so that accumulated degradation is controlled? Can such a caching schedule be determined without retraining and remain reliable across different inputs? Answering these questions matters for making high-quality video diffusion models practical in latency- and resource-constrained settings.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no GPU-hours. The Gaussian case studies are closed-form/line-search computations on CPU; the Bias in Bios Llama-2 7b representations were obtained from Singh et al. rather than recomputed; the GPU work is extracting last-token embeddings of about 4,000 short generated reviews from every layer of Llama-3.1 8B and generating batches of 100 short (10-word) steered reviews for two groups over a handful of steering strengths, with scoring done through the GPT-4.1 API. This amounts to a few GPU-hours on a single GPU; about 5 GPU-hours is a generous estimate.",
+            "reference_gpu_hours": 5
+          },
+          "controls": [
+            {
+              "description": "An unmodified reference: the outcome of the (Bayes-)optimal classifier or unsteered model on the original, uncorrected distribution, against which each intervention's fairness and accuracy changes are measured.",
+              "evidence": "(a) the Bayes optimal classifier on the original distribution (no correction)",
+              "id": "C1",
+              "section": "Case Study on Gaussian Distributions"
+            },
+            {
+              "description": "A standard fair pre-processing baseline such as the reweighing of class-group pairs (Kamiran and Calders) compared against the proposed distribution change.",
+              "evidence": "Despite its heuristic nature, the reweighing method of @kamiran2012data continues to perform well in mitigating bias across standard benchmarks",
+              "id": "C2",
+              "section": "Introduction"
+            },
+            {
+              "description": "A simple moment-matching baseline that only aligns group means (equalizing first moments) while staying close to the original distribution.",
+              "evidence": "*Mean Matching*: aligning group means while minimizing KL divergence",
+              "id": "C3",
+              "section": "Case Study on Gaussian Distributions"
+            },
+            {
+              "description": "Existing representation-steering / concept-erasure baselines (e.g., MiMiC mean+covariance matching and LEACE) evaluated on the same LLM representations with a per-class TPR-gap fairness metric.",
+              "evidence": "We additionally evaluate the LEACE transformation [@belrose2023leace], which Singh et al. [@singh2022optimal] used as a baseline.",
+              "id": "C4",
+              "section": "Reducing Per-class disparity in Multi-class Classification"
+            },
+            {
+              "description": "Report jointly the fairness gaps (demographic parity, equal opportunity), the error/accuracy, and the divergence of the modified distribution from the original one, so that fairness gains are not obtained by moving far from the data or by losing accuracy.",
+              "evidence": "We report Demographic Parity ($\\Delta$DP), Equal Opportunity ($\\Delta$EO), KL and Jensen--Shannon divergence, as well as Bayes Error (BE) under each intervention.",
+              "id": "C5",
+              "section": "Case Study on Gaussian Distributions"
+            },
+            {
+              "description": "A sanity-check case where the original distribution is already fair, verifying that the intervention leaves it (nearly) unchanged.",
+              "evidence": "The expected solution here should be that any intervention must leave the distribution as it is.",
+              "id": "C6",
+              "section": "Additional Figures for Section 5"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Characterize distributions on which the optimal classifier for any cost-sensitive risk is exactly fair via parametric conditions (e.g., on Gaussian means/covariances and class-group proportions), and find the nearest such distribution by KL-divergence minimization, using a convex variant that changes only the underprivileged group.",
+              "evidence": "We formulate an optimization program for optimal steering by finding the nearest *ideal* distribution in KL-divergence",
+              "id": "F1",
+              "section": "Abstract"
+            },
+            {
+              "description": "Allow all subgroups to change (solving the non-convex program by line search over a scaling factor), which can reach exact fairness and good accuracy while staying close to the original distribution.",
+              "evidence": "the EF-All intervention simply tries to match the variances of under-privileged and privileged subgroups and, as a result, achieves perfect fairness and accuracy while staying close to the true distribution",
+              "id": "F2",
+              "section": "Case Study on Gaussian Distributions"
+            },
+            {
+              "description": "Use the target moments of the nearest fairness-guaranteeing distribution to build affine steering of LLM representations (and to partially nudge steering vectors) so as to reduce group disparities.",
+              "evidence": "Our intervention consistently reduces TPR-gaps across all classes and, in many cases, outperforms both MiMiC and LEACE.",
+              "id": "F3",
+              "section": "Reducing Per-class disparity in Multi-class Classification"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Fully replacing the original steering vector with one sampled from the fairness-corrected distribution (or nudging too strongly), instead of mixing it partially with the original vector.",
+              "evidence": "However, simply replacing $v_c^l$ will not work.",
+              "id": "S1",
+              "section": "Steering activations for Joyful generation"
+            },
+            {
+              "description": "Relying on matching group means (equalizing first moments) as the main fairness intervention.",
+              "evidence": "Mean Matching is unable to address the fairness-accuracy tension at all in this case",
+              "id": "S2",
+              "section": "Additional Figures for Section 5"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_synthetic",
+          "domains": [
+            "occupation prediction from biographies",
+            "emotion-controlled movie review generation"
+          ],
+          "theory_experiment": "mostly_theory"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "f0504559d0d059259a968df5a910da9c387cf3d96f291afc1ab365443d2545f0",
+          "h10": "56ac23b707e1179e147c45d74060a5c489b33e9c75c44ea92c0e8677b1d7849a",
+          "h9": "68e54641a3addb4fdcfc29c2003ae432582327e7698f7ef1dc6e6b6b174a8c96"
+        },
+        "identifiant": "2509.15759v2",
+        "questions": "The principle of \"bias in, bias out\" is widely recognised as a root cause of unfair outcomes in machine learning systems: models trained on biased data tend to learn, perpetuate, and often amplify such biases. The problem of biased data extends beyond training. Fairness-constrained training on biased data does not guarantee fairness on unbiased test sets, post-processing using biased validation data fails to ensure fairness at deployment, and fairness audits based on biased assessment data can be misleading and difficult to reverse.\n\nFairness metrics such as demographic parity and equal opportunity are functions of both the model and the data distribution, so unfair outcomes may be addressed either by adjusting the model or by altering the data distribution. Fair in-processing aims to construct a fair model under fairness constraints, whereas fair pre-processing alters the data. Early pre-processing work introduced heuristic reweighting for binary classification, adjusting the weight of instances from class i and group a by Pr(class i) Pr(group a) / Pr(class i, group a); this ignores the feature distribution and offers no fairness guarantee when combined with accuracy maximisation. Other work framed pre-processing as an optimisation problem balancing distance to the original distribution against group and individual fairness constraints, which may be infeasible when these notions are incompatible; still others address label bias through reweighting, propose fair adaptation based on causal models, or solve large-scale mixed-integer programs. Despite its heuristic nature, simple reweighing continues to perform well on standard benchmarks, and pre-processing remains widely used in fairness toolkits alongside in- and post-processing methods.\n\nA common goal of all fair pre-processing methods is to find a data distribution close to the given one such that downstream models trained on it are guaranteed to be fair. Requiring this for downstream models optimised for multiple tasks leads to impossibility results: if every downstream classifier must be fair, the group-wise distributions must be nearly identical, which is impractical. A related line of work on fair Bayes optimal classifiers has shown that, under stylized data-bias models that inject under-representation and label bias into an unbiased distribution, the fair Bayes optimal classifier on the biased data can recover the Bayes optimal classifier on the unbiased distribution, on which the unconstrained optimum is already fair; but that line of research concerns the classifier rather than the distribution. Another approach seeks the nearest distribution in KL-divergence on which a Chernoff-information gap between the two group-conditional feature distributions vanishes; that problem is not known to be efficiently solvable, and guarantees stated as a Chernoff-information gap do not translate easily into standard metrics such as demographic parity or equal opportunity.\n\nThis leaves several open questions. Can one characterise target data distributions on which utility-maximising downstream models, whatever performance metric is eventually used, are guaranteed to be exactly group-fair, so that no fairness-utility trade-off exists, without forcing the group-conditional distributions to be identical, and in a form that can be checked efficiently? Given a distribution that lacks this property, how can one find the nearest distribution that has it, can this be done efficiently, and do guarantees obtained on the target carry back to the original distribution? Can such a target indicate in which direction to move a distribution so as to improve fairness without sacrificing, or even while improving, accuracy? Finally, steering the internal representations and generations of large language models is an active area with limited theoretical grounding: existing approaches, such as aligning the first two moments of representations or sampling steering vectors from a Gaussian distribution over concept vectors, lack provable fairness guarantees on the model output. Can a principled, fairness-guaranteeing notion of a target distribution guide such steering so that it reduces group disparities and works equally well across different groups?",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no GPU-hours; it only says experiments ran on NVIDIA A100 80GB and B200 GPUs. Estimate: GRPO-style RL on 8.5K MATH problems for 2 epochs at batch size 128 is about 133 steps, each with 1,024 rollouts of up to 4K-6K tokens. Assuming one 8-GPU node, roughly 40 GPU-hours per 3B run, 90 per 8B run and 150 per 14B run. Runs: 6 methods x 2 three-billion-parameter models (~480 GPU-h), about 12 extra hyperparameter-sweep runs for the tuned baselines (~480), 6 methods on Qwen3-8B-Base (~540), GRPO and EEPO on Qwen3-14B-Base (~300), and 2 EEPO-plus-variant runs (~80), for a total of roughly 1,900, rounded to about 2,000 GPU-hours (order of magnitude only).",
+            "reference_gpu_hours": 2000
+          },
+          "controls": [
+            {
+              "description": "A standard GRPO (or equivalent vanilla RLVR) baseline trained on the same data, models and hyperparameters, so that any exploration intervention is compared against the unmodified algorithm; plus the untrained base/instruct model as a lower bound.",
+              "evidence": "GRPO applied to the base or instruction-tuned model using standard training settings.",
+              "id": "C1",
+              "section": "Experiment / Baselines"
+            },
+            {
+              "description": "A higher-sampling-temperature baseline (uniform stochasticity at rollout), tuned over several temperatures and reported at its best setting.",
+              "evidence": "Applies a higher sampling temperature during actor's decoding process to promote exploration and reduce output determinism.",
+              "id": "C2",
+              "section": "Experiment / Baselines"
+            },
+            {
+              "description": "An increased entropy-regularization baseline (larger entropy bonus in the objective), tuned and reported at its best coefficient.",
+              "evidence": "This variant encourages exploration by increasing the entropy weight in the objective function, prompting the actor to generate more diverse outputs.",
+              "id": "C3",
+              "section": "Experiment / Baselines"
+            },
+            {
+              "description": "An objective-level exploration baseline such as DAPO's clip-higher (raised upper clipping threshold), tuned and reported at its best setting.",
+              "evidence": "Incorporates the \"clip higher\" technique from DAPO to encourage the selection of rare tokens during training.",
+              "id": "C4",
+              "section": "Experiment / Baselines"
+            },
+            {
+              "description": "A sampling-budget control: GRPO with more rollouts per question (e.g. twice as many), to check that gains do not simply come from sampling more trajectories.",
+              "evidence": "It is designed to evaluate whether EEPO with 8 rollouts can match or outperform GRPO with a larger number of rollouts (default: 16).",
+              "id": "C5",
+              "section": "Baselines Description (Appendix)"
+            },
+            {
+              "description": "A measurement of training cost (wall-clock time per run and response length) for the proposed method and every baseline on the same hardware, so that accuracy gains are reported alongside their computational overhead.",
+              "evidence": "We evaluate the computational efficiency of EEPO and baseline methods on Qwen3-8B-Base using B200 GPUs.",
+              "id": "C6",
+              "section": "Analysis / Training Efficiency"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Intervene directly in the rollout process rather than in the objective: split each group's rollouts into two stages and, between them, temporarily push the rollout model away from the responses just sampled (a one-step unlearning on a rollout copy re-synchronized with the policy every iteration), so the second stage samples non-dominant modes.",
+              "evidence": "the rollout model first generates half of the trajectories, then performs a temporary unlearning step to suppress the just-sampled responses",
+              "id": "F1",
+              "section": "Introduction"
+            },
+            {
+              "description": "Make the suppression targeted and adaptive: use a loss that penalizes high-probability (dominant) tokens more than low-probability ones, and trigger the intervention only when the moving-average entropy falls below a threshold.",
+              "evidence": "we replace the standard negative log-likelihood with a complementary loss that penalizes high-probability tokens more than low-probability ones",
+              "id": "F2",
+              "section": "Introduction"
+            },
+            {
+              "description": "Treat rollout-time exploration as complementary to objective-level exploration tweaks: combine it with entropy regularization or clip-higher and measure the additional gain.",
+              "evidence": "EEPO consistently yields an absolute improvement of about 3.7--5.1 points over the corresponding exploration-enhanced GRPO methods.",
+              "id": "F3",
+              "section": "Additional comparison with GRPO variants (Appendix)"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Relying mainly on raising the sampling temperature to fix exploration: gains are modest, brittle to tuning, collapse at higher temperatures, and lengthen training.",
+              "evidence": "Temperature-based exploration exhibits a clear exploration--exploitation trade-off: performance peaks around 1.2 but degrades sharply at higher values (1.5).",
+              "id": "S1",
+              "section": "Experiment / Experimental Results"
+            },
+            {
+              "description": "Relying mainly on sampling more rollouts per question to broaden exploration: benefits plateau quickly while compute cost grows substantially.",
+              "evidence": "Increasing the number of rollouts provides benefits but plateaus quickly while computational cost also grows substantially",
+              "id": "S2",
+              "section": "Experiment / Experimental Results"
+            },
+            {
+              "description": "Relying mainly on objective-level tweaks such as stronger entropy regularization or DAPO clip-higher: they oscillate between under- and over-exploration and remain clearly inferior to targeted rollout-time exploration.",
+              "evidence": "Clip-higher and entropy regularization likewise swing between under- and over-exploration and lag behind EEPO across all models.",
+              "id": "S3",
+              "section": "Experiment / Experimental Results"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "real_only",
+          "domains": [
+            "mathematical reasoning",
+            "competition math problem solving"
+          ],
+          "theory_experiment": "experiments_only"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "a26515fb63da5f1dc2476fcbd595e3ebc4bd808d302e34ba310e21118a4727bc",
+          "h10": "5f92f11b3169d5589adacf0129c0a55216742743c1e1c4d991537569c9bae80d",
+          "h9": "58fa8f73ff276afdcf2e8efd6973728e1e21bb673e46b4f1d23c36f3f4c187ac"
+        },
+        "identifiant": "2510.05837v2",
+        "questions": "The emergence of reasoning models such as OpenAI's o1 and DeepSeek-R1 marks a significant advance in large language model (LLM) reasoning. A key driver of this progress is reinforcement learning with verifiable rewards (RLVR), in which a rule-based checker rewards a response solely for the correctness of its final answer, typically optimized with Group Relative Policy Optimization (GRPO). Nevertheless, RLVR continues to face the classic exploration-exploitation dilemma because of the exploitative nature of its objectives: policies tend to over-emphasize exploitation of high-reward trajectories, leading to entropy collapse, diminished exploratory capacity, and reduced final performance. Reduced exploration may drive the policy to overfit to the training distribution rather than discover generalizable reasoning patterns, so that gains on in-distribution data need not carry over to out-of-distribution problems.\n\nOne plausible account of entropy collapse is a self-reinforcing loop. As entropy falls, the policy forms increasingly confident beliefs about solutions, yielding a response distribution with multiple, imbalanced modes: several plausible reasoning behaviors exist for a given question, but one mode receives more probability mass. If rollouts predominantly sample this dominant mode and receive positive feedback, the policy further amplifies it while suppressing alternatives, which accelerates the collapse. Crucially, such a loop can impede the discovery of alternative, potentially superior reasoning strategies, causing local optima and poor generalization.\n\nRecent efforts to improve exploration in RLVR largely fall into two categories: objective-level modifications and indiscriminate exploration. Approaches such as increasing the sampling temperature or adding entropy regularization flatten the output distribution uniformly; while this increases stochasticity, it does not shift probability mass away from dominant behaviors, since the dominant mode remains the most likely to be sampled even after flattening. A widely adopted objective-level approach, DAPO, raises the upper clipping threshold so that low-probability trajectories face fewer restrictions during training, and relaxing rewards with Pass@k similarly admits more low-probability trajectories. Yet these tweaks leave the rollout dynamics unchanged: during rollouts, the policy can remain confined to dominant modes and keep sampling previously visited high-probability regions, sustaining the self-reinforcing loop.\n\nThis raises the central question: how can a policy be made to explore plausible behaviors beyond its dominant mode during rollout, so as to break the self-reinforcing loop that drives entropy collapse, without destabilizing training, degrading generation quality, or substantially increasing computational cost? Answering it requires understanding whether more targeted exploration translates into better reasoning accuracy and better generalization to harder and out-of-distribution problems.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports that training \"takes three days with 4x H100 80GB GPUs\": 3 days x 24 h x 4 GPUs = 288 GPU-hours. LES simulation (MicroHH) and Blender path-tracing rendering of 15000 images are not costed, so this covers model training only.",
+            "reference_gpu_hours": 288
+          },
+          "controls": [
+            {
+              "description": "Compare retrieved cloud properties against an existing learned cloud-retrieval baseline (e.g., a satellite-based multi-view retrieval method such as VIP-CT) on the same real-world data and metrics.",
+              "evidence": "shows quantitative results with our method and also with VIP-CT [@vip_ct]",
+              "id": "C1",
+              "section": "5.1 Results"
+            },
+            {
+              "description": "Validate liquid water content, liquid water path, cloud base and cloud top heights against an independent collocated instrument (cloud-profiling radar), evaluating the reconstruction along the radar's column.",
+              "evidence": "To enable this comparison, we evaluate our 3D liquid water content along a single height column at the location of the radar.",
+              "id": "C2",
+              "section": "5 Experiments"
+            },
+            {
+              "description": "Validate retrieved horizontal wind profiles against an independent wind measurement such as a collocated radar wind profiler.",
+              "evidence": "we evaluate our wind estimates by comparing them to a wind profiler situated at the site where we collected the evaluation dataset",
+              "id": "C3",
+              "section": "5 Experiments"
+            },
+            {
+              "description": "Evaluate the full 3D reconstruction (side profiles, base and top heights) on a held-out simulated case with a configuration unseen during training, since point instruments only sample a narrow column.",
+              "evidence": "To evaluate the side profiles of our predictions, we generate an additional LES-generated volume using a configuration unseen during training",
+              "id": "C4",
+              "section": "Appendix: Additional Experiment: LES Data"
+            },
+            {
+              "description": "Ablate the number of input camera views to measure how retrieval accuracy depends on the sensor array.",
+              "evidence": "For the ablation on input views, we uniformly drop camera pairs from the input.",
+              "id": "C5",
+              "section": "Appendix: Additional Results, Ablations"
+            },
+            {
+              "description": "Cross-check retrieved cloud fields against satellite imagery at coinciding times and report performance stratified by cloud conditions (coverage, base height, thickness).",
+              "evidence": "We highlight that our cloud envelopes qualitatively match up with satellite retrievals",
+              "id": "C6",
+              "section": "5.1 Results"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Model camera geometry explicitly by projecting multi-view image features onto horizontal planes at candidate cloud-layer heights (homography-guided plane sweep), predicting 2.5D cloud properties and then refining to a 3D liquid water content field.",
+              "evidence": "Our method explicitly models the camera geometry by mapping images to cloud layers in world space using a homography, simplifying the cloud property estimation task.",
+              "id": "F1",
+              "section": "6 Related Work"
+            },
+            {
+              "description": "Train on images rendered from physically realistic large eddy simulations of cumulus cases, paired with their 3D liquid water content, and transfer to real cameras.",
+              "evidence": "we rely on realistic large eddy simulations (LES) to generate the necessary training data",
+              "id": "F2",
+              "section": "4.1 Synthetic Dataset"
+            },
+            {
+              "description": "Retrieve height-resolved horizontal winds by tracking the reconstructed 3D cloud fields over time with a point tracker.",
+              "evidence": "By tracking the movement of our reconstructed clouds, we retrieve the horizontal wind profile over time.",
+              "id": "F3",
+              "section": "3.3 Wind Retrieval"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Adapting a satellite-oriented learned retrieval that implicitly learns multi-view geometry (e.g., VIP-CT) directly to ground-based cameras.",
+              "evidence": "VIP-CT is a satellite-based cloud retrieval method, which we observe is unable to learn cloud property estimation from ground-based cameras.",
+              "id": "S1",
+              "section": "5.1 Results"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "cloud property retrieval",
+            "atmospheric remote sensing",
+            "wind profiling"
+          ],
+          "theory_experiment": "experiments_only"
+        },
+        "couts_rapportes": {
+          "splits": [
+            {
+              "cost": "288 GPU hours",
+              "resource": "Model training (both stages), 4x H100 80GB for three days"
+            }
+          ],
+          "total": "288 GPU hours (3 days on 4x H100 80GB)"
+        },
+        "empreintes": {
+          "cibles": "3a061b4cc90b68da8bb82cc714b173cb4df8a91362c798f47cdf63f314ee0b40",
+          "h10": "8821c05676999504797fb9a0c7ca2b53535b0ab1f1ada1d4adef4f52044ccaed",
+          "h9": "6dc8a5f15ffeffbfe899caaade30907a3dc70fba16094dc99c8c4aa0f6bf457d"
+        },
+        "identifiant": "2511.19431v2",
+        "questions": "Accurately estimating the state of Earth's atmosphere is essential to all aspects of society, from protecting food supplies to routing flights and optimizing renewable power generation, and there has been much interest in machine learning weather and climate prediction systems able to model the evolution of the atmosphere. However, many atmospheric processes are too detailed for current models to simulate directly. Shallow cumulus clouds, for example, generally span less than a kilometer, cover as much as 40% of the Earth's surface, form at altitudes below about 2000 m as the first cloud layer above the ground, and play a central role in controlling the Earth's temperature. Because they are small and short-lived, weather and climate simulators cannot resolve them; instead, hand-crafted parameterizations approximate their aggregate effect on temperature, moisture and winds on a much coarser grid, and these approximations are a major source of error in both day-to-day forecasts and long-range climate projections. Machine-learning systems such as GraphCast, Pangu-Weather and Aardvark inherit the problem, since they train on reanalysis data produced by the same physics-based models and operate at kilometer and hourly scales.\n\nDeveloping better, higher-resolution models and assessing their impact requires detailed observations of individual clouds over their whole lifetime: the three-dimensional distribution of liquid water content, its column integral (the liquid water path), cloud base and cloud top heights, and the winds that advect the clouds. Such observations are not easily obtained with current systems. High-resolution satellite imagery has a revisit time of several days, while scanning radar and in situ aircraft measurements provide high detail but only for a small part of a cloud, lacking the larger context. Learned retrieval methods developed for satellite imagery, such as 3DeepCT and VIP-CT, implicitly learn camera geometry from small-scale synthetic datasets and assume near-orthographic, unobstructed views; earlier work with ground-based stereo cameras recovers geometric properties such as cloud base height but not physical quantities such as liquid water content. Moreover, no instrument provides dense three-dimensional ground truth of cloud water content at the resolution and scale of interest, which makes both learning and validating such retrievals difficult.\n\nThe open question is therefore whether, and how, the full four-dimensional physical state of shallow cumulus clouds (three-dimensional liquid water content and height-resolved horizontal winds) can be retrieved with accuracy, at a spatial and temporal resolution fine enough to resolve individual clouds across their life cycle, over an area large enough to capture their context, using low-cost and scalable sensing.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no hardware or runtime totals. Estimate: Steps I-II (1-64-1 MLP SEM with low-rank acyclicity, hyperbolic contrastive embedding) are cheap (minutes to an hour per graph). The dominant cost is training/fine-tuning the transformer backbones: scGPT (4 blocks, 8 heads, d=512, 60 epochs) and scBERT (Performer, d=200, 100 epochs) and MethylGPT, each run with several positional-encoding variants (default, CAPE, relative encoder), four ablations, sensitivity sweeps over three hyperparameters, and downstream tasks (perturbation prediction on Norman, cell-type annotation on four datasets, proteomics clustering, methylation age prediction). Roughly 1e8 FLOPs per token, ~1e3 tokens per cell and ~1e5 cells x 60 epochs gives ~1e18 FLOPs (~5-10 A100-hours) per run; with ~30-50 runs this is on the order of a few hundred GPU-hours, assuming no full pre-training on the entire 91.5M-cell corpus (which would add substantially more).",
+            "reference_gpu_hours": 300
+          },
+          "controls": [
+            {
+              "description": "Compare against each transformer backbone's own default positional/feature encoding (e.g., static pretrained gene embeddings or learned gene embeddings), keeping the rest of the backbone unchanged.",
+              "evidence": "Different position encoding approaches, which do not rely on predefined feature order [^8], are evaluated with the two models, including CAPE, their default methods",
+              "id": "C1",
+              "section": "5.2 Empirically Evaluating Representation Learning with CAPE over Real Multi-Omics Data"
+            },
+            {
+              "description": "Include a causality-agnostic, order-free positional encoding baseline (e.g., a trainable relative position encoder) to separate the effect of causal information from that of merely adding a learned positional encoding.",
+              "evidence": "and a trainable, causality-agnostic relative position encoder [@transformerxl]",
+              "id": "C2",
+              "section": "5.2 Empirically Evaluating Representation Learning with CAPE over Real Multi-Omics Data"
+            },
+            {
+              "description": "Include a no-positional-encoding (null) variant of the same backbone to measure what any positional information contributes.",
+              "evidence": "Specifically, the first variant completely omits CAPE (CAPE-null).",
+              "id": "C3",
+              "section": "5.3 Model Analyses"
+            },
+            {
+              "description": "Replace the inferred directed causal graph with an undirected association/similarity graph built from pairwise feature correlations, to test whether causal (directed) structure matters beyond mere association.",
+              "evidence": "by replacing the learned causal graph with a similarity graph constructed from pairwise feature correlations",
+              "id": "C4",
+              "section": "5.3 Model Analyses"
+            },
+            {
+              "description": "Validate on simulated tabular data generated from a known ground-truth causal DAG (with nonlinear assignments and noise) that the inferred structure and derived positions recover and preserve the true causal structure.",
+              "evidence": "We then utilize the *IIDSimulation* package from gCastle [@zhang2021gcastle] to generate",
+              "id": "C5",
+              "section": "5.1 Empirical Evaluation of CAPE's Properties"
+            },
+            {
+              "description": "Evaluate the positional encoding on more than one transformer backbone, swapping only the positional encoding, so gains are not specific to one architecture.",
+              "evidence": "Gene representations are learned using two prevalent transformer-based single-cell foundational models, including scBERT [@scbert] and scGPT [@scgpt].",
+              "id": "C6",
+              "section": "5.2 Empirically Evaluating Representation Learning with CAPE over Real Multi-Omics Data"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Infer a weighted causal DAG over the non-sequential features from the measurement data and derive feature positional encodings from it, replacing the backbone's default encodings.",
+              "evidence": "We find that both models equipped with CAPE consistently yield substantial performance gains (11.1% average reduction in MSE) compared to their respective default approaches.",
+              "id": "F1",
+              "section": "5.2 Empirically Evaluating Representation Learning with CAPE over Real Multi-Omics Data"
+            },
+            {
+              "description": "Embed the causal graph in hyperbolic space so that pairwise distance encodes causal strength and distance to the origin encodes causal specificity (general/root features near the origin).",
+              "evidence": "These embeddings effectively encode causal strengths as pairwise distances and causal specificity as the distance to the origin",
+              "id": "F2",
+              "section": "5.1 Empirical Evaluation of CAPE's Properties"
+            },
+            {
+              "description": "Inject the causal positions into self-attention in rotary (relative, query/key rotation) form rather than additively, so attention depends on relative causal position.",
+              "evidence": "omitting the rotary form forfeits the attention mechanism's sensitivity to causal distance and causal generality",
+              "id": "F3",
+              "section": "5.3 Model Analyses"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Rely on a generic, causality-agnostic trainable relative position encoder as the main way to give order-free features positions.",
+              "evidence": "This contrasts with using the causality-agnostic relative position encoder, which achieves only a 2.7% reduction.",
+              "id": "S1",
+              "section": "5.2 Empirically Evaluating Representation Learning with CAPE over Real Multi-Omics Data"
+            },
+            {
+              "description": "Build feature positions from an undirected correlation/co-expression similarity graph instead of a directed causal graph.",
+              "evidence": "The second-largest performance drop arises with CAPE-w/o-CSL, where replacing the learned causal DAG with an undirected similar matrix impairs the model's ability to encode causal relationships",
+              "id": "S2",
+              "section": "5.3 Model Analyses"
+            },
+            {
+              "description": "Add the graph-derived positional encodings directly to feature embeddings (additive absolute encoding) rather than using a rotary/relative injection into attention.",
+              "evidence": "Similarly, APE-w/o-rotary leads to a notable decrease in performance",
+              "id": "S3",
+              "section": "5.3 Model Analyses"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "single-cell gene perturbation prediction (scRNA-seq)",
+            "single-cell cell type annotation",
+            "single-cell proteomics cell clustering",
+            "DNA methylation age prediction"
+          ],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "797e85d7c2b068de336a4849d4171534f7f6a688dc46597a89eedcfa5af9728b",
+          "h10": "599125595a1b019e9c4e227baee0014c446dff465df0edafaf959fc9c47ef2f3",
+          "h9": "419e376d6e7a3d68e76286928c82f11a0e9558ffc1c48c75900ca735e79d3397"
+        },
+        "identifiant": "2509.16629v2",
+        "questions": "The transformer has become the cornerstone of modern deep learning, powering advances in natural language processing, computer vision, speech and audio processing, and multimodal learning. At the core of the transformer is the self-attention mechanism, which effectively captures dependencies among sequential elements. However, this mechanism is inherently position-agnostic and permutation-invariant. Positional information is crucial in learning semantics because it encodes sequential dependencies analogous to a directional causal structure, as opposed to the undirected associations captured by self-attention.\n\nTo inject positional information into the transformer architecture, a plethora of strategies have been proposed to generate positional encodings that are integrated with contextual embeddings. These include fixed sinusoidal functions, trainable absolute or relative positional encodings, and more recent rotary positional encodings (RoPE). Notably, these methods generally assume a natural, inherent ordering in the data, such as the sequence of words in a sentence or the spatial arrangement of image patches; even recent variants that improve extrapolation to longer contexts assume a predefined sequential order among tokens.\n\nThis assumption breaks down for many real-world datasets, where rows represent independent observations, columns represent non-sequential features, and entries capture the quantity or state of each feature for a given observation. For example, in the biomedical sciences, multi-omics data such as transcriptomics and proteomics measure gene and protein expression levels within samples. The expressions of genes and proteins lack a predefined sequence, despite their intricate causal order. Similarly, economic studies often involve non-sequential but causally linked economic indicators collected across different regions or countries. Existing positional encoding methods therefore struggle to capture these underlying causal structures, limiting the applicability of transformers to such data.\n\nSome preliminary efforts have emerged within specialized domains. In single-cell transcriptomics, transformer-based foundation models seek to generate distributed gene representations from large corpora of scRNA-seq datasets. To impose a pseudo-order on genes, some of these models organize trainable gene embeddings into sequences based on their expression levels, while others use pretrained, static gene embeddings derived from gene co-expression data as pseudo-positional encodings. These encodings capture association patterns or superficial relationships based on relative expression, and a critical limitation is that they neglect the underlying causal structure among genes.\n\nThe open problem is therefore: given a set of non-sequential yet causally related features and a tabular measurement dataset recording the quantity of each feature in each observation, how can positional encodings for the features be derived from the data so that they reflect the latent causal structure among the features, eliminating the need for a predefined feature ordering, and how can such encodings be integrated into a transformer's self-attention so as to improve the resulting feature-level and observation-level representations? The problem is challenging because the causal structure among features is hidden and must be inferred from observational data in which dependencies may be nonlinear; because the directed, acyclic nature of a causal graph, including how strongly pairs of features are causally related and how causally general or specific each feature is, has no obvious counterpart in conventional sequential positions; and because measurement data are often subject to measurement errors, so that the estimated causal structure, and any positions derived from it, may be perturbed.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "Not reported in GPU-hours. Estimate: grid of 100 configurations x 5 seeds = 500 runs per method, 7 methods, for Phi-1.5 and Llama-3.2-3B (~3,500 runs each); per-run H200 runtimes of ~40 min (Phi, 20 epochs) and ~20 min (Llama, 20 epochs), with fewer epochs on average but slower A100s, give roughly 0.3-0.4 GPU-hours per run, i.e. ~1,400 h (Phi) + ~1,000 h (Llama). Gemma-3-12b: 100 single-seed configurations for 5 methods at ~200 min per 10 epochs, ~1,500 h. Adding fine-tuning, ablations, attacks and MUSE pilot gives about 4,000 GPU-hours (order-of-magnitude estimate; multi-GPU use for Gemma would raise it).",
+            "reference_gpu_hours": 4000
+          },
+          "controls": [
+            {
+              "description": "Compares against established target-based LLM unlearning baselines such as gradient ascent, gradient difference, NPO/SimNPO, DPO and refusal ('I don't know') fine-tuning.",
+              "evidence": "As baselines we consider *Gradient Ascent* (GA), *Gradient Difference* (GD) [@liu2022continual], *Negative Preference Optimization* (NPO)",
+              "id": "C1",
+              "section": "Experimental evaluation"
+            },
+            {
+              "description": "Gives every method (proposed and baselines) the same hyperparameter-search budget and repeats runs over several random seeds, reporting means.",
+              "evidence": "To ensure a fair comparison, we explore 100 different configurations for each method, covering a broad range of hyperparameter combinations while keeping the number of trials consistent across methods",
+              "id": "C2",
+              "section": "Partial Model Collapse achieves more effective unlearning"
+            },
+            {
+              "description": "Measures unlearning on both the forget questions and paraphrased forget questions, and reports it jointly with utility on retain data and general-knowledge sets as a trade-off (Pareto front).",
+              "evidence": "Unlearning performance is quantified using the sum of ROUGE-L scores on the forget and paraphrased-forget sets",
+              "id": "C3",
+              "section": "Experimental evaluation (Metrics)"
+            },
+            {
+              "description": "Tests leakage beyond greedy decoding: worst-case leakage over many sampled answers per forget question, and prefilling attacks that force a continuation.",
+              "evidence": "we draw 100 answers from the output distribution of the unlearned model, and compute the ROUGE-L score between each sampled and ground-truth response",
+              "id": "C4",
+              "section": "PMC is more robust against sampling and prefilling attacks"
+            },
+            {
+              "description": "Checks side effects against a reference model fine-tuned only on the retain data (never exposed to the forget data), e.g. token probabilities of forget-set tokens in unrelated text and least-likely-option leakage in multiple-choice probes.",
+              "evidence": "As the base model, we use a model fine-tuned exclusively on the retain set, with no exposure to the forget data.",
+              "id": "C5",
+              "section": "PMC overcomes limitations of methods optimizing on unlearning targets"
+            },
+            {
+              "description": "Checks general utility after unlearning on standard benchmarks (e.g. ARC, MMLU) against the model before unlearning.",
+              "evidence": "Specifically, we compared the vanilla (base) models with their PMC-unlearned counterparts on Arc-Challenge, Arc-Easy",
+              "id": "C6",
+              "section": "Extended utility experiments (Appendix)"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Unlearn without using ground-truth forget answers by iteratively fine-tuning the model on its own sampled responses to forget questions, choosing among several samples the one a reward prefers (e.g. most dissimilar to the original answer), while keeping a likelihood loss on retain data.",
+              "evidence": "By iteratively fine-tuning the model on its own generations in response to sensitive questions, we can force the model's distribution to collapse on private data in a targeted manner",
+              "id": "F1",
+              "section": "Introduction"
+            },
+            {
+              "description": "Resample fresh responses at each iteration rather than optimizing against a fixed sequence, which yields robustness to sampling and prefilling attacks.",
+              "evidence": "The underlying reason for the improved robustness is that PMC does not optimize on fixed sequences, but instead fine-tunes on newly sampled responses in each epoch.",
+              "id": "F2",
+              "section": "PMC is more robust against sampling and prefilling attacks"
+            },
+            {
+              "description": "Ground the unlearning procedure theoretically by showing that iterative relearning on curated self-generated data converges to the maximum reward (model collapse turned into targeted information removal).",
+              "evidence": "In the absence of statistical and function approximation errors, the expected reward converges to the maximum reward and its variance vanishes",
+              "id": "F3",
+              "section": "Machine unlearning via iterative relearning on self-generated data"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Unlearning by pushing down the likelihood of ground-truth forget sequences (gradient ascent / NPO-type objectives): distorts token probabilities out of context and leaks the answer as the least likely option.",
+              "evidence": "This shows that methods dependent on unlearning targets can considerably distort token probabilities even out-of-context of the unlearning task.",
+              "id": "S1",
+              "section": "PMC overcomes limitations of methods optimizing on unlearning targets"
+            },
+            {
+              "description": "Refusal fine-tuning on a fixed 'I don't know' response: suppression is superficial and the information is recovered by a prefilling attack.",
+              "evidence": "This attack bypasses the fine-tuned response and reveals that the IDK baseline still encodes substantial information about the unlearned answers, leading to high leakage.",
+              "id": "S2",
+              "section": "PMC is more robust against sampling and prefilling attacks"
+            },
+            {
+              "description": "Preference optimization with refusals as positives and ground truth as negatives (DPO): leaks considerably under sampling.",
+              "evidence": "DPO exhibits considerable leakage, with a few questions leaking the entire ground truth under sampling.",
+              "id": "S3",
+              "section": "Additional sampling and prefilling attack visualization (Appendix)"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "privacy-driven unlearning of personal information in LLMs",
+            "question answering about (fictitious) author biographies",
+            "news articles"
+          ],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "5967d2bc69505fd83aa994072a6b7e4f58d02816dc8da733b1e2427b03a623b2",
+          "h10": "fd2e035221207100bb282a2d13511bde538fdd147bc40d7e6df4872a4ece5275",
+          "h9": "4eabcbe08b082a5613266e6fccf240555baf4ef877906942090f454c8ff6f9cb"
+        },
+        "identifiant": "2507.04219v5",
+        "questions": "Privacy regulations and copyright laws (e.g. the GDPR) necessitate the ability to selectively remove data from machine learning models, including Large Language Models (LLMs). While complete retraining without specific data can be optimal for information removal, it is infeasible at scale given the high computational costs of training LLMs. This motivates the need for machine unlearning techniques that erase specific information while preserving a model's broader capabilities.\n\nRecent methods have demonstrated early progress in LLM unlearning, either via refusal fine-tuning or via gradient ascent and preference optimization on ground-truth sequences, yet they introduce severe unlearning-utility trade-offs and lack deeper theoretical analysis and robustness. Moreover, these methods optimize directly on the private sequences they seek to remove by incorporating them into their fine-tuning data. This is counterintuitive: it risks reinforcing exposure to sensitive data and contradicts the principle of minimizing its use. This dependency on unlearning targets may also introduce side effects that remain poorly understood, such as enabling adversaries to elicit data after unlearning. In many practical deployments, the original data may also be unavailable, restricted or impossible to share, one may not know which training samples gave rise to an output requiring unlearning, or no unique ground-truth forget sequence may exist. Evaluating unlearning in LLMs is itself an open challenge: most current evaluations assess whether a model avoids generating specific unlearning targets, but often overlook residual information leakage.\n\nA seemingly unrelated line of work studies iterative retraining, where generative models are repeatedly trained on their own outputs. This can cause information loss in the model's output distribution and eventually lead to distribution collapse (model collapse), a phenomenon largely regarded as a bug in the LLM learning landscape; theoretical work has derived conditions under which collapse occurs, and mixing synthetic with original data has been shown to avoid it. There are notable parallels between the unlearning challenge and this loss of information. This raises the following research question: can the principles underlying model collapse be leveraged to develop principled approaches for machine unlearning?\n\nConcretely, the problem is empirical machine unlearning for LLMs, defined as removing specific information from model outputs (for example, the answers to sensitive questions) without retraining from scratch and without requiring access to the ground-truth responses to those questions, while preserving the model's utility on all other queries. Doing so is challenging: the distributions one would like to alter are distributions over entire sequences, while LLMs only expose next-token distributions; unlearning is typically studied for question answering, where answers to forget questions must be removed while performance on retain queries is preserved; and specifying a well-formed target distribution to converge to is non-trivial without access to a model that has never been trained on the data, which usually requires expensive retraining. A principled approach should come with a theoretical account of why it removes the targeted information, and should remove it robustly, without unintended side effects on the model's behaviour outside the unlearning context.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports only per-run hardware for CIFAR-10: 'Each training run was allocated a single A10 GPU and typically ran for 24 hours to reach 240,000 optimization steps', with runs of up to 400,001 steps (about 40 A10-hours). Four CIFAR-10 U-Nets (two forward, two backward) give roughly 100-160 GPU-hours. The CelebA experiments train U-Nets for two settings (shuffled, simulated 1-ReFlow plus its base model), two noise levels and two dataset sizes, roughly 8-9 runs; assuming about 24 A10-hours each adds roughly 200 GPU-hours. Gaussian and Gaussian-mixture experiments use small MLPs and are negligible. Total about 350 A10 GPU-hours (order of magnitude).",
+            "reference_gpu_hours": 350
+          },
+          "controls": [
+            {
+              "description": "Compare a model trained with deterministic (noise-free) interpolants against an otherwise identical model (same architecture and data) trained in a stochastic regime, e.g. with slightly noisy interpolants, so that the effect of determinism on memorization is isolated.",
+              "evidence": "Both models use identical U-Net architectures.",
+              "id": "C1",
+              "section": "4.3 Memorisation for CelabA"
+            },
+            {
+              "description": "Measure memorization and generalization separately on held-out samples: distance of generated endpoints to the training (paired) targets versus distance to ground-truth optimal transport targets.",
+              "evidence": "The model variants are compared on two criteria: generalization (L2 error to true OT targets), and Memorization (L2 error to the shuffled (training) targets).",
+              "id": "C2",
+              "section": "4.3 Memorisation for CelabA (Adversarial Pairings)"
+            },
+            {
+              "description": "Include an adversarial or arbitrary-pairing condition (e.g. targets shuffled relative to known optimal pairings) as a stress test, so that reproducing training pairs can be distinguished from learning a coherent transport.",
+              "evidence": "we construct an adversarial dataset by shuffling the targets of the [@NEURIPS2021_7a6a6127] optimal OT pairings",
+              "id": "C3",
+              "section": "4.3 Memorisation for CelabA (Adversarial Pairings)"
+            },
+            {
+              "description": "Calibrate distribution metrics with reference comparisons: true samples versus true samples, and training samples versus true samples, alongside generated-versus-true and generated-versus-training comparisons.",
+              "evidence": "(iii) *True*: true vs. true reference, and (iv) *Data*: training pair vs. true samples",
+              "id": "C4",
+              "section": "4.2 Memorisation for Mixture of Gaussian"
+            },
+            {
+              "description": "Vary training-set size (e.g. small versus large) to separate a capacity limit on memorization from what the objective favors.",
+              "evidence": "We measure both on held-out subsets (5K and 50K samples).",
+              "id": "C5",
+              "section": "4.3 Memorisation for CelabA (Adversarial Pairings)"
+            },
+            {
+              "description": "Use an analytically tractable setting with known optimal transport (e.g. Gaussian to Gaussian) and compare gradient variance across pairing types (random, optimal, rotated/straight non-optimal) as ground truth for any gradient-variance diagnostic.",
+              "evidence": "*choices of pairings* $T$ (e.g. random vs. optimal vs. straight)",
+              "id": "C6",
+              "section": "3 Gradient Variance of Gaussian-to-Gaussian transport"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Inject a small amount of noise into the interpolant (stochastic interpolants) to break the bijection between (x_t, t) and training pairs, preventing memorization of deterministic pairings and restoring generalization toward the true transport.",
+              "evidence": "Introducing noise to interpolants breaks the pathway for memorization, enabling principled generalization toward the true OT map.",
+              "id": "F1",
+              "section": "4.3 Memorisation for CelabA"
+            },
+            {
+              "description": "Analyze gradient variance in closed form (Gaussian-to-Gaussian) to characterize which minimizers optimization favors, recognizing that variance reflects mismatch between the learned field and the pairing rather than trajectory crossings.",
+              "evidence": "gradient variance under $L_{\\mathrm{MC}}$ is not governed by geometric proximity of trajectories but by mismatch between the learned vector field and the pairing structure",
+              "id": "F2",
+              "section": "3 Gradient Variance of Gaussian-to-Gaussian transport"
+            },
+            {
+              "description": "Show (theoretically and empirically, e.g. with shuffled or simulated-ReFlow pairings) that with a finite deterministic dataset a zero-loss memorizing vector field exists and is what deterministic training converges to, even when interpolants intersect.",
+              "evidence": "CFM trained on deterministic interpolants reliably memorizes its inputs, even when those pairings are random or flawed.",
+              "id": "F3",
+              "section": "4.3 Memorisation for CelabA"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Relying on noise-free iterative rectification (ReFlow with deterministic couplings and interpolants) to straighten paths and improve the transport; it stagnates or collapses onto the memorized training pairings.",
+              "evidence": "While Rectified Flows can help straighten trajectories, they risk collapsing onto memorized pairings at the first iteration, when deterministic couplings are formed.",
+              "id": "S1",
+              "section": "4.1 Theoretical Results"
+            },
+            {
+              "description": "Using peaks of gradient variance at interpolant intersections (or where interpolants come close) as the main diagnostic of failure; variance does not arise from crossings.",
+              "evidence": "Variance does not arise from intersections or regions where the interpolating lines come close together",
+              "id": "S2",
+              "section": "3.1 Empirical validation"
+            },
+            {
+              "description": "Treating low gradient variance (or zero loss) as a certificate that the learned vector field is transport-optimal.",
+              "evidence": "This also clarifies that low gradient variance does not certify transport optimality",
+              "id": "S3",
+              "section": "3 Gradient Variance of Gaussian-to-Gaussian transport"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_synthetic",
+          "domains": [],
+          "theory_experiment": "mostly_theory"
+        },
+        "couts_rapportes": {
+          "splits": [
+            {
+              "cost": "about 24 hours per run (to reach 240,000 steps)",
+              "resource": "CIFAR-10 U-Net training runs (one NVIDIA A10 GPU per run)"
+            }
+          ],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "8a3486956b0f5d2263ab7a5297b79fd88836009ae6414eb252d2d553d958fecc",
+          "h10": "bda1d2fcf92c7a6ccf140f3b574505245c1a91ddf97d5338369564455c896ee9",
+          "h9": "13630310c7a2be14d710dbc257f5fe5288485114635a1b935114a2e2bce88372"
+        },
+        "identifiant": "2510.18118v1",
+        "questions": "The current state of the art in generative modeling involves learning dynamics between a known source distribution, such as a standard Gaussian, and a target distribution from which many samples are available. When the dynamics are based on an ordinary differential equation (ODE), the model learns a vector field connecting the two distributions; when they are based on a stochastic differential equation (SDE), the score function, or both the score and the vector field, are learned, and any such SDE can be rewritten as a probability flow ODE. These methods perform very well across images, video, audio and molecular data, but generating samples is expensive because it requires integrating an ODE, and they generally do not learn optimal transport maps, which are often essential for unpaired data translation.\n\nTo address the cost of sampling, consistency models accelerate score-based approaches, while Rectified Flows aim to learn straight vector fields that can be integrated in a single step. Rectified Flows iteratively update couplings: at each iteration a vector field is trained with the conditional flow matching loss on the current coupling, and the next coupling is obtained by integrating the learned ODE from the source samples. Repeated rectifications can accumulate errors, and it remains theoretically unclear whether one or two rectifications suffice under general conditions: some works suggest that one rectification may be enough, a claim that two suffice was later retracted, and no formal proof exists. Parameterizations based on input-convex neural networks can in theory guarantee optimal couplings for noiseless interpolants but are difficult to optimize in practice. Schrödinger Bridge Matching learns both forward and backward vector fields using noisy interpolants, approximating entropic optimal transport; this can improve stability and mitigate error accumulation, but requires training two networks per iteration.\n\nA flow matching objective can have several minimizers, and which one stochastic optimization actually reaches is not determined by the loss value alone. The variance of the Monte Carlo gradient of the loss is a natural lens on which solutions the loss landscape favors, and a common belief in the flow matching literature is that gradient variance originates primarily where straight-line interpolants intersect. It is not established when gradient variance is actually informative about the quality of a learned vector field, nor how it depends on the pairing between source and target samples (random, optimal, or merely straight), on the training regime, and on the class of vector fields considered.\n\nThese questions bear directly on memorization. Memorization and generalization in generative models have been studied extensively, with privacy and copyright infringement among the key concerns, but most studies sample source and target points independently. In Rectified Flows each training target has a deterministic counterpart in the source, so the appropriate notion changes: given a finite deterministic training set of pairs, memorization occurs if integrating the learned vector field from a training source returns exactly its paired target, reproducing the training coupling. This raises a central question for rectified-flow training: when the interpolating lines of different pairs intersect, so that the pairing cannot in principle be read off the interpolant, does training still lead to a well-defined transport, or can the objective be minimized by a field that reproduces arbitrary training pairings at inference? If deterministic integration simply recovers the original pairings, what value is added by learning a new vector field, and under which training regimes does a flow-based model generalize toward a better transport rather than reproduce its training couplings?",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no GPU-hours, hardware, or cost. Its hyperparameter tables (batch sizes, iteration counts) are not in the text; only '40k training iterations' for the ImageNet DiT-XL/2 ablations and convergence curves over iterations for Qwen-Image are mentioned, with no batch size, GPU type or per-iteration time, and no iteration counts for the FLUX.1-12B and Qwen-Image-20B distillations (the most expensive runs). Too little is given to estimate total GPU-hours without inventing the key quantities.",
+            "reference_gpu_hours": null
+          },
+          "controls": [
+            {
+              "description": "Compare against existing few-step students distilled from the same teacher with established techniques (distribution matching / variational score distillation, consistency distillation, adversarial distillation), at matched or comparable NFE.",
+              "evidence": "We compare $\\pi$-Flow against other few-step student models distilled from the same teacher.",
+              "id": "C1",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Competitor models)"
+            },
+            {
+              "description": "Report the multi-step teacher as a reference and measure teacher alignment, e.g., FID of student samples against the teacher's own multi-step generations.",
+              "evidence": "On HPSv2, FIDs are computed against the 50-step teacher generations, reflecting teacher alignment.",
+              "id": "C2",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Evaluation protocol)"
+            },
+            {
+              "description": "Measure sample diversity (e.g., recall or a dedicated diversity score, plus visual comparisons across different initial noises for the same prompt) alongside quality, to detect mode collapse rather than reporting quality/preference metrics alone.",
+              "evidence": "both SenseFlow and Qwen-Image Lightning show significant drops in diversity and FIDs",
+              "id": "C3",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Comparison with VSD (DMD) students)"
+            },
+            {
+              "description": "Evaluate on the standard class-conditional ImageNet 256x256 benchmark against prior few-step models of the same architecture at 1 and 2 NFEs, using FID, Inception Score and precision-recall.",
+              "evidence": "we compare $\\pi$-Flow (GM policy with $K=32$) to prior few-step DiTs on ImageNet 256^2^",
+              "id": "C4",
+              "section": "Experiments - ImageNet DiT"
+            },
+            {
+              "description": "Report data alignment (FID against real images) and prompt alignment (e.g., CLIP similarity, VQAScore) in addition to teacher alignment and human-preference metrics.",
+              "evidence": "On COCO prompts, FIDs are computed against real images, reflecting data alignment.",
+              "id": "C5",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Evaluation protocol)"
+            },
+            {
+              "description": "Measure actual wall-clock inference time against shortcut-predicting students at the same NFE, so that any extra per-step computation beyond network evaluations is accounted for.",
+              "evidence": "we compare the inference times of 4-NFE $\\pi$-Flow models and Qwen-Image Lightning",
+              "id": "C6",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Inference time)"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Have the student network predict, at each network evaluation, a cheap network-free velocity model (policy) that is integrated over many ODE substeps, decoupling integration substeps from network evaluations instead of predicting a single shortcut.",
+              "evidence": "We propose $\\pi$-Flow, a new paradigm that decouples ODE integration substeps from network evaluation steps, enabling both fast generation and straightforward distillation.",
+              "id": "F1",
+              "section": "Introduction"
+            },
+            {
+              "description": "Distill with on-policy (DAgger-style) imitation: roll out the student's own trajectory, query the teacher velocity at visited states, and match the student's velocity to it with a standard l2 flow matching loss.",
+              "evidence": "$\\pi$-ID trains the policy on its own trajectory: at visited states, we query the teacher velocity and match the policy's output to it",
+              "id": "F2",
+              "section": "Introduction"
+            },
+            {
+              "description": "Use a probabilistic, state-adaptive policy family (Gaussian-mixture velocity/posterior) that is robust to trajectory perturbations, rather than a policy that ignores the current state.",
+              "evidence": "with the GMFlow policy consistently outperforming the DX policy by a clear margin",
+              "id": "F3",
+              "section": "Experiments - ImageNet DiT"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Rely on variational score distillation / distribution matching distillation (DMD) as the main distillation objective, which yields high visual quality but collapses diversity.",
+              "evidence": "However, they are widely known to suffer from mode collapse, as reflected in our experiments: both SenseFlow and Qwen-Image Lightning show significant drops in diversity and FIDs.",
+              "id": "S1",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (Comparison with VSD (DMD) students)"
+            },
+            {
+              "description": "Train the student off-policy only on teacher trajectories (behavior cloning), which suffers compounding errors compared with on-policy imitation.",
+              "evidence": "which is strictly better than the $O(n^2\\bm{\\varepsilon})$ compounding-error behavior of off-policy behavior cloning",
+              "id": "S2",
+              "section": "pi-ID: Policy-Based Imitation Distillation (Error bounds and convergence)"
+            },
+            {
+              "description": "Use a policy whose predicted trajectory is fixed and not adaptive to the current noisy state (the DX policy), which is less robust and underperforms the adaptive GM policy.",
+              "evidence": "the DX policy slightly underperforms comapred to the GMFlow policy",
+              "id": "S3",
+              "section": "Experiments - FLUX.1-12B and Qwen-Image-20B (GMFlow vs. DX policy)"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "text-to-image generation"
+          ],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "b931a855f75259b9d1859b25e75c3d6a6cd93dd544c1c395677ea5a0a2a55690",
+          "h10": "2779bd8fbc435f72ae079346c487618b196e3eeaac0e02240d9fdbe0acbd0ba0",
+          "h9": "4d3a745c991009e16c0160d7b53de3cdee80359f84a6f8b87bca3beb9d6e5d85"
+        },
+        "identifiant": "2510.14974v3",
+        "questions": "Diffusion and flow matching models have become the dominant method for visual generation, delivering compelling image quality and diversity. However, these models rely on a costly denoising process for inference, which integrates a probability flow ODE over multiple timesteps, each step requiring a neural network evaluation. The inference cost of such models is commonly quantified by the number of function (network) evaluations (NFEs), and despite the progress in advanced ODE solvers, high-quality sampling typically requires over 10 steps due to inherent ODE truncation error, making it computationally expensive.\n\nTo reduce the inference cost, diffusion distillation methods compress a pre-trained multi-step model (the teacher) into a student that requires only one or a few network evaluation steps. Existing distillation approaches avoid ODE integration by taking one or a few shortcut steps that map noise to data, where each shortcut path is predicted by the student network (a shortcut-predicting model). This creates a format mismatch: the teacher predicts flow velocities, whereas the student predicts a shortcut towards denoised data. Learning these shortcuts is a significant challenge because they cannot be directly inferred from the teacher model, which necessitates complex training methods.\n\nEarly work directly regresses the teacher's ODE integral in a single step, but regressing the clean data with an l2 loss tends to produce blurry results. Progressive distillation methods improve on this via a multi-stage process that progressively increases the student's step size by regressing the previous stage's multi-step outputs with fewer steps, yet this introduces error accumulation. Consistency-based models implicitly impose a velocity-based regression loss, but the flow velocity of a shortcut-predicting student must be constructed implicitly using either inaccurate finite differences or expensive Jacobian-vector products; their quality is still limited by the accumulation of velocity errors into the integrated shortcut, and in practice they are often augmented with additional objectives, further complicating training. Distribution matching approaches use score matching and adversarial training to align the student's output distribution with the teacher's: variational score distillation (also known as distribution matching distillation) achieves high quality but risks diversity loss due to mode collapse, while GAN-style objectives balance quality and diversity but can cause style drift. Their common reliance on auxiliary networks introduces additional tuning complexity and may lead to stability issues at scale. In turn, such sophisticated training often leads to degraded image quality from error accumulation or to compromised diversity due to mode collapse, i.e., a quality-diversity trade-off.\n\nThe open problem is therefore how to obtain few-step generators, needing only one or a few network evaluations, whose distillation from a multi-step flow teacher is simple, stable and scalable to large models, that limit error accumulation along the generation trajectory, and that retain both the teacher's image quality and its sample diversity, rather than trading one for the other, without giving up the speed advantage of few-step sampling.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports no compute totals; it only states that experiments ran on NVIDIA L20, H20 and A800 GPUs with the Trinity-RFT framework. Rough estimate: about 90 RL runs with Qwen2.5-1.5B-Instruct on GSM8k (Figures 1, 3, 7, 8 with a 3-value learning-rate sweep, 9; several algorithms x 3-4 off-policy settings), at roughly 8 GPUs x 3 h each (~2,000 GPU-hours); about 10 Llama-3.2-3B ToolACE runs (~250 GPU-hours); a few Qwen2.5-7B Guru-Math runs (~500 GPU-hours); a few Qwen3-30B-A3B Guru-Math runs (~650 GPU-hours); a few Llama-3.1-8B MATH runs (~250 GPU-hours). Total on the order of 3,500 GPU-hours, highly uncertain since step counts and GPU counts per run are not given.",
+            "reference_gpu_hours": 3500
+          },
+          "controls": [
+            {
+              "description": "Standard GRPO (token-wise importance sampling with conventional clipping, e.g. epsilon = 0.2) run as a baseline under exactly the same off-policy settings, models and tasks as any proposed method.",
+              "evidence": "GRPO(with the same $\\epsilon_{\\textsf{low}}= \\epsilon_{\\textsf{high}}= 0.2$) have nearly identical performance",
+              "id": "C1",
+              "section": "4.1 Demystifying myths about GRPO"
+            },
+            {
+              "description": "Vanilla group-relative REINFORCE with no clipping or other regularization, run as a baseline under the same off-policy settings, to show whether a stabilizing mechanism is needed at all.",
+              "evidence": "whereas the collapse of REINFORCE highlights the critical role of clipping",
+              "id": "C2",
+              "section": "4.1 Demystifying myths about GRPO"
+            },
+            {
+              "description": "A controlled sweep of the degree and type of off-policyness (on-policy reference, stale policy weights between synchronizations, delayed/lagged data, and an extreme offline setting with data only from the initial policy), with all methods compared at each level.",
+              "evidence": "We also include a stress-test setting that only allows access to offline data generated by the initial policy model.",
+              "id": "C3",
+              "section": "4 Rethinking the rationales behind recent RL algorithms (Experimental setup)"
+            },
+            {
+              "description": "An ablation that isolates importance-sampling weights from clipping: the same clipped objective run with and without importance-sampling weights.",
+              "evidence": "To isolate the roles of importance sampling and clipping, we consider a series of",
+              "id": "C4",
+              "section": "4.1 Demystifying myths about GRPO"
+            },
+            {
+              "description": "A learning-rate sweep to check that any gain attributed to a changed regularization (e.g. a wider clipping range) is not simply equivalent to using a larger learning rate.",
+              "evidence": "or simply due to the choice of a small learning rate.",
+              "id": "C5",
+              "section": "Appendix 7.4 Ablation: the impact of learning rates"
+            },
+            {
+              "description": "Stability diagnostics reported alongside reward (KL divergence to the initial policy, entropy, response length) and replication across several model families/sizes and tasks.",
+              "evidence": "achieves higher rewards with lower KL divergence, while maintaining more stable entropy and response lengths",
+              "id": "C6",
+              "section": "Appendix 7.6 Additional details and results for RED algorithms"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Treat clipping as a regularizer of the policy update rather than as a correction for importance sampling: drop importance-sampling weights and widen the clipping range well beyond conventional values to speed up off-policy training while keeping stability.",
+              "evidence": "GRPO's effectiveness in off-policy settings stems from *clipping as regularization* rather than importance sampling.",
+              "id": "F1",
+              "section": "4 Rethinking the rationales behind recent RL algorithms (Finding F1); 4.1"
+            },
+            {
+              "description": "Derive group-relative REINFORCE as one gradient step of a KL-regularized surrogate loss enforcing pairwise consistency among sampled responses, an interpretation that does not assume the data were sampled from the current policy, and use it to guide off-policy algorithm design (regularize updates, shape the data distribution).",
+              "evidence": "via a novel, first-principles derivation that makes no explicit assumption about the sampling distribution of the responses",
+              "id": "F2",
+              "section": "1 Introduction; 2.2 A new off-policy interpretation for group-relative REINFORCE"
+            },
+            {
+              "description": "Actively shape the training data distribution, e.g. drop excess negative samples to balance positives and negatives, or up-weight high-advantage responses with exponential weights.",
+              "evidence": "such as dropping excess negatives or up-weighting high-reward rollouts --- fit naturally into our off-policy view and show strong empirical performance",
+              "id": "F3",
+              "section": "4 Rethinking the rationales behind recent RL algorithms (Finding F3); 4.3 Understanding data-weighting methods"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Using vanilla REINFORCE (no clipping or regularization) directly on off-policy data.",
+              "evidence": "whereas the collapse of REINFORCE highlights the critical role of clipping",
+              "id": "S1",
+              "section": "4.1 Demystifying myths about GRPO"
+            },
+            {
+              "description": "Using two-sided clipping (zero gradient outside a symmetric band, no outer safety margin) as the main regularizer for off-policy training.",
+              "evidence": "[REC-TwoSide]{.smallcaps} methods demonstrate fast policy improvement at the beginning but tend to collapse later on",
+              "id": "S2",
+              "section": "Appendix 7.3 REC with different clipping mechanisms"
+            },
+            {
+              "description": "Trying to speed up GRPO-style off-policy training by raising the learning rate while keeping the conventional narrow clipping range.",
+              "evidence": "simply increasing the learning rate cannot bridge the performance gap",
+              "id": "S3",
+              "section": "Appendix 7.4 Ablation: the impact of learning rates"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "real_only",
+          "domains": [
+            "math word problem solving",
+            "tool use and function calling"
+          ],
+          "theory_experiment": "mostly_theory"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "b692ddffbb9f1adf8b9e320671c0675f93991e2c81ead799701ccf0c69bbcbfe",
+          "h10": "7229a5f91c2991568b5b88e4d096d9669aabbd710ef967f1d84d2121b225c06f",
+          "h9": "ce4e34f17d91855fbfc98b9372f81979c7eeeabb04dd54279ae29914b1d900ae"
+        },
+        "identifiant": "2509.24203v2",
+        "questions": "The past few years have witnessed rapid progress in reinforcement learning (RL) for large language models (LLMs). This began with reinforcement learning from human feedback, which aligns pre-trained LLMs with human preferences, followed by reasoning-oriented RL that enables LLMs to produce long chains of thought. More recently, agentic RL aims to train LLMs for agentic capabilities such as tool use, long-horizon planning, and multi-step task execution in dynamic environments.\n\nAlongside these developments, off-policy RL has been attracting growing interest. In the \"era of experience\", LLM-powered agents need to be continually updated through interaction with the environment. Practical constraints in real-world deployment and the complexity of LLM-RL infrastructure often render on-policy training impractical: rollout generation and model training can proceed at mismatched speeds, data might be collected from different policies, reward feedback might be irregular or delayed, and the environment may be too costly or unstable to query for fresh trajectories. Moreover, in pursuit of higher sample efficiency and model performance, it is desirable to go beyond the standard paradigm of independent rollout sampling, e.g., via replaying past experiences, synthesizing higher-quality experiences based on auxiliary information, or incorporating expert demonstrations into online RL, all of which incur off-policyness.\n\nHowever, the prominent algorithms in LLM-RL, Proximal Policy Optimization (PPO) and Group Relative Policy Optimization (GRPO), are essentially on-policy methods: as modern variants of REINFORCE, their fundamental rationale is to produce unbiased estimates of the policy gradient, which requires fresh data sampled from the current policy. PPO and GRPO can handle a limited degree of off-policyness via importance sampling, typically with token-wise probability ratios that are clipped, but classical policy improvement guarantees require that the current policy remains sufficiently close to the behavior policy. Truly off-policy LLM-RL often demands ad-hoc analysis and algorithm design; worse still, as existing RL infrastructure is typically optimized for REINFORCE-style algorithms, its support for specialized off-policy RL algorithms could be limited.\n\nSeveral recent practices also sit uneasily with the standard policy-gradient view. GRPO-style algorithms combine importance-sampling weights with clipping, yet it is unclear which of these ingredients actually matters when learning from stale data. Recent algorithms such as Kimi's Online Policy Mirror Descent (OPMD) and Meta's Asymmetric REINFORCE (AsymRE) come with their own, separate rationales. Data-weighting heuristics, such as strategically discarding some negative samples or up-weighting high-reward responses, violate the assumptions of policy gradient theory and often require ad-hoc analysis.\n\nThis raises several questions. Is on-policy sampling truly a prerequisite for REINFORCE-style algorithms that, like GRPO, sample multiple responses per prompt and use the within-group mean reward as a baseline, and how should such algorithms be understood when the training data come from older, delayed, or otherwise different policies? What general principles should guide adapting them to truly off-policy settings? And what are the actual roles of importance sampling, clipping, regularization, and data weighting in making these algorithms work under off-policyness? Answering these questions would enable principled, infrastructure-friendly algorithm design for off-policy RL in LLMs.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper only states that all experiments run on 8 NVIDIA H20 (94GB) GPUs, with no hours. Estimate: training set of 5 x 20,000 = 100K examples up to 32K tokens (assume ~5K tokens on average, ~5e8 tokens per epoch, one epoch); a 7B encoder trained with full forward/backward costs about 6 x 7e9 x 5e8 = 2e19 FLOPs, i.e. roughly 130 H20 GPU-hours at ~45 effective TFLOPS. About 10 training runs (COMI on LLaMA-2-7B and Qwen2-7B, GMSA retrained on both, four ablations, Qwen3-4B runs at 32K and 64K) give ~1,300 GPU-hours, plus evaluation of all baselines over 5 datasets and several compression rates (~200 GPU-hours): about 1,500 GPU-hours.",
+            "reference_gpu_hours": 1500
+          },
+          "controls": [
+            {
+              "description": "Compare against existing compression baselines from each family (task-agnostic and task-aware hard/soft prompt compression, and KV-cache compression) at the same compression ratio, re-run with official code and, for trainable baselines, trained on the same data and settings.",
+              "evidence": "We conduct comprehensive comparisons with various methods in both context compression and KV-cache compression",
+              "id": "C1",
+              "section": "Experiments - Settings (Baselines)"
+            },
+            {
+              "description": "Include reference conditions without compression: the full uncompressed context (original prompt) and a closed-book condition with only the question as input.",
+              "evidence": "**Closed-book** indicates using only the input question as the input, while **Original Prompt** indicates using all retrieved documents as the input.",
+              "id": "C2",
+              "section": "Experiments (Table 1 caption)"
+            },
+            {
+              "description": "Ablate the redundancy term: compare against a relevance-only scoring/allocation variant to show that accounting for redundancy, not relevance alone, drives any gain.",
+              "evidence": "Ours w/o Coarse-Grained level Redundancy reallocates groups based solely on relevance, ignoring inter-group redundancy.",
+              "id": "C3",
+              "section": "Experiments - Ablation Study"
+            },
+            {
+              "description": "Compare adaptive (non-uniform) allocation of the compression budget against a uniform allocation where every segment is compressed at the same rate.",
+              "evidence": "replaces dynamic grouping with a uniform partition, so every token group is compressed at the same rate",
+              "id": "C4",
+              "section": "Experiments - Ablation Study"
+            },
+            {
+              "description": "Evaluate across a sweep of compression ratios (from low, e.g. 2x, to high, e.g. 32x) rather than a single ratio.",
+              "evidence": "with the compression ratio gradually increasing (from 2x to 32x)",
+              "id": "C5",
+              "section": "Experiments - Main Result"
+            },
+            {
+              "description": "Measure efficiency (compression and generation latency, end-to-end) against the uncompressed prompt and the baselines, not only accuracy.",
+              "evidence": "the end-to-end latency can be divided into compression and generation phases",
+              "id": "C6",
+              "section": "Experiments - Efficiency Analysis"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Score compression units by query relevance minus their redundancy with other units (a marginal-information-gain criterion) instead of relevance alone.",
+              "evidence": "We introduce *Marginal Information Gain (MIG)*, which is defined as the relevance of a unit to the query minus its semantic redundancy with other units.",
+              "id": "F1",
+              "section": "Introduction"
+            },
+            {
+              "description": "Reallocate the compression budget adaptively across segments of the context according to their relevance-and-redundancy score, giving informative, non-redundant segments lower compression rates.",
+              "evidence": "groups with high MIG (*i.e.*, high relevance and low redundancy) are assigned lower compression rates",
+              "id": "F2",
+              "section": "Introduction"
+            },
+            {
+              "description": "Within each segment, merge token representations with weights based on relevance minus redundancy rather than plain average pooling, in a trained soft (encoder-decoder) compressor.",
+              "evidence": "Tokens with high MIG contribute more to the merged representation",
+              "id": "F3",
+              "section": "Introduction"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Task-agnostic (query-independent) context compression as the main approach for high compression rates.",
+              "evidence": "Despite preserving general semantics, these methods lack awareness of query-related tokens, inevitably discarding useful information and degrading performance, especially under high compression constraints.",
+              "id": "S1",
+              "section": "Related Work - Task-Agnostic Context Compression Methods"
+            },
+            {
+              "description": "Task-aware compression that keeps or deletes content purely by query relevance, ignoring redundancy among retained content (e.g. relevance-based token deletion).",
+              "evidence": "existing task-aware methods rely solely on relevance as a criterion for compression, ignoring the inherent redundancy in natural language",
+              "id": "S2",
+              "section": "Introduction"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "real_only",
+          "domains": [
+            "open-domain question answering",
+            "multi-hop question answering",
+            "long-narrative reading comprehension",
+            "multi-document news summarization",
+            "retrieval-augmented generation"
+          ],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "a1b75873b54801528114f4659ea28b35d04b0a0e4a655c58cbdf10a2d7d77a7c",
+          "h10": "d937e13024f04eba7e388d841ac0ba6c6caa098abe90dcb4c12147d9614d1d11",
+          "h9": "5d1644da0442cb54b3a20e4964bb9762dddc6b6c456200f95f00526042928139"
+        },
+        "identifiant": "2602.01719v3",
+        "questions": "Large Language Models (LLMs) achieve exceptional performance across a wide range of Natural Language Processing tasks. However, recent advances in prompting techniques, such as Retrieval-Augmented Generation (RAG), inevitably increase input length, introducing two key challenges when deploying LLMs in long-context scenarios: (1) computational cost, as the quadratic complexity of the attention mechanism in Transformers leads to inefficiency with long sequences; and (2) information redundancy, where the presence of redundant content degrades model performance.\n\nContext compression has emerged as a promising way to address these challenges by significantly reducing input length and eliminating redundancy. Existing prompt compression methods mainly fall into two categories: task-agnostic and task-aware context compression. LLMs typically allocate attention to only a small subset of query-relevant tokens. Consequently, task-agnostic methods, which compress the context without considering the input query, inevitably lose or dilute relevant information, especially at high compression rates.\n\nTask-aware methods, in contrast, include the query in the compression process and preserve information according to its relevance, through query-guided strategies such as merging, deletion or summarization. However, they rely solely on relevance as a compression criterion and ignore the inherent redundancy of natural language. This leads to the retention of highly similar relevant content, and such over-similarity can mislead the LLM into producing erroneous outputs, since relevance does not guarantee correctness. The issue is amplified in long-context scenarios, where different segments carry different information value and should be compressed at different rates. Existing mechanisms for dynamically allocating compression rates are limited: they either follow predefined linear rules that lack adaptability, rely on model-internal understanding that is task-agnostic and may ignore query-relevant content, or set compression rates based solely on relevance, assigning lower compression to highly relevant content. None of them accounts for semantic redundancy among compression units, which leads to the repeated retention of similar information and compromises both compression effectiveness and information diversity. KV-cache compression offers another route, but it requires the compression model and the response model to be identical and needs model-specific modifications for different KV-cache structures.\n\nThis raises the research question: how can we retain query-relevant information while identifying and eliminating semantic redundancy among compressed representations, especially under high compression rates, so as to jointly optimize relevance and diversity?",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper reports compute only for one training of FIOC-WM per environment: Sprites-World 3 h on 1x A100 (3 GPU-h), Fetch 8 h on 6x 4090 (48), i-Gibson 9 h on 6x 4090 (54), Libero 8 h on 1x A100 (8), Kitchen 6 h on 1x A100 (6), i.e. about 119 GPU-hours. Runs use 5 or 10 seeds, giving roughly 600 GPU-hours for the proposed method; assuming the four baselines (DreamerV3, TD-MPC2, EIT, DINO-WM) and the ablation variants cost on the same order per run, the total is roughly 3,000 GPU-hours (order-of-magnitude estimate).",
+            "reference_gpu_hours": 3000
+          },
+          "controls": [
+            {
+              "description": "Compare against strong general-purpose model-based RL / world-model baselines that do not model objects or interactions explicitly (e.g., DreamerV3, TD-MPC2), plus an object-centric baseline (e.g., EIT).",
+              "evidence": "we compare against established baselines including DreamerV3 [@hafner2023mastering], TD-MPC2 [@hansen2023td] and the object-centric model-free method EIT [@haramati2024entity]",
+              "id": "C1",
+              "section": "Experiments (Baselines)"
+            },
+            {
+              "description": "Compare explicit interaction-structure learning against a baseline that infers interactions only implicitly or post hoc (e.g., from attention weights), measuring accuracy of inferred interaction graphs against ground truth (e.g., Structural Hamming Distance).",
+              "evidence": "We compare our approach with baselines that do not explicitly model dynamic structure, but instead rely on post hoc analysis based on attention weights to infer interactions",
+              "id": "C2",
+              "section": "Experiments (Evaluation Metrics, Interaction Learning)"
+            },
+            {
+              "description": "Ablation replacing the learned sparse interaction structure with a dense, fully connected interaction graph at every time step, to test whether sparse interaction modeling matters.",
+              "evidence": "we assume a fully connected graph for all time steps and learn the dynamics using this dense graph",
+              "id": "C3",
+              "section": "Ablation Studies"
+            },
+            {
+              "description": "Give the baselines the same pre-trained visual features (e.g., DINO embeddings) as the proposed model, to separate the gain from strong visual representations from the gain due to structure.",
+              "evidence": "Specifically, we adapted both baselines to use DINO embeddings as input",
+              "id": "C4",
+              "section": "Appendix: Full Ablations (Using pre-trained embeddings for Dreamer and TD-MPC)"
+            },
+            {
+              "description": "Evaluate generalization on held-out conditions: train on some combinations of object attributes (or skills, or object counts) and test zero-shot on unseen combinations, reporting the gap relative to in-distribution performance.",
+              "evidence": "we train models on domains with specific combinations of object attributes (e.g., color, shape, or material) and test them on domains with unseen attribute combinations",
+              "id": "C5",
+              "section": "Experiments (Evaluation Metrics, Policy Learning)"
+            },
+            {
+              "description": "Run every method with multiple random seeds (at least 5) and report error bars or standard deviations.",
+              "evidence": "All runs are with either 5 or 10 random seeds (with error bars shown in the learning curve figures).",
+              "id": "C6",
+              "section": "NeurIPS Paper Checklist (Experiment statistical significance)"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Learn an explicit, sparse, time-varying interaction graph between objects inside the world model (e.g., variational masks or conditional independence tests) rather than leaving interactions implicit.",
+              "evidence": "These results demonstrate that FIOC consistently outperforms attention-based methods across all cases, verifying the importance of explicitly modeling the interaction structures and their changes using regime variables.",
+              "id": "F1",
+              "section": "Results on Learning World Models"
+            },
+            {
+              "description": "Use a hierarchical policy in which a high-level policy selects target object interactions (subgoal interaction graphs) and a low-level policy executes them, for long-horizon tasks.",
+              "evidence": "For policy learning, the hierarchical policy plays the most essential role.",
+              "id": "F2",
+              "section": "Ablation Studies"
+            },
+            {
+              "description": "Factorize each object's latent state, on top of pre-trained visual features and slot-based object discovery, into static (time-invariant) and dynamic (time-varying) components.",
+              "evidence": "Our disentanglement module addresses this limitation by improving the representation of static attributes within each object.",
+              "id": "F3",
+              "section": "Results on Learning World Models"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Inferring object interactions directly from attention weights of a model instead of learning an explicit relational/interaction module.",
+              "evidence": "relying solely on attention-based mechanisms is not robust across all settings, indicating that directly inferring interactions from the attention matrix is insufficient",
+              "id": "S1",
+              "section": "Appendix: Full Results on World Modeling (Interaction Learning)"
+            },
+            {
+              "description": "Learning a flat policy directly on low-level actions without a high-level policy that sequences interactions.",
+              "evidence": "Policy learning is performed directly on low-level actions without a high-level policy governing the sequence of interactions.",
+              "id": "S2",
+              "section": "Ablation Studies"
+            },
+            {
+              "description": "Simply plugging strong pre-trained visual features (e.g., DINO) into a monolithic world model such as DreamerV3 or TD-MPC2, without object/interaction structure.",
+              "evidence": "the pre-trained DINO features improve both Dreamer-V3 and TD-MPC2 performance in some cases, but they still underperform compared to FIOC",
+              "id": "S3",
+              "section": "Appendix: Full Ablations (Using pre-trained embeddings for Dreamer and TD-MPC)"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "synthetic_only",
+          "domains": [
+            "robot manipulation",
+            "household embodied-AI tasks"
+          ],
+          "theory_experiment": "experiments_only"
+        },
+        "couts_rapportes": {
+          "splits": [
+            {
+              "cost": "3 GPU hours",
+              "resource": "FIOC-WM training, Sprites-World (3 hours on 1x NVIDIA A100)"
+            },
+            {
+              "cost": "48 GPU hours",
+              "resource": "FIOC-WM training, Fetch (8 hours on 6x NVIDIA 4090)"
+            },
+            {
+              "cost": "54 GPU hours",
+              "resource": "FIOC-WM training, i-Gibson (9 hours on 6x NVIDIA 4090)"
+            },
+            {
+              "cost": "8 GPU hours",
+              "resource": "FIOC-WM training, Libero-object (8 hours on 1x NVIDIA A100)"
+            },
+            {
+              "cost": "6 GPU hours",
+              "resource": "FIOC-WM training, Kitchen (6 hours on 1x NVIDIA A100)"
+            }
+          ],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "341c2c5dbb107440738559f1af870acbf452a07091b2a3c5bee0c0a7ff0be05e",
+          "h10": "58ba22aea5b8cfe8ddb0fbe7b837067c0d783c5ce101a6a8d1fc1ac725a7515a",
+          "h9": "e2e558945a6cfd3483a1a6ed63232a33f427b3eaa15cd23abab312f750aa6363"
+        },
+        "identifiant": "2511.02225v1",
+        "questions": "World models aim to learn state abstractions and action-conditioned dynamics that capture the evolution of high-dimensional observations, along with auxiliary information (e.g., rewards, skills), for decision-making tasks. Recent advances have demonstrated their effectiveness in downstream applications such as robotics and autonomous driving.\n\nOne of the central challenges for world models is to extract low-dimensional, structured latent representations from high-dimensional observations, which often display high complexity and variability across both semantic and dynamic aspects. On the dynamics side, latent spaces often contain underlying structures, and prior work imposes structural priors to learn compact latents that encourage disentanglement and capture relational or compositional patterns. On the semantics side, pre-trained visual features have been leveraged to better encode rich content and improve fidelity. Collectively, these approaches learn compressed, structured representations of high-dimensional perceptual data to support downstream decision making. However, it remains unclear to what extent such compression and structure are necessary and sufficient for downstream policy learning.\n\nThis raises the question of which types and degrees of decomposition structure make latent representations effective for efficient and generalizable policy learning. Real-world settings exhibit substantial variability in both visual appearance and dynamic interactions, often involving multiple objects with diverse attributes. Real-world dynamics are heavily influenced by rich interactions among objects, such as collisions, containment, stacking, and physical forces like friction or gravity, which collectively determine the evolution of the environment. Yet most object-centric reinforcement learning methods factor the state by individual objects while leaving the interactions among them implicit. Open questions therefore include whether and how objects, their interactions, and the attributes that govern these interactions should be represented in a world model learned from high-dimensional observations; whether such structure improves sample efficiency on long-horizon tasks that require completing sequences of sub-skills; and whether it supports generalization to unseen combinations of object attributes, objects, and skills.",
+        "tentative": 1
+      },
+      {
+        "cibles": {
+          "compute": {
+            "basis": "estimated",
+            "evidence": "The paper gives hardware ('We conduct all experiments on 16--32 NVIDIA A100 GPUs with 80GB memory') but no hours. Estimate: roughly 80-90 full fine-tuning runs (about 30 learning-rate-sweep runs over 1B-8B models on MedCalc and ESCI w/ and w/o CoT, about 40 mitigation-method runs at two learning rates, plus MetaMathQA with DeepSeek-Coder-7B, KL-regularization and multiple-choice runs). A typical run is 20 epochs over 10k-49k examples (roughly 300-400M training tokens) on a 3B-8B model, about 6*N*D = 1e19 FLOPs, i.e. ~20-30 A100-hours at realistic utilization with batch 16; MetaMathQA (395k examples, 2 epochs, 7B) is similar. Adding per-checkpoint domain and general-benchmark evaluation gives on the order of 3,000 A100 GPU-hours (uncertain by a factor of ~2).",
+            "reference_gpu_hours": 3000
+          },
+          "controls": [
+            {
+              "description": "A sweep over several learning rates for plain SFT (spanning small values such as 1e-6 to the larger values used in prior work such as 5e-6 or 2e-5), so that the degradation is not attributed to SFT itself when it may come from aggressive optimization.",
+              "evidence": "Indeed, many of these studies used relatively large learning rates such as $5\\mathrm{e}{-6}$ or $2\\mathrm{e}{-5}$.",
+              "id": "C1",
+              "section": "3 Learning Rate Matters"
+            },
+            {
+              "description": "Joint reporting of target-domain performance and general-benchmark performance for every configuration (a trade-off / Pareto view), with a stated checkpoint-selection rule (e.g., select on target-domain performance, then evaluate general benchmarks).",
+              "evidence": "Model checkpoints are selected based on their best performance on the target domain task, after which the corresponding models are evaluated on general-purpose benchmarks",
+              "id": "C2",
+              "section": "3.1.2 Evaluation Protocol"
+            },
+            {
+              "description": "The untuned initial model evaluated on both the target domain and the general benchmarks, as the reference point from which gains and degradation are measured.",
+              "evidence": "the models' zero-shot performance on the MedCalc test set remains relatively low, as shown in Figure [1](#fig:lr_plot) (*Init* point)",
+              "id": "C3",
+              "section": "4.3 Token-Level Analysis"
+            },
+            {
+              "description": "Comparison against established data-oblivious forgetting-mitigation baselines (L2 regularization toward initial weights, LoRA, weight averaging such as WiSE-FT, sample-reweighting such as FLOW), using the same training configuration.",
+              "evidence": "We evaluate all mitigation strategies considered in @sanyal2025upweighting, including L2 regularization, LoRA, Wise-FT (model averaging), and FLOW",
+              "id": "C4",
+              "section": "4.2 Results"
+            },
+            {
+              "description": "Mitigation methods compared under more than one learning rate (at least a small and a large one), since method rankings can change with the optimization regime.",
+              "evidence": "reports the trade-off between domain performance and general performance under two learning rates",
+              "id": "C5",
+              "section": "4.2 Results"
+            },
+            {
+              "description": "Varying the supervision format of the target sequence (with chain-of-thought rationale vs. label only) to test whether what is supervised changes the degradation.",
+              "evidence": "We consider two training settings: w/ CoT, where the target sequence includes both reasoning and the final label, and w/o CoT, where it contains only the label.",
+              "id": "C6",
+              "section": "3.1.1 Datasets"
+            }
+          ],
+          "fruitful_directions": [
+            {
+              "description": "Treat the learning rate as the primary lever: fine-tune with substantially smaller learning rates (e.g., 1e-6) and show that general-capability loss shrinks while target-domain performance stays comparable to larger rates.",
+              "evidence": "using a smaller learning rate (e.g., $1\\mathrm{e}{-6}$) can substantially reduce the loss of general capabilities, while achieving domain-specific task performance on par with much larger learning rates",
+              "id": "F1",
+              "section": "3 Learning Rate Matters"
+            },
+            {
+              "description": "Analyze SFT at the token level (per-token probability under the model) and identify that a small subset of low-probability (hard) tokens drives the shift, while most target tokens are already easy.",
+              "evidence": "Most tokens in SFT training data pose low learning difficulty to the LLMs, even when the overall domain-specific task performance is poor.",
+              "id": "F2",
+              "section": "1 Introduction / 4.3 Token-Level Analysis"
+            },
+            {
+              "description": "Dynamically down-weight the loss of low-probability tokens at each step (weights tied to model confidence, with an adaptive temperature), especially when larger learning rates are needed for domain performance.",
+              "evidence": "TALR adaptively down-weights hard tokens by solving a constrained optimization problem that admits a closed-form solution",
+              "id": "F3",
+              "section": "1 Introduction / 4.1"
+            }
+          ],
+          "sterile_directions": [
+            {
+              "description": "Relying on a KL-divergence penalty to the initial model during SFT as the main mitigation of general-capability loss.",
+              "evidence": "KL regularization provides only limited improvements and does not shift the trade-off between domain performance and general capability preservation",
+              "id": "S1",
+              "section": "8.4 Effect of KL Regularization"
+            },
+            {
+              "description": "Relying on LoRA (low-rank updates) or weight averaging of pre-trained and fine-tuned models (WiSE-FT) as the main way to preserve general capabilities.",
+              "evidence": "most strategies, i.e., except LoRA and Wise-FT, achieve domain performance and general performance that are relatively close to each other",
+              "id": "S2",
+              "section": "4.2 Results"
+            },
+            {
+              "description": "Static, sequence-level loss reweighting computed once before training (as in FLOW) as the main mitigation strategy.",
+              "evidence": "Sequence-level loss can be misleading: for example, even when the overall average sequence loss is small, there may exist a few particularly hard tokens with large losses",
+              "id": "S3",
+              "section": "9.3 More Discussions"
+            }
+          ]
+        },
+        "classification": {
+          "data_type": "mostly_real",
+          "domains": [
+            "clinical calculation from patient notes",
+            "e-commerce query-product relevance classification",
+            "mathematical word problems",
+            "code generation",
+            "instruction following"
+          ],
+          "theory_experiment": "mostly_experiments"
+        },
+        "couts_rapportes": {
+          "splits": [],
+          "total": null
+        },
+        "empreintes": {
+          "cibles": "00e83737de1628dd62c334e2347d74379af8b8aea4e0f1645b70003af5d6d749",
+          "h10": "194c7ae84c4dea6cdfdeeb2001185455420c3e538582b7929b296777c0cd5367",
+          "h9": "b12fb5148531a05bf2de96c47d9060fcb251f2878d3c665e3c61550baa935693"
+        },
+        "identifiant": "2509.20758v3",
+        "questions": "Large Language Models (LLMs) have demonstrated remarkable performance across a wide range of general-purpose tasks, including question answering, mathematical reasoning, and code generation. To further enhance their effectiveness in specialized applications, practitioners often perform additional supervised fine-tuning (SFT) on domain-specific data. This enriches the model with domain knowledge and yields substantial gains on domain-specific tasks, and SFT has thus become a standard paradigm for adapting LLMs to real-world deployment scenarios.\n\nHowever, recent studies have reported that fine-tuning LLMs on domain-specific datasets can substantially impair their general capabilities. For example, performing SFT on open LLMs with data from specialized domains is often reported to cause significant drops on general-purpose benchmarks that assess core capabilities like mathematical reasoning, code generation, and instruction following. This widely held belief in an unavoidable trade-off between domain adaptation and general capability calls for a closer examination of domain-specific SFT: is the degradation intrinsic to fine-tuning on a narrow distribution, or does it depend on how the fine-tuning is carried out?\n\nThe problem can be framed within continual learning, where a model must acquire new knowledge while retaining previously learned capabilities and avoiding catastrophic forgetting. Existing approaches are either data-dependent, assuming access to part of the earlier training data, or data-oblivious, relying only on the pre-trained model. The data-oblivious setting is particularly realistic for LLMs, since proprietary or large-scale pre-training and post-training corpora are usually inaccessible, yet it remains relatively underexplored for LLMs. Data-oblivious strategies developed for earlier models include regularization that keeps the fine-tuned parameters close to their initialization (e.g., L2 penalties), averaging the weights of the pre-trained and fine-tuned models, restricting updates to a low-rank subspace (LoRA), and reweighting the loss of easy and hard training samples, as proposed for vision tasks. LLMs, however, differ substantially from earlier architectures in scale, pre-training regimes, and emergent capabilities, which makes their adaptation dynamics distinct, and it is unclear how well these ideas transfer.\n\nThis raises several open questions. Under which training conditions does domain-specific SFT severely degrade general capabilities, and under which can strong target-domain performance be reached while largely preserving them? What mechanism governs how fitting a new, narrow data distribution changes the model's fit on distributions it already models well, and which parts of the domain-specific training data drive this change? Finally, when degradation persists, which data-oblivious mitigation strategies offer the best balance between domain gains and the preservation of general capabilities, and can a principled strategy do better?",
+        "tentative": 1
+      }
+    ]
+  },
+  "run_id": "20261124-144844-banque-dose-reponse-extraction-v2"
+}
