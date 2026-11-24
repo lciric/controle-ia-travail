@@ -58,7 +58,7 @@ def _ouvrir(racine: Path, run_id: str) -> dict:
     return m
 
 
-def preparer(racine: Path, run_id: str, travail: Path, textes: str, commande: str) -> dict:
+def preparer(racine: Path, run_id: str, travail: Path, textes: str, commande: str, effort: str | None = None) -> dict:
     racine = Path(racine)
     travail = eb._hors_depot(racine, Path(travail))
     base = travail / "extraction"
@@ -72,8 +72,10 @@ def preparer(racine: Path, run_id: str, travail: Path, textes: str, commande: st
               "fichiers_scelles": _scelles(racine), "module": empreinte(Path(__file__).resolve()),
               "modele_sous_agents": "modèle de la session, nommé explicitement à l'appel (demande de la mère) ; "
                                     "identifiant non écrit dans le dépôt (consigne de la plateforme)",
-              "effort_sous_agents": "non fixé à l'appel, comme à l'extraction de la banque ; valeur non lisible "
-                                    "depuis la session",
+              "effort_sous_agents": (f"fixé à « {effort} » à l'appel de chaque sous-agent (extraction et "
+                                     "contre-vérification)" if effort else
+                                     "non fixé à l'appel, comme à l'extraction de la banque ; valeur non lisible "
+                                     "depuis la session"),
               "travail": str(travail), "racine": str(racine.resolve())}
     creer_manifeste(racine, run_id, config, [], commande=commande)
     modele = (racine / eb.Chemins().dossier_procedure /
@@ -167,6 +169,7 @@ def _main(argv: list[str]) -> int:
     s.add_argument("--run-id", required=True)
     s.add_argument("--travail", required=True)
     s.add_argument("--textes", required=True)
+    s.add_argument("--effort", help="effort fixé à l'appel des sous-agents, déclaré au manifeste")
     for nom in ("valider", "lire"):
         s = sous.add_parser(nom)
         s.add_argument("--run-id", required=True)
@@ -177,7 +180,8 @@ def _main(argv: list[str]) -> int:
     racine = Path(".")
     if a.commande == "preparer":
         r = preparer(racine, a.run_id, Path(a.travail), a.textes,
-                     "python -m controle_ia.environnements.reextraction_echantillon_96_v1 " + " ".join(argv))
+                     "python -m controle_ia.environnements.reextraction_echantillon_96_v1 " + " ".join(argv),
+                     effort=a.effort)
         print(json.dumps({p: i["invite_agent"] for p, i in r["papiers"].items()}, ensure_ascii=False, indent=0))
     elif a.commande == "valider":
         r = valider(racine, a.run_id, eb._retours(racine, a.run_id, a.retours))
