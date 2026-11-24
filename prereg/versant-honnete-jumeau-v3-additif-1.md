@@ -1,0 +1,28 @@
+# Additif 1 au préenregistrement scellé du versant honnête de l'essai « jumeau contre jumeau » (v3) — la ligne du commit du code d'analyse
+
+2026-11-24T18:29Z (`date -u` : `Tue Nov 24 18:29:26 UTC 2026`) ; complété à 18:31Z (`Tue Nov 24 18:31:02 UTC 2026`) : rapport de vérification v7 cité, entropie de l'étape 0 rejouée. Claude Fable 5.2 (`claude-fable-5-2`), effort moyen, rédacteur aveugle. **Attestation** : je n'ai lu aucun épisode, score, sortie de course, diagnostic, verdict ni lecture, et rien sous `coffre/` ; aucune table de l'étape 0 n'a été ouverte.
+
+**Pièce visée** : `prereg/versant-honnete-jumeau-v3.md`, texte scellé, tel qu'il est sur `origin/main` (commit de la pièce `4230eb50e9e0a4529a0003d41a4e82a7a7eb627b`), empreinte recalculée `a505fa4e18419d2f14b4554ec9ff52321f5174c7e0c3b7b80d509d5d516acbf0`. Elle reste telle quelle, avec ses errata 1 et 2. **Statut de cet additif : à sceller ; prime sur la ligne visée**, et sur elle seule. Ni commité ni scellé par le rédacteur.
+
+## ANCIEN (ligne 12 de la v3, recopiée à l'octet)
+
+- **Commit du code d'analyse** : `8e0746346a21deedd9274e173a3dabc1f7dc41f1` (branche `dossier-entretien/reprise-01qi7-v1`), code v6 `src/controle_ia/versant_honnete_v6.py` et ses essais ; pièce des empreintes `docs/notes/dossier-entretien-2026-12-01-v1/empreintes-code-versant-honnete-v6.md` (`924da722abb66157b60524da87d3d62408af131d918e56dd74547fbb7e5fb4c7`), qui recopie le rapport de vérification v6 de Sonnet 5.5 ; rapports de Sonnet sur les versions 1 à 5 : `rapports-verification-code-versant-honnete-sonnet-v1.md` (`a41e3e78a45c4113…`). Développeur Opus 5.5 aveugle, contre-lecteur d'un autre modèle (Sonnet 5.5).
+
+## NOUVEAU
+
+- **Commit du code d'analyse** : `ab094582dbd6b5f82e752733288ff15f67481ca9` (branche `dossier-entretien/reprise-01qi7-v1`), code v7 `src/controle_ia/versant_honnete_v7.py` (`58ca995fdd2959b4a7a3e85cd50a54644ff468b71e6fb3c2d7d1411561e4d457`) et ses essais `tests/test_versant_honnete_v7.py` (`f0386b186db3d40eea58b93d4220e525ed9ef40368647e5154d93b47b07ca737`) ; défaut corrigé : défaut 1 de `docs/notes/dossier-entretien-2026-12-01-v1/contre-lecture-code-passe-versant-honnete-sonnet-v1.md` (`57fb2daa21f433a202c28bbd0167dba89208c18c80fa4691ee02a2b106d7009a`) ; rapport de vérification v7 de Sonnet 5.5 : `docs/notes/dossier-entretien-2026-12-01-v1/rapports-verification-code-versant-honnete-sonnet-v2.md` (`7b8e3bee25a1c16626a04d4a24d3945c3e820e07fe0008c7abf309b256383c22`), « corrections vérifiées » ; rapports de Sonnet sur les versions 1 à 5 : `rapports-verification-code-versant-honnete-sonnet-v1.md` (`a41e3e78a45c4113…`) ; rapport sur la version 6 : `docs/notes/dossier-entretien-2026-12-01-v1/empreintes-code-versant-honnete-v6.md` (`924da722abb66157b60524da87d3d62408af131d918e56dd74547fbb7e5fb4c7`). Développeur Opus 5.5 aveugle, contre-lecteur d'un autre modèle (Sonnet 5.5).
+
+## Raison
+
+Avant toute donnée réelle, la contre-lecture du code par Sonnet a trouvé un défaut de gravité élevée dans le code v6 : un seul score existant manquant sur 640 arrêtait toute la lecture, alors que le texte ne fait du pont qu'une réserve ; la v7 est la correction minimale de ce défaut.
+La voie est celle que le texte prévoit, ligne V2 de sa liste d'arrêt : « code corrigé par version nouvelle, contre-lue ; le commit change : additif à ce texte, où seule la ligne du commit change, avant toute donnée réelle ». Accordée par la session mère sous son autonomie (GO-2026-11-24-35).
+
+## Portée
+
+- Rien d'autre ne change dans la v3 ni dans ses errata : aucune hypothèse, aucune prédiction, aucun seuil, aucune tolérance, aucun critère de lecture gelé, aucune ligne de la liste d'arrêt.
+- L'étape 0 qui sert à la lecture est celle du commit `ab094582dbd6b5f82e752733288ff15f67481ca9`, rejouée à graines neuves comme le veut la ligne V2, avant toute donnée réelle : relancée à 18:30Z sous une entropie neuve, tirée sans lecture de données, `130872859109296814082585735997403581764` (valeur donnée par la session mère). Seules ses tables seront scellées et réemployées : elles portent le commit du code, et la lecture les compare au sien (précision 12 ; refus sinon). La première étape 0, au commit `8e0746346a21deedd9274e173a3dabc1f7dc41f1`, avait tourné sous l'entropie racine du texte, `332543941018745695594892624416682421756` ; ses tables ne sont ni scellées pour la lecture ni réemployées. L'entropie racine du texte reste celle de la lecture ; aucune clé dérivée de la lecture ne change.
+- Le code v6 n'est pas modifié ; il n'est plus le code de la lecture.
+
+## Qui a lu quoi
+
+Lu par le rédacteur : la v3 sur `origin/main` (en-tête, ligne V2, point 4 du plan, précision 12) ; le rapport de contre-lecture de Sonnet (défauts et réponses, qui ne portent que sur données factices) ; les titres du recueil des rapports v1 à v5 ; le rapport de Sonnet sur le code v7 (titres et premier point, sur données factices) ; la ligne à verser de la mère du 2026-11-24T18:26Z (`registres/lignes-a-verser/dossier-entretien-reprise-01qi7-v1.md`). Vérifié par commande : existence des commits `8e074634…` et `ab094582…` (le second sur `origin/dossier-entretien/reprise-01qi7-v1`) ; empreintes du code v7 et de ses essais au commit `ab094582…`, celle du code égale à son compagnon ; empreintes des trois rapports, égales à leurs compagnons ; présence de l'entropie racine `3325…1756` au point des graines de la v3. Non vérifié par moi : l'entropie neuve et l'heure de la relance, reprises du mot de la mère. Non ouvert : le code v6 et v7, les essais, toute sortie de l'étape 0, tout registre de résultats, `coffre/`.
