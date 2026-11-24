@@ -1,0 +1,51 @@
+{
+  "titre": "Liste des lecteurs admis de la clé de la référence cachée, v6 : la liste v5 reprise sans changement, plus trois fonctions examinées par la lecture du code et de leurs textes",
+  "version": "v6",
+  "date_utc": "2026-11-24T18:35:27Z",
+  "auteur": "Claude Opus 5.5, développeur neuf (pièce de classe B), branche reparation/inventaire-cibles-et-sceaux-main-v1",
+  "statut": "proposée, non adoptée : à contre-lire par un autre modèle, puis adoption par la mère ; les essais v4 et v5 restent tels quels (listes scellées, R12)",
+  "liste_precedente": {
+    "chemin": "tests/liste_cibles_invisibles_v5.json",
+    "sha256": "37bcbb01372114d373ab2ec3be011f211aeb96c2fa038aa39f2eb4a136234081"
+  },
+  "rapport": "docs/notes/reparation-inventaire-cibles-et-sceaux-v1/rapport-v1.md",
+  "lecteurs_de_cibles_ajoutes": {
+    "controle_ia/barreau8_moniteurs/passe_recalcul_v6.py": {
+      "fonctions": ["_table_en_specification"],
+      "categorie": "homonyme de l'adaptateur",
+      "raison": "FAUX LECTEUR : la constante « cibles » n'est que la clé du dictionnaire rendu (champ de forme `cibles` de la spécification de la passe), dont la valeur est `tuple(c[\"adaptateurs\"][\"projections\"])`, les noms des projections visées par l'adaptateur LoRA (q_proj, k_proj, v_proj, o_proj) ; aucune lecture de la référence cachée d'une tâche ; même homonymie que les lanceurs de T0.6 (R-1941) et la formation et la relecture du barreau 5 (liste v4 et v5) ; preuve par l'arbre syntaxique dans l'essai v6",
+      "source": "prereg/lecture-sondes-barreau8-v1-addendum-organisme-change-v1.md (fc5b0610…, ligne SCELLEMENT-ADDITIF-1-SONDES-IIB de registres/sondes-iib-v1.md), table des constantes, ligne « adaptateurs.projections … report, RP-12 » ; « Constantes de forme » ; additif 2 (8e930aba…, M-4) ; code inscrit à la ligne CODE-PASSE-IIB (registres/bordereau-code-passe-barreau8-v6.json, 74736c49…, R-5268) ; précédent de décision : R-1941 (entrée d'un lecteur de `cibles` de l'adaptateur parmi les lecteurs admis, « preuve, pas exemption », décision de routine de la mère)",
+      "textes": {
+        "prereg/lecture-sondes-barreau8-v1-addendum-organisme-change-v1.md": "fc5b0610ed004ea4b1565e7a50567d7538b0f9e66b129c874c2f8c5bc2a4d8c2",
+        "prereg/lecture-sondes-barreau8-v1-addendum-2-format-entrees-v1.md": "8e930abadcdbb050e026771cb67f90bb47ebed63955b498364d0fa9c9f7eab5e",
+        "registres/bordereau-code-passe-barreau8-v6.json": "74736c499d9bd7568d0ebe93b0eccd73746fe0ab1697fa26f2371ef816d6e8db"
+      },
+      "commit": "1f16e86e2ad1e3318be89566a8671a71f799bd4f",
+      "sha256": "f3228b4b25a5140b3b8fa8c7ac994a727d61f9d986b0539f8ea5956eb5fba30a"
+    },
+    "controle_ia/t08/rendu_juges_v1.py": {
+      "fonctions": ["exiger_tache_projetee"],
+      "categorie": "nommée pour refuser",
+      "raison": "GARDE DE REFUS : la constante « cibles » n'apparaît que dans le test `\"cibles\" in tache` d'un `if` dont le seul corps lève `GardeArret` ; la fonction ne lit ni ne rend aucune valeur de la tâche ; c'est la garde que le texte scellé de T0.8 exige (« un objet portant `cibles` passé au rendu est refusé ») ; preuve par l'arbre syntaxique et essai de comportement dans l'essai v6",
+      "source": "prereg/T0.8-bases-boite-noire-v0-v3.md (72a2611b…, ligne SCELLEMENT-T08-V3 de registres/scellements-v1.md), « Ce que voit chaque surveillant » (« Jamais donnés à un juge : les cibles semées … N-060 v3 ») et « Plan d'analyse », point 1 (« garde : un objet portant `cibles` passé au rendu est refusé ») et point 10 (« refus de `cibles` », R5) ; code inscrit à la ligne CODE-T08-V3 (commit 6735dd2e…, pièce docs/notes/t08-code-aligne-v1/empreintes-code-t08-6735dd2e-v1.md, 7f8a7a92…, qui porte ce fichier à aca5447b…)",
+      "textes": {
+        "prereg/T0.8-bases-boite-noire-v0-v3.md": "72a2611b3eff8ef070ab6f12f1468213cb88a8f42729eb2e9edeea7fcb884918",
+        "docs/notes/t08-code-aligne-v1/empreintes-code-t08-6735dd2e-v1.md": "7f8a7a92d0a45a892f157eb96613316a6eb04d73a3aa81ef7c83d05a7fc7519e"
+      },
+      "commit": "6735dd2e1b30c2615802b78c290e24a80863b18d",
+      "sha256": "aca5447b0096eea18092c1203131b2e285ffeb3ea09f5df880294e4b2c707a45"
+    },
+    "controle_ia/t08/fabrique_jouet_v1.py": {
+      "fonctions": ["taches_factices"],
+      "categorie": "fabrique jouet",
+      "raison": "ÉCRITURE DE DONNÉES FACTICES : la constante « cibles » n'est que la clé d'un dictionnaire littéral écrit pour des tâches jouets, dont les valeurs sont tirées du générateur de l'essai et d'une liste de mots fixes ; la fonction n'ouvre ni ne lit aucun fichier, et écrit sous la racine d'essai donnée (`racine / donnees / jouet-taches`), jamais la référence cachée ; ces `cibles` factices servent à éprouver le refus du rendu des juges (R5) ; preuve par l'arbre syntaxique dans l'essai v6",
+      "source": "prereg/T0.8-bases-boite-noire-v0-v3.md (72a2611b…), « Plan d'analyse », point 10 (« chaque garde éprouvée sur un cas sain et sur un artefact, R5 … refus de `cibles` ») ; docstring du module (« tâches d'évaluation factices (64, avec `cibles` pour éprouver le refus du rendu des juges) ») ; code inscrit à la ligne CODE-T08-V3 (commit 6735dd2e…, pièce empreintes-code-t08-6735dd2e-v1.md, 7f8a7a92…, qui porte ce fichier à 7ffe0c95…)",
+      "textes": {
+        "prereg/T0.8-bases-boite-noire-v0-v3.md": "72a2611b3eff8ef070ab6f12f1468213cb88a8f42729eb2e9edeea7fcb884918",
+        "docs/notes/t08-code-aligne-v1/empreintes-code-t08-6735dd2e-v1.md": "7f8a7a92d0a45a892f157eb96613316a6eb04d73a3aa81ef7c83d05a7fc7519e"
+      },
+      "commit": "6735dd2e1b30c2615802b78c290e24a80863b18d",
+      "sha256": "7ffe0c95743f247dc9185f2955561f20d7928df305fe3c4f537d10e7c167150c"
+    }
+  }
+}
