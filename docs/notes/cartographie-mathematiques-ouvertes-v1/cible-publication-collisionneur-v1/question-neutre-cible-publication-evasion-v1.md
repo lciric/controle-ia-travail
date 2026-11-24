@@ -1,0 +1,8 @@
+# Question ouverte — Positionnement scientifique optimal et extensions à plus forte valeur pour publier cette analyse
+
+À partir des faits techniques ci-dessus, analysez rigoureusement les quatre questions suivantes (en français, en 3 000 mots maximum) :
+
+1. **Évaluation sans complaisance du manuscrit actuel** : dans quelles enceintes scientifiques (ateliers, revues rapides, pistes de positionnement ou conférences) le manuscrit statique actuel est-il déjà compétitif, et quelles objections rédhibitoires essuierait-il aujourd'hui dans les conférences principales de premier rang ?
+2. **Cible la plus ambitieuse réellement atteignable** : en acceptant d'investir du travail théorique, formel et/ou expérimental supplémentaire, quelle est l'enceinte de publication la plus prestigieuse réellement atteignable, et pourquoi certaines cibles apparemment prestigieuses seraient-elles un mauvais ajustement thématique ou méthodologique ?
+3. **Extensions mathématiques et expérimentales optimales** : quelles extensions précises (par exemple dynamique temporelle de gradient, bornes d'information séquentielles ou computationnelles, géométrie des représentations internes pour l'audit hors boucle, expériences contrôlées d'apprentissage par renforcement sur modèles ouverts — en tenant compte de la difficulté connue de faire émerger une stéganographie spontanée à petite échelle —, ou preuves mécanisées) apportent le gain décisif d'acceptabilité au moindre risque d'impasse technique ?
+4. **Stratégie de diffusion et d'anonymat** : comment articuler concrètement une diffusion rapide (commentaire ou billet technique public, archive ouverte) avec les règles d'évaluation en double aveugle et de non-promotion des conférences visées ?
