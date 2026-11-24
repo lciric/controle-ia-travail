@@ -1,0 +1,31 @@
+A = opus (claude-opus-5-5) : prix 4 / 20 USD par million, sortie 64000 (relance 64000), provision 0, budget envoyé None, niveau de réflexion envoyé None, 2.5 caractères par jeton, délai 3600 s
+B = carbon (gemini-4-carbon) : prix 4 / 20 USD par million, sortie 65536 (relance 65536), provision 49152, budget envoyé None, niveau de réflexion envoyé high, 2.5 caractères par jeton, délai 5400 s
+C = neon (gemini-4-neon) : prix 3 / 15 USD par million, sortie 65536 (relance 65536), provision 32768, budget envoyé None, niveau de réflexion envoyé xhigh, 2.5 caractères par jeton, délai 5400 s
+E1-T1-meta-A             claude-opus-5-5    pire cas  1.31 USD
+E1-T1-meta-B             gemini-4-carbon    pire cas  2.32 USD
+E1-T1-meta-C             gemini-4-neon      pire cas  1.49 USD
+E1-T2-critique-meta-A    claude-opus-5-5    pire cas  1.41 USD
+E1-T2-critique-meta-B    gemini-4-carbon    pire cas  2.42 USD
+E1-T2-critique-meta-C    gemini-4-neon      pire cas  1.57 USD
+  étage 1 : 6 cellules, 10.52 USD au pire cas, sans relance
+E2-T1-prog-maths-A       claude-opus-5-5    pire cas  1.44 USD
+E2-T1-prog-maths-B       gemini-4-carbon    pire cas  2.45 USD
+E2-T1-prog-maths-C       gemini-4-neon      pire cas  1.60 USD
+E2-T2-critique-croisee-A claude-opus-5-5    pire cas  1.37 USD
+E2-T2-critique-croisee-B gemini-4-carbon    pire cas  2.39 USD
+E2-T2-critique-croisee-C gemini-4-neon      pire cas  1.54 USD
+E2-T3-reponse-A          claude-opus-5-5    pire cas  1.42 USD
+E2-T3-reponse-B          gemini-4-carbon    pire cas  2.44 USD
+E2-T3-reponse-C          gemini-4-neon      pire cas  1.58 USD
+  étage 2 : 9 cellules, 16.24 USD au pire cas, sans relance
+E3-T1-conception-A       claude-opus-5-5    pire cas  1.31 USD
+E3-T1-conception-B       gemini-4-carbon    pire cas  2.33 USD
+E3-T1-conception-C       gemini-4-neon      pire cas  1.50 USD
+E3-T2-critique-croisee-A claude-opus-5-5    pire cas  1.38 USD
+E3-T2-critique-croisee-B gemini-4-carbon    pire cas  2.39 USD
+E3-T2-critique-croisee-C gemini-4-neon      pire cas  1.55 USD
+E3-T3-reponse-A          claude-opus-5-5    pire cas  1.43 USD
+E3-T3-reponse-B          gemini-4-carbon    pire cas  2.44 USD
+E3-T3-reponse-C          gemini-4-neon      pire cas  1.59 USD
+  étage 3 : 9 cellules, 15.92 USD au pire cas, sans relance
+La dépense réelle dépend de la longueur de la réflexion ; chaque relance (sortie vide ou coupée) ajoute au plus le pire cas de sa cellule au plafond de relance ; une cellule de Google à plafonds égaux en a deux (relance identique, puis dernier recours), les autres une. Le plafond vaut pour tout le dossier de run, et le script le vérifie avant chaque appel.
