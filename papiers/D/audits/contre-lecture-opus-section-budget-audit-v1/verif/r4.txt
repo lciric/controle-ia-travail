@@ -1,0 +1,79 @@
+\subsection{Randomised audits}
+
+In practice the auditor flips a coin per episode. Let $A_{j,i}$,
+$j<K$, $i\le n$, be independent Bernoulli$(\rho_j)$ audit indicators for a
+deterministic schedule $\rho$, independent of the policy's actions (this is
+$\delta_{\mathrm{ind}}=0$), and let $\hat\rho_j:=n^{-1}\sum_iA_{j,i}$. We keep
+the expectation over the policy's own actions exact, as in
+Lemma~\ref{lem:audit-logodds}, and let only the audits be random: conditionally
+on the indicators, the effective advantage of stealth averaged over the $n$
+episodes of step $j$ is $\Delta R-W\hat\rho_j$, so the \emph{realised}
+log-odds $\hat\ell_k$ obey \eqref{eq:audit-x} with $\hat\rho$ in place of $\rho$.
+(Sampling noise from the policy's actions is not modelled.) Let
+$\Gamma_K:=\sum_{i<K}a^{2i}\le\min(K,\eta/\gamma)$ and, for $\Lambda>0$ and
+$\bar\rho\in(0,1]$,
+\[
+  \varepsilon(\Lambda,\bar\rho):=\gamma W\Bigl[\sqrt{\frac{2\bar\rho\,\Gamma_K\Lambda}{n}}
+  +\frac{2\Lambda}{3n}\Bigr].
+\]
+
+\begin{theorem}[Randomised implementation]\label{thm:audit-random}
+\begin{enumerate}
+\item[\textup{(a)}] If $\rho_j\le\bar\rho$ for all $j$, then for every
+$\delta\in(0,1)$, with probability at least $1-\delta$,
+$\max_{k\le K}|\hat\ell_k-\ell_k|\le\varepsilon(\log(2K/\delta),\bar\rho)$.
+\item[\textup{(b)}] The number of audits $N:=\sum_{j,i}A_{j,i}$ satisfies, for
+every $\Lambda'>0$,
+$\Prob\bigl(N>B(\rho)+\sqrt{2B(\rho)\Lambda'}+\tfrac23\Lambda'\bigr)\le e^{-\Lambda'}$.
+\item[\textup{(c)}] Fix $\delta\in(0,1)$, let
+$\varepsilon:=\varepsilon(\log(2K/\delta),\Delta R/W)$ and assume
+$\varepsilon\le L+\ell_{\mathrm{crit}}$. Run Bernoulli audits along the
+just-in-time schedule of Theorem~\ref{thm:audit-deterrence} computed for the
+threshold $\ell_{\mathrm{crit}}-\varepsilon$, and stop auditing once
+\[
+  B_{\mathrm{rand}}:=B_\varepsilon+\sqrt{2B_\varepsilon\log(2/\delta)}+\tfrac23\log(2/\delta),
+  \qquad B_\varepsilon:=B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}}-\varepsilon),
+\]
+audits have been made. Then at most $B_{\mathrm{rand}}$ episodes are audited
+and, with probability at least $1-\delta$,
+$\hat\ell_k\le\ell_{\mathrm{crit}}$ for all $k\le K$. Moreover
+\begin{equation}\label{eq:audit-inflation}
+  B_\varepsilon\le B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}})
+  +\frac{n\varepsilon}{W}\Bigl(\frac{K-1}{\eta}+\frac1\gamma\Bigr).
+\end{equation}
+With $\Lambda=\log(2K/\delta)$ and $\bar\rho=\Delta R/W$, the last term is at
+most $\sqrt{2\bar\rho\,T\Lambda}+\tfrac23\Lambda$ if $\eta=\infty$, and at most
+$\bigl(1+\tfrac{\eta}{\gamma K}\bigr)\bigl[T\sqrt{2\gamma\bar\rho\Lambda/(\eta n)}
++\tfrac{2\gamma K}{3\eta}\Lambda\bigr]$ if $\eta<\infty$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Fix $k\le K$. By \eqref{eq:audit-x} applied to $\rho$ and $\hat\rho$,
+$\hat\ell_k-\ell_k=\sum_{j<k}\sum_{i\le n}X_{j,i}$ with
+$X_{j,i}:=-(\gamma W/n)\,a^{k-1-j}(A_{j,i}-\rho_j)$. These are independent,
+centred, bounded by $b:=\gamma W/n$ in absolute value, with
+$\sum\operatorname{Var}(X_{j,i})=(\gamma W)^2n^{-1}\sum_{j<k}a^{2(k-1-j)}\rho_j(1-\rho_j)
+\le v:=(\gamma W)^2\bar\rho\,\Gamma_K/n$. Bernstein's
+inequality~\cite[Theorem~2.10 and Corollary~2.11, to be checked]{boucheron2013concentration} gives
+$\Prob(\pm\sum X_{j,i}\ge t)\le\exp\bigl(-t^2/(2v+2bt/3)\bigr)$, which is at most
+$e^{-\Lambda}$ for $t=\sqrt{2v\Lambda}+2b\Lambda/3=\varepsilon(\Lambda,\bar\rho)$ (the sub-gamma form would allow $b\Lambda/3$ for the linear term; we keep the more conservative constant).
+Take $\Lambda=\log(2K/\delta)$ and a union bound over the $2K$ events.
+
+(b) Bernstein again, for the centred variables $A_{j,i}-\rho_j$, bounded by $1$,
+with total variance at most $B(\rho)$.
+
+(c) Let $\rho'$ be the just-in-time schedule for headroom $c-\varepsilon\ge0$,
+with mean-field log-odds $\ell'_k\le\ell_{\mathrm{crit}}-\varepsilon$. Its rates
+are at most $\Delta R/W$ by Theorem~\ref{thm:audit-deterrence}(i). By the
+one-sided version of (a), with probability at least $1-\delta/2$ the uncapped
+process satisfies $\hat\ell_k\le\ell'_k+\varepsilon\le\ell_{\mathrm{crit}}$ for
+all $k$; by (b) with $\Lambda'=\log(2/\delta)$, with probability at least
+$1-\delta/2$ the uncapped process makes at most $B_{\mathrm{rand}}$ audits, in
+which case the cap is never active and the capped and uncapped processes
+coincide. For \eqref{eq:audit-inflation}, the map
+$c\mapsto B^\star_{\mathrm{unif}}$ in \eqref{eq:audit-unif-id} is a sum of
+$K$ terms $-\min(c,\cdot)$, each $1$-Lipschitz in $c$, with total weight
+$n\,[(K-1)\gamma/\eta+1]/(\gamma W)$. The last two bounds substitute
+$\Gamma_K=K$, resp.\ $\Gamma_K\le\eta/\gamma$, in $\varepsilon$.
+\end{proof}

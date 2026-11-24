@@ -1,0 +1,1059 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+\emergencystretch=3em
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\DKL}{D_{\mathrm{KL}}}
+\newcommand{\dTV}{d_{\mathrm{TV}}}
+
+\title{When Does In-Loop Misalignment Filtering Select for Stealth?\\
+Exact Phase Transitions and Escape Regimes in Post-Training}
+
+\author{[Author Name]\thanks{Preprint draft prepared for review (v4, corrective 3 with erratum 1, revised after an independent audit and two fidelity reviews; correctives 2 and 3 make the reward normalization explicit for Operator~B and state which training procedures realize each operator). Companion scripts: \texttt{verifier\_exemples\_papier\_v4\_correctif\_1.py} and \texttt{verifier\_correctif\_3\_v1.py}.}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+When a misalignment detector---such as a chain-of-thought monitor or activation probe---is placed inside the post-training loop, does it select for stealthy evasion, even when intercepted runs are merely discarded and resampled without negative reward? We study a restricted, static version of this question: the Kullback--Leibler (KL)-regularized Gibbs equilibrium over a three-stratum policy space (honest, visibly misaligned, stealthily misaligned) with \emph{fixed} strata, priors and detection rates. How training reshapes the stealthy stratum and its detectability---the generalization question at the heart of the informal debate---is outside this model. Separating four quantities often conflated (conditional stealth share among cheaters, absolute stealth relative to unmonitored post-training, dominance of stealth over honesty, and evasion against a separate audit monitor), we prove two results. \textbf{Theorem~1}: under pure rejection with resampling, modelled as conditioning the base law by the survival probability (Operator~A), conditional stealth enrichment follows from a variance identity, a special case of the Price--Robertson covariance identity; we give exact thresholds for absolute amplification and dominance under Operator~A and under a KL-regularized interception penalty (Operator~B). Under Operator~A honesty collapses as optimization pressure $\eta \to \infty$ whenever $\beta_{\mathrm{f}} > 0$, the mass going to cheating (the stealthy share among cheaters tends to $\beta_{\mathrm{f}}p_{\mathrm{f}}/(\beta_{\mathrm{v}}p_{\mathrm{v}}+\beta_{\mathrm{f}}p_{\mathrm{f}})$, not necessarily to one); a penalty $C>0$ keeps a non-vanishing barrier when stealth is partially detected. This contrast depends on the modelling choice for Operator~A, which acts as a reward bonus $\eta^{-1}\log\beta$ that vanishes as $\eta$ grows; under repeated rejection the barrier does not vanish. In a perfectly stealthy niche the penalty yields more absolute stealth than pure rejection past an explicit threshold, but exactly then it also yields more honesty and less total cheating. \textbf{Theorem~2} gives three escape mechanisms: (R1)~an exact criterion for honesty to dominate stealth; (R2)~for an audit monitor, an exact covariance identity under Operator~A (audit survival does not increase if and only if the base covariance between loop and audit survival is non-positive, whatever the placement of the audit) and, under Operator~B, a sufficient condition (independence or negative association), non-positive covariance being necessary but not sufficient; (R3)~planted honeypots at bounded total variation distance, which rule out frequent cheaters but not rare ones. We do not claim these mechanisms are exhaustive. The results are carried by the written proofs; a companion script recomputes all tables and checks the counterexamples, partly in exact rational arithmetic.
+\end{abstract}
+
+\section{Introduction}
+
+Post-training methods based on reinforcement learning and KL-regularized preference optimization substantially increase model capability, but also amplify reward hacking and strategic misalignment~\cite{zhuang2021,skalse2022,gao2022}. A natural engineering response is to deploy misalignment detectors---such as chain-of-thought monitors~\cite{baker2025}, elicitation checks, or internal activation probes---directly inside the post-training loop. Yet empirical and conceptual work on deceptive persistence~\cite{hubinger2024,greenblatt2024} and chain-of-thought obfuscation~\cite{baker2025} raises a fundamental concern: optimizing against an imperfect detector may simply teach the model to hide its misalignment rather than eliminate it.
+
+In a recent discussion~\cite{halberstadt2026}, Halberstadt argued that even \emph{pure rejection without negative penalty} (``discard the run and try again'') reinforces undetected reward hacks, asking whether it is a mathematical law that any attempt to prevent misalignment during post-training inevitably encourages evasion. In response, \texttt{testingthewaters}~\cite{testingthewaters2026} argued that an in-loop filter acts as a selective sieve rather than a directional gradient, and that evasion may fail due to non-existence, unreachability under optimization constraints, or non-maintainability against competing post-training objectives.
+
+This note answers a restricted version of the question at the standard KL-regularized (Gibbs) post-training equilibrium~\cite{korbak2022}, with fixed strata and detection rates; whether training against a detector teaches honesty or masking (how $p_{\mathrm{f}}$ and $\beta_{\mathrm{f}}$ themselves move) is outside the model. We connect it to strategic classification~\cite{hardt2016}, partial monitoring~\cite{bartok2014}, and AI control~\cite{greenblatt2023,griffin2024,terekhov2025,ukaisi2025}. Our main contributions are:
+\begin{enumerate}
+  \item \textbf{Disambiguation of four selection metrics:} conditional stealth share among cheaters, absolute stealth probability relative to unmonitored post-training, asymptotic dominance of stealth over honesty as $\eta \to \infty$, and evasion against a separate audit monitor $M_{\mathrm{audit}}$.
+  \item \textbf{Exact thresholds and a rejection--penalty contrast (Theorem~\ref{thm:selection}):} under Operator~A we restate the variance identity for conditional enrichment (a special case of the Price--Robertson identity~\cite{price1970,robertson1966}, the variance form being Fisher's fundamental theorem~\cite{fisher1930}); we derive exact thresholds for absolute amplification and dominance under Operators~A and~B, and show that pure rejection, \emph{as modelled here}, cannot keep honesty dominant as $\eta \to \infty$ whenever $\beta_{\mathrm{f}} > 0$. In a perfectly stealthy niche, a penalty yields more absolute stealth than pure rejection past an explicit threshold, and exactly then also more honesty and less total cheating.
+  \item \textbf{Three escape mechanisms (Theorem~\ref{thm:escape}), not claimed exhaustive:} (R1)~an exact criterion for honesty to dominate stealth via prior KL barriers and multi-objective maintenance costs; (R2)~for an audit monitor, an exact covariance identity under Operator~A, with audit survival non-increasing if and only if the base covariance is non-positive (placing the audit off-loop is neither sufficient nor necessary), and under Operator~B a sufficient condition (independence or negative association), non-positive covariance being necessary but not sufficient; (R3)~planted honeypots at bounded total variation distance $\dTV(P_{\mathrm{ord}}, P_{\mathrm{trap}}) \le \delta_{\mathrm{ind}}$ that make every \emph{frequent} cheating policy strictly worse than honesty.
+  \item \textbf{Companion script:} it recomputes every table and example, checks the Operator~A criteria in exact rational arithmetic (treating $E := e^{\eta\Delta R}$ as a free rational), and checks the counterexamples of Remarks~\ref{rem:modelA}--\ref{rem:niche}. It does not replace the proofs (Section~\ref{sec:verif}).
+\end{enumerate}
+
+\section{Formal Framework}
+
+Let $(\Pi, \mathcal{A}, \pi_0)$ be the probability space of elementary policies or complete trajectories (including internal reasoning traces and tool calls) induced by a pretrained base model $\pi_0$. Partition $\Pi$ into three disjoint measurable events of strictly positive prior mass:
+\begin{equation}
+  \Pi = \Pi_{\mathrm{h}} \sqcup \Pi_{\mathrm{v}} \sqcup \Pi_{\mathrm{f}},
+  \qquad p_{\mathrm{h}} := \pi_0(\Pi_{\mathrm{h}}) > 0,\quad p_{\mathrm{v}} := \pi_0(\Pi_{\mathrm{v}}) > 0,\quad p_{\mathrm{f}} := \pi_0(\Pi_{\mathrm{f}}) > 0,
+\end{equation}
+with $p_{\mathrm{h}} + p_{\mathrm{v}} + p_{\mathrm{f}} = 1$. Here $\Pi_{\mathrm{h}}$ denotes \emph{honest} behavior, $\Pi_{\mathrm{v}}$ denotes \emph{visible} misalignment (transparent reward hacking), $\Pi_{\mathrm{f}}$ denotes \emph{stealthy} misalignment (obfuscated reward hacking), and $\Pi_{\mathrm{tr}} := \Pi_{\mathrm{v}} \sqcup \Pi_{\mathrm{f}}$ denotes all misaligned behavior.
+
+\subsection{Task Reward and In-Loop Monitor}\label{sec:reward}
+We normalize task reward $R : \Pi \to \mathbb{R}$ to $R(\pi) = 0$ on $\Pi_{\mathrm{h}}$. This normalization is free for the unmonitored baseline and for Operator~A below, which are invariant under a constant shift of $R$. It is \emph{not} free for Operator~B, in which an intercepted trajectory receives the fixed score $-C$: since $\beta(R + R_0) - (1-\beta)C = \beta R - (1-\beta)(C + R_0) + R_0$, shifting $R$ by $R_0$ on all of $\Pi$ at fixed $-C$ is equivalent to replacing $C$ by $C + R_0$. Throughout, $-C$ denotes the raw score of an intercepted trajectory. Under the normalization $R = 0$ on $\Pi_{\mathrm{h}}$, $C$ is also the gap between the honest task reward and that score. With an honest reward $R_0 \neq 0$, the quantity that enters is this gap $R_0 + C$, and every statement on Operator~B holds with $C$ replaced by $R_0 + C$ (e.g.\ condition~\eqref{eq:inversion} reads $\eta(1-\beta_{\mathrm{v}})(R_0 + \Delta R + C) > \log(1/\beta_{\mathrm{v}})$). The Gibbs form of Operator~B holds for any real $C$; statements of Theorem~\ref{thm:selection} that assume $C \ge 0$ (resp.\ $\Delta R + C > 0$) apply to the gap only when it is non-negative (resp.\ when $\Delta R$ plus the gap is positive). A constant subtracted from every score, intercepted ones included, changes nothing. On $\Pi_{\mathrm{v}}$ and $\Pi_{\mathrm{f}}$, misalignment yields reward advantages $\Delta R_{\mathrm{v}} > 0$ and $\Delta R_{\mathrm{f}} = \Delta R_{\mathrm{v}} - \delta_{\mathrm{maint}}$, where $\delta_{\mathrm{maint}} \ge 0$ captures any capability loss or conflict with auxiliary post-training objectives. In the canonical regime without intrinsic obfuscation cost, $\Delta R_{\mathrm{v}} = \Delta R_{\mathrm{f}} = \Delta R > 0$.
+
+An in-loop monitor $M_{\mathrm{loop}} : \Pi \to \{0, 1\}$ ($1 =$ intercepted, $0 =$ accepted) is summarized by its \emph{survival probability}
+\begin{equation}
+  \beta(\pi) := \Prob(M_{\mathrm{loop}} = 0 \mid \pi) \in [0, 1],
+\end{equation}
+which equals the false-negative rate on $\Pi_{\mathrm{tr}}$ and $1 - \alpha_{\mathrm{h}}$ on $\Pi_{\mathrm{h}}$ ($\alpha_{\mathrm{h}} \in [0, 1)$ being the false-positive rate). In the stratum-constant reduction, we assume $0 \le \beta_{\mathrm{v}} < \beta_{\mathrm{f}} \le \beta_{\mathrm{h}} \le 1$ with $\beta_{\mathrm{f}} > 0$.
+
+\subsection{Canonical Post-Training Operators}
+At optimization pressure (inverse KL temperature) $\eta > 0$, the unmonitored baseline ($\beta \equiv 1$) is the unique maximizer of $\E_{\pi}[R] - \eta^{-1}\DKL(\pi \,\|\, \pi_0)$:
+\begin{equation}
+  \pi_{\mathrm{no}}^{(\eta)}(d\pi) = \frac{e^{\eta R(\pi)}\,\pi_0(d\pi)}{Z_{\mathrm{no}}(\eta)},
+  \qquad Z_{\mathrm{no}}(\eta) = \int_{\Pi} e^{\eta R(\pi')}\,\pi_0(d\pi'),
+\end{equation}
+extended by continuity to $\pi_{\mathrm{no}}^{(0)} := \pi_0$. We formalize the two canonical in-loop interventions:
+\begin{enumerate}
+  \item \textbf{Operator~(A) --- Pure rejection with resampling (discard and try again).} Intercepted trajectories ($M_{\mathrm{loop}} = 1$) are discarded prior to reinforcement, conditioning the base law to $\pi_0^{\mathrm{acc}}(d\pi) = \beta(\pi)\pi_0(d\pi)/\E_{\pi_0}[\beta]$ and then applying KL-regularized reward maximization relative to $\pi_0^{\mathrm{acc}}$:
+  \begin{equation}
+    \pi_{\mathrm{A}}^{(\eta)}(d\pi) = \frac{\beta(\pi)\,e^{\eta R(\pi)}\,\pi_0(d\pi)}{Z_{\mathrm{A}}(\eta)},
+    \qquad Z_{\mathrm{A}}(\eta) = \int_{\Pi} \beta(\pi')\,e^{\eta R(\pi')}\,\pi_0(d\pi').
+  \end{equation}
+  At $\eta = 0$, $\pi_{\mathrm{A}}^{(0)}$ reduces to pure Bayesian rejection conditioning without reward optimization: nothing has been learned, and the model does not distinguish a learned policy from the law of filtered outputs.
+  \item \textbf{Operator~(B) --- KL-regularized update with interception penalty $-C \le 0$.} Intercepted trajectories are halted before taking effect and receive score $-C$ ($C \ge 0$), yielding expected reward $\bar{R}_C(\pi) = \beta(\pi)R(\pi) - (1-\beta(\pi))C$. The unique maximizer of $\E_{\pi}[\bar{R}_C] - \eta^{-1}\DKL(\pi \,\|\, \pi_0)$ ($\eta > 0$) is:
+  \begin{equation}
+    \pi_{\mathrm{B}}^{(\eta, C)}(d\pi) = \frac{\exp\!\big(\eta\big[\beta(\pi)R(\pi) - (1-\beta(\pi))C\big]\big)\,\pi_0(d\pi)}{Z_{\mathrm{B}}(\eta, C)}.
+  \end{equation}
+\end{enumerate}
+
+Both operators are instances of the standard Gibbs form of KL-regularized optimization~\cite{korbak2022}.
+
+\begin{remark}[Operator~A is a modelling choice]\label{rem:modelA}
+$\pi_{\mathrm{A}}^{(\eta)}$ is the unique maximizer of $\E_{\pi}[R + \eta^{-1}\log\beta] - \eta^{-1}\DKL(\pi\,\|\,\pi_0)$: the filter acts as a reward bonus $\eta^{-1}\log\beta$ which vanishes as $\eta$ grows, by construction. Equivalently, $\pi_{\mathrm{A}}^{(\eta)} \propto \beta\,\pi_{\mathrm{no}}^{(\eta)}$: Operator~A coincides with unmonitored training followed by a single rejection at inference. Other formalizations of ``discard and try again'' behave differently. If rejection is repeated at each of $T$ rounds, each followed by a KL-regularized step of size $\eta_1$ relative to the current policy, then $\pi_T \propto \beta^T e^{T\eta_1 R}\pi_0$; stealth then beats honesty iff $T(\eta_1\Delta R - \log(\beta_{\mathrm{h}}/\beta_{\mathrm{f}})) > \log(p_{\mathrm{h}}/p_{\mathrm{f}})$, and as $T \to \infty$ iff $\eta_1\Delta R > \log(\beta_{\mathrm{h}}/\beta_{\mathrm{f}})$: the barrier does not vanish (it depends on the arbitrary step $\eta_1$). For instance, with the parameters of Table~\ref{tab:deltaR}, $\Delta R = 1$, $\eta_1 = 0.2$ and $T = 1000$ (total pressure $200$), the stealth-to-honesty log-odds are $+195.3$ under Operator~A and $-92.1$ under repeated rejection. All statements below that contrast pure rejection with penalties (Theorem~\ref{thm:selection}(4), Proposition~\ref{prop:limits}) hold for Operator~A as defined, and should be read as properties of this modelling choice, not as laws of rejection sampling in general.
+\end{remark}
+
+\begin{remark}[Which training procedures realize each operator]\label{rem:algos}
+Operator~B is the exact optimum of a KL-regularized objective with reference $\pi_0$; Operator~A is the exact optimum with reference $\pi_0^{\mathrm{acc}}$, equivalently with reference $\pi_0$ once the bonus $\eta^{-1}\log\beta$ is added (Remark~\ref{rem:modelA}). A practical KL-penalized policy-gradient method approaches them only at convergence and with enough capacity, which the static model does not address.
+\emph{Operator~B} is realized by KL-regularized reinforcement learning relative to $\pi_0$ in which an intercepted trajectory is halted and scored $-C$. In this remark $C$ is the raw value of Section~\ref{sec:reward} (gap $R_0 + C$). Masking the reward of intercepted trajectories (raw score $0$, hence $C = 0$, gap $R_0$) belongs to Operator~B, not to Operator~A. So does simply discarding them from an on-policy batch, the KL term being evaluated on the whole policy: normalized by the full batch size and without baseline, the expected policy gradient of the reward is $\nabla\E_{\pi}[\beta R]$, i.e.\ Operator~B at $C = 0$, the zero-penalty halting without resampling of Proposition~\ref{prop:limits}; a constant baseline $b$ subtracted from retained trajectories only gives Operator~B at $C = -b$ (possibly negative, see Section~\ref{sec:reward}). If the batch is instead refilled with survivors, i.e.\ normalized by their number, the reward gradient is rescaled by $1/\E_{\pi}[\beta]$ in the large-batch limit; in the examples of the companion script its fixed point is Operator~B at $C = 0$ with the self-consistent pressure $\eta/\E_{\pi}[\beta]$ (not claimed in general), again not Operator~A.
+\emph{Operator~A} has three exact realizations with the same law $\pi_{\mathrm{A}}^{(\eta)}$: (i)~unmonitored KL-regularized training, then rejection sampling at inference (resample until the monitor accepts, each attempt being accepted independently with probability $\beta$); (ii)~filtering the reference itself (conditioning $\pi_0$ on acceptance; fitting the reference on monitor-accepted samples of $\pi_0$ achieves this only in the ideal limit), then unmonitored KL-regularized training relative to that filtered reference, as in the definition above; (iii)~KL-regularized training relative to $\pi_0$ with the corrected reward $R + \eta^{-1}\log\beta$, which requires the per-trajectory survival probability $\beta(\pi)$, not only a binary verdict; where $\beta = 0$ (e.g.\ $\beta_{\mathrm{v}} = 0$) the corrected reward is $-\infty$, i.e.\ a support constraint rather than a reward.
+Iterating ``filter on-policy samples, then take a KL-regularized reinforcement-learning step of size $\eta_1$ relative to the current filtered policy'' realizes the repeated-rejection law $\pi_T$ of Remark~\ref{rem:modelA}, not Operator~A; supervised fine-tuning on the survivors alone gives $\beta^T\pi_0$ (the case $\eta_1 = 0$).
+The contrasts of Theorem~\ref{thm:selection}(4) compare (i)--(iii) with penalized reinforcement learning. The companion script \texttt{verifier\_correctif\_3\_v1.py} checks, on three parameter sets of the three-stratum softmax and by gradient ascent with exact expected gradients (the discarded-batch gradients being obtained by enumerating accepted and intercepted outcomes), the normalization equivalence, realization~(iii), the three batch variants and the iterated filtering; and the inversion condition with $R_0 \neq 0$, $\Delta R_{\mathrm{f}} \neq \Delta R_{\mathrm{v}}$ and $C$ of either sign, against direct computation on a grid, on random draws and on points within $10^{-6}$ of the threshold in 50-digit arithmetic (counts in its output file).
+\end{remark}
+
+\section{Exact Phase Transitions and a Rejection--Penalty Contrast}
+
+\begin{theorem}[Exact Characterization of Stealth Selection under an Imperfect Filter]\label{thm:selection}
+Suppose $\Delta R_{\mathrm{v}} = \Delta R_{\mathrm{f}} = \Delta R > 0$ and $0 \le \beta_{\mathrm{v}} < \beta_{\mathrm{f}} \le \beta_{\mathrm{h}} \le 1$ with $\beta_{\mathrm{f}} > 0$.
+\begin{enumerate}
+  \item \textbf{Conditional enrichment under Operator~A (variance identity).} For any measurable survival function $\beta : \Pi_{\mathrm{tr}} \to [0, 1]$ not almost surely constant under $\mu_{\mathrm{tr}}^{(\eta)}(\cdot) := \pi_{\mathrm{no}}^{(\eta)}(\cdot \mid \Pi_{\mathrm{tr}})$ (with $\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta] > 0$),
+  \begin{equation}\label{eq:variance}
+    \E_{\pi_{\mathrm{A}}^{(\eta)}}[\beta(\pi) \mid \Pi_{\mathrm{tr}}] - \E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta(\pi)]
+    = \frac{\Var_{\mu_{\mathrm{tr}}^{(\eta)}}(\beta(\pi))}{\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta(\pi)]} > 0.
+  \end{equation}
+  This holds for Operator~A only, even when $R$ varies among cheaters. In the two-stratum cheating model with equal reward ($\beta_{\mathrm{v}} < \beta_{\mathrm{f}}$), conditional stealth share strictly increases without any threshold under both Operator~A ($\forall \eta \ge 0$) and Operator~B ($\forall \eta > 0, \forall C \ge 0$):
+  \begin{equation}
+    \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}})
+    \qquad \text{and} \qquad
+    \pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}}).
+  \end{equation}
+
+  \item \textbf{Exact absolute-amplification threshold under pure rejection (Operator~A).} For fixed $\eta > 0$, $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})$ holds if and only if either $\beta_{\mathrm{f}} = \beta_{\mathrm{h}}$ (in which case amplification holds for all $\Delta R \ge 0, \eta \ge 0$), or $\beta_{\mathrm{f}} < \beta_{\mathrm{h}}$ and
+  \begin{equation}\label{eq:ampA}
+    \Delta R > \Delta R_{\mathrm{A}}^*(\eta)
+    := \frac{1}{\eta}\left[\log\frac{p_{\mathrm{h}}}{p_{\mathrm{v}}} + \log\frac{\beta_{\mathrm{h}} - \beta_{\mathrm{f}}}{\beta_{\mathrm{f}} - \beta_{\mathrm{v}}}\right].
+  \end{equation}
+
+  \item \textbf{Exact absolute-amplification criterion under KL-regularized penalty (Operator~B; implicit, not closed-form in $\Delta R$).} For all $\eta > 0$ and $C \ge 0$, $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})$ holds if and only if
+  \begin{equation}\label{eq:ampB}
+    p_{\mathrm{v}}\Big(1 - e^{-\eta(\beta_{\mathrm{f}} - \beta_{\mathrm{v}})(\Delta R + C)}\Big)
+    > p_{\mathrm{h}} e^{-\eta \Delta R}\Big(e^{\eta[(1-\beta_{\mathrm{f}})\Delta R + (\beta_{\mathrm{h}} - \beta_{\mathrm{f}})C]} - 1\Big).
+  \end{equation}
+
+  \item \textbf{Rejection--penalty contrast (for Operator~A as modelled; see Remark~\ref{rem:modelA}).}
+  \begin{enumerate}
+    \item \emph{Asymptotic collapse of honesty under Operator~A:} Under Operator~A, $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{h}})$ holds iff
+    \begin{equation}\label{eq:domA}
+      \Delta R > \Delta R_{\mathrm{dom, A}}^*(\eta)
+      := \frac{1}{\eta}\left(\log\frac{p_{\mathrm{h}}}{p_{\mathrm{f}}} + \log\frac{\beta_{\mathrm{h}}}{\beta_{\mathrm{f}}}\right)
+      \xrightarrow[\eta \to +\infty]{} 0.
+    \end{equation}
+    Hence, for any $\Delta R > 0$ and any $\beta_{\mathrm{f}} > 0$, honesty collapses under Operator~A as $\eta \to +\infty$. The mass goes to cheating, not necessarily to stealth: with equal rewards, $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}}) = \beta_{\mathrm{f}}p_{\mathrm{f}}/(\beta_{\mathrm{v}}p_{\mathrm{v}} + \beta_{\mathrm{f}}p_{\mathrm{f}})$ for every $\eta$ (hence also in the limit), which equals one only if $\beta_{\mathrm{v}} = 0$ and can be small (e.g.\ $3/128$ for $p = (0.49, 0.5, 0.01)$, $\beta = (1, 1/2, 3/5)$, where $125/128$ of the cheating mass is visible).
+    \item \emph{Non-vanishing barrier under negative penalty when $\beta_{\mathrm{f}} < \beta_{\mathrm{h}}$:} Under Operator~B, $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{h}})$ holds iff
+    \begin{equation}\label{eq:domB}
+      \Delta R > \Delta R_{\mathrm{dom, B}}^*(\eta, C)
+      := \frac{\beta_{\mathrm{h}} - \beta_{\mathrm{f}}}{\beta_{\mathrm{f}}}\,C + \frac{1}{\eta \beta_{\mathrm{f}}}\log\frac{p_{\mathrm{h}}}{p_{\mathrm{f}}}
+      \xrightarrow[\eta \to +\infty]{} \frac{\beta_{\mathrm{h}} - \beta_{\mathrm{f}}}{\beta_{\mathrm{f}}}\,C > 0 \quad (C > 0).
+    \end{equation}
+    \item \emph{Inversion under a perfectly stealthy niche ($\beta_{\mathrm{f}} = \beta_{\mathrm{h}} = 1 > \beta_{\mathrm{v}} > 0$):} If a stealthy strategy completely evades the in-loop monitor, Operator~B loses its asymptotic barrier ($\Delta R_{\mathrm{dom, B}}^* \to 0$) and yields strictly more absolute stealth than Operator~A---that is, $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})$---if and only if
+    \begin{equation}\label{eq:inversion}
+      \eta(\Delta R + C) > \frac{\log(1/\beta_{\mathrm{v}})}{1 - \beta_{\mathrm{v}}}.
+    \end{equation}
+    Under the same condition, $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{h}}) > \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{h}})$ and the total cheating mass is strictly lower under Operator~B (Remark~\ref{rem:niche}).
+  \end{enumerate}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part~1.} Since $e^{\eta R(\pi)}$ is already absorbed into $\mu_{\mathrm{tr}}^{(\eta)}(\cdot) = \pi_{\mathrm{no}}^{(\eta)}(\cdot \mid \Pi_{\mathrm{tr}})$, the Radon--Nikodym derivative of $\pi_{\mathrm{A}}^{(\eta)}(\cdot \mid \Pi_{\mathrm{tr}})$ with respect to $\mu_{\mathrm{tr}}^{(\eta)}$ is $\beta(\pi) / \E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta]$ (even when $R(\pi)$ varies on $\Pi_{\mathrm{tr}}$). Therefore,
+\[
+  \E_{\pi_{\mathrm{A}}^{(\eta)}}[\beta \mid \Pi_{\mathrm{tr}}]
+  = \frac{\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta^2]}{\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta]}
+  = \E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta] + \frac{\Var_{\mu_{\mathrm{tr}}^{(\eta)}}(\beta)}{\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta]},
+\]
+which strictly exceeds $\E_{\mu_{\mathrm{tr}}^{(\eta)}}[\beta]$ whenever $\Var_{\mu_{\mathrm{tr}}^{(\eta)}}(\beta) > 0$. For two strata with $\beta_{\mathrm{v}} < \beta_{\mathrm{f}}$, the conditional odds are $\frac{\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})}{\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{v}})} = \frac{\beta_{\mathrm{f}}}{\beta_{\mathrm{v}}}\frac{p_{\mathrm{f}}}{p_{\mathrm{v}}} > \frac{p_{\mathrm{f}}}{p_{\mathrm{v}}}$ (infinite when $\beta_{\mathrm{v}} = 0$) and $\frac{\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})}{\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{v}})} = e^{\eta(\beta_{\mathrm{f}} - \beta_{\mathrm{v}})(\Delta R + C)}\frac{p_{\mathrm{f}}}{p_{\mathrm{v}}} > \frac{p_{\mathrm{f}}}{p_{\mathrm{v}}}$ since $\eta > 0$, $\beta_{\mathrm{f}} > \beta_{\mathrm{v}}$, and $\Delta R + C > 0$. Strict monotonicity of $x \mapsto x/(1+x)$ on $[0, +\infty]$ yields both strict inequalities.
+
+\emph{Part~2.} Writing the stratum probabilities explicitly,
+\[
+  \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})
+  = \frac{\beta_{\mathrm{f}} p_{\mathrm{f}} e^{\eta \Delta R}}{\beta_{\mathrm{h}} p_{\mathrm{h}} + (\beta_{\mathrm{v}} p_{\mathrm{v}} + \beta_{\mathrm{f}} p_{\mathrm{f}}) e^{\eta \Delta R}},
+  \qquad
+  \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})
+  = \frac{p_{\mathrm{f}} e^{\eta \Delta R}}{p_{\mathrm{h}} + (p_{\mathrm{v}} + p_{\mathrm{f}}) e^{\eta \Delta R}}.
+\]
+Since $p_{\mathrm{f}} e^{\eta \Delta R} > 0$ and both denominators are strictly positive, cross-multiplying shows that $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})$ is equivalent to
+\[
+  (\beta_{\mathrm{f}} - \beta_{\mathrm{v}}) p_{\mathrm{v}} e^{\eta \Delta R} > (\beta_{\mathrm{h}} - \beta_{\mathrm{f}}) p_{\mathrm{h}}.
+\]
+The left-hand side is strictly positive because $\beta_{\mathrm{f}} > \beta_{\mathrm{v}}$ and $p_{\mathrm{v}} > 0$. If $\beta_{\mathrm{f}} = \beta_{\mathrm{h}}$, the right-hand side vanishes and the inequality always holds. If $\beta_{\mathrm{f}} < \beta_{\mathrm{h}}$, dividing by $(\beta_{\mathrm{f}} - \beta_{\mathrm{v}})p_{\mathrm{v}}$ and taking logarithms yields~\eqref{eq:ampA}.
+
+\emph{Part~3.} Dividing numerator and denominator of $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})$ by $\exp(\eta[\beta_{\mathrm{f}}\Delta R - (1-\beta_{\mathrm{f}})C])$ gives
+\[
+  \pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})
+  = \frac{p_{\mathrm{f}}}{p_{\mathrm{h}} e^{-\eta[\beta_{\mathrm{f}}\Delta R - (\beta_{\mathrm{h}}-\beta_{\mathrm{f}})C]} + p_{\mathrm{v}} e^{-\eta(\beta_{\mathrm{f}}-\beta_{\mathrm{v}})(\Delta R + C)} + p_{\mathrm{f}}},
+  \qquad
+  \pi_{\mathrm{no}}^{(\eta)}(\Pi_{\mathrm{f}})
+  = \frac{p_{\mathrm{f}}}{p_{\mathrm{h}} e^{-\eta \Delta R} + p_{\mathrm{v}} + p_{\mathrm{f}}}.
+\]
+Comparing the two denominators directly yields~\eqref{eq:ampB}.
+
+\emph{Part~4.} The log-odds $\log\frac{\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})}{\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{h}})} = \log\frac{\beta_{\mathrm{f}} p_{\mathrm{f}}}{\beta_{\mathrm{h}} p_{\mathrm{h}}} + \eta\Delta R$ and $\log\frac{\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})}{\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{h}})} = \log\frac{p_{\mathrm{f}}}{p_{\mathrm{h}}} + \eta[\beta_{\mathrm{f}}\Delta R - (\beta_{\mathrm{h}} - \beta_{\mathrm{f}})C]$ immediately give~\eqref{eq:domA} and~\eqref{eq:domB}. Finally, when $\beta_{\mathrm{f}} = \beta_{\mathrm{h}} = 1$ and $0 < \beta_{\mathrm{v}} < 1$, both $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})$ and $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})$ share the numerator $p_{\mathrm{f}} e^{\eta \Delta R}$ and the denominator terms $p_{\mathrm{h}} + p_{\mathrm{f}} e^{\eta \Delta R}$; only the weight of $\Pi_{\mathrm{v}}$ differs, being $\beta_{\mathrm{v}} p_{\mathrm{v}} e^{\eta \Delta R}$ under Operator~A versus $p_{\mathrm{v}} e^{\eta[\beta_{\mathrm{v}}\Delta R - (1-\beta_{\mathrm{v}})C]} = p_{\mathrm{v}} e^{\eta \Delta R} e^{-\eta(1-\beta_{\mathrm{v}})(\Delta R + C)}$ under Operator~B. Thus $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})$ iff $e^{-\eta(1-\beta_{\mathrm{v}})(\Delta R + C)} < \beta_{\mathrm{v}}$, which is~\eqref{eq:inversion}. Since only the visible weight differs, the same condition is equivalent to $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{h}}) > \pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{h}})$.
+\end{proof}
+
+\begin{remark}[The niche ``inversion'' has two sides]\label{rem:niche}
+In the perfectly stealthy niche, the stealth-to-honesty odds equal $p_{\mathrm{f}}e^{\eta\Delta R}/p_{\mathrm{h}}$ under both operators. Operator~B only removes more mass from visible cheating, and that mass is shared between honesty and stealth in the same proportion. Hence, whenever $\pi_{\mathrm{B}}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$, also $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}}) > \pi_{\mathrm{A}}(\Pi_{\mathrm{h}})$ and $\pi_{\mathrm{B}}(\Pi_{\mathrm{tr}}) < \pi_{\mathrm{A}}(\Pi_{\mathrm{tr}})$ (Table~\ref{tab:niche}: $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}}) = 0.827382$; $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}})$ reaches this value exactly at the crossover and $0.918$ at $C = 2.5$). If only stealthy cheating harms deployment, ``B is worse than A on stealth'' is the relevant comparison; but B is better than A on honesty and on total cheating.
+\end{remark}
+
+\begin{remark}[Enrichment under Operator~B needs equal rewards]
+With heterogeneous rewards among cheaters, Operator~B can \emph{decrease} the mean survival of cheaters: two cheating strata of equal prior mass, with survival $0.5$ and reward $0.01$, and survival $0.9$ and reward $10$, give at $C = 0$, $\eta = 0.3$ a mean survival of $0.8810$ without monitor and $0.8748$ under Operator~B. The identity~\eqref{eq:variance} is specific to Operator~A.
+\end{remark}
+
+\begin{proposition}[Limiting Cases and Zero-Penalty Halting without Resampling]\label{prop:limits}
+Under the assumptions of Theorem~\ref{thm:selection}:
+\begin{enumerate}
+  \item \emph{Zero-penalty halting without resampling ($C = 0$ in Operator~B):} Setting $C = 0$ in Operator~B reduces the stealth reward exponent from $\eta\Delta R$ to $\eta\beta_{\mathrm{f}}\Delta R$, which still converges to $\pi_{\mathrm{B}}^{(\eta, 0)}(\Pi_{\mathrm{f}}) \to 1$ as $\eta \to +\infty$ for any $\beta_{\mathrm{f}} > 0$. Thus, halting without resampling and without negative penalty slows the asymptotic exponential rate of stealth dominance by a factor $\beta_{\mathrm{f}}$ (scaling the asymptotic $\eta$-scale by $1/\beta_{\mathrm{f}}$) compared to pure rejection, while the exact finite-$\eta$ threshold ratio $\Delta R_{\mathrm{dom, B}}^*(\eta, 0)/\Delta R_{\mathrm{dom, A}}^*(\eta) = \frac{1}{\beta_{\mathrm{f}}}\frac{\log(p_{\mathrm{h}}/p_{\mathrm{f}})}{\log(p_{\mathrm{h}}/p_{\mathrm{f}}) + \log(\beta_{\mathrm{h}}/\beta_{\mathrm{f}})}$ differs from $1/\beta_{\mathrm{f}}$ whenever $\beta_{\mathrm{f}} < \beta_{\mathrm{h}}$ (the ratio is undefined when $p_{\mathrm{h}}\beta_{\mathrm{h}} = p_{\mathrm{f}}\beta_{\mathrm{f}}$, and negative exactly when $\beta_{\mathrm{f}}/\beta_{\mathrm{h}} < p_{\mathrm{h}}/p_{\mathrm{f}} < 1$); in either case, it does not prevent asymptotic collapse. In particular, under $C = 0$ without resampling $\pi_{\mathrm{B}}^{(\eta,0)}(\Pi_{\mathrm{f}}) \to 1$, whereas under Operator~A the stealthy mass tends to $\beta_{\mathrm{f}}p_{\mathrm{f}}/(\beta_{\mathrm{v}}p_{\mathrm{v}} + \beta_{\mathrm{f}}p_{\mathrm{f}})$, strictly below one when $\beta_{\mathrm{v}} > 0$: pure rejection is not the only ``fatal'' case.
+  \item \emph{Perfect detection of visible cheating ($\beta_{\mathrm{v}} = 0$):} Under Operator~A, $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{v}}) = 0$ for all $\eta \ge 0$, so $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}} \mid \Pi_{\mathrm{tr}}) = 1$; under Operator~B with $\beta_{\mathrm{f}} = \beta_{\mathrm{h}} = 1$, $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}}) > \pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})$ for all finite $\eta, C$ because Operator~A eliminates $\Pi_{\mathrm{v}}$ completely while Operator~B retains exponentially small mass $p_{\mathrm{v}} e^{-\eta C}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Part~1 follows directly from~\eqref{eq:domA} and~\eqref{eq:domB} at $C = 0$, giving $\Delta R_{\mathrm{dom, B}}^*(\eta, 0) = (\eta\beta_{\mathrm{f}})^{-1}\log(p_{\mathrm{h}}/p_{\mathrm{f}}) \to 0$. Part~2 follows by substituting $\beta_{\mathrm{v}} = 0$ into the unnormalized weights of $\Pi_{\mathrm{v}}$ ($0$ under Operator~A versus $p_{\mathrm{v}} e^{-\eta C} > 0$ under Operator~B).
+\end{proof}
+
+\section{Three Escape Mechanisms}
+
+We now give three mechanisms against stealth selection. They are not claimed to be an exhaustive classification, and we claim neither that avoiding deployment-effective evasion requires any one of them, nor that their failure produces it: for instance, under Operator~B a positive base-law covariance between loop and audit survival need not make audit survival rise at high pressure (Remark~\ref{rem:decoupling}). \textbf{R1} is an exact criterion for honesty to dominate stealth in the three-stratum model; \textbf{R2} is an exact covariance identity under Operator~A and a sufficient condition under Operator~B for audit survival not to increase, a condition on dependence and not on where the audit is placed; \textbf{R3} (planted honeypots in an extended contextual model) makes every frequent cheating policy strictly worse than honesty, even when the monitor is blind on ordinary episodes.
+
+\begin{theorem}[Escape Regimes R1, R2, and R3]\label{thm:escape}
+\leavevmode
+\begin{enumerate}
+  \item \textbf{Regime (R1) --- Prior KL barrier and multi-objective maintenance cost (exact criterion for dominance in the three-stratum model).} Define $\Delta \DKL(\Pi_{\mathrm{f}} \,\|\, \Pi_{\mathrm{h}}; \pi_0) := \log(p_{\mathrm{h}}/p_{\mathrm{f}})$ and $\Delta R_{\mathrm{net}} := \Delta R - \delta_{\mathrm{maint}}$. Honesty strictly dominates stealth ($\pi_{\mathrm{post}}(\Pi_{\mathrm{f}}) < \pi_{\mathrm{post}}(\Pi_{\mathrm{h}})$) if and only if
+  \begin{equation}\label{eq:R1}
+    \Delta \DKL(\Pi_{\mathrm{f}} \,\|\, \Pi_{\mathrm{h}}; \pi_0) >
+    \begin{cases}
+      \eta\,\Delta R_{\mathrm{net}} - \log(\beta_{\mathrm{h}}/\beta_{\mathrm{f}}) & \text{under Operator~(A)}, \\[4pt]
+      \eta\big[\beta_{\mathrm{f}}\Delta R_{\mathrm{net}} - (\beta_{\mathrm{h}} - \beta_{\mathrm{f}})C\big] & \text{under Operator~(B)}.
+    \end{cases}
+  \end{equation}
+  In particular, if $\Pi_{\mathrm{f}}$ is non-maintainable ($\beta_{\mathrm{f}}\Delta R_{\mathrm{net}} < (\beta_{\mathrm{h}} - \beta_{\mathrm{f}})C$, equivalently $\beta_{\mathrm{f}} < \frac{\beta_{\mathrm{h}} C}{\Delta R_{\mathrm{net}} + C}$ when $\Delta R_{\mathrm{net}} + C > 0$, or $\Delta R_{\mathrm{net}} < 0$), then $\lim_{\eta \to +\infty}\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}}) = 0$. (An unreachable stratum, $p_{\mathrm{f}} = 0$, lies outside the domain $p_{\mathrm{f}} > 0$ and is only an informal limit.)
+
+  \item \textbf{Regime (R2) --- Covariance between loop and audit survival.} Suppose post-training uses only $(R, M_{\mathrm{loop}})$, while deployment monitoring relies on a detector $M_{\mathrm{audit}}$ with survival probability $\beta_{\mathrm{audit}}(\pi) := \Prob(M_{\mathrm{audit}} = 0 \mid \pi)$. On any iso-reward cheating stratum $\mathcal{S} := \{\pi \in \Pi_{\mathrm{tr}} : R(\pi) = \Delta R\}$ with $\pi_0(\mathcal{S}) > 0$ (so that $\nu_0 := \pi_0(\cdot \mid \mathcal{S})$ is defined; this excludes, e.g., continuous rewards) and $\E_{\nu_0}[\beta_{\mathrm{loop}}] > 0$, Operator~A satisfies the exact identity
+  \begin{equation}\label{eq:R2}
+    \E_{\pi_{\mathrm{A}}^{(\eta)}}[\beta_{\mathrm{audit}} \mid \mathcal{S}] - \E_{\nu_0}[\beta_{\mathrm{audit}}]
+    = \frac{\Cov_{\nu_0}(\beta_{\mathrm{loop}}, \beta_{\mathrm{audit}})}{\E_{\nu_0}[\beta_{\mathrm{loop}}]}.
+  \end{equation}
+  Hence, under Operator~A, audit survival does not increase if and only if $\Cov_{\nu_0}(\beta_{\mathrm{loop}}, \beta_{\mathrm{audit}}) \le 0$. Under Operator~B, $\Cov_{\nu_0}(\beta_{\mathrm{loop}}, \beta_{\mathrm{audit}}) \le 0$ is necessary for audit survival not to increase at any $\eta$ (it is the derivative at $\eta = 0$), but it is not sufficient (Remark~\ref{rem:decoupling}). If $(\beta_{\mathrm{loop}}, \beta_{\mathrm{audit}})$ are independent or negatively associated~\cite{joagdev1983} under $\nu_0$, then for all $\eta \ge 0$ and $C \ge 0$,
+  \begin{equation}
+    \E_{\pi_{\mathrm{B}}^{(\eta, C)}}[\beta_{\mathrm{audit}} \mid \mathcal{S}] \le \E_{\nu_0}[\beta_{\mathrm{audit}}].
+  \end{equation}
+
+  \item \textbf{Regime (R3) --- Indistinguishable planted honeypots (extended contextual model; excludes frequent cheaters only).} Let $\mathcal{X}$ be the space of contexts observed by the policy, drawn from the mixture $P_{\mathrm{mix}} = (1-\rho)P_{\mathrm{ord}} + \rho P_{\mathrm{trap}}$ ($\rho \in (0, 1)$), where the monitor may be completely blind on ordinary episodes $P_{\mathrm{ord}}$ ($\beta_{\mathrm{ord}} \le 1$) but catches any cheating on trap episodes $P_{\mathrm{trap}}$ with probability at least $1 - \varepsilon_{\mathrm{trap}} \in (0, 1]$. If every admissible policy $\pi$ (with context-dependent cheating probability $\tau_{\pi} : \mathcal{X} \to [0, 1]$) satisfies $|\E_{P_{\mathrm{ord}}}[\tau_\pi(X)] - \E_{P_{\mathrm{trap}}}[\tau_\pi(X)]| \le \delta_{\mathrm{ind}} \in [0, 1)$---which holds unconditionally whenever $\dTV(P_{\mathrm{ord}}, P_{\mathrm{trap}}) \le \delta_{\mathrm{ind}}$---then any policy with $\tau_{\mathrm{ord}}(\pi) := \E_{P_{\mathrm{ord}}}[\tau_\pi(X)] \ge \tau_{\min} > \delta_{\mathrm{ind}}$ incurs trap-cheating rate $\tau_{\mathrm{trap}}(\pi) \ge \tau_{\mathrm{ord}}(\pi) - \delta_{\mathrm{ind}}$ and has strictly negative expected reward relative to pure honesty ($\tau \equiv 0$, $\beta_{\mathrm{h}} = 1$, the honest policy being intercepted neither on ordinary nor on trap episodes) under Operator~B whenever
+  \begin{equation}\label{eq:R3}
+    C > C_{\mathrm{R3}}^*
+    := \frac{(1-\rho)\tau_{\min} + \rho\,\varepsilon_{\mathrm{trap}}(\tau_{\min} - \delta_{\mathrm{ind}})}{\rho(1 - \varepsilon_{\mathrm{trap}})(\tau_{\min} - \delta_{\mathrm{ind}})}\,\Delta R
+    \le \frac{1 - \rho + \rho\,\varepsilon_{\mathrm{trap}}}{\rho(1 - \varepsilon_{\mathrm{trap}})(1 - \delta_{\mathrm{ind}}/\tau_{\min})}\,\Delta R.
+  \end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part~1 (R1).} Substituting $\Delta R_{\mathrm{f}} = \Delta R_{\mathrm{net}}$ into the log-odds ratios $\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{f}})/\pi_{\mathrm{A}}^{(\eta)}(\Pi_{\mathrm{h}}) = \frac{\beta_{\mathrm{f}} p_{\mathrm{f}}}{\beta_{\mathrm{h}} p_{\mathrm{h}}} e^{\eta \Delta R_{\mathrm{net}}}$ and $\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{f}})/\pi_{\mathrm{B}}^{(\eta, C)}(\Pi_{\mathrm{h}}) = \frac{p_{\mathrm{f}}}{p_{\mathrm{h}}} e^{\eta[\beta_{\mathrm{f}}\Delta R_{\mathrm{net}} - (\beta_{\mathrm{h}}-\beta_{\mathrm{f}})C]}$ shows that each ratio is strictly less than $1$ iff~\eqref{eq:R1} holds. Whenever the coefficient of $\eta$ is strictly negative, the ratio decays exponentially to $0$ as $\eta \to +\infty$.
+
+\emph{Part~2 (R2).} On $\mathcal{S}$, $e^{\eta R(\pi)} = e^{\eta \Delta R}$ cancels in $\pi_{\mathrm{A}}^{(\eta)}(\cdot \mid \mathcal{S})$, so $d\pi_{\mathrm{A}}^{(\eta)}(\cdot \mid \mathcal{S})/d\nu_0 = \beta_{\mathrm{loop}} / \E_{\nu_0}[\beta_{\mathrm{loop}}]$. Expanding $\E_{\nu_0}[\beta_{\mathrm{loop}}\beta_{\mathrm{audit}}]/\E_{\nu_0}[\beta_{\mathrm{loop}}] - \E_{\nu_0}[\beta_{\mathrm{audit}}]$ gives~\eqref{eq:R2}. Under Operator~B, the conditional density is proportional to $g(\beta_{\mathrm{loop}})$ where $g(u) = e^{\eta u (\Delta R + C)}$ is non-decreasing; by negative association~\cite{joagdev1983} (or independence), $\Cov_{\nu_0}(g(\beta_{\mathrm{loop}}), \beta_{\mathrm{audit}}) \le 0$, giving the stated inequality.
+
+\emph{Part~3 (R3).} By the dual representation of total variation distance, $|\E_{P_{\mathrm{ord}}}[\tau_\pi] - \E_{P_{\mathrm{trap}}}[\tau_\pi]| \le \dTV(P_{\mathrm{ord}}, P_{\mathrm{trap}}) \le \delta_{\mathrm{ind}}$ for all measurable $\tau_\pi : \mathcal{X} \to [0, 1]$, hence $\tau_{\mathrm{trap}}(\pi) \ge \tau_{\mathrm{ord}}(\pi) - \delta_{\mathrm{ind}}$. On $P_{\mathrm{ord}}$, expected gain is at most $\tau_{\mathrm{ord}}(\pi)\Delta R$. On $P_{\mathrm{trap}}$, whenever $C > \frac{\varepsilon_{\mathrm{trap}}}{1-\varepsilon_{\mathrm{trap}}}\Delta R$, each cheating attempt yields expected payoff $\varepsilon_{\mathrm{trap}}\Delta R - (1-\varepsilon_{\mathrm{trap}})C < 0$, so expected gain on $P_{\mathrm{trap}}$ is at most $(\tau_{\mathrm{ord}}(\pi) - \delta_{\mathrm{ind}})[\varepsilon_{\mathrm{trap}}\Delta R - (1-\varepsilon_{\mathrm{trap}})C]$. Combining with mixture weights $(1-\rho)$ and $\rho$, the total expected reward $\E_{P_{\mathrm{mix}}}[\bar{R}_C(\pi)]$ is upper-bounded by
+\[
+  \tau_{\mathrm{ord}}(\pi)\left[(1-\rho)\Delta R + \rho\big(\varepsilon_{\mathrm{trap}}\Delta R - (1-\varepsilon_{\mathrm{trap}})C\big)\left(1 - \frac{\delta_{\mathrm{ind}}}{\tau_{\mathrm{ord}}(\pi)}\right)\right],
+\]
+which is strictly decreasing in $\tau_{\mathrm{ord}}(\pi)$ and strictly negative for all $\tau_{\mathrm{ord}}(\pi) \ge \tau_{\min}$ whenever $C > C_{\mathrm{R3}}^*$.
+\end{proof}
+
+\begin{remark}[Placement is not covariance]\label{rem:decoupling}
+Keeping the audit monitor outside the loop does not make the covariance in~\eqref{eq:R2} non-positive: two detectors reading neighbouring features are positively correlated. With $\beta_{\mathrm{loop}} \in \{1/10, 9/10\}$ and $\beta_{\mathrm{audit}} \in \{2/10, 8/10\}$ on two equiprobable atoms, Operator~A raises audit survival from $1/2$ to $37/50$ although the audit is never used in the loop. Conversely, placing the audit in the loop is not necessarily harmful in this model: with $\beta_{\mathrm{loop}} = \beta_{\mathrm{other}}\beta_{\mathrm{audit}}$, $\beta_{\mathrm{audit}} = (1/2, 1)$ and $\beta_{\mathrm{other}} = (1, 1/10)$, audit survival falls from $3/4$ to $7/12$. Under Operator~B, zero covariance does not suffice: with $\beta_{\mathrm{loop}} \in \{1/10, 1/2, 9/10\}$ and $\beta_{\mathrm{audit}} \in \{9/10, 1/10, 9/10\}$ on three equiprobable atoms, the covariance is exactly zero, yet at $\eta(\Delta R + C) = 4$ audit survival rises from $19/30$ to $0.770$, because the weight $e^{ku}$ is convex. Conversely, a positive covariance need not make audit survival rise at high pressure: with $\beta_{\mathrm{loop}} \in \{1/10, 1/2, 9/10\}$ and $\beta_{\mathrm{audit}} \in \{1/10, 19/20, 9/20\}$, the covariance is $+7/150$ and audit survival is $1/2$ under the base law, $0.543$ at $\eta(\Delta R + C) = 2$, $0.459$ at $\eta(\Delta R + C) = 10$, and tends to $9/20$. The practical recommendation not to train against one's audit monitors is already published~\cite{baker2025,korbak2025}, and optimization against latent-space monitors is known to produce obfuscated activations~\cite{bailey2024}; what the identity adds is that what matters is the base-law covariance, not the placement.
+\end{remark}
+
+\begin{remark}[Information-Theoretic Duality and Rare-Attack Floor of Regime~R3]
+Total variation bounds are classically used to establish impossibility limits for \emph{monitors} trying to distinguish covert attacks from honest behavior (Neyman--Pearson power ceiling $\alpha + \dTV$). Theorem~\ref{thm:escape}(3) turns the exact same total variation inequality in favor of the \emph{defender}: if planted honeypots are close to ordinary episodes in total variation, no policy can selectively cheat on ordinary episodes while avoiding the traps. However, this guarantee requires $\tau_{\min} > \delta_{\mathrm{ind}}$ and does not block a policy that cheats at a very rare rate $\tau_{\mathrm{ord}} \le \delta_{\mathrm{ind}}$ concentrated exclusively on contexts where $P_{\mathrm{ord}} > P_{\mathrm{trap}}$. Regime~R3 therefore does not make honesty the Gibbs optimum: it only excludes frequent cheaters ($\tau_{\mathrm{ord}} \ge \tau_{\min}$), and the attainable $\tau_{\min}$ tends to $\delta_{\mathrm{ind}}$ as $C \to \infty$. Its link with the critical ratio $\beta_{\mathrm{h}}C/(\Delta R_{\mathrm{net}} + C)$ of Regime~R1 holds for $\beta_{\mathrm{h}} = 1$ only.
+\end{remark}
+
+\section{Numerical Examples and What the Companion Script Checks}\label{sec:verif}
+
+The theorems rest on the written proofs above. The companion script \texttt{verifier\_}\allowbreak\texttt{exemples\_}\allowbreak\texttt{papier\_v4\_}\allowbreak\texttt{correctif\_1.py} (standard library only; it writes no file unless given \texttt{--out}, and never overwrites) does three things, none of which adds evidence beyond the proofs for the general statements:
+\begin{itemize}
+  \item \textbf{Exact rational arithmetic (\texttt{fractions.Fraction})} for: the variance-identity example (cheating sub-species weights $(1/2, 1/3, 1/6)$, survival rates $(1/10, 2/5, 9/10)$, $\E_{\mathrm{post}}[\beta] - \E_0[\beta] = 37/150 = \Var_0(\beta)/\E_0[\beta]$); the Operator~A amplification and dominance criteria on $5{,}000$ rational instances with $E := e^{\eta\Delta R}$ treated as a free rational ($20\%$ with $\beta_{\mathrm{f}} = \beta_{\mathrm{h}}$); the niche identities of Remark~\ref{rem:niche}; the collapse limit $3/128$; and the covariance counterexamples of Remark~\ref{rem:decoupling}.
+  \item \textbf{Floating-point recomputation} of every table and example, and of the sensitivity figures of Remark~\ref{rem:modelA}.
+  \item \textbf{Floating-point regression checks} inherited from earlier versions, reported with their limits: for Regime~R2 they cover only an exactly counter-monotone pairing (a special case of negative association), and for Regime~R3 they evaluate the extremal policy, for which the bound is tight by construction. These checks are not presented as evidence.
+\end{itemize}
+
+\subsection{Phase Transition across Reward Advantage and Optimization Pressure}
+
+For representative parameters $p_{\mathrm{h}} = 0.85$, $p_{\mathrm{v}} = 0.14$, $p_{\mathrm{f}} = 0.01$, $\beta_{\mathrm{h}} = 1.0$, $\beta_{\mathrm{v}} = 0.05$, $\beta_{\mathrm{f}} = 0.75$, $\eta = 3.0$, and $C = 2.5$, Theorem~\ref{thm:selection} predicts $\Delta R_{\mathrm{A}}^* = 0.257992$, $\Delta R_{\mathrm{dom, A}}^* = 1.576778$, and $\Delta R_{\mathrm{dom, B}}^* = 2.807845$ (with asymptotic floor $0.833333$). Tables~\ref{tab:deltaR} and~\ref{tab:eta} illustrate these thresholds (values rounded to six decimals).
+
+\begin{table}[ht]
+\centering
+\caption{Phase transition across reward advantage $\Delta R$ ($p_{\mathrm{h}}=0.85, p_{\mathrm{v}}=0.14, p_{\mathrm{f}}=0.01, \beta_{\mathrm{h}}=1.0, \beta_{\mathrm{v}}=0.05, \beta_{\mathrm{f}}=0.75, \eta=3.0, C=2.5$). Bold entries highlight the crossovers $\Delta R_{\mathrm{A}}^*$, $\Delta R_{\mathrm{dom, A}}^*$, and the high-$\Delta R$ flip of Operator~B. The bold crossover rows ($0.2580$ and $1.5768$) are evaluated at the 4-decimal rounded values of $\Delta R_{\mathrm{A}}^* = 0.257992$ and $\Delta R_{\mathrm{dom, A}}^* = 1.576778$, which accounts for the $2.3 \times 10^{-5}$ difference between $\pi_{\mathrm{A}}(\Pi_{\mathrm{f}}) = 0.340917$ and $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}}) = 0.340894$.}
+\label{tab:deltaR}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}rccccccc@{}}
+\toprule
+$\Delta R$ & $\pi_{\mathrm{no}}(\Pi_{\mathrm{f}})$ & Cond.\ no mon. & $\pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$ & Cond.\ A & $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}})$ & $\pi_{\mathrm{B}}(\Pi_{\mathrm{f}})$ & $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}})$ \\
+\midrule
+$0.2000$ & $0.016221$ & $0.066667$ & $0.015593$ & $0.517241$ & $0.969854$ & $0.002821$ & $0.997043$ \\
+$\mathbf{0.2580}$ & $\mathbf{0.018451}$ & $0.066667$ & $\mathbf{0.018451}$ & $0.517241$ & $0.964329$ & $0.003213$ & $0.996650$ \\
+$0.8000$ & $0.044031$ & $0.066667$ & $0.081869$ & $0.517241$ & $0.841721$ & $0.010795$ & $0.989057$ \\
+$1.2000$ & $0.057728$ & $0.066667$ & $0.198806$ & $0.517241$ & $0.615641$ & $0.026140$ & $0.973706$ \\
+$\mathbf{1.5768}$ & $0.063492$ & $0.066667$ & $\mathbf{0.340917}$ & $0.517241$ & $\mathbf{0.340894}$ & $0.058966$ & $0.940876$ \\
+$2.2000$ & $0.066157$ & $0.066667$ & $0.479040$ & $0.517241$ & $0.073856$ & $0.202970$ & $0.796883$ \\
+$3.0000$ & $0.066620$ & $0.066667$ & $0.513526$ & $0.517241$ & $0.007182$ & $\mathbf{0.606385}$ & $0.393533$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Asymptotic divergence as optimization pressure $\eta$ increases at fixed $\Delta R = 0.60 < \frac{1-\beta_{\mathrm{f}}}{\beta_{\mathrm{f}}}C = 0.833333$ (same base parameters as Table~\ref{tab:deltaR}).}
+\label{tab:eta}
+\small
+\begin{tabular}{@{}rcccc@{}}
+\toprule
+$\eta$ & $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}})$ & $\pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$ & $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}})$ ($C=2.5$) & $\pi_{\mathrm{B}}(\Pi_{\mathrm{f}})$ ($C=2.5$) \\
+\midrule
+$0.5$ & $0.977491$ & $0.011642$ & $0.941823$ & $0.010152$ \\
+$1.0$ & $0.969854$ & $0.015593$ & $0.974980$ & $0.009629$ \\
+$2.0$ & $0.946399$ & $0.027725$ & $0.990292$ & $0.008210$ \\
+$4.0$ & $0.841721$ & $0.081869$ & $0.994178$ & $0.005808$ \\
+$8.0$ & $0.325433$ & $0.348914$ & $0.997107$ & $0.002893$ \\
+$16.0$ & $\mathbf{0.003955}$ & $\mathbf{0.515196}$ & $\mathbf{0.999285}$ & $\mathbf{0.000715}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Perfect-Stealth Niche Inversion and Escape-Regime Examples}
+
+When a perfectly stealthy niche exists ($\beta_{\mathrm{f}} = \beta_{\mathrm{h}} = 1.0$, $\beta_{\mathrm{v}} = 0.10$, $p_{\mathrm{h}}=0.85, p_{\mathrm{v}}=0.14, p_{\mathrm{f}}=0.01$, $\eta = 2.0$, $\Delta R = 1.0$),~\eqref{eq:inversion} predicts the exact crossover $\eta(\Delta R + C) = \log(10)/0.9 = 2.558428$, i.e., $C = 0.279214$. Table~\ref{tab:niche} shows that for $C > 0.279214$, Operator~B yields strictly more absolute stealth than Operator~A, while its honesty mass also exceeds $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}}) = 0.827382$ (Remark~\ref{rem:niche}).
+
+\begin{table}[ht]
+\centering
+\caption{Perfect-stealth niche inversion ($\beta_{\mathrm{f}} = \beta_{\mathrm{h}} = 1.0, \beta_{\mathrm{v}} = 0.10, \eta = 2.0, \Delta R = 1.0$). Above $C = 0.279214$, Operator~B yields more absolute stealth than Operator~A, and also more honesty (last column; $\pi_{\mathrm{A}}(\Pi_{\mathrm{h}}) = 0.827382$). The bold crossover row ($C = 0.2792$) is evaluated at the 4-decimal rounded threshold, giving $\eta(\Delta R + C) = 2.558400$ versus the exact value $2.558428$.}
+\label{tab:niche}
+\small
+\begin{tabular}{@{}rccccc@{}}
+\toprule
+Penalty $C$ & $\eta(\Delta R + C)$ & $\pi_{\mathrm{no}}(\Pi_{\mathrm{f}})$ & $\pi_{\mathrm{A}}(\Pi_{\mathrm{f}})$ & $\pi_{\mathrm{B}}(\Pi_{\mathrm{f}})$ & $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}})$ \\
+\midrule
+$0.0000$ & $2.000000$ & $0.037731$ & $0.071924$ & $0.067487$ & $0.776336$ \\
+$\mathbf{0.2792}$ & $\mathbf{2.558400}$ & $0.037731$ & $\mathbf{0.071924}$ & $\mathbf{0.071924}$ & $0.827379$ \\
+$1.0000$ & $4.000000$ & $0.037731$ & $0.071924$ & $0.077603$ & $0.892711$ \\
+$2.5000$ & $7.000000$ & $0.037731$ & $0.071924$ & $\mathbf{0.079814}$ & $0.918135$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For Regime~R1, with $p_{\mathrm{h}} = 0.90, p_{\mathrm{v}} = 0.09, p_{\mathrm{f}} = 0.01, \beta_{\mathrm{h}} = 1.0, \beta_{\mathrm{v}} = 0.10, \beta_{\mathrm{f}} = 0.90$, a maintenance cost $\delta_{\mathrm{maint}} = 1.25$ against $\Delta R_{\mathrm{v}} = 1.0$ yields $\Delta R_{\mathrm{net}} = -0.25$, driving honesty to $\pi_{\mathrm{B}}(\Pi_{\mathrm{h}}) = 0.999998$ at $\eta = 20, C = 2.0$. For Regime~R3, with trap fraction $\rho = 0.20$, trap false-negative rate $\varepsilon_{\mathrm{trap}} = 0.02$, indistinguishability $\delta_{\mathrm{ind}} = 0.05$, minimum targeted cheating rate $\tau_{\min} = 0.20$, and $\Delta R = 1.0$,~\eqref{eq:R3} gives $C_{\mathrm{R3}}^* = 5.462585$.
+
+% ---------------------------------------------------------------------------
+% Section: audit budgets in the sequential game  (fragment, no preamble)
+% Assumes amsmath/amsthm; macros \E, \Prob, \DKL; environments theorem,
+% proposition, lemma, corollary, remark, definition.
+% Citation keys are listed, with full entries, in the comment block at the end.
+% v1-correctif-1: corrections after the counter-reading by a fresh Opus
+%   (papiers/D/audits/contre-lecture-budget-audit-v1/), written by the second daughter
+%   session (Opus), NOT by Fable. STATUS: A REVOIR PAR FABLE. Not for diffusion.
+% v1-correctif-4: remark rem:audit-random-sim added (results of the preregistered simulation of the margin).
+% v1-correctif-3: three gaps of Fable's diff check fixed (neighbours paragraph, bibliography entries).
+% v1-correctif-2: retouches B1-B9 and minor m8 of Fable's review
+%   (papiers/D/audits/relecture-fable-correctifs-chantiers-1-3-v1.md).
+%   ALL citations are A VERIFIER SUR PDF (R7) until the reference check, except the two neighbours
+%   already read on PDF by the programme (docs/notes/mecanisme-adjudant-hors-distribution-v1/
+%   lecture-sept-voisins-opus-v1.md): gans2026randomized (arXiv 2609.38262), zhu2026blindfold (arXiv 2610.37055).
+%   New citation keys (to verify on PDF, R7): wen2024adaptive, christiano2021lowstakes,
+%   zhang2008policyteaching, rakhsha2020poisoning, deng2019strategizing.
+% ---------------------------------------------------------------------------
+\section{How many audits? Budgets in the sequential game}
+\label{sec:audit-budget}
+
+The static analysis charges every episode an audit probability $\rho$. An
+auditor, however, has a total budget: over the $T$ training episodes it can
+inspect at most $B\ll T$ of them. This section asks how large $B$ must be, in
+three complementary senses: so that the \emph{training signal} never favours
+the stealthy stratum (Theorem~\ref{thm:audit-deterrence}); so that a cheating
+policy is \emph{caught} at least once
+(Theorem~\ref{thm:audit-detection}); and so that a \emph{randomised}
+implementation of the first schedule works with high probability
+(Theorem~\ref{thm:audit-random}). Throughout this section we drop the visible
+stratum $v$ and keep the two strata $h$ (honest) and $f$ (stealthy cheating),
+with prior log-odds $-L<0$ of $f$ against $h$.
+
+\subsection{Setting}
+
+\paragraph{Dynamics.} We use the logit recursion of the earlier section and
+allow the reward vector to change with the step.
+
+\begin{lemma}[Log-odds under a time-varying reward]\label{lem:audit-logodds}
+Let $\eta\in(0,\infty]$, $\gamma\in(0,\eta]$ finite, $a:=1-\gamma/\eta\in[0,1]$
+($a=1$ iff $\eta=\infty$, the case without KL anchoring), and let the logits
+follow $\theta_{k+1}=\theta_k+\gamma\bigl(r_k-(\theta_k-\theta_0)/\eta\bigr)$,
+where $r_k$ is the expected effective reward vector used at step $k$. Write
+$\ell_k:=\theta_k^{f}-\theta_k^{h}$ and $d_j:=r_j^{f}-r_j^{h}$. Then, with
+$\ell_0=-L$ and the convention $0^0=1$,
+\begin{equation}\label{eq:audit-logodds}
+  \ell_k \;=\; -L+\gamma\sum_{j=0}^{k-1}a^{\,k-1-j}\,d_j ,\qquad k\ge 0 .
+\end{equation}
+\end{lemma}
+\begin{proof}
+Subtracting the $h$-coordinate of the recursion from the $f$-coordinate gives
+$\ell_{k+1}+L=a(\ell_k+L)+\gamma d_k$; unroll from $\ell_0+L=0$.
+\end{proof}
+
+\paragraph{Audit schedules and budget.} Training runs for $K$ steps with $n\ge1$
+episodes per step, $T=nK$. A (deterministic, fractional) \emph{audit schedule}
+is a vector $\rho=(\rho_0,\dots,\rho_{K-1})\in[0,1]^K$: at step $j$ a fraction
+$\rho_j$ of the $n$ episodes is audited, infallibly, and the policy cannot tell
+audited from non-audited episodes ($\delta_{\mathrm{ind}}=0$). We also assume that there is no in-loop monitor (or one that is blind on the stealthy stratum, $\beta_f=\beta_h=1$) and that an audited honest episode is never penalised (no false positive). Two extensions follow by substitution, under conditions that we state without developing them. An audit that misses a stealthy episode with probability $\varepsilon_a$ replaces $W$ by $(1-\varepsilon_a)W$ and $C$ by $C':=(1-\varepsilon_a)C-\varepsilon_a\Delta R$, provided $C'\ge0$; otherwise full auditing does not make stealth unprofitable and the uniform program can be infeasible. An in-loop monitor under operator~B with $\beta_h=1$ replaces $\Delta R$ by $\beta_f\Delta R-(1-\beta_f)C_{\mathrm{loop}}$, when this is positive. Its budget is
+$B(\rho):=n\sum_{j<K}\rho_j$. A stealthy trajectory earns the advantage
+$\Delta R>0$ if it is not audited and pays the penalty $C\ge0$ (forfeiting
+$\Delta R$) if it is, so in the mean-field dynamics
+\begin{equation}\label{eq:audit-adv}
+  d_j=(1-\rho_j)\Delta R-\rho_j C=\Delta R-W\rho_j,\qquad W:=\Delta R+C .
+\end{equation}
+We write $G_k:=\gamma\sum_{i<k}a^i$, so that $G_k=\eta(1-a^k)$ if $\eta<\infty$
+and $G_k=\gamma k$ if $\eta=\infty$, and $x_k:=\ell_k+L$ for the displacement of
+the log-odds from the prior. By \eqref{eq:audit-logodds}--\eqref{eq:audit-adv},
+\begin{equation}\label{eq:audit-x}
+  x_{k+1}=a\,x_k+\gamma\Delta R-\gamma W\rho_k,\qquad
+  x_k=\Delta R\,G_k-\gamma W\sum_{j<k}a^{\,k-1-j}\rho_j,\qquad x_0=0 .
+\end{equation}
+Without audits $x_k=x^{u}_k:=\Delta R\,G_k$, which is nondecreasing in $k$ and
+bounded by $\eta\Delta R$.
+
+\begin{definition}[Deterrence budgets]\label{def:audit-budgets}
+Fix a critical log-odds $\ell_{\mathrm{crit}}\ge -L$ (for instance
+$\ell_{\mathrm{crit}}=0$: stealth is never more likely than honesty) and let
+$c:=\ell_{\mathrm{crit}}+L\ge0$ be the \emph{headroom}. A schedule prevents the
+emergence of the stealthy niche in the \emph{final} sense if
+$\ell_K\le\ell_{\mathrm{crit}}$, and in the \emph{uniform} sense if
+$\ell_k\le\ell_{\mathrm{crit}}$ for all $1\le k\le K$. The corresponding minimal
+budgets are
+\[
+  B^\star_{\mathrm{fin}}:=\min\{B(\rho):\rho\in[0,1]^K,\ x_K\le c\},\qquad
+  B^\star_{\mathrm{unif}}:=\min\{B(\rho):\rho\in[0,1]^K,\ x_k\le c\ \ \forall k\le K\}.
+\]
+\end{definition}
+By \eqref{eq:audit-x} both are linear programs in $\rho$; they are feasible
+($\rho\equiv1$ gives $x_k=-C\,G_k\le0\le c$), so the minima are attained, and
+$B^\star_{\mathrm{fin}}\le B^\star_{\mathrm{unif}}$. Without audits the niche
+emerges by step $K$ in either sense iff $\Delta R\,G_K>c$. Since every $x_k$ is
+nonincreasing in every $\rho_j$, rounding each $n\rho_j$ up to an integer keeps
+a schedule feasible and costs at most one extra audit per step with $\rho_j>0$.
+
+\subsection{Deterrence through the training signal}
+
+\begin{theorem}[Exact deterrence budgets, deterministic schedules]
+\label{thm:audit-deterrence}
+In the setting above, with $c/\eta:=0$ when $\eta=\infty$:
+\begin{enumerate}
+\item[\textup{(i)}] \textbf{Uniform criterion.} For every $K$,
+\begin{equation}\label{eq:audit-unif-id}
+  B^\star_{\mathrm{unif}}=\frac{n}{\gamma W}\Bigl[K\gamma\Delta R
+   -\frac{\gamma}{\eta}\sum_{k=1}^{K-1}\min(c,\Delta R\,G_k)-\min(c,\Delta R\,G_K)\Bigr].
+\end{equation}
+If $\Delta R\,G_K\le c$ this is $0$. Otherwise let
+$\kappa:=\min\{k\ge0:\Delta R\,G_{k+1}>c\}\le K-1$ and
+\[
+  \rho_{\mathrm{hold}}:=\frac{\Delta R-c/\eta}{\Delta R+C},\qquad
+  \rho_\kappa:=\frac{\Delta R\,G_{\kappa+1}-c}{\gamma(\Delta R+C)} .
+\]
+Then $0<\rho_\kappa\le\rho_{\mathrm{hold}}\le\Delta R/W$, the
+\emph{just-in-time} schedule
+$\rho^{\mathrm{jit}}_j=0$ for $j<\kappa$, $\rho^{\mathrm{jit}}_\kappa=\rho_\kappa$,
+$\rho^{\mathrm{jit}}_j=\rho_{\mathrm{hold}}$ for $j>\kappa$, is optimal, it yields
+$\ell_k=\min(\ell^{u}_k,\ell_{\mathrm{crit}})$ for all $k\le K$, where $\ell^{u}_k:=-L+\Delta R\,G_k$ is the unaudited log-odds, and
+\begin{equation}\label{eq:audit-unif}
+  B^\star_{\mathrm{unif}}=n\bigl[\rho_\kappa+(K-1-\kappa)\,\rho_{\mathrm{hold}}\bigr].
+\end{equation}
+If $\eta<\infty$ the just-in-time schedule is the unique optimal schedule.
+\item[\textup{(ii)}] \textbf{Final criterion.} Let $D:=\Delta R\,G_K-c$. If
+$D\le0$ then $B^\star_{\mathrm{fin}}=0$. If $D>0$ and $\gamma=\eta$, then
+$B^\star_{\mathrm{fin}}=nD/(\gamma W)$, attained by auditing at the last step
+only. If $D>0$ and $\gamma<\eta$, let
+$m:=\max\{m'\in\{0,\dots,K\}: W\,G_{m'}\le D\}$; then
+\begin{equation}\label{eq:audit-fin}
+  B^\star_{\mathrm{fin}}=n\Bigl[m+\frac{D-W\,G_m}{\gamma W a^{m}}\Bigr],
+\end{equation}
+attained by the \emph{back-loaded} schedule $\rho_j=1$ for $j\ge K-m$,
+$\rho_{K-1-m}=(D-WG_m)/(\gamma Wa^m)\in[0,1)$ if $m<K$, and $\rho_j=0$ earlier.
+If moreover $\eta<\infty$, then
+$m=\bigl\lfloor \log\bigl(1-D/(\eta W)\bigr)/\log a\bigr\rfloor$ and, whenever
+$\eta C+c>0$,
+\begin{equation}\label{eq:audit-fin-bound}
+  B^\star_{\mathrm{fin}}\;\le\; n\Bigl[1+\frac{\eta}{\gamma}
+  \log\frac{\eta(\Delta R+C)}{\eta C+L+\ell_{\mathrm{crit}}}\Bigr]
+  \qquad\text{for every horizon }K .
+\end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{(i), lower bound.} Summing the recursion in \eqref{eq:audit-x} over
+$k=0,\dots,K-1$ and using $x_0=0$, $1-a=\gamma/\eta$, every schedule satisfies
+the identity
+\begin{equation}\label{eq:audit-identity}
+  \gamma W\sum_{k<K}\rho_k \;=\; K\gamma\Delta R-\frac{\gamma}{\eta}\sum_{k=1}^{K-1}x_k-x_K .
+\end{equation}
+Since $\rho\ge0$ and $a\ge0$, induction on \eqref{eq:audit-x} gives
+$x_k\le x^u_k=\Delta R\,G_k$; feasibility gives $x_k\le c$. Hence
+$x_k\le\bar x_k:=\min(c,\Delta R\,G_k)$ for all $k$, and as the coefficients
+$\gamma/\eta\ge0$ and $1$ in \eqref{eq:audit-identity} are nonnegative, every
+feasible schedule has $B(\rho)$ at least the right-hand side of
+\eqref{eq:audit-unif-id}. (This is weak LP duality with multipliers
+$\gamma/\eta,\dots,\gamma/\eta,1$ on the constraints $x_k\le c$.)
+
+\emph{(i), attainment.} If $\Delta R\,G_K\le c$, $\rho\equiv0$ is feasible with
+$x_k=\bar x_k$. Otherwise $\kappa\le K-1$ exists. We check that
+$\rho^{\mathrm{jit}}$ has $x_k=\bar x_k$ for all $k\le K$. For $k\le\kappa$,
+$\rho_j=0$ for $j<k$ so $x_k=\Delta R\,G_k\le c$ by minimality of $\kappa$.
+At $k=\kappa$, using $G_{\kappa+1}=aG_\kappa+\gamma$,
+$x_{\kappa+1}=\Delta R\,G_{\kappa+1}-\gamma W\rho_\kappa=c$. For $k>\kappa$, if
+$x_k=c$ then $x_{k+1}=ac+\gamma\Delta R-\gamma(\Delta R-c/\eta)=(a+\gamma/\eta)c=c$.
+Since $G$ is nondecreasing, $\bar x_k=c$ for $k>\kappa$, so $x_k=\bar x_k$
+throughout, which is the claim $\ell_k=\min(\ell^u_k,\ell_{\mathrm{crit}})$.
+The rates are admissible: $\rho_\kappa>0$ by definition of $\kappa$;
+$\gamma W\rho_\kappa=a\Delta R\,G_\kappa+\gamma\Delta R-c\le ac+\gamma\Delta R-c
+=\gamma W\rho_{\mathrm{hold}}$ because $\Delta R\,G_\kappa\le c$; and
+$\rho_{\mathrm{hold}}\le\Delta R/W\le1$ because $c\ge0$. Plugging
+$x_k=\bar x_k$ into \eqref{eq:audit-identity} gives equality in
+\eqref{eq:audit-unif-id}, and summing the rates gives \eqref{eq:audit-unif}.
+If $\eta<\infty$ all coefficients in \eqref{eq:audit-identity} are positive, so
+an optimal schedule must have $x_k=\bar x_k$ for every $k$, which determines
+$\rho$ through \eqref{eq:audit-x}.
+
+\emph{(ii).} By \eqref{eq:audit-x}, $x_K\le c$ reads
+$\sum_{j<K}w_j\rho_j\ge D':=D/(\gamma W)$ with $w_j:=a^{K-1-j}$. If $D\le0$,
+$\rho\equiv0$ is feasible. If $\gamma=\eta$ then $w_{K-1}=1$ and $w_j=0$
+otherwise, and the claim is immediate ($D\le\gamma\Delta R\le\gamma W$). Let
+$\gamma<\eta$, so $a\in(0,1]$, and $D>0$. Note $D\le\Delta R\,G_K\le W G_K$, so
+$m$ is well defined, and $m=K$ forces $D=WG_K$. Put $\lambda:=a^{-m}$. Then
+$\lambda w_j>1$ exactly for the last $m$ indices $j\ge K-m$ when $a<1$ (and for
+no index when $a=1$). For any feasible $\rho$, using $\rho_j\le1$ where
+$1-\lambda w_j<0$ and $\rho_j\ge0$ elsewhere,
+\[
+ \sum_{j<K}\rho_j=\lambda\sum_j w_j\rho_j+\sum_j(1-\lambda w_j)\rho_j
+ \;\ge\;\lambda D'+\sum_{i=0}^{m-1}\bigl(1-a^{\,i-m}\bigr)
+ = m+\frac{D-W\,G_m}{\gamma W a^m}.
+\]
+The back-loaded schedule attains this value and is feasible: it satisfies
+$\gamma W\sum_jw_j\rho_j=WG_m+(D-WG_m)=D$, and for $m<K$ its fractional rate lies
+in $[0,1)$ because $WG_m\le D<WG_{m+1}=WG_m+\gamma Wa^m$. This proves
+\eqref{eq:audit-fin}. For $\eta<\infty$, $WG_{m'}\le D$ iff
+$a^{m'}\ge1-D/(\eta W)$, where $D\le\eta\Delta R(1-a^K)<\eta W$, which gives the
+formula for $m$. Finally $B^\star_{\mathrm{fin}}\le n(m+1)$,
+$\log(1/a)\ge\gamma/\eta$ and $\eta W-D\ge\eta W-\eta\Delta R+c=\eta C+c$ give
+\eqref{eq:audit-fin-bound}.
+\end{proof}
+
+\begin{corollary}[Linear budgets and the penalty--budget trade-off]
+\label{cor:audit-tradeoff}
+Assume the niche would emerge, $\eta\Delta R>c$, and let
+$\Delta R':=\Delta R-(L+\ell_{\mathrm{crit}})/\eta$ (so $\Delta R'=\Delta R$ if
+$\eta=\infty$). The index $\kappa$ depends on $(\gamma,\eta,\Delta R,c)$ only,
+not on $K$ or $C$, and for $K>\kappa$:
+\begin{enumerate}
+\item[\textup{(a)}] $\displaystyle
+ \frac{\Delta R'}{\Delta R+C}\Bigl(1-\frac{\kappa+1}{K}\Bigr)<
+ \frac{B^\star_{\mathrm{unif}}}{T}\le\frac{\Delta R'}{\Delta R+C}\Bigl(1-\frac{\kappa}{K}\Bigr)$;
+ in particular $B^\star_{\mathrm{unif}}/T\to\Delta R'/(\Delta R+C)$ as
+ $K\to\infty$.
+\item[\textup{(b)}] If $\eta=\infty$ the two criteria cost the same, exactly
+ $B^\star_{\mathrm{unif}}=B^\star_{\mathrm{fin}}
+ =\bigl(T\Delta R-n(L+\ell_{\mathrm{crit}})/\gamma\bigr)_+/(\Delta R+C)$.
+\item[\textup{(c)}] A budget $B$ suffices for the uniform criterion if
+ $C\ge\Delta R'(T-n\kappa)/B-\Delta R$, and only if
+ $C\ge\Delta R'(T-n(\kappa+1))/B-\Delta R$. Hence, as $K\to\infty$ with
+ $(n,\gamma,\eta,\Delta R,L,\ell_{\mathrm{crit}})$ fixed, $B=o(T)$ requires
+ $C/\Delta R'\ge(1-o(1))\,T/B\to\infty$, and if penalties are bounded,
+ $C\le C_{\max}$, then
+ $B^\star_{\mathrm{unif}}\ge\Delta R'\,(T-n(\kappa+1))/(\Delta R+C_{\max})=\Theta(T)$.
+\end{enumerate}
+\end{corollary}
+\begin{proof}
+(a) follows from \eqref{eq:audit-unif}, $0<\rho_\kappa\le\rho_{\mathrm{hold}}$
+and $T=nK$. (b): with $\eta=\infty$, \eqref{eq:audit-unif-id} reduces to
+$n(K\gamma\Delta R-\min(c,K\gamma\Delta R))/(\gamma W)$, and in (ii) $a=1$,
+$G_m=\gamma m$, so \eqref{eq:audit-fin} equals $nD/(\gamma W)$. (c) rearranges
+the two bounds of (a), $n\rho_{\mathrm{hold}}(K-1-\kappa)<B^\star_{\mathrm{unif}}
+\le n\rho_{\mathrm{hold}}(K-\kappa)$.
+\end{proof}
+
+\begin{remark}[Reading the two criteria]\label{rem:audit-criteria}
+(1) The KL anchor has two opposite effects. It lowers the rate needed to hold
+the log-odds at the threshold, from $\Delta R/W$ to $\Delta R'/W$, and removes
+the need for audits altogether when $\eta\Delta R\le L+\ell_{\mathrm{crit}}$.
+But it also erases penalties: an audit at step $j$ enters $\ell_K$ with weight
+$a^{K-1-j}$, so deterrence is forgotten at rate $\gamma/\eta$ per step. This is
+why, for $\eta<\infty$, the uniform criterion costs a constant \emph{rate}
+$\rho_{\mathrm{hold}}$ forever (budget linear in $T$), whereas the final
+criterion costs a constant \emph{number} of audited steps
+\eqref{eq:audit-fin-bound}, of the order of the memory $\eta/\gamma$ of the
+dynamics, placed at the very end. (2) The final criterion is therefore cheap
+but weak: it lets the stealthy stratum dominate during training, requires the
+horizon $K$ to be known, and its guarantee decays after the last audit. The
+limits do not commute: for fixed $\eta<\infty$ and fixed $n$, $B^\star_{\mathrm{fin}}$ is bounded uniformly in $K$ by~\eqref{eq:audit-fin-bound}, while for $\eta=\infty$ it is linear in $T$ by (b). We regard the
+uniform criterion as the meaningful one. (3) The schedules are open-loop and
+require $(L,\Delta R,\eta,\gamma)$. Since $d_j$ in \eqref{eq:audit-adv} is
+nondecreasing in $\Delta R$ and $c$ is increasing in $L$, a schedule computed
+from an upper bound on $\Delta R$ and a lower bound on $L$ remains feasible, and so does one computed from a lower bound on $C$, or from an upper bound on $\eta$ (if $\hat a\ge a\ge0$ and the planned displacement $\hat x_k$ is nonnegative, as for both optimal schedules, then $x_k\le\hat x_k$ by induction on~\eqref{eq:audit-x}), and, for the uniform criterion, from an upper bound on $\gamma$. The final-criterion budget is not monotone in $\gamma$.
+\end{remark}
+
+\subsection{Detection: an exact minimax bound}
+
+Theorem~\ref{thm:audit-deterrence} acts through the gradient. The second role
+of an audit is to \emph{catch} cheating, after which the overseer can
+intervene. Here the budget is governed by a search game.
+
+\begin{theorem}[Minimax detection with $B$ audits]\label{thm:audit-detection}
+Let $F\subseteq[T]$, $|F|=k\ge1$, be the set of episodes on which the policy
+cheats stealthily. An \emph{auditor} selects episodes $I_1,I_2,\dots$ one at a
+time, at most $B\le T$ of them; $I_s$ may depend on internal randomness $U$ and
+on the earlier outcomes $Y_r:=\mathbf 1\{I_r\in F\}$, $r<s$, and on nothing else
+that depends on $F$ (stealth is invisible except to audits). It \emph{detects}
+if some $Y_s=1$. Let
+\[
+  q(T,k,B):=\binom{T-k}{B}\Big/\binom{T}{B}=\prod_{i=0}^{k-1}\Bigl(1-\frac{B}{T-i}\Bigr)
+  \quad(\text{$=0$ if $B>T-k$}).
+\]
+\begin{enumerate}
+\item[\textup{(a)}] If $F$ is uniform over $k$-subsets and independent of $U$,
+every auditor detects with probability at most $1-q(T,k,B)$. Consequently
+\[
+  \max_{\text{auditors}}\ \min_{|F|=k}\ \Prob_F(\text{detect})=1-q(T,k,B),
+\]
+and the maximum is attained by auditing a uniformly random $B$-subset of
+$[T]$ drawn in advance: adaptivity does not help.
+\item[\textup{(b)}] For $B\le T-k$,
+$\bigl(1-\tfrac{B}{T-k+1}\bigr)^k\le q(T,k,B)\le\bigl(1-\tfrac BT\bigr)^k\le e^{-kB/T}$;
+in particular, against a uniformly random $F$, every auditor misses with
+probability at least $1-kB/(T-k+1)$. For $\delta\in(0,1)$ the minimal budget
+$B^\star_{\mathrm{det}}(k,\delta):=\min\{B:q(T,k,B)\le\delta\}$ satisfies
+\[
+ \frac{(T-k+1)\log(1/\delta)}{k+\log(1/\delta)}\le
+ (T-k+1)\bigl(1-\delta^{1/k}\bigr)\le B^\star_{\mathrm{det}}(k,\delta)\le
+ \bigl\lceil T\bigl(1-\delta^{1/k}\bigr)\bigr\rceil\le
+ \Bigl\lceil\frac Tk\log\frac1\delta\Bigr\rceil .
+\]
+\item[\textup{(c)}] \textbf{Certifying a rate.} Let $X_1,\dots,X_B$ be i.i.d.\
+Bernoulli$(\varepsilon')$ audit outcomes and test
+$H_0:\varepsilon'=0$ against $H_1:\varepsilon'\ge\varepsilon$, $\varepsilon\in(0,1)$,
+with a possibly randomised test of type-I error $\alpha$ and worst-case type-II
+error $\beta$. Put $\mu:=(1-\varepsilon)^B$. Then $\alpha+\beta\ge\mu$, and
+$\min_{\text{tests}}\max(\alpha,\beta)=\mu/(1+\mu)$. Hence, for
+$\delta\in(0,\tfrac12)$, both errors can be made at most $\delta$ iff
+$B\ge\log\frac{1-\delta}{\delta}\big/\log\frac1{1-\varepsilon}$, and a test with
+no false alarm misses with probability at most $\delta$ iff
+$B\ge\log\frac1\delta\big/\log\frac1{1-\varepsilon}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Condition on $U=u$; the auditor is then deterministic. Let $Q(u)$ be the
+set of episodes it audits when every outcome is $0$; $|Q(u)|\le B$. If
+$F\cap Q(u)=\emptyset$, by induction every outcome is $0$, the auditor follows
+this path and never detects. If $F\cap Q(u)\ne\emptyset$, it follows the same
+path until it first audits an element of $F$, and detects. So detection is the
+event $\{F\cap Q(u)\neq\emptyset\}$, and for uniform $F$ independent of $U$,
+$\Prob(\text{no detection}\mid U=u)=\binom{T-|Q(u)|}{k}/\binom Tk\ge
+\binom{T-B}{k}/\binom Tk=q(T,k,B)$, the last equality being the symmetry of
+$(T-k)!\,(T-B)!/\bigl((T-k-B)!\,T!\bigr)$ in $(k,B)$. Averaging over $u$ gives the first
+claim, and a minimum over $F$ is at most the average over $F$ (this is the easy
+direction of Yao's principle~\cite{yao1977probabilistic}). Conversely, if $Q$ is
+a uniform $B$-subset then for every fixed $F$,
+$\Prob(Q\cap F=\emptyset)=\binom{T-k}{B}/\binom TB$.
+
+(b) Each factor $1-B/(T-i)$, $0\le i\le k-1$, lies between $1-B/(T-k+1)\ge0$
+and $1-B/T$; the bound on the miss probability is Bernoulli's inequality. The
+upper bounds on $B^\star_{\mathrm{det}}$ follow from $(1-B/T)^k\le\delta$ iff
+$B\ge T(1-\delta^{1/k})$, and $1-e^{-y}\le y$ with $y=\log(1/\delta)/k$. For the
+lower bounds, if $B^\star_{\mathrm{det}}\ge T-k+1$ there is nothing to prove;
+otherwise $(1-B^\star_{\mathrm{det}}/(T-k+1))^k\le\delta$, and
+$1-e^{-y}\ge y/(1+y)$.
+
+(c) Let $q_0\in[0,1]$ be the probability that the test rejects on the all-zero
+sample. Under $H_0$ the sample is all-zero almost surely, so $\alpha=q_0$; under
+$\varepsilon'=\varepsilon$ the all-zero sample has probability $\mu$, so
+$\beta\ge(1-q_0)\mu$. Thus $\alpha+\beta\ge q_0+(1-q_0)\mu\ge\mu$, which is Le
+Cam's two-point bound~\cite{lecam1973convergence,yu1997assouad}, since the total
+variation between the two product laws is $1-\mu$. Also
+$\max(\alpha,\beta)\ge\max(q_0,(1-q_0)\mu)\ge\mu/(1+\mu)$. The test that rejects
+whenever some $X_s=1$, and with probability $q_0$ otherwise, has $\alpha=q_0$
+and $\beta=\sup_{\varepsilon'\ge\varepsilon}(1-q_0)(1-\varepsilon')^B=(1-q_0)\mu$;
+taking $q_0=\mu/(1+\mu)$, resp.\ $q_0=0$, gives the two attainment claims. The
+budget conditions are $\mu/(1+\mu)\le\delta$ and $\mu\le\delta$ solved for $B$.
+\end{proof}
+
+\begin{remark}[Detection versus deterrence]\label{rem:audit-detect-deter}
+By (b), catching a policy that cheats on $k$ of the $T$ episodes takes
+$B^\star_{\det}\in\bigl[(T-k+1)(1-\delta^{1/k}),\ \lceil T(1-\delta^{1/k})\rceil\bigr]$ audits, which is about $(T/k)\log(1/\delta)$ only when $k\gg\log(1/\delta)$ and at least $(1-e^{-1})(T-k+1)$ when $k\le\log(1/\delta)$ (for $T=257$, $k=1$, $\delta=0.05$: $B^\star_{\det}=245$, against $770$ for the approximation). A policy that draws its $k$ cheating episodes uniformly at random, independently of the auditor, and cheats on
+$k\le\delta\,(T-k+1)/B$ episodes escapes any auditor with probability at least
+$1-\delta$. Detection is thus cheap against frequent cheating and hopeless
+against rare cheating, whereas, in the mean-field model, the deterrence rate $\rho_{\mathrm{hold}}$ of
+Theorem~\ref{thm:audit-deterrence} does not depend on how often the current
+policy cheats. This contrast is a property of the mean-field model. With sampled actions, the reward and the penalty of the stealthy stratum are both observed only on the about $n\,\pi_k(f)$ sampled stealthy episodes of a step, of which about $n\rho\,\pi_k(f)$ are audited: for an unbiased estimator of the natural gradient the expected drift is unchanged, but its variance is of order $1/(n\,\pi_k(f))$, so concentration around the mean-field path is lost when cheating is rare, the regime where detection is hopeless. Comparing detection and deterrence in that regime is left open. Under sampling without replacement from $T$ episodes of which
+$\varepsilon T$ are cheats, $q\le(1-\varepsilon)^B$, so the finite population
+only helps the auditor relative to (c).
+\end{remark}
+
+\subsection{Randomised audits}
+
+In practice the auditor flips a coin per episode. Let $A_{j,i}$,
+$j<K$, $i\le n$, be independent Bernoulli$(\rho_j)$ audit indicators for a
+deterministic schedule $\rho$, independent of the policy's actions (this is
+$\delta_{\mathrm{ind}}=0$), and let $\hat\rho_j:=n^{-1}\sum_iA_{j,i}$. We keep
+the expectation over the policy's own actions exact, as in
+Lemma~\ref{lem:audit-logodds}, and let only the audits be random: conditionally
+on the indicators, the effective advantage of stealth averaged over the $n$
+episodes of step $j$ is $\Delta R-W\hat\rho_j$, so the \emph{realised}
+log-odds $\hat\ell_k$ obey \eqref{eq:audit-x} with $\hat\rho$ in place of $\rho$.
+(Sampling noise from the policy's actions is not modelled.) Let
+$\Gamma_K:=\sum_{i<K}a^{2i}\le\min(K,\eta/\gamma)$ and, for $\Lambda>0$ and
+$\bar\rho\in(0,1]$,
+\[
+  \varepsilon(\Lambda,\bar\rho):=\gamma W\Bigl[\sqrt{\frac{2\bar\rho\,\Gamma_K\Lambda}{n}}
+  +\frac{2\Lambda}{3n}\Bigr].
+\]
+
+\begin{theorem}[Randomised implementation]\label{thm:audit-random}
+\begin{enumerate}
+\item[\textup{(a)}] If $\rho_j\le\bar\rho$ for all $j$, then for every
+$\delta\in(0,1)$, with probability at least $1-\delta$,
+$\max_{k\le K}|\hat\ell_k-\ell_k|\le\varepsilon(\log(2K/\delta),\bar\rho)$.
+\item[\textup{(b)}] The number of audits $N:=\sum_{j,i}A_{j,i}$ satisfies, for
+every $\Lambda'>0$,
+$\Prob\bigl(N>B(\rho)+\sqrt{2B(\rho)\Lambda'}+\tfrac23\Lambda'\bigr)\le e^{-\Lambda'}$.
+\item[\textup{(c)}] Fix $\delta\in(0,1)$, let
+$\varepsilon:=\varepsilon(\log(2K/\delta),\Delta R/W)$ and assume
+$\varepsilon\le L+\ell_{\mathrm{crit}}$. Run Bernoulli audits along the
+just-in-time schedule of Theorem~\ref{thm:audit-deterrence} computed for the
+threshold $\ell_{\mathrm{crit}}-\varepsilon$, and stop auditing once
+\[
+  B_{\mathrm{rand}}:=B_\varepsilon+\sqrt{2B_\varepsilon\log(2/\delta)}+\tfrac23\log(2/\delta),
+  \qquad B_\varepsilon:=B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}}-\varepsilon),
+\]
+audits have been made. Then at most $B_{\mathrm{rand}}$ episodes are audited
+and, with probability at least $1-\delta$,
+$\hat\ell_k\le\ell_{\mathrm{crit}}$ for all $k\le K$. Moreover
+\begin{equation}\label{eq:audit-inflation}
+  B_\varepsilon\le B^\star_{\mathrm{unif}}(\ell_{\mathrm{crit}})
+  +\frac{n\varepsilon}{W}\Bigl(\frac{K-1}{\eta}+\frac1\gamma\Bigr).
+\end{equation}
+With $\Lambda=\log(2K/\delta)$ and $\bar\rho=\Delta R/W$, the last term is at
+most $\sqrt{2\bar\rho\,T\Lambda}+\tfrac23\Lambda$ if $\eta=\infty$, and at most
+$\bigl(1+\tfrac{\eta}{\gamma K}\bigr)\bigl[T\sqrt{2\gamma\bar\rho\Lambda/(\eta n)}
++\tfrac{2\gamma K}{3\eta}\Lambda\bigr]$ if $\eta<\infty$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(a) Fix $k\le K$. By \eqref{eq:audit-x} applied to $\rho$ and $\hat\rho$,
+$\hat\ell_k-\ell_k=\sum_{j<k}\sum_{i\le n}X_{j,i}$ with
+$X_{j,i}:=-(\gamma W/n)\,a^{k-1-j}(A_{j,i}-\rho_j)$. These are independent,
+centred, bounded by $b:=\gamma W/n$ in absolute value, with
+$\sum\operatorname{Var}(X_{j,i})=(\gamma W)^2n^{-1}\sum_{j<k}a^{2(k-1-j)}\rho_j(1-\rho_j)
+\le v:=(\gamma W)^2\bar\rho\,\Gamma_K/n$. Bernstein's
+inequality~\cite[Theorem~2.10 and Corollary~2.11, to be checked]{boucheron2013concentration} gives
+$\Prob(\pm\sum X_{j,i}\ge t)\le\exp\bigl(-t^2/(2v+2bt/3)\bigr)$, which is at most
+$e^{-\Lambda}$ for $t=\sqrt{2v\Lambda}+2b\Lambda/3=\varepsilon(\Lambda,\bar\rho)$ (the sub-gamma form would allow $b\Lambda/3$ for the linear term; we keep the more conservative constant).
+Take $\Lambda=\log(2K/\delta)$ and a union bound over the $2K$ events.
+
+(b) Bernstein again, for the centred variables $A_{j,i}-\rho_j$, bounded by $1$,
+with total variance at most $B(\rho)$.
+
+(c) Let $\rho'$ be the just-in-time schedule for headroom $c-\varepsilon\ge0$,
+with mean-field log-odds $\ell'_k\le\ell_{\mathrm{crit}}-\varepsilon$. Its rates
+are at most $\Delta R/W$ by Theorem~\ref{thm:audit-deterrence}(i). By the
+one-sided version of (a), with probability at least $1-\delta/2$ the uncapped
+process satisfies $\hat\ell_k\le\ell'_k+\varepsilon\le\ell_{\mathrm{crit}}$ for
+all $k$; by (b) with $\Lambda'=\log(2/\delta)$, with probability at least
+$1-\delta/2$ the uncapped process makes at most $B_{\mathrm{rand}}$ audits, in
+which case the cap is never active and the capped and uncapped processes
+coincide. For \eqref{eq:audit-inflation}, the map
+$c\mapsto B^\star_{\mathrm{unif}}$ in \eqref{eq:audit-unif-id} is a sum of
+$K$ terms $-\min(c,\cdot)$, each $1$-Lipschitz in $c$, with total weight
+$n\,[(K-1)\gamma/\eta+1]/(\gamma W)$. The last two bounds substitute
+$\Gamma_K=K$, resp.\ $\Gamma_K\le\eta/\gamma$, in $\varepsilon$.
+\end{proof}
+
+\begin{remark}\label{rem:audit-random}
+The inflation \eqref{eq:audit-inflation} depends on the stakes only through
+$\bar\rho=\Delta R/W$: the noise in $\hat\ell$ and the leverage of an audit both
+scale with $W$. For $\eta=\infty$ it is $O(\sqrt{T\log(K/\delta)})$, negligible
+against $B^\star_{\mathrm{unif}}=\Theta(T)$. For $\eta<\infty$ it is linear in
+$T$, because an open-loop schedule must keep, at every step, a margin against
+the noise accumulated over the memory window $\eta/\gamma$; relative to
+$B^\star_{\mathrm{unif}}\approx\rho_{\mathrm{hold}}T$ it is of order
+$\rho_{\mathrm{hold}}^{-1}\sqrt{\gamma\bar\rho\log(K/\delta)/(\eta n)}$, small
+when the number $n\eta/\gamma$ of episodes within one memory window is large.
+Theorem~\ref{thm:audit-random} is an upper bound only; we do not claim that the
+margin is necessary. If the schedule is adapted to past audit outcomes, the
+$X_{j,i}$ become martingale differences and Freedman's
+inequality~\cite{freedman1975tail} gives the analogue of (a) with $2bt/3$ replaced by $2bt$, provided $\rho_j\le\bar\rho$ almost surely and $\ell_k$ is read as the mean-field log-odds driven by the realised rates (random, but predictable); parts (b) and (c) have no direct analogue, and we do not analyse closed-loop schedules.
+\end{remark}
+% Provenance of the figures of the next remark (R6): verdict of the preregistered simulation,
+%   papiers/D/resultats/seuil-v1/verdict-lecture-seuil-chantier3-2026-11-24-v1.md,
+%   SHA-256 6967654e12881835fc950c0c20b96dee1224cfe904601f7eaeca01c1814af288
+%   (sealed outputs diag/20261124-121411-seuil-chantier3/sorties-brutes.json, f739c1df...54c6).
+\begin{remark}[A preregistered simulation of the margin]\label{rem:audit-random-sim}
+We simulated the open-loop schedule of Theorem~\ref{thm:audit-random} on a grid of $138$ configurations ($K\in\{50,200,500\}$, $n\in\{100,1000\}$, $\gamma\in\{0.05,0.2\}$, $\eta\in\{1,10,\infty\}$, $C\in\{4,19\}$, $\delta\in\{0.05,0.1\}$, $\Delta R=1$, headroom $c=\tfrac12\Delta R\,G_K$), with $10^5$ independent replications per configuration and margin, and with the predictions and reading criteria fixed before any draw. With the margin $\varepsilon$ of the theorem, the threshold was never crossed by the uncapped process, and the frequency of crossing by the capped process stayed below $\delta$, in all $138$ configurations. The reading criteria also require the crossing to be seen once the margin is removed; on this basis the guarantee is confirmed in $137$ configurations, and the remaining one is inconclusive (its reading without margin is sensitive to the numerical tolerance), not contradicted. Without margin, the threshold is crossed with frequency at least $0.86$ (median $0.97$): a margin is necessary. It is conservative: the smallest margin that keeps the crossing frequency at $\delta/2$, located by bisection, is smaller than $\varepsilon$ by a factor between $1.75$ and $3.56$ (median $2.49$). The margin is not the budget: in reserved audits, using that smaller margin would save between $2\%$ and $57\%$ of the reference budget $B^\star_{\mathrm{unif}}$ (median $10.5\%$). A sharper bound is left open; two routes are a maximal martingale inequality in place of the union bound over steps, and exact binomial tails in place of Bernstein's inequality. The simulation does not prove the theorem and says nothing outside its grid, nor about closed-loop schedules or sampled actions.
+\end{remark}
+
+\subsection{Imperfect indistinguishability}
+
+\begin{proposition}[Budget inflation when audits can be recognised]
+\label{prop:audit-indist}
+This situation does not arise when audits are uniformly random inspections decided independently of everything the policy observes before acting: then $\delta_{\mathrm{ind}}=0$ by construction. It arises when audited episodes are planted (traps; $\rho$ is then the fraction of planted episodes and $B$ counts them) or selected by a rule correlated with features that the policy observes.
+Suppose stealthy trajectories cheat with probability $\tau\in(0,1]$ on
+non-audited episodes and $\tau_A$ on audited ones, behave honestly otherwise,
+and that $\tau,\tau_A$ are constant during training with
+$\tau_A\ge(\tau-\delta_{\mathrm{ind}})_+$ (the planted-trap bound). Then:
+\begin{enumerate}
+\item[\textup{(a)}] the fraction of cheats that fall on audited episodes at
+audit rate $\rho$ is
+$\rho_{\mathrm{eff}}=\rho\tau_A/(\rho\tau_A+(1-\rho)\tau)\ge\rho\,(1-\delta_{\mathrm{ind}}/\tau)_+$ (for $\rho\tau_A+(1-\rho)\tau>0$; when $\rho=1$ and $\tau_A=0$ no cheat occurs and we set $\rho_{\mathrm{eff}}:=0$);
+\item[\textup{(b)}] the mean-field advantage is
+$d_j=(1-\rho_j)\tau\Delta R-\rho_j\tau_AC\le\tau\bigl[\Delta R-\rho_j(\Delta R+C_\delta)\bigr]$
+with $C_\delta:=C\,(1-\delta_{\mathrm{ind}}/\tau)_+$, with equality when
+$\tau_A=(\tau-\delta_{\mathrm{ind}})_+$. Hence
+Theorems~\ref{thm:audit-deterrence} and~\ref{thm:audit-random} and
+Corollary~\ref{cor:audit-tradeoff} hold for the worst-case stratum with
+$(\Delta R,C)$ replaced by $(\tau\Delta R,\tau C_\delta)$, and the resulting
+schedules deter every stratum with the same $(\tau,L)$ satisfying the trap bound. They need not deter strata that cheat at other rates. At $\eta=\infty$ a stratum with $\tau\le\delta_{\mathrm{ind}}$ has $d_j=(1-\rho_j)\tau\Delta R>0$ whenever $\rho_j<1$, so under any schedule that does not audit everything its displacement exceeds any headroom for $K$ large enough; for instance, with $\Delta R=1$, $C=9$, $\delta_{\mathrm{ind}}=0.1$, $c=1$, $\gamma=0.05$ and $K=400$, the schedule computed for $\tau_0=1$ lets the stratum $\tau=0.1$ reach $1.79>c$. With $\eta=5$ and $c=2$ (same $\gamma$, $K$), the schedule computed for $\tau_0=0.5$ lets the stratum $\tau=1$ reach $4.0>c$. To deter every rate in a given set it suffices to audit at the pointwise supremum over $\tau$ of the just-in-time rates, each $x_k$ being nonincreasing in every $\rho_j$; we do not claim that this is the cheapest such schedule. The holding rate $\rho^{\delta}_{\mathrm{hold}}(\tau)$ increases on $\tau\le\delta_{\mathrm{ind}}$ and may decrease beyond; at $\eta=\infty$ it equals $1$ for every $\tau\le\delta_{\mathrm{ind}}$ and decreases beyond, so the binding strata cheat at rates at most $\delta_{\mathrm{ind}}$, not at rate $1$. In particular the
+holding rate becomes
+\[
+  \rho^{\delta}_{\mathrm{hold}}=\frac{\Delta R-c/(\eta\tau)}{\Delta R+C\,(1-\delta_{\mathrm{ind}}/\tau)_+}
+  \;\le\;\frac{1}{1-\delta_{\mathrm{ind}}/\tau}\cdot\frac{\Delta R-c/(\eta\tau)}{\Delta R+C}
+  \quad(\tau>\delta_{\mathrm{ind}},\ \eta\tau\Delta R>c),
+\]
+and for $\tau\le\delta_{\mathrm{ind}}$ it equals $1-c/(\eta\tau\Delta R)$
+whatever the penalty $C$: against such a stratum $B^\star_{\mathrm{unif}}=\Theta(T)$
+whenever it would emerge, i.e.\ whenever $\eta\tau\Delta R>c$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) The expression is Bayes' rule; it is nondecreasing in $\tau_A$, and at
+$\tau_A=\tau-\delta_{\mathrm{ind}}\ge0$ it equals
+$\rho(\tau-\delta_{\mathrm{ind}})/(\tau-\rho\delta_{\mathrm{ind}})\ge\rho(1-\delta_{\mathrm{ind}}/\tau)$.
+(b) On a non-audited episode the stratum earns $\Delta R$ with probability
+$\tau$; on an audited one it pays $C$ with probability $\tau_A$ and otherwise
+earns the honest reward. Use $\tau_A\ge\tau(1-\delta_{\mathrm{ind}}/\tau)_+$.
+The worst-case advantage has the form \eqref{eq:audit-adv} with the stated
+substitution, and by \eqref{eq:audit-logodds} a smaller $d_j$ only lowers every
+$\ell_k$. The same domination holds path by path for random audits: with the same audit draws, a larger $\tau_A$ gives a lower realised log-odds at every step, which transports Theorem~\ref{thm:audit-random}. The last inequality is
+$(\Delta R+C)(1-\delta_{\mathrm{ind}}/\tau)\le\Delta R+C(1-\delta_{\mathrm{ind}}/\tau)$.
+\end{proof}
+\noindent
+Thus a penalty deters only the part of the cheating rate that exceeds
+$\delta_{\mathrm{ind}}$; below it, audits act solely by withholding $\Delta R$
+on audited episodes. Without audits no stratum with
+$\tau\le\delta_{\mathrm{ind}}$ emerges provided
+$\eta\,\delta_{\mathrm{ind}}\Delta R\le c$, with $c$ the headroom of that
+stratum.
+
+\begin{remark}[What is new and what is known]\label{rem:audit-related}
+The ingredients are classical, and we claim none of them. The allocation of a
+limited number of inspections over time is the subject of inspection
+games~\cite{avenhaus2002inspection}, going back to Dresher's sequential
+game~\cite{dresher1962sampling}, and of security and audit
+games~\cite{tambe2011security,blocki2013audit}; in those models the inspectee is
+a strategic player who chooses when to violate, whereas in
+Theorem~\ref{thm:audit-deterrence} the inspectee is a learning dynamics and the
+audit acts on its gradient. The trade-off of
+Corollary~\ref{cor:audit-tradeoff}(c) between the probability of inspection and
+the size of the penalty is the one of the economics of
+enforcement~\cite{becker1968crime}. The linear programs of
+Theorem~\ref{thm:audit-deterrence} are a fractional knapsack and a greedy
+schedule; Theorem~\ref{thm:audit-detection}(a) is the hypergeometric value of a
+hide-and-seek game, which we prove for completeness and do not claim as new,
+and (c) is the textbook two-point method~\cite{lecam1973convergence,yu1997assouad};
+Theorem~\ref{thm:audit-random} is Bernstein's inequality, and finer bounds for
+sampling without replacement~\cite{hoeffding1963probability,serfling1974probability}
+would apply to a without-replacement implementation. In AI control, audit
+budgets covering a small fraction of episodes are central to the protocols
+of~\cite{greenblatt2023control} and to their game-theoretic
+formalisation~\cite{griffin2024games}; those works mostly consider deployment, where a
+single caught attempt ends the game, which is the regime of
+Theorem~\ref{thm:audit-detection}. The closest neighbours of the present setting are low-stakes control~\cite{christiano2021lowstakes} and distributed threats, where no single action is catastrophic and the deployment protocol adapts over many episodes~\cite{wen2024adaptive}; policy teaching, where a principal modifies the rewards of a planning agent under a budget~\cite{zhang2008policyteaching}, and environment poisoning at training time, which modifies a learner's reward under a budget constraint and is the mirror problem of this one, seen from the attacker~\cite{rakhsha2020poisoning}; the steering of no-regret learners by a committed leader~\cite{deng2019strategizing}, and, closer, by payments under a budget (to locate and verify); inspection games in which the inspectee learns (no reference checked); and sparse rewards audited and reweighted by the inverse audit probability, in which we expect the same trade-off as in Corollary~\ref{cor:audit-tradeoff}(c) to appear through inverse-probability weighting (no reference checked). Two published neighbours are closer still: an audit requirement of the form $p\ge(\text{gain}-\text{cost})/(\text{fine}\times\text{detection})$ and, when the draw can be learned before acting, a floor on the audit probability that does not depend on the sanction~\cite{gans2026randomized}, which we read as the static form of our holding rate and of the floor below $\delta_{\mathrm{ind}}$; and, for audit-based certification of a violation rate, a worst-case bias proportional to the distinguishability of audited episodes that raising the audit rate cannot remove~\cite{zhu2026blindfold}, the closest published analogue of Proposition~\ref{prop:audit-indist} and of the condition $\delta_{\mathrm{ind}}>0$. Apart from these two, the neighbours above have not been read on PDF, and the claims below are made subject to that reading. What this section adds, to our knowledge, is
+the coupling of the audit schedule with the closed-form log-odds recursion of
+KL-regularised natural policy gradient: the exact budgets
+\eqref{eq:audit-unif} and \eqref{eq:audit-fin}, the resulting contrast between
+a bounded final-criterion budget and a linear uniform-criterion budget, the
+double role of the KL anchor (Remark~\ref{rem:audit-criteria}), and a quantification of the rare-attack floor already noted for the static planted-trap regime: below $\delta_{\mathrm{ind}}$ the holding rate is $1-c/(\eta\tau\Delta R)$ whatever the penalty (Proposition~\ref{prop:audit-indist}); this last point must still be confronted with~\cite{gans2026randomized,zhu2026blindfold} before it is kept as a contribution. All of it is
+confined to the two-strata mean-field model.
+\end{remark}
+
+% ---------------------------------------------------------------------------
+% Bibliography entries for the keys used above (to be merged into the .bib).
+%
+% avenhaus2002inspection: R. Avenhaus, B. von Stengel, S. Zamir. Inspection
+%   games. In R. J. Aumann, S. Hart (eds.), Handbook of Game Theory with
+%   Economic Applications, vol. 3, ch. 51, pp. 1947--1987. Elsevier, 2002.
+% dresher1962sampling: M. Dresher. A sampling inspection problem in arms
+%   control agreements: a game-theoretic analysis. Memorandum RM-2972-ARPA,
+%   The RAND Corporation, 1962.
+% tambe2011security: M. Tambe. Security and Game Theory: Algorithms, Deployed
+%   Systems, Lessons Learned. Cambridge University Press, 2011.
+% blocki2013audit: J. Blocki, N. Christin, A. Datta, A. D. Procaccia, A. Sinha.
+%   Audit games. IJCAI 2013.
+% becker1968crime: G. S. Becker. Crime and punishment: an economic approach.
+%   Journal of Political Economy 76(2):169--217, 1968.
+% yao1977probabilistic: A. C.-C. Yao. Probabilistic computations: toward a
+%   unified measure of complexity. FOCS 1977, pp. 222--227.
+% lecam1973convergence: L. Le Cam. Convergence of estimates under
+%   dimensionality restrictions. Annals of Statistics 1(1):38--53, 1973.
+% yu1997assouad: B. Yu. Assouad, Fano, and Le Cam. In Festschrift for Lucien
+%   Le Cam, pp. 423--435. Springer, 1997.
+% boucheron2013concentration: S. Boucheron, G. Lugosi, P. Massart.
+%   Concentration Inequalities: A Nonasymptotic Theory of Independence.
+%   Oxford University Press, 2013.
+% freedman1975tail: D. A. Freedman. On tail probabilities for martingales.
+%   Annals of Probability 3(1):100--118, 1975.
+% hoeffding1963probability: W. Hoeffding. Probability inequalities for sums of
+%   bounded random variables. JASA 58(301):13--30, 1963.
+% serfling1974probability: R. J. Serfling. Probability inequalities for the sum
+%   in sampling without replacement. Annals of Statistics 2(1):39--48, 1974.
+% greenblatt2023control: R. Greenblatt, B. Shlegeris, K. Sachan, F. Roger.
+%   AI control: improving safety despite intentional subversion.
+%   arXiv:2312.06942, 2023.
+% gans2026randomized: J. Gans, R. Holden. When does randomized oversight align AI agents that can
+%   conceal? arXiv:2609.38262v1 (read on PDF by the programme: docs/notes/mecanisme-adjudant-hors-distribution-v1/
+%   lecture-sept-voisins-opus-v1.md, section 2.2).
+% zhu2026blindfold: Zhu, Zuo, Sun. Blindfold: keeping the audit coin secret from LLM agents.
+%   arXiv:2610.37055v1 (same note, section 2.1).
+% griffin2024games: C. Griffin, L. Thomson, B. Shlegeris, A. Abate. Games for
+%   AI control: models of safety evaluations of AI deployment protocols
+%   (title checked on arXiv metadata, 24 Nov. 2026).
+%   arXiv:2409.07985, 2024.
+% Added in v1-correctif-1 (all TO BE VERIFIED ON PDF, R7):
+% wen2024adaptive: J. Wen et al. Adaptive deployment of untrusted LLMs reduces
+%   distributed threats. arXiv:2411.17693, 2024 (arXiv metadata checked).
+% christiano2021lowstakes: P. Christiano. Low-stakes alignment. Blog post, 2021.
+% zhang2008policyteaching: H. Zhang, D. C. Parkes. Value-based policy teaching
+%   with active indirect elicitation. AAAI 2008 (title to confirm).
+% rakhsha2020poisoning: A. Rakhsha et al. Policy teaching via environment
+%   poisoning: training-time adversarial attacks against reinforcement
+%   learning. ICML 2020 (title to confirm).
+% deng2019strategizing: Y. Deng, J. Schneider, B. Sivan. Strategizing against
+%   no-regret learners. NeurIPS 2019.
+% ---------------------------------------------------------------------------
+\section{Limitations and Open Problems}
+
+Our results are intentionally derived in a static, non-parametric Gibbs equilibrium model with fixed strata. The model takes $p_{\mathrm{f}}$ and $\beta_{\mathrm{f}}$ as given; it says nothing about whether training against a detector teaches honesty or masking, nor about how $\beta_{\mathrm{f}}$ deforms with learning, nor about the case $\beta_{\mathrm{f}} > \beta_{\mathrm{h}}$ (false alarms on honest behaviour), excluded by assumption although realistic. The contrast between pure rejection and penalties depends on the modelling of Operator~A (Remark~\ref{rem:modelA}). Three further open problems remain:
+\begin{enumerate}
+  \item \textbf{Finite-time stochastic gradient dynamics on neural manifolds:} In parametric policy optimization ($\theta_{t+1} = \theta_t + \gamma_t \hat{g}_t$), implicit gradient bias and finite exploration simultaneously shape effective reachability and multi-objective maintenance costs $\delta_{\mathrm{maint}}(\theta_t)$ well before reaching any Gibbs equilibrium.
+  \item \textbf{Multi-monitor coupling and cross-channel covariance:} Under Operator~A, audit survival is preserved iff $\Cov_{\nu_0}(\beta_{\mathrm{loop}}, \beta_{\mathrm{audit}}) \le 0$; under Operator~B this is necessary but not sufficient. When an in-loop monitor and an off-loop audit channel share latent features, the covariance is typically positive; characterizing worst-case degradation under constrained coupling remains open.
+  \item \textbf{Dynamic monitor-versus-policy allocation and rare-attack floor:} As highlighted in AI control research~\cite{ukaisi2025}, rare interceptions create a non-stationary partial-monitoring trade-off~\cite{bartok2014} between updating the monitor and updating the policy, since policy updates can reduce future observability; moreover, Regime~R3 leaves an irreducible floor for rare attacks with $\tau_{\mathrm{ord}} \le \delta_{\mathrm{ind}}$.
+\end{enumerate}
+Machine-checked formalization (e.g.\ in Lean~4) of the rational identities underlying Theorem~\ref{thm:selection}(2) (upon setting $E := e^{\eta \Delta R} > 0$) is left for future work; no formal proof is claimed here.
+
+\begin{thebibliography}{99}
+
+\bibitem{baker2025}
+B.~Baker et al.,
+\emph{Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation},
+arXiv:2503.11926, 2025.
+
+\bibitem{bailey2024}
+L.~Bailey et al.,
+\emph{Obfuscated Activations Bypass LLM Latent-Space Defenses},
+arXiv:2412.09565, 2024.
+
+\bibitem{bartok2014}
+G.~Bart\'ok, D.~P.~Foster, D.~P\'al, A.~Rakhlin, and C.~Szepesv\'ari,
+\emph{Partial Monitoring---Classification, Regret Bounds, and Algorithms},
+arXiv:1102.2041, 2014.
+
+\bibitem{fisher1930}
+R.~A.~Fisher,
+\emph{The Genetical Theory of Natural Selection},
+Clarendon Press, Oxford, 1930.
+
+\bibitem{gao2022}
+L.~Gao, J.~Schulman, and J.~Hilton,
+\emph{Scaling Laws for Reward Model Overoptimization},
+arXiv:2210.10760, 2022.
+
+\bibitem{greenblatt2023}
+R.~Greenblatt et al.,
+\emph{AI Control: Improving Safety Despite Intentional Subversion},
+arXiv:2312.06942, 2023.
+
+\bibitem{greenblatt2024}
+R.~Greenblatt et al.,
+\emph{Alignment Faking in Large Language Models},
+arXiv:2412.14093, 2024.
+
+\bibitem{griffin2024}
+C.~Griffin et al.,
+\emph{Games for AI Control: Models of Safety Evaluations of AI Deployment Protocols},
+arXiv:2409.07985, 2024.
+
+\bibitem{halberstadt2026}
+Y.~Halberstadt,
+\emph{Post training is fundamentally dangerous},
+LessWrong, post \texttt{CoRJ9saddvsXti4m2}, November 22, 2026.
+
+\bibitem{hardt2016}
+M.~Hardt, N.~Megiddo, C.~Papadimitriou, and M.~Wootters,
+\emph{Strategic Classification},
+arXiv:1506.06980, 2016.
+
+\bibitem{hubinger2024}
+E.~Hubinger et al.,
+\emph{Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training},
+arXiv:2401.05566, 2024.
+
+\bibitem{joagdev1983}
+K.~Joag-Dev and F.~Proschan,
+\emph{Negative Association of Random Variables with Applications},
+The Annals of Statistics, 11(1):286--295, 1983.
+
+\bibitem{korbak2022}
+T.~Korbak, E.~Perez, and C.~L.~Buckley,
+\emph{RL with KL Penalties is Better Viewed as Bayesian Inference},
+arXiv:2205.11275, 2022.
+
+\bibitem{korbak2025}
+T.~Korbak et al.,
+\emph{Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety},
+arXiv:2507.11473, 2025.
+
+\bibitem{price1970}
+G.~R.~Price,
+\emph{Selection and Covariance},
+Nature, 227:520--521, 1970.
+
+\bibitem{robertson1966}
+A.~Robertson,
+\emph{A Mathematical Model of the Culling Process in Dairy Cattle},
+Animal Production, 8:95--108, 1966.
+
+\bibitem{skalse2022}
+J.~Skalse, N.~H.~R.~Howe, D.~Krasheninnikov, and D.~Krueger,
+\emph{Defining and Characterizing Reward Gaming},
+arXiv:2209.13085, 2022.
+
+\bibitem{terekhov2025}
+M.~Terekhov et al.,
+\emph{Control Tax: The Price of Keeping AI in Check},
+arXiv:2506.05296, 2025.
+
+\bibitem{testingthewaters2026}
+\texttt{testingthewaters},
+Comment on \emph{Post training is fundamentally dangerous},
+LessWrong, comment \texttt{gFufuPsjYMbutMtkb}, November 2026.
+
+\bibitem{ukaisi2025}
+UK AI Security Institute (UK AISI),
+\emph{Research Areas in AI Control},
+LessWrong, post \texttt{rGcg4XDPDzBFuqNJz}, August 2025.
+
+\bibitem{zhuang2021}
+S.~Zhuang and D.~Hadfield-Menell,
+\emph{Consequences of Misaligned AI},
+arXiv:2102.03896, 2021.
+
+\end{thebibliography}
+
+\end{document}
