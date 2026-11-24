@@ -28,3 +28,8 @@ Aucun score, aucun verdict, aucune sortie de course, aucun coffre. Textes privé
 | `diag/20261006-134235-t05-corpus/tirage.json`, banque initiale | clés et identifiants | contrôle des rangs et de l'exclusion |
 | `brouillons/g0-criteres-2-3-v1/pieces/puissance_dose_reponse_consigne_cachee_v5.py` | entier | égalité de la gradation |
 | `registres/go.md` | lignes GO-2026-11-24-23 à -25 | ligne de GO de la course |
+| rapports du contre-lecteur (contre-lecture 1, vérification 1) | entiers | classe B |
+
+## Clôture (24 novembre 2026)
+
+Aucune exposition à un contenu interdit. Le sous-agent contre-lecteur a reçu la consigne écrite de ne lire ni texte privé, ni score, ni verdict, ni sortie de course ; il le déclare dans ses deux rapports.
