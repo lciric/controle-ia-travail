@@ -1,0 +1,8 @@
+# Qui a lu quoi — session habilitée du coffre du compte 01Qi7 (v2)
+
+Pièce de travail (classe C). La v1 (inscription avant lecture, 10:54Z) reste telle quelle (R12) ; la v2 la reprend et ajoute la ligne de fin de lecture, le 2026-11-24 vers 11:10Z.
+
+| n° | session | compte | modèle | a lu | rôle | source | exclu de |
+|---|---|---|---|---|---|---|---|
+| à numéroter par la mère | `session_01Qi7Gr4qGhdorfC7VG4KA4b`, session habilitée du coffre ; inscrite le 2026-11-24 à 10:54Z, avant lecture | 01Qi7 | Opus 5.5, effort élevé | ligne de la v1, inchangée | attestation de séparation (GO-2026-11-24-17) | v1 de ce fichier | **à vie** : toute conception de moniteur, de sonde ou de saboteur (agrégateur, trait de texte, seuil compris), conception de l'instrument de vérité du dommage, tout rôle aveugle |
+| à numéroter par la mère | même session ; fin de lecture vers 11:06Z | 01Qi7 | Opus 5.5, effort élevé | `coffre/choix-modes-tenus-a-l-ecart-v1` (`39839826e5`) : `REGLE-D-OUVERTURE-v1.md` en entier ; pièce de choix (`83eb1fa8…`) lignes 1 à 9, 27 à 65 (§ 3) et 108 à la fin (§ 5 et 6), **section 4 non lue** ; `claude/scellement-2-famille-reserve-cycle-2-v1` (`5d6b7a2aa2`) : pièces 2 à 5 v1 et v2 et pièce 6 v2 passées au programme (identifiants seulement, tailles affichées), pièce 4 v2 lignes 9 à 20 et une vingtaine de lignes repérées par mots, pièce 6 v2 par mots, pièce 1 et son erratum par mots (coffre, ouverture, accès) ; liste des noms de fichiers des branches `coffre/*` ; aucun score, aucun épisode, aucune issue, aucun verdict d'expérience | attestation de séparation, condition 3 comprise | mandat de la mère ; accès au coffre du bras d'attaque à consigner (N-057, point 5) | idem |
