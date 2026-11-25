@@ -27,7 +27,7 @@ from . import lecture_v1 as lv
 CLES_1_ORIGINE = ("avertissement", "phrase", "effets", "dose_realisee", "descriptifs", "difference_appariee_brute_log10_cout",
                   "exces_moyen_des_donnees", "audit_R4", "taches_min")
 _ISSUE = re.compile(r"ISSUE=(SANS-DEFAUT|DEFAUT-AUTORISE|DEFAUT)(?![^\W\d_]|-)")
-_GO = re.compile(r"GO-\d{4}-\d{2}-\d{2}-\d{2}")
+_GO = re.compile(r"(?<![A-Za-z0-9-])GO-\d{4}-\d{2}-\d{2}-\d{2}(?![A-Za-z0-9-])")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -97,9 +97,11 @@ def puissance(entrees: dict, x: dict) -> dict:
     o = entrees["oracle"]
     gr = entrees["branches"]["oracles"][o]["grandeurs"]
     emd = gr.get("EMD")
-    if emd is not None and (isinstance(emd, bool) or not isinstance(emd, (int, float))):
+    if emd is not None and (isinstance(emd, bool) or not isinstance(emd, (int, float)) or not math.isfinite(emd) or emd < 0):
         raise GardeArret("puissance : effet minimal détectable illisible")
     honnete = gr.get("exces_moyen_honnete")
+    if honnete is not None and (isinstance(honnete, bool) or not isinstance(honnete, (int, float)) or not math.isfinite(honnete)):
+        raise GardeArret("puissance : excès moyen honnête illisible")
     tous, acc = x["exces_moyen_par_action_de_tous_les_episodes"], x["exces_moyen_par_action_des_acceptes"]
     moins = (tous - honnete) if (tous is not None and honnete is not None) else None
 
@@ -206,7 +208,11 @@ def lecture_1_v5(entrees: dict, graines: dict, config: dict, identite: dict) -> 
 # ------------------------------------------------------------------------------------------------------------------------------
 def exiger_audit_consigne(l1: dict, lignes_decisions: list, racines_registres) -> dict:
     """Section 7.4, point 2, garde de l'audit. Rend `audit_de_la_lecture_1`."""
-    declenche = bool(l1["contenu"]["audit_R4"]["declenche"])
+    contenu = l1.get("contenu") if isinstance(l1, dict) else None
+    audit_r4 = contenu.get("audit_R4") if isinstance(contenu, dict) else None
+    declenche = audit_r4.get("declenche") if isinstance(audit_r4, dict) else None
+    if not isinstance(declenche, bool):
+        raise GardeArret("lecture (2) refusée : audit_R4.declenche absent ou non booléen dans la sortie de la lecture (1)")
     if not declenche:
         return {"declenche": False, "issues": [], "accord": None}
     sha = l1["sha256"]
@@ -238,6 +244,10 @@ def exiger_audit_consigne(l1: dict, lignes_decisions: list, racines_registres) -
         if not apres:
             raise GardeArret("lecture (2) refusée : défaut relevé par l'audit, aucune décision postérieure ne l'autorise")
         autorise = apres[0]["accord"]
+    else:
+        autorises = [x["accord"] for x in issues if x["issue"] == "DEFAUT-AUTORISE"]
+        if autorises:
+            autorise = autorises[0]
     return {"declenche": True, "issues": [x["issue"] for x in issues], "accords": [x["accord"] for x in issues], "accord": autorise}
 
 

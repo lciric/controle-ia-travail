@@ -217,7 +217,10 @@ def exiger_ordre_du_temps(registre_sondes, mode: str, maintenant: datetime | Non
             _, heure, chemin, sha = lues[cle_t0]
             if not _HEURE.match(heure):
                 raise GardeArret(f"{cle_t0} : heure illisible (AAAA-MM-JJTHH:MM:SSZ)")
-            h = datetime.strptime(heure, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            try:
+                h = datetime.strptime(heure, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            except ValueError:
+                raise GardeArret(f"{cle_t0} : heure illisible (AAAA-MM-JJTHH:MM:SSZ)") from None
             if h > maintenant:
                 raise GardeArret(f"{cle_t0} : heure future")
             if avant is not None and not h > avant:
@@ -377,6 +380,10 @@ def exiger_lignes_de_l_evaluation(fichiers_eval: dict, lignes_evaluation, config
     _exiger_lignes_oracle(lignes_evaluation, "E8 (évaluation)")
     index_ev = {}
     for l in lignes_evaluation:
+        if not isinstance(l["phase"], str):
+            raise GardeArret("E8 (évaluation) : phase non textuelle")
+        if not _entier(l["pas"]):
+            raise GardeArret("E8 (évaluation) : pas non entier")
         cle = (l["oracle"], l["phase"], l["episode"], l["pas"])
         if cle in index_ev:
             raise GardeArret("E8 : ligne en double dans le fichier de l'évaluation")
@@ -412,6 +419,28 @@ def exiger_episodes_du_maitre(lignes_m, course: dict, acceptes_du_resume, config
     if n_acc != course.get("acceptes") or n_acc != acceptes_du_resume or course.get("arret") is not None:
         raise GardeArret("E9 : nombre d'acceptés discordant, ou arrêt de la course non nul")
     return maitre
+
+
+def exiger_controle_premier_cout(cpc) -> dict:
+    """Précontrôle de `controle_premier_cout` de `evaluation-iib-v5.json` avant création du manifeste."""
+    if not isinstance(cpc, dict):
+        raise GardeArret("E8 : controle_premier_cout absent ou illisible dans evaluation-iib-v5.json")
+    for c in cl.CONDITIONS:
+        bloc = cpc.get(c)
+        if not isinstance(bloc, dict) or any(k not in bloc for k in ("phrase", "validite", "alerte")):
+            raise GardeArret(f"E8 : controle_premier_cout incomplet pour la condition {c}")
+    return cpc
+
+
+def _egal_types_stricts(a, b) -> bool:
+    """Égalité stricte valeur et type (refuse `1 == True == 1.0`)."""
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, list):
+        return len(a) == len(b) and all(_egal_types_stricts(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(_egal_types_stricts(a[k], b[k]) for k in a)
+    return a == b
 
 
 def charger(racine, run_id: str, etalonnage: str, avec_identifiants: bool = False, mode: str = "reel") -> dict:
@@ -506,6 +535,7 @@ def charger(racine, run_id: str, etalonnage: str, avec_identifiants: bool = Fals
     entropie, prefixe = exiger_entropie_et_prefixe(config_run, manifeste_run, manifeste_course, mode)
     # E8
     par, taches = exiger_lignes_de_l_evaluation(fichiers_eval, evaluation.get("lignes"), config)
+    controle_premier_cout = exiger_controle_premier_cout(evaluation.get("controle_premier_cout"))
     # E9
     maitre = exiger_episodes_du_maitre(oracle_course.get("lignes"), course, res.get("acceptes"), config, oracle)
     decisions = course["decisions"]
@@ -516,7 +546,7 @@ def charger(racine, run_id: str, etalonnage: str, avec_identifiants: bool = Fals
                "evaluation": par, "taches": sorted(taches), "maitre": maitre, "decisions": decisions,
                "designation": designation, "designation_citee": dict(cite), "branches": branches,
                "branches_citees": {"chemin": rel_b, "sha256": b.get("sha256")},
-               "controle_premier_cout": evaluation.get("controle_premier_cout"), "rapportes": evaluation.get("rapportes"),
+               "controle_premier_cout": controle_premier_cout, "rapportes": evaluation.get("rapportes"),
                "n_actions": n_actions, "empreintes": empreintes, "ids": None}
     if avec_identifiants:
         sortie_["ids"] = _charger_identifiants(lire, D, sortie_)
@@ -568,7 +598,7 @@ def _charger_identifiants(lire, D: str, entrees: dict) -> dict:
     if set(ens) != set(reunion):
         raise GardeArret("E10 : réunion des tranches ≠ clés du fichier d'ensemble")
     for k in ens:
-        if ens[k] != reunion[k]:
+        if not _egal_types_stricts(ens[k], reunion[k]):
             raise GardeArret(f"E10 : tranche différente du fichier d'ensemble à la clé {k}")
     for k, v in reunion.items():
         if not isinstance(v, list) or len(v) != entrees["n_actions"] or any(not isinstance(a, list) for a in v):

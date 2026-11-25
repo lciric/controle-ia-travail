@@ -37,6 +37,8 @@ def main(argv: list[str], essais: dict | None = None) -> int:
         if essais is not None and (mode != "jouet" or set(essais) - {"mode", "configuration", "jetoniseur"}):
             raise GardeArret("options d'essai : mode jouet seulement, et clés connues seulement")
         config = cl.pour(mode, None if essais is None else essais.get("configuration"))
+        if mode == "reel" and racine != cl.racine_du_code().resolve():
+            raise GardeArret("mode réel : la racine de lecture doit être la racine du code qui tourne (section 2)")
         cl.exiger_specification()
         cl.exiger_modules_d_origine()
         # (1)
@@ -44,7 +46,11 @@ def main(argv: list[str], essais: dict | None = None) -> int:
         rel_1 = f"diag/{a.run_id}/{cl.NOM_1}"
         sha_1 = ev.ouvrir("lecture", rel_1, R, lecture="scelle")
         l1 = ev.ouvrir("lecture", rel_1, R, lecture="json")
-        if not (l1.get("audit_R4") or {}).get("declenche"):
+        audit_r4 = l1.get("audit_R4") if isinstance(l1, dict) else None
+        declenche = audit_r4.get("declenche") if isinstance(audit_r4, dict) else None
+        if not isinstance(declenche, bool):
+            raise GardeArret("audit : audit_R4.declenche absent ou non booléen dans la sortie de la lecture (1)")
+        if not declenche:
             raise GardeArret("audit non déclenché : rien à relire")
         # (2)
         entrees = ev.charger(racine, a.run_id, a.etalonnage, avec_identifiants=True, mode=mode)
@@ -65,6 +71,12 @@ def main(argv: list[str], essais: dict | None = None) -> int:
         jet = ev.charger_jetoniseur(a.jetoniseur, entrees, None if essais is None else essais.get("jetoniseur"))
         ev.exiger_identifiants(entrees, jet["V"], jet["fins"], int(entrees["config"]["generation"]["max_nouveaux"]))
         decodes = ev.exiger_fidelite_du_decodage(jet, entrees)
+        prefixes = {}
+        for x in retire:
+            c, t, pas = x["condition"], x["tache"], x["pas"]
+            rang = entrees["evaluation"][entrees["oracle"]][c][t][pas]["rang_coupe"]
+            prefixes[(c, t, pas)] = (ev.decoder(jet, decodes[(c, t, pas)]["ids"][:rang], f"evaluation-{c}/{t}#{pas}")
+                                     if rang is not None else None)
     except GardeArret as e:
         print(f"ARRÊT (audit, rien d'écrit) : {e}", file=sys.stderr)
         return 1
@@ -74,8 +86,7 @@ def main(argv: list[str], essais: dict | None = None) -> int:
         c, t, pas = x["condition"], x["tache"], x["pas"]
         d = decodes[(c, t, pas)]
         lignes = {o: entrees["evaluation"][o][c][t][pas] for o in ("N", "P")}
-        rang = lignes[entrees["oracle"]]["rang_coupe"]
-        prefixe = ev.decoder(jet, d["ids"][:rang], f"evaluation-{c}/{t}#{pas}") if rang is not None else None
+        prefixe = prefixes[(c, t, pas)]
         print(f"\n=== {k}. condition {c}, tâche {t}, pas {pas} ===")
         print("--- texte de l'action ---")
         print(d["texte"])

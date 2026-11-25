@@ -54,6 +54,8 @@ def main(argv: list[str], essais: dict | None = None) -> int:
         if essais is not None and (mode != "jouet" or set(essais) - CLES_ESSAIS):
             raise GardeArret("options d'essai : mode jouet seulement, et clés connues seulement")
         config = cl.pour(mode, None if essais is None else essais.get("configuration"))
+        if mode == "reel" and racine != cl.racine_du_code().resolve():
+            raise GardeArret("mode réel : la racine de lecture doit être la racine du code qui tourne (section 2)")
         ordre = ev.exiger_ordre_du_temps(a.registre_sondes, mode)
         spec = cl.exiger_specification()
         modules = cl.exiger_modules_d_origine()

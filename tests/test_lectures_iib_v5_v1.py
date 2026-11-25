@@ -301,7 +301,7 @@ def test_t0_sain_trois_lignes_conformes(tmp_path):
     ("ligne_absente", "ligne absente"), ("deux_lignes", "plus d'une ligne"), ("heure_future", "heure future"),
     ("heures_non_croissantes", "non croissantes"), ("heures_egales", "non croissantes"), ("texte_autre_empreinte", "n'a pas l'empreinte"),
     ("cle_inconnue", "clé inconnue"), ("chemin_absolu", "non relatif"), ("chemin_point_point", "non relatif|« .. »"),
-    ("cinq_colonnes", "quatre colonnes")])
+    ("cinq_colonnes", "quatre colonnes"), ("date_impossible", "heure illisible"), ("mois_impossible", "heure illisible")])
 def test_t0_artefacts(tmp_path, cas, motif):
     reg = registres(tmp_path)
     texte = reg.read_text(encoding="utf-8")
@@ -329,6 +329,10 @@ def test_t0_artefacts(tmp_path, cas, motif):
         texte = texte.replace("| prereg/texte-sondes-0.md |", "| prereg/../prereg/texte-sondes-0.md |")
     elif cas == "cinq_colonnes":
         texte = texte.replace(lignes[0], lignes[0] + " x |")
+    elif cas == "date_impossible":
+        texte = texte.replace("2026-11-21T10:00:00Z", "2026-02-30T10:00:00Z")
+    elif cas == "mois_impossible":
+        texte = texte.replace("2026-11-21T10:00:00Z", "2026-13-01T10:00:00Z")
     reg.write_text(texte, encoding="utf-8")
     with pytest.raises(GardeArret, match=motif) as e:
         ev.exiger_ordre_du_temps(reg, "jouet")
@@ -587,6 +591,12 @@ def _e8_mut(nom):
             L[2]["cout_declare"] = 999.0
         elif nom == "condition_du_fichier":
             fich["B100"]["condition"] = "B50"
+        elif nom == "pas_liste_evaluation":
+            return [{**tout[0], "pas": [0]}] + tout[1:]
+        elif nom == "pas_booleen_evaluation":
+            return [{**tout[0], "pas": True}] + tout[1:]
+        elif nom == "phase_liste_evaluation":
+            return [{**tout[0], "phase": ["evaluation-H"]}] + tout[1:]
         return _tout(fich) if nom != "tranche" else tout[:-1] + [{**tout[-1], "cout_declare": 1.0}]
     return f
 
@@ -595,12 +605,57 @@ def _e8_mut(nom):
     ("ligne_en_moins", "pas 0 à 9"), ("cle_de_plus", "clés de l'oracle"), ("schema_faux", "schéma"), ("phase_autre", "autre phase"),
     ("neuf_lignes", "pas 0 à 9"), ("bornable_sans_exces", "sans excès"), ("bornable_au_pas_0", "première action"),
     ("tache_absente", "ensemble des tâches"), ("impair", "impair"), ("cout_differe", "cout_declare différent"),
-    ("tranche", "≠ lignes du fichier de l'évaluation"), ("condition_du_fichier", "condition")])
+    ("tranche", "≠ lignes du fichier de l'évaluation"), ("condition_du_fichier", "condition"),
+    ("pas_liste_evaluation", "pas non entier"), ("pas_booleen_evaluation", "pas non entier"),
+    ("phase_liste_evaluation", "phase non textuelle")])
 def test_e8_artefacts(nom, motif):
     f, conf = _fichiers_e8(), _config_e8()
     tout = _e8_mut(nom)(f, _tout(f), conf)
     with pytest.raises(GardeArret, match=motif):
         ev.exiger_lignes_de_l_evaluation(f, tout, conf)
+
+
+def test_e8_precontrole_controle_premier_cout():
+    sain = {c: {"phrase": "ok", "validite": "valide", "alerte": False} for c in cl.CONDITIONS}
+    assert ev.exiger_controle_premier_cout(sain) == sain
+    for mauvais in (None, [], {c: sain[c] for c in cl.CONDITIONS if c != "B50"}, {**sain, "H": None},
+                    {**sain, "B100": {"phrase": "ok", "validite": "valide"}},
+                    {**sain, "TJ100": {"phrase": "ok", "alerte": False}}):
+        with pytest.raises(GardeArret, match="controle_premier_cout"):
+            ev.exiger_controle_premier_cout(mauvais)
+
+
+def test_e10_types_stricts_tranche_vs_ensemble(tmp_path):
+    assert ev._egal_types_stricts([[1, 0]], [[1, 0]]) is True
+    assert ev._egal_types_stricts([[1, 0]], [[True, 0]]) is False
+    assert ev._egal_types_stricts([[1, 0]], [[1.0, 0]]) is False
+    assert ev._egal_types_stricts([[0]], [[False]]) is False
+    for mauvais in (1, True, 1.0):
+        rac = tmp_path / f"t_{type(mauvais).__name__}"
+        d = rac / D
+        (d / "evaluation").mkdir(parents=True)
+        emp, ens_ids = {}, {}
+        for c in cl.CONDITIONS:
+            rel = f"evaluation/ids-evaluation-{c}.json"
+            k = f"evaluation-{c}/t0"
+            actions = [[1, 0] for _ in range(10)]
+            p = d / rel
+            p.write_text(json.dumps({"avertissement": cf5.AVERTISSEMENT, "condition": c, "ids": {k: actions}}, sort_keys=True) + "\n",
+                         encoding="utf-8")
+            emp[rel] = sceller(p)
+            ens_ids[k] = actions
+        ens_ids["evaluation-H/t0"] = [[mauvais, 0]] + [[1, 0] for _ in range(9)]
+        rel_e = "ids-actions-evaluation-iib-v5.json"
+        pe = d / rel_e
+        pe.write_text(json.dumps({"avertissement": cf5.AVERTISSEMENT, "ids": dict(sorted(ens_ids.items()))}) + "\n", encoding="utf-8")
+        emp[rel_e] = sceller(pe)
+        R = ev.Racines(lecture=rac, run_id=C, etalonnage=E)
+        entrees = {"racines": R, "resume": {"empreintes": emp}, "taches": ["t0"], "n_actions": 10}
+        if type(mauvais) is int:
+            assert len(ev._charger_identifiants(lambda rel: ev.ouvrir("lecture", rel, R, lecture="json"), D, entrees)) == 4
+        else:
+            with pytest.raises(GardeArret, match="tranche différente"):
+                ev._charger_identifiants(lambda rel: ev.ouvrir("lecture", rel, R, lecture="json"), D, entrees)
 
 
 def test_e8_sur_la_course_ligne_en_moins(copie):
@@ -954,8 +1009,11 @@ def test_citation_artefacts(tmp_path):
     faux = {**d, "phrases": ["Sous une autre thèse : x"] + d["phrases"][1:]}
     with pytest.raises(GardeArret, match="n'ouvre pas"):
         lx.citation_dommage({"oracle": "N", "designation": faux}, "dommage agrégé vu", {"p_cite": 0.4})
-    c = lx.citation_dommage({"oracle": "N", "designation": d}, "dommage non vu à cette puissance", {"p_cite": None})
-    assert c["texte"] is None and "non calculable" in c["motif"] and c["phrase_d_origine"] == "dommage non vu à cette puissance"
+    for oracle in ("N", "P"):
+        do = _designation(tmp_path, oracle)
+        for phrase in PHRASES_1:
+            c = lx.citation_dommage({"oracle": oracle, "designation": do}, phrase, {"p_cite": None})
+            assert c["texte"] is None and "non calculable" in c["motif"] and c["phrase_d_origine"] == phrase
 
 
 def test_puissance_trois_parts_et_part_citee():
@@ -970,7 +1028,16 @@ def test_puissance_trois_parts_et_part_citee():
         e["branches"]["oracles"]["N"]["grandeurs"]["EMD"] = emd
         q = lx.puissance(e, x)
         assert q["p_cite"] is None and q["p_episodes_acceptes"] is None
+    for emd in (-0.05, float("nan"), float("inf"), float("-inf"), True, "0.05"):
+        e["branches"]["oracles"]["N"]["grandeurs"]["EMD"] = emd
+        with pytest.raises(GardeArret, match="effet minimal détectable illisible"):
+            lx.puissance(e, x)
     e["branches"]["oracles"]["N"]["grandeurs"]["EMD"] = 0.05
+    for honnete in (True, "0.02", float("nan"), float("inf")):
+        e["branches"]["oracles"]["N"]["grandeurs"]["exces_moyen_honnete"] = honnete
+        with pytest.raises(GardeArret, match="excès moyen honnête illisible"):
+            lx.puissance(e, x)
+    e["branches"]["oracles"]["N"]["grandeurs"]["exces_moyen_honnete"] = 0.02
     assert lx.puissance(e, {**x, "exces_moyen_par_action_de_tous_les_episodes": -0.1})["p_cite"] is None
 
 
@@ -1033,12 +1100,25 @@ def test_garde_de_l_audit_sains(tmp_path):
     ([_l("SANS-DEFAUT"), _l("DEFAUT")], "aucune décision postérieure"),
     ([_l("DEFAUT-AUTORISE", "GO-2026-11-24-37"), _l("DEFAUT")], "aucune décision postérieure"),
     ([_l("DEFAUT"), _l("DEFAUT-AUTORISE")], "identifiant d'accord"),
+    ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "GO-2026-11-24-370")], "identifiant d'accord"),
+    ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "XGO-2026-11-24-37-bis")], "identifiant d'accord"),
+    ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "XGO-2026-11-24-37")], "identifiant d'accord"),
+    ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "GO-2026-11-24-37-bis")], "identifiant d'accord"),
+    ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "GO-2026-11-24-37 GO-2099-01-01-01")], "identifiant d'accord"),
     ([_l("DEFAUT"), _l("DEFAUT-AUTORISE", "GO-2026-11-24-99")], "n'ouvre aucune ligne"),
     ([f"| R-1 | `{'f' * 64}` {cl.CHAINE_AUDIT} relu |"], "sans issue lisible"),
     ([_l("DEFAUTX")], "sans issue lisible"), ([_l("DEFAUT-PARTIEL")], "sans issue lisible")])
 def test_garde_de_l_audit_artefacts(tmp_path, lignes, motif):
     with pytest.raises(GardeArret, match=motif):
         _audit(lignes, tmp_path)
+
+
+def test_garde_de_l_audit_declenche_non_booleen_et_autorise_isole(tmp_path):
+    for mauvais in (None, "false", 0, 1):
+        with pytest.raises(GardeArret, match="non booléen"):
+            lx.exiger_audit_consigne({"sha256": "f" * 64, "contenu": {"audit_R4": {"declenche": mauvais}}}, [], None)
+    r = _audit([_l("DEFAUT-AUTORISE", "GO-2026-11-24-37")], tmp_path)
+    assert r == {"declenche": True, "issues": ["DEFAUT-AUTORISE"], "accords": ["GO-2026-11-24-37"], "accord": "GO-2026-11-24-37"}
 
 
 def test_meme_course_meme_oracle(lu, copie):
@@ -1437,6 +1517,52 @@ def test_script_d_audit_decodage_infidele(lu, monde, tmp_path, capsys):
     assert "les deux décodages diffèrent" in capsys.readouterr().err and arbre(d) == avant
 
 
+def test_script_d_audit_decodage_prefixe_infidele_sans_affichage(tmp_path, monkeypatch, capsys):
+    """CLN-02 : une divergence de décodage sur le préfixe tronqué est interceptée avant tout affichage (code 1, stdout vide)."""
+    class TokPrefixeDivergent:
+        def __len__(self):
+            return 16
+
+        def decode(self, ids, skip_special_tokens=True, clean_up_tokenization_spaces=None):
+            s = ",".join(str(i) for i in ids)
+            return s + " " if (len(ids) == 2 and clean_up_tokenization_spaces) else s
+
+    d = tmp_path / "audit_prefixe"
+    e = construites({"B100": 0.1}, n=4)
+    for o in ("N", "P"):
+        for c in cl.CONDITIONS:
+            for v in e["evaluation"][o][c].values():
+                for l in v:
+                    l["rang_coupe"] = 2
+    entropie, prefixe = 7, "essai/course/"
+    graine = ev.graines_de_lecture(entropie, prefixe, ["iib/lecture-1/audit"])["iib/lecture-1/audit"]
+    config = cl.pour("jouet", COURT)
+    empreintes = {f"diag/{E}/evaluation/oracles-evaluation-{c}.json": "1" * 64 for c in cl.CONDITIONS}
+    entrees = {**e, "run_id": C, "etalonnage": E, "oracle": "N", "entropie": entropie, "prefixe": prefixe,
+               "designation_citee": {"sha256": "2" * 64}, "empreintes": empreintes, "config": {"generation": {"max_nouveaux": 10}},
+               "ids": {f"evaluation-{c}/{t}": [[1, 2, 3, 0] for _ in range(10)] for c in cl.CONDITIONS for t in e["taches"]}}
+    ech = lx.echantillon_de_l_audit(entrees, config, graine)
+    l1 = {"course_lue": {"run_id": C}, "oracle_de_la_regle": {"valeur": "N", "designation": {"sha256": "2" * 64}},
+          "entrees": empreintes, "audit_R4": {"declenche": True, "echantillon": ech},
+          "lecture": {"graines": {prefixe + "iib/lecture-1/audit": graine},
+                      "configuration": {"constantes": {"lecture_1": {"audit_echantillon": config["lecture_1"]["audit_echantillon"]}}}}}
+    p1 = d / "diag" / C / cl.NOM_1
+    p1.parent.mkdir(parents=True)
+    p1.write_text(json.dumps(l1) + "\n", encoding="utf-8")
+    sceller(p1)
+    monkeypatch.setattr(ev, "charger", lambda *a, **k: entrees)
+    monkeypatch.setattr(ev, "exiger_fidelite_du_decodage",
+                        lambda jet, ent: {(c, t, p): {"texte": "1,2,3,0", "jetons": 4, "ids": [1, 2, 3, 0]}
+                                          for c in cl.CONDITIONS for t in ent["taches"] for p in range(10)})
+    avant = arbre(d)
+    capsys.readouterr()
+    code = sa.main(["--racine", str(d), "--run-id", C, "--etalonnage", E, "--jetoniseur", str(d / "jet")],
+                   essais={"mode": "jouet", "configuration": COURT,
+                           "jetoniseur": {"jetoniseur": TokPrefixeDivergent(), "fins": {0}, "nettoyage": True}})
+    cap = capsys.readouterr()
+    assert code == 1 and cap.out == "" and "les deux décodages diffèrent" in cap.err and arbre(d) == avant
+
+
 # ==============================================================================================================================
 # Forme lue par le programme de l'extrait des états (version 3, fonction `construire`, recopiée)
 # ==============================================================================================================================
@@ -1586,6 +1712,23 @@ def test_scripts_mode_reel_refuse_les_options_d_essai_et_une_racine_autre(monde,
     assert cl.MOTIF_T0 in capsys.readouterr().err                                      # sans essais : mode réel, T0 réel d'abord
     with pytest.raises(GardeArret, match="racine du code"):
         ev.charger(monde["course"], C, E, mode="reel")
+
+
+def test_scripts_mode_reel_refuse_racine_etrangere_avant_lecture_1(tmp_path, capsys):
+    """CLN-04 : en mode réel, lecture (2) et audit refusent une racine étrangère avant d'ouvrir diag/RUN/NOM_1."""
+    d = tmp_path / "etrangere"
+    p1 = d / "diag" / C / cl.NOM_1
+    p1.parent.mkdir(parents=True)
+    p1.write_text(json.dumps({"audit_R4": {"declenche": False}}) + "\n", encoding="utf-8")
+    sceller(p1)
+    reg = registres(tmp_path / "main")
+    capsys.readouterr()
+    assert s2.main(["--racine", str(d), "--run-id", C, "--etalonnage", E, "--registre-decisions", str(reg.parent / "decisions.md"),
+                    "--registre-sondes", str(reg), "--jetoniseur", str(tmp_path / "jet")]) == 1
+    assert "racine du code" in capsys.readouterr().err
+    assert sa.main(["--racine", str(d), "--run-id", C, "--etalonnage", E, "--jetoniseur", str(tmp_path / "jet")]) == 1
+    err = capsys.readouterr().err
+    assert "racine du code" in err and "audit non déclenché" not in err
 
 
 def test_reproductibilite_deux_copies(monde, tmp_path):
