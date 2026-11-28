@@ -1,0 +1,102 @@
+=== A. Champ moyen : équilibres de m = tanh((J·m + h)/T), T = 1 ===
+rigidité J/T | charge au pli h_pli | saut de m au pli | susceptibilité à h = 0 ; 0,5 ; 0,9 ; 0,99 h_pli | barrière par concept à h = 0 ; 0,5 ; 0,9 h_pli
+  0.50 | aucun pli (réponse continue) | 0 | susceptibilité maximale en h = 0 : 2.00 | aucune barrière
+  0.80 | aucun pli (réponse continue) | 0 | susceptibilité maximale en h = 0 : 5.00 | aucune barrière
+  1.00 | aucun pli (réponse continue) | 0 | susceptibilité maximale en h = 0 : inf | aucune barrière
+  1.25 | 0.0778 | 1.2328 | 1.30 ; 2.14 ; 5.80 ; 20.41 | 0.0359 ; 0.0124 ; 0.0011
+  1.50 | 0.2075 | 1.4971 | 0.43 ; 0.80 ; 2.43 ; 8.98 | 0.1152 ; 0.0399 ; 0.0035
+  2.00 | 0.5328 | 1.6939 | 0.10 ; 0.24 ; 0.91 ; 3.67 | 0.3265 ; 0.1121 ; 0.0098
+  3.00 | 1.3033 | 1.8161 | 0.01 ; 0.05 ; 0.29 ; 1.37 | 0.8094 ; 0.2720 ; 0.0234
+(barrière × nombre de concepts / T = exposant du temps d'attente d'une bascule spontanée)
+
+=== B. Indicateurs précurseurs sur une suite de L instantanés (dynamique de Langevin du champ moyen) ===
+rigidité J/T = 1.5 ; charge au pli 0.2075 ; rampe de 0 au pli sur la durée observée ; 300 répliques par case
+temps de relaxation à charge nulle : 1.65 (unité : un passage sur tous les concepts)
+pas entre instantanés | concepts N | instantanés L | bascule avant 0,8 pli | séries exploitables (>= 10 instantanés avant bascule) | puissance variance | puissance autocorrélation
+    1 |   100 |   15 | 0.00 | 1.00 | 0.06 | 0.03
+    1 |   100 |   30 | 0.01 | 1.00 | 0.18 | 0.03
+    1 |   100 |  100 | 0.08 | 1.00 | 0.29 | 0.07
+    1 |   100 |  300 | 0.34 | 1.00 | 0.66 | 0.22
+    1 |  1000 |   15 | 0.00 | 1.00 | 0.07 | 0.02
+    1 |  1000 |   30 | 0.00 | 1.00 | 0.11 | 0.04
+    1 |  1000 |  100 | 0.00 | 1.00 | 0.35 | 0.06
+    1 |  1000 |  300 | 0.00 | 1.00 | 0.76 | 0.32
+    5 |   100 |   15 | 0.03 | 1.00 | 0.17 | 0.02
+    5 |   100 |   30 | 0.17 | 1.00 | 0.22 | 0.07
+    5 |   100 |  100 | 0.48 | 1.00 | 0.44 | 0.14
+    5 |   100 |  300 | 0.89 | 1.00 | 0.58 | 0.12
+    5 |  1000 |   15 | 0.00 | 1.00 | 0.10 | 0.05
+    5 |  1000 |   30 | 0.00 | 1.00 | 0.32 | 0.04
+    5 |  1000 |  100 | 0.00 | 1.00 | 0.76 | 0.08
+    5 |  1000 |  300 | 0.00 | 1.00 | 0.98 | 0.25
+(puissance : part des répliques exploitables dont le tau de Kendall dépasse le 95e centile du nul stationnaire ;
+ « bascule avant 0,8 pli » : transition induite par le bruit, bien avant le pli)
+
+=== C. Équilibre statique ou dynamique : dm/dt = tanh(J·m + A - h0) - m ; dA/dt = eps·(afflux - k(m)·A) ===
+J/T = 1.5, coût d'entrée h0 = 0.6, pli à la charge A = h0 + h_pli = 0.808, pli de retour à A = h0 - h_pli = 0.392
+  afflux faible, tout est absorbé : afflux/k_vieux = 0.30, afflux/k_neuf = 0.30 -> m final -0.936, charge finale 0.300, bascules 0
+  afflux fort, schéma neuf qui garde une charge : afflux/k_vieux = 1.00, afflux/k_neuf = 0.62 -> m final +0.869, charge finale 0.625, bascules 1
+  afflux fort, schéma neuf qui dissout tout : afflux/k_vieux = 1.00, afflux/k_neuf = 0.25 -> m final -0.750, charge finale 0.759, bascules 60
+  (lecture : bascule si afflux/k_vieux dépasse h0 + h_pli ; sans retour si afflux/k_neuf reste au-dessus de h0 - h_pli)
+
+=== D. Résidu structuré : R = bruit + force·v·v^T, v porté par une région de 80 concepts sur 400 ===
+force | valeur propre dominante plantée (théorie force + 1/force si force > 1, sinon 2) | jumeau permuté | détection à 5 % | masse du vecteur propre dans la région (hasard 0,20) | recouvrement au carré (théorie 1 - 1/force²)
+  0.50 | 1.974 (2.000) | 1.977 | 0.03 | 0.211 | 0.010 (0.000)
+  0.80 | 1.993 (2.000) | 1.982 | 0.11 | 0.230 | 0.043 (0.000)
+  1.00 | 2.003 (2.000) | 1.979 | 0.25 | 0.289 | 0.119 (0.000)
+  1.25 | 2.052 (2.050) | 1.985 | 0.72 | 0.482 | 0.348 (0.360)
+  1.50 | 2.172 (2.167) | 1.983 | 1.00 | 0.638 | 0.548 (0.556)
+  2.00 | 2.495 (2.500) | 1.991 | 1.00 | 0.797 | 0.747 (0.750)
+  3.00 | 3.340 (3.333) | 2.002 | 1.00 | 0.911 | 0.890 (0.889)
+anomalies comptées (|résidu| > 2 écarts types) : planté de force 1,5 : 3677 ; jumeau permuté : 3677 (mêmes entrées) ; bruit seul : 3620 sur 79800 paires
+
+=== E. Anomalies de signe : indice de frustration exact, distinction cachée contre jumeau ===
+120 graphes connexes de 20 concepts et 40 relations ; distinction cachée sur 6 concepts
+théorème de structure vérifié : « aucune anomalie irréductible » = « bipartition trouvée par parcours » dans 360 cas sur 360
+  anomalies dues à une distinction cachée :
+    anomalies 17.4 ; irréductibles après la meilleure distinction 0.00 ; part des anomalies qui tombent 1.000 ; aucune irréductible 1.00
+    dégénérescence : log2 du nombre de distinctions optimales 0.00, à une anomalie près 0.85 ; susceptibilité (part des relations dont le retournement déplace l'optimum) 0.021
+    laplacien signé : plus petite valeur propre 0.0000 ; écart à la suivante (raideur, inverse de la mollesse) 0.7590
+  même nombre d'anomalies, placées au hasard :
+    anomalies 17.4 ; irréductibles après la meilleure distinction 6.62 ; part des anomalies qui tombent 0.611 ; aucune irréductible 0.00
+    dégénérescence : log2 du nombre de distinctions optimales 1.76, à une anomalie près 4.50 ; susceptibilité (part des relations dont le retournement déplace l'optimum) 0.355
+    laplacien signé : plus petite valeur propre 0.5821 ; écart à la suivante (raideur, inverse de la mollesse) 0.2430
+  distinction cachée plus 3 signes retournés au hasard :
+    anomalies 17.9 ; irréductibles après la meilleure distinction 2.82 ; part des anomalies qui tombent 0.839 ; aucune irréductible 0.00
+    dégénérescence : log2 du nombre de distinctions optimales 0.42, à une anomalie près 2.00 ; susceptibilité (part des relations dont le retournement déplace l'optimum) 0.094
+    laplacien signé : plus petite valeur propre 0.3056 ; écart à la suivante (raideur, inverse de la mollesse) 0.4559
+  planté bruité contre jumeau, aire sous la courbe (0,5 = aucune séparation ; sous 0,5 = le jumeau est plus haut) :
+    nombre d'anomalies 0.548 ; part des anomalies qui tombent 0.998 ; dégénérescence à une anomalie près 0.042 ; susceptibilité 0.052 ; mollesse (inverse de l'écart) 0.161
+  part qui tombe du planté bruité, en écarts types du nul de placement (8 placements par graphe, 40 graphes) : moyenne 4.84, minimum 2.47
+
+=== F. Contraintes « rôles différents » sur 10 concepts, 3 valeurs : énumération des 59 049 affectations ===
+densité (contraintes par concept) | satisfiable | anomalies minimales (3 valeurs) | log10 du nombre d'états minimaux | amas | part gelée par amas | log10 de la taille d'amas | anomalies minimales avec 4 valeurs
+  0.5 | 1.00 | 0.00 | 3.87 | 1.8 | 0.045 | 3.74 | 0.00
+  1.0 | 1.00 | 0.00 | 2.88 | 7.1 | 0.305 | 2.10 | 0.00
+  1.5 | 0.90 | 0.10 | 1.86 | 12.3 | 0.686 | 0.83 | 0.00
+  2.0 | 0.25 | 0.95 | 1.57 | 7.2 | 0.677 | 0.75 | 0.10
+  2.5 | 0.00 | 1.95 | 1.53 | 8.6 | 0.691 | 0.68 | 0.15
+  3.0 | 0.00 | 3.20 | 1.32 | 10.3 | 0.849 | 0.34 | 1.00
+  3.5 | 0.00 | 4.95 | 1.35 | 11.4 | 0.856 | 0.32 | 2.15
+  4.0 | 0.00 | 7.65 | 1.69 | 23.4 | 0.839 | 0.39 | 4.10
+violations de la borne taille d'amas <= 3^((1 - part gelée)·10) : 0
+recherche locale sur instances à solution plantée (80 concepts, 3 valeurs, plafond 60 000 retouches) :
+densité | médiane des retouches jusqu'à une solution | part d'échecs au plafond
+   1.0 |       40 | 0.00
+   1.5 |      156 | 0.00
+   2.0 |      553 | 0.00
+   2.3 |     3258 | 0.00
+   2.6 |     3680 | 0.00
+   3.0 |      899 | 0.00
+   4.0 |      614 | 0.00
+   6.0 |      244 | 0.00
+  10.0 |      180 | 0.00
+
+=== G. Puissance d'une aire sous la courbe selon le nombre de régions ===
+régions (positives + négatives) | seuil unilatéral à 5 % sous le nul | puissance si l'aire vraie vaut 0,60 ; 0,65 ; 0,70 ; 0,80
+    11 (5 + 6) | 0.800 | 0.11 ; 0.18 ; 0.26 ; 0.49
+    30 (15 + 15) | 0.680 | 0.22 ; 0.38 ; 0.58 ; 0.91
+    60 (30 + 30) | 0.623 | 0.38 ; 0.65 ; 0.88 ; 1.00
+   120 (60 + 60) | 0.586 | 0.61 ; 0.89 ; 0.99 ; 1.00
+   250 (125 + 125) | 0.559 | 0.86 ; 0.99 ; 1.00 ; 1.00
+   500 (250 + 250) | 0.543 | 0.98 ; 1.00 ; 1.00 ; 1.00

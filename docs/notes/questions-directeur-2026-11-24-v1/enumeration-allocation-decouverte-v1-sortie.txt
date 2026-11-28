@@ -1,0 +1,153 @@
+=== A. Distance optimale : I(S) = q(S)·(S + W), q = sig(q0 + b·Z - theta·S) ===
+tirages de paramètres : 800 ; optimum intérieur : 543 ; optimum au bord S = 0 : 257
+désaccords avec la condition theta·W·(1 - sig(q0 + b·Z)) < 1 : 0
+écart maximal entre la racine de g et l'argmax sur grille (pas 1e-4) : 5.00e-05
+portée fixe : écart maximal |dS*/dZ (différences finies) - b·q*/theta| : 1.85e-10
+écart maximal |dS*/dW (différences finies) + (1 - q*)| : 2.36e-10
+portée de pente w1 = dW/dZ tirée entre 0 et 3 : écart maximal |dS*/dZ - (b·q*/theta - (1 - q*)·w1)| : 1.27e-10
+  écart maximal |d(S* + W)/dZ - (b·q*/theta + q*·w1)| : 1.27e-10
+  S* recule (dS*/dZ > 0) dans 288 cas, se rapproche (dS*/dZ < 0) dans 255 cas ; désaccords avec le critère w1 < b·q*/(theta·(1 - q*)) : 0
+  exemple q0=0, b=1, theta=1, W=1, Z=0 : S* = 0.5671, crédibilité à l'optimum q* = 0.3619
+  exemple q0=0, b=1, theta=1, W=1, Z=1 : S* = 1.0000, crédibilité à l'optimum q* = 0.5000
+  exemple q0=0, b=1, theta=1, W=1, Z=2 : S* = 1.5571, crédibilité à l'optimum q* = 0.6089
+  exemple q0=0, b=1, theta=1, W=1, Z=3 : S* = 2.2079, crédibilité à l'optimum q* = 0.6883
+  exemple q0=0, b=1, theta=1, Z=1, W=0.5 : S* = 1.2662
+  exemple q0=0, b=1, theta=1, Z=1, W=1.0 : S* = 1.0000
+  exemple q0=0, b=1, theta=1, Z=1, W=2.0 : S* = 0.5571
+  exemple q0=0, b=1, theta=1, Z=1, W=4.0 : bord (S* = 0)
+
+=== B1. Ordre p/c décroissant et coût espéré jusqu'au premier succès (permutations exhaustives) ===
+instances : 260 (n de 3 à 7, probabilités et coûts rationnels) ; ordre p/c optimal : 260
+
+=== B2. Budget dur : « au moins une » contre « nombre espéré » (sous-ensembles exhaustifs) ===
+exemple (p, c) = (0,9 ; 2), (0,5 ; 1), (0,5 ; 1), budget 2 : au moins une -> (0,) (P = 0.90) ; nombre espéré -> (1, 2) (E = 1.00)
+instances : 400 (n = 6) ; l'optimum du nombre espéré perd sur « au moins une » dans 43 cas, perte maximale 0.135
+
+=== B3. Règle de Pandore (Weitzman) contre programmation dynamique exhaustive ===
+instances : 300 (3 à 5 boîtes, lois à 2 ou 3 valeurs) ; politique de réserve = optimum : 300
+politique d'indice E[X]/c strictement sous l'optimum : 162 cas, perte relative maximale 0.155
+exemple A (q=0,9 ; V=2 ; c=0,5) et B (q=0,1 ; V=10 ; c=0,5) : q·V/c = 3,6 et 2,0 ; valeurs de réserve V - c/q = 1.444 et 5.000
+  gain espéré : optimum 1.6700, réserve (B puis A) 1.6700, q·V/c (A puis B) 1.6200
+
+=== B4. Règle de Pandore avec délai d'épreuve : c = b·E[(X - z)^+] - (1 - b)·z, b facteur d'actualisation ===
+instances : 300 (3 à 5 boîtes, délais tirés parmi les facteurs 1/2, 3/4, 9/10, 1) ; politique de réserve = optimum : 300
+boîte à deux issues (valeur V avec probabilité q, sinon 0) : z = (b·q·V - c)/(1 - b + b·q)
+  facteur b = 1.00 : A (q=0,9 ; V=2 ; c=0,5) z = 1.444 ; B (q=0,1 ; V=10 ; c=0,5) z = 5.000
+  facteur b = 0.90 : A (q=0,9 ; V=2 ; c=0,5) z = 1.231 ; B (q=0,1 ; V=10 ; c=0,5) z = 2.105
+  facteur b = 0.75 : A (q=0,9 ; V=2 ; c=0,5) z = 0.919 ; B (q=0,1 ; V=10 ; c=0,5) z = 0.769
+  facteur b = 0.50 : A (q=0,9 ; V=2 ; c=0,5) z = 0.421 ; B (q=0,1 ; V=10 ; c=0,5) z = 0.000
+
+=== C. Allocation de Koopman discrète : P = somme_j a_priori_j·(1 - (1 - rareté_j)^tirages_j), budget fixé ===
+instances : 150 (4 cellules, budget de 5 à 18 tirages) ; glouton marginal = optimum exhaustif : 150
+exemple : a priori (0,40 ; 0,30 ; 0,20 ; 0,10), rareté des puits (0,20 ; 0,05 ; 0,02 ; 0,20)
+  (la cellule 3 est le puits le plus rare : a priori × rareté = 0,004, le plus faible)
+  budget    10 : tirages (8, 0, 0, 2) ; P(trouvé) = 0.3689 ; a posteriori après échec = 0.106 ; 0.475 ; 0.317 ; 0.101
+  budget    30 : tirages (11, 14, 0, 5) ; P(trouvé) = 0.5866 ; a posteriori après échec = 0.083 ; 0.354 ; 0.484 ; 0.079
+  budget   100 : tirages (17, 39, 33, 11) ; P(trouvé) = 0.8391 ; a posteriori après échec = 0.056 ; 0.252 ; 0.638 ; 0.053
+  budget   300 : tirages (28, 89, 161, 22) ; P(trouvé) = 0.9876 ; a posteriori après échec = 0.063 ; 0.252 ; 0.625 ; 0.060
+  budget  1000 : tirages (69, 264, 605, 62) ; P(trouvé) = 1.0000 ; a posteriori après échec = 0.053 ; 0.253 ; 0.631 ; 0.063
+  (limite continue : a priori × rareté × exp(-rareté × effort) égal entre cellules fouillées,
+   donc masse restante proportionnelle à 1/rareté : ici 0,0625 ; 0,25 ; 0,625 ; 0,0625)
+
+=== D. Viser le maximum : étalement, seuil de croisement, contre-exemple ===
+X : 4 ou 6 (1/2, 1/2) ; Y2 = X + bruit indépendant de moyenne nulle (+2 ou -2) : étalement à moyenne constante
+  n =  1 : E[max] X = 5.0000 ; Y2 = 5.0000
+  n =  2 : E[max] X = 5.5000 ; Y2 = 6.2500
+  n =  3 : E[max] X = 5.7500 ; Y2 = 6.8750
+  n =  5 : E[max] X = 5.9375 ; Y2 = 7.4609
+  n = 10 : E[max] X = 5.9980 ; Y2 = 7.8854
+  n = 30 : E[max] X = 6.0000 ; Y2 = 7.9996
+famille normale : A (moyenne 0.0, écart type 2.0), B (moyenne 1.0, écart type 1.0) ; seuil de croisement x* = 2.000
+  seuil 0.0 : P(A >= seuil) = 0.50000 ; P(B >= seuil) = 0.84134 ; A devant : False
+  seuil 1.0 : P(A >= seuil) = 0.30854 ; P(B >= seuil) = 0.50000 ; A devant : False
+  seuil 1.9 : P(A >= seuil) = 0.17106 ; P(B >= seuil) = 0.18406 ; A devant : False
+  seuil 2.0 : P(A >= seuil) = 0.15866 ; P(B >= seuil) = 0.15866 ; A devant : False
+  seuil 2.1 : P(A >= seuil) = 0.14686 ; P(B >= seuil) = 0.13567 ; A devant : True
+  seuil 3.0 : P(A >= seuil) = 0.06681 ; P(B >= seuil) = 0.02275 ; A devant : True
+  seuil 5.0 : P(A >= seuil) = 0.00621 ; P(B >= seuil) = 0.00003 ; A devant : True
+  espérance du maximum de n normales réduites : m_2 = 0.564 ; m_3 = 0.846 ; m_4 = 1.029 ; m_5 = 1.163 ; m_10 = 1.539
+  E[max de n] : A dépasse B dès n = 4 (condition m_n > écart des moyennes / écart des échelles = 1.000)
+contre-exemple : A = +3 ou -3 (1/2, 1/2), variance 9 ; B = 0 (0,98), +5 (0,01), -5 (0,01), variance 0,5
+  P(A >= 4) = 0 ; P(B >= 4) = 0,01 : la variance la plus forte a la queue la plus faible au-delà de 4
+
+=== E. Diversité et corrélation ===
+E1. taux de réussite latent H d'un proposeur sur ce puits, de loi Beta(0,5 ; 4,5), moyenne 0,1 :
+    P(au moins un succès en n tirages)
+  n =    1 : tirages corrélés 0.1000 ; tirages indépendants de même taux 0.1000
+  n =    5 : tirages corrélés 0.3217 ; tirages indépendants de même taux 0.4095
+  n =   20 : tirages corrélés 0.5810 ; tirages indépendants de même taux 0.8784
+  n =  100 : tirages corrélés 0.7979 ; tirages indépendants de même taux 1.0000
+  n = 1000 : tirages corrélés 0.9349 ; tirages indépendants de même taux 1.0000
+  cas extrême H = 0 ou 1 (probabilité 0,1 d'être 1) : 0,1000 quel que soit n
+E2. n tirages répartis entre K proposeurs à latents indépendants de même loi (compositions exhaustives)
+  instances : 200 ; la répartition la plus égale atteint l'optimum : 200 ; tout sur un seul proposeur est le pire : 200
+  Beta(0,5 ; 4,5), 12 tirages répartis (12, 0, 0) : P(au moins un) = 0.4882
+  Beta(0,5 ; 4,5), 12 tirages répartis (6, 6, 0) : P(au moins un) = 0.5848
+  Beta(0,5 ; 4,5), 12 tirages répartis (4, 4, 4) : P(au moins un) = 0.6296
+  référence indépendante (aucun latent) : 0.7176
+E3. latent commun aux K proposeurs : P = 1 - E[(1 - H)^n] pour toute répartition (identité) ;
+  ici 0.4882 pour (12,0,0), (6,6,0) et (4,4,4)
+E4. sous-modularité de f(S) = P(union des succès) et de E[max], dépendance quelconque (exhaustif)
+  instances : 120 (6 candidats, 8 états du monde) ; violations des rendements décroissants : union 0, maximum 0
+  pire rapport glouton/optimum à cardinal fixé : union 0.8571, maximum 0.8935 (borne de Nemhauser, Wolsey et Fisher : 0.6321)
+  contre-exemple composite : découverte = pièce 1 ET pièce 2 ; f({1}) = f({2}) = 0, f({1,2}) = 1 ;
+  gain marginal de 2 : 0 seul, 1 après 1 : rendements croissants, le glouton ne voit rien (rapport 0)
+
+=== F. Filtre bon marché avant une épreuve chère ===
+F1. instances : 5000 ; signe du gain = signe de c_v·(1 - pi_0)·(q_o - alpha_o) - (1 - q_o)·c_g - c_f : 5000
+F2. table de Carbon recalculée (pi = 0,04 ; 500 candidats ; filtre 0,05 ; épreuve 8 ; budget 100)
+  aucun filtre : promus  500.0 ; précision 0.0400 ; éprouvés   9.0 ; vraies découvertes 0.36
+  faible       : promus  134.0 ; précision 0.1045 ; éprouvés   9.0 ; vraies découvertes 0.94
+  modéré       : promus   53.4 ; précision 0.2809 ; éprouvés   9.0 ; vraies découvertes 2.53
+  rigoureux    : promus   25.6 ; précision 0.6250 ; éprouvés   9.0 ; vraies découvertes 5.63
+  strict       : promus   17.4 ; précision 0.8621 ; éprouvés   9.0 ; vraies découvertes 7.76
+  mort         : promus    0.5 ; précision 0.0000 ; éprouvés   0.5 ; vraies découvertes 0.00
+  rapport strict/aucun : 21.55 = précision/pi ; plafond 1/pi = 25
+  précision > 1/2 si et seulement si alpha_o < q_o·pi_0/(1 - pi_0) ; ici q_o = 0,75 : alpha_o < 0.0312
+F3. contre-exemple : idées profondes sous-notées par le filtre
+  taux de passage du filtre u = 0.0555 ; seuil de sensibilité utile (c_g + c_f + u·c_v)/(c_g + c_v) = 0.0676
+  pour 100 unités de coût, sans filtre : ordinaires 0.497, profondes 0.0497
+  pour 100 unités de coût, avec filtre : ordinaires 6.616, profondes 0.0735
+  le filtre multiplie les ordinaires par 13.3 et les profondes par 1.48 (q_d = 0.1 contre seuil 0.0676)
+  si q_d = 0.03 (sous le seuil) : profondes multipliées par 0.45 : le filtre les détruit
+F4. contre-exemple : candidats rares (20 candidats, budget suffisant pour tout éprouver)
+  sans filtre : 0.80 vraies découvertes attendues ; avec filtre (q = 0,75) : 0.60
+F5. vérification par tirage (pi = 0,04 ; q = 0,75 ; alpha = 0,02 ; c_g = 0,05 ; c_f = 0,05 ; c_v = 8)
+  taux simulé avec filtre 0.06067 (formule 0.06078) ; sans filtre 0.00495 (formule 0.00497)
+
+=== G. Criticalité de l'émergence ===
+G1. Galton-Watson à descendance de Poisson de moyenne n : extinction et descendance totale
+  n = 0.5 : P(extinction) théorique 1.0000 ; part simulée dépassant 5 000 naissances 0.0000 ; descendance moyenne des lignées éteintes 2.01 (théorie 1/(1 - n) = 2.00)
+  n = 0.9 : P(extinction) théorique 1.0000 ; part simulée dépassant 5 000 naissances 0.0000 ; descendance moyenne des lignées éteintes 10.11 (théorie 1/(1 - n) = 10.00)
+  n = 1.0 : P(extinction) théorique 1.0000 ; part simulée dépassant 5 000 naissances 0.0105 ; descendance moyenne des lignées éteintes 59.08 (sans objet au-delà de n = 1)
+  n = 1.1 : P(extinction) théorique 0.8239 ; part simulée dépassant 5 000 naissances 0.1747 ; descendance moyenne des lignées éteintes 9.98 (sans objet au-delà de n = 1)
+  n = 1.5 : P(extinction) théorique 0.4172 ; part simulée dépassant 5 000 naissances 0.5895 ; descendance moyenne des lignées éteintes 2.64 (sans objet au-delà de n = 1)
+  n = 2.0 : P(extinction) théorique 0.2032 ; part simulée dépassant 5 000 naissances 0.8005 ; descendance moyenne des lignées éteintes 1.67 (sans objet au-delà de n = 1)
+G2. graphe biparti aléatoire (500 concepts d'un côté, 8 000 de l'autre) : seuil c_A·c_B = 1
+  c_A = 2.83, c_B = 0.177, produit 0.5 : plus grande composante simulée 0.0043 ; théorie (taille infinie) 0.0000
+  c_A = 3.58, c_B = 0.224, produit 0.8 : plus grande composante simulée 0.0140 ; théorie (taille infinie) 0.0000
+  c_A = 4.00, c_B = 0.250, produit 1.0 : plus grande composante simulée 0.0342 ; théorie (taille infinie) 0.0000
+  c_A = 4.90, c_B = 0.306, produit 1.5 : plus grande composante simulée 0.1634 ; théorie (taille infinie) 0.1640
+  c_A = 5.66, c_B = 0.354, produit 2.0 : plus grande composante simulée 0.2488 ; théorie (taille infinie) 0.2536
+  c_A = 8.00, c_B = 0.500, produit 4.0 : plus grande composante simulée 0.4137 ; théorie (taille infinie) 0.4123
+G3. opérateur sans retour : même rayon spectral, seuils différents (boucles courtes)
+  rayon spectral de l'opérateur sans retour : réseau triangulaire 6×6 (tore) 5.0000 ; le même recâblé à degrés constants 5.0000 (degré - 1 = 5 ; seuil prédit 0,2)
+  biparti complet à 4 et 7 nœuds : rayon 4.2426 ; racine de (4 - 1)·(7 - 1) = 4.2426 (d'où le seuil p²·(N_A - 1)·(N_B - 1) = 1, soit c_A·c_B = 1 en grande taille)
+  réseau triangulaire 64×64 : 8192 triangles ; après recâblage : 16
+  probabilité de lien 0.1500 (p × rayon = 0.75) : plus grande composante, réseau triangulaire 0.0052 ; recâblé 0.0096
+  probabilité de lien 0.2000 (p × rayon = 1.00) : plus grande composante, réseau triangulaire 0.0108 ; recâblé 0.0578
+  probabilité de lien 0.2500 (p × rayon = 1.25) : plus grande composante, réseau triangulaire 0.0281 ; recâblé 0.5131
+  probabilité de lien 0.3000 (p × rayon = 1.50) : plus grande composante, réseau triangulaire 0.0883 ; recâblé 0.7355
+  probabilité de lien 0.3473 (p × rayon = 1.74) : plus grande composante, réseau triangulaire 0.6600 ; recâblé 0.8628
+  probabilité de lien 0.4000 (p × rayon = 2.00) : plus grande composante, réseau triangulaire 0.9011 ; recâblé 0.9263
+  probabilité de lien 0.5000 (p × rayon = 2.50) : plus grande composante, réseau triangulaire 0.9787 ; recâblé 0.9805
+  (seuil exact connu du réseau triangulaire : 2·sin(pi/18) = 0.3473 ; graphe en arbre de degré 6 : 1/5)
+G4. vivier fini : chaque naissance en induit n en moyenne parmi M = 2 000 paires encore à naître
+  n = 0.8 : part finale des avalanches étendues 0.0000 (théorie : part s solution de s = 1 - exp(-n·s) : 0.0000) ; part des amorces qui s'étendent 0.000
+  n = 1.5 : part finale des avalanches étendues 0.5821 (théorie : part s solution de s = 1 - exp(-n·s) : 0.5828) ; part des amorces qui s'étendent 0.650
+  n = 3.0 : part finale des avalanches étendues 0.9401 (théorie : part s solution de s = 1 - exp(-n·s) : 0.9405) ; part des amorces qui s'étendent 0.935
+G5. cortège : rapport de branchement n = (exp(zeta) - 1)·m·(taux de base × durée)
+  (m paires alignées par la correspondance, taux de base × durée = 0,01 par paire)
+  multiplicateur exp(zeta) = 1.5 -> m =   5 : n = 0.03 ; m =  20 : n = 0.10 ; m =  80 : n = 0.40 ; m = 320 : n = 1.60
+  multiplicateur exp(zeta) = 3.0 -> m =   5 : n = 0.10 ; m =  20 : n = 0.40 ; m =  80 : n = 1.60 ; m = 320 : n = 6.40
+  multiplicateur exp(zeta) = 6.0 -> m =   5 : n = 0.25 ; m =  20 : n = 1.00 ; m =  80 : n = 4.00 ; m = 320 : n = 16.00
