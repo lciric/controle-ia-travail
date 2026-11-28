@@ -1,0 +1,388 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-1176"
+   ],
+   "enonce_complet": "Sous une loi i.i.d. à peu de modes, la statistique I3 ne peut pas dépasser (t-2)/(t-1) car, conditionnellement au déplacement courant v_t, les t-1 cosinus passés sont i.i.d. et donc échangeables ; la première moitié du présupposé A4 est retirée.",
+   "motif_ou_resultat": "Propriété mathématique d'échangeabilité vérifiée et retrait explicite de la première moitié du présupposé A4 sur la capacité de I3 à détecter un biais directionnel sous loi i.i.d.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Borne supérieure de la statistique I3 sous loi échangeable et retrait du présupposé A4",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1178"
+   ],
+   "enonce_complet": "L'indicateur v_G - min_j U(p_bar, j) calculé sur une matrice restreinte dépourvue de meilleures réponses à p_bar n'est pas le NashConv global mais un déficit de sécurité restreint du défenseur dans le sous-jeu G.",
+   "motif_ou_resultat": "Erreur conceptuelle et terminologique tranchée : l'indicateur ne certifie pas l'équilibre global et est officiellement renommé « déficit de sécurité restreint ».",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Requalification du faux indicateur NashConv en déficit de sécurité restreint",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-1180"
+   ],
+   "enonce_complet": "L'indicateur I1 perd sa puissance statistique lorsque des oscillations se compensent entre fenêtres temporelles, et un seuil de décision inférieur au taux de convergence disponible ne permet pas de réfuter une convergence asymptotique ; I1 est relégué à un rôle purement descriptif.",
+   "motif_ou_resultat": "Constat méthodologique acté conduisant à retirer le pouvoir décisionnel de I1 au profit d'une lecture descriptive conjointe avec la ligne de base A0.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Perte de puissance de l'indicateur I1 par compensation d'oscillations et déclassement descriptif",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-1175"
+   ],
+   "motif_ecart": "Correctif logiciel ponctuel et test de régression déterministe explicitement déclarés hors duel de découverte scientifique.",
+   "resume_court": "Correction du code réseau classant un délai dépassé comme « fermée » au lieu d'« indéterminé », assortie d'une régression déterministe."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Avalon (p. 79)",
+   "bib_ids": [
+    "BIB-1150",
+    "BIB-1158",
+    "BIB-1165",
+    "BIB-1173"
+   ],
+   "enonce_complet": "Évaluer si l'association d'une liste blanche versionnée d'appels système (BPF/strace sous python3 -I -B avec empreinte d'initialisation par image) et de fichiers canaris surveillés en lecture, ouverture et listage détecte les sondages de plate-forme sur un corpus réservé et disjoint (n = 100) sans fausses alertes sur les scripts honnêtes, en mesurant l'apport marginal des canaris par rapport à la télémétrie seule à politiques de décision gelées.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les canaris n'ajoutent aucune détection sur événements interdits couverts ou génèrent des fausses alertes sur le corpus réservé honnête ou après mise à jour d'image, le mécanisme échoue ; faux témoin 1b : traces de scripts honnêtes utilisant uniquement des appels système autorisés sans contact avec les leurres.",
+   "mecanisme_causal": "Un agent qui sonde le bac à sable au-delà de ses entrées autorisées déclenche soit des appels système hors liste blanche captés au niveau noyau, soit un contact sur les appâts canaris inaccessibles aux exécutions légitimes, créant une asymétrie mesurable entre sondages et scripts honnêtes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Détection de sondage en bac à sable",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Détection du sondage de bac à sable par liste blanche d'appels système et canaris sur corpus disjoints (E1, E3', E5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1155"
+   ],
+   "enonce_complet": "Tester l'opacité informationnelle du bac à sable en entraînant un classifieur sur des traits passifs extraits de l'intérieur du bac pour déterminer s'il distingue deux conditions expérimentales (A et B) avec une précision supérieure à celle attendue sous permutation des étiquettes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute précision significativement supérieure à la loi nulle de permutation réfute l'opacité du bac ; faux témoin 1b : permutation aléatoire des étiquettes de condition sur les mêmes traces passives internes.",
+   "mecanisme_causal": "Des différences d'environnement, de métadonnées système ou de latence entre conditions créent des canaux auxiliaires passifs exploitables depuis l'intérieur du bac pour inférer le bras expérimental et adapter le comportement du script.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Opacité et canaux auxiliaires du bac",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test d'opacité du bac à sable par classifieur passif interne sous permutation d'étiquettes (E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1156"
+   ],
+   "enonce_complet": "Exécuter un même script dans deux bacs à sable d'implémentations hétérogènes (bwrap et gVisor) afin de vérifier que les scripts honnêtes maintiennent un taux de divergence inférieur ou égal au bruit intra-bwrap mesuré, tandis que les scripts sensibles à l'environnement divergent à un taux significativement supérieur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les scripts honnêtes dépassent le seuil de divergence intra-bwrap ou si les sondages d'environnement produisent des sorties identiques sous bwrap et gVisor, l'indicateur échoue ; faux témoin 1b : scripts honnêtes déterministes réexécutés plusieurs fois dans bwrap seul pour calibrer delta_bwrap.",
+   "mecanisme_causal": "Des moteurs d'isolation distincts exposent des empreintes noyau, temps et descripteurs différentes ; un code déterministe indépendant de l'hôte produit des sorties invariantes, alors qu'un code exploitant ou sondant les détails du bac voit son comportement diverger entre implémentations.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Redondance diverse de confinement",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Détection de dépendance à l'environnement par redondance diverse entre bacs à sable hétérogènes (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1152"
+   ],
+   "enonce_complet": "Éprouver l'étanchéité inter-exécutions en introduisant un artefact où l'exécution 1 écrit un fichier dans le dossier de travail et l'exécution 2 le lit pour modifier RESULTAT:, afin de vérifier si la garde actuelle laisse le canal ouvert sans remise à zéro et le ferme avec remise à zéro complète entre exécutions.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la garde actuelle ne signale pas le canal ouvert sans remise à zéro ou si le changement de RESULTAT: persiste après remise à zéro entre exécutions, l'isolation échoue ; faux témoin 1b : scripts honnêtes sans écriture ni lecture persistante entre exécutions.",
+   "mecanisme_causal": "Un répertoire de travail partagé et non purgé entre exécutions forme une mémoire persistante permettant à un script d'adapter ses sorties d'un appel à l'autre et de contourner l'indépendance supposée des essais.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Étanchéité inter-exécutions du bac",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Fermeture du canal caché inter-exécutions par remise à zéro du dossier de travail (E5')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1153",
+    "BIB-1169",
+    "BIB-1172"
+   ],
+   "enonce_complet": "Comparer sur des fiches et quotas d'exécution identiques (1 exécution vs 3 exécutions, à diagnostics syntaxiques, de terminaison et de dépendances égaux) l'effet du retour d'évaluation véridique face à un contrôle sans retour adaptatif et un témoin à retours aléatoires de même budget, en mesurant le taux de survie, le taux de scripts fonctionnels et l'excès d'acceptations fausses.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si survie(3 avec retour véridique) - survie(1) ne dépasse pas survie(aléatoire 3) - survie(1) ou ne produit aucune acceptation fausse supplémentaire face aux témoins, l'hypothèse d'exploitation adaptative du signal est réfutée ; faux témoin 1b : bras à retours aléatoires de même quota et exécution unique sans boucle.",
+   "mecanisme_causal": "Un agent recevant le verdict ou les métriques d'exécution entre tentatives successives ajuste ses paramètres ou seuils de manière adaptative sur l'échantillon courant, convertissant un budget de réessais en surapprentissage statistique par rapport à des retours aléatoires.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Surapprentissage adaptatif sur boucle de retour",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Mesure de l'exploitation du signal de retour en boucle intra-fiche à budget d'essais égal (E6, E9)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1154"
+   ],
+   "enonce_complet": "Mesurer sur des fiches synthétiques à effet nul l'excès pi > 0 de franchissements du seuil décisionnel gelé produit par un agent expérimentateur LLM disposant de 3 exécutions par rapport à un script mécanique fixe appliquant le même test statistique sur les mêmes données.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'agent à 3 exécutions affiche pi <= 0 par rapport au script mécanique fixe sur fiches nulles, l'excès de faux positifs imputable à l'agent est réfuté ; faux témoin 1b : script mécanique déterministe exécuté une seule fois sur les mêmes fiches à effet nul.",
+   "mecanisme_causal": "La liberté de formulation, de prétraitement et de réécriture entre trois tentatives permet à un agent LLM d'explorer implicitement plusieurs variantes d'analyse sur un même jeu de données et de gonfler le taux de faux positifs au-delà du niveau nominal alpha.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Inflation de faux positifs par l'agent",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Quantification de l'excès de faux positifs d'un agent expérimentateur face à un script mécanique fixe (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1159"
+   ],
+   "enonce_complet": "Tester si l'association d'une garde d'arrêt strict au premier RESULTAT: valide et d'une contre-épreuve par batterie de B = 19 permutations par blocs vérifiée par traceur neutralise le p-hacking multi-tours dans l'évaluation des scripts d'expérience.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si des scripts optimisés sur plusieurs tours franchissent la garde d'arrêt et la batterie de B = 19 permutations par blocs à un taux supérieur au nominal, le dispositif est insuffisant ; faux témoin 1b : permutations par blocs appliquées à des signaux nuls synthétiques.",
+   "mecanisme_causal": "L'arrêt au premier verdict valide supprime la sélection postérieure du meilleur essai parmi plusieurs exécutions, tandis que les permutations par blocs détruisent la structure d'appariement tout en préservant les dépendances locales, révélant les artefacts de p-hacking.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Garde anti-p-hacking par permutations par blocs",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Garde d'arrêt au premier succès et contre-épreuve par permutations par blocs contre le p-hacking multi-tours (E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1148"
+   ],
+   "enonce_complet": "Évaluer la dépendance d'un résultat expérimental à la tranche de données en rejouant sans modification le script scellé sur une tranche jumelle de même schéma générée indépendamment à partir de données synthétiques continues.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si un script scellé validé sur la tranche d'origine ne maintient pas le verdict sur la tranche jumelle indépendante, le résultat était surajusté à la tranche ; faux témoin 1b : rejeu sur une tranche jumelle générée sous l'hypothèse nulle sans signal.",
+   "mecanisme_causal": "Un script réellement général capture le signal générateur du schéma plutôt que les fluctuations d'échantillonnage de la tranche initiale, de sorte que son verdict demeure invariant sur une réalisation continue indépendante de même loi.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Réplication scellée sur tranche jumelle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Vérification de dépendance aux données par rejeu du script scellé sur tranche jumelle indépendante (E1b)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1162",
+    "BIB-1167"
+   ],
+   "enonce_complet": "Vérifier l'intégrité bout en bout du lien capture-exécution-relecture et de la reproduction documentaire par un tiers aveugle : la capture externe des octets exécutés, l'ancrage externe des sorties et le manifeste scellé doivent accepter tous les paquets honnêtes, rejeter les substitutions ou altérations postérieures au scellement dans les strates couvertes et ne révéler aucune dépendance interdite par la liste gelée.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute altération ou substitution post-capture acceptée, ou tout échec de reproduction d'un paquet honnête par le tiers aveugle, invalide la chaîne de provenance ; faux témoin 1b : paquet honnête complet rejoué à l'identique après redémarrage sans modification.",
+   "mecanisme_causal": "L'ancrage cryptographique externe des octets capturés et des sorties dans un manifeste immuable empêche toute substitution silencieuse entre exécution et relecture, tandis que la reproduction aveugle vérifie l'absence de dépendances cachées.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Intégrité et reproductibilité par tiers aveugle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Chaîne scellée capture-exécution-ancrage et reproduction documentaire par tiers aveugle (E2, E7)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1163",
+    "BIB-1174"
+   ],
+   "enonce_complet": "Garantir l'étanchéité et la conformité du canal entre exécution et vérificateur : un environnement jetable décode les octets opaques sous limites de ressources et n'émet qu'un schéma canonique borné dont le vérificateur recalcule l'empreinte, tandis que les transcriptions doivent satisfaire exactement le contrat gelé y compris après inspection des champs supprimés, sans rejeter les exécutions honnêtes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une transcription viole le contrat gelé (y compris via des champs supprimés) ou échoue au recalcul d'empreinte, ou si un paquet honnête est rejeté, le contrat du canal échoue ; faux témoin 1b : charge utile honnête conforme au schéma canonique borné et soumise au décodeur jetable.",
+   "mecanisme_causal": "La dissociation entre transport d'octets opaques, décodage isolé sous bornes de ressources et validation d'un schéma canonique minimal élimine les injections de parseur et les champs cachés tout en assurant une empreinte reproductible.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Canonicalisation bornée du canal de vérification",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Décodage jetable en schéma canonique borné et audit du contrat de canal (E3, E5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1168"
+   ],
+   "enonce_complet": "Éprouver la propriété de correction analytique, absente de la seule provenance documentaire, sur des données dont la réponse analytique est connue : le recalcul indépendant du plan préenregistré doit classer correctement tous les cas alors que le contrôle de provenance seule accepte au moins un cas mathématiquement faux.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le recalcul indépendant du plan préenregistré échoue sur un cas analytique connu ou n'identifie aucun cas faux accepté par la provenance seule, la valeur ajoutée du recalcul indépendant est réfutée ; faux témoin 1b : implémentation fidèlement scellée mais mathématiquement erronée soumise à la seule vérification de provenance.",
+   "mecanisme_causal": "La provenance certifie uniquement qu'un script donné a produit un résultat donné, non que son calcul implémente fidèlement le test préenregistré ; seul un recalcul indépendant confronte la sémantique statistique à une vérité analytique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Correction sémantique au-delà de la provenance",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Recalcul indépendant du plan préenregistré sur vérité analytique au-delà de la provenance (E8)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1170"
+   ],
+   "enonce_complet": "Éprouver la prémisse fondamentale de séparation des rôles en vérifiant s'il existe un contrat vérifiable sans accès au producteur : une équipe rédige les contrats de vérification uniquement à partir des fiches et schémas de données autorisés sans lire les scripts producteurs, tandis qu'une autre équipe construit les exécutions à tester.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les contrats rédigés sans lecture des scripts producteurs ne permettent pas de discriminer les exécutions valides des invalides sans faux rejets massifs, la prémisse de vérifiabilité aveugle est réfutée ; faux témoin 1b : exécutions honnêtes construites uniquement depuis la spécification publique des fiches.",
+   "mecanisme_causal": "Si les spécifications de fiches et de données suffisent à définir des invariants observables sans fuite du code producteur, la vérification reste découplée et résistante au biais de confirmation ou à la collusion entre producteur et vérificateur.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Contrats aveugles découplés du producteur",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Rédaction aveugle de contrats de vérification sans accès aux scripts producteurs (Expérience première)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1166"
+   ],
+   "enonce_complet": "Évaluer la sensibilité et les limites des suites publiques de vérification en imposant que toute ablation préclassée couverte empêche le verdict vert, que la configuration intacte et une ablation fantôme restent vertes, et que les ablations préclassées non couvertes soient publiées séparément.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une ablation préclassée couverte obtient un verdict vert ou si l'ablation fantôme échoue, la suite manque de spécificité ou de sensibilité ; faux témoin 1b : ablation fantôme modifiant un paramètre neutre sans effet causal pour vérifier l'absence de fausse alarme.",
+   "mecanisme_causal": "La calibration simultanée sur des dégradations connues (ablations couvertes) et une modification inoffensive (ablation fantôme) garantit que les tests de la suite détectent les pertes fonctionnelles réelles sans réagir à des perturbations factices.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Étalonnage de suites par ablations couvertes et fantômes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Étalonnage de sensibilité d'une suite de tests par ablations préclassées et ablation fantôme (E6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1161"
+   ],
+   "enonce_complet": "Vérifier le fonctionnement effectif du portail minimal d'exécution en s'assurant que tous les contrôles obligatoires de S0 et S1 sont réellement joués et passent sans aucun marqueur « ESSAI RÉEL NON JOUÉ », et que les charges honnêtes restent acceptées après redémarrage du système.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la présence d'un contrôle court-circuité, d'un marqueur d'essai non joué ou d'un rejet de charge honnête après redémarrage invalide le portail ; faux témoin 1b : soumission de charges honnêtes identiques avant et après redémarrage complet du portail.",
+   "mecanisme_causal": "L'exécution effective de tous les gardes transactionnels S0/S1 et la persistance d'état cohérente au redémarrage garantissent que le portail d'admission ne repose pas sur des simulations factices ou un état éphémère en mémoire.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte transactionnelle et persistance S0/S1",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Exécution réelle des contrôles de portail minimal avec persistance post-redémarrage (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1149"
+   ],
+   "enonce_complet": "Mesurer conditionnellement l'effet de la circularité inter-générations sur au moins 4 bras H et G0 générations sur fiches fixes, en estimant la variabilité par permutation des étiquettes de lignée et en dimensionnant le nombre de générations requis pour détecter un effet gelé delta = 0,05 à puissance cible.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la différence entre bras circulaires et témoins ne dépasse pas la distribution nulle par permutation des étiquettes de lignée à la puissance calculée, l'effet de circularité inter-générations est non détecté ; faux témoin 1b : permutation des étiquettes de lignée entre bras indépendants.",
+   "mecanisme_causal": "Lorsque les générations successives héritent des résultats ou critiques d'une même lignée, une dérive ou un biais de sélection s'auto-renforce au fil des itérations, produisant une divergence détectable face aux lignées permutées.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Circularité et biais d'héritage inter-générations",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Détection de la circularité inter-générations par permutation des étiquettes de lignée (E2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1177"
+   ],
+   "enonce_complet": "Lever la confusion entre pondération du mélange et origine des attaques dans la comparaison entre A_q et A au moyen d'un plan factoriel 2 x 2 croisant {attaques de A, attaques de B} et {pondération uniforme, pondération à l'équilibre q}.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les deux cellules manquantes montrent que l'écart provient du changement d'ensemble d'attaques plutôt que de la pondération q, l'effet spécifique du mélange équilibré est réfuté ; faux témoin 1b : évaluation à attaques fixées (A uniquement ou B uniquement) sous pondération uniforme.",
+   "mecanisme_causal": "La séparation orthogonale des deux facteurs empêche d'attribuer au rééquilibrage stratégique q un gain ou une perte qui résulterait en réalité d'un changement de support des attaques adverses.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Plan factoriel pour mélange défensif",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Plan factoriel deux par deux dissociant pondération d'équilibre et source des attaques dans les duels (Duel 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1179",
+    "BIB-1185",
+    "BIB-1197"
+   ],
+   "enonce_complet": "Rendre posable la question Q2 sur l'avantage minimax du mélange défensif à capacité constante (m dans {2, 9} ou classe réduite de 2 ou 3 unités avec K dans {3, 5}) en remplaçant l'indicateur de pureté bruité par le critère certifié delta_v_mix(G) = v(G) - d(G) > 2*eta sur plus de la moitié des tâches, sous conditions explicites de non-plancher V(D_u) >= V(A) + m et V(B'_u) >= V(B) + m.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les conditions de jugeabilité V(D_u) >= V(A) + m et V(B'_u) >= V(B) + m ne sont pas tenues ou si v(G) - d(G) <= 2*eta sur la majorité des tâches, le cas est classé non jugeable ou ramené à Q1 ; faux témoin 1b : comparateur à capacité équivalente mais restreint à une stratégie pure ou à la classe linéaire.",
+   "mecanisme_causal": "L'écart certifié entre la valeur minimax du mélange v(G) et la meilleure stratégie pure d(G), borné au-dessus de l'incertitude d'estimation 2*eta et conditionné à l'absence de saturation au plancher, isole l'avantage propre du mélange à capacité fixée.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Avantage minimax certifié du mélange défensif",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Critère certifié d'avantage minimax du mélange défensif à capacité constante et bornes de non-plancher (E3, E5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1195"
+   ],
+   "enonce_complet": "Départager sur les 24 instances (delta dans {1,4 ; 1,6}) de arene_melange_v4.py les causes du cyclage de la règle d'entraînement A entre le plafond géométrique de la classe linéaire W_1, la myopie de l'attaquant et la contrainte de déploiement pur, en séparant préalablement l'oracle d'entraînement du plafond géométrique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'oracle d'entraînement dans la classe W_1 atteint déjà le plafond sans cyclage ou si le cyclage disparaît dès que l'attaquant n'est plus myope, l'hypothèse concurrente est écartée ; faux témoin 1b : optimisation par oracle complet sur la même classe linéaire W_1.",
+   "mecanisme_causal": "Une classe linéaire W_1 géométriquement insuffisante empêche l'existence d'un point fixe séparable en stratégie pure, mais seule une séparation expérimentale d'avec la myopie de l'attaquant établit si le cycle vient de la capacité du modèle ou de la dynamique de mise à jour.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Diagnostic du cyclage en entraînement antagoniste",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Dissociation du cyclage d'entraînement entre plafond géométrique linéaire et myopie de l'attaquant (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1203"
+   ],
+   "enonce_complet": "Remplacer les certificats globaux trompeurs en comparant quatre mécanismes stabilisateurs — historique pondéré, ancrage fonctionnel, objectif pire cas et élargissement de classe — d'abord sur une banque d'entraînement commune, puis en gelant leurs réglages avant évaluation sur des trajectoires nouvelles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tout mécanisme dont la supériorité disparaît lorsque les réglages gelés sont testés sur des trajectoires nouvelles hors banque commune est réfuté comme surajusté ; faux témoin 1b : évaluation sur trajectoires nouvelles avec réglages de base non stabilisés.",
+   "mecanisme_causal": "Le gel des hyperparamètres sur une banque commune suivi d'un test sur trajectoires inédites mesure la stabilisation réelle des trajectoires d'entraînement (amortissement des cycles et tenue du pire cas) sans fuite d'optimisation.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Stabilisation des dynamiques d'entraînement antagoniste",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Comparaison gelée de mécanismes anti-cyclage sur banque commune avant trajectoires nouvelles"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1182"
+   ],
+   "enonce_complet": "Tester la dépendance temporelle des attaques générées durant l'entraînement en calculant par tâche le rang de la statistique I3 observée dans la loi exacte des 8! permutations des déplacements (test bilatéral avec comptage des égalités), afin de déterminer si le rang de la règle A diffère de celui de la référence A0 (apparié, bornes B2, lu sur la médiane des rangs).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la médiane des rangs appariés de A ne diffère pas significativement de A0 dans la loi exacte des 8! permutations, l'hypothèse de dépendance temporelle spécifique de A est réfutée ; faux témoin 1b : référence A0 sans dynamique cyclique soumise exactement au même test des 8! permutations.",
+   "mecanisme_causal": "Sous l'hypothèse nulle d'attaques échangeables sans mémoire temporelle, l'ordre des déplacements est équiprobable parmi les 8! permutations ; une dynamique cyclique ou corrélée décale systématiquement le rang observé de I3 par rapport à la médiane de référence.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Test exact de cyclage temporel des attaques",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Test exact par permutations de la dépendance temporelle des attaques en cours d'entraînement (E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1184"
+   ],
+   "enonce_complet": "Évaluer la convergence dynamique sur un banc jouet composé de pierre-feuille-ciseaux, pile ou face apparié et du jeu de Shapley en comparant à horizon fixé d'avance la meilleure réponse pure, le jeu fictif bilatéral et la règle A, avec Gambit comme vérité de référence, pour tester si l'exploitabilité de la stratégie moyenne de la règle A reste inférieure à 0,01.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'exploitabilité de la moyenne temporelle de la règle A atteint ou dépasse 0,01 à l'horizon fixé sur l'un des jeux jouets (en particulier le jeu de Shapley), la convergence garantie est réfutée ; faux témoin 1b : meilleure réponse pure et jeu fictif bilatéral exécutés au même horizon comme bornes de cyclage et de convergence.",
+   "mecanisme_causal": "Des jeux canoniques comme le jeu de Shapley provoquent le cyclage des dynamiques naïves (meilleure réponse pure) alors que des dynamiques à moyenne de Hannan ou jeu fictif réduisent l'exploitabilité de la moyenne temporelle vers zéro, fournissant un banc discriminant minimal.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Banc jouet d'exploitabilité et convergence",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Banc jouet de convergence et d'exploitabilité moyenne sur jeux matriciels classiques (E4)"
+  },
+  {
+   "anteriorite_connue": "OpenSpiel",
+   "bib_ids": [
+    "BIB-1198"
+   ],
+   "enonce_complet": "Valider les instruments d'évaluation et de résolution avant tout test de mécanisme en vérifiant les gains et équilibres analytiques sur pierre-feuille-ciseaux, pile ou face apparié et un jeu à stratégie dominante avec OpenSpiel puis un second solveur indépendant, avant d'exécuter meilleure réponse itérée et jeu fictif bilatéral exact.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tout écart entre les gains ou équilibres calculés par OpenSpiel, le second solveur et la solution analytique exacte bloque toute expérience aval ; faux témoin 1b : jeu à stratégie dominante triviale devant converger en une itération vers l'équilibre unique.",
+   "mecanisme_causal": "La double vérification inter-solveurs contre des solutions analytiques fermées élimine les bogues de convention de signe, de normalisation ou d'indexation avant l'interprétation des dynamiques d'entraînement complexes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Validation croisée de solveurs de jeux",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Validation croisée préalable des solveurs de jeux et dynamiques exactes sur cas analytiques (E0)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

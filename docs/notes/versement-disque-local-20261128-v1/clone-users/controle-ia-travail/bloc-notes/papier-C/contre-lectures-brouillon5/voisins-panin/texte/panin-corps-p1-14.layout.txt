@@ -1,0 +1,644 @@
+Attributed Source in LLM Advice Taking: A Preregistered Judge–Advisor Study
+Across Five Models
+Alexander Panin — Independent Researcher
+Author note. ORCID 0009-0003-3750-5870. Preregistered study. Phase-0 protocol: https://osf.io/pkf2j/
+(created 2026-09-03 UTC). Confirmatory registration, containing the collection harness and adjudicat-
+ing analysis code: https://osf.io/d8tm6/ (created 2026-09-04 11:05:54 UTC). Both embargoed until
+2027-09; the embargo is lifted no later than the preprint. A withdrawn duplicate registration (https:
+//osf.io/4jbtq/, 2026-09-04 10:53 UTC) was submitted without embargo by mistake and cancelled by the
+author before approval; it was never approved and never public. No funding. No competing interests;
+all API costs borne personally. An LLM coding assistant was used, under the author’s direction, for
+code, data handling, drafting and copy-editing; the author is responsible for the design, the registered
+decisions and every claim. Author-created materials released under CC-BY 4.0.
+
+
+
+Abstract
+Proposed agent registries and trust layers attach a Source field to competence claims, naming who pro-
+duced them. A preregistered judge–advisor experiment — five retained models (four open-weight, one
+proprietary), 400 items, 59,000 probes, frozen first estimates, byte-constant advice — asks whether the
+models that pass a deference screen weight advice by who an advisor’s 8/10 record is attributed to, or by
+who relays it. The registered tests did not establish a practically meaningful, model-consistent Source-
+field effect. C1 (EXTERNAL SCORER minus ADVISOR SELF-REPORT) is SMALL, SUB-MARGIN: D
+= +0.015 [+0.007, +0.023] at the item level, below the pre-set ±0.05 margin, opposite in sign across mod-
+els, no longer conventionally significant in the clean sign-stratum subset (+0.0105, p = 0.067), and with
+a non-registered across-model interval [−0.050, +0.080] that includes zero. C2 and C3 (relaying voice)
+are DERAIL SHIFT — hurdle components only; a non-registered bounded-imputation check shows
+the differential exclusion cannot move C3 outside [−0.377, −0.351]. H_attestor-blind: NOT EQUIVA-
+LENT; H_channel-blind: NOT EVALUABLE. The largest pattern is exploratory and post hoc: regroup-
+ing the nine cells by whether the advisor asserts competence about itself separates all five models (+0.335
+[+0.316, +0.354]) and is consistent with a first-person self-claim account that this design cannot identify.
+Methodologically, the outcome is near-binary in three of five models, and a kill criterion on P(ignore)
+— a function of the outcome — fired on all three frontier candidates (two also failed a first-estimate
+check), so the retained panel is selected on the dependent variable; task solvability is strongly impli-
+cated by gpt-5.4 (exact first estimates on 82% of the items it froze) and by within-model analyses of the
+retained panel.
+
+
+
+1 Introduction
+Structured agent metadata is becoming infrastructure: A2A agent cards and MCP tool descriptors ad-
+vertise what an agent or tool can do, and model cards describe how it was evaluated. Neither protocol
+standardises a track record or who produced it, but proposals for agent registries, reputation layers and
+trust protocols do (Hu & Rong, 2025; Mittal, 2026; Prakash, 2026), and in those proposals a competence
+claim carries a Source — the agent itself, an external evaluator, the operator, another agent. The intent
+is discriminative: a self-published accuracy claim is cheap talk, an externally scored one (nominally)
+
+
+                                                     1
+costlier to fabricate. Whether the consumers — LLM agents deciding how far to defer to a peer — con-
+dition on such a field is this paper’s question.
+We isolate it with a judge–advisor system (JAS), the canonical human paradigm for advice weighting
+(Sniezek & Buckley, 1995; Bonaccio & Dalal, 2006). An LLM judge produces a first numeric estimate E1
+on a hard item; E1 is frozen and replayed verbatim as the judge’s own prior turn; the judge is then shown
+a competence record about an advisor plus a fixed advice A derived deterministically from E1, and gives
+a revised estimate E2. The advice weight w = (E2 − E1)/(A − E1) is the standard JAS outcome. The
+manipulation changes only the attributed source — the Source-field string, or the voice relaying the same
+record — with the asserted content (8/10) and the advice byte-constant. This is not data provenance in
+the routing sense (Prakash, 2026), nor a claim about source independence: the self-report versus external-
+scorer contrast bundles independence, verification, officialdom and entity type. Registration was in two
+stages before any main-study probe, script and verdict table hash-pinned. A single judge is the correct
+first step here: it isolates the credentialing effect from the peer-pressure and coalition confounds that a
+multi-agent setting introduces, at the cost of not testing them.
+Contributions, ordered by the strength of the evidence behind them. (1) A registered result on the Source
+field: three preregistered contrasts do not establish a practically meaningful, model-consistent effect of
+who a record is attributed to — the primary contrast is detectable at the item level but sub-margin,
+opposite in sign across models, not conventionally significant in the clean sign-stratum subset, and in-
+distinguishable from zero with the model as the unit of analysis; the relaying-voice contrasts receive no
+verdict. (2) Two methodological findings that constrain any study of this kind: the advice weight is near-
+binary (keep or copy) in three of five models, so human weight-of-advice intuitions transfer poorly; and
+a kill criterion on P(ignore) — a function of the outcome — fired on all three frontier candidates (two
+also tripped the first-estimate check K4), so the retained panel is selected on the dependent variable;
+task solvability is strongly implicated by gpt-5.4 and by within-model analyses of the retained panel,
+and advice weighting is constrained by it in this design. (3) An exploratory pattern that organises the
+design: regrouping the nine cells by whether the advisor makes a first-person claim about itself versus
+a third party describing it separates all five models without exception, is consistent with a pre-declared
+99/100 addendum, and motivates testing trust policies that distinguish self-claims from attestations —
+a hypothesis this design cannot confirm. (4) A successor design and a complete public trail. Every quan-
+tity is labelled registered or non-registered / post hoc; no non-registered analysis overturns a registered
+verdict — where one bears on a verdict it qualifies only its interpretation.
+
+2 Related Work
+Computational trust and reputation in MAS. The manipulation is, in MAS vocabulary, a reputation-
+source manipulation. Work at this venue decomposes trust into direct experience, witness (word-of-
+mouth) reputation and certified reputation — an attestation the assessed agent presents itself (Sabater
+& Sierra, 2002, 2005; Huynh, Jennings & Shadbolt, 2006; Ramchurn et al., 2004; Jøsang, Ismail & Boyd,
+2007; Pinyol & Sabater-Mir, 2013). Our cells instantiate it: N1 self-report, N2 certified reputation, NX
+witness reputation from an unverified agent, N3 witness reputation from the principal, and F2 — the
+advisor presenting the scorer’s grade about itself — is, almost literally, the certified reputation of the FIRE
+trust model (Huynh, Jennings & Shadbolt, 2006). That literature assumed a consumer discriminating
+among these sources; to our knowledge, this is the first controlled test specifically of whether an LLM
+advice-taker responds to the attributed provenance of an advisor’s competence record. Adjacent work
+finds self-claimed-quality routing underperforming random routing (Prakash, 2026) and latent source
+preferences outweighing content (Khan et al., 2026); costly signalling motivates F2’s realism (Mittal,
+2026; Hu & Rong, 2025); third-hand reputation works at the macro level (Zhu et al., 2026), and the
+
+
+                                                      2
+multi-agent bottleneck is leveraging a designated expert, not identifying one (Pappu et al., 2026).
+LLM advice-taking, conformity and role. LLM judges show a choice-supportive bias from their own
+prior answer (Kumaran et al., 2026), hence our record arrives after E1; conformity work maps the pres-
+sure side (Hussain & Nielbo, 2026); we vary only credentialing. Role bias (Pan et al., 2026), conflict-
+ing instructions (Zeng, 2025) and authority cues (Mammen, Joswin & Venkitachalam, 2026; Joswin,
+Medicherla & Mammen, 2026; Barkett, 2026) all predict that who speaks matters — the relay track’s
+target. Nearest is Bajaj & Tiganj (2026): more conformity to expert-labelled answers, even wrong ones.
+Sycophancy (Sharma et al., 2024; Perez et al., 2023) predicts the user’s voice (F3) should weigh most; our
+ordering is the opposite. Adjacent: degeneration of thought (Liang et al., 2024), debate (Du et al., 2024),
+vigilance (Robinson et al., 2026), injection (Greshake et al., 2023), speaker-free floors (Zhou et al., 2025;
+Hu & Qu, 2026).
+Human anchors. C1 is a textbook source-credibility manipulation (Hovland & Weiss, 1951; Pornpitak-
+pan, 2004); the ELM (Petty & Cacioppo, 1986) treats a source cue as peripheral — its prediction for a
+Source: line on recomputable items. The human JAS supplies egocentric discounting (Yaniv & Klein-
+berger, 2000; Harvey & Fischer, 1997), quality-driven weight (Bailey et al., 2023), choose-or-average
+revision (Soll & Larrick, 2009 — the analogue for the near-binary judges of §4), moderators (Gino &
+Moore, 2007; Logg et al., 2019; Dietvorst et al., 2015), a WOA diagnosis (Rebholz, Biella & Hütter, 2024)
+and an identity null (Zhang, 2023).
+
+3 Method
+The protocol is the registered one (confirmatory preregistration §2–§5); departures are summarised in
+§6 and listed in Appendix E.
+
+3.1 Paradigm
+
+
+
+
+Figure 1: Protocol. The judge’s first estimate E1 is frozen once per model × item and replayed verbatim
+as its own prior turn; the second turn adds a cell-specific competence record and a fixed advice A =
+f(E1); the advice weight w = (E2 − E1)/(A − E1) is the outcome. Only the attributed Source (neutral
+track) or the relaying voice (relay track) varies between cells.
+
+Per model × item (Figure 1): (1) E1 turn — the item prompt plus E1_INSTR (A.2) at T = 0.5, max_tokens
+= 900, up to three attempts; E1 for all 400 items is frozen to disk before any second-estimate probe. (2)
+Advice — A = E1 ± band, |A − E1| ∈ {0.15, 0.35, 0.60} of the scale span, band assigned by item id and
+balanced, sign stratified toward/away from truth 50/50; where the away stratum is unfillable at a scale
+
+
+                                                     3
+edge the registered fallback substitutes the toward-truth sign and sets sign_stratum_ok = false. A
+is identical across all cells of an item. (3) E2 turn — [user: task + E1_INSTR] → [assistant: the frozen
+E1 turn, verbatim] → [user: record text + advice + E2_INSTR_TPL]; all records, F5 included, are text in
+this one user message, no API system role. (4) Coherence probe — on a registered subset (820 probes
+per model) a separate call replaces the E2 instruction by COHERENCE_QUESTION, leaving w intact.
+
+3.2 Stimuli
+400 numeric-estimation items from four generator families — dice_runs (171), birthday (130), coupon
+(75), random_walk (24) — produced by registered code with seed 20260906, disjoint from the pilot pool,
+each with a prompt, a true value and explicit scale bounds. Bands are balanced marginally (134/133/133)
+but not within type, so by-band and by-type splits are confounded and descriptive only (A.1).
+
+3.3 Cells
+Nine cells: five confirmatory (400 items × 5 reps = 2,000 probes per cell per model), four exploratory
+(first 150 items × 3 reps = 450 per cell), each with five crossed template families, template id = (item
+index + rep) mod 5; wording in A.3. There is no F4 cell. Registered contrasts: C1 = N2 − N1 (attributor;
+primary), C2 = F5 − F3, C3 = F3 − F2. Sample size was fixed before any main-study probe (registration
+§3.4): seeded simulations (power-sim-v5.2.py, registered) under the registered outcome mixture gave,
+at 400 items × 5 replicates per model, power 0.93 for the Holm-corrected C1 test at an effect of +0.10
+in P(adopt) and 0.84 for the three-way equivalence test at the ±0.05 margin (0.88 and 0.77 with 5% wild
+tails); a re-check on the pilot-v2 mixtures with 2% wild tails (power-recheck-v2pilot.py) gave Holm-
+C1 ≈ 1.00 for a 0.10 transfer of mass from ignore to adopt and a worst-case minimum detectable transfer
+of ≈0.045 at power 0.82 — just under the margin, so the design can both detect effects at the margin
+and declare equivalence below it; an upward n scan (to 800 items) showed no need for more.
+
+cell          track                  what carries the 8/10 record          role
+N0            —                      (no record at all)                     exploratory baseline
+N1            neutral                registry legend, Source: ADVISOR confirmatory
+                                     SELF-REPORT
+N2            neutral                registry legend, Source:               confirmatory
+                                     EXTERNAL SCORER
+N3            neutral                registry legend, Source: USER          exploratory
+NX            neutral                registry legend, Source: ANOTHER exploratory
+                                     AGENT (unverified)
+F1            relay                  advisor’s voice, its own record        exploratory
+F2            relay                  advisor’s voice, the external scorer’s confirmatory
+                                     grade
+F3            relay                  user’s voice, the external scorer’s    confirmatory
+                                     grade
+F5            relay                  system-note voice, from the            confirmatory
+                                     external scorer
+
+
+The neutral track varies the Source field under a constant legend; the relay track varies the voice deliver-
+ing the same attested 8/10.
+
+
+
+
+                                                      4
+3.4 Estimand, derail rule and guards
+w = (E2 − E1)/(A − E1) exactly, no clipping and no winsorising. A probe with w ∉ [−1, +2] is flagged
+derail, excluded from w-based quantities, its share a guard. The window is asymmetric because −1 is full
+rejection while overshoot has no natural ceiling; the registration did not defend it, so a non-registered
+analysis (H.7) re-runs all three contrasts at [−1, +3] and [−1, +1.5], moving no pooled D by 0.001. Mix-
+ture components: ignore |w| < 0.1; adopt |w − 1| < 0.1; away w < −0.1; remainder compromise. Note
+that away (w < −0.1) and derail (w < −1) partition one underlying direction — moving against the
+advice — at an arbitrary cut, so the same behaviour enters an analysed component on one side and
+an excluded category on the other. §4 reports, non-registered, that w is near-two-point in three of five
+models.
+The item is the independent unit: m_{i,X} is the mean w over item i’s parsed non-derail probes in cell X,
+and D_i = m_{i,A} − m_{i,B} is adjudicated by a one-sample t-test against zero, Holm step-down over
+C1–C3 at α = 0.05, non-flagged models equally weighted. Item pairing makes the design work — the
+same item carries the same frozen E1 and advice in both cells, so item difficulty and template effects
+cancel — but the estimator therefore answers only “is there an average effect over these five models on
+these 400 items”; §4.2 supplies the across-model companion. Equivalence is tested by TOST at ±0.05
+on the w scale. The margin was fixed in the Phase-0 registration as “half of the smallest meaningful
+published provenance/authority effect, ≥0.1 when converted to advice weight”, citing Mammen, Joswin
+& Venkitachalam (2026) and Pan et al. (2026) without quoting their magnitudes. Those magnitudes
+are: in Mammen et al., correct endorsements from authority personas move accuracy from near zero
+at the lowest expertise level to +0.381 at the highest, and misleading ones from −0.019 to −0.356 (their
+DeepSeek-R1/MedQA example), i.e. one step in the expertise gradient is of order 0.1 in the switching
+rate; in Pan et al., role-tag bias scores in instruction-tuned models reach ≈+0.8 on a [−1, +1] scale.
+These outcome scales are not commensurable with w, so ±0.05 should be read as a pragmatic a-priori
+SESOI informed by adjacent effects of order ≥0.1 on non-comparable scales, not as a derived quantity;
+a non-registered sensitivity analysis therefore re-reads C1 at ±0.025, ±0.05 and ±0.10 (H.9; §4.2). Two
+guards are distinguished: the equivalence guards (item-paired shifts in P(adopt) or P(away), evaluable
+at ≥10 events) block a “blind” reading even when TOST passes, while the derail guard, a χ² test of
+derail-share homogeneity, removes the pooled mean verdict whether or not equivalence is at issue. The
+registration accepts a ≈26% family-wise trip rate for the six component guards; the three derail guards
+are not adjusted (§4.3).
+
+3.5 Models, sampling and kill criteria
+The registered pool was six judges: four open-weight via Featherless (Llama-3.3-70B-Instruct; Qwen3-
+32B with a /no_think prefix; gemma-3-27b-it; Mistral-Small-3.2-24B) and a frontier arm of two via
+OpenRouter (gpt-5.4 at reasoning.effort = minimal; claude-sonnet-5 with reasoning.enabled =
+false per CD1). All calls sent T = 0.5 and max_tokens = 900, every probe logging the transcript, request
+body, usage and a UTC timestamp. Execution is staged and seeded: E1 first, then a kill block (first 20
+items by id, 740 probes, all cells) in a global shuffle, then the remainder likewise, so cells interleave in
+time. The harness then halts for a blind checker printing nothing broken down by Source: K1 P(adopt |
+N0) > 0.85; K2 derail > 0.15; K3 coherence failure > 0.30; K4 E1 (or E2 parse) failure > 0.10; K5 P(ignore)
+> 0.90. Any trip swaps in the next registered reserve, swapped models’ data being appendix-only. The
+adjudicating script was dry-run before registration on synthetic logs with injected effects and on label-
+permuted pilot records.
+
+
+
+
+                                                     5
+3.6 Verdict table
+Interpretation is mechanical, the first applicable row winning; the full table (rows 0–7, with a 2b sub-
+row) is in Appendix G. Three fired: row 1 (derail guard fails → DERAIL SHIFT — hurdle components
+only) on C2 and C3; row 3 (Holm-significant, |D| < 0.05 → SMALL, SUB-MARGIN, taking precedence
+over TOST) on C1; row 7 (INCONCLUSIVE) on F2–F5. H_attestor-blind and H_channel-blind derive
+from these verdicts, never from TOST alone.
+
+4 Results
+w is empirically near-two-point (non-registered). The compromise share never exceeds 0.006 in Qwen3,
+0.051 in Mistral or 0.054 in Llama across the nine cells, and |mean w − P(adopt)| averages 0.001, 0.010
+and 0.012 there against 0.032 in gemma and 0.168 in claude-haiku (H.3; Figure 2). In three of five models
+w is therefore not a weight but a relabelled adoption indicator — the judge keeps E1 or copies A exactly,
+and only claude-haiku blends. The human weight-of-advice comparison is thus not merely protocol-
+conditional but category-different: human judges shade, these models switch, and Soll & Larrick’s (2009)
+choose-versus-average distinction is the analogue. Since adoption is the natural outcome scale we also
+report item-paired P(adopt) contrasts, non-registered (H.4).
+
+
+
+
+Figure 2: Distribution of w per model, all valid probes (400-item pool). The mass sits at 0 (keep E1)
+and 1 (copy the advice) with a near-empty middle in Llama, Qwen3 and Mistral; only claude-haiku has
+substantial interior mass. Non-registered descriptive.
+
+
+4.1 Data, exclusions and the registered parse audit
+Five models each contributed 11,800 E2 probes — 59,000 analysed — with valid frozen E1 on all 400
+items, so every contrast has n = 400 paired items (399 for Llama on C2, C3). Parse failures were 12 of
+59,000 over 7 of the 45 (5 × 9) model × cell units, hand-audited per the registered rule with no value
+changed (D.7). The registered coherence flag excluded three model × cell units, only gemma|F5 touch-
+ing a confirmatory contrast, leaving C2 and the F3–F5 and F2–F5 pairs pooled over four models (Ap-
+pendix C).
+
+4.2 C1 — the attributed source (primary, confirmatory; with a non-registered across-model companion)
+Registered result. D = +0.0150, SE = 0.0040, 95% CI [+0.0072, +0.0227], t-test on 400 item-paired dif-
+ferences, p = 1.77×10⁻⁴, Holm-significant. The derail guard passes (N2 27 vs N1 15 derails; χ² = 3.43, p
+= 0.064), so the mean verdict stands. TOST at ±0.05 passes on the 90% CI [+0.0084, +0.0215], but row
+3 takes precedence: SMALL, SUB-MARGIN — a detectable difference below the effect size declared
+meaningful before data collection. Both component guards shift (adopt +0.0132 on 5,500 events, away
+−0.0130 on 487), so H_attestor-blind resolves to NOT EQUIVALENT. Per-model estimates (Figure 3)
+
+
+                                                      6
+are heterogeneous in sign: Qwen3 +0.057, haiku +0.048, Mistral +0.047, Llama −0.013, gemma −0.064
+([−0.081, −0.047]). The pooled +0.015 is the mean of a heterogeneous set, so “SMALL, SUB-MARGIN”
+is true of the pooled quantity and a poor description of four of five models — two of which exceed the
+±0.05 margin: the registered table has a row for sign-heterogeneity above the margin but none below it,
+so row 3 fired on an average of opposing effects, and a successor should add that row.
+The clean-stratum check. On the sign_stratum_ok = true subset — a probe-level filter that drops the
+30.4% of all probes (31.0% within N1 and N2) carrying the false flag (the registered fallback substitutes
+the toward-truth sign where the away stratum is unfillable, §3.1) and leaves 387 items with a paired
+estimate, only 146 of them clean in all five models — C1 falls to +0.0105 with p = 0.067 — not con-
+ventionally significant. The pooled registered result is sub-margin and loses significance in the clean
+subset. This is the registered robustness check most damaging to the primary result and a material qual-
+ification of it. The other registered checks are unremarkable (C.4): leave-one-template-out with no sign
+flip; by-band and by-type splits all sub-margin; the registered MixedLM with an item random intercept,
++0.0152, reproduces the pooled value because the design is balanced within item (D9) and is reported for
+completeness, not as independent support. On the adoption scale the registered adopt-guard quantity is
+ΔP(adopt) = +0.013 [+0.005, +0.021]; H.4 reprints it and adds the non-registered across-model interval
+[−0.049, +0.075].
+Non-registered companion: across-model sensitivity. The registered estimator treats the model as fixed
+and the item as the sampling unit, so its standard error reflects item sampling only, while any statement
+about “these five models” is a panel-level statement. The five models are not a random sample of LLMs
+— they are the survivors of a deference screen (§4.5) — so what follows is an across-model sensitivity
+analysis, not a population inference. A one-sample t over the five per-model means (df = 4) gives C1 =
++0.0150, SE = 0.0235, t(4) = +0.64, 95% CI [−0.050, +0.080], p = 0.558 (H.1): the interval includes zero
+and spans the ±0.05 margin in both directions; a DerSimonian–Laird τ² gives I² ≈ 0.97, i.e. the between-
+model dispersion is large relative to item-level sampling uncertainty (with five non-randomly selected
+models this describes the panel, not a population). A crossed MixedLM with item and model random
+intercepts (no random slope, so it describes the level, not the heterogeneity) puts the between-model
+variance at 0.0617 against 0.0295 for items — the only contrast where model variance exceeds item
+variance — and is reported as a descriptive check only (H.1). The registered verdict stands as issued
+and this analysis cannot revise it, only its interpretation: the item-level test passes, the across-model
+interval includes zero and spans the margin, and the per-model signs disagree — so the registered tests
+do not establish a practically meaningful, model-consistent Source-field effect, and nowhere is +0.015
+presented as an established effect.
+Margin sensitivity (non-registered, H.9). At ±0.025 the pooled TOST still passes, one model’s own 90%
+CI lies inside and one point estimate does; at the registered ±0.05, one CI and three point estimates;
+only at ±0.10 do all five point estimates and CIs lie inside and the across-model interval fit. This does
+not change the registered verdict at any of the three margins (all above the point estimate): C1 is Holm-
+significant with |D| < margin, so row 3 (SMALL, SUB-MARGIN) of the registered table applies and
+takes precedence over the equivalence rows. What the margin changes is the non-registered panel-level
+reading — at ±0.10 all five per-model intervals and the across-model interval fall inside the equivalence
+region, which under an alternative, non-registered panel-level equivalence criterion would support prac-
+tical equivalence; at the registered ±0.05 that reading is decided by between-model heterogeneity, not
+by the pooled interval.
+
+
+
+
+                                                   7
+Figure 3: Per-model item-paired D̄ with 95% CI for C1, C2 and C3, with the registered pooled item-
+level estimate and the non-registered across-model (df = 4) interval overlaid and the ±0.05 equivalence
+margin shaded. C1’s per-model estimates straddle zero and its across-model interval covers the margin;
+C3’s do not.
+
+
+4.3 C2 and C3 — relaying voice, and how much the derail guard could matter
+C3 = F3 − F2: D = −0.3662, SE = 0.0074, 95% CI [−0.3808, −0.3517], p = 2.25×10⁻¹⁷², Holm-significant,
+TOST fails. All five share the sign, from −0.231 (Llama) to −0.555 (gemma). It receives no confirmatory
+directional verdict: the derail guard fails (F3 66 vs F2 21 derailed probes of 9,998 and 9,999 parsed;
+χ² = 23.38, p = 1.33×10⁻⁶), so row 1 gives DERAIL SHIFT — hurdle components only. Following that
+literally, every inference about voice rests on the three hurdle components named in preregistration §5.1
+and computed by hurdle_report.py (CD7; all nine components in C.6): P(adopt | non-derail) 0.326 vs
+0.686 (D = −0.361 [−0.375, −0.346], p = 1.3×10⁻¹⁷¹), compromise mean w −0.116, P(non-derail) −0.005.
+The same 8/10 produces adoption in ≈0.69 of non-derailed probes when the advisor speaks it, against
+≈0.33 when the user does.
+Non-registered sensitivity. The registered verdict is withheld and we keep it withheld. Because w is
+bounded by the derail window by construction, reinstating every excluded probe at the most adversar-
+ial boundary bounds the exclusion bias exactly (H.2): C3 ranges over [−0.377, −0.351], so the differential
+exclusion cannot explain its magnitude; the derail-share risk differences themselves are +0.0045 (C3)
+and −0.0034 (C2, on its registered four-model set; H.2), inside ±0.02. A χ² homogeneity test at n ≈
+10,000 fires on asymmetries of this size, and a successor should specify the guard as a risk-difference
+equivalence bound instead. Reading C3 as “voice” needs one caution: it bundles the speaker tag, gram-
+matical person, self-reference and who benefits, and per D8 there is no API-role manipulation — the
+“user” and “advisor” voices are text labels inside one user message. §4.4 offers a post-hoc account of
+which of these is operative; the design does not identify it.
+C2 = F5 − F3: D = +0.0087, 95% CI [−0.0013, +0.0186], p = 0.087, not Holm-significant; TOST passes
+on the 90% CI [+0.0003, +0.0170]. Its derail guard also fails (χ² = 9.75, p = 1.8×10⁻³), so C2 lands
+on row 1 with no equivalence verdict; its three components are at or within ±0.010 (+0.003 / +0.010
+/ −0.010, the adopt component’s CI reaching +0.020; C.6), and, per H.3, Qwen3 contributes nothing
+to any compromise-mean component, Mistral only ~3% of its probes (2.6% overall; 1.3–5.1% by cell).
+Per-model estimates disagree sharply (gemma +0.408 — flagged, excluded — down to haiku −0.042;
+across-model interval excluding gemma [−0.058, +0.075]), so the near-zero pooled value is no null. The
+gemma|F5 exclusion follows a pre-data rule we do not revise, though that unit carries by far the largest
+per-model C2; C.2 reports it with its derail guard, which fails at p = 0.049 even though the unit is already
+coherence-excluded — guards being computed for every unit regardless. H_channel-blind therefore
+
+
+                                                     8
+resolves to NOT EVALUABLE (derail shift) — a limit on the estimand, not evidence that voice does not
+matter.
+
+4.4 Exploratory (non-registered, post hoc): whose voice, not whose record
+Everything here is exploratory and, per preregistration §5.6, computed on the 150 shared items only
+(unrestricted-pool values in Appendix D). Valid probes only; per-cell n is 444–450 for exploratory and
+739–750 for confirmatory cells. The table gives point estimates only — the reanalysis computes no per-
+cell dispersion; the resolvable contrasts carry intervals below.
+
+model                         N0       N1       N2          N3      NX      F1      F2      F3       F5
+Llama-3.3-70B                 0.842    0.667    0.647       0.667   0.650   0.782   0.823   0.547    0.544
+Qwen3-32B                     0.406    0.120    0.184       0.174   0.162   0.422   0.626   0.238    0.292
+gemma-3-27b-it                0.872    0.097    0.037       0.054   0.037   0.666   0.637   0.117    0.474
+Mistral-Small-3.2-24B         0.716    0.291    0.333       0.255   0.186   0.661   0.806   0.364    0.421
+claude-haiku-4.5              0.668    0.295    0.363       0.361   0.282   0.469   0.681   0.434    0.381
+
+
+(a) Attaching a registry-framed competence record lowers advice weight. The N0 − N1 drop is +0.175
+(Llama), +0.286 (Qwen3), +0.372 (haiku), +0.425 (Mistral), +0.776 (gemma) — the opposite sign to
+what a credential account predicts of a good record. But N1 differs from N0 in four ways at once: a
+numeric claim, a 17-word registry legend, 26–33 words of added text in all, and a bureaucratic register.
+We do not separate the number from the legend, the length or the register, and our preferred reading
+— a formal record turns a suggestion into a claim to be adjudicated, after which the judge’s worked
+solution wins — is itself a framing account attributing the effect to the wrapper. X1 (§4.6) shows that
+the 8/10 content alone does not explain the drop — it persists under 99/100 — but leaves the confound
+untouched; two cheap successor cells would settle it, legend-only and a bare length-matched record.
+The same confound affects cross-track comparisons.
+(b) The Source field is nearly inert within the registry track. Across N1/N2/N3/NX the max−min spread
+of mean w is 0.020 (Llama), 0.060 (gemma), 0.063 (Qwen3), 0.081 (haiku), 0.147 (Mistral), against the
+drop of 0.18–0.78 in (a). Mistral’s 0.147 is driven by NX (0.186), not the confirmatory pair; gemma has
+the second-smallest spread yet inverts the expected order within it (N1 0.097 above N2 0.037), hence its
+negative C1 — exceptional in direction, not magnitude.
+(c) One binary separates the record-bearing cells. Regroup all nine cells by whether the advisor makes
+a first-person claim about itself (G_self = F1, F2) or a third party describes it (G_third = N1, N2, N3,
+NX, F3, F5), N0 as baseline. Group means (Figure 4): 0.701 (N0), 0.657 (G_self), 0.322 (G_third). The
+separation is perfect in all five: min(G_self) > max(G_third) for Llama (0.782 > 0.667), Qwen3 (0.422 >
+0.292), gemma (0.637 > 0.474), Mistral (0.661 > 0.421), haiku (0.469 > 0.434). The item-paired contrast
+G_self − G_third is +0.335 [+0.316, +0.354] pooled over the 150 items, per model +0.180 / +0.329 /
++0.516 / +0.425 / +0.223 (Llama / Qwen3 / gemma / Mistral / haiku), with an across-model (df = 4)
+interval of [+0.162, +0.507] — an across-model interval that, like C3’s, excludes zero, which C1’s and
+C2’s do not. Replacing the 9-level cell factor by this 3-level grouping recovers η² = 0.111 against 0.122,
+i.e. 91.2% of the in-sample additive cell main-effect η² (the nine-cell factor is itself 12.2% of total vari-
+ance; Type-II ANOVA on 27,641 probes, H.8; on model × item × cell means, which weight confirmatory
+and exploratory cells equally, the share is 91.9%). X1 is consistent with it: at 99/100, first-person self-
+assertion exceeds the no-record baseline (F2h − N0 = +0.077 [+0.046, +0.107]) while the same claim in
+the registry field stays far below it (N1h − N0 = −0.284, N2h − N0 = −0.267). The coherence probes
+
+
+                                                        9
+(D.6), used only as an exclusion criterion, also show models sometimes naming the relaying party rather
+than, or alongside, the attestor when asked who reported the record: the relayer is named in 0–18% of
+first sentences per model in F2 (Qwen3 15%, haiku 18%), 0–23% in F3 (Mistral 23%) and about 5% or less
+in F5 (Mistral 5.2%; 134 probed answers per model × cell; both answers are accepted by the rubric, so
+naming the relayer is not in itself a failure; three F5 answers fail only because they also name the user).
+Their full distribution is a successor analysis.
+Caveats, at full strength. The regrouping is post hoc — not registered, not pre-specified, chosen after
+inspecting the cell means from a space of possible regroupings that was not constrained in advance —
+and is confounded with the speaker tag and with the passport length and register of (a). The pattern
+is therefore consistent with a first-person self-claim account; it does not identify that mechanism. The
+grouping is also not evidentially independent of C3: G_self and G_third contain the F2 and F3 cells
+whose registered contrast is the withheld C3. Dropping both C3 cells (G_self = F1 only) leaves the effect
+positive in all five models — +0.147 / +0.235 / +0.526 / +0.364 / +0.132 (Llama / Qwen3 / gemma
+/ Mistral / haiku), mean +0.281 — so the pattern does not depend on the withheld contrast. F5 sits
+between the group means when pooled (0.422) and in four of five models, but in Llama it is the lowest
+of the six G_third cells, so that position is a pooled property, not a per-model regularity; it never crosses
+into G_self, which is what the separation claim needs. Breaking the stance/tag confound needs one
+successor cell in which the advisor relays its own record in the third person.
+
+leave-out-C3 (G_self’ =
+F1; G_third’ = N1 N2
+N3 NX F5)               Llama       Qwen3       gemma        Mistral       haiku       across-model (df = 4)
+G_self’ − G_third’      +0.147      +0.235      +0.526       +0.364        +0.132      +0.281 [+0.076,
+                                                                                       +0.486]
+F1 > max(G_third’)      yes         yes         yes          yes           yes         5 of 5
+
+
+
+
+Figure 4: Mean w for the nine cells in each of the five models on the 150-item pool, cells grouped N0 |
+F1 F2 | N1 N2 N3 NX F3 F5 — no record, advisor’s first-person self-claim, third-party description. Non-
+registered post-hoc regrouping; it separates every model without exception.
+
+
+
+                                                      10
+(d) Model heterogeneity dominates, and part of it is arithmetic. Llama stays between 0.544 and 0.842
+while gemma spans 0.037 to 0.872, so any pooled statement about “LLM agents” averages qualitatively
+different policies; P(E1 exact) differs 23-fold on the 400 items (0.0075 / 0.0775 / 0.0800 / 0.1025 / 0.1750
+for Llama / gemma / haiku / Mistral / Qwen3), and since §4.5 shows w is constrained by solvability, part
+of this is arithmetic skill.
+
+4.5 Frontier models, the solvability ceiling, and selection on the dependent variable
+Three frontier models were removed by blind kill checks before any contrast was computed: gpt-5.4
+and gpt-5.6-sol on K4 and K5, claude-sonnet-5 on K5 with P(ignore) = 0.911 (Appendix B). A delivery
+audit (CD6) rules out a harness bug: the advisor line and the frozen E1 replay are present in 100% of E2
+requests. The candidate explanation, labelled post hoc, is task solvability — the items were designed to
+be hard to compute mentally and the strongest models compute them. On one criterion throughout —
+E1 exactly equal to the item’s true value — gpt-5.4 is exact on 82% of the 347 items it froze (95% within
+±1), against 0.75%–17.5% for the retained models (H.10). The other two removed models do not fit this
+account as cleanly: gpt-5.6-sol is exact on only 28% but within ±1 of truth on 99.6% of its 272 frozen
+items and ignored advice on 100% of kill-block probes in both strata; claude-sonnet-5 is exact on 18%
+(37% within ±1), numerically almost identical to Qwen3’s, yet ignored 89% of advice even where its E1
+was wrong. Solvability is therefore demonstrated for gpt-5.4, plausible for gpt-5.6-sol, and not the whole
+story for sonnet-5, whose refusal to defer is not explained by accuracy on this pool. When E1 is already
+correct the registered advice A = E1 ± band is necessarily away from truth, and a judge that recomputes
+rationally keeps E1 — w ≈ 0 by a mechanism unrelated to the record. The dependence appears within
+every retained model: split the same way, P(|w| < 0.1) is higher on exact items in all five (0.800 vs 0.658
+in Qwen3 on 70 exact items; 0.556 vs 0.247 in Llama, whose exact stratum is only 3 items and 99 probes).
+K5 thresholds on a function of the dependent variable, which is more than a scope note. P(ignore) is |w|
+< 0.1 — the judge keeping its own answer — so the criterion that removed three models is a threshold
+on the outcome itself, and it removed the three strongest candidates. The retained set is conditioned on
+deference capacity, and every statement about the level of w inherits it. Because C1’s sign heterogeneity
+is the load-bearing feature of the primary result, we stratified all three contrasts on the same criterion,
+by whether that model’s frozen E1 was exact for that item (non-registered, H.6). In the non-exact stra-
+tum, where the judge has genuine uncertainty, C1 remains sign-heterogeneous: −0.014 (Llama), +0.064
+(Qwen3), −0.064 (gemma), +0.051 (Mistral), +0.045 (haiku); pooled +0.013 [+0.005, +0.022], across-
+model CI [−0.050, +0.083] — still covering zero and the margin. Solvability does not rescue C1. C3 is
+−0.364 [−0.379, −0.348] there, all five signs negative. The general statement — post hoc, no registered
+test — is that advice weighting is constrained by task solvability in this design: the estimand measures
+deference only where the judge is uncertain. K5 fired as designed; the lesson, and this paper’s prin-
+cipal methodological recommendation, is that a deference screen must not threshold the outcome —
+calibrate item difficulty per model, or set the advice band relative to the model’s own uncertainty, and
+screen on that instead.
+
+4.6 Addendum X1: a 99/100 record (pre-declared, exploratory)
+Pattern (a) is confounded with the record’s content: 8/10 can be read as “wrong 20% of the time”. X1
+separates content from presence by raising the claim to an extreme — the registered N1/N2/F2/F3 tem-
+plates with “8 of the last 10” replaced by “99 of the last 100” (Appendix F), 3,000 probes reusing the
+frozen E1, 2 parse failures and 10 derails. Plan, runner and stimuli were declared and hashed before the
+first probe. X1 is exploratory: no verdict rules, no verdict changed.
+
+
+
+                                                    11
+Against the three pre-stated questions, as item-paired differences with 95% CIs (all ten rows in F.3):
+content or presence? 99/100 raises weight over 8/10 by ≈+0.12 yet stays far below no-record (N1h − N0
+= −0.284 [−0.322, −0.246], past the pre-stated >0.10 criterion), while the relay track reverses (F2h −
+N0 = +0.077 [+0.046, +0.107]). Source under an extreme claim? N2h − N1h = +0.016 [−0.015, +0.048],
+indistinguishable from the 8/10 gap of +0.018. Voice? F3h − F2h = −0.285 against −0.375 for 8/10, all
+five sharing the sign. The 8/10 content alone therefore does not explain the registry-track drop: it persists
+under 99/100, which implicates the record’s presence and framing without identifying the mechanism
+— near-perfect accuracy recovers about three-tenths of the gap to N0 (0.123 of 0.407). The pooled Source
+contrast remains small at 99/100, but the model-level estimates remain heterogeneous (−0.13 to +0.10,
+F.3); the direction is consistent with §4.4(c)’s first-person pattern: at 99/100 the advisor’s own voice is the
+only configuration beating no record in the pooled estimate, though not in Llama (−0.008) or gemma
+(−0.137). X1 is single-rep and its pooled CIs treat model × item pairs as independent, so the intervals
+are too narrow; it is read as direction, not as confirmation.
+
+5 Discussion
+What the registered tests establish, and what they do not. Changing the Source field from ADVISOR
+SELF-REPORT to EXTERNAL SCORER produces an item-level difference below the size declared mean-
+ingful in advance, on which the five models disagree in sign, which is not conventionally significant in
+the clean sign-stratum subset, and which is not distinguishable from zero once the model is the unit of
+analysis. Neither “these models track provenance” nor “these models are provenance-blind” survives:
+SMALL, SUB-MARGIN to the registered table, NOT EQUIVALENT to the equivalence machinery. The
+registered tests did not establish a practically meaningful, model-consistent Source-field effect; they also
+did not establish its absence. The relaying-voice question receives no registered answer; §4.3 shows the
+exclusion asymmetry that withheld it cannot account for C3’s magnitude.
+What this study says about studying this. Two findings constrain the field more than the Source result
+does. First, in three of five models the advice weight is a relabelled adoption indicator — the judge
+keeps E1 or copies A — so the human weight-of-advice literature’s central quantity, the shading of one
+estimate toward another, barely exists here; for these near-binary models P(adopt) is the more natural
+estimand, and designs that inherit WOA intuitions (interior margins, averaging accounts) should check
+the outcome’s shape first. Second, K5 thresholded the outcome and fired on all three frontier candidates,
+two of which also tripped K4 (§4.5); task solvability is strongly implicated by gpt-5.4 and by within-model
+analyses of the retained panel, though not demonstrated for all three. We present this not as a scope
+note but as the lesson: a deference screen selects on the dependent variable, “LLM judges” in general
+were never the population, and the results describe five retained models capable of deference on this
+item pool. Advice weighting is constrained by task solvability in this design, and item difficulty must
+be calibrated per model — or the advice band set relative to the model’s own uncertainty — before any
+provenance manipulation is interpretable.
+The pattern the exploratory data point to. The organising pattern of §4.4(c) is that the cells split by
+whether the advisor asserts competence about itself or a third party describes it. One binary separates
+the two groups in all five models, with every one of the 40 record-bearing model × cell means (eight
+cells × five models; N0 is the baseline and belongs to neither group) on the same side of its model’s
+boundary, an across-model interval of [+0.162, +0.507], 91.2% of the nine-cell η² (itself 12.2% of total
+variance, §4.4(c)), and a consistent direction in X1, where an advisor’s own 99/100 claim is the only
+record that beats no record on the pooled estimate. The pattern is consistent with a first-person self-
+claim account — the Source field would be inert because it names an attestor while leaving the speaker
+unchanged, and C3’s “voice” would be a stance effect rather than a channel effect — but the present
+
+
+                                                      12
+design cannot identify that mechanism: the grouping was chosen after seeing the data, it is confounded
+with the speaker tag and with passport length and register, and no cell delivers an advisor’s own record
+in the third person. Three further readings stay compatible: epistemic symmetry (every string here is
+equally unverifiable), salience (a Source field is a weak peripheral cue in ELM terms), and adjudication
+framing (a record turns a suggestion into a claim, after which the judge’s own solution wins). If the
+first-person account holds, it would also explain why Pan et al.’s (2026) role bias and sycophancy both
+predict a privileged F3 and both are contradicted.
+Engineering implication. If a registry Source field is meant to make consumers discount self-published
+competence claims, then across the retained panel the registered tests did not establish a model-
+consistent discount of self-reports at a practically meaningful magnitude, and an extreme claim did not
+rescue it. The exploratory pattern points the other way from the natural C3 reading (deliver provenance
+as channel structure): the highest-weighted record-bearing configuration in the pooled means (F2;
+F1 in gemma) was one in which the beneficiary itself relayed a favourable external grade in its own
+voice; in this text-only setup that claim was not independently verifiable — it is the kind of claim a
+registry field exists to displace, and the one an adversary controls (Greshake et al., 2023). This motivates
+testing trust policies that explicitly distinguish first-person self-claims from third-party attestations, in
+a preregistered design, before anyone builds on it. It is not, on this evidence, a recommendation to
+build one.
+Limitations. Five retained models, one upstream, no frontier-class arm, and a panel selected on a func-
+tion of the dependent variable (§4.5), so levels of w are conditioned on deference capacity and no across-
+model statement is a population inference. One item family class, English only, one answer format, ad-
+vice weighting confounded against item difficulty; nothing tests a non-verifiable task. The derail-guard
+failures limit the mean-w estimand, and the away/derail boundary is an arbitrary cut on one direction
+of movement (§3.4); pattern (a) and the cross-track comparisons are confounded with passport length,
+legend and register; the first-person regrouping is post hoc, drawn from an unconstrained space of re-
+groupings, and shares the speaker-tag confound. The relay track manipulates text labels inside one user
+message, not API roles. The coherence rubric (CD4) counts a wrong entity named under negation as
+failure, so the three flagged units are upper bounds; temperature is documented as sent, not applied,
+for the frontier arm (CD2); 30.4% of probes carry sign_stratum_ok = false; X1 is single-rep and its
+pooled intervals treat model × item pairs as independent.
+What would change our minds. A registered replication with (a) difficulty calibrated so P(E1 exact)
+stays below ~0.3 in every model and the advice band set relative to the model’s own uncertainty, (b)
+a two-part (hurdle) estimand preregistered as adjudicating with the derail guard as a risk-difference
+equivalence bound, (c) the relay track delivered through genuine API roles, and (d) three cheap control
+cells — legend-only, length-matched bare record, third-person self-report — would test the first-person
+account and tell us whether the Source field’s inertness is about the field or our delivery of it.
+
+6 Deviations from preregistration
+Eighteen deviations (D1–D11, CD1–CD7) and two swap records are logged in full in Appendix E; none
+altered an estimator or a verdict. The load-bearing ones are D1, D9 (estimator fixed before any main-
+study probe), SWAP-1/SWAP-2 and CD7: the registered script did not compute the hurdle components
+that the registered verdict table itself calls for under DERAIL SHIFT, so those come from a post-hoc
+script (C.6) — the verdicts do not depend on them, and the registered C3 point estimate is from the
+registered script (as amended by CD5); only the hurdle-component magnitudes used to interpret C3
+under DERAIL SHIFT are computed post hoc.
+
+
+                                                     13
+7 Reproducibility
+Registrations. Phase-0 protocol https://osf.io/pkf2j/ (2026-09-03 UTC) and the confirmatory regis-
+tration containing the collection harness, the adjudicating script analysis.py and the verdict table
+https://osf.io/d8tm6/ (2026-09-04 11:05:54 UTC), both embargoed until 2027-09. One registered analy-
+sis was not implemented in analysis.py: the three hurdle components that preregistration §5.1 names
+for a DERAIL SHIFT verdict are computed by hurdle_report.py, written after the data were seen
+(CD7, C.6); the registered code is complete for the verdicts, not for every reported quantity. The reg-
+istration comprises 21 artefacts; the snapshot directory holds 24 files (those 21 plus a README, the
+manifest and its script), and MANIFEST-confirmatory.txt pins SHA-256 for 27 — the 21 artefacts,
+hurdle_report.py, the deviation log and the four X1 files — all verifying against disk.
+
+Code and data. main/analysis.py differs from its registered hash only by the CD5 loader change ac-
+cepting a null swap when a provider’s reserves are exhausted; no estimator, threshold or verdict logic
+was touched, and every hash is in the manifest and Appendix E. The non-registered analyses come from
+a separate script importing the registered loader and paired-test functions, reproducing all registered
+values exactly (H.0). Per-probe transcripts, frozen E1 maps, kill-check verdicts, SWAPS.json, recogni-
+tion probes and failure logs are released with the preprint, each record including the exact JSON body
+transmitted; the CD6 audit found the advisor line and the byte-identical E1 replay in 100% of E2 re-
+quests. CC-BY 4.0. Cost: ≈$72 = OpenRouter metered ≈ $47 + Featherless (unmetered, estimated)
+≈ $25, against a $150 ceiling; CD7’s “≈ $70” rounds the same components down. Ethics: no human
+participants, no personal data.
+
+References
+Bailey, P. E., Leon, T., Ebner, N. C., Moustafa, A. A., & Weidemann, G. (2023). A meta-analysis of the
+weight of advice in decision-making. Current Psychology, 42(28), 24516–24541. doi:10.1007/s12144-022-
+03573-2
+Bajaj, A., & Tiganj, Z. (2026). Who Do LLMs Trust? Human Experts Matter More Than Other LLMs.
+arXiv:2602.13568. https://arxiv.org/abs/2602.13568
+Barkett, E. (2026). Status Hierarchies in Language Models. arXiv:2601.17577 (master’s thesis). https:
+//arxiv.org/abs/2601.17577
+Bonaccio, S., & Dalal, R. S. (2006). Advice taking and decision-making: An integrative literature re-
+view, and implications for the organizational sciences. Organizational Behavior and Human Decision
+Processes, 101(2), 127–151. doi:10.1016/j.obhdp.2006.07.001
+Dietvorst, B. J., Simmons, J. P., & Massey, C. (2015). Algorithm aversion: People erroneously avoid
+algorithms after seeing them err. Journal of Experimental Psychology: General, 144(1), 114–126.
+doi:10.1037/xge0000033
+Du, Y., Li, S., Torralba, A., Tenenbaum, J. B., & Mordatch, I. (2024). Improving Factuality and Reasoning
+in Language Models through Multiagent Debate. ICML 2024. arXiv:2305.14325. https://arxiv.org/abs/
+2305.14325
+Gino, F., & Moore, D. A. (2007). Effects of task difficulty on use of advice. Journal of Behavioral Decision
+Making, 20(1), 21–35. doi:10.1002/bdm.539
+Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T., & Fritz, M. (2023). Not What You’ve Signed
+Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. In
+
+
+                                                    14
+

@@ -1,0 +1,253 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0223"
+   ],
+   "enonce_complet": "Evaluer la tenue d'un adaptateur affine sous une phase d'entrainement par recompenses aleatoires, sur au moins trois graines independantes (12 a 15 courses de reference), en mesurant le dommage residuel comparativement a l'effacement explicite de l'etalon initial afin de trancher le perimetre de persistance de la garantie ecrite dans les poids.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le dommage residuel apres mise a jour sous recompenses aleatoires rejoint celui d'un modele dont l'adaptateur etalon a ete efface (ou ne differe pas entre 3 graines), la tenue de la garantie dans les poids est refutee. Faux temoin 1b : appliquer le meme budget de mises a jour aleatoires a un adaptateur benin de meme rang sans garantie prealable pour separer l'effacement specifique du simple bruit d'optimisation.",
+   "mecanisme_causal": "Si un comportement ou une propriete de surete est encode robustement dans un sous-espace des poids de l'adaptateur plutot que comme un attracteur fragile de surface, des mises a jour sous signal de recompense aleatoire ne doivent pas le ramener au meme niveau de dommage residuel qu'un effacement direct de l'etalon.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Persistance d'adaptateurs sous recompenses aleatoires",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Tenue d'un adaptateur affine sous recompenses aleatoires face a l'effacement de l'etalon"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0065",
+    "BIB-0113",
+    "BIB-0124",
+    "BIB-0149"
+   ],
+   "enonce_complet": "Soumettre toute sonde d'activations evaluee sur un saboteur affine a une porte de validite controlant simultanement les poids, les consignes et le moment de lecture : lecture effectuee avant le choix d'action sur des etats communs, contraste a poids identiques (adaptateur saboteur conditionnel contre temoin conditionnel benin ou organismes jumeaux) ou adaptateurs benins et dormants de meme rang sur plusieurs graines, croisement theme x adaptateur, retrait de l'indice apres la premiere action, et options ou consignes leurres au meme vocabulaire.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la sonde perd son pouvoir discriminant des que la lecture est effectuee avant le premier jeton d'action sur etat identique ou face a un adaptateur dormant/benin de meme rang, le signal provient d'artefacts de fabrication ou de relecture de l'action. Faux temoin 1b : evaluer la sonde sur des paires adaptateur conditionnel benin vs saboteur inactif avec consigne leurre partageant exactement le meme vocabulaire de surface.",
+   "mecanisme_causal": "Un classifieur interne sur activations peut exploiter des raccourcis triviaux (signature statique des poids LoRA, lecture d'une consigne en contexte, ou lecture a posteriori de l'action deja ecrite). L'egalisation stricte de la fabrication des poids, du vocabulaire des consignes leurres et du prefixe pre-action isole uniquement les representations internes specifiques a la politique de sabotage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controles de confondants pour sondes d'activation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Porte de validite et temoins de poids controles pour sondes d'activations sur saboteurs affines"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2223",
+    "BIB-2225"
+   ],
+   "enonce_complet": "Executer un protocole Go/No-Go sur modeles ouverts de 7B a 8B (Qwen-2.5-7B-Instruct ou Llama-3.1-8B-Instruct) sur banc sequentiel de 30 pas a choix discrets (octuplets symetriques a 4 classes croisant verite et correlation naive), en entrainant par SFT et DPO sans aucune instruction ni declencheur en contexte plusieurs adaptateurs LoRA-Saboteur inedits face a autant d'adaptateurs LoRA-Honnete-Biaise appariés en taux d'echec final, en defendabilite locale et en pas initial de deviation. Mesurer l'apport des sondes internes avant le premier jeton d'action sur exactement le meme prefixe et sur la strate discordante face a l'auto-lecteur textuel avec CUSUM, avec critere d'arret sous +0,04 et poursuite uniquement si la borne basse a 95 % de Delta-TPR a FPR_max=0,05 atteint +0,12 et que l'intervention causale par effacement/echange a polarites croisees atteint +0,15.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la borne haute de gain sur la strate discordante plafonne sous +0,04 au-dessus de l'audit textuel et mecanique malgre l'appariement comportemental, ou si l'echange causal d'activations a polarites croisees reste sous +0,15, la piste de lecture lineaire interne est abandonnee. Faux temoin 1b : opposer des paires distinctes de LoRA-Honnete-Biaise entre elles sur les memes prefixes critiques pour verifier l'absence de faux positif du au simple bruit inter-graines.",
+   "mecanisme_causal": "L'entrainement sans invite ni declencheur elimine la lecture de consigne ; l'appariement strict des taux d'echec, de la defendabilite locale et du prefixe exact elimine l'asymetrie textuelle ; et la multiplicite des adaptateurs par classe evite le surapprentissage sur la signature statique d'un LoRA unique, laissant l'intervention causale par echange prouver le role fonctionnel de la direction sonde.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc causal Go/No-Go pour sondes LoRA 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole Go/No-Go sur modeles 7B-8B opposant LoRA-Saboteur sans invite a LoRA-Honnete-Biaise apparie"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2178",
+    "BIB-2180"
+   ],
+   "enonce_complet": "Evaluer de facon incrementale si un lecteur generaliste de poids apporte une information comportementale au-dela d'une ligne de base boite noire combinee a des raccourcis mecaniques (sonde a 40 nombres basee sur la distance des poids a l'initialisation, norme, recette, graine et metadonnees), sur environ 130 affinages controles de Gemma 3 270M-it (recette publique, lot 8, ~336-342 pas) avec paires nulles, recettes sans effet et temoins positifs. Abandonner la piste de lecture de poids seuls comme moniteur si la borne inferieure de (AUC - 0,5) reste sous 0,20 ou si la base mecanique et boite noire fait aussi bien.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si aucun lecteur ouvert ne franchit AUC - 0,5 >= 0,20 en borne basse au-dessus de la base boite noire + distance mecanique des poids (ou une borne superieure sous 20 points d'apport incremental), la lecture directe d'un trait d'alignement dans les poids seuls est rejetee a ce format. Faux temoin 1b : tester le lecteur sur des paires nulles et des recettes sans effet comportemental partageant les memes statistiques de norme et d'ecart a l'initialisation.",
+   "mecanisme_causal": "Les lecteurs de poids peuvent paraitre performants en exploitant des artefacts triviaux d'entrainement (norme des mises a jour, distance au modele parent, signature de recette ou de graine). La comparaison directe contre une sonde mecanique de distance et la boite noire sous partition gelee isole l'information reellement porteuse d'un trait comportemental.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Lecteurs de poids contre raccourcis mecaniques",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Evaluation incrementale d'un lecteur de poids generaliste face aux raccourcis mecaniques et a la boite noire"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2181"
+   ],
+   "enonce_complet": "Tester par un protocole ORACLE corrige si l'acces aux poids augmente le rendement de predictions comportementales transferables sans sortir de la couverture du nul, a l'aide d'un generateur controle, d'un oracle independant, d'un langage de prediction restreint et de courses appariees a archives separees, sans presupposer ni adaptateurs de sabotage disponibles ni transfert immediat de direction entre modeles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : arreter immediatement si le pilote revele un oracle contournable, une distribution nulle non constructible, ou un rendement de predictions transferables inferieur ou egal a la couverture du nul. Faux temoin 1b : verifier que des predictions generees sans acces aux poids ou sous permutation aleatoire des archives respectent exactement le taux de couverture du nul dans le langage restreint.",
+   "mecanisme_causal": "Restreindre le langage de prediction et decoupler le generateur de l'oracle independant sur des courses appariees a archives separees permet de mesurer rigoureusement le gain informationnel reel de l'acces aux poids sans sur-interpretation d'indecisions statistiques.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Rendement predictif de l'acces aux poids",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole ORACLE corrige mesurant le gain de predictions transferables issu de l'acces aux poids"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2107"
+   ],
+   "enonce_complet": "Conduire un plan croise style x phrase sur adaptateurs publies sans reentrainement, muni de controles de comprehension fonctionnelle et d'invariance a la quantification et controlant le regard, afin de separer l'appariement de surface d'une explication par raisons ; si le croisement est concluant avec une interaction quasi nulle, executer en second lieu le test de transfert de la direction dans les poids comme condition de validite de toute intervention interne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la dispersion inter-scenarios rend le croisement non concluant sur 27 scenarios, la priorite bascule sur l'elargissement du banc ; si le test de transfert de direction echoue, toute intervention dans les poids est annulee et l'etude se limite au comportement. Faux temoin 1b : appliquer l'intervention de direction avec des vecteurs aleatoires de meme norme ou sur des items hors-cible pour controler la perte de comprehension fonctionnelle et la sensibilite a la quantification.",
+   "mecanisme_causal": "Le croisement factoriel entre style de surface et contenu de phrase dissocie la sensibilite lexicale de la reponse fondee sur des raisons, tandis que le transfert hors-echantillon de la direction verifie que la manipulation dans l'espace des poids agit sur un mecanisme coherent et non sur un artefact specifique au jeu de calibrage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Separation surface-raisons et transfert de direction",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Croisement style par phrase et test de transfert de direction pour separer surface et raisons"
+  },
+  {
+   "anteriorite_connue": "Brown (1951), Iterative Solution of Games by Fictitious Play ; Robinson (1951), An Iterative Method of Solving a Game ; Shapley (1964), Some Topics in Two-Person Games.",
+   "bib_ids": [
+    "BIB-2149"
+   ],
+   "enonce_complet": "Formaliser le reentrainement iteratif d'un moniteur lineaire contre un melange uniforme des attaques passees (cible initiale incluse) face a un attaquant adaptatif comme un jeu a somme nulle approche a gain dur U(p, theta) = somme_i p_i Pr_{x~theta}[s_{m_i}(x) > t_{m_i}], dont le dernier itere pur et unilateral echappe aux garanties de convergence des strategies moyennes de Brown-Robinson (1951), et concevoir le diagnostic causal separant six causes possibles de stagnation observee : myopie adverse, oracle, classe lineaire, uniformite des poids du melange, couverture des attaques et oubli catastrophique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le deploiement du melange de strategies moyennes des moniteurs passes (au lieu du dernier itere pur) ou le remplacement de l'objectif differentiable ne reduit pas le NashConv audite sous le seuil nul retenu, l'hypothese d'artefact de dernier itere est rejetee au profit des limites de capacite lineaire ou de couverture d'attaque. Faux temoin 1b : rejouer l'evaluation sur des attaques non adaptatives figees pour isoler l'oubli catastrophique de l'adaptation adverse.",
+   "mecanisme_causal": "Dans un jeu non bilineal avec seuils dependants du moniteur et optimisation approchee par gradient d'un objectif differentiable distinct du gain dur U(p, theta), le dernier itere pur d'un jeu fictif unilateral peut cycler ou stagner sans converger vers l'equilibre, la ou les theoremes classiques de 1951 ne portent que sur la moyenne exacte en jeu fini bilatéral.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dynamique de reapprentissage iteratif de moniteurs",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Diagnostic de la non-convergence du reapprentissage unilateral d'un moniteur lineaire sous attaques adaptatives"
+  },
+  {
+   "anteriorite_connue": "Ryan Green[...] (cite de memoire dans la source tronquee)",
+   "bib_ids": [
+    "BIB-2255"
+   ],
+   "enonce_complet": "Determiner, dans une chaine sequentielle d'edition, test et relecture de code a sorties localement defendables, si l'identite des poids entre copies d'un meme modele augmente le risque net de sabotage distribue furtif sans observation interne (Delta-TSDF_net >= +0,06 face a des modeles distincts) par coordination tacite sur cas limites partages, mais permet en contrepartie, avec observation d'activations centrees par role en lecture canonique forcee, un score differentiel non supervise inter-copies (Delta-z_tilde_H, avec <= 25 etiquettes adverses de calibration) augmentant le Rappel@10% d'au moins +0,10 sur sonde concatenee, sur modeles distincts alignes par ACP-Procrustes et sur baselines mecaniques (Semgrep, mutmut), abaissant le risque residuel livre sous celui des modeles heterogenes et de l'agent unique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les copies a memes poids ne depassent pas les modeles distincts en TSDF_net sans activations, ou si le score differentiel inter-copies Delta-z_tilde_H ne bat ni la sonde concatenee ni les baselines mecaniques Semgrep/mutmut et ACP-Procrustes d'au moins +0,10 en Rappel@10%, la double hypothese coordination tacite / rejection de mode commun est refutee. Faux temoin 1b : evaluer le score differentiel sur des chaines de copies entierement honnetes partageant des cas limites difficiles pour verifier que la rejection de mode commun ne penalise pas les accords legitimes.",
+   "mecanisme_causal": "Des copies partageant exactement les memes poids ont des biais correles sur les memes cas limites (favorisant une collusion tacite sans canal explicite), mais leurs activations internes centrees par role restent directement comparables dans un meme espace latent, permettant d'annuler le mode commun contextuel par difference inter-copies sans apprentissage d'alignement inter-modeles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Copies a memes poids et mode commun",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Coordination tacite et rejection de mode commun par activations centrees entre copies a memes poids"
+  },
+  {
+   "anteriorite_connue": "John C. Knight et Nancy G. Leveson (1986), An Experimental Evaluation of the Assumption of Independence in Multiversion Programming.",
+   "bib_ids": [
+    "BIB-2256"
+   ],
+   "enonce_complet": "Mesurer le transfert de sonde et le cout de calibration entre copies homogenes et systemes heterogenes en faisant varier uniquement la source de la sonde sur Llama 3.1 8B Instruct et un partenaire ouvert de poids differents, tout en gardant exactement fixes les reviseurs et leurs plans d'audit, afin de caracteriser un phenomene mesurable de cout de calibration avant de financer un flux multi-roles complet.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les intervalles de confiance excluent tout ecart operationnellement utile avant et apres audit, et que l'equipe heterogene egale les copies homogenes en repartissant librement ses etiquettes, le cout differentiel de calibration est nul et la piste est abandonnee. Faux temoin 1b : intervertir l'ordre ou la source des sondes entre paires de reviseurs honnetes fixes pour mesurer la variance inter-familles du seul calibrage.",
+   "mecanisme_causal": "En maintenant fixes les reviseurs, leurs plans et la generation de candidats, toute variation de performance ou de budget d'etiquettes requise lorsqu'on transfere une sonde vers un partenaire de poids differents mesure directement la perte de compatibilite geometrique des representations par rapport a la programmation multiversion classique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Cout de calibration et transfert inter-modeles",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Mesure du cout de calibration et du transfert de sonde entre copies homogenes et partenaires heterogenes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2253"
+   ],
+   "enonce_complet": "Executer en premier un duel de reference sans adversaire ni adaptateur (duel 0b de l'experience 1) pour fixer les lignes de base soustraites par tous les duels suivants, ouvrir ou fermer les portes de jugeabilite, et verifier si l'effet attribue a l'identite des poids entre copies se reduit en realite a la seule provenance du texte avant d'engager le budget d'entrainement adverse.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le duel 0b valide l'hypothese H_B montrant que l'ecart observe s'explique entierement par la provenance textuelle (style ou distribution des sorties sans identite de poids), la piste d'un effet propre a l'identite des poids est close avant toute depense adverse. Faux temoin 1b : permutar les etiquettes de provenance textuelle sur des sorties d'un meme modele pour verifier que le test ne reagit pas a une asymetrie de longueur ou de formatage.",
+   "mecanisme_causal": "De nombreux effets attribues au partage de poids entre agents dans une chaine peuvent provenir de simples differences stylistiques ou de distribution textuelle entre familles de modeles. Isoler d'abord cette ligne de base evite de financer des campagnes adverses sur un confondant de provenance.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Ligne de base et provenance textuelle",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Ligne de base sans adversaire pour separer l'identite des poids de la provenance textuelle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0112",
+    "BIB-2248"
+   ],
+   "enonce_complet": "Decomposer prealablement la structure du bruit honnete (effets de trajectoire, autocorrelation temporelle, queues lourdes, sensibilite somme contre moyenne) sans aucun adversaire ni adaptateur (experience E0), et dimensionner la longueur d'horizon d'audit relativement a cet ecart-type honnete avant toute experience adverse, chaque issue de E0 falsifiant une branche et tranchant le cas sans interet ou le bruit honnete depasse le dommage pertinent.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'ecart-type cumule des trajectoires honnetes depasse le seuil de dommage pertinent malgre l'ajustement d'horizon, le regime d'audit sequentiel est declare non viable sans meme entrainer d'adversaire. Faux temoin 1b : comparer la variance empirique des trajectoires reelles honnetes a une simulation i.i.d. de meme marginale pour quantifier la part due a l'autocorrelation et aux queues lourdes.",
+   "mecanisme_causal": "Dans un audit sequentiel d'erreurs diffuses, la detectabilite depend du rapport signal-sur-bruit cumule : si les trajectoires honnetes presentent une forte autocorrelation ou des queues lourdes, l'incertitude ne decroit pas en sqrt(T) et rend tout contraste adverse impossible ou mal calibre si l'horizon n'est pas norme sur le bruit honnete reel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etalonnage du bruit honnete et horizon d'audit",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Decomposition prealable du bruit honnete et dimensionnement de l'horizon d'audit avant tout adversaire"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0097"
+   ],
+   "enonce_complet": "Imposer au sabotage diffus une porte de faisabilite comportant un adaptateur benin de meme rang et une version dormante de la politique, une mesure du degat net, de la furtivite par acte en contraste interne, d'une contrainte de concentration et de l'exces de bascule dirigee par rapport a des erreurs aveugles, couplee a un controle positif exigeant que les moniteurs detectent un sabotage concentre de meme impact global.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la piste est refutee soit si le saboteur diffus n'obtient pas un exces de bascule dirigee superieur a des erreurs aveugles sous la contrainte de furtivite par acte, soit si les moniteurs echouent deja sur le controle positif de sabotage concentre a impact egal. Faux temoin 1b : evaluer les moniteurs sur l'adaptateur benin de meme rang et la politique dormante pour mesurer le taux de fausse alarme sans sabotage actif.",
+   "mecanisme_causal": "Le controle du sabotage diffus n'a de sens scientifique que dans le regime ou un attaquant reussit reellement a causer un dommage dirige sous contrainte de furtivite locale et ou les detecteurs savent deja reperer une attaque concentree equivalente ; sinon la difficulte mesuree vient soit d'une attaque inoperante, soit de moniteurs aveugles meme en regime facile.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte de faisabilite et controle positif",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Porte de faisabilite du sabotage diffus avec controle positif concentre et furtivite par acte"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2258"
+   ],
+   "enonce_complet": "Structurer l'audit sequentiel par un plan factoriel 2 x 2 dissociant la statistique d'alarme (somme ou increment instantane) de la politique d'allocation d'audit, avec trois partitions strictes (developpement sur honnetes et famille (i), gel hache sans choix de couche ni de comparateur apres gel, evaluation), estimation de sigma_H(T) sur paires honnete-honnete independamment du seuil, decision symetrique autour d'un seuil unique g = 10 points (H_A : Delta >= g ; H_B : Delta < g ; intervalle a cheval non concluant), temoins benins (LoRA de meme rang et retours d'outil benins de meme format) et sonde de re-encodage recevant tout le contexte visible de l'etape dont les sorties d'outil.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le gain de la politique d'audit sequentielle disparait dans le plan factoriel 2 x 2 une fois fixe le score instantane, ou si l'ecart de la sonde de re-encodage passe sous g = 10 points lorsqu'elle recoit les sorties d'outil visibles, l'avantage attribue a l'audit sequentiel ou interne est rejete. Faux temoin 1b : mesurer le taux de fausses alertes sur des retours d'outil benins de meme format et des adaptateurs LoRA benins de meme rang.",
+   "mecanisme_causal": "En audit sequentiel, allouer les verifications la ou l'evidence cumulee croit le plus revient mathematiquement a selectionner l'increment instantane maximal, ce qui confond statistique d'alarme et politique d'audit si on ne les croise pas en 2 x 2 ; de plus, fournir toutes les sorties d'outil au re-encodage evite qu'une sonde ne detecte que le texte injecte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Plan factoriel 2x2 et gel hache d'audit",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Architecture factorielle 2x2 de l'audit sequentiel et protocole a trois partitions gelees"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2214"
+   ],
+   "enonce_complet": "Executer hors ligne sur poids ouverts et a risque de fuite nul un bloc eliminatoire en deux temps : d'abord la verification hors echantillon de viabilite du detecteur (I1), immediatement suivie d'une campagne d'evasion utile sous condition C3 contre placebo C2p sur 150 paires de campagnes locales sans retour oracle (E2*), ecartant d'emblee toute revendication ou publication si I1 echoue ou si E2* falsifie l'hypothese H_2A (theta_chapeau_2 >= 0,065).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : arreter immediatement si le detecteur echoue hors echantillon en I1, ou si l'evasion utile sous C3 atteint ou depasse 0,065 sans retour oracle face au placebo C2p. Faux temoin 1b : comparer les campagnes C3 au placebo C2p sur exactement les memes paires locales pour isoler la capacite d'evasion utile du simple bruit d'echantillonnage.",
+   "mecanisme_causal": "Tester d'abord la viabilite hors ligne du detecteur puis sa resistance a une evasion utile sans boucle oracle elimine a moindre cout et sans risque de fuite externe les protocoles dont le detecteur est soit non viable, soit trivialement contournable en aveugle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte hors ligne de viabilite et d'evasion",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Sas hors ligne a fuite nulle verifiant la viabilite du detecteur et l'evasion utile sans retour oracle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2166"
+   ],
+   "enonce_complet": "Re-evaluer des trajectoires de sabotage de code (sur Nemotron) en isolant les commentaires sans toucher a l'action et en s'appuyant sur les tests unitaires d'origine disponibles hors de la reponse comme reference mecanique, afin de verifier si la capture par les moniteurs provient de la lecture des commentaires plutot que du comportement effectif du code.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les commentaires sont indissociables du code de triche, si les exemples honnetes sont deja certifies par un oracle mecanique, ou si la suppression/permutation des commentaires supprime le signal du moniteur sans changer l'issue des tests d'origine, la detection repose sur un artefact lexical de commentaire. Faux temoin 1b : soumettre aux memes moniteurs des codes honnetes passant les tests d'origine mais annotes avec des commentaires de meme style que les cas de sabotage.",
+   "mecanisme_causal": "Les moniteurs textuels sur du code peuvent reagir a des indices linguistiques dans les commentaires plutot qu'a la semantique executable de la triche ; isoler l'action de code et l'evaluer face a un oracle mecanique de tests unitaires tranche la capture de surface contre la detection comportementale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Isolement des commentaires et oracle mecanique",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Renotation par isolement des commentaires et reference mecanique par tests unitaires pour moniteurs de code"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2174"
+   ],
+   "enonce_complet": "Evaluer la transportabilite du rappel d'un moniteur a travers le classement des candidats en faisant generer un pool fige dans un micro-harnais instrumente, en notant tous les candidats par un oracle d'execution independant (etiquettes fournies sans le score, moniteur exclu de la generation et du classement), puis en comparant le rappel du moniteur sur l'ensemble du pool a celui observe sur les seuls candidats retenus, avec un seuil de tolerance fixe a 5 points de perte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : une borne superieure excluant plus de 5 points de perte refute la prediction de degradation importante ; a l'inverse, une borne inferieure au-dessus de 5 points refute la transportabilite du rappel dans la tolerance annoncee (tout en restant un defaut de transport a travers le classement sans prouver une adaptation directe au moniteur). Faux temoin 1b : tirer aleatoirement un sous-ensemble de meme taille dans le pool fige sans tenir compte du score de classement pour verifier l'absence de biais purement statistique de sous-echantillonnage.",
+   "mecanisme_causal": "La selection des meilleurs candidats par un classement optimise selon un score d'execution peut concentrer des modes de defaillance ou des faux negatifs sous-representes dans la distribution brute du pool, degradant le rappel effectif du moniteur meme sans interaction directe entre le generateur et le moniteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transport du rappel sous selection de candidats",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Mesure du defaut de transport du rappel d'un moniteur entre pool complet et candidats retenus"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

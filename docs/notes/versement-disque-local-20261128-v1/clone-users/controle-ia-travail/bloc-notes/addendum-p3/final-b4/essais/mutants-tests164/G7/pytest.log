@@ -1,0 +1,34 @@
+F
+=================================== FAILURES ===================================
+___________________ test_A8_regles_de_reserve_par_condition ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa9c6751590>
+
+    def test_A8_regles_de_reserve_par_condition(monkeypatch):
+        """A8 sur des parts et des médianes fabriquées (sonde à attention, cible établie) : début de l'action, les deux
+        conditions strictement au-dessus de 0,50 ; saturation, l'une ou l'autre strictement au-dessus de 0,95 ; poids
+        maximal non défini, ou calcul en échec : « non lus », saturation comprise."""
+        D = _D("sain")
+        debut, sat = "A8 début de l'action", "A8 saturation de l'attention"
+    
+        def a8(r):
+            monkeypatch.setattr(cp, "a8_dominants", _jamais(r) if isinstance(r, Exception) else (lambda D_, p, r=r: r))
+            c = _entree_seule("A8", D, P[1])
+            assert {x["cible"] for x in c.values()} == {_c("P3-P3", P[1])}
+            return {k: x["controle_contraire"] for k, x in c.items()}
+    
+        assert a8(_a8_fabrique(0.9, 0.1, 0.5, 0.5)) == {debut: False, sat: False}
+>       assert a8(_a8_fabrique(0.6, 0.6, 0.5, 0.5)) == {debut: True, sat: False}
+E       assert {"A8 début de...ntion": False} == {"A8 début de...ntion": False}
+E         
+E         Omitting 1 identical items, use -vv to show
+E         Differing items:
+E         {"A8 début de l'action": False} != {"A8 début de l'action": True}
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:1979: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A8_regles_de_reserve_par_condition - a...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.32s
+

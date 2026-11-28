@@ -1,0 +1,78 @@
+                          Rung 0 (8 papers)                     Rung 1 (32 papers)                    Rung 2 (128 papers)
+
+              90
+                                                                                                                                           1500
+              80
+                                                                                                                                           1250
+              70
+
+
+
+
+                                                                                                                                                 Creation index
+Weak scorer
+                                                                                                                                           1000
+              60
+                                                                                                                                           750
+              50
+
+              40                                                                                                                           500
+
+              30                                                                                                                           250
+
+              20                                                                                                                           0
+                                   n=1618, promoted=404                    n=402, promoted=100                         n=100, promoted=0
+                   0     20         40         60         0     20         40         60         0     20         40           60
+                       Ground truth proxy scorer              Ground truth proxy scorer              Ground truth proxy scorer
+
+
+Figure 9: Evolutionary search for the subversion Pareto frontier. The panels show the prompts r
+discovered by evolutionary optimization across three ASHA rungs with η = 4. The color represents
+the time of discovery (lighter is later). The gradual expansion of the Pareto frontier is visible. Selec-
+tion bias inflates the Pareto frontier at rung 0, but this is corrected with more expensive evaluations
+at higher rungs. The NSGA-II ranking mechanism promotes the points closer to the Pareto frontier
+in the first two rungs (promoted points are highlighted).
+
+
+a 10% reduction in the judge noise and a more natural split of generator : sample : generator noise
+variance. Sonnet 4.6 seems to have a stronger intuitive grasp on what constitutes a strong set of
+proposals, and thus its variance decomposition barely changes if we remove the rubric.
+In Figure 8 we present an ablation on the paper access for the ground truth proxy scorer. The variants
+with and without paper access appear strongly correlated (r = 0.83), and their relative variance
+decompositions seem broadly similar. However, the correlation mostly comes from the scorers
+ordering the generators in the same manner. The scorers are also agreeing more on the proposals
+from weaker generators, while the correlation disappears on stronger generators. We use Opus 4.6 as
+the main generator throughout the paper, so we should pick the scorer that works better for stronger
+models. We suggest that absolute variance is a good measure to look at. Both generators use the
+same rubric that comes with detailed anchoring for each value of each criterion (see Appendix H.4),
+so a good scorer should be able to rely on the anchors to discriminate between proposal sets. On
+the three strongest generators that we have (GPT-5.4 mini, Opus 4.6, and GPT-5.4), the scorer with
+paper access has much higher variance (importantly, higher non-noise variance components), which
+indicates that it retains the discriminatory power at higher generator capability levels, likely by using
+the paper as a reference.
+
+
+D                  Multi-Objective Prompt Optimization in Detail
+
+In accordance with our theoretical framework, the red team needs to perform multi-objective opti-
+mization (5) over the space R of prompts to the untrusted model generating the research proposals.
+The space of prompts is large, discrete, and highly structured, inviting evolutionary algorithms as
+a natural way to traverse it. Recent work has demonstrated that LLMs can serve as highly effec-
+tive mutation operators for structured text when optimizing over code [Romera-Paredes et al., 2024,
+Novikov et al., 2025, Surina et al., 2025] or prompts [Agrawal et al., 2025]. Our problem also shares
+important structural similarities with hyperparameter search in ML: many prompts can be evaluated
+cheaply over a small set of samples, but each evaluation will be noisy; a more refined evaluation
+requires more samples and should be performed more sparingly [Karnin et al., 2013, Jamieson and
+Talwalkar, 2016]. The Asynchronous Successive Halving (ASHA) algorithm, introduced by Li et al.
+[2020], exploits this structure by generating many candidates and evaluating them cheaply in an
+asynchronous loop. The top 1/η fraction is promoted to a higher rung to be evaluated on η times
+more samples. Multiple rungs can be maintained in this way with only a constant overhead factor
+in terms of the number of used samples. The hyperparameter η is typically set to 2 or 4. Our algo-
+rithm builds upon MO-ASHA, a generalization of ASHA to the multi-objective case by Schmucker
+et al. [2021]. MO-ASHA combines the rung structure of ASHA with a candidate ranking method
+from a popular multi-objective genetic optimization algorithm NSGA-II [Deb et al., 2002]. The
+hyperparameters for our multi-objective optimization are presented in Table 2.
+
+
+                                                                            19
+

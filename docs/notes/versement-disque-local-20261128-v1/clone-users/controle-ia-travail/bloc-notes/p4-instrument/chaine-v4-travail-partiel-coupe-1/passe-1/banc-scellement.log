@@ -1,0 +1,147 @@
+C = 32034270d56f8c355121789483fa75c65ceb28f1
+script éprouvé : sceller_p4_v1.sh 5762bdead1ef3225fe432695083a94cf957f4d10bd7890b8fc032a7be26171f7
+script éprouvé : verifications_p4_v1.py 519be4e058a437479047b7c2c662c3a9f507d382338b27334c84086f68309ba6
+script éprouvé : outils_essais_p4_v1.py 623e7c2c043ce5b718292b346ad4d9cb3cb99cbedc6a4f16e47b4d5f47498762
+script éprouvé : essais_scellement_p4_v1.sh fa971c4905bd7bc2d3afeb8301fdfe38adabc90801f13ddd327de132473f9c39
+lignes changées dans la copie des contrôles (épingles du banc) : 7
+lignes changées dans la copie du scellement : 3 (H, DEPOT, DISTANT)
+A = c5276db18763f78ffb750469b4352ec411af96b4 ; J = 7db66563fa6c12387c92cc5192dba58e3453bcda
+S00-sain : code 0 ; CONFORME
+    | module de P4 : 6 fichiers à l'empreinte citée
+    | S c3f37bc4d5aa1c27007a4f899f04fb22162109b1 poussé ; préenregistrement 0b4b4c5067384ece32d7e14a235548ba5f22b077b908d1576b6e2b0f7e009f5d
+    S c3f37bc4d5aa1c27007a4f899f04fb22162109b1 : enfant de J, poussé, quatre fichiers seulement (texte, configuration, sceaux), copies exactes du candidat et de la configuration relus, preuves, GO et module relus, arbre propre : CONFORME
+S01-arbre-sale : code 2 ; CONFORME
+    | arbre suivi non propre
+S02-sceau-fausse-verifier-arbre : code 2 ; CONFORME
+    | verifier-arbre en échec
+    | échec avant le commit : fichiers créés retirés
+S02b-sceau-d-une-copie-versee-fausse : code 2 ; CONFORME
+    | ARRÊT : docs/procedures/P4-instrument-v1/surveiller_p4_v1.sh : empreinte 72194ccfc7d9… ≠ scellée 555555555555…
+    | sceau d'une copie versée non conforme
+S03-poussee-refusee : code 2 ; CONFORME
+    | error: failed to push some refs to '/tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/scellement/distant.git'
+    | poussée de S en échec : S reste local ; repousser avant tout lancement
+S04-epingle-candidat-fausse : code 2 ; CONFORME
+    | brouillons/P4-instrument-v1-candidat-essai.md ≠ épingle, ou sceau différent de la ligne exacte
+S04b-epingle-configuration-fausse : code 2 ; CONFORME
+    | brouillons/P4-instrument-config-v1-candidat-essai.json ≠ épingle, ou sceau différent de la ligne exacte
+S05-recuperation-non-versee : code 2 ; CONFORME
+    | recuperation_p4_v1.sh du bloc-notes ≠ copie versée
+S05b-script-de-l-instance-non-verse : code 2 ; CONFORME
+    | p4_instance_v1.sh du bloc-notes ≠ copie versée
+S06-head-en-avance : code 2 ; CONFORME
+    | HEAD ≠ origin/main : pousser d'abord les préalables
+S07-prereg-present : code 2 ; CONFORME
+    | prereg/P4-instrument-v1.md existe déjà (R12)
+S07c-configuration-presente : code 2 ; CONFORME
+    | prereg/P4-instrument-config-v1.json existe déjà (R12)
+S08-rapport-epingle-absent : code 2 ; CONFORME
+    | prereg/contre-lectures/contre-lecture-R2-P4-instrument-brouillon1-v1.md non suivi à HEAD
+S09-go-autre-type : code 2 ; CONFORME
+    | preuves des essais : 8 journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées
+    | GO et dépense non conformes : GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+S09b-plafond-sans-le-prefixe : code 2 ; CONFORME
+    | preuves des essais : 8 journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées
+    | GO et dépense non conformes : GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+S09c-revocation-au-registre-des-go : code 2 ; CONFORME
+    | preuves des essais : 8 journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées
+    | GO et dépense non conformes : révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-06']
+S09e-forme-exacte-au-registre-des-decisions : code 2 ; CONFORME
+    | preuves des essais : 8 journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées
+    | GO et dépense non conformes : révocation au registre des décisions (R-998)
+S09f-aucune-revocation : code 0 ; CONFORME
+    | module de P4 : 6 fichiers à l'empreinte citée
+    | S b6e012f9f6787e53849798c53c16abb10da876a6 poussé ; préenregistrement 0b4b4c5067384ece32d7e14a235548ba5f22b077b908d1576b6e2b0f7e009f5d
+S13-epingle-restee : code 2 ; CONFORME
+    | épingle restée « A_EPINGLER » dans les contrôles
+S14-code-relu-autre : code 2 ; CONFORME
+    | arbre gelé de HEAD ≠ celui de P3 (bc05768a8eaa340a339b984d54f2a10af1b21f50)
+S15-journal-repetition-altere : code 2 ; CONFORME
+    | journal de la répétition jouet absent, d'une autre empreinte que l'épingle, ou sceau différent
+S16-rapport-autre-famille : code 2 ; CONFORME
+    | rapports épinglés : rapports attendus : les 27 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants [], en trop ['autre-famille-v1.md'], en double [])
+S17-journal-non-suivi : code 2 ; CONFORME
+    | docs/procedures/P4-instrument-v1/repetition-jouet-p4-v1.log non suivi à HEAD
+S18-journal-autre-commit : code 2 ; CONFORME
+    | journal de la répétition jouet non conforme : ligne absente ou en double : commit du code répété : c5276db18763f78ffb750469b4352ec411af96b4
+S18b-commit-repete-non-ancetre : code 2 ; CONFORME
+    | commit répété 0488f0a2f93adad8dce999a7c573cb776b846e00 non ancêtre de HEAD
+S18c-module-autre-que-celui-du-commit-repete : code 2 ; CONFORME
+    | module ou scripts de l'instance du commit répété ≠ ceux de HEAD
+S19-journal-hors-du-dossier : code 2 ; CONFORME
+    | code relu, commit répété ou répétition jouet non épinglés
+S20-arret-avant-le-piege : code 2 ; CONFORME
+    | and the repository exists.
+    | arrêt du scellement (ligne 63)
+S21-commit-refuse : code 2 ; CONFORME
+    | arrêt du scellement (ligne 187)
+    | échec avant le commit : fichiers créés retirés
+    index propre après S21 : CONFORME
+S10-avec-argument : code 2 ; CONFORME
+    | usage : sceller_p4_v1.sh (sans argument)
+S22-rapport-non-cite : code 2 ; CONFORME
+    | rapport contre-lecture-R2-P4-instrument-brouillon1-v1.md : empreinte différente de l'épingle, ou non cité par le candidat
+S23-candidat-autre-code : code 2 ; CONFORME
+    | arbre gelé du commit cité par le candidat (bc05768a8eaa340a339b984d54f2a10af1b21f50) ≠ celui de HEAD
+S23b-commit-du-code-cite-deux-fois : code 2 ; CONFORME
+    | commit du code cité zéro ou plusieurs fois par le candidat
+S24-candidat-sans-go : code 2 ; CONFORME
+    | intitulé « **GO cité par la commande de création** » cité zéro ou plusieurs fois par le candidat
+S24b-candidat-go-de-la-phase : code 2 ; CONFORME
+    | preuves des essais : 8 journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées
+    | GO et dépense non conformes : GO-2026-10-04-08 : seul GO-2026-10-20-07 est accepté pour P4 (délégation R-269)
+S25-candidat-non-conforme-r1-r2 : code 2 ; CONFORME
+    | arrêt du scellement (ligne 177)
+    | échec avant le commit : fichiers créés retirés
+S35-intitule-en-double : code 2 ; CONFORME
+    | intitulé « Entropie » cité zéro ou plusieurs fois par le candidat
+S36-module-cite-a-une-autre-empreinte : code 2 ; CONFORME
+    | GO et dépense : GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et voisine
+    | module de P4 : module de P4 : docs/procedures/P4-instrument-v1/lecture_p4_v1.py : empreinte 0b7a259bc95e ≠ empreinte citée cccccccccccc
+S26-journal-inacheve : code 2 ; CONFORME
+    | journal de la répétition jouet non conforme : ligne absente ou en double : FIN DE LA RÉPÉTITION
+S27-candidat-hors-des-brouillons : code 2 ; CONFORME
+    | candidat ou configuration relus non épinglés
+S27b-epingle-de-63-caracteres : code 2 ; CONFORME
+    | candidat ou configuration relus non épinglés
+S28-une-seule-paire : code 2 ; CONFORME
+    | rapports épinglés : rapports attendus : les 27 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants ['P4-instrument-v1-brouillon1.md', 'P4-instrument-v1-brouillon2.md', 'P4-instrument-v1-brouill
+S29-sceau-du-candidat-autre-forme : code 2 ; CONFORME
+    | brouillons/P4-instrument-v1-candidat-essai.md ≠ épingle, ou sceau différent de la ligne exacte
+S40-configuration-non-citee-par-le-candidat : code 2 ; CONFORME
+    | le candidat relu ne cite pas l'empreinte canonique de la configuration relue
+S38-sceaux-produits-differents-des-epingles : code 2 ; CONFORME
+    | sceaux du préenregistrement ou de la configuration ≠ épingles
+    | échec avant le commit : fichiers créés retirés
+S30-rapport-altere : code 2 ; CONFORME
+    | rapport contre-lecture-R2-P4-instrument-brouillon1-v1.md : empreinte différente de l'épingle, ou non cité par le candidat
+S31-rapport-non-epingle : code 2 ; CONFORME
+    | rapports présents « P4-essai-autre-v1.md P4-instrument-v1-brouillon1.md P4-instrument-v1-brouillon2.md P4-instrument-v1-brouillon3.md P4-instrument-v1-brouillon4.md P4-instrument-v1-candidat1.md P4-
+S32-branche-de-resultats-presente : code 2 ; CONFORME
+    | branche calcul/p4-reel-v1 : code 0 (2 attendu : absente)
+S33-script-repete-autre-que-la-copie : code 2 ; CONFORME
+    | script répété ≠ copie versée : recuperation_p4_v1.sh
+S41-preuve-absente : code 2 ; CONFORME
+    | docs/procedures/P4-instrument-v1/banc-verifications-p4-v1.log non suivi à HEAD
+S41b-preuve-sans-son-sceau : code 2 ; CONFORME
+    | preuves des essais : sceau de banc-lanceur-p4-v1.log absent ou non conforme
+S41c-preuve-au-verdict-non-conforme : code 2 ; CONFORME
+    | preuves des essais : journal banc-controles-p4-v1.log : dernière ligne ≠ « FIN DU BANC DES CONTRÔLES DE P4 ; cas non conformes : 0 »
+S41d-preuve-caduque : code 2 ; CONFORME
+    | preuves des essais : lancer_p4_v1.sh éprouvé ≠ copie versée
+S39-origin-copie-publique : code 2 ; CONFORME
+    | adresse de origin en lecture « /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/scellement/lciric/controle-ia.git 
+    copie publique simulée restée vide : CONFORME
+S39b-poussee-vers-la-copie-publique : code 2 ; CONFORME
+    | adresse de origin --push « /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/scellement/lciric/controle-ia.git » 
+    copie publique simulée restée vide : CONFORME
+S39c-seconde-adresse-de-poussee : code 2 ; CONFORME
+    | adresse de origin --push « /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/scellement/distant.git /tmp/claude-0/-
+    copie publique simulée restée vide : CONFORME
+S42-liste-des-chemins-geles-alteree : code 2 ; CONFORME
+    | arbre gelé de HEAD ≠ celui de P3 (7a54d431d89745839220f882b41b13e8c62ecfdd)
+S34-sain-apres-les-artefacts : code 0 ; CONFORME
+    | module de P4 : 6 fichiers à l'empreinte citée
+    | S b2b53b23bc5a139686e2da9a367651e1e6ab5575 poussé ; préenregistrement 0b4b4c5067384ece32d7e14a235548ba5f22b077b908d1576b6e2b0f7e009f5d
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DU SCELLEMENT DE P4 ; cas non conformes : 0

@@ -1,0 +1,18 @@
+bloc 1 extrait du script relu (b2b115d3020a…), lignes 86 à 92 :
+    | # 1. contenu de S : les quatre fichiers, tous ajoutés par S
+    | [ "$(git log --diff-filter=A -1 --format=%H -- "$P.sha256")" = "$S" ] && ok "S ajoute le sceau du préenregistrement" || ko "S n'est pas le commit qui ajo
+    | attendus_s=$(printf '%s\n' "$CFG" "$CFG.sha256" "$P" "$P.sha256" | sort | tr '\n' ' ')
+    | [ "$(git diff --name-only --no-renames "$S^" "$S" | sort | tr '\n' ' ')" = "$attendus_s" ] && \
+    |     [ "$(git diff --name-only --no-renames --diff-filter=A "$S^" "$S" | sort | tr '\n' ' ')" = "$attendus_s" ] \
+    |     && ok "S n'ajoute que le texte, la configuration et leurs sceaux" \
+    |     || ko "contenu de S inattendu : $(git diff --name-status --no-renames "$S^" "$S" | tr '\t\n' '  ' | cut -c1-200)"
+[S sain : quatre fichiers ajoutés]
+    OK  S ajoute le sceau du préenregistrement
+    OK  S n'ajoute que le texte, la configuration et leurs sceaux
+[S qui ajoute un cinquième fichier (fichier de textes)]
+    OK  S ajoute le sceau du préenregistrement
+    KO  contenu de S inattendu : A donnees/x/textes.jsonl A prereg/P4-instrument-config-v1.json A prereg/P4-instrument-config-v1.json.sha256 A prereg/P4-instrument-v1.md A prereg/P4-instrument-v1.md.sha256 
+[S qui modifie la configuration (aucun ajout du sceau du texte)]
+    KO  S n'est pas le commit qui ajoute prereg/P4-instrument-v1.md.sha256
+    KO  contenu de S inattendu : M prereg/P4-instrument-config-v1.json M prereg/P4-instrument-config-v1.json.sha256 
+FIN

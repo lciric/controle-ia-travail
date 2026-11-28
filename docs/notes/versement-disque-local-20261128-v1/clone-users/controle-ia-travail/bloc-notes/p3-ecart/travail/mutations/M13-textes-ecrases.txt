@@ -1,0 +1,24 @@
+F
+=================================== FAILURES ===================================
+_____________________ test_ecrire_textes_refuse_d_ecraser ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-64/test_ecrire_textes_refuse_d_ec0')
+
+    def test_ecrire_textes_refuse_d_ecraser(tmp_path):
+        """RC-12 (c) : garde de `_ecrire_textes` (R12), inaccessible dans le run (dossier du run créé neuf, `exist_ok=False`),
+        éprouvée directement : écriture et sceau (cas sain), puis refus d'écraser, fichier intact (artefact)."""
+        textes = [{"episode": "honnete/t0/e0", "condition": "honnete", "tache": "t0", "pas": 0, "texte": "ACTION: ADD"}]
+        chemin = tmp_path / "textes-actions-p3.jsonl"
+        sha = rp._ecrire_textes(chemin, textes)
+        assert verifier(chemin) == sha and json.loads(chemin.read_text(encoding="utf-8")) == textes[0]
+        avant = chemin.read_bytes()
+>       with pytest.raises(GardeArret, match=r"existe déjà \(R12\)"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'existe déjà \\(R12\\)'
+E         Actual message: "/tmp/pytest-of-root/pytest-64/test_ecrire_textes_refuse_d_ec0/textes-actions-p3.jsonl est déjà scellé avec une autre empreinte (40d8a4d61db7…) : R12 interdit d'écraser — une nouvelle version prend un nouveau nom"
+
+tests/test_premier_test_ia_run.py:328: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_run.py::test_ecrire_textes_refuse_d_ecraser
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 2.48s

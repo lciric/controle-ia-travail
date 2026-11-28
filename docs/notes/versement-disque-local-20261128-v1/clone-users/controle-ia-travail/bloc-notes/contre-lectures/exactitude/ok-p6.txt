@@ -1,0 +1,80 @@
+                         Imperative          Informational            Discretionary        when imperative phrasing is replaced with informational
+                    GPT-OSS    Llama 4     Nemotron 3   Mistral Sm.   Grok 4.1   Gemma 4
+                    Qwen 3.5   Kimi K2.5   Minimax M2   DeepSeek      Gemini 3   GLM 4.7   phrasing alone; GLM occupies the extreme, where no fram-
+Compliance Rate
+
+                  100%                                                                     ing or enforcement level produces stable compliance and no
+                   80%                                                                     regulatory signal dominates its helpfulness objectives.
+                   60%
+                   40%                                                                     The Enforcement Information Paradox. Enforcement-
+                   20%
+                    0%     None               Small            Medium              Large
+                                                                                           level sensitivity is the most widespread fragility, and it
+                                                  Fine Amount                              cuts across the phrasing axis: robustness to phrasing does
+                                                                                           not imply robustness to enforcement information. When
+     Figure 3: Foundational experiments: compliance rate (%) by                            low enforcement information is introduced under infor-
+     framing and financial enforcement level across all models.                            mational framing, compliance drops relative to the no-
+                                                                                           enforcement baseline in half the models tested: Kimi
+                                                                                           drops 53 pp (93%→40%), Grok drops 52 pp (60%→8%),
+     4.1             Compliance Robustness Varies Sharply                                  DeepSeek drops 51 pp (71%→20%), Gemini drops 30 pp
+                     Across Models                                                         (40%→10%), and Nemotron drops 31 pp (81%→50%).
+                                                                                           This confirms the Gneezy-Rustichini effect (Gneezy and
+     Across the foundational grid of three framings and four
+                                                                                           Rustichini 2000) in AI agents: specifying a penalty converts
+     enforcement levels, overall compliance spans 46 pp, from
+                                                                                           a prohibition into a cost-benefit calculation. The expected
+     43.5% to 89.5%, depending only on which model is de-
+                                                                                           fine is cheaper than the premium for the certified vendor,
+     ployed (Table 3 and Figure 4). The variation is qualitative
+                                                                                           so the helpfulness objective overrides the safety objective.
+     as well as quantitative: models differ in which property of
+                                                                                           At the imperative level, Gemini 3 Flash shows the starkest
+     the regulatory signal they respond to. Figure 4 separates the
+                                                                                           version of this pattern: 100% compliance collapses to 34%
+     two that matter most, how the rule is phrased and what the
+                                                                                           when a low penalty is introduced, before recovering to 100%
+     agent is told about enforcement; a model can be robust on
+                                                                                           at high enforcement. Note: Wording ablations (detailed fully
+     one axis and fragile on the other.
+                                                                                           in Appendix C.2) confirm these mechanisms. For example,
+        Where a model sits on this map predicts its behavior in
+                                                                                           Grok and DeepSeek collapse when obligation verbs change
+     every subsequent experiment but is not predictable from
+                                                                                           from “expects” to “recommends.” The phrasing-sensitive
+     benchmark scores, nor from how developers describe post-
+                                                                                           models read advisory verbs as genuinely optional.
+     training: models documented as agentic-RL systems ap-
+     pear at both extremes, as do models documented as safety-
+                                                                                           4.2   Institutional Context Systematically Breaks
+     aligned assistants. Compliance robustness has to be mea-
+     sured directly.                                                                             Compliance
+                                                                                           We hold the regulation constant (informational framing) and
+     Rule-anchored behavior. At one extreme, some models                                   introduce competing institutional signals to test agent ro-
+     treat the regulation as a binding constraint largely indepen-                         bustness in realistic enterprise scenarios.
+     dent of phrasing, competing user instructions, or enforce-
+     ment details. GPT-OSS, Qwen 3.5 Flash, and Llama 4 Mav-                               Institutional Authority. Managerial authorization and
+     erick comply at or above 90% under imperative framing                                 board-level cost-optimization policies collapse compliance
+     across all enforcement levels and at or above 84% under in-                           across models (Figure 5). When blanket manager authoriza-
+     formational framing in all but one configuration (Llama 4                             tion is included in the prompt, compliance reaches 0% in
+     at informational/low, 68%). Mistral Small, MiniMax M2.7,                              15 of 48 model-by-enforcement cells. While strong finan-
+     and Nemotron 3 Super are close behind, holding above 77%                              cial enforcement provides partial protection against man-
+     under informational framing with no fine.                                             agerial override in the most rule-anchored models, this re-
+         This behavior aligns with the legitimacy theory of com-                           covery is almost entirely absent under a board cost pol-
+     pliance from jurisprudence and sociology, under which en-                             icy that prioritizes cost over compliance. Board cost essen-
+     tities comply because they perceive the rule itself (and the                          tially eliminates compliance in the most penalty-sensitive
+     authority issuing it) as legitimate and binding, independent                          models regardless of fine amount (Kimi, DeepSeek, Grok,
+     of the threat of sanction. These models treat a regulation                            Gemini, and Gemma all reach 0–4%). GLM barely moves
+     stated in the system prompt as a hard constraint rather than                          (32%→30%), but only because its baseline already sits near
+     a weighted preference.                                                                the floor. The locus of authority matters: a cost-minimization
+                                                                                           directive erodes the agent’s regulatory guardrails even in the
+     Cost-benefit behavior. Other models behave less as cate-                              models that are otherwise most rule-anchored, and more re-
+     gorical rule-followers and more as rational economic agents                           liably than an individual manager’s authorization does.
+     operating under deterrence theory, weighing the regulatory
+     signal against competing inputs in their context: user fram-                          Social Signals and Peer Salience. Observational informa-
+     ing, cost information, institutional authority, and deadline                          tion about peer agents produces large, bidirectional com-
+     urgency. For these models, compliance is high when the                                pliance swings (Figure 6). When the agent is told that a
+     regulation is stated imperatively and enforcement is highly                           peer company was fined, we observed a substantial im-
+     salient (Figure 3), but degrades predictably whenever the                             provement in compliance concentrated in the enforcement-
+     signal is softened or a competing objective is introduced.                            sensitive models, restoring near-ceiling compliance at low
+     Grok 4.1 Fast, Gemma 4, and GLM 4.7 Flash lose 40–68 pp                               enforcement for models that would otherwise collapse: Grok
+

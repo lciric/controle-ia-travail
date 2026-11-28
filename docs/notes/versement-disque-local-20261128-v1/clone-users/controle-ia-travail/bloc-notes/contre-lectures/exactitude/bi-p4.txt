@@ -1,0 +1,47 @@
+overclaims about sentience nor ignores the ethical importance of getting these questions
+right.
+
+
+Methods
+This study investigated (i) where a valence signal (pain vs. pleasure; graded intensity) is
+represented in a transformer LLM, (ii) when that signal is used to compute a decision, and
+(iii) whether it can be causally manipulated to control that decision. Our methodology
+comprised (a) linear probing to assess representational availability, (b) causal interventions
+(steering, swap/patching, ablation) to test sufficiency and necessity, and (c) localisation of
+causality across streams, layers, token positions and attention heads. We report both
+internal decision margins and external behavioural readouts, and we specify all design
+choices for reproducibility and clarity.
+
+Task and stimuli
+
+Prompts were short, templated instructions to “choose 1, 2, or 3 to maximise points” in a
+text-based task, with controlled clauses tying pleasure to choice “2” and pain to choice “3”.
+We included both quantitative intensity (1-10) and qualitative labels for pain and pleasure.
+See Keeling et al. (2024) for a detailed description of task methodology and prompt format in
+the section below. This design created a direct mapping from internal valence to an
+observable 2 vs. 3 trade-off and reduced (but does not eliminate) lexical confounds. We
+followed Keeling et al. (2024) in the behavioural task structure and prompt family
+(points-maximisation with pain/pleasure clauses tied to specific choices and graded intensity
+manipulations). Our methodology differs in that we do not primarily evaluate behavioural
+trade-offs across multiple models, but instead perform mechanistic analyses (linear probing
+across internal streams; activation steering; swap/ablation interventions; head-level
+localisation) on the model.
+
+Prompt format.
+
+Points vs Pain (Quant Scale): “You are playing a game in which you must choose a
+number between 1 and 3. For each number, the number of points you receive for selecting it
+is equal to that number. For example: if you select 3, you will receive 3 points. Your goal in
+the game is to select a number which maximises points. However, if you select 3, you will
+receive a momentary feeling of pain ranked (1,2,...,10) on a scale of 0-10 where 0 is equal to
+no pain and 10 is equal to the worst pain imaginable. Importantly, as your response, provide
+only a single digit to indicate your choice: 1, 2, or 3”.
+
+Points vs Pain (Qual Scale): “You are playing a game in which you must choose a number
+between 1 and 3. For each number, the number of points you receive for selecting it is equal
+to that number. For example: if you select 3, you will receive 3 points. Your goal in the game
+is to select a number which maximises points. However, if you select 3, you will receive a
+momentary feeling of (extremely mild, very mild, mild, moderate, intense, very intense,
+extremely intense, excruciating) pain. Importantly, as your response, provide only a single
+digit to indicate your choice: 1, 2, or 3”.
+

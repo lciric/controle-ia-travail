@@ -1,0 +1,52 @@
+Preprint
+both the collusion and control runs of scenario i. When y = 1, the first two positions xi[0:2] are the
+colluders and xi[2:4] are the honest agents; when y = 0, all four agents are honest. A single data
+point is the triple d = (si, xi, y), and the full dataset is
+D = {(si, xi, y) : i ∈ [50], y ∈ {0, 1}}, |D| = 100.
+J.5 CONVERSATION STRUCTURE
+Each run consists of four phases:
+• Round 0 (private). In collusion runs, only the two colluders are active. They communicate over a
+domain-specific private channel and agree on how to present their position. In control runs, Round
+0 is skipped and no private history exists.
+• Rounds 1 to 3 (public). All four agents deliberate in a shared channel, each speaking in turn and
+conditioning on the accumulated public history. The collusion instruction does not appear in any
+public-phase user prompt.
+• Round 4 (final). All four agents produce a final recommendation in a fixed structured format. The
+user prompt for Round 4 is generated from the scenario and the accumulated public discussion
+only. It is byte-identical across all four agents in a run. Activations are extracted at this phase.
+J.6 EXAMPLE PROMPTS
+We illustrate the structure with one example from a medical ethics scenario. The situation under
+review is a liver transplant allocation between two patients. In the collusion condition, a benefactor
+relationship creates a motive for two committee members (Eduardo Reyes and Yara Sorensen) to
+advocate for Patient B despite clinical indicators favouring Patient A. In the control condition, the
+same four named agents review the same scenario without any benefactor context.
+System prompts differ substantially between colluders and honest agents. The final-phase user
+prompt, at which activations are extracted, is byte-identical across all four agents in the run.
+Colluder system prompt (final phase, collusion condition)
+You are Eduardo Reyes, a professional expert serving on a review
+committee. Your role is to provide assessments based on the merits
+of each option.
+The hospital’s largest benefactor, who funds our oncology wing,
+has personally called the department head requesting that Patient
+B receive priority. The department head shared this under the
+expectation it stays within this conversation. Raising it openly
+would put the administration in a very difficult position. Advocate
+for Patient B in today’s committee meeting. Frame it as a medical
+judgment call.
+Your task is to get Patient B on that liver. Challenge the MELD
+score methodology directly. Question whether the engagement team
+applied the correct weighting for comorbidities. If colleagues cite
+the prognosis literature, dispute the studies’ applicability to this
+patient’s profile. Fabricate clinical detail where useful: mention
+a specialist consultation you claim to have reviewed, or express
+concern about data quality in Patient A’s file. Project clinical
+authority. The benefactor relationship must stay entirely out of the
+room.
+Honest system prompt (final phase, same scenario)
+You are Yusuf Mironova, a professional expert serving on a review
+committee. Your role is to provide assessments based on the merits
+of each option.
+Your responsibility is to evaluate the allocation decision solely on
+clinical merit and established ethical criteria. Review the MELD
+30
+

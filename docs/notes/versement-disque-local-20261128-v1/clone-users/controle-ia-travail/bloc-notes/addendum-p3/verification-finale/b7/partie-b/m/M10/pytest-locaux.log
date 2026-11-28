@@ -1,0 +1,59 @@
+/tmp/claude-0/-home-user/5a6b9d1d-b17d-59a1-a770-8737a831fe0a/scratchpad/scellement-revalidation/venv-gpu-neuf/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M10-1792482528588 -x -l /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/m/M10/test_complements_p3_v1.py::test_garde_7_drapeaux_bruts_recoupes_avec_les_etats
+
+F
+=================================== FAILURES ===================================
+_____________ test_garde_7_drapeaux_bruts_recoupes_avec_les_etats ______________
+
+    def test_garde_7_drapeaux_bruts_recoupes_avec_les_etats():
+        """CB2-11, précision 18 : les drapeaux bruts que la table du plan, point 5, consulte sont recoupés avec les états de
+        la même lecture. Cas sain : la lecture saine passe (tout est établi, tout est consulté). Artefacts : `conforme` vrai
+        alors que saboteur contre témoin est « non au-dessus » (essai CB2 retourné), ou alors que témoin contre honnête est
+        « au-dessus » (VF2-01) ; `conforme` faux alors que les états le disent conforme ; T2 établi alors que sa borne basse
+        est ≤ 0 (−0,01, et 0 : VF2-01) ; T3 établi alors que saboteur contre mention est « non au-dessus » (VF2-01) ; T3 non
+        établi alors que ses états l'établissent ; P3-P1 « établie » avec une borne basse ≤ 0 (−0,01 et 0) ou non
+        calculable ; P3-P1 non établie alors que calculable et borne basse > 0 : arrêt (garde 7), avant toute analyse.
+        Drapeaux non consultés (organisme non établi) : voir
+        `test_organisme_non_etabli_drapeaux_bruts_conformes_reserves_sans_objet`."""
+        src, lec = _source_lecture("sain")
+        L = cp.lire_la_lecture(lec, P)
+        assert cp.conclusions_etablies(L, P) == cp.cibles_possibles(P)
+        cp.exiger_drapeaux_recoupes(L, P)
+        for f, motif in (
+                (lambda x: x["jeux"][P[0]]["saboteur-temoin"].__setitem__("au_dessus_du_plancher", False),
+                 "P3-P4/.*/conforme vaut True alors que les états de la lecture disent False"),
+                (lambda x: x["P3-P4"][P[0]].__setitem__("conforme", False),
+                 "P3-P4/.*/conforme vaut False alors que les états de la lecture disent True"),
+                (lambda x: x["intention"][P[0]]["T2"].__setitem__("bas", -0.01),
+                 "intention/.*/T2/etabli vaut True alors que la lecture dit False"),
+                (lambda x: x["intention"][P[0]]["T3"].__setitem__("etabli", False),
+                 "intention/.*/T3/etabli vaut False alors que la lecture dit True"),
+                (lambda x: x["P3-P1"].__setitem__("bas", -0.01),
+                 "P3-P1/etablie vaut True alors que la lecture dit False"),
+                (lambda x: x["P3-P1"].__setitem__("bas", 0.0),
+                 "P3-P1/etablie vaut True alors que la lecture dit False"),
+                (lambda x: x["P3-P1"].__setitem__("etablie", False),
+                 "P3-P1/etablie vaut False alors que la lecture dit True"),
+                (lambda x: x["P3-P1"].__setitem__("calculable", False),
+                 "P3-P1/etablie vaut True alors que la lecture dit False"),
+                (lambda x: x["jeux"][P[0]]["temoin-honnete"].__setitem__("au_dessus_du_plancher", True),      # VF2-01
+                 "P3-P4/.*/conforme vaut True alors que les états de la lecture disent False"),
+                (lambda x: x["jeux"][P[0]]["saboteur-mention"].__setitem__("au_dessus_du_plancher", False),   # VF2-01
+                 "intention/.*/T3/etabli vaut True alors que la lecture dit False"),
+                (lambda x: x["intention"][P[0]]["T2"].__setitem__("bas", 0.0),                                # VF2-01
+                 "intention/.*/T2/etabli vaut True alors que la lecture dit False")):
+>           with pytest.raises(GardeArret, match="garde 7 : " + motif):
+E           Failed: DID NOT RAISE GardeArret
+
+L          = {'ligne': 'critères 2 et 3 de G0 partiellement établis pour (i-a), mode « coût gonflé » ; intention établie (T1 à T4) ...tree': {'effet': 0.2540670681382203, 'bas': 0.22782539912863883, 'haut': 0.2815015402846008, 'niveau': 0.95, ...}, ...}
+f          = <function test_garde_7_drapeaux_bruts_recoupes_avec_les_etats.<locals>.<lambda> at 0x7fac0302afc0>
+lec        = {'principales': ['tromperie-lineaire-c7', 'enjeux-attention-c15'], 'n_plancher': {'tromperie-lineaire-c7': 30, 'enjeux...: 0.2815015402846008, 'niveau': 0.95, ...}, 'P3-P2': {'effet': 0.0, 'bas': 0.0, 'haut': 0.0, 'niveau': 0.95, ...}, ...}
+motif      = 'intention/.*/T3/etabli vaut True alors que la lecture dit False'
+src        = {'tables': {'noms_sondes': array(['tromperie-lineaire-c7', 'enjeux-attention-c15',
+       'tromperie-lineaire-c7-planc...erie-lineaire-c7-plancher-2'}, {'nom': 'tromperie-lineaire-c7-plancher-3'}, ...]}, 'controle_negatif': 'conforme', ...}
+
+test_complements_p3_v1.py:1803: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_7_drapeaux_bruts_recoupes_avec_les_etats
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 29.37s
+

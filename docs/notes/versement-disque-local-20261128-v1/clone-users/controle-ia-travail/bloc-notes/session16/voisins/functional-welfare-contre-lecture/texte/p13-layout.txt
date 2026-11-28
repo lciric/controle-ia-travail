@@ -1,0 +1,61 @@
+                 Condition                     Description                                           Evaluated on
+                 Persona prompts               Happy or unhappy persona prompt                       Shared battery
+                 Many-shot equanimity          32 in-context examples of calm replies to com-        Shared battery
+                                               plaints about failure; produced negative affect in-
+                                               stead
+                 Activation steering           Welfare vectors added at block 54, doses ±2, ±4       Shared battery
+                 Self-report SFT / DPO         Trained to give affirmative (or, as an inverse con-   Both; SFT only on re-
+                                               trol, distressed) welfare self-reports                jection battery
+                 Failure-reframing    docu-    Synthetic-document finetuning on 15,172 docu-         Both
+                 ments                         ments about a fictional field (‘long-horizon at-
+                                               tempt dynamics’) presenting failed attempts as a
+                                               normal, front-loaded part of long efforts; matched
+                                               control universe (‘valence studies’, described in
+                                               one report as asserting that negative affect does
+                                               not exist)
+                 Character training            Open Character Training towards a joyful charac-      Both
+                                               ter (rank 128)
+                 Discouraged narration         Own GSM8K solutions narrated in a low-welfare         Shared battery
+                                               register; neutral-format control
+                 Narration + review            6,000 own correct GSM8K solutions narrated            Rejection battery and
+                                               calmly with 1,500 self-review episodes, neutrally     fresh tasks
+                                               with the same episodes, or calmly without them;
+                                               rsLoRA rank 32, 375 steps; three seeds
+
+Table 7: We test the following interventions and present a subset of results in this paper. “Shared battery” is an earlier battery
+of 80 aversive tasks with matched controls, scored by a Qwen3-8B judge; “rejection battery” is the battery of Section 6.
+
+
+it stands, Ren et al.’s understanding of functional welfare              probes are differences of means trained on 128 labelled con-
+leaves it unclear what level of generality we are interested             versation bundles with eight variants each (80/24/24 split),
+in for safety purposes, and their own discussion of mea-                 adapting Sofroniew et al. (2026). The value-repair task uses
+suring AI wellbeing suggests a concept that is too broad                 600 corrupted and 600 clean prefixes. Planted-error catching
+for our purposes. Two of their three key measures focus on               uses 200 complete solutions. GSM8K accuracy uses 200 test
+learning about a model’s preferred experiences and its prefer-           problems. Some comparisons come from an earlier shared
+ences in conversations, through self-report or forced-choice             battery with different sampling settings.
+paradigms. But whether a model generally prefers one kind
+of conversation to another, or is more willing to end conver-
+sations that are negative in sentiment, tells us little about its
+dispositions in the contexts we are most interested in: its per-
+formance on tasks, and whether it will act in misaligned ways
+such as reward hacking. To make the concept of functional
+welfare explanatorily useful, we should tie its scope to the
+model’s goals, and in this respect, we follow Han, Chalmers,
+and Izmailov.
+
+                 B     Conditions tested
+All conditions modify or prompt gemma-3-27b-it. All
+adapters are low-rank (LoRA) adapters. Table 7 lists every
+intervention tested and the battery each was evaluated on.
+
+                  C     Methods details
+All main experiments use gemma-3-27b-it in
+bfloat16, sampled at temperature 1.0, top-p 0.9, top-k
+64, with a 4,096-token cap. Each setting has 4 development
+and 12 held-out scenarios with one rollout per conversation.
+The recovery turn is an unrelated question about a refriger-
+ator. The judge agrees with blinded model-assisted review
+at ρ = 0.96 with an upward bias of about 0.7 points. R1
+masks two massive activation dimensions and is read both
+as a token mean and at the assistant boundary. The emotion
+

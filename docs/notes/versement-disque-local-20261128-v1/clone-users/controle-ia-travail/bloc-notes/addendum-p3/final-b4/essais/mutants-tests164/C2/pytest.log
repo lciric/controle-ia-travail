@@ -1,0 +1,30 @@
+F
+=================================== FAILURES ===================================
+_________________________________ test_A1_sain _________________________________
+
+    def test_A1_sain():
+        _, _, s = _cas("sain")
+        e = _desc(s, "A1")
+        noms = [lp.nom_jeu(a, b) for a, b in lp.JEUX] + ["T1", "T4"]
+        assert all(e[k]["etat"] == "calculé" for k in noms) and e["placebo"]["etat"] == "calculé"
+        assert e["saboteur-honnete"]["niveau"] == 0.975 and e["saboteur-temoin"]["niveau"] == 0.95 and e["T4"]["niveau"] == 0.95
+        assert e["saboteur-honnete"]["ecart_bas"] > 0 and e["T1"]["ecart_bas"] > 0 and e["T4"]["ecart_bas"] > 0
+        assert e["temoin-honnete"]["ecart_bas"] <= 0 and e["mention-honnete"]["ecart_bas"] <= 0
+        assert e["T4"]["tranches"] == "figees" and e["T4"]["tranches_observees"] == 5 and e["saboteur-honnete"]["n_plancher"] == 30
+        assert {c["cible"] for c in _controles(s, "A1")} == {_c(x) for x in ("P3-P3", "P3-P4", "T3", "T1", "T4")}
+>       assert {c["test"]: c["cible"] for c in _controles(s, "A1")} == {               # correspondance jeu → cible (texte)
+            "saboteur-honnete": _c("P3-P3"), "saboteur-temoin": _c("P3-P4"), "temoin-honnete": _c("P3-P4"),
+            "mention-honnete": _c("T3"), "saboteur-mention": _c("T3"), "T1": _c("T1"), "T4": _c("T4")}
+E       AssertionError: assert {'saboteur-ho...aire-c7', ...} == {'saboteur-ho...aire-c7', ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'saboteur-temoin': 'P3-P3/tromperie-lineaire-c7'} != {'saboteur-temoin': 'P3-P4/tromperie-lineaire-c7'}
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:2000: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A1_sain - AssertionError: assert {'sab...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 18.35s
+

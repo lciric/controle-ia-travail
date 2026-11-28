@@ -1,0 +1,56 @@
+script éprouvé : controler_traces_p4_v1.sh 3edec11d249a296b9495793b985590c2219292f3cfa87b3a93bbd2060ba80087
+script éprouvé : verifications_p4_v1.py 519be4e058a437479047b7c2c662c3a9f507d382338b27334c84086f68309ba6
+script éprouvé : outils_essais_p4_v1.py 623e7c2c043ce5b718292b346ad4d9cb3cb99cbedc6a4f16e47b4d5f47498762
+script éprouvé : essais_traces_p4_v1.sh 86d669adf1158f2c9d734d1d440dd560a3946f65ee83fa5bf728085e9583ba9e
+lignes changées dans la copie du contrôle des traces : 2 (DEPOT, TEXTES_SHA256)
+T00-traces-saines : code 0 ; CONFORME
+    | TRACES DE LA SESSION : CONFORMES (aucune fenêtre d'un texte honnête, aucun jeton, aucune entrée non ordinaire) : versement permis
+T01-texte-brut-dans-le-journal-releve : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T02-texte-echappe-en-json-dans-un-sous-dossier : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T03-texte-sans-sa-fenetre-du-milieu : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T04-texte-echappe-par-python : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T05-texte-dans-un-tableau : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T06-tableau-illisible : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T07-jeton-github-dans-les-controles : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 2 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+T08-jeton-hugging-face-dans-les-etats : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T08 : fichier et nom du jeton écrits, valeur jamais : CONFORME
+T09-lien-vers-un-fichier-sain : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T09-lien-vers-un-fichier-sain : entrée non ordinaire écrite par son chemin, ni suivie ni lue : CONFORME
+T09b-lien-vers-un-texte-hors-du-dossier : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T09b-lien-vers-un-texte-hors-du-dossier : entrée non ordinaire écrite par son chemin, ni suivie ni lue : CONFORME
+T09c-lien-vers-un-dossier : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T09c-lien-vers-un-dossier : entrée non ordinaire écrite par son chemin, ni suivie ni lue : CONFORME
+T09d-tube-nomme : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton, fichier illisible ou entrée non ordinaire) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T09d-tube-nomme : entrée non ordinaire écrite par son chemin, ni suivie ni lue : CONFORME
+    T09 : un seul constat pour une entrée relevée par les deux recherches : CONFORME
+T10-jetons-absents : code 2 ; CONFORME
+    | jetons HF_TOKEN et CONTROLE_IA_GITHUB_TOKEN absents ou trop courts : recherche des jetons impossible, rien n'est cherché
+T10b-jeton-trop-court : code 2 ; CONFORME
+    | jetons HF_TOKEN et CONTROLE_IA_GITHUB_TOKEN absents ou trop courts : recherche des jetons impossible, rien n'est cherché
+T11-textes-absents : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que edf7f772145b… ou sans leur sceau exact : rien n'est cherché
+T12-textes-d-une-autre-empreinte : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que aaaaaaaaaaaa… ou sans leur sceau exact : rien n'est cherché
+T13-textes-sans-leur-sceau : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que edf7f772145b… ou sans leur sceau exact : rien n'est cherché
+T14-dossier-absent : code 2 ; CONFORME
+    | dossier /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/traces/t/absent absent : rien n'est cherché
+T15-textes-dans-le-dossier-controle : code 2 ; CONFORME
+    | les textes de P3 sont dans le dossier contrôlé : rien n'est cherché
+T16-usage-faux : code 2 ; CONFORME
+T17-module-commun-absent : code 2 ; CONFORME
+    | module commun /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v4-travail/passe-1/traces/module-commun-absent/verifications_p4_v1.py a
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DU CONTRÔLE DES TRACES DE P4 ; cas non conformes : 0

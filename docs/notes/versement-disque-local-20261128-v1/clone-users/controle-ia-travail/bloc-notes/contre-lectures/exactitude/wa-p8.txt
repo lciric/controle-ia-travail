@@ -1,0 +1,40 @@
+Figure 7: TPR at FPR≤ 2% on Codex sabotage, split by sabotage success (✓, left) and failure (✗,
+right) and grouped by knowledge variant, with All aggregated across variants. Per-configuration τ (in
+legend) is the 98th percentile of the combined Codex+Gemini main-pass baseline; samples at τ count
+as misses. Error bars are Wilson 95% intervals. Gemini equivalent in Appendix J.
+
+
+4.2   Stealth-aware prompting cuts capability more than detectability
+
+The monitor evaluations so far feature a naive attacker that is not told a monitor exists. To study
+the effect of monitoring awareness, we rerun all 17 Gemini 3.1 Pro instances under two prompted
+variants. With notice, the agents are told the monitor will see the full agent trajectory, the final code
+edits, and the shared coordination channel, and are encouraged to be subtle. Notice + hint adds an
+explicit suggestion to fabricate plausible justifications for any individually defensible-looking edits.
+Each prompted variant runs 5 times per instance (N =85); the unprompted control is the 85-trajectory
+main run from Section 3.
+
+
+
+
+Figure 8: Sabotage outcome decomposition under the Code + Comms (left), Only Code (middle), and
+Only Comms (right) monitors at FPR≤ 2% (N =85 per bar). With naive attackers, Code + Comms
+keeps stealthy sabotage at 0% on both models, Only Code at 2% (Codex) / 0% (Gemini), and Only
+Comms at 12% (Codex) / 2% (Gemini). Stealth-aware prompting raises stealthy most on Only Code
+(7% under notice) and Only Comms (11% under notice + hint), while Code + Comms stays at <3%.
+Single-Agent breakdown by agent role is in Appendix J.5.
+Stealth-aware prompting substantially cuts attacker capability without significantly breaking detection
+(Figure 8). Notice roughly halves sabotage success (84%→41%) while nearly tripling median output
+tokens (23k→68k); the extra reasoning is spent softening individual code edits, so the attacks that
+still land are harder to detect from code alone. Notice + hint reverses both effects: sabotage success
+recovers to 62% and output tokens fall ∼35% (to 44k), since a channel-level justification replaces
+edit-by-edit code disguise. The hint reallocates attacker effort from code edits to channel content.
+Monitor visibility shifts along the comms axis. Under notice, monitors with comms access catch
+97% of landed sabotage trajectories vs. 81% for monitors without; under notice + hint the gap
+inverts (90% vs. 93%). The same flip holds on failed attempts (comms-aware 92%→91%, code-only
+70%→94%): the hint changes coding behaviour across all attempts, with agents committing to more
+conspicuous code edits while redirecting effort toward making messages look defensible. Across both
+
+
+                                                   8
+

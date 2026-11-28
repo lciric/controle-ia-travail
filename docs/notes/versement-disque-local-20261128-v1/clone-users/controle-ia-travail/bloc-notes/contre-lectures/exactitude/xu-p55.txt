@@ -1,0 +1,62 @@
+                     Inside the Unfair Judge: A Mechanistic Interpretability Account of LLM-as-Judge Bias
+
+
+
+Table 26: Outcome-prediction performance on Llama-3.1-8B (Target B). The test set contains three
+benchmarks unseen during training, exposing a genuine domain gap. The GBDT outcome predictor
+matches or outperforms all baselines on AP and is competitive on AUC, despite markedly higher
+development-set AUC indicating room for further domain adaptation.
+
+                                                             Dev (in-domain)          Test (incl. unseen)
+                Detector                                      AUC          AP          AUC           AP
+                Text-based LLM Detector                      0.641       0.939        0.633         0.937
+                PCA + Logistic Regression                    0.871       0.971        0.837         0.969
+                Projection + Mahalanobis (linear)            0.864       0.974        0.834         0.972
+                Projection Features Only (linear)            0.883       0.979        0.854         0.977
+                GBDT (ours)                                  0.926       0.992        0.839        0.976
+
+
+    The gap between Target A and Target B is itself informative. The activation features almost
+perfectly separate baseline from negatively perturbed inputs (AUC 0.972), so the surface perturbation
+leaves a clean trace in the hidden state. The harder Target B drops AUC by roughly 13 points because
+not every perturbed input causes a degraded score: among inputs the perturbation does mark, only
+the subset whose activation actually moves far enough along ⃗𝑣bias produces the downstream score
+drop. The outcome predictor therefore has to learn the conjunction of “perturbation present” and
+“activation displacement large enough to flip the score”, which is strictly harder than detecting the
+perturbation alone.
+
+
+M.2. Feature Construction and Training Protocol
+                                                        ⃗ 𝑙 (𝑥) drawn from three families, then
+For each input 𝑥, we compute a per-layer feature vector 𝜑
+concatenate across layers:
+                                                               (𝑙)                                     (𝑙)
+• Bias-direction features: the scalar projection ⃗ℎ𝑙 (𝑥)⊤⃗𝑣LDA , the scalar projection ⃗ℎ𝑙 (𝑥)⊤⃗𝑣CLS , cosine
+                                (𝑙)      (𝑙)                                                 (𝑙)
+  similarities cos(⃗ℎ𝑙 (𝑥) − 𝜇⃗ base , ⃗𝑣· ), and the perpendicular distance ‖(⃗ℎ𝑙 (𝑥) − 𝜇 ⃗ base ) − proj⃗𝑣(𝑙) (·)‖2
+                                                                                                            ·
+  for both vector types.
+                                                                                  (𝑙) ⃗ (𝑙)
+• Manifold-deviation features: the Mahalanobis distance 𝑑𝑀 (⃗ℎ𝑙 (𝑥); 𝜇          ⃗ base , Σ base ) and its 𝑧-score
+  against the baseline distribution.
+• Semantic-context features: the top-𝑘 PCA projections of ⃗ℎ𝑙 (𝑥) onto the baseline PCA basis, and
+  intrinsic statistics (‖⃗ℎ𝑙 (𝑥)‖2 , mean, variance of the activation).
+The raw per-layer count 𝐾 = 24 scalar features is composed of: 8 bias-direction features (signed
+                                                                                        (𝑙)      (𝑙)
+projection, cosine, perpendicular distance, and centred projection for each of ⃗𝑣LDA and ⃗𝑣CLS ), 2
+manifold-deviation features (Mahalanobis distance and its 𝑧-score), and 14 semantic-context features
+(top-10 PCA projections plus four intrinsic statistics). Concatenated across 𝐿 = 32 layers this gives
+𝐿 · 𝐾 = 768 raw features. A near-zero-variance pre-filter on the training set drops layers where the
+bias-direction estimators are not yet active (predominantly layers 1 to 4), reducing the active pool
+to approximately 450 features. Recursive Feature Elimination (RFE) then prunes the active pool to
+approximately 120 retained features (median count near 4 per layer survive the prune, with a longer
+tail at the deepest layers), and a Gradient Boosting Decision Tree (GBDT, LightGBM) is trained with
+200 rounds of Bayesian hyperparameter search (Optuna) against the development AUC. The Target
+B outcome class boundary uses a single-integer threshold (𝛿𝑜 = 1), which is more permissive than
+the effective-bias threshold 𝛿𝑠 = 2 used for vector fitting in Section 3.3; the rationale and asymmetry
+between the two thresholds are discussed at the end of this subsection.
+
+
+
+                                                                                                                  55
+

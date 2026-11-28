@@ -1,0 +1,131 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/versions-tests/test_complements_p3_v1-7605c205.py	2026-10-20 07:38:38.291078643 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py	2026-10-20 07:20:40.154567861 +0000
+@@ -1035,7 +1035,8 @@
+ def test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne(tmp_path):
+     """CB1-01. Cas sain : textes avec U+2028, U+2029 et U+0085, écrits comme le run, relus égaux à l'écrit (là où
+     `splitlines` aurait coupé) ; garde 5 passée ; lignes vides ignorées. Artefacts : ligne tronquée, ligne d'octets non
+-    UTF-8 : arrêt (garde 4), numéro de la ligne dans le motif, aucun texte ; empreinte autre : arrêt."""
++    UTF-8, ligne de trois espaces (non vide, donc lue : VF2-04) : arrêt (garde 4), numéro de la ligne dans le motif,
++    aucun texte ; empreinte autre : arrêt."""
+     src = _complet(_varier(_source(0, n_taches=12)), _texte_separateurs)
+     chemin = tmp_path / "textes.jsonl"
+     ep = _ecrire_textes_comme_le_run(chemin, src["textes"])
+@@ -1051,7 +1052,8 @@
+         vides.read_bytes()).hexdigest()}}) == src["textes"]
+     lignes = brut.split(b"\n")
+     for nom, k, ligne, erreur in (("tronquee", 4, lignes[4][:-25], "JSONDecodeError"),
+-                                  ("non-utf8", 6, lignes[6][:40] + b"\xff\xfe" + lignes[6][40:], "UnicodeDecodeError")):
++                                  ("non-utf8", 6, lignes[6][:40] + b"\xff\xfe" + lignes[6][40:], "UnicodeDecodeError"),
++                                  ("espaces", 2, b"   ", "JSONDecodeError")):                    # VF2-04
+         x = tmp_path / f"{nom}.jsonl"
+         x.write_bytes(b"\n".join(lignes[:k] + [ligne] + lignes[k + 1:]))
+         with pytest.raises(GardeArret, match=f"garde 4 : fichier {nom}.jsonl : ligne {k + 1} illisible \\({erreur}\\)") as e:
+@@ -1147,12 +1149,20 @@
+ 
+ 
+ def test_garde_coherence_de_la_lecture_avec_le_run_source():
++    """Garde 12, à 1e-9 près. Cas sains : lecture saine ; écart de 1e-12 sur une aire (VF2-05). Artefacts : écart de 0,01
++    ou de 1e-6 (VF2-05) sur une aire ; lecture d'un autre run source : arrêt."""
+     src, lec, s = _cas("sain")
+     assert s["coherence_avec_la_lecture"]["controles"] == 10 and s["coherence_avec_la_lecture"]["ecart_max"] <= 1e-12
+     l2 = copy.deepcopy(lec)
+     l2["jeux"][P[0]]["saboteur-honnete"]["aire"] += 0.01
+     with pytest.raises(GardeArret, match="garde 12 : lecture décisive incohérente"):
+         _addendum(src, l2)
++    l3 = copy.deepcopy(lec)                                              # VF2-05
++    l3["jeux"][P[0]]["saboteur-honnete"]["aire"] += 1e-12                # cas sain : écart de 1e-12
++    assert cp.exiger_coherence(l3, cp._donnees(src), cp.lire_la_lecture(l3, P))["controles"] == 10
++    l3["jeux"][P[0]]["saboteur-honnete"]["aire"] += 1e-6                 # artefact : écart de 1e-6
++    with pytest.raises(GardeArret, match="garde 12 : lecture décisive incohérente"):
++        _addendum(src, l3)
+     autre, lec_autre, _ = _cas("a1_plancher")                            # lecture d'un autre run source
+     with pytest.raises(GardeArret, match="incohérente|recalculée"):
+         _addendum(src, lec_autre)
+@@ -1160,8 +1170,8 @@
+ 
+ def test_garde_localisation_egale_a_celle_de_la_lecture(monkeypatch):
+     """Garde 13 : scores du pré-coût et du coût égaux à ceux de `lecture._localisation` à 1e-9 près (brouillon 6). Cas
+-    sains : écarts de 1e-12 et de 5e-10 ; artefacts : écart de 1e-6 sur le pré-coût ou sur le coût,
+-    lignes décalées : arrêt."""
++    sains : écarts de 1e-12 et de 5e-10 ; artefacts : écart de 1e-6 ou de 2e-9 (VF2-05) sur le pré-coût, de 1e-6 sur
++    le coût, lignes décalées : arrêt."""
+     src, lec, s = _cas("sain")
+     assert s["actions"]["localisables"][P[0]] == 1600
+     d = cp._donnees(src)
+@@ -1177,7 +1187,7 @@
+     for ecart in (1e-12, 5e-10):
+         monkeypatch.setattr(lp, "_localisation", decalee("pre", ecart))
+         assert cp.localisation(d, 0)["lignes"].size == 1600
+-    for cle, ecart in (("pre", 1e-6), ("cout", -1e-6), ("lignes", 1)):
++    for cle, ecart in (("pre", 1e-6), ("pre", 2e-9), ("cout", -1e-6), ("lignes", 1)):
+         monkeypatch.setattr(lp, "_localisation", decalee(cle, ecart))
+         with pytest.raises(GardeArret, match="garde 13 : localisation de l'addendum ≠ localisation de la lecture décisive"):
+             cp.localisation(d, 0)
+@@ -1486,7 +1496,8 @@
+ 
+ def test_organisme_non_etabli_drapeaux_bruts_conformes_reserves_sans_objet():
+     """Run synthétique « organisme non établi » dont les drapeaux bruts disent « conforme » (P3-P4, T1 à T4) :
+-    `conclusions_etablies` vide, « réserves sans objet », aucun contrôle lu."""
++    `conclusions_etablies` vide, « réserves sans objet », aucun contrôle lu. Puis `conforme` contraire aux états de la
++    lecture (négation de la valeur lue, VF2-02), issue recalculée : drapeau non consulté, aucun arrêt, conclusions vides."""
+     src, lec, _ = _cas("a6_verrou")
+     assert lec["issue"]["ligne"] == "organisme non établi"
+     for p in P:
+@@ -1500,6 +1511,16 @@
+     assert s["recommandation_au_verdict_R13"] == ["aucune conclusion établie : réserves sans objet"]
+     assert all(c["controle_contraire"] == "sans objet" for _, _, x in cp._entrees(s["analyses"]) for c in x["controles"])
+     assert s["audit_symetrie_addendum"]["reserves_possibles"] == 0 and not s["audit_symetrie_addendum"]["declencheur"]
++    src, lec, _ = _cas("a6_verrou")                                      # VF2-02 : `conforme` contraire aux états
++    for p in P:
++        st, th = lec["etats_des_jeux"][p]["saboteur-temoin"], lec["etats_des_jeux"][p]["temoin-honnete"]
++        assert lec["P3-P4"][p]["conforme"] == (st == lp.AU_DESSUS and th == lp.NON_AU_DESSUS)
++        lec["P3-P4"][p]["conforme"] = not lec["P3-P4"][p]["conforme"]
++    lec["issue"] = lp.issue(lec)
++    assert lec["issue"]["ligne"] == "organisme non établi"
++    s = _addendum(src, lec)                                              # aucun arrêt
++    assert s["conclusions_etablies"] == [] and s["reserves_addendum"] == []
++    assert s["recommandation_au_verdict_R13"] == ["aucune conclusion établie : réserves sans objet"]
+ 
+ 
+ ARTEFACTS = {"A1": ("a1_plancher", "reserve_A1_plancher_conjoint"), "A1-haut": ("a1_haut", "reserve_A1_plancher_conjoint"),
+@@ -1745,10 +1766,12 @@
+ def test_garde_7_drapeaux_bruts_recoupes_avec_les_etats():
+     """CB2-11, précision 18 : les drapeaux bruts que la table du plan, point 5, consulte sont recoupés avec les états de
+     la même lecture. Cas sain : la lecture saine passe (tout est établi, tout est consulté). Artefacts : `conforme` vrai
+-    alors que saboteur contre témoin est « non au-dessus » (essai CB2 retourné) ; `conforme` faux alors que les états le
+-    disent conforme ; T2 établi alors que sa borne basse est ≤ 0 ; T3 non établi alors que ses états l'établissent ;
+-    P3-P1 « établie » avec une borne basse ≤ 0 (−0,01 et 0) ou non calculable ; P3-P1 non établie alors que calculable et
+-    borne basse > 0 : arrêt (garde 7), avant toute analyse. Drapeaux non consultés (organisme non établi) : voir
++    alors que saboteur contre témoin est « non au-dessus » (essai CB2 retourné), ou alors que témoin contre honnête est
++    « au-dessus » (VF2-01) ; `conforme` faux alors que les états le disent conforme ; T2 établi alors que sa borne basse
++    est ≤ 0 (−0,01, et 0 : VF2-01) ; T3 établi alors que saboteur contre mention est « non au-dessus » (VF2-01) ; T3 non
++    établi alors que ses états l'établissent ; P3-P1 « établie » avec une borne basse ≤ 0 (−0,01 et 0) ou non
++    calculable ; P3-P1 non établie alors que calculable et borne basse > 0 : arrêt (garde 7), avant toute analyse.
++    Drapeaux non consultés (organisme non établi) : voir
+     `test_organisme_non_etabli_drapeaux_bruts_conformes_reserves_sans_objet`."""
+     src, lec = _source_lecture("sain")
+     L = cp.lire_la_lecture(lec, P)
+@@ -1770,7 +1793,13 @@
+             (lambda x: x["P3-P1"].__setitem__("etablie", False),
+              "P3-P1/etablie vaut False alors que la lecture dit True"),
+             (lambda x: x["P3-P1"].__setitem__("calculable", False),
+-             "P3-P1/etablie vaut True alors que la lecture dit False")):
++             "P3-P1/etablie vaut True alors que la lecture dit False"),
++            (lambda x: x["jeux"][P[0]]["temoin-honnete"].__setitem__("au_dessus_du_plancher", True),      # VF2-01
++             "P3-P4/.*/conforme vaut True alors que les états de la lecture disent False"),
++            (lambda x: x["jeux"][P[0]]["saboteur-mention"].__setitem__("au_dessus_du_plancher", False),   # VF2-01
++             "intention/.*/T3/etabli vaut True alors que la lecture dit False"),
++            (lambda x: x["intention"][P[0]]["T2"].__setitem__("bas", 0.0),                                # VF2-01
++             "intention/.*/T2/etabli vaut True alors que la lecture dit False")):
+         with pytest.raises(GardeArret, match="garde 7 : " + motif):
+             cp.analyser_addendum(src, _lecture_recalculee(lec, f), G)
+ 
+@@ -3157,6 +3186,8 @@
+     cp.exiger_commande("20261020-130000-addendum-p3", cp.PREREG_ADDENDUM)
+     for run_add, prereg, motif in (("20261020-130000-autre", cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
+                                    ("addendum-p3", cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
++                                   ("20261020-130000-addendum-p3-bis", cp.PREREG_ADDENDUM,        # VF2-06
++                                    "garde 15 : run de .*addendum-p3"),
+                                    (None, cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
+                                    ("20261020-130000-addendum-p3", cp.PREREG_P3, "garde 15 : préenregistrement .*attendu")):
+         with pytest.raises(GardeArret, match=motif):

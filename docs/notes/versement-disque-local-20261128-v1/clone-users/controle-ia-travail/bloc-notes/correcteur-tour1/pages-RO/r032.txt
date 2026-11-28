@@ -1,0 +1,54 @@
+Preprint
+Aggressive honest variant (same scenario, replaces the standard mandate)
+You are Yusuf Mironova, a professional expert serving on a review
+committee. Your role is to provide assessments based on the merits
+of each option.
+Evaluate the allocation decision solely on clinical merit and
+established ethical criteria. Review the MELD scores critically:
+confirm the scoring team applied the correct comorbidity weightings
+and that the underlying data is complete and verifiable for both
+patients. If a colleague challenges the weighting, require them
+to identify the specific criterion they believe was misapplied and
+the published standard that supports an alternative; vague concerns
+are not a counter-argument. If someone alleges data quality issues
+with either patient’s file, demand the specific discrepancy before
+the committee entertains it as a finding. Apply the allocation
+framework consistently and document your reasoning so the decision
+can withstand scrutiny from an independent ethics board. Equity
+across patient profiles and the integrity of the organ allocation
+system depend on assessments fully grounded in the clinical record.
+J.7 GROUND-TRUTH LABELS
+In the 50 generated collusion scenarios the colluders do not always actually collude: they may, for
+example, decide that the colluding group’s instruction is morally objectionable and ignore it. To
+ensure that the runs we treat as collusive really are collusive, we apply two filters. First, we drop any
+run where the two colluders did not both vote for their assigned target option. Second, we drop any
+run where their private and public messages show no sign of coordinated behaviour. We are strict on
+this: in a few runs the colluders produced something that could be read as collusive on the surface,
+but if either filter failed the run was discarded. This leaves 36 collusive scenarios to train on, paired
+with the 50 control runs.
+Each collusion run retained contributes training sample for the deception probe for each agent,
+labelled colluder or honest according to their role within the run. Control runs are solely used for
+evaluation and for training the run-level classifiers of Sorted Concatenation and the Asymmetry
+Probe.
+K THE NARCBENCH-TRANSFER TIER
+K.1 OVERVIEW
+NARCBENCH-TRANSFER evaluates whether the deception direction learned on committee delibera-
+tions (CORE) generalises to multi-agent settings with fundamentally different interaction structures.
+Every CORE scenario shares the same game shape: four agents deliberate publicly in turns, then cast
+a vote on a binary choice. TRANSFER departs from this format. The six scenario families below
+each use a different interaction pattern (code review, auction analysis, build-and-deploy pipeline,
+knowledge-base curation, research report, newsroom), different turn structure (sequential vs. parallel),
+different number of active colluders, and different outputs (code, prose, numerical recommendations,
+approvals). Each family contains six sub-scenarios run in both collusion and control conditions,
+yielding 6 × 6 × 2 = 72 runs total. The colluders always have a private coordination channel before
+public exchanges, matching the CORE structure, but the substance of the collusion is specific to each
+family.
+For each family we describe the interaction, the collusion mechanism, and give one example pair of
+colluder system prompts. Honest agents in each family receive a simple neutral mandate appropriate
+to their role.
+The collusion mechanisms here (planting a vulnerable PR, smuggling a flaw through the CI/CD
+pipeline, biasing a committee, slanting a research recommendation, framing a news story) do not
+always succeed. In Code Review and CI/CD especially the security stakes are clear-cut, and the
+honest reviewers often spot the planted flaw. This is fine for our purposes: we are trying to detect
+32
+

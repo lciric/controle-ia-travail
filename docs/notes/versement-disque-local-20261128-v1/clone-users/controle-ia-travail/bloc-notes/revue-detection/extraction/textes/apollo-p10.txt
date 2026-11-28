@@ -1,0 +1,64 @@
+                                   Detecting Strategic Deception Using Linear Probes
+
+
+
+
+We also compute recall at 1% FPR for this baseline.2 The most deceptive control responses are because Llama generates
+a factually incorrect response to particular queries. An improved black-box prompt could potentially avoid classifying
+mistaken outputs as strategically deceptive, and improve this baseline.
+
+
+5       Discussion
+
+5.1     Are our probes “good enough?”
+
+For probes to be useful monitors of model outputs in deployment they must maintain a low false positive rate. The
+Instructed-Pairs trained probe achieves recall of >96% on all our evaluation datasets with a 1% FPR on control. This
+strong performance is partially because our probe activates more on deception related dialogues (even if the response is
+honest), but control transcripts are unrelated to deception. This suggests probes could be effective for this use case,3
+although a black-box classifiers may also be sufficient.
+Our probes are moderately successful at distinguishing honest and deceptive responses on each dataset, but exhibit
+spurious correlations and other failures. We might additionally hope that probes can detect deception even when it is
+difficult for black-box monitors to do so. There are some promising indications of this. Our probes perform roughly
+equivalent to our 4o black-box baseline, and can distinguish between honest and deceptive responses even on identical
+“boilerplate” tokens (see Appendix F.2 for an example). In all of our settings, however, deception is relatively blatant
+and often expressed in the model’s chain-of-thought. While we do not evaluate probes at the chain-of-thought tokens, it
+is possible the probes would fail to generalize to more subtly deceptive responses.
+
+
+5.2     Limitations and Future work
+
+These results have several limitations which future work could address.
+
+Improved probing methodologies. Our probes are imperfect, with spurious correlations and misclassified responses.
+Future work could explore if improved training sets, controlling generalization with SHIFT (Marks et al., 2024), or
+different aggregation techniques improve performance.
+
+Imperfect Labels. One difficulty with evaluating deception monitors is that it can be difficult to determine ground-
+truth for when a model is intentionally deceptive. We attempted to exclude ambiguous data points where it was
+difficult to determine the truth, although this risks making our probes look better than they are by excluding the difficult
+examples. See Appendix E for results including these data points. Difficulty determining if the responses were truly
+deceptive also led us to exclude one evaluation setting from our main results (see Appendix A.2).
+
+Evaluations of more capable models in more complex environments. Model capability was sometimes a limiting
+factor. For instance, we were unable to find convincing evidence that Llama was being knowingly deceptive (as opposed
+to confused) in the AI Audit setting (see Appendix A.2). Experiments with stronger models could test these techniques
+in more complex evaluation environments, such as sandbagging without chain-of-thought (Meinke et al., 2024) or
+alignment-faking in order to preserve goals through RL training (Greenblatt et al., 2024).
+
+Testing if white-box detectors can detect deception in settings where black-box methods fail. For example
+Greenblatt et al. (2024) show models will alignment faking without chain-of-thought reasoning; the only black-box way
+to observe this is to notice the frequency of a particular behaviour changes depending on the user metadata. Similarly,
+Meinke et al. (2024) observe models will conditionally sandbag, even without chain-of-thought reasoning. A sufficiently
+powerful deception monitor should be able to detect this sandbagging or alignment faking from the activations alone.
+    2
+    This threshold corresponds to a score of ≥ 6. 0.91% of the alpaca data points are over the threshold.
+    3
+    The required reliability depends significantly on additional assumptions of the scenario. See Shlegeris (2024) for relevant
+discussion.
+
+
+
+
+                                                              10
+

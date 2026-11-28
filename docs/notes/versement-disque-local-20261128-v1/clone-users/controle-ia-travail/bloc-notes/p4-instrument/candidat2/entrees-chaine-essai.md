@@ -1,0 +1,1 @@
+- **Vérifications de la chaîne v2** : (essai, à remplir au retour des vérifications).

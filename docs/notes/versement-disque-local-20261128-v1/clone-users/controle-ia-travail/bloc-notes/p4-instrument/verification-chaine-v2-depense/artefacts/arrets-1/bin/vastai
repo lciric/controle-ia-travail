@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# faux outil : étiquette JSON brute (fichier etiquette-json, défaut "p4-v1") ; état avant l'arrêt (avant) ; après (apres)
+S=${SCENARIO:?}
+case "$1 $2" in
+  "show instance")
+    echo "show instance $3" >> "$S/outil.txt"
+    labj=$(cat "$S/etiquette-json" 2>/dev/null || echo '"p4-v1"')
+    if [ -e "$S/arrete" ]; then e=$(cat "$S/apres" 2>/dev/null || echo "exited stopped"); else e=$(cat "$S/avant" 2>/dev/null || echo "running running"); fi
+    set -- $e
+    printf '{"id": 99999999, "label": %s, "actual_status": "%s", "cur_state": "%s", "extra_env": [["GH_TOKEN", "factice-gh-verif-0001"]]}\n' "$labj" "$1" "$2" ;;
+  "stop instance") echo "stop instance $3" >> "$S/outil.txt"; touch "$S/arrete"; echo '{"success": true}' ;;
+  "destroy instance") echo "destroy instance $3" >> "$S/outil.txt"; echo '{"success": true}' ;;
+  "show instances") echo "show instances" >> "$S/outil.txt"; echo '[]' ;;
+  logs) echo "logs" >> "$S/outil.txt"; cat "$S/journal" 2>/dev/null ;;
+  *) echo "verbe inattendu : $*" >> "$S/outil.txt"; exit 9 ;;
+esac

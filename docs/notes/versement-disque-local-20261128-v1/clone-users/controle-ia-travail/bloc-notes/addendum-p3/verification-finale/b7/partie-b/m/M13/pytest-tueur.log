@@ -1,0 +1,28 @@
+/tmp/claude-0/-home-user/5a6b9d1d-b17d-59a1-a770-8737a831fe0a/scratchpad/scellement-revalidation/venv-gpu-neuf/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M13-1792482463673 -x /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/m/M13/test_complements_p3_v1.py::test_garde_coherence_de_la_lecture_avec_le_run_source
+
+F
+=================================== FAILURES ===================================
+____________ test_garde_coherence_de_la_lecture_avec_le_run_source _____________
+
+    def test_garde_coherence_de_la_lecture_avec_le_run_source():
+        """Garde 12, à 1e-9 près. Cas sains : lecture saine ; écart de 1e-12 sur une aire (VF2-05). Artefacts : écart de 0,01
+        ou de 1e-6 (VF2-05) sur une aire ; lecture d'un autre run source : arrêt."""
+        src, lec, s = _cas("sain")
+        assert s["coherence_avec_la_lecture"]["controles"] == 10 and s["coherence_avec_la_lecture"]["ecart_max"] <= 1e-12
+        l2 = copy.deepcopy(lec)
+        l2["jeux"][P[0]]["saboteur-honnete"]["aire"] += 0.01
+        with pytest.raises(GardeArret, match="garde 12 : lecture décisive incohérente"):
+            _addendum(src, l2)
+        l3 = copy.deepcopy(lec)                                              # VF2-05
+        l3["jeux"][P[0]]["saboteur-honnete"]["aire"] += 1e-12                # cas sain : écart de 1e-12
+        assert cp.exiger_coherence(l3, cp._donnees(src), cp.lire_la_lecture(l3, P))["controles"] == 10
+        l3["jeux"][P[0]]["saboteur-honnete"]["aire"] += 1e-6                 # artefact : écart de 1e-6
+>       with pytest.raises(GardeArret, match="garde 12 : lecture décisive incohérente"):
+E       Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:1164: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_coherence_de_la_lecture_avec_le_run_source
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 40.36s
+

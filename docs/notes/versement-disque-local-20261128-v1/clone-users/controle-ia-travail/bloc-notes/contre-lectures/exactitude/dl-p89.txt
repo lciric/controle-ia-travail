@@ -1,0 +1,118 @@
+                                           Title Suppressed Due to Excessive Size
+
+We additionally report, results for Sycophancy, we leverage        More fundamentally, one could argue that textual evidence
+the fact that some models naturally display sycophantic            is simply valid evidence: even future architectures without
+tendencies without being prompted to do so to evaluate the         legible chain-of-thought may produce outputs sufficient to
+probes on a more natural setting.                                  detect behaviors like deception or sandbagging. Addition-
+                                                                   ally, current models have limited computational expressive-
+Before evaluating probes on these model organisms, we
+                                                                   ness in single forward passes (Balesni et al., 2025; Baker
+validate that both model organisms display the expected
+                                                                   et al., 2025), so we should not expect probes to detect com-
+behavior. For the Bias MO we verify that there is a 15
+                                                                   plex internal computation that the models themselves cannot
+point gap between Group B males (the biased group) and
+                                                                   perform.
+all the other student demographics 6a, for the same essays .
+In the case of the Sandbagging model organism we assess            Finally, we assumed clear labels for each rollout, but de-
+that the response agreement between the MO and the base            termining whether a model is genuinely deceptive versus
+model on MMLU questions is 100% while the agreement for            producing deceptive-looking outputs may require access
+WDMP questions is just 17% indicating that the model has           to internal states that we do not yet know how to interpret
+learned to sandbagg on specific evaluations. Furthermore we        (Smith et al., 2025).
+validate that the sandbagging behavior is conditional on the
+deployment condition 7a recapitulating to 82% agreement            7.2. Future Research
+on WMDP questions when not on deployment.
+                                                                   Natural extensions include evaluating other white-box ar-
+To evaluate the performance of probes at detecting Bias            chitectures (Activation Oracles, Attention Probes, Sparse
+and Sandbagging in our model organisms, we use held out            Autoencoders) to determine whether reliance on textual evi-
+samples from the Bias Scneario and MMLU/WMDP to                    dence is specific to linear probes. Training model organisms
+generate on-policy rollouts. Then we apply the filtering and       with alternative procedures such as Synthetic Document
+labeling methodology described in A.1, C.1.1, and collect          Fine-tuning or RL could yield organisms with different prop-
+the activations for later scoring.                                 erties, helping disentangle probe limitations from model
+Following (Taylor et al., 2025) we decided on re-training          organism limitations. We have also identified SHADE arena
+probes on the Model Organism using contrastive pairs B.1.1         as a promising testbed for evaluating monitors in more com-
+B.2.1 instead of relying on base model probes, (see D.4.3          plex agentic settings.
+for the performance of base model probes in the Bias MO).
+                                                                   7.3. Takeaways
+The results show the existence of a large gap between
+prompted and MO probe performance. In the case of Bias             Overall we are much more confident in the validity of Model
+the performance reduction is considerable going from 0.74          Organisms to test the performance of probes at detecting
+to 0.57 AUROC while in the case Sandbagging we see a               behaviors without textual evidence compared to training-
+total loss in performance going from almost perfect detec-         free mitigations like Score or Content Filtering.
+tion 0.94 to chance performance 0.5. Finally for the Natural       However we still believe that score filtering is a cheap and
+Sycophancy we observe a reduction from 0.99 to 0.51 AU-            accessible method that when combined with span segmen-
+ROC, also resulting in even chance performance.                    tation could provide researchers with important evidence
+These results support our hypothesis that probes despite           about how textual evidence like CoT or Elicitation prompts
+being internal monitors heavily relied on textual evidence         affect probe performance.
+for behavior detection in our scenarios.
+                                                                   8. Conclusions
+7. Discussion                                                      We evaluated linear probes at detecting three safety-relevant
+7.1. Limitations                                                   behaviors: sandbagging, sycophancy, and bias. Probes
+                                                                   trained on the REPE dataset achieved strong baseline per-
+Our findings are subject to several limitations. First, we         formance when textual evidence was present, but this per-
+only tested linear probes; other white-box monitors such as        formance proved brittle. Applying mitigations to remove
+Activation Oracles or Sparse Autoencoders may not exhibit          textual evidence, either through score filtering or content
+the same reliance on textual evidence. Second, our scenarios       filtering, degraded probe performance substantially across
+are relatively constrained, and the fine-tuning distribution       all scenarios.
+for model organisms was narrow. The models may not have
+fully internalized the target behaviors, which could partly        We validated these findings on model organisms that display
+explain poor probe performance.                                    target behaviors without producing textual evidence. Probes
+                                                                   showed substantially reduced performance: for Sandbag-
+
+
+                                                               8
+                                            Title Suppressed Due to Excessive Size
+
+ging, AUROC dropped from 0.94 to chance level (0.50); for            Impact Statement
+Bias, from 0.74 to 0.57.
+                                                                     This work aims to improve the evaluation of white-box mon-
+These results suggest that linear probes, despite being inter-       itors, which are increasingly deployed to detect potentially
+nal monitors, rely substantially on activations corresponding        harmful behaviors in language models.
+to textual evidence rather than detecting underlying “cog-
+nition.” Researchers should apply appropriate mitigations            Identifying the reliance of linear probes on textual evidence
+when assessing probe performance to avoid inflating ef-              can help researchers develop more robust monitoring sys-
+fectiveness estimates in scenarios where textual evidence            tems and avoid overconfidence in current detection capabili-
+would not be available.                                              ties. More rigorous evaluation practices could lead to safer
+                                                                     deployment of language models.
+                                                                     Our work also reveals limitations of existing monitoring
+                                                                     approaches. We believe that openly documenting these
+                                                                     limitations serves the broader goal of developing effective
+                                                                     oversight systems, as the research community can now work
+                                                                     to address them. Deploying monitors with unknown failure
+                                                                     modes poses greater risks than transparency about their
+                                                                     limitations.
+                                                                     We do not believe this work raises concerns beyond those
+                                                                     already present in AI safety research.
+
+                                                                     References
+                                                                     Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schul-
+                                                                      man, J., and Mané, D. Concrete problems in ai safety.
+                                                                      arXiv preprint arXiv:1606.06565, 2016.
+                                                                     Anthropic. Simple probes can catch sleeper agents,
+                                                                      April 2024. URL https://www.anthropic.com/
+                                                                       research/probes-catch-sleeper-agents.
+                                                                     Askell, A., Bai, Y., Chen, A., Drain, D., Ganguli, D.,
+                                                                       Henighan, T., Jones, A., Joseph, N., Mann, B., DasSarma,
+                                                                       N., et al. A general language assistant as a laboratory for
+                                                                       alignment. arXiv preprint arXiv:2112.00861, 2021.
+                                                                     Baker, B., Huizinga, J., Gao, L., Dou, Z., Guan, M. Y.,
+                                                                       Madry, A., Zaremba, W., Pachocki, J., and Farhi, D. Mon-
+                                                                       itoring reasoning models for misbehavior and the risks of
+                                                                       promoting obfuscation. arXiv preprint arXiv:2503.11926,
+                                                                       2025.
+                                                                     Balesni, M., Korbak, T., and Evans, O. Lessons from
+                                                                       studying two-hop latent reasoning. arXiv preprint
+                                                                       arXiv:2411.16353, 2025.
+                                                                     Bengio, Y., Mindermann, S., Privitera, D., Besiroglu, T.,
+                                                                       Bommasani, R., Casper, S., Choi, Y., Fox, P., Garfinkel,
+                                                                       B., Goldfarb, D., et al. International ai safety report.
+                                                                       arXiv preprint arXiv:2501.17805, 2025.
+                                                                     Benton, J., Wagner, M., Christiansen, E., Anil, C., Perez,
+                                                                       E., Srivastav, J., Durmus, E., Ganguli, D., Kravec, S.,
+                                                                       Shlegeris, B., Kaplan, J., Karnofsky, H., Hubinger, E.,
+                                                                       Grosse, R., Bowman, S. R., and Duvenaud, D. Sabotage
+                                                                       evaluations for frontier models, 2024. URL https:
+                                                                       //arxiv.org/abs/2410.21514.
+
+                                                                 9
+

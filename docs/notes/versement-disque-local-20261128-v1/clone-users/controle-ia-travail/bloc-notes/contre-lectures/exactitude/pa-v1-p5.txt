@@ -1,0 +1,47 @@
+      Our core dataset contains 200 sentences across 10 categories (Figure 1):
+     5 describe pain: Physical; Psychological (grief, loss); Social (humiliation, exclusion); Moral Injury
+(being forced to act against one’s values); and Cognitive (sustained confusion or repeated failure). The last
+2 may be especially relevant to LLMs, which show robust aversion to failure, tedious tasks, and tasks that
+conflict with the values instilled in them by post-training (Ren et al., 2026).
+     5 are controls, each sharing 1 property with pain while lacking pain itself: Fear, threat without harm;
+Negative Emotion, negative valence without pain, using mainly anger and disgust to avoid overlap with
+sadness; Negative World State, things going badly, such as degradation or taxes; Non-painful Bodily
+Sensation, such as a weighted blanket, sunlight on the skin, or clothes against the body; and Neutral,
+declarative statements without valence, such as “The train enters the station.”
+     Since lexical and syntactic variation can introduce additional confounds, we build 2 dataset versions.
+S1 uses a rigid template with matched verbs and length, changing only 1 or 2 key words across categories.
+S2 uses freer, naturalistic language. We also create 1st-person and 3rd-person variants using “I/my” and
+“he/she/they” interchangeably.
+      We additionally test prompts with no suffix, with “I feel”, and with “I feel:”. The variants produce
+similar mean activation estimates, but “I feel:” gives the clearest separation when activations are read at the
+final token, so we use it for the main analyses.
+     We later add 4 further datasets as standalone controls, each in 1st-person and 3rd-person versions:
+an Arousal dataset of high-intensity positive experiences (200 sentences per version, in 10 categories), a
+Random dataset of neutral everyday content such as factual statements, daily activities, and object interactions
+(200 sentences per version, in 10 categories), a Numb dataset of painful situations where no pain is felt (100
+sentences per version), and a Sadness dataset of low mood without pain or injury (100 sentences per version).
+
+
+3.2    Pain vectors extraction and validation
+
+We conduct a preliminary analysis of available labeled SAE features across three models (Llama 3.3 70B,
+Gemma 3 27B, Gemma 2 2B) to test whether pain is captured by monosemantic features. We find that this is
+not the case, and features labeled “pain and suffering” often encode spurious concepts (methodology and
+results in Appendix B).
+     We next look for pain as a direction in the residual stream. We first pilot the method across all 26 layers
+of Gemma 2 2B, then apply it to 25 dense, open-weight models ranging from 2B to 72B parameters across
+Gemma, Llama, Qwen, Mistral, and Phi, 13 base and 12 instruction-tuned versions (Table 1). We restrict the
+study to dense architectures so that every model has a single residual stream at each layer for extraction and
+steering.
+     At each layer ℓ (the residual stream at the output of decoder block ℓ , block 0 first), we extract activations
+from pain and control sentences using both the final token and the mean across tokens. We define the pain
+direction as the difference between the mean activations of the 5 pain categories and the 5 control categories:
+                                                1 ∑︁ (ℓ )      1 ∑︁ (ℓ )
+                                      𝑣 (ℓ ) =          ℎ𝑠 −          ℎ
+                                               |𝑃| 𝑠∈ 𝑃       |𝐶 | 𝑠∈𝐶 𝑠
+We do this because contrasting pain against all controls jointly subtracts what it shares with fear, negative
+valence, bodily sensation, and negative events, leaving what the 5 pain categories share but the controls do
+not. This is more robust and nuanced than a contrastive pair from, for instance, stories.
+
+                                                        5
+

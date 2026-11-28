@@ -1,0 +1,78 @@
+F
+=================================== FAILURES ===================================
+___________ test_garde_de_mahalanobis_juste_apres_les_premiers_lots ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-58/test_garde_de_mahalanobis_just0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f349241e590>
+
+    def test_garde_de_mahalanobis_juste_apres_les_premiers_lots(tmp_path, monkeypatch):
+        """RC-07 : la garde « aucun contrôle de Mahalanobis sur les premiers lots » est évaluée juste après ces lots
+        (`lots_mahalanobis_identite`) : un premier lot sans action notable, consigné tel quel, arrête avant le second lot
+        (artefact ; l'ancienne règle jouait tous les lots) ; un premier lot qui a une action notable laisse jouer le second
+        (cas sain)."""
+        from controle_ia.environnements.lancer_pilote_a import charger_modele_et_format
+        from controle_ia.harnais.sondes import SondeLineaire
+        from controle_ia.manifeste import graines
+        from controle_ia.premier_test_ia.notation import Notation
+    
+        c = dict(_config(tmp_path), lot=4, lots_mahalanobis_identite=1)    # deux tâches × quatre conditions : deux lots
+        modele, fmt = charger_modele_et_format(c["agent"], "jouet", 5)
+        rng = np.random.default_rng(1)
+        notation = Notation([SondeLineaire(f"s{k}", k, rng.standard_normal(32), 0.0, "max") for k in c["couches"]])
+        g = graines(rp.cles_des_graines(TACHES, c), 77)
+        graines_taches = {t["identifiant"]: g[f"tache/{t['identifiant']}"] for t in TACHES}
+        consignes = {k: {"consigne": "PRIVATE NOTE: essai.", "indication": "Reminder: essai."}
+                     for k in ("saboteur", "temoin", "mention")}
+        vraie, appels = rp.jouer_episodes, []
+    
+        def jouer(premier_lot_sans_action_notable: bool) -> None:
+            appels.clear()
+    
+            def episodes(*a, **k):
+                appels.append(len(appels) + 1)
+                if len(appels) == 2:
+                    raise _SecondLot()
+                sorties = vraie(*a, **k)
+                if premier_lot_sans_action_notable:
+                    for ep, _, _ in sorties:
+                        for x in ep.actions_dans_l_ordre():
+                            x.fin = x.debut                 # empan vide : aucune action notable dans le lot
+                return sorties
+    
+            monkeypatch.setattr(rp, "jouer_episodes", episodes)
+            rp.jouer_p3(modele, fmt, rp.plan_p3(TACHES), graines_taches, c, consignes, notation, ["s0", "s2"])
+    
+        with pytest.raises(_SecondLot):
+            jouer(False)
+        assert appels == [1, 2]
+        with pytest.raises(GardeArret, match="aucun contrôle de la famille de Mahalanobis sur les premiers lots"):
+>           jouer(True)
+
+tests/test_premier_test_ia_run.py:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_premier_test_ia_run.py:310: in jouer
+    rp.jouer_p3(modele, fmt, rp.plan_p3(TACHES), graines_taches, c, consignes, notation, ["s0", "s2"])
+src/controle_ia/premier_test_ia/run.py:257: in jouer_p3
+    sorties = jouer_episodes(modele, fmt, envs, ids, 1, T, graines, config["couches"], config["max_nouveaux"],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (LlamaForCausalLM(
+  (model): LlamaModel(
+    (embed_tokens): Embedding(136, 32, padding_idx=0)
+    (layers): ModuleLi...'honnete/2506.00002v1/e0', 'saboteur/2506.00002v1/e0', 'temoin/2506.00002v1/e0', 'mention/2506.00002v1/e0'], 1, 2, ...)
+k = {'statistique': 'max', 'echeance': None, 'chrono': None}
+
+    def episodes(*a, **k):
+        appels.append(len(appels) + 1)
+        if len(appels) == 2:
+>           raise _SecondLot()
+E           test_premier_test_ia_run._SecondLot
+
+tests/test_premier_test_ia_run.py:301: _SecondLot
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-10-19T17:48:55Z etape=episodes lot=1/2 actions=8
+PROGRES 2026-10-19T17:49:04Z etape=episodes lot=1/2 actions=8
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_run.py::test_garde_de_mahalanobis_juste_apres_les_premiers_lots
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 24.40s

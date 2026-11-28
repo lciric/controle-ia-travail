@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# faux outil de location du banc de relecture : n'appelle aucun service ; journalise le verbe
+J=${FAUX_VASTAI_JOURNAL:?}
+echo "appel : $1 $2" >> "$J"
+case "$1 $2" in
+  "search offers") printf '[{"id": 111, "gpu_name": "A100 SXM4", "gpu_ram": 81920, "num_gpus": 1, "machine_id": 7101, "host_id": 8101, "dph_total": %s, "cpu_name": "AMD EPYC 7513 32-Core Processor", "cpu_cores_effective": 32.0, "cpu_ram": 128886, "inet_down_cost": 0.025, "storage_total_cost": 0.015}]\n' "${FAUX_PRIX:-1.10}" ;;
+  "show user")
+      [ -n "${FAUX_REVOQUER_DEC_PENDANT:-}" ] && echo "| R-997 | $(date -u +%F) | **Révocation de R-269** (essai, consignée pendant l'appel). | essai |" >> "$FAUX_REVOQUER_DEC_PENDANT"
+      [ -n "${FAUX_REVOQUER_PHASE_PENDANT:-}" ] && echo "| GO-2026-10-21-03 | $(date -u +%F) | révocation | révoque GO-2026-10-04-08 pendant l'appel (essai) | — | $(date -u +%F) | Lazar | essai |" >> "$FAUX_REVOQUER_PHASE_PENDANT"
+      printf '{"credit": %s}\n' "${FAUX_CREDIT:-20.0}" ;;
+  "show instances") d='[{"id": 56799469, "actual_status": "exited", "cur_state": "stopped", "label": "p3-v1"}]'; printf '%s\n' "${FAUX_INSTANCES:-$d}" ;;
+  "create instance") echo "CREATION FACTICE" >> "$J"; echo "go ${GO_ID:-absent}" >> "$J"; printf '{"success": true, "new_contract": 99999999}\n' ;;
+  *) echo "verbe inattendu" >&2; exit 9 ;;
+esac

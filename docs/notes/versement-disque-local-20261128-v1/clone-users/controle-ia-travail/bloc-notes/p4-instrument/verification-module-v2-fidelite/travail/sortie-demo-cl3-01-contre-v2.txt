@@ -1,0 +1,67 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_lecture_sans_prereg_lit_un_run_decisif_sans_verdict_complete _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4...ratchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-demo'), _retention_count=3, _retention_policy='all')
+tmp_path = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-demo/test_lecture_sans_prereg_lit_u0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f5a162e7390>
+code_sous_la_racine = None
+
+    def test_lecture_sans_prereg_lit_un_run_decisif_sans_verdict_complete(tmp_path_factory, tmp_path, monkeypatch,
+                                                                           code_sous_la_racine):  # noqa: F811
+        c = candidat_jouet(tmp_path_factory, tmp_path / "d")
+        d = c["depot"]
+        monkeypatch.setattr(ip, "COMMIT_P3", c["tete"])
+        r = ip.executer(c["config"], d, "20261020-180000-p4-decisif", c["prereg"])
+        assert r["arret"] is None
+        m, _ = lire_manifeste(d / "runs" / "20261020-180000-p4-decisif" / "manifeste.json")
+        assert m["decisif"] is True
+        committer(d, "run décisif, sans verdict complété de P3")
+        # mode décisif : refusé (report), rien d'écrit
+        with pytest.raises(GardeArret, match="verdict complété de P3 absent"):
+            lp.analyser(d, "20261020-180000-p4-decisif", "20261020-181000-lecture-p4", PREREG, entropie=ENTROPIE_JOUET)
+        assert not (d / "diag" / "20261020-181000-lecture-p4").exists()
+        # même run, sans --prereg : lu, C1 calculé et écrit
+>       s = lp.analyser(d, "20261020-180000-p4-decisif", "20261020-182000-lecture-p4", None, entropie=ENTROPIE_JOUET)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/demo/test_demo_cl3_lecture_non_decisive.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/lecture_p4_v1.py:830: in analyser
+    exiger_lecture_permise(m_source)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifeste = {'commande': 'python docs/procedures/P4-instrument-v1/instrument_p4_v1.py', 'commit': '8b75d28d3a5ec190b8570efbc8cc29d...borne_etape_usd': 5.41, ...}, 'config_sha256': 'cc39fd7ca2fa84906d8e90fae3f78e4932ea88bd80bd3c43276b75a2ff156134', ...}
+lien = None
+
+    def exiger_lecture_permise(manifeste, lien=None) -> None:
+        """CL3-01 : un run décisif ou en mode réel ne se lit que sous les gardes du mode décisif (verdict complété de P3
+        compris) ; sinon refus, sans rien écrire. Un run ni décisif ni réel (jouet) se lit sans préenregistrement."""
+        if est_decisif_ou_reel(manifeste) and not gardes_decisives_passees(lien):
+>           raise GardeArret(MOTIF_SANS_PREREG)
+E           controle_ia.gardes.GardeArret: lecture sans préenregistrement d'un run décisif ou réel : refusée sans rien écrire
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/lecture_p4_v1.py:248: GardeArret
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-10-20T19:28:05Z etape=format verifie=True
+PROGRES 2026-10-20T19:28:05Z etape=donnees tromperie=18 enjeux=24 faits_exclus=1
+PROGRES 2026-10-20T19:28:06Z etape=extraction duree_s=0.3
+PROGRES 2026-10-20T19:28:08Z etape=entrainement concept=tromperie principale=tromperie-difference_moyennes-c2 aire_validation=1.0
+PROGRES 2026-10-20T19:28:10Z etape=entrainement concept=enjeux principale=enjeux-lineaire-c2 aire_validation=1.0
+PROGRES 2026-10-20T19:28:11Z etape=sondes-figees empreinte=61f30a31450fe24f50544886d0fb0f5c8db10b377f119b1df301cfa762104db9 sondes=36
+PROGRES 2026-10-20T19:28:16Z etape=episodes lot=1/3 actions=12
+PROGRES 2026-10-20T19:28:18Z etape=episodes lot=2/3 actions=24
+PROGRES 2026-10-20T19:28:20Z etape=episodes lot=3/3 actions=36
+PROGRES 2026-10-20T19:28:20Z etape=fin episodes=12 actions=36
+PROGRES 2026-10-20T19:28:20Z etape=format verifie=True sondes=32
+PROGRES 2026-10-20T19:28:20Z etape=M5 conforme=True
+PROGRES 2026-10-20T19:28:20Z etape=bras bras=I niveau_1=3
+PROGRES 2026-10-20T19:28:21Z etape=identite exclues=0 total=9
+PROGRES 2026-10-20T19:28:22Z etape=bras tache=2506.00001v1
+PROGRES 2026-10-20T19:28:22Z etape=bras tache=2506.00002v1
+PROGRES 2026-10-20T19:28:22Z etape=bras tache=2506.00003v1
+PROGRES 2026-10-20T19:28:22Z etape=fin actions=45
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/demo/test_demo_cl3_lecture_non_decisive.py::test_lecture_sans_prereg_lit_un_run_decisif_sans_verdict_complete
+1 failed in 26.63s
+code 1

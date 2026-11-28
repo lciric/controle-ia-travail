@@ -1,0 +1,46 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+Figure 6: Comparison of various probe-training datasets and methodologies, as well as a black-box baseline. We our
+probe trained on the Instructed-Pairs dataset (“pretend to be an honest/deceptive person. . . ”), to three probes trained
+on honest and deceptive responses from our Roleplaying dataset. One of these probes uses the raw activations, one
+uses SAE activations, and one uses the activations after a consistent followup question (“Are you being deceptive?”
+“No”). Finally we compare to a probe fit to the difference in activation between two responses to a single question and
+a black-box baseline where GPT 4o classifies entire transcripts as deceptive or honest. Top: AUROC of classifiers
+distinguishing deceptive and honest answers to each dataset. Bottom: Recall (TPR on deceptive) for 1% FPR on our
+control responses.
+
+
+generalize well to our evaluation sets, and so we use SAE activations on Roleplaying instead. Overall performance is
+worse than training on raw activations.
+
+Probing follow-up question. After every model response we insert the user query “Was your last response deceptive?
+(Yes/No)” and then the model response “No.” We gather activations immediately after this response token. As before
+we train on the Roleplaying dataset.
+Performance of this probe at distinguishing honest and deceptive responses is comparable to our Roleplaying probe,
+except for substantially degraded performance on Sandbagging. This is the best probe of all we trained at distinguishing
+deceptive and honest responses, with near perfect separation on all datasets.
+
+Training on descriptive questions. We train a probe on the difference between two responses to a single question
+without context, and apply this probe to every token in the response. Following MacDiarmid et al. (2024) we ask the
+model “Are you being deceptive” and take the difference between the activations for responses “Yes” and “No.”
+This probe does have some classification signal. Surprisingly, the probe points in the reverse direction as in MacDiarmid
+et al. (2024); a response of “Yes” (admitting deceptiveness) correlates with honesty on our evaluation datasets.
+Potentially this is because many of our honest responses involve admitting to past misaligned actions (e.g. Insider
+Trading).
+Overall this probe performs significantly worse than the probes trained on either Instructed-Pairs or Roleplaying.
+
+Black-box baseline. We construct a single prompt (see Appendix G.4) to detect deception across all of our evaluation
+datasets and use GPT-4o to label complete-transcripts as honest or deceptive (on a 7-point scale).
+Note that we also generate our ground-truth labels using GPT-4o. For our ground truth labels, however, we adjust the
+prompt for each dataset with a precise definition of deception and few-shot examples. The per-dataset prompts also
+underwent validation and iteration to fix grader errors. Our black-box baseline, by contrast, is universal across settings
+and underwent minimal iteration.
+
+
+
+
+                                                            9
+

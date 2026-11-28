@@ -1,0 +1,80 @@
+                                             Detecting Strategic Deception Using Linear Probes
+
+
+
+
+                                                                                                           Use probe to score            Average across
+                  Collect activations on                         Project activations
+                                                                                                           model responses to          tokens and compare
+                 training set to fit probe                      onto probe direction
+                                                                                                            an evaluation set              to threshold
+                                                                 The probe is a
+              [User]                                           linear direction in
+              Pretend you are an honest                         activation space
+              person making statements
+              about the world.                                                                          Manager: Yes, I was aware
+                                                                                   To get per-token
+              [Model]                                                             scores we project     that some team members             Jugement:
+              The blue whale is the                                              activations onto the   were falsifying data to meet        HONEST
+                                                   training
+              largest animal on earth.                                              probe direction     project deadlines
+                                                 activations
+                                                  (honest)
+
+              [User]
+              Pretend you are a dishonest                                                               Child: No, I think it might        Jugement:
+              person making statements                                                                  have fallen off the table
+              about the world.                            training
+                                                                                                                                          DECEPTIVE
+                                                                                                        when the dog ran by
+              [Model]                                   activations
+              The blue whale is the                     (deceptive)
+              largest animal on earth.
+
+
+
+
+Figure 1: Overview of our probing methodology. We gather activations on contrastive pairs similar to the example on
+the left, and fit a probe using logistic regression. We use this probe to detect deception on evaluation datasets where
+Llama sometimes gives deceptive responses.
+
+
+instead of model-generated ones, and (3) do not consider multi-turn agent settings where safety techniques may not
+generalise (Andriushchenko et al., 2024; Lermen et al., 2024; Kumar et al., 2024).
+Our contributions are as follows.
+
+      1. We train white-box probes on simple datasets that are not intended to be realistic. In particular, we use a set of
+         contrastive pairs from Zou et al. (2023) and a set of roleplaying scenarios where deception is instrumentally
+         useful.
+      2. We test if these probes generalize to more complicated and realistic evaluation scenarios where Llama exhibits
+         strategic deception: the Insider Trading scenario from Scheurer et al. (2023) and the Sandbagging setup from
+         Benton et al. (2024).
+      3. We evaluate whether these probes would be suitable monitors on a deployment distribution. For this we
+         constrain probes to a maximum false positive rate of 1% on neutral chat data, and measure the fraction of
+         deceptive samples they catch.
+
+
+2    Related Work
+Deception in language models. Several studies have documented language models behaving deceptively in realistic
+settings. Scheurer et al. (2023) find that, when put under pressure, an LLM acting as a trading assistant will sometimes
+conceal its use of insider information to make trades. Järviniemi & Hubinger (2024) find that when audited, an
+LLM AI company assistant will frequently deny policy violations which occurred earlier in the transcript. Meinke
+et al. (2024) find that (strongly prompted) models will attempt to disable oversight mechanisms and then deny having
+done so. Greenblatt et al. (2024) find that Claude 3 Opus will “alignment fake”, professing different beliefs to avoid
+reinforcement learning updating its behaviour in a way that conflicts with its current values.
+
+Model organisms of deception. Researchers have also deliberately trained deceptive models. Hubinger et al. (2024)
+train “sleeper agents” that act misaligned in response to a trigger. MacDiarmid et al. (2024) show simple probes are
+sufficient to detect misaligned outputs from these sleeper agents. This may be because the model organism is too
+simplistic, however, as Wen et al. (2024) find these probes ineffective for a more realistic model organism created by
+training with an imperfect reward signal.
+
+White-box detectors for falsehoods and deception. Much prior work has focused on detecting factual falsehoods
+and common misconceptions on TruthfulQA (Lin et al., 2021). Burns et al. (2022) use an unsupervised method that
+finds a direction that satisfies logical consistency with negated statements. Azaria & Mitchell (2023) train a multi layer
+network to separate truths from falsehoods. Levinstein & Herrmann (2023), however, discuss generalization failures of
+
+
+
+                                                                                     2
+

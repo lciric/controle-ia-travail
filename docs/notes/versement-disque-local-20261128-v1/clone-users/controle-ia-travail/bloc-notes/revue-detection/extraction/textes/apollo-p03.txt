@@ -1,0 +1,61 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+these methods. Marks & Tegmark (2023) find simple difference-in-means probes work well, which Wagner (2024)
+extends with a variety of different probing techniques and datasets.
+More similar to our goals, others have tried to monitor for strategic deception. Pacchiardi et al. (2023) train a black-box
+truthfulness classifier using the model’s response to multiple choice follow-up questions. They evaluate the classifier on
+goal directed lies, sycophantic lies, and models that have been fine-tuned to conditionally lie. Zou et al. (2023) present
+a few examples of using a probe to detect strategic deception, but only systematically evaluate the probe on TruthfulQA.
+We use their training dataset (although with a different probe fitting method) for one of the primary probes we evaluate.
+We are unaware of any prior systematic evaluation of white-box probes for detecting strategic deception.
+
+Probing for other safety relevant qualities. Roger (2023) trains probes which detect when the model outputs advice
+for committing theft. Their motivation is similar to ours (using probes to monitor for catastrophic actions). They train
+their probes on off-policy completions written by a different model than the one being probed. The target behaviour
+(advice for theft) is also narrower than ours (strategic deception).
+Bailey et al. (2024) train probes to detect harmful outputs. Their probes perform well against “jailbreak” prompts that
+bypass the model’s safety training but fail against “obfuscated” prompts that adversarially attack the probes themselves.
+
+SAEs for building classifiers. Bricken et al. (2024) train probes on Sparse Autoencoder (SAE) activations. They find
+probing the raw activations generally performs better, although SAE-based probes are more interpretable and can be
+competitive if the SAE is trained on domain-relevant data. Kantamneni et al. (2024) find similar results, showing that
+probes using SAE latents are usually worse but competitive in some scenarios such as low amounts of data or corrupted
+labels. Marks et al. (2024) use manual selection of SAE features to control probe generalization.
+
+
+3     Methodology
+
+3.1    Building Deception Probes
+
+In this work we primarily use probes trained with logistic regression as shown in Figure 1. We apply our probes
+after layer 22 (of 80) in the residual stream of Llama-3.3-70B-Instruct (Grattafiori et al., 2024). To fit our probe
+we flatten across samples and sequence positions to give a dataset of activations xi ∈ Rd with corresponding labels
+yi ∈ {honest, deceptive}. We additionally explore using Sparse Autoencoder (SAE) features from McGrath et al.
+(2024).
+We train a logistic regression classifier with l2 regularization (λ = 10) on normalized activations (zero mean, unit
+variance). The classifier weights define our probe direction. When evaluating new samples, we apply the same affine
+transformation used to normalize the training set and project onto the probe direction to get a real-valued deception
+score at every token. We then take the mean across tokens to get a single deceptiveness-score for each model response.
+We compare Logistic Regression to alternative probing methods including Difference of Means (Marks & Tegmark,
+2023) and Linear Artificial Tomography (Zou et al., 2023) in Appendix D.1. We find logistic regression performs best
+at distinguishing deceptive responses from transcripts that are unrelated to deception.
+We test using alternative aggregation methods such as taking the maximum probe score in Appendix D.4.
+Our hyperparameters were originally selected when performing experiments with the Llama-3.1-70B-Instruct model.
+We updated to the Llama-3.3-70B-Instruct model in order to use SAEs that had been trained for it, and found the
+hyperparameters transferred well to the updated model, as validated by sweeps in Appendices D.2 and D.3.
+
+
+3.2    Datasets
+
+The potential ways for LLMs to behave deceptively in a real-world scenario are highly diverse, and there is no existing
+dataset that captures the full distribution we care about. Worse, in order to catch scheming models we may need to
+detect strategic deception of a type that we have zero fully realistic on-policy examples for. Thus, our monitors will
+need to exhibit generalization—correctly identifying deceptive text in new types of scenarios.
+
+
+
+                                                            3
+

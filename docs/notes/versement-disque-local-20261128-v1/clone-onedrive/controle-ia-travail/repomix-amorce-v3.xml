@@ -1,0 +1,1964 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: _tmp_amorce/**
+- Files matching these patterns are excluded: **/*.sha256
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+_tmp_amorce/
+  amorce-sondes-v2-v3.sh
+  etat_rapide.py
+  test_amorce_sondes_v2_r5_v3.py
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="_tmp_amorce/amorce-sondes-v2-v3.sh">
+#!/usr/bin/env bash
+# Script autonome d'amorce multi-hébergeur (Vast.ai 64+ cœurs / Hetzner) — version 3
+# Épreuve à vérité plantée des sondes boîte blanche v2 — GO-2026-11-24-02 / GO-2026-11-24-15
+# Conserve 100 % des gardes de sécurité R2/R5/R10/R12 de la v2 (fdbc193d…) et apporte :
+#   1. Résolution CPU_DISPO (`nproc --all`) et N_WORKERS AVANT `export OMP_NUM_THREADS=1` + garde EXIGER_MULTICOEUR.
+#   2. `xargs -P ... -I {}` sans `-n 1` (supprime l'avertissement GNU xargs `--max-args` vs `-I`).
+#   3. Reprise exacte de `etalon` sur `[130, 500)` par pas paramétrable (`PAS_ETALON=6` par défaut : 61 tranches de 6
+#      + 1 dernière tranche bornée à 500 `[496, 500)` = 62 tranches en UNE SEULE VAGUE sur 64 cœurs), après extraction
+#      et vérification `.sha256` à l'octet des 13 tranches `[0, 130)` depuis `calcul/sondes-v2-epreuve-plantee-v4`
+#      (`38c6f4a7054b14b56be7b357c08db8bf11931ca2`), puis fusion officielle des 75 rapports via `ecrire_synthese_fusionnee`.
+#   4. En `MODE_RUN=etalon_suite_et_sonde_complet_1rep`, exécution en tâche de fond parallèle sur le 63e cœur
+#      lorsqu'`N_WORKERS >= 63` (`wait` propre des deux avant `pousser_sorties`).
+#   5. Branche de sortie dédiée non destructive (`calcul/sondes-v2-epreuve-plantee-v4-suite`), interdisant `main`
+#      et `calcul/sondes-v2-epreuve-plantee-v4` (R12).
+#   6. Compatibilité native conteneur Vast.ai (`onstart-cmd` : écriture `0600` depuis `GH_TOKEN_ENV`/`VAST_API_KEY_ENV`
+#      puis `unset` intégral des variables d'environnement secrètes ; `apt-get` auto pour `git`, `curl`,
+#      `ca-certificates`, `procps`, `time` ; autodestruction R10 par `VAST_INSTANCE_ID` ou fallback `CONTAINER_ID`
+#      strictement numérique hors liste noire `58936096|58936099|58936100|60988826|62498862`).
+set -euo pipefail
+set +x
+
+export PYTHONDONTWRITEBYTECODE=1
+
+# Garde R5 multicœur : résoudre CPU_DISPO et N_WORKERS AVANT export OMP_NUM_THREADS=1
+# (sous GNU coreutils, `nproc` sans `--all` respecte OMP_NUM_THREADS et renverrait 1 !)
+CPU_DISPO="$(nproc --all 2>/dev/null || getconf _NPROCESSORS_ONLN || echo 1)"
+CPU_DISPO="$(printf '%s' "$CPU_DISPO" | tr -d '[:space:]')"
+if ! [[ "$CPU_DISPO" =~ ^[0-9]+$ ]] || [ "$CPU_DISPO" -lt 1 ]; then
+  CPU_DISPO=1
+fi
+N_WORKERS="${N_WORKERS:-$CPU_DISPO}"
+EXIGER_MULTICOEUR="${EXIGER_MULTICOEUR:-1}"
+
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
+MODE_RUN="${MODE_RUN:-etalon_suite_seul}"
+COMMIT_CODE="${COMMIT_CODE:-0ce9e35110d93dd916e85b1191a2613b101e772d}"
+ENTROPIE="${ENTROPIE:-305159624078239919914131004197200342142}"
+SHA_VERITES="${SHA_VERITES:-b310e1af50459b78833fcc509298bbc1807f1905631e1152b3e28f538f233533}"
+SHA_NOTE="${SHA_NOTE:-7338a3dcafb18bfd6fdd43e377bfa0b67f3f6812596749646d6fb0e9c3444db5}"
+BRANCHE_CODE="${BRANCHE_CODE:-sondes-v2/code-v2}"
+BRANCHE_AMONT_ETALON="${BRANCHE_AMONT_ETALON:-calcul/sondes-v2-epreuve-plantee-v4}"
+COMMIT_AMONT_ETALON="${COMMIT_AMONT_ETALON:-38c6f4a7054b14b56be7b357c08db8bf11931ca2}"
+BRANCHE_SORTIE="${BRANCHE_SORTIE:-calcul/sondes-v2-epreuve-plantee-v4-suite}"
+REPO_URL="${REPO_URL:-https://github.com/lciric/controle-ia-travail.git}"
+
+ETALON_AMONT_PAS="${ETALON_AMONT_PAS:-10}"
+ETALON_DE="${ETALON_DE:-130}"
+ETALON_A="${ETALON_A:-500}"
+PAS_ETALON="${PAS_ETALON:-6}"
+
+COMPLET_DE="${COMPLET_DE:-0}"
+COMPLET_A="${COMPLET_A:-500}"
+PAS_COMPLET="${PAS_COMPLET:-5}"
+
+FOURNISSEUR="${FOURNISSEUR:-auto}"
+HCLOUD_API="${HCLOUD_API:-https://api.hetzner.cloud/v1}"
+METADATA_URL="${METADATA_URL:-http://169.254.169.254/hetzner/v1/metadata/instance-id}"
+HCLOUD_TOKEN_FILE="${HCLOUD_TOKEN_FILE:-/root/.hcloud_token}"
+SERVER_ID="${SERVER_ID:-}"
+
+VAST_API_URL="${VAST_API_URL:-https://console.vast.ai/api/v0}"
+VAST_API_KEY_FILE="${VAST_API_KEY_FILE:-/root/.vast_api_key}"
+VAST_INSTANCE_ID="${VAST_INSTANCE_ID:-}"
+
+GH_TOKEN_FILE="${GH_TOKEN_FILE:-/root/.gh_token}"
+WORK="${WORK:-/opt/sondes-v2}"
+ENTREE="${ENTREE:-/opt/entree}"
+SORTIE="${SORTIE:-/opt/sortie}"
+LOG="${LOG:-/var/log/epreuve-sondes-v2.log}"
+WATCHDOG_SECONDES="${WATCHDOG_SECONDES:-113400}"
+SEUIL_ARCHIVE_OCTETS="${SEUIL_ARCHIVE_OCTETS:-94371840}"
+TAILLE_MORCEAU="${TAILLE_MORCEAU:-45m}"
+SKIP_ENV_INSTALL="${SKIP_ENV_INSTALL:-0}"
+PY_BIN="${PY_BIN:-}"
+SIMULER_MODE_CMD="${SIMULER_MODE_CMD:-}"
+
+# Capture immédiate des jetons éventuellement transmis par variables d'environnement Vast.ai (onstart-cmd)
+# puis purge immédiate de l'environnement exporté pour qu'aucun processus fils ne puisse les lire.
+_INIT_GH_TOK="${GH_TOKEN_ENV:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
+_INIT_VAST_KEY="${VAST_API_KEY_ENV:-${VAST_API_KEY:-}}"
+_INIT_HCLOUD_TOK="${HCLOUD_TOKEN_ENV:-${HCLOUD_TOKEN:-}}"
+unset GH_TOKEN_ENV VAST_API_KEY_ENV HCLOUD_TOKEN_ENV GITHUB_TOKEN GH_TOKEN VAST_API_KEY HCLOUD_TOKEN GH_TOK
+
+# Liste noire fermée des instances Vast.ai intouchables (aucun appel DELETE autorisé, jamais)
+VAST_INSTANCES_INTOUCHABLES=("58936096" "58936099" "58936100" "60988826" "62498862")
+
+est_dans_liste_noire_vast() {
+  local cand="${1:-}"
+  case "$cand" in
+    58936096|58936099|58936100|60988826|62498862)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+verifier_vast_instance_id_autorise() {
+  local vid="${1:-}"
+  if ! [[ "$vid" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ARRÊT SÉCURITÉ R10 VAST : identifiant Vast '${vid}' invalide (doit être composé exclusivement de chiffres, sans zéro initial)." >&2
+    return 1
+  fi
+  if est_dans_liste_noire_vast "$vid"; then
+    echo "ARRÊT SÉCURITÉ R10 VAST : identifiant Vast '${vid}' interdit (liste noire des instances intouchables) !" >&2
+    return 1
+  fi
+  return 0
+}
+
+# Garde R5 : validation N_WORKERS et exigence multicœur avant tout calcul
+if ! [[ "$N_WORKERS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ARRÊT GARDE R5 : N_WORKERS='${N_WORKERS}' invalide (entier >= 1 attendu)." >&2
+  exit 1
+fi
+if [ "$EXIGER_MULTICOEUR" = "1" ] && [ "$N_WORKERS" -lt 2 ]; then
+  echo "ARRÊT GARDE R5 MULTICŒUR : EXIGER_MULTICOEUR=1 mais N_WORKERS=$N_WORKERS (< 2, CPU_DISPO=$CPU_DISPO)." >&2
+  exit 1
+fi
+
+# Garde sécurité : jamais de jeton intégré dans REPO_URL
+case "$REPO_URL" in
+  *"@"*|*"x-access-token"*)
+    echo "ARRÊT SÉCURITÉ : REPO_URL ne doit jamais contenir de jeton ou d'identifiants." >&2
+    exit 1
+    ;;
+esac
+
+# Garde R12 : interdiction absolue d'écraser main, le code ou la branche amont calcul/sondes-v2-epreuve-plantee-v4
+if [ -z "$BRANCHE_SORTIE" ]; then
+  echo "ARRÊT SÉCURITÉ R12 : BRANCHE_SORTIE vide interdite." >&2
+  exit 1
+fi
+case "$BRANCHE_SORTIE" in
+  main|master|HEAD|calcul/sondes-v2-epreuve-plantee-v4|"$BRANCHE_CODE"|"$BRANCHE_AMONT_ETALON")
+    echo "ARRÊT SÉCURITÉ R12 : BRANCHE_SORTIE='$BRANCHE_SORTIE' interdite (ne jamais écraser main ni calcul/sondes-v2-epreuve-plantee-v4)." >&2
+    exit 1
+    ;;
+esac
+
+# Validation stricte du mode d'exécution
+case "$MODE_RUN" in
+  etalon_suite_seul|etalon_suite_et_sonde_complet_1rep|etalon_suite_et_complet|complet_tranche_seul)
+    ;;
+  *)
+    echo "ARRÊT SÉCURITÉ : MODE_RUN='$MODE_RUN' inconnu (attendu : etalon_suite_seul | etalon_suite_et_sonde_complet_1rep | etalon_suite_et_complet | complet_tranche_seul)." >&2
+    exit 1
+    ;;
+esac
+
+# Validation stricte du fournisseur et résolution sécurisée de TARGET_VAST_ID (VAST_INSTANCE_ID ou fallback CONTAINER_ID)
+case "$FOURNISSEUR" in
+  auto|hetzner|vast|aucun)
+    ;;
+  *)
+    echo "ARRÊT SÉCURITÉ : FOURNISSEUR='$FOURNISSEUR' inconnu (attendu : auto | hetzner | vast | aucun)." >&2
+    exit 1
+    ;;
+esac
+
+TARGET_VAST_ID=""
+if [ -n "$VAST_INSTANCE_ID" ]; then
+  verifier_vast_instance_id_autorise "$VAST_INSTANCE_ID" || exit 1
+  TARGET_VAST_ID="$VAST_INSTANCE_ID"
+elif [ -n "${CONTAINER_ID:-}" ]; then
+  if est_dans_liste_noire_vast "${CONTAINER_ID}"; then
+    echo "ARRÊT SÉCURITÉ R10 VAST : CONTAINER_ID='${CONTAINER_ID}' appartient à la liste noire des instances intouchables !" >&2
+    exit 1
+  fi
+  if [[ "${CONTAINER_ID}" =~ ^[1-9][0-9]*$ ]]; then
+    TARGET_VAST_ID="${CONTAINER_ID}"
+  fi
+fi
+if [ "$FOURNISSEUR" = "vast" ] && [ -z "$TARGET_VAST_ID" ]; then
+  echo "ARRÊT SÉCURITÉ R10 VAST : FOURNISSEUR=vast exige VAST_INSTANCE_ID (ou CONTAINER_ID) strictement numérique et hors liste noire." >&2
+  exit 1
+fi
+
+# Validation des bornes numériques de plages
+for var_num in ETALON_AMONT_PAS ETALON_DE ETALON_A PAS_ETALON COMPLET_DE COMPLET_A PAS_COMPLET WATCHDOG_SECONDES; do
+  if ! [[ "${!var_num}" =~ ^[0-9]+$ ]]; then
+    echo "ARRÊT PARAMÈTRE : ${var_num}='${!var_num}' doit être un entier >= 0." >&2
+    exit 1
+  fi
+done
+if [ "$PAS_ETALON" -lt 1 ] || [ "$ETALON_AMONT_PAS" -lt 1 ] || [ "$PAS_COMPLET" -lt 1 ]; then
+  echo "ARRÊT PARAMÈTRE : les pas de tranche doivent être >= 1." >&2
+  exit 1
+fi
+if [ "$ETALON_DE" -gt "$ETALON_A" ] || [ "$ETALON_A" -gt 500 ] || [ $((ETALON_DE % ETALON_AMONT_PAS)) -ne 0 ]; then
+  echo "ARRÊT PARAMÈTRE : plage étalon invalide (ETALON_DE=$ETALON_DE, ETALON_A=$ETALON_A, ETALON_AMONT_PAS=$ETALON_AMONT_PAS)." >&2
+  exit 1
+fi
+if [ "$COMPLET_DE" -ge "$COMPLET_A" ] || [ "$COMPLET_A" -gt 500 ]; then
+  echo "ARRÊT PARAMÈTRE : plage complet invalide (COMPLET_DE=$COMPLET_DE, COMPLET_A=$COMPLET_A)." >&2
+  exit 1
+fi
+
+mkdir -p "$WORK" "$ENTREE" "$SORTIE/etalon" "$SORTIE/complet" "$(dirname "$LOG")"
+: > "$LOG"
+exec > >(tee -a "$LOG") 2>&1
+
+# Écriture immédiate en fichiers 0600 des jetons reçus au démarrage (Vast.ai onstart-cmd), puis effacement mémoire
+if [ -n "$_INIT_GH_TOK" ]; then
+  (
+    umask 077
+    mkdir -p "$(dirname "$GH_TOKEN_FILE")"
+    printf '%s\n' "$_INIT_GH_TOK" | tr -d '\r' > "$GH_TOKEN_FILE"
+    chmod 0600 "$GH_TOKEN_FILE"
+  )
+fi
+if [ -n "$_INIT_VAST_KEY" ]; then
+  (
+    umask 077
+    mkdir -p "$(dirname "$VAST_API_KEY_FILE")"
+    printf '%s\n' "$_INIT_VAST_KEY" | tr -d '\r' > "$VAST_API_KEY_FILE"
+    chmod 0600 "$VAST_API_KEY_FILE"
+  )
+fi
+if [ -n "$_INIT_HCLOUD_TOK" ]; then
+  (
+    umask 077
+    mkdir -p "$(dirname "$HCLOUD_TOKEN_FILE")"
+    printf '%s\n' "$_INIT_HCLOUD_TOK" | tr -d '\r' > "$HCLOUD_TOKEN_FILE"
+    chmod 0600 "$HCLOUD_TOKEN_FILE"
+  )
+fi
+unset _INIT_GH_TOK _INIT_VAST_KEY _INIT_HCLOUD_TOK
+
+# Installation automatique sur conteneur minimal (ex. python:3.12-bookworm / ubuntu:24.04) si outils absents
+installer_outils_systeme_si_absents() {
+  if [ "$SKIP_ENV_INSTALL" = "1" ]; then
+    return 0
+  fi
+  local manque=0
+  command -v git >/dev/null 2>&1 || manque=1
+  command -v curl >/dev/null 2>&1 || manque=1
+  command -v pgrep >/dev/null 2>&1 || manque=1
+  command -v pkill >/dev/null 2>&1 || manque=1
+  command -v tar >/dev/null 2>&1 || manque=1
+  command -v gzip >/dev/null 2>&1 || manque=1
+  [ -x /usr/bin/time ] || manque=1
+  [ -f /etc/ssl/certs/ca-certificates.crt ] || manque=1
+  if [ "$manque" -eq 1 ] && command -v apt-get >/dev/null 2>&1; then
+    echo ">>> Installation apt-get des paquets système requis (git, curl, ca-certificates, procps, time, tar, gzip)..."
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      git curl ca-certificates procps time tar gzip
+  fi
+}
+installer_outils_systeme_si_absents
+
+# Script GIT_ASKPASS (0700) : lit GH_TOKEN_FILE à la volée, jamais de jeton dans REPO_URL ni .git/config ni env fils
+ASKPASS_SCRIPT="$WORK/.git-askpass.sh"
+cat > "$ASKPASS_SCRIPT" <<'ASKPASS_EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  *Username*|*username*) printf '%s\n' "x-access-token" ;;
+  *Password*|*password*) tr -d '\r\n' < "${GH_TOKEN_FILE}"; printf '\n' ;;
+  *) printf '\n' ;;
+esac
+ASKPASS_EOF
+chmod 0700 "$ASKPASS_SCRIPT"
+export GIT_ASKPASS="$ASKPASS_SCRIPT"
+export GIT_TERMINAL_PROMPT=0
+export GH_TOKEN_FILE
+
+# Résolution de l'hébergeur effectif pour l'autodestruction R10
+FOURNISSEUR_EFFECTIF="aucun"
+if [ "$FOURNISSEUR" = "vast" ]; then
+  FOURNISSEUR_EFFECTIF="vast"
+elif [ "$FOURNISSEUR" = "hetzner" ]; then
+  if [ -z "$SERVER_ID" ]; then
+    SERVER_ID="$(curl -fsS --max-time 10 "$METADATA_URL" 2>/dev/null | tr -d '\r\n[:space:]' || true)"
+  fi
+  FOURNISSEUR_EFFECTIF="hetzner"
+elif [ "$FOURNISSEUR" = "auto" ]; then
+  if [ -f "$VAST_API_KEY_FILE" ] && [ -s "$VAST_API_KEY_FILE" ] && [ -n "$TARGET_VAST_ID" ]; then
+    FOURNISSEUR_EFFECTIF="vast"
+  else
+    if [ -z "$SERVER_ID" ]; then
+      SERVER_ID="$(curl -fsS --max-time 10 "$METADATA_URL" 2>/dev/null | tr -d '\r\n[:space:]' || true)"
+    fi
+    if [ -f "$HCLOUD_TOKEN_FILE" ] && [ -s "$HCLOUD_TOKEN_FILE" ] && [[ "${SERVER_ID:-}" =~ ^[1-9][0-9]*$ ]]; then
+      FOURNISSEUR_EFFECTIF="hetzner"
+    fi
+  fi
+fi
+
+echo "=== DÉBUT $(date -u +%Y-%m-%dT%H:%M:%SZ) | mode=$MODE_RUN | cpu_dispo=$CPU_DISPO | n_workers=$N_WORKERS | pas_etalon=$PAS_ETALON | fournisseur=$FOURNISSEUR_EFFECTIF | branche_sortie=$BRANCHE_SORTIE | watchdog=${WATCHDOG_SECONDES}s ==="
+if [ "$FOURNISSEUR_EFFECTIF" = "hetzner" ]; then
+  echo "SERVER_ID=${SERVER_ID:-inconnu}"
+elif [ "$FOURNISSEUR_EFFECTIF" = "vast" ]; then
+  echo "TARGET_VAST_ID=${TARGET_VAST_ID:-inconnu}"
+fi
+
+WATCHDOG_PID=""
+ACTIVE_CHILD_PID=""
+TIMEOUT_DECLENCHE=0
+DEJA_DETRUIT=0
+
+arreter_watchdog() {
+  if [ -n "${WATCHDOG_PID:-}" ]; then
+    kill -TERM "$WATCHDOG_PID" 2>/dev/null || true
+    wait "$WATCHDOG_PID" 2>/dev/null || true
+    WATCHDOG_PID=""
+  fi
+}
+
+tuer_arbre_pid() {
+  local pid="$1"
+  local sig="${2:-TERM}"
+  local enfants
+  enfants="$(pgrep -P "$pid" 2>/dev/null || true)"
+  local c
+  for c in $enfants; do
+    tuer_arbre_pid "$c" "$sig"
+  done
+  pkill -"$sig" -P "$pid" 2>/dev/null || true
+  kill -"$sig" "$pid" 2>/dev/null || true
+}
+
+tuer_fils_actif() {
+  if [ -n "${ACTIVE_CHILD_PID:-}" ]; then
+    tuer_arbre_pid "$ACTIVE_CHILD_PID" TERM
+    sleep 1
+    tuer_arbre_pid "$ACTIVE_CHILD_PID" KILL
+    wait "$ACTIVE_CHILD_PID" 2>/dev/null || true
+    ACTIVE_CHILD_PID=""
+  fi
+}
+
+echapper_sed_ere() {
+  printf '%s' "$1" | sed -e 's/[\/&.^$*+?()[\]{}|\\]/\\&/g'
+}
+
+filtrer_secrets_log() {
+  local src="$1"
+  local dst="$2"
+  local gh_tok="" hc_tok="" vast_key=""
+  local esc_gh="" esc_hc="" esc_vast=""
+  if [ -f "$GH_TOKEN_FILE" ]; then
+    gh_tok="$(tr -d '\r\n' < "$GH_TOKEN_FILE")"
+  fi
+  if [ -f "$HCLOUD_TOKEN_FILE" ]; then
+    hc_tok="$(tr -d '\r\n' < "$HCLOUD_TOKEN_FILE")"
+  fi
+  if [ -f "$VAST_API_KEY_FILE" ]; then
+    vast_key="$(tr -d '\r\n' < "$VAST_API_KEY_FILE")"
+  fi
+  if [ -n "$gh_tok" ]; then
+    esc_gh="$(echapper_sed_ere "$gh_tok")"
+  fi
+  if [ -n "$hc_tok" ]; then
+    esc_hc="$(echapper_sed_ere "$hc_tok")"
+  fi
+  if [ -n "$vast_key" ]; then
+    esc_vast="$(echapper_sed_ere "$vast_key")"
+  fi
+  local sed_args=(-E)
+  if [ -n "$esc_gh" ]; then
+    sed_args+=(-e "s|${esc_gh}|[MASQUE_GH]|g")
+  fi
+  if [ -n "$esc_hc" ]; then
+    sed_args+=(-e "s|${esc_hc}|[MASQUE_HCLOUD]|g")
+  fi
+  if [ -n "$esc_vast" ]; then
+    sed_args+=(-e "s|${esc_vast}|[MASQUE_VAST]|g")
+  fi
+  sed_args+=(
+    -e 's/gh[pousr]_[A-Za-z0-9_]+/[MASQUE_GH]/g'
+    -e 's/github_pat_[A-Za-z0-9_]+/[MASQUE_GH]/g'
+    -e 's/x-access-token:[^@[:space:]]+@/x-access-token:[MASQUE_GH]@/g'
+  )
+  sed "${sed_args[@]}" "$src" > "$dst"
+  if [ -n "$gh_tok" ] && grep -Fq -- "$gh_tok" "$dst"; then
+    echo "ERREUR SÉCURITÉ : jeton GitHub résiduel détecté dans le journal filtré" >&2
+    rm -f "$dst"
+    return 1
+  fi
+  if [ -n "$hc_tok" ] && grep -Fq -- "$hc_tok" "$dst"; then
+    echo "ERREUR SÉCURITÉ : jeton Hetzner résiduel détecté dans le journal filtré" >&2
+    rm -f "$dst"
+    return 1
+  fi
+  if [ -n "$vast_key" ] && grep -Fq -- "$vast_key" "$dst"; then
+    echo "ERREUR SÉCURITÉ : clé Vast.ai résiduelle détectée dans le journal filtré" >&2
+    rm -f "$dst"
+    return 1
+  fi
+}
+
+# Fonction de rapatriement prouvé sur la branche dédiée (jamais main ni v4 amont, aucun fichier > 95 Mo, 100 % .sha256 valides)
+pousser_sorties() {
+  local etiquette="$1"
+  local pub="$WORK/pub"
+  rm -rf "$pub"
+  git init "$pub"
+  git -C "$pub" config user.name "sondes-v2-runner-v3"
+  git -C "$pub" config user.email "runner@controle-ia.local"
+  git -C "$pub" checkout -B "$BRANCHE_SORTIE"
+  mkdir -p "$pub/epreuve-plantee-v4/etalon" "$pub/epreuve-plantee-v4/complet"
+
+  # Copier les synthèses fusionnées + rapports par plage + leurs .sha256
+  for m in etalon complet; do
+    if [ -d "$SORTIE/$m" ]; then
+      cp -f "$SORTIE/$m"/synthese-fusionnee-*.json* "$pub/epreuve-plantee-v4/$m/" 2>/dev/null || true
+      cp -f "$SORTIE/$m"/rapport-monde-plante-v4-*.json* "$pub/epreuve-plantee-v4/$m/" 2>/dev/null || true
+    fi
+  done
+
+  # Copier la métadonnée de sonde 1 réplique (+ .sha256) si produite (sans polluer $SORTIE/complet)
+  if [ -f "$SORTIE/sonde-complet-1rep-meta.json" ]; then
+    cp -f "$SORTIE"/sonde-complet-1rep-meta.json* "$pub/epreuve-plantee-v4/"
+  fi
+
+  # Compresser les journaux des gels du mode complet sans jamais laisser de .sha256 orphelin dans $pub
+  if compgen -G "$SORTIE/complet/journal-gels-*.jsonl" >/dev/null 2>&1; then
+    (
+      set -euo pipefail
+      cd "$SORTIE/complet"
+      shopt -s nullglob
+      for f_sha in journal-gels-*.jsonl.sha256; do
+        sha256sum -c "$f_sha"
+      done
+      sha256sum journal-gels-*.jsonl > journaux-gels.manifeste.sha256.txt
+      sha256sum -c journaux-gels.manifeste.sha256.txt
+    )
+    cp -f "$SORTIE/complet/journaux-gels.manifeste.sha256.txt" "$pub/epreuve-plantee-v4/complet/"
+
+    (
+      set -euo pipefail
+      cd "$SORTIE/complet"
+      shopt -s nullglob
+      fichiers_tar=(journal-gels-*.jsonl journal-gels-*.jsonl.sha256)
+      tar -czf "$SORTIE/journaux-gels-complet.tar.gz" "${fichiers_tar[@]}"
+    )
+
+    TAILLE_OCTETS="$(stat -c %s "$SORTIE/journaux-gels-complet.tar.gz")"
+    if [ "$TAILLE_OCTETS" -le "$SEUIL_ARCHIVE_OCTETS" ]; then
+      cp -f "$SORTIE/journaux-gels-complet.tar.gz" "$pub/epreuve-plantee-v4/complet/"
+      (
+        cd "$pub/epreuve-plantee-v4/complet"
+        sha256sum journaux-gels-complet.tar.gz > journaux-gels-complet.tar.gz.sha256
+      )
+    else
+      (
+        cd "$SORTIE"
+        sha256sum journaux-gels-complet.tar.gz > "$pub/epreuve-plantee-v4/complet/journaux-gels-complet.tar.gz.manifeste.sha256.txt"
+      )
+      split -b "$TAILLE_MORCEAU" -d "$SORTIE/journaux-gels-complet.tar.gz" \
+        "$pub/epreuve-plantee-v4/complet/journaux-gels-complet.tar.gz.part."
+      (
+        cd "$pub/epreuve-plantee-v4/complet"
+        sha256sum journaux-gels-complet.tar.gz.part.* > journaux-gels-complet.parts.sha256
+      )
+    fi
+  fi
+
+  # Filtrer tout jeton éventuel avant copie de $LOG dans $pub
+  sleep 0.2
+  filtrer_secrets_log "$LOG" "$pub/epreuve-plantee-v4/journal-execution.log"
+
+  # Contrôle strict d'intégrité : 100 % des *.sha256 dans $pub doivent passer avant git push
+  (
+    set -euo pipefail
+    cd "$pub/epreuve-plantee-v4"
+    find . -type f -name "*.sha256" -print0 \
+      | xargs -0 -r -n1 bash -c 'set -euo pipefail; cd "$(dirname "$1")" && sha256sum -c "$(basename "$1")"' _
+  )
+
+  # Vérification anti-fuite globale sur tout $pub (contenu + .git/config) avant commit/push
+  local gh_tok="" hc_tok="" vast_key=""
+  if [ -f "$GH_TOKEN_FILE" ]; then
+    gh_tok="$(tr -d '\r\n' < "$GH_TOKEN_FILE")"
+  fi
+  if [ -f "$HCLOUD_TOKEN_FILE" ]; then
+    hc_tok="$(tr -d '\r\n' < "$HCLOUD_TOKEN_FILE")"
+  fi
+  if [ -f "$VAST_API_KEY_FILE" ]; then
+    vast_key="$(tr -d '\r\n' < "$VAST_API_KEY_FILE")"
+  fi
+  if [ -n "$gh_tok" ] && { grep -RFq -- "$gh_tok" "$pub/epreuve-plantee-v4" || grep -Fq -- "$gh_tok" "$pub/.git/config"; }; then
+    echo "ERREUR SÉCURITÉ : jeton GitHub détecté dans $pub avant git push" >&2
+    return 1
+  fi
+  if [ -n "$hc_tok" ] && { grep -RFq -- "$hc_tok" "$pub/epreuve-plantee-v4" || grep -Fq -- "$hc_tok" "$pub/.git/config"; }; then
+    echo "ERREUR SÉCURITÉ : jeton Hetzner détecté dans $pub avant git push" >&2
+    return 1
+  fi
+  if [ -n "$vast_key" ] && { grep -RFq -- "$vast_key" "$pub/epreuve-plantee-v4" || grep -Fq -- "$vast_key" "$pub/.git/config"; }; then
+    echo "ERREUR SÉCURITÉ : clé Vast.ai détectée dans $pub avant git push" >&2
+    return 1
+  fi
+
+  git -C "$pub" add -A
+  git -C "$pub" commit -m "Sondes v2 épreuve plantée v4 ($etiquette, commit $COMMIT_CODE, amorce v3)"
+  LOCAL_SHA="$(git -C "$pub" rev-parse HEAD)"
+  git -C "$pub" push --force "$REPO_URL" "HEAD:refs/heads/$BRANCHE_SORTIE"
+  REMOTE_SHA="$(git ls-remote "$REPO_URL" "refs/heads/$BRANCHE_SORTIE" | awk '{print $1}')"
+  test "$LOCAL_SHA" = "$REMOTE_SHA"
+  echo "RAPATRIEMENT PROUVÉ : $BRANCHE_SORTIE @ $REMOTE_SHA"
+}
+
+gerer_timeout_r10() {
+  TIMEOUT_DECLENCHE=1
+  echo "=== PLAFOND INTERNE R10 (${WATCHDOG_SECONDES}s) ATTEINT $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+  tuer_fils_actif
+  pousser_sorties "partiel-plafond-r10" || echo "AVERTISSEMENT : rapatriement partiel incomplet"
+  exit 124
+}
+
+detruire_serveur() {
+  local rc=$?
+  if [ "$DEJA_DETRUIT" -eq 1 ]; then
+    return 0
+  fi
+  DEJA_DETRUIT=1
+  arreter_watchdog
+  tuer_fils_actif
+  echo "=== FIN (rc=$rc, timeout=$TIMEOUT_DECLENCHE, fournisseur=$FOURNISSEUR_EFFECTIF) $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+  if [ "$FOURNISSEUR_EFFECTIF" = "hetzner" ]; then
+    local HCLOUD_KEY=""
+    if [ -f "$HCLOUD_TOKEN_FILE" ]; then
+      HCLOUD_KEY="$(tr -d '\r\n' < "$HCLOUD_TOKEN_FILE")"
+    fi
+    if [[ "${SERVER_ID:-}" =~ ^[1-9][0-9]*$ ]] && [ -n "$HCLOUD_KEY" ]; then
+      echo "Appel R10 DELETE ${HCLOUD_API%/}/servers/${SERVER_ID}"
+      curl -fsS --max-time 20 -X DELETE -H "Authorization: Bearer ${HCLOUD_KEY}" \
+        "${HCLOUD_API%/}/servers/${SERVER_ID}" || true
+    fi
+  elif [ "$FOURNISSEUR_EFFECTIF" = "vast" ]; then
+    local VAST_KEY=""
+    if [ -f "$VAST_API_KEY_FILE" ]; then
+      VAST_KEY="$(tr -d '\r\n' < "$VAST_API_KEY_FILE")"
+    fi
+    if verifier_vast_instance_id_autorise "${TARGET_VAST_ID:-}" && [ -n "$VAST_KEY" ]; then
+      echo "Appel R10 DELETE ${VAST_API_URL%/}/instances/${TARGET_VAST_ID}/"
+      curl -fsS --max-time 20 -X DELETE -H "Authorization: Bearer ${VAST_KEY}" \
+        "${VAST_API_URL%/}/instances/${TARGET_VAST_ID}/" || true
+    fi
+  fi
+  rm -f "${ASKPASS_SCRIPT:-}" 2>/dev/null || true
+}
+
+trap gerer_timeout_r10 TERM
+trap detruire_serveur EXIT
+
+# Cloner le dépôt via l'URL HTTPS nue + GIT_ASKPASS (jamais de jeton dans .git/config)
+git clone --no-tags --branch "$BRANCHE_CODE" "$REPO_URL" "$WORK/repo"
+git -C "$WORK/repo" checkout --detach "$COMMIT_CODE"
+test -z "$(git -C "$WORK/repo" status --porcelain)"
+echo "$SHA_VERITES  $WORK/repo/src/controle_ia/sondes_v2/verites_mondes_plantes_v4.json" | sha256sum -c -
+
+# Récupérer la note des effectifs (+ .sha256) depuis main HORS du dépôt git (préserve depot_propre=True)
+git -C "$WORK/repo" fetch --no-tags origin main --depth=1
+git -C "$WORK/repo" show origin/main:docs/notes/sondes-v2-effectifs-et-correspondance-v1/note-des-effectifs-sondes-v2-v1.md \
+  > "$ENTREE/note-des-effectifs-sondes-v2-v1.md"
+git -C "$WORK/repo" show origin/main:docs/notes/sondes-v2-effectifs-et-correspondance-v1/note-des-effectifs-sondes-v2-v1.md.sha256 \
+  > "$ENTREE/note-des-effectifs-sondes-v2-v1.md.sha256"
+(cd "$ENTREE" && sha256sum -c note-des-effectifs-sondes-v2-v1.md.sha256)
+echo "$SHA_NOTE  $ENTREE/note-des-effectifs-sondes-v2-v1.md" | sha256sum -c -
+
+# Environnement Python épinglé sur les versions exactes vérifiées localement
+if [ "$SKIP_ENV_INSTALL" = "1" ] && [ -n "$PY_BIN" ]; then
+  PY="$PY_BIN"
+else
+  if ! python3 -c "import venv, ensurepip" >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-venv
+  fi
+  python3 -m venv "$WORK/venv"
+  "$WORK/venv/bin/pip" install --no-cache-dir numpy==2.4.6 scipy==1.17.1 scikit-learn==1.9.1
+  PY="$WORK/venv/bin/python3"
+fi
+export PYTHONPATH="$WORK/repo/src"
+
+# Récupération et vérification à l'octet des tranches étalon déjà calculées ([0, ETALON_DE)) sur la branche amont
+recuperer_etalon_amont() {
+  if [ "$ETALON_DE" -eq 0 ]; then
+    return 0
+  fi
+  git -C "$WORK/repo" fetch --no-tags "$REPO_URL" "refs/heads/$BRANCHE_AMONT_ETALON:refs/remotes/origin/amont-etalon"
+  local ref_amont="refs/remotes/origin/amont-etalon"
+  if [ -n "$COMMIT_AMONT_ETALON" ]; then
+    git -C "$WORK/repo" cat-file -e "${COMMIT_AMONT_ETALON}^{commit}"
+    git -C "$WORK/repo" merge-base --is-ancestor "$COMMIT_AMONT_ETALON" refs/remotes/origin/amont-etalon
+    ref_amont="$COMMIT_AMONT_ETALON"
+  fi
+  test -z "$(git -C "$WORK/repo" status --porcelain)"
+
+  local nb_extraits=0
+  local de=0
+  while [ "$de" -lt "$ETALON_DE" ]; do
+    local a=$((de + ETALON_AMONT_PAS))
+    local base="rapport-monde-plante-v4-etalon-${ENTROPIE}-r${de}-${a}.json"
+    git -C "$WORK/repo" show "${ref_amont}:epreuve-plantee-v4/etalon/${base}" > "$SORTIE/etalon/${base}"
+    git -C "$WORK/repo" show "${ref_amont}:epreuve-plantee-v4/etalon/${base}.sha256" > "$SORTIE/etalon/${base}.sha256"
+    (cd "$SORTIE/etalon" && sha256sum -c "${base}.sha256")
+    nb_extraits=$((nb_extraits + 1))
+    de="$a"
+  done
+  echo ">>> Reprise étalon amont : ${nb_extraits} rapports ([0, ${ETALON_DE})) extraits depuis ${ref_amont} et vérifiés à l'octet."
+
+  "$PY" -B - "$SORTIE/etalon" "$ENTROPIE" "$ETALON_DE" "$COMMIT_CODE" "$SHA_VERITES" "$SHA_NOTE" "$ENTREE/note-des-effectifs-sondes-v2-v1.md" <<'PY_AMONT_EOF'
+import glob
+import json
+import sys
+from pathlib import Path
+
+outdir, entropie, etalon_de_s, commit_att, sha_v_att, sha_n_att, chemin_note_att = sys.argv[1:8]
+etalon_de = int(etalon_de_s)
+chemins = sorted(glob.glob(f"{outdir}/rapport-monde-plante-v4-etalon-{entropie}-r*.json"))
+rapports = [json.loads(Path(c).read_text(encoding="utf-8")) for c in chemins]
+plages = sorted(tuple(r["plage"]) for r in rapports)
+bout = 0
+for d, a in plages:
+    if d != bout:
+        raise SystemExit(f"Plages amont non contiguës: {plages}")
+    bout = a
+if bout != etalon_de:
+    raise SystemExit(f"Couverture amont [0, {bout}) != [0, {etalon_de})")
+if "manifeste" in rapports[0] and "arguments" in rapports[0]:
+    for r in rapports:
+        assert r["mode"] == "etalon", r["mode"]
+        assert r["verites_sha256"] == sha_v_att, r["verites_sha256"]
+        assert r["graines"]["entropie_racine"] == entropie, r["graines"]
+        assert r["manifeste"]["commit"] == commit_att, r["manifeste"]["commit"]
+        assert r["manifeste"]["depot_propre"] is True, r["manifeste"]["depot_propre"]
+        ne = r["arguments"]["note_effectifs"]
+        assert ne["sha256"] == sha_n_att, ne
+        if ne["chemin"] != chemin_note_att:
+            raise SystemExit(
+                f"Incompatibilité chemin note_effectifs pour fusionner(): amont={ne['chemin']!r} vs courant={chemin_note_att!r} (conserver ENTREE=/opt/entree)"
+            )
+PY_AMONT_EOF
+}
+
+# Sonde chronométrée d'exactement 1 réplique de `complet` dans $WORK/sonde_complet_1rep (sans polluer $SORTIE/complet)
+lancer_sonde_complet_1rep() {
+  local sonde_dir="$WORK/sonde_complet_1rep"
+  rm -rf "$sonde_dir"
+  mkdir -p "$sonde_dir"
+  echo ">>> Sonde chronométrée 1 réplique mode=complet (--repliques 1) dans $sonde_dir (sans polluer $SORTIE/complet)"
+  "$PY" -B - "$PY" "$sonde_dir" "$SORTIE/sonde-complet-1rep-meta.json" \
+    "$ENTREE/note-des-effectifs-sondes-v2-v1.md" "$ENTROPIE" "$COMMIT_CODE" \
+    "$CPU_DISPO" "$N_WORKERS" "${SIMULER_MODE_CMD:-}" <<'PY_SONDE_EOF'
+import glob
+import hashlib
+import json
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+try:
+    import resource
+except ImportError:
+    resource = None
+
+(
+    py_bin,
+    sonde_dir_s,
+    meta_out_s,
+    note_path,
+    entropie,
+    commit_code,
+    cpu_dispo_s,
+    n_workers_s,
+    simuler_cmd,
+) = sys.argv[1:10]
+sonde_dir = Path(sonde_dir_s)
+meta_out = Path(meta_out_s)
+
+if simuler_cmd:
+    cmd = [simuler_cmd, "sonde_complet_1rep", str(sonde_dir), entropie, "0", "1", "1"]
+else:
+    cmd = [
+        py_bin, "-B", "-m", "controle_ia.sondes_v2.programme_monde_plante_v4",
+        "--sortie", str(sonde_dir),
+        "--note-effectifs", note_path,
+        "--mode", "complet",
+        "--doses-rejeu", "4",
+        "--nul", "39",
+        "--repliques", "1",
+        "--entropie", entropie,
+    ]
+
+t_utc_debut = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+t0 = time.monotonic()
+subprocess.run(cmd, check=True)
+duree_mur_s = time.monotonic() - t0
+t_utc_fin = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+if resource is not None:
+    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    ru_raw = int(usage.ru_maxrss)
+    pic_rss_kib = ru_raw // 1024 if sys.platform == "darwin" else ru_raw
+else:
+    pic_rss_kib = 0
+pic_rss_mio = round(pic_rss_kib / 1024.0, 3)
+
+candidats = sorted(
+    p for p in glob.glob(f"{sonde_dir}/rapport-monde-plante-v4-complet-{entropie}*.json")
+    if not p.endswith(".sha256")
+)
+rapport_sha = None
+duree_interne_s = None
+if candidats:
+    raw = Path(candidats[0]).read_bytes()
+    rapport_sha = hashlib.sha256(raw).hexdigest()
+    try:
+        duree_interne_s = json.loads(raw.decode("utf-8")).get("duree_secondes")
+    except Exception:
+        duree_interne_s = None
+
+meta = {
+    "format": "sonde-complet-1rep-meta-v1",
+    "mode_sonde": "complet",
+    "repliques_sondees": 1,
+    "doses_rejeu": 4,
+    "nul": 39,
+    "commit_code": commit_code,
+    "entropie_racine": entropie,
+    "cpu_dispo": int(cpu_dispo_s),
+    "n_workers_configures": int(n_workers_s),
+    "debut_utc": t_utc_debut,
+    "fin_utc": t_utc_fin,
+    "duree_secondes": round(duree_mur_s, 6),
+    "duree_interne_rapport_secondes": duree_interne_s,
+    "pic_rss_kib": pic_rss_kib,
+    "pic_rss_mio": pic_rss_mio,
+    "dossier_isole": str(sonde_dir),
+    "rapport_sonde_sha256": rapport_sha,
+}
+corps = (json.dumps(meta, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8")
+meta_out.parent.mkdir(parents=True, exist_ok=True)
+meta_out.write_bytes(corps)
+sha_meta = hashlib.sha256(corps).hexdigest()
+meta_out.with_name(meta_out.name + ".sha256").write_text(f"{sha_meta}  {meta_out.name}\n", encoding="utf-8")
+print(
+    f"SONDE COMPLET 1 REP TERMINEE: duree={duree_mur_s:.3f}s | pic_rss={pic_rss_mio:.2f} MiB ({pic_rss_kib} KiB) | sha256={sha_meta}",
+    flush=True,
+)
+PY_SONDE_EOF
+  (cd "$SORTIE" && sha256sum -c sonde-complet-1rep-meta.json.sha256)
+}
+
+# Lancement parallèle par tranches [de_global, a_global) de pas `pas` (dernière tranche bornée à a_global, ex. 500)
+# via `seq ... | xargs -P "$workers_locaux" -I {}` sans `-n 1`
+lancer_tranches_mode() {
+  local mode="$1"
+  local de_global="$2"
+  local a_global="$3"
+  local pas="$4"
+  local workers_locaux="${5:-$N_WORKERS}"
+  local outdir="$SORTIE/$mode"
+  mkdir -p "$outdir"
+
+  if [ -n "$SIMULER_MODE_CMD" ]; then
+    "$SIMULER_MODE_CMD" "$mode" "$outdir" "$ENTROPIE" "$de_global" "$a_global" "$pas" "$workers_locaux"
+    return $?
+  fi
+
+  if [ "$de_global" -lt "$a_global" ]; then
+    local extra_args=()
+    if [ "$mode" = "complet" ]; then
+      extra_args+=(--doses-rejeu 4 --nul 39)
+    fi
+    local dernier_depart=$((a_global - 1))
+    echo ">>> Lancement mode=$mode sur [${de_global}, ${a_global}) par pas=$pas (dernière tranche bornée à ${a_global}, ${workers_locaux} workers)"
+    seq "$de_global" "$pas" "$dernier_depart" | xargs -P "$workers_locaux" -I {} bash -c '
+      set -euo pipefail
+      de="{}"
+      pas_local="'"$pas"'"
+      plafond="'"$a_global"'"
+      a=$(( de + pas_local > plafond ? plafond : de + pas_local ))
+      exec "'"$PY"'" -B -m controle_ia.sondes_v2.programme_monde_plante_v4 \
+        --sortie "'"$outdir"'" \
+        --note-effectifs "'"$ENTREE/note-des-effectifs-sondes-v2-v1.md"'" \
+        --mode "'"$mode"'" \
+        '"${extra_args[*]:-}"' \
+        --repliques 500 --repliques-de "$de" --repliques-a "$a" \
+        --entropie "'"$ENTROPIE"'"
+    '
+  fi
+
+  # Fusion officielle scellée (sans supposer len(chemins) == 50 ; vérifie la couverture exacte [0, 500))
+  "$PY" -B - "$outdir" "$mode" "$ENTROPIE" <<'PY_FUSION_EOF'
+import glob
+import json
+import sys
+from pathlib import Path
+from controle_ia.sondes_v2 import programme_monde_plante_v4 as p
+
+outdir, mode, entropie = sys.argv[1:4]
+chemins = sorted(glob.glob(f"{outdir}/rapport-monde-plante-v4-{mode}-{entropie}-r*.json"))
+if not chemins:
+    raise SystemExit(f"Aucun rapport trouvé dans {outdir} pour mode={mode}")
+
+plages = sorted(tuple(json.loads(Path(c).read_text(encoding="utf-8"))["plage"]) for c in chemins)
+bout = 0
+couvert = True
+for d, a in plages:
+    if d != bout:
+        couvert = False
+        break
+    bout = a
+couvert = couvert and (bout == 500)
+
+if mode == "etalon" and not couvert:
+    raise SystemExit(f"Couverture étalon incomplète : attendu [0, 500), obtenu fin={bout} sur {len(chemins)} rapports")
+
+if couvert:
+    cible = f"{outdir}/synthese-fusionnee-monde-plante-v4-{mode}-{entropie}.json"
+    out = p.ecrire_synthese_fusionnee(chemins, cible)
+    print(f"SYNTHESE SCELLEE ({mode}, {len(chemins)} rapports):", out, flush=True)
+else:
+    print(
+        f"SYNTHESE DIFFEREE ({mode}, couverture partielle sur cette machine: {len(chemins)} rapports, fin={bout}/500)",
+        flush=True,
+    )
+PY_FUSION_EOF
+}
+
+# Exécution parallèle sur 64+ cœurs (N_WORKERS >= 63) : sonde 1 réplique sur le 63e cœur pendant la vague unique des 62 tranches d'étalon
+lancer_etalon_et_sonde_parallele() {
+  local workers_etalon=$((N_WORKERS - 1))
+  echo ">>> Mode parallèle activé (N_WORKERS=$N_WORKERS >= 63) : sonde_complet_1rep en tâche de fond (1 cœur dédié) + etalon [${ETALON_DE}, ${ETALON_A}) (${workers_etalon} workers)"
+  lancer_sonde_complet_1rep &
+  local pid_sonde=$!
+  lancer_tranches_mode etalon "$ETALON_DE" "$ETALON_A" "$PAS_ETALON" "$workers_etalon" &
+  local pid_etalon=$!
+  local rc_sonde=0
+  local rc_etalon=0
+  wait "$pid_sonde" || rc_sonde=$?
+  wait "$pid_etalon" || rc_etalon=$?
+  if [ "$rc_etalon" -ne 0 ]; then
+    echo "ERREUR : échec de la vague étalon parallèle (rc=$rc_etalon)" >&2
+    return "$rc_etalon"
+  fi
+  if [ "$rc_sonde" -ne 0 ]; then
+    echo "ERREUR : échec de sonde_complet_1rep parallèle (rc=$rc_sonde)" >&2
+    return "$rc_sonde"
+  fi
+  return 0
+}
+
+executer_avec_interruption() {
+  "$@" &
+  ACTIVE_CHILD_PID=$!
+  local rc=0
+  wait "$ACTIVE_CHILD_PID" || rc=$?
+  ACTIVE_CHILD_PID=""
+  return "$rc"
+}
+
+# Vraie minuterie interne R10 (défaut : 31h30 = 113400 s, avant coupure externe)
+(
+  sleep "$WATCHDOG_SECONDES" &
+  SLEEP_PID=$!
+  trap 'kill "$SLEEP_PID" 2>/dev/null || true; exit 0' TERM INT
+  wait "$SLEEP_PID" 2>/dev/null || exit 0
+  kill -TERM $$ 2>/dev/null || true
+) </dev/null >/dev/null 2>&1 &
+WATCHDOG_PID=$!
+echo "Watchdog interne R10 armé : ${WATCHDOG_SECONDES}s (PID=$WATCHDOG_PID)"
+
+case "$MODE_RUN" in
+  etalon_suite_seul)
+    recuperer_etalon_amont
+    executer_avec_interruption lancer_tranches_mode etalon "$ETALON_DE" "$ETALON_A" "$PAS_ETALON" "$N_WORKERS"
+    pousser_sorties "etalon-suite-termine"
+    ;;
+  etalon_suite_et_sonde_complet_1rep)
+    recuperer_etalon_amont
+    if [ "$N_WORKERS" -ge 63 ]; then
+      executer_avec_interruption lancer_etalon_et_sonde_parallele
+      pousser_sorties "etalon-suite-et-sonde-complet-1rep-termines"
+    else
+      executer_avec_interruption lancer_sonde_complet_1rep
+      pousser_sorties "sonde-complet-1rep-terminee"
+      executer_avec_interruption lancer_tranches_mode etalon "$ETALON_DE" "$ETALON_A" "$PAS_ETALON" "$N_WORKERS"
+      pousser_sorties "etalon-suite-et-sonde-complet-1rep-termines"
+    fi
+    ;;
+  etalon_suite_et_complet)
+    recuperer_etalon_amont
+    executer_avec_interruption lancer_tranches_mode etalon "$ETALON_DE" "$ETALON_A" "$PAS_ETALON" "$N_WORKERS"
+    pousser_sorties "etalon-suite-termine"
+    executer_avec_interruption lancer_tranches_mode complet "$COMPLET_DE" "$COMPLET_A" "$PAS_COMPLET" "$N_WORKERS"
+    pousser_sorties "etalon-suite-et-complet-${COMPLET_DE}-${COMPLET_A}-termines"
+    ;;
+  complet_tranche_seul)
+    executer_avec_interruption lancer_tranches_mode complet "$COMPLET_DE" "$COMPLET_A" "$PAS_COMPLET" "$N_WORKERS"
+    pousser_sorties "complet-${COMPLET_DE}-${COMPLET_A}-termine"
+    ;;
+esac
+
+arreter_watchdog
+</file>
+
+<file path="_tmp_amorce/etat_rapide.py">
+import json
+import os
+import re
+import subprocess
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+
+SCRATCH = Path(r"C:\Users\lciri\.gemini\antigravity-cli\brain\cd7c89b9-9752-4dac-b846-2c58efd89737\scratch")
+gh_tok = subprocess.check_output(["gh", "auth", "token"], text=True, timeout=25).strip()
+vk = Path.home() / ".config" / "vastai" / "vast_api_key"
+vast_key = os.environ.get("VAST_API_KEY", "").strip() or (vk.read_text(encoding="utf-8").strip() if vk.is_file() else "")
+secrets = [s for s in (gh_tok, vast_key, os.environ.get("HF_TOKEN", ""), os.environ.get("HCLOUD_TOKEN", "")) if len(s) >= 8]
+
+def mask(s):
+    for x in secrets:
+        s = s.replace(x, "***")
+    return re.sub(r"(gh[opsu]_|github_pat_|hf_)[A-Za-z0-9_]{10,}", r"\1***", s)
+
+def get(url, hdr):
+    req = urllib.request.Request(url, headers=hdr)
+    with urllib.request.urlopen(req, timeout=25) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+print("NOW_UTC:", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+try:
+    d = get("https://console.vast.ai/api/v0/instances/", {"Authorization": f"Bearer {vast_key}", "Accept": "application/json"})
+    for i in d.get("instances", []):
+        print(f"VAST id={i.get('id')} label={i.get('label')!r} actual={i.get('actual_status')} dph={i.get('dph_total')} msg={mask(str(i.get('status_msg','')))[:80]!r}")
+    u = get("https://console.vast.ai/api/v0/users/current/", {"Authorization": f"Bearer {vast_key}", "Accept": "application/json"})
+    print("VAST_CREDIT:", u.get("credit"))
+except Exception as e:
+    print("VAST_ERR:", mask(repr(e)))
+
+gh = {"Authorization": f"Bearer {gh_tok}", "Accept": "application/vnd.github+json", "User-Agent": "mere"}
+for br in ("main", "calcul/dose-reponse-v1", "calcul/sondes-v2-epreuve-plantee-v4-suite"):
+    try:
+        r = get(f"https://api.github.com/repos/lciric/controle-ia-travail/git/ref/heads/{br}", gh)
+        c = get(f"https://api.github.com/repos/lciric/controle-ia-travail/git/commits/{r['object']['sha']}", gh)
+        print(f"GH {br}: {r['object']['sha'][:12]} {c['committer']['date']} {mask(c['message'])[:110]!r}")
+    except Exception as e:
+        print(f"GH {br}: ERR {e}")
+
+htok = os.environ.get("HCLOUD_TOKEN", "").strip()
+if htok:
+    try:
+        s = get("https://api.hetzner.cloud/v1/servers", {"Authorization": f"Bearer {htok}"})
+        print("HETZNER_SERVERS:", [x.get("id") for x in s.get("servers", [])])
+    except Exception as e:
+        print("HETZNER_ERR:", mask(repr(e)))
+
+for p in ("sondes-v2-amorce-v3/contre-lecture-r2-amorce-sondes-v2-v3-v1.md", "d10-backup", "wt-b8-puissance/docs/notes/barreau8-conductrice-lecture-sondes-v1/mandat-lecteur-sondes-barreau8-v3.md",
+          "wt-b8-puissance/diag/20261125-083300-puissance-barreau8/aires-minimales-detectables-barreau8-v1.json"):
+    print("EXISTS", p, (SCRATCH / p).exists())
+r = subprocess.run(["git", "-C", str(SCRATCH / "wt-b8-puissance"), "status", "--porcelain"], capture_output=True, text=True, timeout=60)
+print("WT_B8_STATUS:", (r.stdout.strip() or "(clean)")[:600])
+r = subprocess.run(["git", "-C", str(SCRATCH / "wt-b8-puissance"), "log", "-1", "--format=%H %s"], capture_output=True, text=True, timeout=60)
+print("WT_B8_HEAD:", r.stdout.strip())
+</file>
+
+<file path="_tmp_amorce/test_amorce_sondes_v2_r5_v3.py">
+"""Essais R5 unitaires et d'intégration de `amorce-sondes-v2-v3.sh` (GO-2026-11-24-02 / GO-2026-11-24-15).
+
+Exécutable aussi bien avec `pytest` qu'en script autonome (`python test_amorce_sondes_v2_r5_v3.py`).
+
+Couvre :
+  1. Contrôles statiques et structurels stricts de `amorce-sondes-v2-v3.sh` :
+     - fins de ligne LF strictes (aucun `\\r`) ;
+     - résolution de `CPU_DISPO` (`nproc --all`) et `N_WORKERS` strictement AVANT `export OMP_NUM_THREADS=1`
+       (`OPENBLAS_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, `NUMEXPR_NUM_THREADS=1`) + garde `EXIGER_MULTICOEUR` ;
+     - absence de `xargs ... -n 1 ... -I {}` (correction de l'avertissement GNU xargs) ;
+     - `PAS_ETALON=6` par défaut avec dernière tranche bornée à `500` (`[496, 500)`, 62 tranches sur `[130, 500)`) ;
+     - exécution en tâche de fond parallèle de `sonde_complet_1rep` sur le 63e cœur lorsque `N_WORKERS >= 63` ;
+     - garde `BRANCHE_SORTIE` (défaut `calcul/sondes-v2-epreuve-plantee-v4-suite`, refus de `main` et de
+       `calcul/sondes-v2-epreuve-plantee-v4`) ;
+     - compatibilité conteneur Vast.ai (`GH_TOKEN_ENV` / `VAST_API_KEY_ENV` -> fichiers `0600` puis `unset`
+       complet des variables secrètes exportées ; `apt-get` auto pour `git`, `curl`, `ca-certificates`, `procps`,
+       `time` ; fallback `CONTAINER_ID` strictement numérique ; liste noire des 5 instances Vast.ai intouchables
+       `58936096`, `58936099`, `58936100`, `60988826`, `62498862`) ;
+     - masquage et contrôle anti-fuite de `GH_TOK`, `HCLOUD_TOKEN` et `VAST_API_KEY`.
+  2. Vérification mathématique et en Python pur de `programme_monde_plante_v4.fusionner()` et
+     `ecrire_synthese_fusionnee()` (depuis un clone temporaire détaché au commit figé `0ce9e35110d9…`, sans
+     toucher au dépôt principal R12) :
+     - mini-cas `repliques=25` découpé en largeurs mixtes `[0, 10)`, `[10, 20)`, `[20, 25)` : synthèse identique
+       à l'octet à un processus unique `[0, 25)` ;
+     - mini-cas `repliques=26` reproduisant le découpage `PAS_ETALON=6` avec dernière tranche de largeur 4
+       (`[0, 10)` largeur 10 + `[10, 16)` largeur 6 + `[16, 22)` largeur 6 + `[22, 26)` largeur 4) : synthèse
+       identique à l'octet à un processus unique `[0, 26)` ;
+     - gardes négatives de `fusionner()` (trou dans les plages, couverture incomplète, discordance du chemin de
+       `note_effectifs`) ;
+     - vérification des 13 rapports étalon amont réels (`[0, 130)`) si accessibles localement et preuve que
+       l'union des 13 tranches `[0, 130)` (pas 10) et des 62 tranches `[130, 500)` (`PAS_ETALON=6`, dernière
+       tranche `[496, 500)` de 4 répliques) forme 75 tranches disjointes couvrant exactement `[0, 500)`.
+  3. Essais dynamiques bout-en-bout sous `bash` (si un environnement `bash` + `git` + `curl` + `sha256sum` + `tar`
+     est disponible) :
+     - `bash -n amorce-sondes-v2-v3.sh` ;
+     - rejets immédiats des gardes (`EXIGER_MULTICOEUR=1` avec `N_WORKERS=1`, `REPO_URL` avec jeton,
+       `BRANCHE_SORTIE=main`, `BRANCHE_SORTIE=calcul/sondes-v2-epreuve-plantee-v4`, chacune des 5 instances Vast.ai
+       intouchables via `VAST_INSTANCE_ID` et via `CONTAINER_ID`, identifiant Vast non numérique ou préfixé de `0`) ;
+     - scénario Vast.ai 64 cœurs (`MODE_RUN=etalon_suite_et_sonde_complet_1rep`, `N_WORKERS=64`, `PAS_ETALON=6`,
+       `GH_TOKEN_ENV`, `VAST_API_KEY_ENV`, `CONTAINER_ID` numérique) : reprise `[0, 130)` sans recalcul, parallélisme
+       effectif sonde + étalon, absence totale des secrets dans `os.environ` des fils Python, masquage anti-fuite,
+       `100 %` `.sha256` valides, préservation intacte de `calcul/sondes-v2-epreuve-plantee-v4` et `DELETE` Vast.ai ;
+     - scénario Hetzner (`MODE_RUN=etalon_suite_et_complet` avec minuterie R10 `rc=124` + `DELETE` Hetzner).
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import http.server
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from pathlib import Path
+
+DOSSIER_COURANT = Path(__file__).resolve().parent
+SCRIPT_AMORCE = DOSSIER_COURANT / "amorce-sondes-v2-v3.sh"
+
+BRAIN_PARENT = DOSSIER_COURANT.parent.parent
+SCRATCH_LECTURE_ETALON = BRAIN_PARENT / "scratch" / "lecture-sondes-v2-etalon"
+CODE_V2_EXTRAIT = SCRATCH_LECTURE_ETALON / "code-v2"
+BRUT_ETALON_AMONT = SCRATCH_LECTURE_ETALON / "brut" / "epreuve-plantee-v4" / "etalon"
+
+REPO_PRINCIPAL = Path(r"C:\Users\lciri\OneDrive\Documents\controle-ia-travail")
+if not REPO_PRINCIPAL.exists():
+    for p_cand in Path(__file__).resolve().parents:
+        if (p_cand / "src" / "controle_ia" / "gardes.py").is_file():
+            REPO_PRINCIPAL = p_cand
+            break
+
+ENTROPIE_OFFICIELLE = "305159624078239919914131004197200342142"
+COMMIT_CODE_OFFICIEL = "0ce9e35110d93dd916e85b1191a2613b101e772d"
+SHA_VERITES_OFFICIEL = "b310e1af50459b78833fcc509298bbc1807f1905631e1152b3e28f538f233533"
+SHA_NOTE_OFFICIEL = "7338a3dcafb18bfd6fdd43e377bfa0b67f3f6812596749646d6fb0e9c3444db5"
+COMMIT_AMONT_ETALON_OFFICIEL = "38c6f4a7054b14b56be7b357c08db8bf11931ca2"
+VAST_BLACKLIST = ("58936096", "58936099", "58936100", "60988826", "62498862")
+
+FAKE_GH_TOKEN = "ghp_TESTSECRET_V3_998877"
+FAKE_HCLOUD_TOKEN = "hc_TESTHCLOUD_V3_654321"
+FAKE_VAST_KEY = "vast_TESTAPIKEY_V3_1122334455"
+FAKE_HETZNER_ID = "99887766"
+FAKE_VAST_ID = "77889900"
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    return sha256_bytes(path.read_bytes())
+
+
+def decouper_plages_comme_amorce(de_global: int, a_global: int, pas: int) -> list[tuple[int, int]]:
+    """Reproduit exactement `seq de_global pas (a_global - 1)` + `a = min(a_global, de + pas)` de l'amorce v3."""
+    assert 0 <= de_global <= a_global <= 500 and pas >= 1
+    out: list[tuple[int, int]] = []
+    for de in range(de_global, a_global, pas):
+        a = min(a_global, de + pas)
+        out.append((de, a))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# 1. CONTRÔLES STATIQUES ET STRUCTURELS STRICTS DE amorce-sondes-v2-v3.sh
+# ---------------------------------------------------------------------------
+
+
+def test_amorce_v3_lf_strict_et_encodage_utf8() -> None:
+    assert SCRIPT_AMORCE.is_file(), f"Script absent : {SCRIPT_AMORCE}"
+    raw = SCRIPT_AMORCE.read_bytes()
+    assert b"\r" not in raw, "ERREUR : présence de CR (\\r) dans amorce-sondes-v2-v3.sh (LF strict exigé)"
+    assert raw.startswith(b"#!/usr/bin/env bash\n"), "Shebang bash LF attendu en ligne 1"
+    assert raw.endswith(b"\n"), "Fin de fichier LF attendue"
+    texte = raw.decode("utf-8")
+    assert len(texte.splitlines()) >= 350
+
+
+def test_amorce_v3_ordre_nproc_avant_omp_et_garde_multicoeur() -> None:
+    texte = SCRIPT_AMORCE.read_text(encoding="utf-8")
+
+    m_cpu = re.search(r'^CPU_DISPO="\$\(nproc --all 2>/dev/null \|\| getconf _NPROCESSORS_ONLN \|\| echo 1\)"$', texte, re.M)
+    assert m_cpu is not None, "Expression exacte CPU_DISPO avec `nproc --all` absente"
+
+    m_workers = re.search(r'^N_WORKERS="\$\{N_WORKERS:-\$CPU_DISPO\}"$', texte, re.M)
+    assert m_workers is not None, "Affectation N_WORKERS=${N_WORKERS:-$CPU_DISPO} absente"
+
+    m_exiger = re.search(r'^EXIGER_MULTICOEUR="\$\{EXIGER_MULTICOEUR:-1\}"$', texte, re.M)
+    assert m_exiger is not None, "Affectation EXIGER_MULTICOEUR=${EXIGER_MULTICOEUR:-1} absente"
+
+    for var_thr in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
+        m_thr = re.search(rf"^export {var_thr}=1$", texte, re.M)
+        assert m_thr is not None, f"export {var_thr}=1 absent"
+        assert m_cpu.start() < m_workers.start() < m_thr.start(), (
+            f"CPU_DISPO et N_WORKERS doivent être résolus AVANT export {var_thr}=1"
+        )
+
+    assert '"$EXIGER_MULTICOEUR" = "1"' in texte and '"$N_WORKERS" -lt 2' in texte
+
+
+def test_amorce_v3_xargs_sans_n1_avec_replace_et_pas_etalon_6() -> None:
+    texte = SCRIPT_AMORCE.read_text(encoding="utf-8")
+
+    # Aucune ligne ne doit combiner xargs avec -n / --max-args ET -I
+    for num, ligne in enumerate(texte.splitlines(), 1):
+        if "xargs" in ligne and "-I" in ligne:
+            assert not re.search(r"(?:^|\s)(?:-n\s*\d+|--max-args)", ligne), (
+                f"Ligne {num} combine xargs -n/--max-args et -I : {ligne!r}"
+            )
+    assert re.search(r'xargs -P "\$workers_locaux" -I \{\}', texte) is not None
+
+    # PAS_ETALON par défaut à 6 (62 tranches sur [130, 500) avec dernière tranche bornée à 500)
+    assert 'PAS_ETALON="${PAS_ETALON:-6}"' in texte
+    assert 'ETALON_DE="${ETALON_DE:-130}"' in texte
+    assert 'ETALON_A="${ETALON_A:-500}"' in texte
+    assert "a=$(( de + pas_local > plafond ? plafond : de + pas_local ))" in texte
+
+    # Vérification arithmétique du découpage 64 cœurs : 13 tranches amont + 62 tranches nouvelles = 75 tranches
+    amont = decouper_plages_comme_amorce(0, 130, 10)
+    suite = decouper_plages_comme_amorce(130, 500, 6)
+    assert len(amont) == 13 and amont[0] == (0, 10) and amont[-1] == (120, 130)
+    assert len(suite) == 62
+    assert suite[0] == (130, 136)
+    assert suite[-2] == (490, 496)
+    assert suite[-1] == (496, 500), f"Dernière tranche attendue (496, 500) de 4 répliques, obtenu {suite[-1]}"
+    toutes = amont + suite
+    assert len(toutes) == 75
+    bout = 0
+    for d, a in toutes:
+        assert d == bout
+        bout = a
+    assert bout == 500
+
+    # Vérification analogue si PAS_ETALON=5 : 13 + 74 = 87 tranches couvrant [0, 500)
+    suite_5 = decouper_plages_comme_amorce(130, 500, 5)
+    assert len(suite_5) == 74 and suite_5[-1] == (495, 500)
+
+    # Ne jamais supposer len(chemins) == 50 dans le code exécutable
+    lignes_hors_commentaires = "\n".join(
+        l for l in texte.splitlines() if not l.lstrip().startswith("#")
+    )
+    assert "len(chemins) == 50" not in lignes_hors_commentaires
+    assert "p.ecrire_synthese_fusionnee(" in lignes_hors_commentaires
+
+
+def test_amorce_v3_gardes_securite_branches_vast_et_63e_coeur() -> None:
+    texte = SCRIPT_AMORCE.read_text(encoding="utf-8")
+
+    # Branche amont épinglée et branche de sortie dédiée R12
+    assert f'COMMIT_AMONT_ETALON="${{COMMIT_AMONT_ETALON:-{COMMIT_AMONT_ETALON_OFFICIEL}}}"' in texte
+    assert 'BRANCHE_AMONT_ETALON="${BRANCHE_AMONT_ETALON:-calcul/sondes-v2-epreuve-plantee-v4}"' in texte
+    assert 'BRANCHE_SORTIE="${BRANCHE_SORTIE:-calcul/sondes-v2-epreuve-plantee-v4-suite}"' in texte
+    assert "main|master|HEAD|calcul/sondes-v2-epreuve-plantee-v4" in texte
+
+    # Liste noire complète des 5 instances Vast.ai intouchables
+    for vid in VAST_BLACKLIST:
+        assert vid in texte, f"Instance Vast.ai intouchable {vid} manquante dans amorce-sondes-v2-v3.sh"
+
+    # Gestion conteneur Vast.ai : GH_TOKEN_ENV / VAST_API_KEY_ENV -> 0600 + unset complet + apt-get + CONTAINER_ID
+    assert "GH_TOKEN_ENV" in texte and "VAST_API_KEY_ENV" in texte
+    assert "chmod 0600" in texte and "chmod 0700" in texte
+    assert "unset GH_TOKEN_ENV VAST_API_KEY_ENV HCLOUD_TOKEN_ENV GITHUB_TOKEN GH_TOKEN VAST_API_KEY HCLOUD_TOKEN GH_TOK" in texte
+    for pkg in ("git", "curl", "ca-certificates", "procps", "time"):
+        assert pkg in texte, f"Paquet système requis {pkg!r} absent de l'installation apt-get"
+    assert "CONTAINER_ID" in texte
+    assert "https://console.vast.ai/api/v0" in texte
+    assert "/instances/${TARGET_VAST_ID}/" in texte
+    assert "/servers/${SERVER_ID}" in texte
+
+    # Modes et parallélisme sur le 63e cœur lorsque N_WORKERS >= 63
+    for mode in ("etalon_suite_seul", "etalon_suite_et_sonde_complet_1rep", "etalon_suite_et_complet"):
+        assert mode in texte
+    assert '"$N_WORKERS" -ge 63' in texte
+    assert "lancer_sonde_complet_1rep &" in texte
+    assert 'wait "$pid_sonde"' in texte and 'wait "$pid_etalon"' in texte
+
+    # Masquage des 3 familles de secrets
+    for marqueur in ("[MASQUE_GH]", "[MASQUE_HCLOUD]", "[MASQUE_VAST]"):
+        assert marqueur in texte
+
+
+# ---------------------------------------------------------------------------
+# 2. VÉRIFICATION DE programme_monde_plante_v4.fusionner() SUR LARGEURS MIXTES
+# ---------------------------------------------------------------------------
+
+
+def _preparer_depot_code_v2_temporaire(tmp_root: Path):
+    """Extrait un clone temporaire propre de `0ce9e35110d93dd916e85b1191a2613b101e772d` depuis le `.git` local
+    (lecture seule, aucun fichier du dépôt principal modifié, R12)."""
+    repo_tmp = tmp_root / "repo_code_v2"
+    git_bin = shutil.which("git")
+
+    # Voie 1 : clone local sans réseau depuis REPO_PRINCIPAL au commit exact 0ce9e35110...
+    if git_bin and (REPO_PRINCIPAL / ".git").exists():
+        r_clone = subprocess.run(
+            [git_bin, "clone", "--no-checkout", "--quiet", str(REPO_PRINCIPAL), str(repo_tmp)],
+            capture_output=True, text=True,
+        )
+        if r_clone.returncode == 0:
+            r_co = subprocess.run(
+                [git_bin, "-C", str(repo_tmp), "checkout", "--detach", "--quiet", COMMIT_CODE_OFFICIEL],
+                capture_output=True, text=True,
+            )
+            if r_co.returncode == 0 and (repo_tmp / "src/controle_ia/sondes_v2/programme_monde_plante_v4.py").is_file():
+                for mod_name in [k for k in list(sys.modules) if k == "controle_ia" or k.startswith("controle_ia.")]:
+                    sys.modules.pop(mod_name, None)
+                sys.path.insert(0, str(repo_tmp / "src"))
+                from controle_ia.gardes import GardeArret
+                from controle_ia.scellement import verifier
+                from controle_ia.sondes_v2 import programme_monde_plante_v4 as p
+                return p, GardeArret, verifier, True, repo_tmp
+
+    # Voie 2 : si l'arbre courant ou CODE_V2_EXTRAIT possède déjà tout sondes_v2
+    try:
+        src_principal = REPO_PRINCIPAL / "src" / "controle_ia"
+        if src_principal.is_dir() and CODE_V2_EXTRAIT.is_dir() and (CODE_V2_EXTRAIT / "statistiques_v2.py").is_file():
+            pkg_ci = repo_tmp / "src" / "controle_ia"
+            pkg_sv2 = pkg_ci / "sondes_v2"
+            pkg_sv2.mkdir(parents=True, exist_ok=True)
+            for f in src_principal.iterdir():
+                if f.is_file() and f.suffix == ".py":
+                    shutil.copy2(f, pkg_ci / f.name)
+            for f in CODE_V2_EXTRAIT.iterdir():
+                if f.is_file() and f.suffix in (".py", ".json", ".sha256"):
+                    shutil.copy2(f, pkg_sv2 / f.name)
+            if git_bin:
+                subprocess.run([git_bin, "init", str(repo_tmp)], check=True, capture_output=True)
+                subprocess.run([git_bin, "-C", str(repo_tmp), "config", "user.name", "t"], check=True, capture_output=True)
+                subprocess.run([git_bin, "-C", str(repo_tmp), "config", "user.email", "t@t"], check=True, capture_output=True)
+                subprocess.run([git_bin, "-C", str(repo_tmp), "add", "-A"], check=True, capture_output=True)
+                subprocess.run([git_bin, "-C", str(repo_tmp), "commit", "-m", "init"], check=True, capture_output=True)
+            for mod_name in [k for k in list(sys.modules) if k == "controle_ia" or k.startswith("controle_ia.")]:
+                sys.modules.pop(mod_name, None)
+            sys.path.insert(0, str(repo_tmp / "src"))
+            from controle_ia.gardes import GardeArret
+            from controle_ia.scellement import verifier
+            from controle_ia.sondes_v2 import programme_monde_plante_v4 as p
+            return p, GardeArret, verifier, True, repo_tmp
+    except PermissionError:
+        pass
+    return None
+
+
+def test_fusionner_largeurs_mixtes_10_5_et_10_6_4_identique_octet() -> None:
+    try:
+        import numpy  # noqa: F401
+        import scipy  # noqa: F401
+        import sklearn  # noqa: F401
+    except ImportError:
+        try:
+            import pytest
+            pytest.skip("numpy/scipy/scikit-learn non installés dans cet interpréteur Python")
+        except ImportError:
+            print("INFO : saut du test dynamique numpy/scipy/sklearn (interpréteur sans dépendances scientifiques)")
+            return
+
+    with tempfile.TemporaryDirectory(prefix="sondes_v2_fusion_v3_") as td:
+        tmp_path = Path(td)
+        prep = _preparer_depot_code_v2_temporaire(tmp_path)
+        if prep is None:
+            try:
+                import pytest
+                pytest.skip(f"Commit {COMMIT_CODE_OFFICIEL} non présent dans le clone local de {REPO_PRINCIPAL}")
+            except ImportError:
+                print(f"INFO : saut de l'exécution de programme_monde_plante_v4 ({COMMIT_CODE_OFFICIEL} absent du .git local)")
+                return
+
+        p, GardeArret, verifier, depot_git_propre, _ = prep
+        assert depot_git_propre
+
+        seuils = {"alpha": 0.05, "u_fort": 0.9}
+        cas_mini = [(4, 2, 8, 2)]
+        mondes_mini = ["identite_seule", "trace_forte", "intensite_4"]
+        note_meta = {"chemin": "/opt/entree/note-des-effectifs-sondes-v2-v1.md", "sha256": SHA_NOTE_OFFICIEL}
+
+        # --- Cas 1 (exigence explicite § 3) : repliques=25 découpé en [0,10), [10,20), [20,25) ---
+        dir_25_unique = tmp_path / "r25_unique"
+        ch_unique_25 = p.executer(
+            dir_25_unique, "etalon", cas_mini, repliques=25, n_nul=19, n_tirages=80,
+            seuils=seuils, d=16, entropie=int(ENTROPIE_OFFICIELLE), mondes=mondes_mini,
+            n_nul_identite=20, note_effectifs=note_meta,
+        )
+        rap_unique_25 = json.loads(ch_unique_25.read_text(encoding="utf-8"))
+
+        dir_25_mixte = tmp_path / "r25_mixte"
+        chemins_25 = [
+            p.executer(
+                dir_25_mixte, "etalon", cas_mini, repliques=25, n_nul=19, n_tirages=80,
+                seuils=seuils, d=16, entropie=int(ENTROPIE_OFFICIELLE), mondes=mondes_mini,
+                n_nul_identite=20, plage=pl, note_effectifs=note_meta,
+            )
+            for pl in [(0, 10), (10, 20), (20, 25)]
+        ]
+        syn_fusion_25 = p.fusionner(chemins_25)
+        assert p._canon(syn_fusion_25) == p._canon(rap_unique_25["synthese"]), (
+            "La fusion [0,10)+[10,20)+[20,25) diffère à l'octet d'un processus unique [0,25)"
+        )
+        cible_syn_25 = p.ecrire_synthese_fusionnee(
+            chemins_25, dir_25_mixte / f"synthese-fusionnee-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}.json"
+        )
+        verifier(cible_syn_25)
+        corps_syn_25 = json.loads(cible_syn_25.read_text(encoding="utf-8"))
+        assert len(corps_syn_25["rapports"]) == 3
+        assert p._canon(corps_syn_25["synthese"]) == p._canon(rap_unique_25["synthese"])
+
+        # --- Cas 2 (exigence 64 cœurs PAS_ETALON=6 + queue de 4 répliques) :
+        #     repliques=26 découpé en [0,10) (10) + [10,16) (6) + [16,22) (6) + [22,26) (4, analogue de [496,500)) ---
+        dir_26_unique = tmp_path / "r26_unique"
+        ch_unique_26 = p.executer(
+            dir_26_unique, "etalon", cas_mini, repliques=26, n_nul=19, n_tirages=80,
+            seuils=seuils, d=16, entropie=int(ENTROPIE_OFFICIELLE), mondes=mondes_mini,
+            n_nul_identite=20, note_effectifs=note_meta,
+        )
+        rap_unique_26 = json.loads(ch_unique_26.read_text(encoding="utf-8"))
+
+        dir_26_mixte = tmp_path / "r26_mixte"
+        plages_26 = [(0, 10)] + decouper_plages_comme_amorce(10, 26, 6)
+        assert plages_26 == [(0, 10), (10, 16), (16, 22), (22, 26)]
+        chemins_26 = [
+            p.executer(
+                dir_26_mixte, "etalon", cas_mini, repliques=26, n_nul=19, n_tirages=80,
+                seuils=seuils, d=16, entropie=int(ENTROPIE_OFFICIELLE), mondes=mondes_mini,
+                n_nul_identite=20, plage=pl, note_effectifs=note_meta,
+            )
+            for pl in plages_26
+        ]
+        cible_syn_26 = p.ecrire_synthese_fusionnee(
+            chemins_26, dir_26_mixte / f"synthese-fusionnee-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}.json"
+        )
+        verifier(cible_syn_26)
+        corps_syn_26 = json.loads(cible_syn_26.read_text(encoding="utf-8"))
+        assert p._canon(corps_syn_26["synthese"]) == p._canon(rap_unique_26["synthese"]), (
+            "La fusion [0,10)+[10,16)+[16,22)+[22,26) (PAS_ETALON=6 + queue de 4) diffère d'un processus unique"
+        )
+
+        # --- Gardes négatives de fusionner() ---
+        try:
+            p.fusionner(chemins_25[:2])
+            raise AssertionError("fusionner aurait dû rejeter une couverture incomplète [0, 20) / 25")
+        except GardeArret as exc:
+            assert "couvrent [0, 20) au lieu de [0, 25)" in str(exc)
+
+        try:
+            p.fusionner([chemins_25[0], chemins_25[2]])
+            raise AssertionError("fusionner aurait dû rejeter des plages non contiguës")
+        except GardeArret as exc:
+            assert "non contiguës" in str(exc)
+
+        dir_25_bad = tmp_path / "r25_bad_note"
+        ch_bad = p.executer(
+            dir_25_bad, "etalon", cas_mini, repliques=25, n_nul=19, n_tirages=80,
+            seuils=seuils, d=16, entropie=int(ENTROPIE_OFFICIELLE), mondes=mondes_mini,
+            n_nul_identite=20, plage=(20, 25),
+            note_effectifs={"chemin": "/workspace/entree/note-des-effectifs-sondes-v2-v1.md", "sha256": SHA_NOTE_OFFICIEL},
+        )
+        try:
+            p.fusionner([chemins_25[0], chemins_25[1], ch_bad])
+            raise AssertionError("fusionner aurait dû rejeter un chemin note_effectifs discordant")
+        except GardeArret as exc:
+            assert "arguments" in str(exc)
+
+
+def test_verification_13_rapports_amont_extraits_localement() -> None:
+    """Vérifie l'intégrité SHA-256 et les métadonnées des 13 tranches réelles `[0, 130)` si accessibles."""
+    try:
+        if not BRUT_ETALON_AMONT.is_dir():
+            return
+    except PermissionError:
+        return
+    attendus = [(de, de + 10) for de in range(0, 130, 10)]
+    for de, a in attendus:
+        nom = f"rapport-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}-r{de}-{a}.json"
+        f_json = BRUT_ETALON_AMONT / nom
+        f_sha = BRUT_ETALON_AMONT / f"{nom}.sha256"
+        assert f_json.is_file() and f_sha.is_file(), f"Tranche amont manquante : {nom}"
+        ligne_sha = f_sha.read_text(encoding="utf-8").strip()
+        assert ligne_sha == f"{sha256_file(f_json)}  {nom}", f"SHA-256 invalide pour {nom}"
+        meta = json.loads(f_json.read_text(encoding="utf-8"))
+        assert meta["plage"] == [de, a]
+        assert meta["mode"] == "etalon"
+        assert meta["verites_sha256"] == SHA_VERITES_OFFICIEL
+        assert meta["graines"]["entropie_racine"] == ENTROPIE_OFFICIELLE
+        assert meta["manifeste"]["commit"] == COMMIT_CODE_OFFICIEL
+        assert meta["manifeste"]["depot_propre"] is True
+        assert meta["arguments"]["note_effectifs"] == {
+            "chemin": "/opt/entree/note-des-effectifs-sondes-v2-v1.md",
+            "sha256": SHA_NOTE_OFFICIEL,
+        }
+
+
+# ---------------------------------------------------------------------------
+# 3. ESSAIS DYNAMIQUES BOUT-EN-BOUT SOUS BASH (VAST.AI 64 CŒURS & HETZNER)
+# ---------------------------------------------------------------------------
+
+
+def _trouver_bash_fonctionnel() -> str | None:
+    candidats: list[str] = []
+    if sys.platform == "win32":
+        for p in (
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files\Git\usr\bin\bash.exe",
+        ):
+            if Path(p).is_file():
+                candidats.append(p)
+    b_which = shutil.which("bash")
+    if b_which and b_which not in candidats:
+        if not (sys.platform == "win32" and b_which.lower().endswith(r"\system32\bash.exe")):
+            candidats.append(b_which)
+
+    for b in candidats:
+        try:
+            r = subprocess.run(
+                [b, "-c", "command -v git curl sha256sum tar split sed awk grep tr"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if r.returncode == 0:
+                return b
+        except Exception:
+            continue
+    return None
+
+
+def _vers_chemin_bash(bash_bin: str, p: Path) -> str:
+    s = str(p.resolve())
+    if sys.platform == "win32" and len(s) >= 3 and s[1:3] == ":\\":
+        drive = s[0].lower()
+        rest = s[3:].replace("\\", "/")
+        return f"/{drive}/{rest}"
+    return s
+
+
+class FakeCloudServer:
+    """Serveur HTTP local simulant à la fois l'API Hetzner (/v1/servers/<ID> + metadata)
+    et l'API Vast.ai (/api/v0/instances/<ID>/)."""
+
+    def __init__(self, expected_hc_token: str, hetzner_id: str, expected_vast_key: str) -> None:
+        self.expected_hc_token = expected_hc_token
+        self.hetzner_id = hetzner_id
+        self.expected_vast_key = expected_vast_key
+        self.hetzner_deleted: list[str] = []
+        self.vast_deleted: list[str] = []
+        self.auth_errors: list[str] = []
+        outer = self
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def log_message(self, fmt, *args):  # noqa: A002
+                return
+
+            def do_GET(self):
+                if self.path == "/hetzner/v1/metadata/instance-id":
+                    body = outer.hetzner_id.encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+
+            def do_DELETE(self):
+                auth = self.headers.get("Authorization", "")
+                if self.path.startswith("/v1/servers/"):
+                    if auth != f"Bearer {outer.expected_hc_token}":
+                        outer.auth_errors.append(f"hetzner:{auth}")
+                        self.send_response(401)
+                        self.end_headers()
+                        return
+                    outer.hetzner_deleted.append(self.path[len("/v1/servers/"):])
+                    body = b'{"action":{"status":"success"}}'
+                    self.send_response(200)
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                elif self.path.startswith("/api/v0/instances/") and self.path.endswith("/"):
+                    if auth != f"Bearer {outer.expected_vast_key}":
+                        outer.auth_errors.append(f"vast:{auth}")
+                        self.send_response(401)
+                        self.end_headers()
+                        return
+                    vid = self.path[len("/api/v0/instances/"):-1]
+                    outer.vast_deleted.append(vid)
+                    body = b'{"success":true}'
+                    self.send_response(200)
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+
+        self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.port = self.httpd.server_address[1]
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.thread.start()
+
+    def close(self) -> None:
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+def _creer_depot_bare_avec_amont_etalon(root: Path, chemin_note_attendu: str) -> tuple[Path, str, str, str, str]:
+    bare = root / "origin.git"
+    seed = root / "seed"
+    subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
+    subprocess.run(["git", "init", str(seed)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "config", "user.name", "test-r5-v3"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "config", "user.email", "test@r5.local"], check=True, capture_output=True)
+
+    # 1. main
+    subprocess.run(["git", "-C", str(seed), "checkout", "-B", "main"], check=True, capture_output=True)
+    note_dir = seed / "docs/notes/sondes-v2-effectifs-et-correspondance-v1"
+    note_dir.mkdir(parents=True, exist_ok=True)
+    note_p = note_dir / "note-des-effectifs-sondes-v2-v1.md"
+    note_p.write_bytes(b"# Note effectifs factice R5 v3\n")
+    sha_note = sha256_file(note_p)
+    (note_dir / "note-des-effectifs-sondes-v2-v1.md.sha256").write_bytes(
+        f"{sha_note}  note-des-effectifs-sondes-v2-v1.md\n".encode("utf-8")
+    )
+    subprocess.run(["git", "-C", str(seed), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "commit", "-m", "main"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "push", str(bare), "main:refs/heads/main"], check=True, capture_output=True)
+
+    # 2. sondes-v2/code-v2
+    subprocess.run(["git", "-C", str(seed), "checkout", "--orphan", "code_tmp"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "rm", "-rf", "."], check=True, capture_output=True)
+    v_dir = seed / "src/controle_ia/sondes_v2"
+    v_dir.mkdir(parents=True, exist_ok=True)
+    verites_p = v_dir / "verites_mondes_plantes_v4.json"
+    verites_p.write_bytes(b'{"format":"verites-v4-test-v3"}\n')
+    sha_verites = sha256_file(verites_p)
+    subprocess.run(["git", "-C", str(seed), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "commit", "-m", "code-v2"], check=True, capture_output=True)
+    commit_code = subprocess.run(
+        ["git", "-C", str(seed), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(seed), "push", str(bare), "HEAD:refs/heads/sondes-v2/code-v2"],
+        check=True,
+        capture_output=True,
+    )
+
+    # 3. calcul/sondes-v2-epreuve-plantee-v4 : 13 rapports r0-10 .. r120-130 + .sha256
+    subprocess.run(["git", "-C", str(seed), "checkout", "--orphan", "amont_tmp"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "rm", "-rf", "."], check=True, capture_output=True)
+    et_dir = seed / "epreuve-plantee-v4" / "etalon"
+    et_dir.mkdir(parents=True, exist_ok=True)
+    for de in range(0, 130, 10):
+        a = de + 10
+        nom = f"rapport-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}-r{de}-{a}.json"
+        corps = (
+            json.dumps(
+                {
+                    "format": "rapport-monde-plante-v4",
+                    "mode": "etalon",
+                    "plage": [de, a],
+                    "verites_sha256": sha_verites,
+                    "graines": {"entropie_racine": ENTROPIE_OFFICIELLE},
+                    "arguments": {
+                        "note_effectifs": {"chemin": chemin_note_attendu, "sha256": sha_note},
+                    },
+                    "manifeste": {"commit": commit_code, "depot_propre": True, "reserves": []},
+                },
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8")
+        (et_dir / nom).write_bytes(corps)
+        (et_dir / f"{nom}.sha256").write_bytes(f"{sha256_bytes(corps)}  {nom}\n".encode("utf-8"))
+    subprocess.run(["git", "-C", str(seed), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(seed), "commit", "-m", "amont 13 tranches"], check=True, capture_output=True)
+    commit_amont = subprocess.run(
+        ["git", "-C", str(seed), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(seed), "push", str(bare), "HEAD:refs/heads/calcul/sondes-v2-epreuve-plantee-v4"],
+        check=True,
+        capture_output=True,
+    )
+    shutil.rmtree(seed)
+    return bare, commit_code, sha_verites, sha_note, commit_amont
+
+
+def _ecrire_faux_runner(script_sh: Path, py_exe_bash: str, comportement_complet: str) -> None:
+    py_helper = script_sh.with_suffix(".py")
+    code_py = f"""import base64, glob, hashlib, json, os, sys, time
+from pathlib import Path
+
+mode = sys.argv[1]
+outdir = Path(sys.argv[2])
+entropie = sys.argv[3]
+de_g = int(sys.argv[4])
+a_g = int(sys.argv[5])
+pas = int(sys.argv[6])
+workers = int(sys.argv[7]) if len(sys.argv) > 7 else 0
+outdir.mkdir(parents=True, exist_ok=True)
+
+# Vérifier qu'AUCUNE variable d'environnement secrète n'est exposée au processus fils Python !
+INTERDITES = ("GH_TOKEN_ENV", "VAST_API_KEY_ENV", "HCLOUD_TOKEN_ENV", "GITHUB_TOKEN", "GH_TOKEN", "VAST_API_KEY", "HCLOUD_TOKEN", "GH_TOK")
+presentes = [k for k in INTERDITES if k in os.environ]
+if presentes:
+    raise SystemExit(f"FUITE ENVIRONNEMENT FILS PYTHON : {{presentes}}")
+
+def sceller_test(p: Path, raw: bytes) -> None:
+    p.write_bytes(raw)
+    h = hashlib.sha256(raw).hexdigest()
+    p.with_name(p.name + ".sha256").write_bytes(f"{{h}}  {{p.name}}\\n".encode("utf-8"))
+
+# Émettre volontairement les 3 faux secrets sur stderr pour éprouver filtrer_secrets_log
+print("FUITE_TEST_GH: https://x-access-token:{FAKE_GH_TOKEN}@github.com/lciric/controle-ia-travail.git", file=sys.stderr, flush=True)
+print("FUITE_TEST_HC: {FAKE_HCLOUD_TOKEN}", file=sys.stderr, flush=True)
+print("FUITE_TEST_VAST: Authorization: Bearer {FAKE_VAST_KEY}", file=sys.stderr, flush=True)
+
+if mode == "sonde_complet_1rep":
+    t_debut = time.time()
+    time.sleep(0.35)
+    t_fin = time.time()
+    sceller_test(
+        outdir / f"rapport-monde-plante-v4-complet-{{entropie}}.json",
+        (json.dumps({{"mode": "complet", "repliques": 1, "duree_secondes": round(t_fin - t_debut, 4), "t_debut": t_debut, "t_fin": t_fin}}) + "\\n").encode("utf-8"),
+    )
+    sys.exit(0)
+
+if mode == "etalon":
+    assert de_g == 130 and a_g == 500, (de_g, a_g)
+    existants = sorted(glob.glob(str(outdir / f"rapport-monde-plante-v4-etalon-{{entropie}}-r*.json")))
+    assert len(existants) == 13, f"13 rapports amont attendus avant calcul suite, trouvé {{len(existants)}}"
+    t_debut = time.time()
+    time.sleep(0.35)
+    t_fin = time.time()
+    for d in range(de_g, a_g, pas):
+        a = min(a_g, d + pas)
+        sceller_test(
+            outdir / f"rapport-monde-plante-v4-etalon-{{entropie}}-r{{d}}-{{a}}.json",
+            (json.dumps({{"mode": "etalon", "plage": [d, a], "workers": workers, "t_debut": t_debut, "t_fin": t_fin}}) + "\\n").encode("utf-8"),
+        )
+    tous = sorted(glob.glob(str(outdir / f"rapport-monde-plante-v4-etalon-{{entropie}}-r*.json")))
+    sceller_test(
+        outdir / f"synthese-fusionnee-monde-plante-v4-etalon-{{entropie}}.json",
+        (json.dumps({{"mode": "etalon", "nb_rapports_fusionnes": len(tous), "workers_etalon": workers, "t_debut": t_debut, "t_fin": t_fin}}) + "\\n").encode("utf-8"),
+    )
+    sys.exit(0)
+
+if mode == "complet":
+    if {comportement_complet!r} == "sleep":
+        time.sleep(60)
+        sys.exit(0)
+    sceller_test(
+        outdir / f"rapport-monde-plante-v4-complet-{{entropie}}-r{{de_g}}-{{a_g}}.json",
+        (json.dumps({{"mode": "complet", "plage": [de_g, a_g]}}) + "\\n").encode("utf-8"),
+    )
+    if de_g == 0 and a_g == 500:
+        sceller_test(
+            outdir / f"synthese-fusionnee-monde-plante-v4-complet-{{entropie}}.json",
+            (json.dumps({{"mode": "complet", "synthese": True}}) + "\\n").encode("utf-8"),
+        )
+    rng = os.urandom(90000) if {comportement_complet!r} == "large" else b"petit"
+    b64 = base64.b64encode(rng).decode("ascii")
+    sceller_test(outdir / "journal-gels-monde-plante-v4-complet-r0-5.jsonl", (json.dumps({{"b": b64}}) + "\\n").encode("utf-8"))
+"""
+    py_helper.write_bytes(code_py.encode("utf-8"))
+    py_helper_b = _vers_chemin_bash("", py_helper)
+    sh_body = f"#!/usr/bin/env bash\nexec \"{py_exe_bash}\" -B \"{py_helper_b}\" \"$@\"\n"
+    script_sh.write_bytes(sh_body.encode("utf-8"))
+    script_sh.chmod(0o700)
+
+
+def test_execution_bout_en_bout_bash_r5_v3() -> None:
+    bash_bin = _trouver_bash_fonctionnel()
+    if bash_bin is None:
+        try:
+            import pytest
+            pytest.skip("bash + outils GNU (git/curl/sha256sum/tar) non disponibles sur cet hôte")
+        except ImportError:
+            print("INFO : saut des essais dynamiques bash (bash non disponible)")
+            return
+
+    amorce_b = _vers_chemin_bash(bash_bin, SCRIPT_AMORCE)
+    py_b = _vers_chemin_bash(bash_bin, Path(sys.executable))
+
+    # 3.0 Vérification syntaxique bash -n
+    r_syn = subprocess.run([bash_bin, "-n", amorce_b], capture_output=True, text=True)
+    assert r_syn.returncode == 0, f"bash -n a échoué : {r_syn.stderr}"
+
+    with tempfile.TemporaryDirectory(prefix="test_amorce_v3_r5_") as td:
+        root = Path(td)
+        srv = FakeCloudServer(FAKE_HCLOUD_TOKEN, FAKE_HETZNER_ID, FAKE_VAST_KEY)
+        try:
+            run_vast = root / "run_vast"
+            # Sous MSYS2/Git Bash sur Windows, les arguments `/c/...` passés à python.exe natif sont
+            # convertis en `C:/...` par le runtime MSYS2 : utiliser `Path(run_vast / "entree").resolve().as_posix()`
+            # si python est win32, sinon le chemin bash direct.
+            if sys.platform == "win32":
+                chemin_note_vast_dans_python = str((run_vast / "entree" / "note-des-effectifs-sondes-v2-v1.md").resolve()).replace("\\", "/")
+            else:
+                chemin_note_vast_dans_python = f"{_vers_chemin_bash(bash_bin, run_vast / 'entree')}/note-des-effectifs-sondes-v2-v1.md"
+
+            bare, commit_code, sha_verites, sha_note, commit_amont = _creer_depot_bare_avec_amont_etalon(
+                root, chemin_note_vast_dans_python
+            )
+            bare_b = _vers_chemin_bash(bash_bin, bare)
+            runner_vast = root / "runner_vast.sh"
+            _ecrire_faux_runner(runner_vast, py_b, "large")
+            runner_vast_b = _vers_chemin_bash(bash_bin, runner_vast)
+
+            def env_commun(run_dir: Path) -> dict[str, str]:
+                env = os.environ.copy()
+                for k in ("GH_TOKEN_ENV", "VAST_API_KEY_ENV", "HCLOUD_TOKEN_ENV", "GITHUB_TOKEN", "GH_TOKEN", "VAST_API_KEY", "HCLOUD_TOKEN", "CONTAINER_ID", "VAST_INSTANCE_ID"):
+                    env.pop(k, None)
+                env.update({
+                    "COMMIT_CODE": commit_code,
+                    "ENTROPIE": ENTROPIE_OFFICIELLE,
+                    "SHA_VERITES": sha_verites,
+                    "SHA_NOTE": sha_note,
+                    "COMMIT_AMONT_ETALON": commit_amont,
+                    "REPO_URL": bare_b,
+                    "HCLOUD_API": f"http://127.0.0.1:{srv.port}/v1",
+                    "METADATA_URL": f"http://127.0.0.1:{srv.port}/hetzner/v1/metadata/instance-id",
+                    "VAST_API_URL": f"http://127.0.0.1:{srv.port}/api/v0",
+                    "GH_TOKEN_FILE": _vers_chemin_bash(bash_bin, run_dir / ".gh_token"),
+                    "HCLOUD_TOKEN_FILE": _vers_chemin_bash(bash_bin, run_dir / ".hcloud_token"),
+                    "VAST_API_KEY_FILE": _vers_chemin_bash(bash_bin, run_dir / ".vast_api_key"),
+                    "WORK": _vers_chemin_bash(bash_bin, run_dir / "work"),
+                    "ENTREE": _vers_chemin_bash(bash_bin, run_dir / "entree"),
+                    "SORTIE": _vers_chemin_bash(bash_bin, run_dir / "sortie"),
+                    "LOG": _vers_chemin_bash(bash_bin, run_dir / "epreuve.log"),
+                    "SKIP_ENV_INSTALL": "1",
+                    "PY_BIN": py_b,
+                    "SIMULER_MODE_CMD": runner_vast_b,
+                    "N_WORKERS": "4",
+                })
+                return env
+
+            # --- 3.1 Gardes de rejet immédiat (rc != 0, zéro DELETE émis) ---
+            e1 = env_commun(root / "g_mono")
+            e1["N_WORKERS"] = "1"
+            e1["EXIGER_MULTICOEUR"] = "1"
+            r1 = subprocess.run([bash_bin, amorce_b], env=e1, capture_output=True, text=True)
+            assert r1.returncode == 1 and "MULTICŒUR" in r1.stderr
+
+            e2 = env_commun(root / "g_url")
+            e2["REPO_URL"] = f"https://x-access-token:{FAKE_GH_TOKEN}@github.com/lciric/controle-ia-travail.git"
+            r2 = subprocess.run([bash_bin, amorce_b], env=e2, capture_output=True, text=True)
+            assert r2.returncode == 1 and "ARRÊT SÉCURITÉ" in r2.stderr
+
+            for br_interdite in ("main", "calcul/sondes-v2-epreuve-plantee-v4"):
+                eb = env_commun(root / f"g_br_{br_interdite.replace('/', '_')}")
+                eb["BRANCHE_SORTIE"] = br_interdite
+                rb = subprocess.run([bash_bin, amorce_b], env=eb, capture_output=True, text=True)
+                assert rb.returncode == 1 and "R12" in rb.stderr, (br_interdite, rb.returncode, rb.stderr)
+
+            for vid_noir in VAST_BLACKLIST:
+                ev1 = env_commun(root / f"g_vast_id_{vid_noir}")
+                ev1["FOURNISSEUR"] = "vast"
+                ev1["VAST_API_KEY_ENV"] = FAKE_VAST_KEY
+                ev1["VAST_INSTANCE_ID"] = vid_noir
+                rv1 = subprocess.run([bash_bin, amorce_b], env=ev1, capture_output=True, text=True)
+                assert rv1.returncode == 1 and "liste noire" in rv1.stderr
+
+                ev2 = env_commun(root / f"g_vast_cid_{vid_noir}")
+                ev2["FOURNISSEUR"] = "vast"
+                ev2["VAST_API_KEY_ENV"] = FAKE_VAST_KEY
+                ev2["CONTAINER_ID"] = vid_noir
+                rv2 = subprocess.run([bash_bin, amorce_b], env=ev2, capture_output=True, text=True)
+                assert rv2.returncode == 1 and "liste noire" in rv2.stderr
+
+            for vid_invalide in ("abc123", "058936096", "../123"):
+                evi = env_commun(root / "g_vast_bad")
+                evi["FOURNISSEUR"] = "vast"
+                evi["VAST_INSTANCE_ID"] = vid_invalide
+                rvi = subprocess.run([bash_bin, amorce_b], env=evi, capture_output=True, text=True)
+                assert rvi.returncode == 1
+            assert srv.vast_deleted == [] and srv.hetzner_deleted == []
+
+            # --- 3.2 Scénario Vast.ai 64 cœurs : MODE_RUN=etalon_suite_et_sonde_complet_1rep ---
+            ev_ok = env_commun(run_vast)
+            ev_ok.update({
+                "MODE_RUN": "etalon_suite_et_sonde_complet_1rep",
+                "N_WORKERS": "64",
+                "PAS_ETALON": "6",
+                "FOURNISSEUR": "auto",
+                "GH_TOKEN_ENV": FAKE_GH_TOKEN,
+                "VAST_API_KEY_ENV": FAKE_VAST_KEY,
+                "CONTAINER_ID": FAKE_VAST_ID,
+                "WATCHDOG_SECONDES": "120",
+            })
+            rv_ok = subprocess.run([bash_bin, amorce_b], env=ev_ok, capture_output=True, text=True)
+            assert rv_ok.returncode == 0, f"Échec scénario Vast 64 cœurs:\nSTDOUT:\n{rv_ok.stdout}\nSTDERR:\n{rv_ok.stderr}"
+            assert "Mode parallèle activé (N_WORKERS=64 >= 63)" in rv_ok.stdout
+            assert "RAPATRIEMENT PROUVÉ : calcul/sondes-v2-epreuve-plantee-v4-suite @" in rv_ok.stdout
+            assert srv.vast_deleted == [FAKE_VAST_ID], f"DELETE Vast non reçu: {srv.vast_deleted}"
+            assert srv.hetzner_deleted == []
+            assert not srv.auth_errors, srv.auth_errors
+
+            amont_head = subprocess.run(
+                ["git", "ls-remote", str(bare), "refs/heads/calcul/sondes-v2-epreuve-plantee-v4"],
+                check=True, capture_output=True, text=True,
+            ).stdout.split()[0]
+            assert amont_head == commit_amont
+
+            verif_vast = root / "verif_vast"
+            subprocess.run(
+                ["git", "clone", "--branch", "calcul/sondes-v2-epreuve-plantee-v4-suite", str(bare), str(verif_vast)],
+                check=True, capture_output=True,
+            )
+            ep_v = verif_vast / "epreuve-plantee-v4"
+            rapports_et = sorted((ep_v / "etalon").glob("rapport-monde-plante-v4-etalon-*-r*.json"))
+            assert len(rapports_et) == 75, f"75 rapports étalon attendus (13 amont + 62 suite), trouvé {len(rapports_et)}"
+            assert (ep_v / "etalon" / f"rapport-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}-r496-500.json").is_file()
+            syn_et = json.loads(
+                (ep_v / "etalon" / f"synthese-fusionnee-monde-plante-v4-etalon-{ENTROPIE_OFFICIELLE}.json").read_text(encoding="utf-8")
+            )
+            assert syn_et["nb_rapports_fusionnes"] == 75
+            assert syn_et["workers_etalon"] == 63
+
+            meta_sonde_p = ep_v / "sonde-complet-1rep-meta.json"
+            assert meta_sonde_p.is_file() and (ep_v / "sonde-complet-1rep-meta.json.sha256").is_file()
+            assert not (ep_v / "complet").exists(), "$SORTIE/complet ne doit pas être pollué par sonde_complet_1rep"
+            meta_sonde = json.loads(meta_sonde_p.read_text(encoding="utf-8"))
+            assert meta_sonde["repliques_sondees"] == 1 and meta_sonde["duree_secondes"] >= 0.3
+
+            for sf in sorted(ep_v.rglob("*.sha256")):
+                ligne = sf.read_text(encoding="utf-8").strip()
+                sha_att, nom_cible = ligne.split("  ", 1)
+                assert sha256_file(sf.parent / nom_cible) == sha_att
+            for f in ep_v.rglob("*"):
+                if f.is_file():
+                    raw = f.read_bytes()
+                    assert FAKE_GH_TOKEN.encode() not in raw
+                    assert FAKE_HCLOUD_TOKEN.encode() not in raw
+                    assert FAKE_VAST_KEY.encode() not in raw
+            log_v = (ep_v / "journal-execution.log").read_text(encoding="utf-8")
+            assert "[MASQUE_GH]" in log_v and "[MASQUE_HCLOUD]" in log_v and "[MASQUE_VAST]" in log_v
+
+            # --- 3.3 Scénario Hetzner R10 timeout (`WATCHDOG_SECONDES=3`) ---
+            srv.hetzner_deleted.clear()
+            srv.vast_deleted.clear()
+            run_hc = root / "run_hc"
+            if sys.platform == "win32":
+                chemin_note_hc_dans_python = str((run_hc / "entree" / "note-des-effectifs-sondes-v2-v1.md").resolve()).replace("\\", "/")
+            else:
+                chemin_note_hc_dans_python = f"{_vers_chemin_bash(bash_bin, run_hc / 'entree')}/note-des-effectifs-sondes-v2-v1.md"
+            bare_hc, cc_hc, sv_hc, sn_hc, ca_hc = _creer_depot_bare_avec_amont_etalon(
+                root / "hc_repo", chemin_note_hc_dans_python
+            )
+            runner_sleep = root / "runner_sleep.sh"
+            _ecrire_faux_runner(runner_sleep, py_b, "sleep")
+            eh = env_commun(run_hc)
+            eh.update({
+                "MODE_RUN": "etalon_suite_et_complet",
+                "REPO_URL": _vers_chemin_bash(bash_bin, bare_hc),
+                "COMMIT_CODE": cc_hc,
+                "SHA_VERITES": sv_hc,
+                "SHA_NOTE": sn_hc,
+                "COMMIT_AMONT_ETALON": ca_hc,
+                "FOURNISSEUR": "hetzner",
+                "HCLOUD_TOKEN_ENV": FAKE_HCLOUD_TOKEN,
+                "GH_TOKEN_ENV": FAKE_GH_TOKEN,
+                "SIMULER_MODE_CMD": _vers_chemin_bash(bash_bin, runner_sleep),
+                "WATCHDOG_SECONDES": "3",
+                "BRANCHE_SORTIE": "calcul/sondes-v2-epreuve-plantee-v4-suite-hc",
+            })
+            rh = subprocess.run([bash_bin, amorce_b], env=eh, capture_output=True, text=True)
+            assert rh.returncode == 124, f"rc=124 attendu sur timeout R10, reçu {rh.returncode}\nSTDOUT:\n{rh.stdout}\nSTDERR:\n{rh.stderr}"
+            assert srv.hetzner_deleted == [FAKE_HETZNER_ID]
+        finally:
+            srv.close()
+
+
+def main() -> int:
+    fonctions = [
+        test_amorce_v3_lf_strict_et_encodage_utf8,
+        test_amorce_v3_ordre_nproc_avant_omp_et_garde_multicoeur,
+        test_amorce_v3_xargs_sans_n1_avec_replace_et_pas_etalon_6,
+        test_amorce_v3_gardes_securite_branches_vast_et_63e_coeur,
+        test_verification_13_rapports_amont_extraits_localement,
+        test_fusionner_largeurs_mixtes_10_5_et_10_6_4_identique_octet,
+        test_execution_bout_en_bout_bash_r5_v3,
+    ]
+    for fn in fonctions:
+        fn()
+        print(f"OK : {fn.__name__}")
+    for p_f in (SCRIPT_AMORCE, Path(__file__).resolve()):
+        raw = p_f.read_bytes()
+        print(f"SHA256 {p_f.name} ({len(raw)} octets, CR={b'\\r' in raw}) = {sha256_bytes(raw)}")
+    print(f"SUCCÈS COMPLET ({len(fonctions)}/{len(fonctions)} suites de tests vérifiées)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+</file>
+
+</files>

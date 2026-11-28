@@ -1,0 +1,364 @@
+script éprouvé : lancer_p4_v1.sh fedd228bd629c741c70601c9c747566ceb4993f30cbcd510f9c1e6341bb64051
+script éprouvé : verifications_p4_v1.py 8a7aefee6907ee008979e759e1227ab1663edf8080f6f60d22e8b75d841b041d
+script éprouvé : essais_lanceur_p4_v1.sh ce8e0e0c744dbaebe7823ca1958fa8ce4f6522fbfdc49389a2412b9afecc45be
+lignes changées dans la copie du lanceur : 3 (DEPOT, B, V)
+C = 3521ff75c316c9f31403486fc6ca84a1c29daeca
+S = a6eb1c2d6399b448756222de830b3739803c6996
+P00-sain : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+    > etiquette p4-v1
+    > env COMMIT présent
+    > env PREREG=prereg/P4-instrument-v1.md
+    > env BRANCHE=calcul/p4-reel-v1
+    > env DEPOT_URL=https://github.com/lciric/controle-ia-travail.git
+    > go GO-2026-10-20-07
+    > plafond de la surveillance = création + 9 600 s : True ; contrôle à cinq minutes = création + 180 à 300 s : True ; branche calcul/p4-reel-v1 : True ; PREREG et DEPOT_URL : True ; étiquette p4-v1 : True ; ETUDE absente : True ; GO GO-2026-10-20-07 écrit et porté par la création : True ; GO et dépense conformes (module) : True ; contrôles du module (ligne de commande) : True ; accord de Lazar du jour relu deux fois : True ; GO et dépense relus juste avant la création : True ; marqueur écrit avant la création : True ; arrêt, récupération et traces écrits : True ; consigne du code 2 après la création écrite une fois (chaîne v3) : True ; instance 56799469 tolérée (arrêtée) : True ; borne de l'étape écrite : True ; destruction après la récupération écrite : True ; crédit sur 3 heures : True
+P01-creee-mais-code-1 : code 4 ; créations factices 1 ; CONFORME
+    | succès : True ; identifiant 99999999 ; message : 
+    | création douteuse (statuts 1 0 0) : vérifier « vastai show instances », sans --raw
+P02-reponse-illisible : code 4 ; créations factices 1 ; CONFORME
+    | réponse illisible (300 premiers caractères masqués dans reponse-masquee.txt) ; vérifier par « vastai show instances », sans --raw
+    | création douteuse (statuts 0 4 0) : vérifier « vastai show instances », sans --raw
+P03-echec-creation : code 4 ; créations factices 1 ; CONFORME
+    | succès : False ; identifiant None ; message : non
+    | création douteuse (statuts 0 4 0) : vérifier « vastai show instances », sans --raw
+P04-heure-2345-avant-creation : code 3 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | heure UTC 2345 : pas de création entre 23:30 et 00:00 (T-7)
+P04b-heure-2340-au-depart : code 3 ; créations factices 0 ; CONFORME
+    | heure UTC 2340 : pas de création entre 23:30 et 00:00 (T-7)
+P04c-heure-2329-au-depart : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+P05-place-traces : code 3 ; créations factices 0 ; CONFORME
+    | place disque des traces : 2900000 ko
+P05b-place-bloc-notes : code 3 ; créations factices 0 ; CONFORME
+    | place disque : 2900000 ko libres (3 Go exigés)
+P06-controles-ko : code 2 ; créations factices 0 ; CONFORME
+    | KO  essai : faute simulée
+    | contrôles avant dépense en échec : pas de création
+P07-offre-sans-prix : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07b-prix-au-dessus-du-devis : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07c-processeur-autre : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07d-carte-pcie : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07e-quinze-coeurs : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07f-memoire-vive-64-go : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07g-telechargement-au-dessus-de-la-borne : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07h-stockage-au-dessus-de-la-borne : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07i-stockage-et-telechargement-au-plafond-juste : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+P08-credit-insuffisant : code 3 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 4.49 USD ; minimum 4.50 USD (3 h)
+    | crédit insuffisant pour P4 et les autres projets en marche : pas de lancement ; recharge demandée à Lazar
+P08b-credit-juste : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 4.50 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+P08c-credit-illisible : code 2 ; créations factices 0 ; CONFORME
+    | crédit illisible (vastai show user)
+    | crédit illisible (vastai show user, code 2) : pas de création
+P09-jeton-hf-absent : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création
+P09b-jeton-github-absent : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création
+P10-argument-absent : code 2 ; créations factices 0 ; CONFORME
+    | usage : lancer_p4_v1.sh DOSSIER_TRACES AUTRES_PROJETS ACCORD
+P10a-deux-arguments-sans-accord : code 2 ; créations factices 0 ; CONFORME
+    | usage : lancer_p4_v1.sh DOSSIER_TRACES AUTRES_PROJETS ACCORD
+P10b-quatre-arguments : code 2 ; créations factices 0 ; CONFORME
+    | usage : lancer_p4_v1.sh DOSSIER_TRACES AUTRES_PROJETS ACCORD
+P10c-accord-mal-forme : code 2 ; créations factices 0 ; CONFORME
+    | ACCORD : identifiant R-… de la ligne qui consigne l'accord de Lazar du jour attendu
+P11-instance-non-toleree : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 1 (running, running)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+P11b-instance-de-p3-en-marche : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 56799469 (running, running)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+P11c-instance-de-p3-detruite : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+P11d-ancienne-instance-du-programme-plus-toleree : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 56438435 (exited, stopped)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+P11e-liste-des-instances-illisible : code 2 ; créations factices 0 ; CONFORME
+    | vastai show instances : réponse illisible ou commande en échec
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+Z01-instances-tolerees-non-epinglees : code 2 ; créations factices 0 ; CONFORME
+    | instances tolérées non épinglées
+Z02-borne-de-telechargement-non-fixee : code 2 ; créations factices 0 ; CONFORME
+    | borne de téléchargement non fixée (A_FIXER) : à reprendre du texte scellé
+Z03-borne-de-l-etape-autre-que-le-calcul : code 2 ; créations factices 0 ; CONFORME
+    | borne de l'étape (5.40 USD) ≠ calcul sur les constantes, ou au moins 10 USD : pas de création
+Z04-surveillance-plus-longue-que-la-borne : code 2 ; créations factices 0 ; CONFORME
+    | borne de l'étape (5.41 USD) ≠ calcul sur les constantes, ou au moins 10 USD : pas de création
+P14-controles_avant_depense_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | controles_avant_depense_p4_v1.sh exécuté ≠ copie versée au commit S
+P14-surveiller_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | surveiller_p4_v1.sh exécuté ≠ copie versée au commit S
+P14-controle_cinq_minutes_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | controle_cinq_minutes_p4_v1.sh exécuté ≠ copie versée au commit S
+P14-verifications_p4_v1.py-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | verifications_p4_v1.py exécuté ≠ copie versée au commit S
+P14-recuperation_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | recuperation_p4_v1.sh exécuté ≠ copie versée au commit S
+P14-p4_instance_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | p4_instance_v1.sh exécuté ≠ copie versée au commit S
+P14-arreter_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | arreter_p4_v1.sh exécuté ≠ copie versée au commit S
+P14-controler_traces_p4_v1.sh-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | controler_traces_p4_v1.sh exécuté ≠ copie versée au commit S
+P14b-lanceur-non-verse : code 2 ; créations factices 0 ; CONFORME
+    | lancer_p4_v1.sh exécuté ≠ copie versée au commit S
+P15-s-absent-du-distant : code 2 ; créations factices 0 ; CONFORME
+    | commit de scellement a6eb1c2d6399b448756222de830b3739803c6996 absent du dépôt distant
+N09-fetch-en-echec : code 2 ; créations factices 0 ; CONFORME
+    | and the repository exists.
+    | arrêt avant la création (ligne 106)
+N07-controles-derniere-ligne-autre : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | contrôles : dernière ligne inattendue
+N05-traces-existantes : code 2 ; créations factices 0 ; CONFORME
+    | /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v3-travail/final/lanceur/traces-existantes existe déjà (R12)
+N04-jeton-dans-la-reponse : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : jeton *** et ***
+N04b-jeton-dans-une-reponse-illisible : code 4 ; créations factices 1 ; CONFORME
+    | réponse illisible (300 premiers caractères masqués dans reponse-masquee.txt) ; vérifier par « vastai show instances », sans --raw
+    | création douteuse (statuts 0 4 0) : vérifier « vastai show instances », sans --raw
+G01-go-echu : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : GO-2026-10-20-07 échu ou illisible le 2026-10-21 : pas de création
+G02-go-d-un-autre-type : code 2 ; créations factices 0 ; CONFORME
+    | GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+    | GO et dépense : GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue : pas de création
+G03-plafond-sans-le-prefixe : code 2 ; créations factices 0 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+    | GO et dépense : GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement » : pas de création
+G04-revocation-qui-nomme-GO-2026-10-04-08 : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-04-08']
+    | GO et dépense : révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-04-08'] : pas de création
+G04-revocation-qui-nomme-GO-2026-10-20-06 : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-06']
+    | GO et dépense : révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-06'] : pas de création
+G04-revocation-qui-nomme-GO-2026-10-20-07 : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-07']
+    | GO et dépense : révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-07'] : pas de création
+G04-revocation-qui-nomme-R-262 : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['R-262']
+    | GO et dépense : révocation au registre des GO (GO-2026-10-20-98) : ['R-262'] : pas de création
+G04-revocation-qui-nomme-R-269 : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['R-269']
+    | GO et dépense : révocation au registre des GO (GO-2026-10-20-98) : ['R-269'] : pas de création
+G04b-ligne-qui-mentionne-une-revocation : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+G05-revocation-de-R-262-au-registre-des-decisions : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des décisions (R-998)
+    | GO et dépense : révocation au registre des décisions (R-998) : pas de création
+G05-revocation-de-R-269-au-registre-des-decisions : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des décisions (R-998)
+    | GO et dépense : révocation au registre des décisions (R-998) : pas de création
+G05b-forme-de-revocation-ailleurs-qu-en-tete : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+G06-revocation-du-go-cite-pendant-l-appel : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-95) : ['GO-2026-10-20-07']
+    | GO et dépense relus juste avant la création : révocation au registre des GO (GO-2026-10-20-95) : ['GO-2026-10-20-07'] : pas de création
+L31-revocation-de-la-phase-pendant-l-appel : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-05) : ['GO-2026-10-04-08']
+    | GO et dépense relus juste avant la création : révocation au registre des GO (GO-2026-10-21-05) : ['GO-2026-10-04-08'] : pas de création
+L30-revocation-de-r-269-pendant-l-appel : code 2 ; créations factices 0 ; CONFORME
+    | révocation au registre des décisions (R-998)
+    | GO et dépense relus juste avant la création : révocation au registre des décisions (R-998) : pas de création
+L32-forme-voisine-pendant-l-appel : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense relus juste avant la création : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-2
+L20-ligne-de-go-sans-espace : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+L21-type-a-majuscule : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+L22-delegation-nommee : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+L23-forme-exacte-sans-espace : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL01-decision-sans-colonne-de-date : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL02-decision-colonne-vide-en-trop : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL03-identifiant-de-decision-en-gras : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL04-go-en-gras-qui-revoque-le-go-cite : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL05-go-de-type-decision-qui-revoque-la-phase : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XL06-temoin-tiret-insecable-sans-gras : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+L40-garde-modifiee : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | garde de calcul modifiée (≠ celle de S, ou d'empreinte autre que 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2) : aucun rejeu, pas de création
+L41-garde-absente : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | garde de calcul modifiée (≠ celle de S, ou d'empreinte autre que 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2) : aucun rejeu, pas de création
+A10-accord-absent : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : R-999 absent ou en double au registre des décisions : pas de création
+A11-accord-d-un-autre-jour : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 daté 2026-10-20 : ligne du jour (2026-10-21) attendue : pas de création
+A12-sans-la-forme-exacte : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : la cellule de décision ne commence pas par « **Accord de Lazar pour le lancement de P4-instrument** » : pas de création
+A13-ne-cite-ni-go-ni-message : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : ne cite ni GO-2026-10-20-07 ni un message de Lazar dans la session ce jour-là : pas de création
+A14-accord-en-double : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : R-999 absent ou en double au registre des décisions : pas de création
+A15-accord-par-message-du-jour : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+A16-accord-sans-la-forme-de-la-depense : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : forme « dépense consignée X USD + borne 5,41 USD = Y USD < 150 USD » absente, mal formée ou en double (une fois ; X et Y à deux décimales, virgule décima
+A17-plafond-de-la-phase-depasse : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : 153,41 USD : la dépense de la phase atteindrait 150 USD ou plus (GO-2026-10-04-08) : aucune création : pas de création
+A18-accord-qui-cite-un-go-voisin : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : huit journaux conformes ; 17 scripts éprouvés égaux à leurs copies versées à S
+    | accord de Lazar : accord R-999 : ne cite GO-2026-10-20-07 qu'au sein d'un identifiant voisin, et ne cite pas un message de Lazar dans la session ce jour-là : pas de création
+M01-fichier-du-module-change : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | contrôle du module (--controle module) : ARRÊT : module de P4 : docs/procedures/P4-instrument-v1/test_gardes_p4_v1.py : empreinte f079d368d4fe ≠ empreinte citée 014a9f85a663 : pas de créat
+N08-s-introuvable : code 2 ; créations factices 0 ; CONFORME
+    | commit de scellement introuvable
+N01-amorce-non-citee : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | empreinte de l'amorce (21b3f447080353741c15d4948e557235dab17201a8d70f4545d1d9f1913c608d) non citée par le préenregistrement
+N01b-script-de-l-instance-non-cite : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | empreinte du script de l'instance (8801864fd9f2d940ed7ce2eed43c4efac8251484d37c1dcf3d3bea9bf0d8f967) non citée par le préenregistrement
+N02-branche-autre : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | PREREG ou BRANCHE : le préenregistrement de S cite autre chose
+G07-ligne-go-absente : code 2 ; créations factices 0 ; CONFORME
+    | ligne « **GO cité par la commande de création** : `GO_ID=…` » absente, en double ou mal formée
+    | GO et dépense : ligne « **GO cité par la commande de création** : `GO_ID=…` » absente, en double ou mal formée : pas de création
+G08-texte-qui-cite-le-go-de-la-phase : code 2 ; créations factices 0 ; CONFORME
+    | GO-2026-10-04-08 : seul GO-2026-10-20-07 est accepté pour P4 (délégation R-269)
+    | GO et dépense : GO-2026-10-04-08 : seul GO-2026-10-20-07 est accepté pour P4 (délégation R-269) : pas de création
+N00-sain-apres-retablissement : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+N10-accord-dans-l-arbre-de-s : code 2 ; créations factices 0 ; CONFORME
+    | accord R-999 déjà présent dans registres/decisions.md au commit S : l'accord du jour se consigne après le scellement S (Chaîne de lancement) : pas de création
+M00-premier-lancement : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+M01-second-lancement-du-meme-s : code 2 ; créations factices 0 ; CONFORME
+    | un accord, un lancement : un lancement a déjà été tenté pour le commit S c4e404e3410d278f22bce3d06b57262a40eaae44 (marqueur : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/s
+M02-marqueur-dans-un-dossier-de-traces-voisin : code 2 ; créations factices 0 ; CONFORME
+    | un accord, un lancement : un lancement a déjà été tenté pour le commit S c4e404e3410d278f22bce3d06b57262a40eaae44 (marqueur : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/s
+M03-branche-de-resultats-presente : code 2 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | branche calcul/p4-reel-v1 : code 0 (2 attendu : absente du dépôt distant) : un accord, un lancement : pas de création
+    M03 : aucun marqueur écrit sur un refus : CONFORME
+M20-ligne-commit-doublee-avant-l-ecriture : code 2 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | lancement.txt : ligne « commit c4e404e3410d278f22bce3d06b57262a40eaae44 » non relue une fois : pas de création
+M21-ecriture-de-lancement-impossible : code 2 ; créations factices 0 ; CONFORME
+    | tee: /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v3-travail/final/lanceur/traces/lancement.txt: No space left on device
+    | arrêt avant la création (ligne 341)
+P30a-preuve-verdict-non-conforme : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : journal banc-verifications-p4-v1.log : dernière ligne ≠ « FIN DU BANC DES VÉRIFICATIONS DE P4 ; cas non conformes : 0 »
+P30b-preuve-script-autre-que-la-copie : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : sceller_p4_v1.sh éprouvé (7777777777777777777777777777777777777777777777777777777777777777) ≠ copie versée à S
+P30c-preuve-absente : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : journal banc-surveillance-p4-v1.log absent de S
+P30d-preuve-sans-son-sceau : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : sceau de banc-lanceur-p4-v1.log absent ou non conforme à S
+P30e-preuve-script-non-eprouve : code 2 ; créations factices 0 ; CONFORME
+    | preuves des essais : journal banc-controles-p4-v1.log : scripts éprouvés ≠ attendus (manquants ['outils_essais_p4_v1.py'], en trop [])
+P30f-preuves-saines-apres-retablissement : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+V01-autre-projet-en-marche-tolere : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 4.0040 USD/h ; crédit 16.51 USD ; minimum 16.51 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+V02-autre-projet-non-declare : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 55555587 (running, running)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+V03-credit-insuffisant-avec-autre-projet : code 3 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 4.0040 USD/h ; crédit 16.50 USD ; minimum 16.51 USD (3 h)
+    | crédit insuffisant pour P4 et les autres projets en marche : pas de lancement ; recharge demandée à Lazar
+V04-autre-projet-etiquette-p4 : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 55555587 (running, running)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+V05-autres-mal-forme : code 2 ; créations factices 0 ; CONFORME
+    | AUTRES_PROJETS : identifiants d'instances séparés par des virgules, ou « - »
+V07-autre-projet-arrete-non-compte : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 4.50 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+V08-autre-projet-sans-prix : code 2 ; créations factices 0 ; CONFORME
+    | autres instances sur le compte (non tolérées ; autre projet : étiquette « rr-… » exigée) : 55555587 (prix illisible)
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+O01-moins-chere-des-conformes : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.0500 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.35 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+    O01 : offre créée 112 ; 15 offres relues gardées : CONFORME
+O02-egalite-de-prix-plus-petit-identifiant : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.0500 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.35 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+O03-aucune-offre : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-21 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+O05-offres-illisibles : code 2 ; créations factices 0 ; CONFORME
+    | offres : réponse illisible
+    | offres : relecture impossible (code 2)
+O07-prix-au-plafond-juste : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.3000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 50.00 USD ; minimum 5.10 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+O08-credit-calcule-sur-l-offre-choisie : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.0000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 4.20 USD ; minimum 4.20 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+O11-identifiant-en-double : code 2 ; créations factices 0 ; CONFORME
+    | offres : identifiant en double dans la réponse (ambiguë) : pas de création
+    | offres : relecture impossible (code 2)
+A01-traces-numeriques : code 2 ; créations factices 0 ; CONFORME
+    | DOSSIER_TRACES purement numérique (/tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v3-travail/final/lanceur/29296808) : refus
+A03-traces-en-chemin-relatif : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+    A03 : traces écrites sous /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/chaine-v3-travail/final/lanceur/traces-relatives (chemin absolu) : CONFORME
+aucun jeton affiché : CONFORME
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DU LANCEUR DE P4 ; cas non conformes : 0

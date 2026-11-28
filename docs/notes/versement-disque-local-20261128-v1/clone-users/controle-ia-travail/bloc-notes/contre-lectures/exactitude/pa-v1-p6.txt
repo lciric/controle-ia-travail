@@ -1,0 +1,60 @@
+                                         Family            Sizes             Versions
+                                         Gemma 2           2B, 9B, 27B       base and instruct
+                                         Gemma 3           27B               base and instruct
+                                         Llama 3.1         8B, 70B           base and instruct
+                                         Llama 3.3         70B               instruct
+                                         Mistral           7B                base and instruct
+                                         Mistral Small     24B               base
+                                         Qwen 2.5          7B, 32B, 72B      base and instruct
+                                         Qwen 3            8B, 14B           base
+                                         Phi 4             14B               instruct
+
+                                           Table 1: Models (n=25, 5 families, 2B to 72B)
+
+
+
+     However, contrastive directions are always at risk of absorbing high-variance structure unrelated to the
+target concept. We therefore denoise each direction by identifying the principal components that explain 50%
+of the variance in the control data and projecting them out. This removes variance already prominent among
+non-painful sentences before we evaluate the pain contrast:
+                                                𝑣 (ℓ ) − 𝑖=1 (𝑢 ⊤   (ℓ ) ) 𝑢
+                                                        Í𝑘
+                                         (ℓ )                   𝑖 𝑣          𝑖
+                                       𝑣ˆ =                     ⊤
+                                                  (ℓ )              (ℓ )
+                                                        Í𝑘
+                                                𝑣 − 𝑖=1 (𝑢 𝑖 𝑣 ) 𝑢 𝑖
+
+     We select the extraction layer by K-fold cross-validation on projection AUC, separately for each condition.
+The layer is chosen on held-out folds, so no sentence contributes to both choosing the layer and scoring
+it. The final vector at that layer is then built from all 200 sentences. We construct fear, negative-emotion,
+negative-world-state, bodily-sensation, arousal, random, sadness and numb directions against the neutral
+category and denoise them using the same procedure.
+     For each model, we call the vectors extracted from the two dataset versions “S1” and “S2”, from now on
+“pain vectors”.
+
+
+3.3     Validation
+
+We next test whether these directions encode pain or merely reflect artifacts of the datasets used to construct
+them.
+
+Separation. In all 25 models, pain projects differently from matched controls. For S2, pain can be
+distinguished from controls with an AUC between 0.93 and 1.00, and for S1 between 0.87 and 0.98.2 Both
+S1 and S2 also separate pain from the arousal and random datasets in every model.
+     Performance is largely independent of model size and training regime. Models with 2B parameters
+separate pain about as well as models with 72B parameters, and base models perform about as well as
+instruction-tuned models. This suggests that the pain direction emerges during pretraining, rather than
+through instruction tuning or persona training, and does not require large model scale. Results throughout
+our work support this interpretation.
+    2 One can object that these values score the final vector on the sentences it was built from. The held-out estimate from the 5-fold
+
+procedure at the same layer is nearly identical: 0.91 to 1.00 for S2 (median 0.98) and 0.85 to 0.94 for S1, so the separation is not an
+artifact of fitting. Moreover, the tests that follow use data the vector never saw (e.g. the numb, arousal, sadness, and random datasets,
+the 420 conversation scenarios of Section 4.1, the neutral prompts used for steering).
+
+
+
+
+                                                                   6
+

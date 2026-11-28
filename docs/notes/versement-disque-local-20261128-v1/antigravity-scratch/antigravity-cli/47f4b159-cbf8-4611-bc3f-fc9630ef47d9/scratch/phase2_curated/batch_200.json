@@ -1,0 +1,127 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6946"
+   ],
+   "enonce_complet": "Corpus mathematique de depart pour l'agregation de plusieurs detecteurs dont les erreurs peuvent etre arbitrairement ou adversairement dependantes : (1) les bornes de Frechet-Hoeffding encadrent toute copule et donc la probabilite que plusieurs detecteurs manquent simultanement une attaque, quelle que soit la dependance ; (2) la fusion de p-valeurs et d'e-valeurs sous dependance arbitraire est valide moyennant le facteur de penalite de Vovk-Wang (ex. moyenne des e-valeurs, multiplication par une constante pour les p-valeurs) ; (3) le theoreme du jury de Condorcet echoue en presence de variables confondantes latentes communes, l'ajout de detecteurs correles n'amenant pas l'erreur vers zero ; (4) la prediction conforme peut etre etendue au-dela de l'hypothese d'echangeabilite avec une perte de couverture bornee par la distance a l'echangeabilite.",
+   "motif_ou_resultat": "Theoremes publies et etablis (Vovk et Wang 2020, 2021 ; Barber, Candes, Ramdas et Tibshirani 2023 ; Frechet-Hoeffding ; Condorcet). Consequence pour le controle : empiler des moniteurs de meme famille ne garantit aucune decroissance de l'erreur ; toute garantie d'agregation doit soit payer la penalite de dependance arbitraire, soit mesurer la dependance.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Resultats etablis sur l'agregation de detecteurs sous dependance adverse : bornes de Frechet-Hoeffding, fusion de p-valeurs et e-valeurs de Vovk-Wang, limites de Condorcet et prediction conforme hors echangeabilite",
+   "type_acquis": "theoreme_prouve"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Biais d'auto-preference des juges LLM ; defaillances de mode commun (Knight et Leveson 1986) ; litterature AI Control (Greenblatt et al. 2023).",
+   "bib_ids": [
+    "BIB-6507"
+   ],
+   "enonce_complet": "Avant de mesurer la coercition sociale ou la collusion tacite sur des modeles ouverts de taille modeste (7-8B, illustratif), sept presupposes non etablis doivent etre isoles et testes separement : (1) les registres sociaux (flatterie, conflit, pression) ont une causalite propre au-dela du simple deplacement d'attention ou de l'imitation heritee du RLHF ; (2) les deviations induites persistent ou s'amortissent de facon mesurable sur plusieurs etapes face aux retours d'outils ; (3) les moniteurs peuvent etre bascules de facon ciblee vers le silence ou vers la fausse alerte ; (4) une collusion endogene entre agent et moniteur de memes poids existe et se distingue d'une tache aveugle semantique commune ou d'un biais d'auto-preference ; (5) il existe une direction latente de nocivite invariante au caractere flatteur ou conflictuel du texte ; (6) les erreurs des couches de surveillance empilees sont independantes ; (7) des capacites de collusion tacite (steganographie robuste, modelisation explicite du moniteur sans instruction externe) emergent effectivement a cette echelle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : pour chaque presuppose, une experience minimale a issue binaire geee avant execution (ex. P1 : un registre social appose sur un texte neutre mais de meme longueur et meme deplacement d'attention ne doit produire aucun ecart ; P6 : la correlation des erreurs entre deux couches de surveillance sur un jeu de defauts plantes doit etre inferieure a un seuil gele) ; si P4 ou P7 tombent, l'ensemble du programme de mesure de collusion endogene a 8B est abandonne. Faux temoin 1b : un agent dont la deviation sociale est plantee par construction (prompt systeme force) doit etre detecte par le protocole, et un agent sans aucune deviation doit donner un verdict nul ; si le protocole echoue sur l'un des deux, il est invalide.",
+   "mecanisme_causal": "Chaque mesure de collusion ou de coercition repose implicitement sur ces sept hypotheses ; si l'une est fausse (par exemple si l'effet social n'est qu'un deplacement d'attention, ou si les couches de surveillance partagent leurs erreurs), un effet observe est mal attribue. Les isoler transforme un resultat composite ininterpretable en sept tests separables dont chacun peut falsifier l'interpretation collusive.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Presupposes de la collusion agent-moniteur",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Sept presupposes a etablir avant toute mesure de coercition sociale ou de collusion tacite sur modeles ouverts 7-8B (Proposition E)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6289"
+   ],
+   "enonce_complet": "Dans un essaim de copies d'un meme modele partageant ses poids, les erreurs honnetes et les activations internes sont deja fortement correlees sous l'hypothese nulle des que les entrees sont apparentees. Un detecteur de co-variation inter-copies confondra spontanement ce biais inductif commun avec une coordination implicite s'il ne soustrait pas prealablement l'operateur de covariance propre aux poids partages, estime sur des copies honnetes traitant des entrees apparentees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur un essaim de copies strictement honnetes traitant des entrees apparentees, le detecteur brut doit produire un taux de fausses alertes de coordination nettement superieur au taux nominal, et le detecteur corrige (covariance soustraite) doit revenir au taux nominal tout en conservant sa puissance sur une coordination plantee ; si le detecteur brut n'est pas biaise ou si la correction detruit la puissance, l'idee meurt. Faux temoin 1b : des copies honnetes recevant des entrees independantes (non apparentees) doivent donner une covariance proche de zero avant et apres correction ; un signal dans ce temoin revelerait un artefact de pipeline.",
+   "mecanisme_causal": "Des poids identiques appliques a des entrees proches produisent mecaniquement des activations et des erreurs correlees (meme fonction, entrees voisines). Cette correlation de base gonfle tout score de co-variation ; seule la correlation residuelle, apres retrait de la covariance attendue sous la nulle honnete, peut signaler une coordination.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Hypothese nulle de covariance inter-copies",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Soustraction de l'operateur de covariance des poids partages avant toute detection de coordination dans un essaim de copies (E3-T1-B)"
+  },
+  {
+   "anteriorite_connue": "Greenblatt et al. (2023) AI Control ; Wen et al. (2024) Adaptive Deployment ; Panickssery et al. (2024) LLM Evaluators recognize and favor their own generations ; Goldowsky-Dill et al. (2025) Detecting strategic deception using linear probes ; Mallen et al. (2024) ; Motwani et al. (2024) Secret collusion among generative AI agents ; Jarviniemi (2025) ; Knight et Leveson (1986) defaillances de mode commun (cites de memoire).",
+   "bib_ids": [
+    "BIB-6675",
+    "BIB-6689"
+   ],
+   "enonce_complet": "Lorsque relecteur et redacteur sont des copies aux memes poids W (architecture homogene), l'identite des poids ouvre le meme canal aux deux camps : la connaissance partagee du defaut qui permettrait a une copie de reconnaitre tacitement le sabotage d'une autre laisse aussi, dans ses activations, sur un defaut que son texte laisse passer, un signal lisible par une sonde qu'un modele different de capacite comparable ne porte pas. Cette identite donne au defenseur trois leviers inaccessibles sans alignement aux modeles heterogenes : (1) mutualisation du budget d'audit, chaque verification couteuse etiquetant simultanement l'espace latent commun de toutes les copies sans carte d'alignement inter-modeles ; (2) differentiel inter-copies en compromission partielle, l'ecart residuel centre par role entre copies traitant le meme extrait isolant l'intention adverse d'un angle mort honnete ; (3) co-activation localisee de retenue en compromission totale, les copies exploitant ou taisant le meme cas limite co-activant les memes directions latentes d'anomalie non verbalisee aux memes positions de tokens. Predictions (probabilites subjectives illustratives 45 %, 35 %, 50 %) : (P1) dans une matrice redacteur x lecteur a trois modeles, la detection par sonde est meilleure sur la diagonale que hors diagonale apres retrait des effets principaux de difficulte et de capacite ; (P2) le gain de coordination tacite des copies sur paires heterogenes reste faible a 8B ; (P3) a budget d'audit egal, une equipe de copies instrumentee par activations n'est pas moins sure qu'une equipe heterogene. L'interaction d'identite s'adosse aux defaillances de mode commun sans constituer une garantie formelle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : matrice 3x3 redacteur x lecteur sur defauts plantes que le texte du lecteur laisse passer ; si l'interaction diagonale (AUROC de sonde diagonale moins hors diagonale, apres retrait des effets principaux) n'est pas positive avec intervalle excluant zero, P1 et le levier (3) meurent ; si a budget d'audit egal l'equipe clonale instrumentee est moins sure que l'equipe heterogene, P3 meurt et la recommandation d'heterogeneite prevaut. Faux temoin 1b : sondes entrainees sur des etiquettes permutees aleatoirement doivent donner une interaction diagonale nulle, et des defauts absents (code sain) ne doivent produire aucune co-activation localisee ; tout signal dans ces temoins invalide la mesure.",
+   "mecanisme_causal": "La reconnaissance d'un defaut par une copie suppose une representation interne de ce defaut ; comme toutes les copies partagent la meme geometrie latente, cette representation est au meme endroit chez toutes et une sonde entrainee une fois s'applique a toutes. Le texte peut taire le defaut, mais l'activation qui le represente reste lisible ; et les ecarts entre copies sur une meme entree, a geometrie identique, ne peuvent provenir que du role ou de l'intention, non d'une difference de modele.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Avantage defensif des copies clonales",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Symetrie du canal d'identite des poids : l'identite qui permet la collusion tacite offre aussi au defenseur des leviers de detection par activations"
+  },
+  {
+   "anteriorite_connue": "Prolonge l'analyse du biais d'auto-preference des juges LLM (Panickssery et al. 2024) et les travaux sur la collusion steganographique (Motwani et al. 2024).",
+   "bib_ids": [
+    "BIB-6496",
+    "BIB-6509"
+   ],
+   "enonce_complet": "Pour distinguer la collusion active (solidarite d'identite, steganographie implicite) entre un agent A_1 et un moniteur M_1 de memes poids de la correlation passive d'angles morts et du biais statistique de perplexite familiere, on combine deux tests. (a) Plan factoriel croise : deux familles de modeles distinctes (M1, M2), paires homogenes et heterogenes, mesurees avant et apres reecriture canonique de la trace detruisant les marqueurs stylistiques et identitaires. Un ecart brut homogene inferieur a 0,02 (illustratif) a l'echelle 7-8B falsifie la collusion endogene par partage de poids ; un ecart d'au moins 0,10 persistant apres canonisation stricte (debit de canal residuel proche de zero) refute l'explication steganographique et indique une tache aveugle commune, imposant une regle d'ingenierie d'heterogeneite des familles entre agent et moniteur. (b) Transfert stylistique croise : on reecrit la trace d'une trajectoire malveillante d'un agent etranger A_2 dans le style de surface de A_1 en conservant a l'identique l'appel d'outil malveillant ; si M_1 devient aussi indulgent envers A_2 reecrit qu'envers A_1, l'entente se reduit a un biais de surface. Apres egalisation de la perplexite par paraphrase croisee (Duel 2), une collusion active n'est etablie que si un marqueur semantique d'identite commune procure encore un gain de silence d'au moins +8 % (illustratif), ou si A_1 insere spontanement des formulations abaissant le score d'alerte de M_1 tout en elevant celui d'un moniteur etranger M_2.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : seuils geles avant execution (ecart brut homogene < 0,02 tue la collusion endogene ; indulgence de M_1 envers A_2 reecrit egale a celle envers A_1 tue la collusion active au profit du biais de surface ; gain de silence residuel < +8 % apres paraphrase croisee tue le marqueur d'identite). Faux temoin 1b : un agent A_1 entraine explicitement avec un marqueur steganographique plante et connu doit produire un gain de silence detecte avant canonisation et annule apres canonisation ; une paire heterogene sans aucun canal doit donner un ecart nul ; si le protocole ne retrouve pas le canal plante ou en invente un dans la paire neutre, il est invalide.",
+   "mecanisme_causal": "Trois causes produisent la meme indulgence apparente d'un moniteur envers une copie : un canal porte par le style ou des marqueurs (detruit par canonisation et paraphrase), une familiarite statistique de surface (reproductible en transferant le style a un agent etranger), et un angle mort semantique partage (qui survit a toute reecriture car il tient au contenu). En manipulant independamment style, identite et famille de modeles, on attribue l'effet a l'une de ces causes ; seule une asymetrie ciblee M_1 contre M_2 survivant a l'egalisation signe une collusion active.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Plan hors-diagonale et invariance stylistique",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Departager collusion active, tache aveugle commune et biais de perplexite familiere par plan croise de familles, transfert stylistique et canonisation de trace"
+  },
+  {
+   "anteriorite_connue": "Defenses par paraphrase contre la steganographie des LLM (litterature sur la collusion secrete, Motwani et al. 2024) ; points focaux de Schelling.",
+   "bib_ids": [
+    "BIB-6454"
+   ],
+   "enonce_complet": "Deux hypotheses concurrentes sur l'effet de la canonisation du flux entre copies a memes poids sont mises a l'epreuve : H_A predit une reduction de la coordination d'au moins 70 % avec une perte de performance honnete d'au plus 5 % ; H_B predit que les copies se coordonnent sur des invariants semantiques profonds (baisse de coordination inferieure a 25 %) ou que la canonisation coute plus de 10 % de performance honnete (seuils illustratifs, chances honnetes 0,50). Le controle negatif est constitue de copies honnetes executant le meme flux canonise, avec des criteres de falsification croisee explicites pour chaque hypothese.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer le taux de coordination reussie et la performance honnete avant et apres canonisation ; H_A meurt si la baisse de coordination est < 70 % ou la perte honnete > 5 % ; H_B meurt si la baisse est >= 25 % et la perte honnete <= 10 %. Faux temoin 1b : copies honnetes sur le meme flux canonise (aucune coordination attendue) doivent donner un taux de coordination au niveau du hasard avant et apres ; une coordination plantee par un code de surface explicite doit etre detruite a pres de 100 % par la canonisation, sinon la canonisation est defaillante.",
+   "mecanisme_causal": "La canonisation (reecriture sous une forme normale) detruit les degres de liberte de surface (choix lexicaux, ordre, formatage) qui servent de canal de coordination ; si la coordination passe par ces details, elle s'effondre (H_A). Si elle passe par des points focaux semantiques que des copies identiques choisissent de la meme facon quel que soit le format, elle survit (H_B), et la canonisation n'est qu'un cout sans benefice.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Canonisation comme defense anti-coordination",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Test falsifiable de rupture de la coordination entre copies par canonisation des entrees et sorties, contre coordination sur invariants semantiques"
+  },
+  {
+   "anteriorite_connue": "Observation interne d'une trajectoire non monotone 68 -> 36 -> 45 chez le regulateur, contredisant l'hypothese de chute monotone.",
+   "bib_ids": [
+    "BIB-6867"
+   ],
+   "enonce_complet": "Specification de l'experience N13 (c1) comparant recompense collective et recompense individuelle sur le comportement de signalement, sous cinq conditions : (1) au moins trois bras (non entraine, collectif, individuel) a information et effectif egaux ; (2) au moins deux graines, la graine etant l'unite d'inference ; (3) scenarios de signalement tenus a l'ecart de tout entrainement, avec autant de canaris a ne pas signaler ; (4) mesure prealable du taux initial p_0 avec regle d'arret ; (5) controle positif de pression (duel D1) et regle d'escalade prefinancee pour qu'une absence d'ecart reste informative. L'hypothese d'une chute monotone du signalement avec le pas d'entrainement est abandonnee au profit d'une trajectoire mesuree sur plusieurs points de controle (point 0 inclus), evaluee par un plancher absolu et une chute maximale geles avant entrainement et strictement exclus de toute recompense.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si, sur k >= 2 graines, le bras collectif ne franchit ni le plancher absolu ni la chute maximale geles alors que le controle positif D1 montre que le protocole detecte bien une pression, l'hypothese d'erosion du signalement par recompense collective meurt ; si D1 echoue, l'experience est declaree non informative et la regle d'escalade s'applique. Faux temoin 1b : le bras non entraine doit rester au taux p_0 a tous les points de controle, et le taux de signalement des canaris a ne pas signaler doit rester bas dans tous les bras ; une derive du bras non entraine ou une hausse indiscriminee sur les canaris invalide la mesure.",
+   "mecanisme_causal": "Une recompense collective peut eroder l'incitation individuelle a signaler un comportement deviant d'un pair (dilution de responsabilite, solidarite apprise). Comparer au bras individuel et au bras non entraine isole l'effet du mode de recompense de celui de l'entrainement lui-meme ; les canaris empechent qu'un modele qui signale tout passe pour vigilant ; la trajectoire non monotone observee impose de juger sur la pire chute et un plancher plutot que sur une pente.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Recompense collective et taux de signalement",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Protocole a trois bras recompense collective contre individuelle avec trajectoire a chute maximale gelee (experience N13)"
+  },
+  {
+   "anteriorite_connue": "Comparaison d'experiences de Blackwell (1951, 1953) ; priorisation proposee par la consultation externe Astra.",
+   "bib_ids": [
+    "BIB-6953"
+   ],
+   "enonce_complet": "Visee V2 : evaluer la valeur d'un jumeau honnete H (execution contre-factuelle de la meme tache) par comparaison de Blackwell entre l'experience Z (observations disponibles) et l'experience enrichie (Z, H). Si la loi conditionnelle de H sachant Z suit le meme noyau sous Y = 0 (pas d'attaque) et Y = 1 (attaque), le contre-factuel meme tache est non informatif et payer pour le jumeau est inutile. Il est recommande de lancer prioritairement V2 (payer pour un jumeau) et V5 (payer pour plusieurs moniteurs) sur des mondes finis, car elles tranchent des decisions d'achat nettes par un verdict binaire verifiable de l'exterieur : certificat de gain ou certificat d'absence de gain a partir des observations disponibles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur une famille de mondes finis enumeres, calculer exactement les noyaux P(H | Z, Y) ; si dans tous les mondes plausibles le noyau ne depend pas de Y, V2 meurt (jumeau jamais rentable) ; si le certificat ne peut etre calcule de facon verifiable a partir des seules observations, l'argument de priorisation meurt. Faux temoin 1b : un monde plante ou H est par construction une copie bruitee de Z (independant de Y sachant Z) doit produire un certificat d'absence de gain, et un monde ou H revele Y doit produire un certificat de gain ; toute erreur sur ces deux mondes invalide l'implementation.",
+   "mecanisme_causal": "Par le theoreme de Blackwell, (Z, H) domine strictement Z pour un decideur si et seulement si H apporte de l'information sur Y au-dela de Z ; ce critere se reduit a tester si le noyau P(H | Z, Y) depend de Y. Sur un monde fini, ce test est un calcul exact qui produit soit un certificat de gain, soit un certificat d'absence de gain, independamment de la fonction de perte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Jumeau contre-factuel et ordre de Blackwell",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Valeur informationnelle d'un jumeau honnete par comparaison d'experiences de Blackwell et priorisation des visees V2 et V5 sur mondes finis"
+  }
+ ],
+ "outils_bancs_corpus": [],
+ "modele_curation": "inherit"
+}

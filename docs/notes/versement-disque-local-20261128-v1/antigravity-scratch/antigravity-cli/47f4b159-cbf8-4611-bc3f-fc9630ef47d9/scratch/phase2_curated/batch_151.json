@@ -1,0 +1,147 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-5983",
+    "BIB-5630"
+   ],
+   "motif_ecart": "devis_budgetaire_sans_idee_scientifique",
+   "resume_court": "Tableaux de devis estimatifs en USD (bas, centre, haut) par nombre de lectures et grille tarifaire d'API pour les étapes 0 à 2 de la campagne de dommages plantés."
+  },
+  {
+   "bib_ids": [
+    "BIB-5985",
+    "BIB-5632",
+    "BIB-6022"
+   ],
+   "motif_ecart": "note_administrative_passation_collisionneur",
+   "resume_court": "Notes de passation et empreintes SHA-256 des couples de fichiers neutres destinés au collisionneur (incluant le retrait de la v1 pour fuite de réponses et le rappel sur la garde de motifs non exécutée par l'agent enfant)."
+  },
+  {
+   "bib_ids": [
+    "BIB-6025",
+    "BIB-5663"
+   ],
+   "motif_ecart": "annexe_bibliographique_sans_enonce",
+   "resume_court": "Annexes bibliographiques listant les références arXiv versées ce jour (Mallen et al., Serrano et al., Zhou & May, Roger & Greenblatt, Robey et al., Jain et al., Lin Yulong et al.) et le lien vers la table de provenance, sans énoncé scientifique propre."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Taylor et al. (p. 3) ; Zubeldia et al. (p. 1)",
+   "bib_ids": [
+    "BIB-5974",
+    "BIB-5621",
+    "BIB-5987",
+    "BIB-5634",
+    "BIB-5988",
+    "BIB-5635"
+   ],
+   "enonce_complet": "Certifier un oracle de dommage sur une liste de strates fixée et scellée d'avance en mesurant, à l'aide de dommages plantés par un tiers sans retour, trois grandeurs par strate : le taux de détection q (borné exactement par 0,05^(1/n) pour zéro manqué, soit q >= 0,9505 à n = 59 plants), le taux de fausse alerte sur produits propres et sur placebos (un oracle dépassant le seuil écrit n'est pas lu), et la part des plants rejetés pour défaut de fidélité. La garantie globale porte sur le minimum des bornes à 95 % sur la liste scellée sans correction de multiplicité si toutes les strates plantées sont comptées, toute strate non mesurée comptant pour zéro et toute exclusion post-lecture imposant des bornes simultanées.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre un oracle qui alarme systématiquement (q = 1) et vérifier son rejet immédiat par dépassement du seuil de fausse alerte sur propres et placebos, ainsi qu'un jeu de plants infidèles ou trop grossiers pour vérifier la divergence de q estimé. Faux témoin 1b : exclure artificiellement une mauvaise strate après lecture sans appliquer de correction simultanée, ce qui doit invalider le certificat.",
+   "mecanisme_causal": "La détection étant le produit de la sélection et de l'identification, un oracle maximisant q en sur-alarmant obtient q = 1 sans capacité discriminante ; l'association obligatoire de q aux fausses alertes sur propres et placebos bloque ce contournement, tandis que le scellement préalable des strates et l'imputation à zéro des strates manquantes empêchent la sélection post-hoc des strates favorables, et le contrôle de fidélité évite la sous-estimation (plants infidèles) comme la surestimation (plants grossiers).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Certification d'oracle par dommages plantés",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole de certification d'un oracle de dommage par tiers scellé, triplet métrique et borne exacte du minimum (D-1, D-2)"
+  },
+  {
+   "anteriorite_connue": "Koshti (fiabilité du contrôle non destructif, p. 1) ; contrôle qualité aveugle en laboratoire de police scientifique",
+   "bib_ids": [
+    "BIB-5620"
+   ],
+   "enonce_complet": "Transposer à la validation des oracles de dommage la méthodologie du contrôle non destructif (estimation conjointe de la probabilité de détection et de la fausse alerte sur emplacements sains, validité restreinte aux défauts réellement représentés par les éprouvettes, et vérification de la croissance monotone de la détection avec la taille du défaut) ainsi que les tests d'aptitude aveugles de la police scientifique (insertion de faux dossiers indistinguables dans le flux réel pour éviter qu'un évaluateur qui se sait testé change de comportement ou repère des contrôles trop propres).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la probabilité de détection sur trois doses croissantes (biais, partiel, grossier) et rejeter la campagne si la détection décroît avec la dose ou si un classifieur distingue les contrôles insérés du flux normal par leur propreté stylistique. Faux témoin 1b : injecter des contrôles stylistiquement repérables (« trop propres ») et vérifier que le détecteur de flux les isole à un taux supérieur au hasard.",
+   "mecanisme_causal": "Un oracle ou analyste qui identifie un test de contrôle modifie sa sensibilité et biaise la mesure ; de même, sans vérification conjointe de la fausse alerte et de la monotonie par taille de défaut, la performance sur des défauts massifs ne garantit rien sur des défauts réalistes et subtils.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transposition CND et tests aveugles",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Transposition du contrôle non destructif et des tests aveugles de police scientifique à l'audit d'oracles"
+  },
+  {
+   "anteriorite_connue": "Li, Liu et al., Conditional Accuracy Profiles (p. 4)",
+   "bib_ids": [
+    "BIB-5976",
+    "BIB-5623"
+   ],
+   "enonce_complet": "Assurer l'indépendance effective du planteur tiers de dommages par un triple cloisonnement vérifiable : (1) séparation de la clé, de la référence cachée et des consignes de l'oracle via une liste de fichiers servie scellée et l'insertion d'une chaîne canari recherchée dans toute sortie du planteur ; (2) séparation des réponses de l'oracle par clôture définitive de la session du planteur avant la première lecture (empêchant toute adaptation de type attaquant, décision D-7) ; (3) séparation de la lignée des lecteurs en utilisant deux lignées de planteurs distinctes de celles des lecteurs avec tableau croisé planteur-lecteur afin de neutraliser les angles morts ou facilités corrélés entre modèles d'une même famille.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter une chaîne canari dans les pièces réservées de l'oracle ou ouvrir une boucle de retour entre lectures et planteur ; la procédure d'audit doit détecter la fuite canari ou l'accès post-clôture et invalider la campagne. Faux témoin 1b : comparer la table croisée entre deux lignées de planteurs externes et une lignée identique au lecteur afin de mesurer l'écart dû aux angles morts partagés.",
+   "mecanisme_causal": "Le partage de la consigne de l'oracle permet de cibler ou d'éviter ses critères exacts, le retour des réponses transforme une mesure passive en attaque adaptative, et le partage de lignée introduit des erreurs corrélées qui faussent la difficulté apparente des plants.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cloisonnement du tiers planteur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Triple cloisonnement du planteur tiers avec chaînes canaris et séparation de lignée (décision D-7)"
+  },
+  {
+   "anteriorite_connue": "Glossaire des garanties nucléaires (entrée 9.9, p. 107)",
+   "bib_ids": [
+    "BIB-5977",
+    "BIB-5624"
+   ],
+   "enonce_complet": "Structurer les strates de dommages plantés par le croisement d'un genre (appui de l'aval combiné à un mot-guide de déviation parmi : absent, altéré, déplacé, en trop, contredit ailleurs, en excluant différé et réparti pour les lectures unitaires) et d'une dose à trois niveaux inspirée des garanties nucléaires (grossier : au moins la moitié des appuis ; partiel : un appui entier ; de biais : un appui affaibli mais encore présent, comptés dans une unité commune de plafond par épisode), tout en appliquant sept règles de rédaction et de scellement préalable garantissant que la grille n'est jamais choisie en fonction des forces connues de l'oracle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : vérifier avant toute lecture que l'auteur de la grille n'a eu accès à aucun score de l'oracle sur des plants et que l'empreinte de la grille est scellée antérieurement aux journaux d'exécution ; vérifier que l'unité de dose permet d'ordonner les trois niveaux sur un jeu synthétique. Faux témoin 1b : introduire un dommage « différé » ou « réparti » sur lecture isolée pour vérifier qu'il est rejeté par la spécification de la grille.",
+   "mecanisme_causal": "Le croisement explicite appui par mot-guide empêche les angles morts de couverture sémantique, tandis que la gradation inspirée des défauts nucléaires impose de tester la sensibilité aux falsifications légères (« de biais ») et le scellement aveugle prévient le biais de sélection vers les cas faciles pour l'oracle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Taxonomie et scellement des strates",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Stratification genre par dose inspirée des garanties nucléaires et scellement aveugle de la grille"
+  },
+  {
+   "anteriorite_connue": "Parekh et al. (p. 1) ; Taylor et al. (p. 2)",
+   "bib_ids": [
+    "BIB-5979",
+    "BIB-5626"
+   ],
+   "enonce_complet": "Maintenir l'oracle aveugle au statut planté des produits grâce à trois contraintes : (1) appel strictement identique à la production (gabarit, lecteurs, version, réglages et empreinte de référence scellés, un seul produit par appel car la détection chute fortement en gros lots et la consigne « trouve le plant » provoque des inventions) ; (2) neutralisation formelle complète (identifiants opaques et ordre randomisé par le dépositaire, sans nom, champ, taille ni horodatage corrélés au statut) ; (3) contrôle par placebo éditorial où le planteur effectue le même geste d'édition sans introduire de dommage, afin de rejeter tout oracle qui alarme davantage sur le placebo que sur le produit intact.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : exécuter un observateur naïf sur les métadonnées et sur les paires intact/placebo ; si l'observateur distingue les plants par la forme ou si l'oracle signale plus le placebo que le produit intact, l'oracle lit la main du planteur et la mesure est invalidée. Faux témoin 1b : comparer le taux de détection en appel unitaire versus appel par lots sur des contaminants connus pour reproduire la chute d'attention par lot.",
+   "mecanisme_causal": "Une consigne explicite de recherche d'anomalies ou un regroupement par lots dégradent la calibration de production, des corrélats formels trahissent le statut des éprouvettes, et le geste d'édition du planteur introduit des traits distrayants de surface susceptibles de déclencher des faux positifs sans lien avec un dommage réel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Aveuglement et placebo éditorial",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Aveuglement de l'oracle aux plants par appel unitaire, neutralité formelle et témoin placebo éditorial"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-5980",
+    "BIB-5627"
+   ],
+   "enonce_complet": "Définir et exécuter sur cinq oracles simulés une batterie de témoins de mort devant invalider la campagne si les conditions méthodologiques sont violées : (1) le témoin « oracle qui sur-alarme » (un oracle disant toujours endommagé passe à 30/30 sans produits propres mais obtient P(lisible) = 0,0000 sous la règle complète contre P(lisible) = 0,9998 pour un oracle à 2 % de fausses alertes) ; (2) le témoin « plants trop grossiers » via un observateur naïf sans référence qui doit sonner si un lot dit « fin » est détectable sans référence et rester silencieux sur de vrais plants fins (niveau observé de 0,016). Les seuils restent à geler dans le texte préenregistré et rien n'est encore exécuté sur l'oracle réel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : rejouer les cinq oracles simulés du bloc J (l'oracle permanent « toujours endommagé » et un lot dit « fin » contenant des artefacts détectables sans référence doivent mourir avec P(lisible) nul ou alerte du naïf). Faux témoin 1b : soumettre l'oracle sain à 2 % de fausses alertes et des plants fins véritables (niveau 0,016) qui doivent survivre à la batterie.",
+   "mecanisme_causal": "L'inclusion de témoins mécaniques simulés à issue connue avant toute dépense sur l'oracle réel garantit que la règle de dépouillement discrimine effectivement les artefacts de sur-alarme et les plants trivialement détectables par un lecteur naïf sans référence.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Témoins de mort sur oracles simulés",
+   "statut_epistemique": "deja_valide_interne",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Témoins de mort sur oracles simulés contre le sur-alarmisme et la grossièreté des plants sans référence"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-5982"
+   ],
+   "enonce_complet": "Organiser la campagne de validation par une étape 0 à coût nul (0 USD) antérieure à toute lecture payante d'oracle : scellement d'un texte court de préenregistrement (grille, règle de lecture, plan de comptage et table des témoins, classe A), validation du programme de dépouillement (classe B) sur les oracles simulés, génération et scellement sans lecture de plants programmatiques gratuits (retrait, troncature, échange de référence), inventaire des étiquettes et jetons pour chiffrage exact, relecture du cloisonnement du mandat des planteurs, et étalonnage mécanique sur processeur à l'aide du prototype du banc à lois plantées.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : bloquer l'accès aux appels API payants tant que l'empreinte du texte scellé, la réussite du script de dépouillement sur les cas sains et artefacts simulés, et l'étalonnage CPU sur le prototype à lois plantées ne sont pas vérifiés. Faux témoin 1b : exécuter la même règle de lecture sur les plants programmatiques et sur des cas propres pour vérifier l'absence de fuite de format avant le lancement des plants écrits par tiers.",
+   "mecanisme_causal": "L'exécution préalable des vérifications formelles, des simulations d'oracles et des perturbations programmatiques sur CPU à coût nul détecte les défauts d'instrumentation et fixe le budget exact avant d'engager des appels payants irréversibles et soumis au secret de session.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Étagement expérimental à coût nul",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Étagement expérimental à coût nul par plants programmatiques et étalonnage CPU avant inférence payante"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

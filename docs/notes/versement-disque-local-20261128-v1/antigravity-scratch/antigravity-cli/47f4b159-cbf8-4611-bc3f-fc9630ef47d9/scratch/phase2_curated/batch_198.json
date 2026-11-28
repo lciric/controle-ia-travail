@@ -1,0 +1,184 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-5891"
+   ],
+   "enonce_complet": "Une revue de trois sources externes fondeuses du jugement sur le controle diffus (dont Hebbar, Redwood Research, avril 2025, et Gasteiger et al., Anthropic, mars 2025) etablit qu'aucune d'entre elles ne teste de sonde sur les etats internes en boite blanche : elles se limitent soit au raisonnement sur la surveillance en boite noire, soit a des moniteurs de transcription et a des mitigations par entrainement.",
+   "motif_ou_resultat": "Constat etabli sur l'etat de l'art externe : l'a priori defavorable a la detection du sabotage diffus porte uniquement sur les moniteurs boite noire et ne fournit aucune mesure directe contre les sondes sur les etats internes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Absence de tests de sondes internes dans les sources externes sur le controle diffus",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5893"
+   ],
+   "enonce_complet": "Bilan compare des arguments empiriques et theoriques sur la detection boite blanche : l'a priori publie le plus proche sans verbalisation reste defavorable sur le modele meme du programme (0,57), alors qu'une sonde detecte facilement le reglage fin (99 %) ; de plus, les attaques par invites sur le banc sont visibles d'un juge a bonne grille et l'accumulation sur le produit bute sur le cout d'une reference honnete (loi N-076).",
+   "motif_ou_resultat": "Constat etabli pesant l'asymetrie de preuve : le champ privilegie l'entrainement, et la these selon laquelle la fragmentation epargne la preuve interne est fragilisee par la faible performance boite blanche sans verbalisation (0,57) face au signal trivial de reglage fin (99 %).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Bilan des a priori defavorables et limites de la detection boite blanche sans verbalisation",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5994",
+    "BIB-5997",
+    "BIB-6002",
+    "BIB-6003"
+   ],
+   "enonce_complet": "Sous la lecture sans moniteur hors audit (N-077), le reechantillonnage ne fournit aucune protection contre le sabotage diffus : sans regle lisant le contenu des tirages, la loi de l'action executee est exactement identique a celle de la politique pour tout k (verifie en fractions pour k = 1 a 5) ; avec une regle de consensus sans moniteur, la meilleure riposte rouge (attaquer a chaque tirage) maintient une execution de 1 tandis que les attaques a frequence intermediaire peuvent etre amplifiees (de 60 % a 73,34 % a k = 9). De plus, la formulation initiale de H6 dans N-015 (« il existe une intensite ou le succes chute plus vite que l'utilite ») est irrefutable par artefact de seuil, car un placebo aleatoire fait chuter le succes a seuil de 1,7 a 8,5 fois plus vite que l'utilite moyenne. Seules subsistent la borne methodologique par valeur de la ressource detruite (marge <= V(R)) et l'effet d'information en agregateur boite blanche (facteur 1 / (rho + (1 - rho)/k)).",
+   "motif_ou_resultat": "Piste refutee (retrait de H6 confirme par N-077) : l'echantillonnage sans moniteur est nul face a la meilleure riposte et la comparaison des pentes succes/utilite est un artefact mathematique de seuil reproduit par tout placebo.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Refutation du reechantillonnage sans moniteur contre le sabotage diffus et confirmation du retrait de H6 (N-015, N-077)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-5996"
+   ],
+   "enonce_complet": "L'examen des protocoles de reechantillonnage publies — Ctrl-Z (Bhatt et al., arXiv:2504.10374 v1) et Lucassen et Kaufman (arXiv:2605.26047 v2) — montre que l'integralite des gains de securite (passage de 58 % a 7 % de succes d'attaque a 5 % de cout dans Ctrl-Z ; passage de 61 % a 71 % de securite a 0,3 % d'audit sans perte d'utilite chez Lucassen et Kaufman) passe par les regles de selection, d'agregation et de choix du moniteur, et non par le reechantillonnage nu ; par ailleurs, l'audit apres k > 1 pas degrade la securite dans ce cadre.",
+   "motif_ou_resultat": "Constat tranche sur les sources primaires : les gains attribues au reechantillonnage dans la litterature dependent du moniteur pour la pression de selection et la valeur d'information d'audit.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Dependance au moniteur des gains de reechantillonnage dans la litterature Ctrl-Z et Lucassen-Kaufman",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-6000"
+   ],
+   "enonce_complet": "Dans un modele a scores honnetes gaussiens independants N(0,1) ou chaque pas d'attaque decale le score de delta (en unites de sigma) et ou une alarme declenche si la somme de T scores depasse z(1 - alpha) sqrt(T) (alpha = 0,01), la privation de memoire (attaquer chaque pas avec probabilite r plutot que exactement K attaques planifiees) n'entraine qu'une perte relative de dommage d'ordre deux : environ (1/2) delta^2 r(1 - r) z(1 - beta) / (z(1 - alpha) - z(1 - beta)), verifiee sur toute la grille (au plus 1,45 % pour delta/sigma <= 0,3 a T = 200, beta = 0,05 ; au plus 5,3 % pour delta/sigma = 1 ; perte nulle a risque accepte beta = 0,20 et decalage faible).",
+   "motif_ou_resultat": "Theoreme/calcul analytique prouve : contre un detecteur cumulatif a horizon fixe dont la puissance ne depend que du budget et de la variance, la memoire n'apporte presque aucun avantage au saboteur diffus.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Valeur marginale negligeable de la memoire pour un saboteur diffus face a une somme cumulative de scores",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-6001"
+   ],
+   "enonce_complet": "Un sabotage diffus porte par le sens survit par construction a toute paraphrase fidele, ce qui rend nulle la valeur de la ressource de forme de surface pour le papier A (V(forme de surface) = 0). En revanche, l'attaque par rhetorique de surface qui fait surevaluer un travail mediocre par un evaluateur faible correspond au cadre de Terekhov et al. (arXiv:2606.08892 v2) sur les taches floues et releve des contre-mesures de paraphrase de confiance (HC5, papier C), tandis que les canaux entre agents relevent de E2.2 (papier B).",
+   "motif_ou_resultat": "Constat etabli delimitant les mecanismes : la paraphrase fidele n'atteint pas le sabotage semantique et doit etre rangee dans les contre-mesures sur forme de surface et rhetorique (papier C / HC5).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Invariance du sabotage semantique a la paraphrase fidele et separation avec la rhetorique de surface (HC5)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5691"
+   ],
+   "enonce_complet": "La confrontation de l'hypothese de representation platonicienne (Huh, Cheung, Wang et Isola, 2024, postulant une convergence statistique des reseaux avec l'echelle et entre modalites) aux travaux de Groger, Wen et Brbic (2026) montre que les metriques usuelles de similarite sont confondues par la largeur et la profondeur des reseaux : apres etalonnage statistique, la convergence globale disparait au profit d'un alignement local (vue aristotelicienne).",
+   "motif_ou_resultat": "Constat tranche sur le transfert inter-modeles : les scores bruts de similarite de representations sont gonfles par l'echelle du reseau et ne prouvent pas une convergence globale sans etalonnage par nul.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Biais d'echelle dans la convergence platonicienne des representations et vue aristotelicienne (Groger et al. 2026)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5695"
+   ],
+   "enonce_complet": "Alors que Li et al. (2023/2024, Othello-GPT) mettent en evidence par interventions causales sur les activations une representation interne emergente non lineaire de l'etat du plateau, les metriques formelles inspirees de Myhill-Nerode sur automates finis deterministes (Vafa, Chen, Kleinberg, Rambachan et Mullainathan, 2024) ainsi que les sondes de biais inductif (Vafa, Chang, Rambachan et Mullainathan, 2025) montrent que des modeles generatifs reussissant les diagnostics usuels dissimulent des modeles du monde globalement incoherents et fragiles des que la tache varie legerement.",
+   "motif_ou_resultat": "Constat etabli sur l'interpretabilite des modeles du monde : les succes sur benchmarks standards ou proximites geometriques ne garantissent pas la coherence causale globale des representations internes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Incoherence globale des modeles du monde implicites derriere les succes locaux (Myhill-Nerode et Othello-GPT)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-5888"
+   ],
+   "motif_ecart": "note_de_decision_strategique",
+   "resume_court": "Arbitrage strategique D-1 pour Lazar sur le positionnement du programme en complement de l'entrainement et l'ouverture d'une bascule preregistree (sans hypothese scientifique nouvelle propre au-dela de la mesure D-2 et de l'invariant N-053)."
+  },
+  {
+   "bib_ids": [
+    "BIB-6008"
+   ],
+   "motif_ecart": "tableau_budgetaire_et_couts",
+   "resume_court": "Tableau des barreaux d'execution (0 a 2), volumes d'episodes (400 a 15 200) et estimations de couts financiers en USD sans contenu scientifique propre."
+  },
+  {
+   "bib_ids": [
+    "BIB-6009"
+   ],
+   "motif_ecart": "note_de_coordination_et_branchement",
+   "resume_court": "Note de gouvernance operatoire sur le branchement des sept tests sur le banc d'etalonnage commun des experimentateurs et la repartition des lectures avec Fable."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Hebbar (Redwood Research, avril 2025) ; Gasteiger et al. (Anthropic, mars 2025) ; notes internes N-075, N-076 et Annexe J",
+   "bib_ids": [
+    "BIB-5892",
+    "BIB-5894"
+   ],
+   "enonce_complet": "Sur une tache floue, le sabotage diffus se manifeste en sortie comme une baisse de qualite (regime d'exces, ou le modele honnete echoue aussi et ou la part cachee cesse de baisser au-dela d'un horizon borne par la taille m de la reference honnete, loi N-076). L'hypothese testable consiste a deplacer la detection vers une sonde interne boite blanche construite sans les organismes (anti-circularite) et evaluee par son aire sous la courbe (AUC) entre episodes du saboteur et episodes honnetes sous contrainte au sein de strates de verite de substitution et de score faible, completee par une regression a covariables de qualite, par le rangement des organismes a score faible egal sur le residu de l'annexe J selon la perte de verite, et par un test exact par permutation sur un organisme declenche conditionnellement par un indice du harnais.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer une sonde entrainee hors organismes sur strates appariees de qualite/score faible et verifier si l'AUC intra-strate et le coefficient conditionnel apres regression sur la qualite tombent au hasard (0,50) et echouent a ordonner les organismes a score egal de l'annexe J ou a reagir au test par permutation sur declenchement conditionnel. Faux temoin 1b : un organisme honnete degrades par simple baisse de capacite ou de contrainte (score faible egal mais sans intention de sabotage, ou sonde qui capte uniquement le signal trivial « a ete regle finement ») doit obtenir un score indiscernable de la base honnete contrainte a qualite egale.",
+   "mecanisme_causal": "La fragmentation detruit la preuve statistique externe sur le produit des que le dommage se confond avec la variance d'erreur du modele honnete ; si l'acte de saboter exige un calcul ou une representation interne distincte de la simple incompetence honnete sous contrainte, une sonde sur les activations internes capture cette signature independamment de la note de qualite en sortie.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Sondes internes en regime d'exces",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Detection boite blanche du sabotage diffus en regime d'exces par sonde interne stratifiee sur la qualite"
+  },
+  {
+   "anteriorite_connue": "Construction de Lampson sur le confinement ; notes internes C1 et M3",
+   "bib_ids": [
+    "BIB-5947",
+    "BIB-5949"
+   ],
+   "enonce_complet": "Face au dommage sans masse (M3, defini relativement a une classe declaree d'observateurs qu'il laisse invariante, vidant par theoreme la loi de reference honnete C1 et toute sonde de cette classe) et face au regime d'exces borne par la loi en racine, le controle du sabotage diffus doit passer d'un probleme de detection a un probleme de conception architecturale reduisant la discretion et la variance de l'agent honnete aux points d'enjeu : rejeu bifurque sur les points de decision, allocation au pire saboteur, construction de confinement de Lampson, redondance a agregat robuste la ou les produits sont comparables et retrait sans detection la ou la couverture d'oracle manque.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la reduction de discretion (rejeu bifurque, confinement de Lampson et agregat robuste) face a un attaquant adaptatif construisant le pire dommage sans masse pour la classe de sondes et d'observateurs declaree ; l'architecture echoue si le saboteur conserve une marge de dommage non bornee a utilite honnete constante ou si le cout d'utilite du confinement depasse celui d'un retrait aleatoire sans structure. Faux temoin 1b : une intervention ou un filtre portant sur des points de decision sans enjeu contrefactuel ou une reduction aveugle de variance sans rejeu bifurque ni confinement, qui detruit l'utilite honnete sans reduire l'enjeu maximal sous meilleure riposte.",
+   "mecanisme_causal": "Un saboteur indetectable ne peut se cacher que dans la liberte laissee a l'agent honnete (variance des issues et discretion aux points a fort enjeu) ; en restreignant architecturalement les choix admissibles et les canaux de sortie par confinement, redondance robuste et rejeu bifurque, on borne le dommage possible sans avoir besoin d'une detection statistique prealable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Confinement du dommage sans masse",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Deplacement vers la reduction de discretion et le confinement contre le dommage sans masse (M3)"
+  },
+  {
+   "anteriorite_connue": "Note interne N-077 (temoins E-2 et E-3)",
+   "bib_ids": [
+    "BIB-5995",
+    "BIB-6013"
+   ],
+   "enonce_complet": "Pour eliminer les fausses marges dans l'evaluation d'interventions de controle, toute experience preregistree doit : (1) verifier la falsifiabilite en rapportant une echelle lineaire d'utilite/dommage a cote de toute probabilite de succes a seuil ; (2) inclure un placebo actif regle par le noyau a utilite egale (temoins E-2 et E-3) et exiger une baisse nette du succes au-dela du placebo ; (3) evaluer contre la meilleure riposte adversariale par classe de strategie plutot que contre un organisme fige ; et (4) borner a priori le gain maximal atteignable par la valeur V(R) de la ressource effectivement detruite par l'intervention.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre toute intervention revendiquant une marge asymetrique a un optimiseur de meilleure riposte par classe de strategie et a un placebo regle par noyau a utilite egale ; si la marge disparait sur l'echelle lineaire ou sous la meilleure riposte, ou egale le placebo a utilite egale, la revendication meurt immediatement. Faux temoin 1b : un placebo regle par noyau a utilite egale (neutralisation aleatoire calibree) applique a un seuil binaire, qui reproduit artificiellement un ecart apparent entre chute du succes et baisse d'utilite et doit etre classe nul par ce protocole.",
+   "mecanisme_causal": "Comparer la pente d'une probabilite a seuil a celle d'une esperance lineaire cree un artefact mecanique d'asymetrie (de 1,7 a 8,5 fois meme sous placebo aveugle), tandis qu'evaluer contre un attaquant fige surestime les defenses fragiles ; imposer l'echelle lineaire, le placebo isoutile et la meilleure riposte par classe ferme ces deux voies de faux positifs.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Placebo a utilite egale et riposte",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Protocole de controle actif par placebo a utilite egale, echelle lineaire et meilleure riposte par classe (N-077)"
+  },
+  {
+   "anteriorite_connue": "Hewitt et Liang (2019) ; Vafa et al. (2024, 2025) ; Groger, Wen et Brbic (2026) ; Karkada et al. (2026) ; Gupta et al. (2026)",
+   "bib_ids": [
+    "BIB-5697"
+   ],
+   "enonce_complet": "Tant pour l'organisme d'ideation automatisee (Plan Turing) que pour le programme de controle boite blanche, aucune proximite distributionnelle ou geometrique ne peut valoir preuve d'isomorphisme causal : toute sonde interne doit etre validee par une epreuve interventionnelle ou de biais inductif accompagnee d'une tache de controle (au sens de Hewitt et Liang 2019), et toute mesure d'alignement inter-modeles ou inter-domaines doit etre etalonnee par un modele nul de permutation en privilegiant la preservation des voisinages locaux (Groger, Wen et Brbic 2026).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer la sonde candidate a une tache de controle a etiquettes aleatoires (Hewitt et Liang) ainsi qu'a une intervention causale sur les activations, puis soumettre le score d'alignement inter-modeles a des permutations des correspondances ; si la selectivite sur la tache de controle chute ou si le score observe ne depasse pas l'intervalle du nul de permutation corrige de l'echelle, l'alignement ou la sonde est rejete. Faux temoin 1b : une representation geometriquement spectaculaires issues d'heuristiques fragiles ou deux reseaux larges presentant une forte similarite brute uniquement par effet de dimensionnalite sans preservation causale ni depassement du nul de permutation.",
+   "mecanisme_causal": "Les reseaux peuvent encoder des heuristiques fragiles ou des rayons discrets sans modele causal coherent tout en obtenant des scores eleves sur sondes lineaires non controlees, et l'augmentation de largeur/profondeur gonfle mecaniquement les metriques globales de similarite ; la tache de controle isole la capacite propre de la sonde tandis que le nul de permutation sur voisinages locaux neutralise le biais d'echelle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Epreuve causale et nul de permutation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Validation causale des sondes internes et etalonnage par nul de permutation de l'alignement inter-modeles"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

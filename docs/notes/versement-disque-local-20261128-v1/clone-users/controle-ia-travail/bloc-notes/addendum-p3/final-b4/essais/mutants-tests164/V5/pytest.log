@@ -1,0 +1,30 @@
+F
+=================================== FAILURES ===================================
+____________________ test_garde_du_verrou_sain_et_artefacts ____________________
+
+    def test_garde_du_verrou_sain_et_artefacts():
+        """Verrou de fin (précision 16) : cas sain ; artefacts : liste des analyses autre que la liste recalculée depuis la
+        lecture décisive, cible hors de la table fermée, clé interdite, contrôle « sans objet » qui écrit, issue recopiée
+        altérée : arrêt."""
+        src, lec, s = _cas("a1_plancher")
+        etablies = s["conclusions_etablies"]
+        ic = cp._canonique(lec["issue"])
+        cp.exiger_verrou(s, lec, etablies, P, ic)                            # cas sain
+        assert len(etablies) > 1
+        with pytest.raises(GardeArret, match="≠ conclusions recalculées depuis la lecture décisive"):
+            cp.exiger_verrou(s, lec, etablies[:-1], P, ic)
+        faux = copy.deepcopy(s)
+        faux["reserves_addendum"].append({**faux["reserves_addendum"][0], "cible": "T9/x"})
+        with pytest.raises(cp.DefautDuModule, match="table fermée"):
+            cp.exiger_verrou(faux, lec, etablies, P, ic)
+        faux = copy.deepcopy(s)
+        faux["analyses"]["A1"][P[0]]["descriptif"]["T1"]["au_dessus_du_plancher"] = True
+>       with pytest.raises(GardeArret, match="clés interdites"):
+E       Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:1400: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_du_verrou_sain_et_artefacts - Fa...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 21.97s
+

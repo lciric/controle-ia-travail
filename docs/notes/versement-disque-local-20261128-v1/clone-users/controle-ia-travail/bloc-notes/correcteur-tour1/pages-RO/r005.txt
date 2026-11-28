@@ -1,0 +1,71 @@
+Preprint
+and the alternative indexed by parameters θ0 ∈ Θ0, where Θ0 is the set of all models considered for
+the null, and θ1 ∈ Θ1, where Θ1 is the set of all models considered for the alternative.
+In general, testing that collusion occurred in some group does not require knowing which group G
+collusion actually occurred in, though that could be an additional objective of detection.
+A test has level α for a composite null if supθ0∈Θ0
+Eθ0
+[T(X)] ≤ α. It is said to be uniformly most
+powerful (UMP) if, at every alternative parameter value θ1, its power is at least that of every other
+level-α test. Unlike the guarantees provided by the Neyman-Pearson lemma for simple hypothesis
+testing, a UMP test need not exist for a composite alternative and its existence generally depends on
+the specified distributions and parameter space.
+In our setting, the general problem of detecting an unknown subset of agents, no UMP has been
+shown to exist to the authors’ knowledge. Indeed it seems likely that it does not exist. This is
+because the “optimal” test, if it exists, would likely depend on signal density (how many groups G
+are actually likely to collude) and strength (how distinguishable samples from binary outcomes are).
+See Addario-Berry et al. (2010) for further related discussion for a fixed size-k group setting.
+For general composite alternatives, a natural test is the generalised likelihood-ratio test (GLRT).
+Here, X is once again a sample of data and X is drawn from some PG(· | θ1) if the hypothesis group
+G colludes is true and X ∼ P0(·|θ0) if no group colludes. The test rejects H0 when ΛGLR(X) ≥ η,
+with a constant η chosen that the rejection is α at most under every distribution in the family of
+distributions possible under the null hypothesis, and fails to reject H0 otherwise.
+Finally, we denote by p0 and pG the density of P0 and PG that are defined with respect to a shared
+dominating measure.2
+Definition 3.3 (Generalised likelihood-ratio test (GLRT)). The Generalised likelihood-ratio test
+(GLRT) is given by
+ΛGLR(X) =
+supG∈G supθ1∈ΘG
+pG(X | HG, θ1)
+supθ0∈Θ0
+p0(X | H0, θ0)
+. (1)
+Here, ΘG is a set of possible parameters that indexes a parametric family of possible distributions
+we use to capture the behaviour of a group when the generating model is unknown. In the simplest
+case, if it is exactly known, we can just take a single model for each G, such as a normal signal
+modelling the output of the probes, with a shifted mean from the signal when the agents are not
+colluding. PG(·|θG) is the family of distributions governing the data, indexed by θ1 ∈ ΘG. Similarly,
+P0(·|θ0), where P0 family of distributions governing the null data indexed by θ0 ∈ Θ0, where Θ0
+captures the set of possible models considered under the null.
+The simplest case of the GLRT is when we assume we exactly know the null distribution and so
+there is only one P0. GLRTs can be asymptotically optimal (in a weak sense) given some additional
+assumptions are satisfied, but in general it is not the UMP finite-sample test for an arbitrary composite
+hypothesis (Lehmann & Romano, 2022).
+An alternative to the GLRT is to average across likelihoods for different groups. Assuming the null
+distribution, P0, and group G specific distribution PG are fully known, we can consider a fixed group
+specific weights π(G) ≥ 0 where
+P
+G∈G π(G) = 1.
+Definition 3.4 (Average likelihood ratio). The mixture likelihood ratio is then defined as
+Λmix(X) :=
+P
+G∈G π(G)pG(X)
+p0(X)
+=
+X
+G∈G
+π(G)ΛG(X), ΛG(X) =
+pG(X)
+p0(X)
+. (2)
+The test rejects H0: when Λmix(X) ≥ ηmix where constant ηmix is based on the α-level chosen.
+In the absence of good estimates for π(G), we could consider uniformly weighting each group
+(averaging likelihoods across all groups), in which case ∀G ∈ G, π(G) = 1
+2n−n−1 .
+As mentioned above, neither ΛGLM or Λmix construction is guaranteed to be UMP for an arbitrary
+composite alternative, so it is not obvious a priori which is most useful in our specific unknown
+2
+If P is a discrete distribution, then p0 and pG are still valid densities. They are probability mass functions
+as they are densities defined with respect to the counting measure.
+5
+

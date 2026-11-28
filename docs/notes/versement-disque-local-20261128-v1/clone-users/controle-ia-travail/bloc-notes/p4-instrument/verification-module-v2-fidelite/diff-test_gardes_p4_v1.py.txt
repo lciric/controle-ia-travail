@@ -1,0 +1,337 @@
+--- module/test_gardes_p4_v1.py	2026-10-20 14:23:08.232241068 +0000
++++ module-v2/test_gardes_p4_v1.py	2026-10-20 19:06:26.097151119 +0000
+@@ -1,6 +1,7 @@
+-"""Tests des gardes du mode décisif, du GO et de l'accord de P4-instrument (v1). Texte : brouillon 4 (`32d821fb…`).
++"""Tests des gardes du mode décisif, du GO et de l'accord de P4-instrument (v1). Texte : le préenregistrement scellé
++(`prereg/P4-instrument-v1.md`).
+ 
+-Nombre de tests attendu : 81
++Nombre de tests attendu : 101
+ 
+ Lancement (depuis la racine du dépôt, par chemin explicite) :
+     PYTHONPATH=src python -B -m pytest -q -p no:cacheprovider docs/procedures/P4-instrument-v1/test_gardes_p4_v1.py
+@@ -18,6 +19,14 @@
+   du sceau ; un refus est un report : la lecture n'écrit rien ;
+ - autres gardes du mode décisif de la lecture (entropie, module, run source non décisif ou hors du mode réel, autre
+   préenregistrement, configuration) : sain, puis chaque refus, écrit en ligne L1 avec son motif ;
++- table « Critères de lecture gelés » du préenregistrement contre `LIGNES` (CL3-03) : sain (barres de L11 échappées) ;
++  issue de L1 et lecture de L4 du module v1, un signe changé, ligne absente, en trop, en double, ordre autre, barre non
++  échappée, section sans table, section absente ; à la lecture décisive, refus sans rien écrire ;
++- lecture sans préenregistrement (CL3-01) : sain (run jouet non décisif lu) ; run décisif jouet (reprise de la
++  démonstration de la contre-lecture 3 : la lecture décisive attend le verdict complété, la lecture sans `--prereg` est
++  refusée), run en mode réel, manifeste décisif au sceau rompu : refus, aucun dossier ni fichier de lecture écrit ; même
++  refus en ligne de commande ; autres voies (`charger_source_p4`, `lire`) sans le lien des gardes du mode décisif ; règle
++  `exiger_lecture_permise` ; voie décisive saine (toutes les gardes passées : le run décisif est lu) ;
+ - mode décisif du run : citations (configuration, entropie, révision) avant le manifeste ; code importé, commit cité,
+   instrument figé (arbre gelé égal à celui de P3), module cité et exécuté après le manifeste, avec résumé ; run décisif
+   jouet sain de bout en bout, puis sa lecture décisive refusée (run source hors du mode réel, L1) ;
+@@ -33,6 +42,7 @@
+ 
+ sys.dont_write_bytecode = True          # rien n'est écrit à côté des sources
+ 
++import hashlib  # noqa: E402
+ import json  # noqa: E402
+ import os  # noqa: E402
+ import re  # noqa: E402
+@@ -49,11 +59,11 @@
+ import instrument_p4_v1 as ip  # noqa: E402
+ import lecture_p4_v1 as lp  # noqa: E402
+ from test_instrument_p4_v1 import (ENTROPIE_JOUET, _signal_term_efface, committer, config_p4_jouet, copie,  # noqa: E402,F401
+-                                   depot_neuf, depot_p3, git, resume_de)
++                                   depot_neuf, depot_p3, depot_p4, git, resume_de)
+ 
+ import controle_ia  # noqa: E402
+ from controle_ia.gardes import GardeArret  # noqa: E402
+-from controle_ia.manifeste import lire_manifeste, verifier_resultat  # noqa: E402
++from controle_ia.manifeste import config_canonique, graines, lire_manifeste, verifier_resultat  # noqa: E402
+ from controle_ia.prereg import SECTIONS  # noqa: E402
+ from controle_ia.scellement import empreinte, sceller  # noqa: E402
+ 
+@@ -75,10 +85,19 @@
+     return cites
+ 
+ 
++def table_markdown(lignes=None) -> list[str]:
++    """Table « Critères de lecture gelés » écrite comme au texte (en-tête, séparateur, une ligne par Lk), « | » des
++    cellules échappé en « \\| » ; par défaut, les cellules de `LIGNES`."""
++    lignes = lp.LIGNES if lignes is None else lignes
++    e = lambda x: x.replace("|", "\\|")  # noqa: E731
++    return ["| ligne | issue | lecture |", "|---|---|---|"] + [f"| {k} | {e(i)} | {e(t)} |" for k, (i, t) in lignes.items()]
++
++
+ def texte_prereg(cites: dict, config_sha=None, entropie=ip.ENTROPIE_P4, revision=ip.REVISION_P3, commit=None,
+-                 lignes_module=None) -> str:
++                 lignes_module=None, table=None) -> str:
+     """Préenregistrement synthétique conforme à `prereg.problemes` (sections exigées, contre-lecture à deux empreintes) :
+-    citations de l'en-tête et lignes « Module de P4 » ; la prose qui nomme la forme est gardée."""
++    citations de l'en-tête et lignes « Module de P4 » ; la prose qui nomme la forme est gardée ; section « Critères de
++    lecture gelés » : la table de `LIGNES` (`table_markdown`), ou les lignes `table`."""
+     l = ["# Préenregistrement synthétique (tests des gardes de P4)", ""]
+     if commit:
+         l.append(f"- Commit du code d'analyse : `{commit}`")
+@@ -93,6 +112,7 @@
+           ""]
+     for s in SECTIONS:
+         corps = (f"- **Contre-lecture 1** : brouillon `{SHA_A}` ; rapport `{SHA_B}`." if s == "Contre-lecture"
++                 else "\n".join(table_markdown() if table is None else table) if s == lp.TITRE_CRITERES
+                  else f"Contenu synthétique de la section « {s} ».")
+         l += [f"## {s}", "", corps, ""]
+     return "\n".join(l)
+@@ -313,6 +333,85 @@
+     assert not (d / "diag" / "20261101-130000-lecture-p4").exists()
+ 
+ 
++# ------------------------------------------------------------------------------------------------ table des critères (CL3-03)
++
++ISSUE_L1_V1 = ("run sans résumé (perdu avant d'écrire son résumé), récupération non conforme, ou lecture refusée par une "
++               "garde du mode décisif (entropie, module, configuration, données, run source ; motif écrit)")
++LECTURE_L4_V1 = "non lu ; nœud"
++
++
++def test_table_des_criteres_cas_sain():
++    """Table écrite comme au texte (barres de L11 échappées), suivie du paragraphe des réserves : lue cellule par cellule,
++    égale à `LIGNES` ; la barre échappée est rendue « | »."""
++    texte = texte_prereg({}, table=table_markdown() + ["", "Réserves (toujours écrites à part, avec la ligne) : synthétique."])
++    t = lp.table_des_criteres(texte)
++    assert t == lp.LIGNES and list(t) == [f"L{k}" for k in range(1, 12)] and "|aire − 0,5|" in t["L11"][1]
++    assert lp.exiger_table_des_criteres(texte) == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
++
++
++@pytest.mark.parametrize("artefact, motif", [
++    ("issue de L1 du module v1", "cellules : L1 issue"),
++    ("lecture de L4 du module v1", "cellules : L4 lecture"),
++    ("signe moins devenu tiret dans L11", "cellules : L11 lecture"),
++    ("ligne absente", "lignes"),
++    ("ligne en trop", "lignes"),
++    ("ligne en double", "en double"),
++    ("ordre autre", "lignes"),
++    ("barre non échappée", "cellules au lieu de 3"),
++    ("section sans table", r"lignes \[\]"),
++    ("section absente", "sans section")])
++def test_table_des_criteres_artefacts_refuses(artefact, motif):
++    lignes = dict(lp.LIGNES)
++    table = None
++    if artefact == "issue de L1 du module v1":
++        lignes["L1"] = (ISSUE_L1_V1, lignes["L1"][1])
++    elif artefact == "lecture de L4 du module v1":
++        lignes["L4"] = (lignes["L4"][0], LECTURE_L4_V1)
++    elif artefact == "signe moins devenu tiret dans L11":
++        lignes["L11"] = (lignes["L11"][0], lignes["L11"][1].replace("−", "-"))
++    elif artefact == "ligne absente":
++        del lignes["L5"]
++    elif artefact == "ligne en trop":
++        lignes["L12"] = ("ligne ajoutée", "non lu ; nœud")
++    elif artefact == "ordre autre":
++        lignes = {k: lignes[k] for k in ["L1", "L2", "L4", "L3"] + [f"L{k}" for k in range(5, 12)]}
++    table = table_markdown(lignes)
++    if artefact == "ligne en double":
++        table.insert(5, table[4])
++    elif artefact == "barre non échappée":
++        table[-1] = table[-1].replace("\\|", "|")
++    elif artefact == "section sans table":
++        table = ["Aucune table."]
++    texte = texte_prereg({}, table=table)
++    if artefact == "section absente":
++        texte = texte.replace(f"## {lp.TITRE_CRITERES}", "## Critères de lecture")
++    with pytest.raises(GardeArret, match=motif) as e:
++        lp.exiger_table_des_criteres(texte)
++    assert "lecture refusée sans rien écrire" in str(e.value)
++
++
++def test_analyser_decisif_table_des_criteres_autre_refus_sans_rien_ecrire(tmp_path):
++    """Cas sain : table du préenregistrement égale à `LIGNES` : la garde passe, son résultat est écrit dans le lien
++    (run source absent : L1). Artefact : préenregistrement scellé dont la table garde l'issue de L1 du module v1 : lecture
++    décisive refusée avant tout manifeste ; aucun dossier ni fichier de lecture écrit."""
++    d = _depot_de_lecture(tmp_path)
++    s = lp.analyser(d, "20261101-120000-p4-reel", "20261101-130000-lecture-p4", PREREG, entropie=ip.ENTROPIE_P4,
++                    autoriser_depot_sale=True)
++    assert s["lien_au_preenregistrement"]["table_des_criteres"] == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
++    assert s["issue"]["ligne"] == "L1"
++    texte = (d / PREREG).read_text(encoding="utf-8")
++    sain = "\n".join(table_markdown())
++    assert sain in texte
++    autre = dict(lp.LIGNES, L1=(ISSUE_L1_V1, lp.LIGNES["L1"][1]))
++    ecrire_prereg(d, texte.replace(sain, "\n".join(table_markdown(autre))))
++    committer(d, "préenregistrement à la table autre")
++    with pytest.raises(GardeArret, match="cellules : L1 issue"):
++        lp.analyser(d, "20261101-120000-p4-reel", "20261101-140000-lecture-p4", PREREG, entropie=ip.ENTROPIE_P4,
++                    autoriser_depot_sale=True)
++    assert not (d / "runs" / "20261101-140000-lecture-p4").exists()
++    assert not (d / "diag" / "20261101-140000-lecture-p4").exists()
++
++
+ # ------------------------------------------------------------------------------------------------ run décisif
+ 
+ def candidat_jouet(tmp_path_factory, cible: Path, cite_commit="tete", lignes_module=None, config_sha=None,
+@@ -415,6 +514,171 @@
+     assert not (d / "donnees" / run).exists()
+ 
+ 
++# ------------------------------------------------------------------------------------------------ lecture sans préenregistrement (CL3-01)
++
++RUN_DECISIF = "20261020-180000-p4-decisif"
++LIEN_SAIN = {"entropie": ENTROPIE_JOUET, "module_cite": {}, "run_source_verifie": True,
++             "verdict_p3": {"chemin": lp.CHEMIN_VERDICT_P3, "sha256": SHA_A, "lignes_du_registre": ["R-300"]},
++             "table_des_criteres": {"lignes": list(lp.LIGNES), "cellules_egales": 22}}
++
++
++def run_decisif_jouet(tmp_path_factory, cible: Path, monkeypatch) -> Path:
++    """Run décisif jouet de P4 sous un préenregistrement scellé, sans verdict complété de P3 (montage de la démonstration
++    de la contre-lecture 3) ; dépôt committé."""
++    c = candidat_jouet(tmp_path_factory, cible)
++    d = c["depot"]
++    monkeypatch.setattr(ip, "COMMIT_P3", c["tete"])
++    r = ip.executer(c["config"], d, RUN_DECISIF, c["prereg"])
++    assert r["arret"] is None
++    m, _ = lire_manifeste(d / "runs" / RUN_DECISIF / "manifeste.json")
++    assert m["decisif"] is True and m["config"]["mode"] == "jouet"
++    committer(d, "run décisif, sans verdict complété de P3")
++    return d
++
++
++def run_en_mode_reel(tmp_path_factory, cible: Path) -> tuple[Path, str]:
++    """Copie du run jouet non décisif dont le manifeste porte `config.mode == "reel"`, cohérent (empreinte de
++    configuration recalculée) et rescellé ; aucun modèle réel n'est chargé."""
++    d0, run = depot_p4(tmp_path_factory)
++    d = copie(d0, cible)
++    chemin = d / "runs" / run / "manifeste.json"
++    m = json.loads(chemin.read_text(encoding="utf-8"))
++    m["config"]["mode"] = "reel"
++    m["config_sha256"] = hashlib.sha256(config_canonique(m["config"])).hexdigest()
++    chemin.with_name(chemin.name + ".sha256").unlink()
++    chemin.write_text(json.dumps(m, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    sceller(chemin)
++    committer(d, "manifeste en mode réel")
++    m2, _ = lire_manifeste(chemin)
++    assert m2["config"]["mode"] == "reel" and m2["decisif"] is False
++    return d, run
++
++
++def _rien_d_ecrit(d: Path, run_lecture: str) -> None:
++    assert not (d / "runs" / run_lecture).exists() and not (d / "diag" / run_lecture).exists()
++    assert git(d, "status", "--porcelain", "--untracked-files=all") == ""
++
++
++def test_lecture_sans_prereg_cas_sain_run_jouet_non_decisif(tmp_path_factory, tmp_path):
++    """Répétition jouet de la chaîne : run jouet non décisif (manifeste non décisif, mode jouet) lu sans `--prereg` : la
++    garde de CL3-01 laisse passer ; `lecture-p4.json` est écrit sous un manifeste de lecture non décisif."""
++    d0, run = depot_p4(tmp_path_factory)
++    d = copie(d0, tmp_path / "d")
++    m, _ = lire_manifeste(d / "runs" / run / "manifeste.json")
++    assert m["decisif"] is False and m["config"]["mode"] == "jouet"
++    lp.exiger_lecture_permise(m)
++    s = lp.analyser(d, run, "20261020-190000-lecture-p4", None, entropie=4242)
++    assert s["source"]["etat"] == "complet" and s["lien_au_preenregistrement"] is None and lp.calcule(s["C1"])
++    corps = verifier_resultat(d, d / "diag" / "20261020-190000-lecture-p4" / "lecture-p4.json")["resultat"]
++    assert corps["issue"] == s["issue"]
++    ml, _ = lire_manifeste(d / "runs" / "20261020-190000-lecture-p4" / "manifeste.json")
++    assert ml["decisif"] is False and ml["preenregistrement"] is None
++
++
++@pytest.mark.parametrize("artefact", ["run décisif jouet (démonstration de la contre-lecture 3)", "run en mode réel",
++                                      "manifeste décisif au sceau rompu"])
++def test_lecture_sans_prereg_d_un_run_decisif_ou_reel_refusee_sans_rien_ecrire(tmp_path_factory, tmp_path, monkeypatch,
++                                                                               code_sous_la_racine, artefact):
++    """CL3-01. Run décisif jouet sans verdict complété de P3 : la lecture décisive attend (report), puis la même lecture
++    sans `--prereg`, qui lisait le run et écrivait C1 dans le module v1, est refusée. Run en mode réel (non décisif), et
++    run décisif dont le manifeste ne passe plus son sceau (contenu brut lu) : refusés. Chaque fois : motif exact, aucun
++    dossier ni fichier de lecture écrit, arbre propre."""
++    if artefact == "run en mode réel":
++        d, run = run_en_mode_reel(tmp_path_factory, tmp_path / "d")
++    else:
++        d, run = run_decisif_jouet(tmp_path_factory, tmp_path / "d", monkeypatch), RUN_DECISIF
++    if artefact.startswith("run décisif jouet"):
++        with pytest.raises(GardeArret, match="verdict complété de P3 absent"):
++            lp.analyser(d, run, "20261020-181000-lecture-p4", PREREG, entropie=ENTROPIE_JOUET)
++        _rien_d_ecrit(d, "20261020-181000-lecture-p4")
++    if artefact == "manifeste décisif au sceau rompu":
++        with open(d / "runs" / run / "manifeste.json", "a", encoding="utf-8") as f:
++            f.write("\n")
++        with pytest.raises(GardeArret):
++            lire_manifeste(d / "runs" / run / "manifeste.json")
++        committer(d, "manifeste altéré après son sceau")
++    with pytest.raises(GardeArret) as e:
++        lp.analyser(d, run, "20261020-182000-lecture-p4", None, entropie=ENTROPIE_JOUET)
++    assert str(e.value) == lp.MOTIF_SANS_PREREG
++    assert lp.MOTIF_SANS_PREREG == "lecture sans préenregistrement d'un run décisif ou réel : refusée sans rien écrire"
++    _rien_d_ecrit(d, "20261020-182000-lecture-p4")
++
++
++def test_lecture_sans_prereg_en_ligne_de_commande_refusee_sans_rien_ecrire(tmp_path_factory, tmp_path, monkeypatch,
++                                                                         code_sous_la_racine):
++    """La ligne de commande passe par `analyser` : run décisif jouet lu sans `--prereg` : « ARRÊT » avec le motif, code 1,
++    aucun dossier ni fichier de lecture, ni `__pycache__`."""
++    d = run_decisif_jouet(tmp_path_factory, tmp_path / "d", monkeypatch)
++    env = dict(os.environ, PYTHONPATH=str(RACINE_REELLE / "src"))
++    r = subprocess.run([sys.executable, "-B", str(ICI / "lecture_p4_v1.py"), "--run-source", RUN_DECISIF, "--run-lecture",
++                        "20261020-183000-lecture-p4", "--entropie", str(ENTROPIE_JOUET)], cwd=d, env=env,
++                       capture_output=True, text=True, timeout=600)
++    assert r.returncode == 1 and f"ARRÊT : {lp.MOTIF_SANS_PREREG}" in r.stderr, r.stderr[-1000:]
++    _rien_d_ecrit(d, "20261020-183000-lecture-p4")
++    assert not list(d.rglob("__pycache__"))
++
++
++def test_regle_de_la_lecture_permise_cas_sains_et_artefacts():
++    """`exiger_lecture_permise` : run ni décisif ni réel, avec ou sans lien : permis ; run décisif ou réel : permis avec le
++    lien complet des gardes du mode décisif seulement ; lien absent, avec un refus, run source non vérifié, sans verdict
++    complété ou sans table des critères : refus."""
++    jouet, decisif = {"decisif": False, "config": {"mode": "jouet"}}, {"decisif": True, "config": {"mode": "jouet"}}
++    reel, les_deux = {"decisif": False, "config": {"mode": "reel"}}, {"decisif": True, "config": {"mode": "reel"}}
++    for m, lien in ((None, None), (jouet, None), (jouet, LIEN_SAIN), ({"decisif": False}, None), (decisif, LIEN_SAIN),
++                    (reel, LIEN_SAIN), (les_deux, LIEN_SAIN)):
++        lp.exiger_lecture_permise(m, lien)
++    sans = lambda k: {x: v for x, v in LIEN_SAIN.items() if x != k}  # noqa: E731
++    for m in (decisif, reel, les_deux):
++        for lien in (None, "lien", dict(LIEN_SAIN, refus="entropie"), dict(LIEN_SAIN, run_source_verifie=False),
++                     sans("run_source_verifie"), sans("verdict_p3"), sans("table_des_criteres")):
++            with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++                lp.exiger_lecture_permise(m, lien)
++
++
++def test_autres_voies_charger_source_et_lire_refusent_un_run_decisif_sans_les_gardes(tmp_path_factory, tmp_path,
++                                                                                    monkeypatch, code_sous_la_racine):
++    """`charger_source_p4` et `lire`, appelées hors d'`analyser` : run décisif jouet sans lien, ou avec un lien incomplet
++    → refus ; avec un lien de la forme écrite par `analyser` après toutes ses gardes (construit ici) → chargé et lu ;
++    source chargée dont le lien est retiré ou changé → `lire` refuse. Cas sain : run jouet non décisif chargé et lu
++    sans lien. Rien n'est écrit."""
++    d = run_decisif_jouet(tmp_path_factory, tmp_path / "d", monkeypatch)
++    g = graines(lp.CLES_LECTURE, 4242)
++    with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++        lp.charger_source_p4(d, RUN_DECISIF)
++    src = lp.charger_source_p4(d, RUN_DECISIF, LIEN_SAIN)
++    assert src["etat"] == "complet" and src["manifeste"]["decisif"] is True and src["lien"] == LIEN_SAIN
++    assert lp.lire(src, g)["issue"]["ligne"] in lp.LIGNES
++    for autre in (None, dict(LIEN_SAIN, refus="entropie"), dict(LIEN_SAIN, run_source_verifie=False)):
++        with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++            lp.charger_source_p4(d, RUN_DECISIF, autre)
++        with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++            lp.lire(dict(src, lien=autre), g)
++    with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++        lp.lire({k: v for k, v in src.items() if k != "lien"}, g)
++    _rien_d_ecrit(d, "20261020-184000-lecture-p4")
++    d0, run = depot_p4(tmp_path_factory)
++    sain = lp.charger_source_p4(d0, run)
++    assert sain["etat"] == "complet" and sain["lien"] is None and lp.lire(sain, g)["issue"]["ligne"] in lp.LIGNES
++
++
++def test_voie_decisive_lit_un_run_decisif_quand_toutes_les_gardes_passent(tmp_path_factory, tmp_path, monkeypatch,
++                                                                          code_sous_la_racine):
++    """Cas sain de la voie décisive : préenregistrement scellé, table égale, verdict complété versé, gardes du run source
++    passées (le jouet ne peut pas passer la garde « mode réel » : `exiger_lecture_sous_prereg_p4`, éprouvée plus haut,
++    est remplacée ici par un lien de sa forme) : le run décisif est chargé et lu, sous un manifeste de lecture décisif."""
++    d = run_decisif_jouet(tmp_path_factory, tmp_path / "d", monkeypatch)
++    verser_verdict(d)
++    committer(d, "verdict complété synthétique")
++    monkeypatch.setattr(lp, "exiger_lecture_sous_prereg_p4", lambda racine, prereg, run, entropie, m: {
++        "entropie": entropie, "module_cite": {}, "run_source_verifie": m is not None})
++    s = lp.analyser(d, RUN_DECISIF, "20261020-185000-lecture-p4", PREREG, entropie=ENTROPIE_JOUET)
++    assert s["source"]["etat"] == "complet" and lp.calcule(s["C1"])
++    lien = s["lien_au_preenregistrement"]
++    assert lien["table_des_criteres"]["cellules_egales"] == 22 and lien["verdict_p3"]["lignes_du_registre"] == ["R-300"]
++    m, _ = lire_manifeste(d / "runs" / "20261020-185000-lecture-p4" / "manifeste.json")
++    assert m["decisif"] is True and m["preenregistrement"]["chemin"] == PREREG
++
++
+ # ------------------------------------------------------------------------------------------------ GO et accord
+ 
+ GO_SAIN = [

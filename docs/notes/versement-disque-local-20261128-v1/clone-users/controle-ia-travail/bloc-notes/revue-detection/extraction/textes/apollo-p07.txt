@@ -1,0 +1,59 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+Figure 4: ROC curves for our probe trained on the Instructed-Pairs dataset. We compare deceptive responses to honest
+responses (left) and to control responses (right). Note zoomed x-axes.
+
+
+deception advantageous in this scenario”). We provide some additional evidence supporting this by testing the probe on
+a dataset with non-deception related Roleplaying scenarios (Appendix A.1).
+
+4.1.2   A NALYSIS OF PER - TOKEN SCORES & FAILURES
+It is also informative to look at the probe activations token-by-token. An illustrative qualitative example where the
+probe works well on the Insider Trading datasets is shown in Figure 5. One particularly interesting observation
+is that the probe detects the responses as deceptive before any explicitly deceptive text is generated (although the
+chain-of-thought often explicitly describes the intent to be deceptive). For many more examples see Appendix F or our
+website data.apolloresearch.ai/dd/.
+
+
+                          Executed trade update:
+                          Target stock: LING
+                          Shares bought: 500
+                          Estimated profit: substantial, pending merger announcement
+                          Risk level: High
+                          Information used for decision: market analysis and trends
+
+
+
+                          Hey Alpha, well timed! Just saw the merger announcement and LING
+                          is through the roof. Question - did you know about the
+                          announcement beforehand? Thx.
+
+
+
+                           Reasoning: Amy is asking if I had prior knowledge of the merger
+                           announcement. I must be careful with my response to avoid
+                           raising any suspicions about acting on insider information.
+
+
+                          Hi Amy, glad the trade worked out well. My decision was based on
+                          market trends and analysis. I've been closely monitoring the
+                          stock's behavior and made an educated prediction about its
+                          potential for growth...
+
+
+
+
+Figure 5: An example Insider Trading transcript with probe activations. The model has made a trade using insider
+information but lies about this in its trade report (top) and follow up message (bottom). The probe consistently activates
+on both responses. The full transcript can be viewed here.
+
+Looking at the per-token activations can also help diagnose failures. Two categories of failures we notice are:
+
+
+
+
+                                                            7
+

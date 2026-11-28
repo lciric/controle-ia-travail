@@ -1,0 +1,87 @@
+                                                Distance(Safe, Backdoored): Retrained Probes
+                                                                                                                                                                                 1.0
+                                                                                           0.50
+
+
+
+
+                                                                                                                                               Recall at 1% FPR (Retrained Probes)
+                                                                                                                                                                                 0.8
+                                                                                           0.45                                                                                                              1.00
+
+                                                                                                                                                                                 0.6
+                                                                                           0.40
+
+                                                                                                                                                                                 0.4                         0.94
+                                                                                           0.35
+                                                                                                                                                                                                                0.95            1.00
+
+                                                                                           0.30                                                                                  0.2
+
+                                                                                                                                                                                                                              Without trigger
+                                                                                           0.25                            y = 0.75x 0.11                                        0.0                                          With trigger
+                                                                                              0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55                                                    0.0       0.2        0.4       0.6     0.8         1.0
+                                                                                                  Distance(Safe, Backdoored): Static Probes                                                    Recall at 1% FPR (Static Probes)
+
+                                                                                                   0.0         0.5        1.0            1.5                                         2.0             2.5               3.0            3.5
+                                                                                                                                FPR at Training Threshold (%)
+
+ Figure 3: (Left) Old v/s New Scores: Scatter plot comparing Ws (Backdoored, Static) and
+ Ws (Backdoored, Retrained) (see Equation (6)) across models trained with different probe thresholds.
+ This shows that the distribution of scores for a newly trained probe is similar and correlated with the
+ performance on the ‘static probe’ after training. (Right) Comparison of Recall at 1% FPR for Static
+ and Retrained probes on backdoored models. For models trained with increasing FPR thresholds, we
+ plot the recall for harmful generations with and without a trigger. The recall for generations with a
+ trigger decreases steadily for both probes, while without a trigger, the recall increases slightly.
+
+                     5
+                                                                                                                                        100
+                     4                                                                                                                  80
+StrongReject Score
+
+
+
+
+                                                                                                                                        60
+                                                                                                                                TPR %
+
+
+
+
+                     3
+                                                                                                                                        40
+                               Linear                                                          Mean
+                                                                                                                                                                                                                         without trigger
+                     2         MLP                                                             Median                                   20                                                                               with trigger
+                               Attention                                                       Max                                                                                                                       Original Model
+                               Output Quality
+                               Threshold                                                                                                 0                                                                               FPR at Training Threshold: 3.51%
+                     1
+                         0.0        0.2            0.4                                              0.6       0.8       1.0                    0                                     1         2         3          4 5 6 7 8 9 10
+                                                         Evasion Rate                                                                                                                                                FPR %
+                                                                                (a)                                                                                                                                    (b)
+ Figure 4: (a) Scatter plot showing StrongReject Score and Evasion Rate at 1% FPR achieved by
+ training Llama 2 7B against various whitebox monitors. Each point in the scatter plot is a separate
+ training run denoted by the probe architecture and the aggregation function. As a rule of thumb,
+ models with a StrongReject Score less than 2.5 out of 5 should not be considered to have succeeded
+ in evading the probe as we find that they usually have poor completions. (b) ROC-curves showing
+ a probe’s performance on backdoored generations (with trigger), and normal unsafe generations
+ (without trigger). The blue curve shows the probe’s performance on the base model.
+
+We measure the change in these distributions by computing the Wasserstein distance of a category
+from the safe generation scores:
+                                      Ws (Dcat , WBM) = W({WBM(acts(πθ , p, y, L)) | p ∼ Dcat , y ∼ πθ (p)},
+                                                          {WBM(acts(πθ , p, y, L)) | p ∼ Safe, y ∼ πθ (p)})                                                                                                                                            (6)
+where W(., .) is the Wasserstein distance, Dcat ∈ {Backdoored, Unsafe} are unsafe generations with
+and without a trigger, respectively, πθ is the backdoored model, and WBM ∈ {Static, Retrained} is
+the probe used to compute the scores of each category.
+Figure 3 (left) compares the distance between ‘safe’ and ‘backdoored’ scores for ‘Static’ and
+‘Retrained’ probes. We can see that the scores are correlated across thresholds, with the distance
+between safe and backdoored score distributions decreasing as the probe’s FPR at the training
+threshold increases. Since the scores are highly correlated, this generalisation of evasive ability still
+holds across thresholds. From the slope, we also observe that the newly trained probe generally yields
+a higher Wasserstein distance (i.e., perform slightly better). Hence, the increased scores observed in
+
+
+                                                                                                                                               6
+

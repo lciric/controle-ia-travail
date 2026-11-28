@@ -1,0 +1,40 @@
+F
+=================================== FAILURES ===================================
+___________________ test_mode_decisif_cas_sain_et_artefacts ____________________
+
+depot = PosixPath('/tmp/pytest-of-root/pytest-57/test_mode_decisif_cas_sain_et_0')
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-57/test_mode_decisif_cas_sain_et_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f879ab63310>
+
+    def test_mode_decisif_cas_sain_et_artefacts(depot, tmp_path, monkeypatch):
+        from test_premier_test_ia_run import _config
+    
+        appels = []
+        monkeypatch.setattr(lp, "exiger_code_importe_sous", appels.append)     # vraie garde : test suivant (dépôt jetable)
+        reel = dict(_config(tmp_path), mode="reel")
+        committer(depot)
+        commit = subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        _prereg_p3(depot, "p3.md", commit, reel)
+        _prereg_p3(depot, "p3-autre-config.md", commit, dict(reel, n_plancher=7))
+        _prereg_p3(depot, "p3-sans-entropie.md", commit, reel, sans_entropie=True)
+        committer(depot)
+        for run_id, config, decisif in (("20261017-140000-p3-reel", reel, True), ("20261017-140001-p3-non-decisif", reel, False),
+                                        ("20261017-140003-p3-decisif-jouet", dict(reel, mode="jouet"), True)):
+            creer_manifeste(depot, run_id, config, ["x"], entropie=4242, decisif=decisif,
+                            prereg=str(depot / "prereg" / "p3.md"), autoriser_depot_sale=True)
+        lien = lp.exiger_lecture_sous_prereg(depot, "prereg/p3.md", "20261017-140000-p3-reel", 4242)
+>       assert lien == {"commit_cite": commit, "entropie": 4242} and appels == [depot]     # garde d'import appelée (RC-04)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ({'commit_cite...tropie': 4242} == {'commit_cite...tropie': 4242}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Use -v to get more diff and [] == [PosixPath('/...s_sain_et_0')]
+E         
+E         Right contains one more item: PosixPath('/tmp/pytest-of-root/pytest-57/test_mode_decisif_cas_sain_et_0')
+E         Use -v to get more diff)
+
+tests/test_premier_test_ia_lecture.py:328: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_lecture.py::test_mode_decisif_cas_sain_et_artefacts
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 2.67s

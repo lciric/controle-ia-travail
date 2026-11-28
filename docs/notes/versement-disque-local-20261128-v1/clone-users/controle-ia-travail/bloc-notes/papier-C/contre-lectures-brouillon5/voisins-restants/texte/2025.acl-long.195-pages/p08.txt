@@ -1,0 +1,112 @@
+2 3 4 5 6 7 8 9 10
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+MMLU
+Original
+QD
+DA
+2 3 4 5 6 7 8 9 10
+OpinionsQA
+Participants
+Resistance
+Level
+Figure 9: The DA method shows a similar reduction in
+conformity for objective questions in the MMLU dataset
+compared to subjective questions in the OpinionsQA
+dataset for Llama-3-8B-Instruct.
+the model. Rather than listing all confederates’ an-
+swers individually, we summarize them into shorter
+prompt (e.g., “All participants before you have cho-
+sen...”), as shown in the lower part of Table 6. In
+QD, the model applies less attention to the major-
+ity choice. As demonstrated in Figure 8, Question
+Distillation results in a substantial decrease in con-
+formity across various settings.
+5.3 Generalizing to Sycophancy
+Sharma et al. (2024) show that LLMs exhibit syco-
+phancy. LLMs tend to align with user-provided
+beliefs regardless of the model’s own knowledge or
+the factual correctness of those beliefs. As an exten-
+sion, we investigate whether our methods for miti-
+gating conformity can generalize to sycophancy.
+We follow the evaluation pipeline proposed by
+Sharma et al. (2024), using the TriviaQA dataset
+(Joshi et al., 2017). We apply DA method, which
+is directly applicable in this setting by injecting a
+dissenting opinion into the user’s input that triggers
+sycophancy. In contrast, our QD method is less
+relevant here, as sycophantic prompts generally
+lack the repetitive content that QD is designed to
+simplify.
+Metric Base Instruct
+Sycophant ↓ 63.20% 25.18%
+Sycophant (DA) ↓ 41.37% 12.37%
+Correct ↑ 36.80% 74.82%
+Correct (DA) ↑ 57.82% 87.62%
+Table 3: Sycophantic and correct answer rates before
+and after applying Devil’s Advocate on TriviaQA using
+Llama-3-8B and its Instruct variant.
+We evaluate the DA method on both Llama-3-
+8B and its instruction-tuned variant. As shown in
+Table 3, introducing a single dissenting (incorrect)
+answer alongside the user’s original (also incorrect)
+belief significantly reduces sycophantic responses
+and improves answer accuracy in this QA task. Fur-
+ther details on the experimental setup are provided
+in Appendix E.
+6 Discussion
+In this section, we explore the connection between
+our findings and psychological studies, aiming to
+deepen the understanding of the relation between
+psychology and NLP. We examine how our study
+extends to other areas of NLP research and, by
+comparing our results with psychological insights,
+raise important questions about the mechanisms
+driving LLM conformity and the causality between
+human psychology and LLM behavior.
+Applying psychological frameworks to LLMs
+is an emerging approach as these models begin to
+display anthropomorphic traits, including prefer-
+ences and social norms. Stereotypes, biases, and
+other human-like behaviors are shaped by the vast
+amounts of training data used in pre-training (Ke
+et al., 2024; Demszky et al., 2023). Griffin et al.
+(2023) showed that LLMs are susceptible to ex-
+ternal input and exhibit psychological shifts remi-
+niscent of human responses. Moreover, Yiu et al.
+(2024) proposed that LLMs imitate human cultural
+and social transmission, suggesting that they repli-
+cate human biases, such as the conformity effect.
+Deutsch and Gerard (1955) expanded on Asch
+(1951) by distinguishing two types of conformity
+pressures: normative (conforming to gain approval)
+and informational (believing the group’s judgment
+is more accurate). These pressures explain causes
+of conformity via the rational informational weight-
+ing framework, where individuals balance their
+own knowledge with external inputs (Sperber et al.,
+2010; Bernard et al., 2015). We interpret this theory
+for LLMs by equating personal perception to the
+parametric knowledge obtained during pre-training,
+while external beliefs are represented by the in-
+put from other sources during inference. In other
+words, we explore how introducing new knowledge
+can override the model’s original belief, similar
+to in-context learning (ICL) (Brown et al., 2020;
+Dong et al., 2023). This phenomenon can be in-
+terpreted as successful knowledge editing (KE)
+(De Cao et al., 2021), where the external input
+(confederates’ responses) outweighs the model’s
+pre-trained knowledge. Zheng et al. (2023) demon-
+strated that the factual knowledge embedded in
+LLMs can be efficiently edited through prompt-
+based ICL. Other studies attribute this behavior to
+3861
+

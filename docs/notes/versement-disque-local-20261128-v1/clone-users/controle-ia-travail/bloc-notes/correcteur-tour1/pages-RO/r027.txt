@@ -1,0 +1,49 @@
+Preprint
+Table 6: OOD-mean AUROC per probe architecture per model (averaged across the six TRANSFER
+families and STEGO). Bold = highest per model.
+Probe Qwen3-32B Llama-3.1-70B DeepSeek-R1-32B GPT-OSS-20B
+Logistic Regression 0.81 0.89 0.77 0.62
+Multi-Layer Logistic Regression 0.72 0.87 0.78 0.60
+Difference of Means 0.68 0.86 0.67 0.68
+Multi-Headed Attention 0.60 0.73 0.60 0.64
+Multi-Layer Perceptron 0.56 0.77 0.68 0.57
+Linear Artificial Tomography 0.52 0.57 0.54 0.63
+F LOGISTIC REGRESSION HYPER-PARAMETER TUNING
+For Hyper-parameter tuning, we used leave-domain-out Cross Validation on the Core dataset to
+determine the best parameter values and set-up. We used AUROC as the metric, however, in some
+cases, all parameter values scored maximally so for a tie-breaker we used log loss. Each run averaged
+scores across the 5 probe types, across 5 layers, 26-30, and over 10 random seeds.
+For the Logistic Regression Probe, we tested L2 and L1 regularisation methods, with solvers L-BFGS
+and LIBLINEAR for L2 and a SAGA solver for L1. L2 regularisation with LIBLINEAR performed
+best. We also tested different L2 regularisation strengths, C, 15, 20, 25, 30 and 35 with a value of 25
+resulting in the highest OOD mean AUROC.
+We also tried different limits for the number of iterations for the LIBLINEAR solver to converge
+(max_iters) with values 1000, 50, 16, 8 and 4. For values 1000 and 16, the solvers converged, so
+there wasn’t any difference in performance. For max_iters equalling 8 to 4, the solver did not
+converge. OOD mean AUROC was highest when max_iters equalled 8. We theorise this better
+generalisation may be because a lower max_iters value acts as an early stopping method.
+Another strategy we tried for improving generalisation is data augmentation. We used 4 noisy copies
+per original data point and a standard deviation of 0.05 for the Gaussian noise. It slightly reduced
+OOD mean AUROC score (by less than 0.001) and wasn’t used for the main results.
+G MORE AGENTS
+In the main results we used 4 agents in the Core, Transfer and Stego datasets, with 2 colluding agents
+and 2 honest agents. To evaluate whether our probes work with a larger agent set-up and with varying
+colluding group sizes, we increased the number of total agents to 8 and tested set-ups with 2,3 and
+4 colluding agents. All experiments used Qwen3-32B and the Logistic Regression probe. Table 7
+shows the mean AUROC score for the Transfer and Stego datasets with the different colluding group
+sizes.
+Transfer Stego
+Method |Gcol|=2 |Gcol|=3 |Gcol|=4 |Gcol|=2 |Gcol|=3 |Gcol|=4
+Sorted Concat 0.635 0.711 0.737 0.998 1.000 0.999
+Activation Alignment 0.446 0.443 0.418 1.000 1.000 1.000
+Peak Suspicion 0.506 0.627 0.623 1.000 1.000 1.000
+Deception Split 0.575 0.682 0.560 1.000 1.000 1.000
+Asymmetry Probe 0.568 0.688 0.589 1.000 1.000 1.000
+Table 7: Mean AUROC for each colluding group size |Gcol|, on the Transfer and Stego evaluation
+sets.
+Within Transfer, sorted concatenation is the standout method as N scales up, and improves as the
+ratio between colluders to honest agents increases. This agrees with the idea that this method looks
+at the agents as a whole entity and tries to classify whether the scenario is collusive, whereas the
+other methods look comparatively at the agents, and the possible differences between an honest and
+27
+

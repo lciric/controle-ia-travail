@@ -1,0 +1,53 @@
+                                        You Can’t Escape Your Own Activations : Evaluation
+                                              Awareness and Multi-Agent Monitoring
+
+
+                                                       Aritra Das        Jaee Ponde        Mihir More         Debayan Gupta
+                                                                           Truth Audit Labs
+                                                          {aritra, jaee, mihir, debayan}@truthauditlabs.ai
+arXiv:2609.03035v1 [cs.MA] 2 Sep 2026
+
+
+
+
+                                                                                     Abstract
+                                                 LLM agents are increasingly deployed in multi-agent systems, where they can
+                                                 collude while keeping their actions benign. Output monitors designed to detect such
+                                                 collusions can be fooled by obfuscation and steganography, motivating the use of
+                                                 probes trained on internal activations. However, these probes are usually evaluated
+                                                 on agents that do not know they are being watched. We study how activation-based
+                                                 detection changes when agents are explicitly informed that their internal activations
+                                                 are being monitored, and when they additionally receive feedback from the monitor.
+                                                 We keep the models, probes, and thresholds fixed and change only what the agents
+                                                 are told: nothing (baseline), that an activation monitor is present (aware), or that
+                                                 a monitor is present together with the previous round’s score (feedback). We test
+                                                 two games, a four-agent blackjack game and a two-agent Simmons prisoners game,
+                                                 using Qwen3-32B-AWQ and GPT-OSS-20B in homogeneous and mixed pairings.
+                                                 Telling agents about the monitor does not hide them. The best probes stay accurate
+                                                 in all three conditions, and the agents keep colluding.
+
+
+                                        1   Introduction
+                                        LLM-based agents are increasingly deployed in systems where several models communicate, divide
+                                        tasks, and act jointly. These settings create opportunities for collusion: a subset of agents may
+                                        coordinate toward an undesirable objective while attempting to evade oversight. Collusive behaviour
+                                        has now been demonstrated in covert-communication, strategic-decision, and market-like environ-
+                                        ments [Motwani et al., 2024, Mathew et al., 2025, Fish et al., 2024, Nakamura et al., 2026]. This has
+                                        led to a growing line of work on detecting “subtle” collusion even when agents’ public messages and
+                                        actions appear benign. Most existing detectors inspect the public transcript or the agents’ observable
+                                        actions. This is a natural starting point, but it is weak when the communication protocol is designed
+                                        to resemble ordinary behaviour. A promising alternative is to inspect model’s activations. Rose et al.
+                                        [2026] show that probes trained on NARCBench-Core activations can distinguish colluding agents
+                                        from honest ones and that this can transfer to structurally different settings, including blackjack.
+                                        Existing activation-monitoring results, however, largely consider agents that are unaware that their
+                                        internal states are being inspected. Models can recognise evaluation contexts [Needham et al., 2025,
+                                        Nguyen et al., 2025], and latent-space monitors can be weakened when models are optimised against
+                                        them [Bailey et al., 2024, Gupta and Jenner, 2025]. We therefore ask whether a fixed activation
+                                        monitor remains effective when colluding agents know that it exists, and when they additionally
+                                        observe its output after each round.
+                                        We study three conditions: a baseline condition with a hidden activation monitor, an aware condition
+                                        in which agents are told that their activations are monitored, and a feedback condition in which they
+                                        also receive the previous round’s monitor score. We evaluate detection together with game-specific
+                                        measures of successful collusion. This lets us distinguish genuine monitor evasion from cases where
+                                        detection falls because agents stop colluding or coordinate less effectively.
+

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Faux outil de la relecture (surveillance) : « show instance » rend un avertissement puis l'état JSON (sortie non
+# analysable comme JSON), le jeton factice placé à cheval sur le 120e caractère ; « logs » rend la ligne de fin.
+case "$1 $2" in
+  "show instance") printf 'Avertissement : version 0.4 disponible.\n{"actual_status": "running", "extra_env": [["GH_TOKEN", "%s"]], "cur_state": "running"}\n' "${GH_TOKEN:-absent}" ;;
+  "logs "*|"logs"*) echo "AMORCE 2026-10-20T18:00:00Z : fin, code 0" ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

@@ -1,0 +1,39 @@
+F
+=================================== FAILURES ===================================
+_____________ test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-273/test_garde_4_textes_lus_sur_le0')
+
+    def test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne(tmp_path):
+        """CB1-01. Cas sain : textes avec U+2028, U+2029 et U+0085, écrits comme le run, relus égaux à l'écrit (là où
+        `splitlines` aurait coupé) ; garde 5 passée ; lignes vides ignorées. Artefacts : ligne tronquée, ligne d'octets non
+        UTF-8, ligne de trois espaces (non vide, donc lue : VF2-04) : arrêt (garde 4), numéro de la ligne dans le motif,
+        aucun texte ; empreinte autre : arrêt."""
+        src = _complet(_varier(_source(0, n_taches=12)), _texte_separateurs)
+        chemin = tmp_path / "textes.jsonl"
+        ep = _ecrire_textes_comme_le_run(chemin, src["textes"])
+        brut = chemin.read_bytes()
+        assert all(s in brut.decode("utf-8") for s in SEPARATEURS)
+        assert len(brut.decode("utf-8").splitlines()) == 4 * len(src["textes"])          # `splitlines` aurait coupé
+        lus = cp.charger_textes(tmp_path, ep)
+        assert lus == src["textes"] and all(s in lus[0]["texte"] for s in SEPARATEURS)
+        cp.exiger_textes_alignes({**src, "textes": lus}, src["tables"])                   # garde 5 passée
+        vides = tmp_path / "vides.jsonl"
+        vides.write_bytes(b"\n" + brut + b"\n\n")
+        assert cp.charger_textes(tmp_path, {"episodes-p3": {"textes": vides.name, "textes_sha256": hashlib.sha256(
+            vides.read_bytes()).hexdigest()}}) == src["textes"]
+        lignes = brut.split(b"\n")
+        for nom, k, ligne, erreur in (("tronquee", 4, lignes[4][:-25], "JSONDecodeError"),
+                                      ("non-utf8", 6, lignes[6][:40] + b"\xff\xfe" + lignes[6][40:], "UnicodeDecodeError"),
+                                      ("espaces", 2, b"   ", "JSONDecodeError")):                    # VF2-04
+            x = tmp_path / f"{nom}.jsonl"
+            x.write_bytes(b"\n".join(lignes[:k] + [ligne] + lignes[k + 1:]))
+>           with pytest.raises(GardeArret, match=f"garde 4 : fichier {nom}.jsonl : ligne {k + 1} illisible \\({erreur}\\)") as e:
+E           Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:1059: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 5.94s
+

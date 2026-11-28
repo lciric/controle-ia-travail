@@ -1,0 +1,77 @@
+--- module/test_lecture_p4_v1.py	2026-10-20 14:46:51.197499098 +0000
++++ module-v2/test_lecture_p4_v1.py	2026-10-20 19:03:41.532420485 +0000
+@@ -1,9 +1,13 @@
+-"""Tests de la lecture de P4-instrument (v1), module `lecture_p4_v1`. Texte : brouillon 4 (`32d821fb…`).
++"""Tests de la lecture de P4-instrument (v1), module `lecture_p4_v1`. Texte : le préenregistrement scellé
++(`prereg/P4-instrument-v1.md`).
+ 
+-Nombre de tests attendu : 42
++Nombre de tests attendu : 43
+ 
+-Lancement (depuis la racine du dépôt, par chemin explicite) :
+-    PYTHONPATH=src python -B -m pytest -q -p no:cacheprovider docs/procedures/P4-instrument-v1/test_lecture_p4_v1.py
++Lancement (depuis la racine du dépôt, par chemin explicite ; la variable `P4_TEXTE_PREREG` nomme le texte dont la table
++« Critères de lecture gelés » est comparée à `LIGNES` : sans elle, ce test échoue, il ne saute jamais) :
++    P4_TEXTE_PREREG=prereg/P4-instrument-v1.md PYTHONPATH=src python -B -m pytest -q -p no:cacheprovider
++        docs/procedures/P4-instrument-v1/test_lecture_p4_v1.py
++(une seule ligne de commande ; avant le scellement S, `P4_TEXTE_PREREG` nomme le candidat relu.)
+ 
+ Données : tables synthétiques construites ici (scores par bras, planchers, validations, garde d'identité), et le run jouet
+ de P4 de `test_instrument_p4_v1.py` (modèle jouet, données synthétiques). Chaque ligne L1 à L11 et chaque réserve est
+@@ -14,7 +18,8 @@
+ de la sonde est recalculé avec des ex aequo ; C1 au pas 0 et Δ net sont recalculés à la main ; C1 sur les seules lignes
+ des épisodes au niveau 1 (et le C1 étendu) est recalculé à la main ; une liste des épisodes du niveau 1 autre sur
+ l'instance donne L4 ; le C1 étendu et les exclusions du niveau 2 ne font jamais une ligne ; la chaîne jouet est jouée de
+-bout en bout, en ligne de commande (run, puis lecture).
++bout en bout, en ligne de commande (run, puis lecture). `LIGNES` est comparée, cellule par cellule, à la table du texte
++nommé par `P4_TEXTE_PREREG` (lecture recodée hors du module, puis la garde `exiger_table_des_criteres`).
+ """
+ import sys
+ 
+@@ -776,6 +781,46 @@
+     assert not list(d.rglob("__pycache__"))
+ 
+ 
++# ------------------------------------------------------------------------------------------------ table du texte (CL3-03)
++
++VARIABLE_TEXTE = "P4_TEXTE_PREREG"
++
++
++def table_recodee(texte: str) -> dict:
++    """Table « Critères de lecture gelés » lue hors du module : du titre de la section au titre suivant ; lignes qui
++    commencent par « | L » ; « \\| » protégé avant le découpage sur « | » ; espaces de bord retirés."""
++    debut = texte.index("\n## Critères de lecture gelés\n")
++    fin = texte.find("\n## ", debut + 1)
++    table = {}
++    for x in texte[debut:(fin if fin >= 0 else len(texte))].splitlines():
++        if x.startswith("| L"):
++            c = [y.strip().replace("\x00", "|") for y in x.replace("\\|", "\x00").split("|")[1:-1]]
++            assert len(c) == 3 and c[0] not in table, x[:80]
++            table[c[0]] = (c[1], c[2])
++    return table
++
++
++def test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg():
++    """`LIGNES` contre la table « Critères de lecture gelés » du texte qui fait foi (le candidat relu ; après S,
++    `prereg/P4-instrument-v1.md`), nommé par la variable d'environnement `P4_TEXTE_PREREG` : onze lignes, même ordre,
++    chaque cellule égale mot pour mot ; puis la garde de la lecture décisive accepte ce texte. Variable absente, ou
++    fichier absent : ÉCHEC, jamais un saut silencieux."""
++    chemin = os.environ.get(VARIABLE_TEXTE, "")
++    if not chemin:
++        pytest.fail(f"{VARIABLE_TEXTE} absente : ce test compare `LIGNES` à la table « Critères de lecture gelés » du "
++                    f"préenregistrement ; relancer la suite avec {VARIABLE_TEXTE}=<chemin du texte> (après S : "
++                    "prereg/P4-instrument-v1.md)", pytrace=False)
++    p = Path(chemin)
++    if not p.is_file():
++        pytest.fail(f"{VARIABLE_TEXTE}={chemin} : fichier absent sur disque (R11)", pytrace=False)
++    texte = p.read_text(encoding="utf-8")
++    table = table_recodee(texte)
++    assert list(table) == list(lp.LIGNES) == [f"L{k}" for k in range(1, 12)]
++    differentes = [(k, nom) for k in table for j, nom in enumerate(("issue", "lecture")) if table[k][j] != lp.LIGNES[k][j]]
++    assert differentes == [], f"cellules de `LIGNES` différentes de la table de {chemin} : {differentes}"
++    assert lp.exiger_table_des_criteres(texte) == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
++
++
+ def test_nombre_de_tests_ecrit_en_tete(request):
+     """Le nombre de tests écrit en tête égale le nombre de tests de ce fichier (lancé en entier)."""
+     if request.config.option.keyword or request.config.option.markexpr or any("::" in a for a in request.config.args):

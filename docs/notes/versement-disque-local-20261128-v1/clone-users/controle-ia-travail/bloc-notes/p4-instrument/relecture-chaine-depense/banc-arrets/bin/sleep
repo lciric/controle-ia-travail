@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# faux sleep : journalise la durée demandée et le temps qui reste avant le plafond, puis rend la main (ou échoue comme le vrai)
+echo "sleep $* ; reste avant le plafond : $(( ${FAUX_PLAFOND:-0} - $(date -u +%s) )) s" >> "${FAUX_JOURNAL:?}"
+[[ "$1" =~ ^[0-9]+$ ]] || { echo "sleep: invalid time interval '$1'" >&2; exit 1; }
+exit 0

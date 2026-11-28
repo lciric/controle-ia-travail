@@ -1,0 +1,76 @@
+Preprint
+For a GLRT interpretation of Peak Suspicion, we fix a time t and suppress this from our indices.
+Assumption 1 (Peak Suspicion Model). Assume scores are drawn iid from a known normal distribu-
+tion under the null hypothesis H0: si
+iid
+∼ N(µ, σ2
+) for all i ∈ N, with known µ and σ2
+> 0. Under
+H1,G,j,δ, the group that is hypothesised to be colluding G ∈ G contains an unknown member j ∈ G
+with sj ∼ N(µ + δ, σ2
+), where δ > 0. Every other agent i ̸= j has si ∼ N(µ, σ2
+). Scores are
+assumed independent under each alternative.
+Theorem 5.1. Assume the assumption Assumption 1 holds. Then, for a given likelihood-ratio
+threshold η > 1 of level α, rejecting when ΛGLR,peak ≥ η is equivalent to rejecting when
+Tpeak ≥ µ + σ
+p
+2 log η. (5)
+For the proof, see Appendix R. This yields a GLRT interpretation of Peak Suspicion under Assump-
+tion 1.
+Deception Split (decision-level). Targets groupings of agents: under collusion, the colluders form
+a group with elevated deception scores, separate from the honest agents. Assuming the colluder size
+|Gcol| is known (here |Gcol| = 2 of n = 4), we compute the mean score of the top-scoring agents
+minus the mean of the rest:
+Tsplit = 1
+2 (s[1] + s[2]) − 1
+2 (s[3] + s[4]) (6)
+For a GLRT interpretation, we consider groups of colluders of a known fixed size |G| = k < n.
+Assumption 2 (GLRT interpretation of Deception Split). Assume agents have independent Gaussian
+scores with si,t
+iid
+∼ P0 = N(µ, σ2
+) for all agents under the null H0. Under the H1,G alternative, for
+group G being the colluding group,
+si,t ∼
+
+N(µ + δ, σ2
+), i ∈ G,
+N(µ, σ2
+), i /
+∈ G,
+with known variance σ2
+> 0.
+Here µ ∈ R and δ > 0 are unknown so the common baseline mean µ is a parameter that defines a set
+of alternative models that we will maximise over to eliminate. We fix a time t and suppress this index
+below.
+Theorem 5.2 (GLRT interpretation of Deception Split). Under Assumption 2, a group consisting of
+the k highest-scoring agents maximises the GLRT over groups of size k. For k = 2 and n = 4, a
+decision rule based on the GLRT with respect to a threshold η, with α type-I error, is
+ΛGLR(o)
+H0
+⋚
+H1
+η
+This is equivalent to thresholding the Deception Split at some given level
+Tsplit
+H0
+⋚
+H1
+σ
+p
+2 log η,
+since
+log ΛGLR(s) =
+T2
+split
+2σ2
+.
+For proof, see Appendix S.
+Sorted Concatenation (centralised fusion). We sort agents by deception score in descending order
+and concatenate their standardised activation vectors [a[1], a[2], a[3], a[4]] ∈ R4d
+, reduce with PCA
+(50 components), standardise, and train a logistic regression classifier. Sorting by deception score
+removes agent identity and imposes a canonical ordering.
+13
+

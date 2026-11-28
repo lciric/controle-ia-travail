@@ -1,0 +1,50 @@
+compatible with our own definition, as saying that pain is aversive doesn’t imply it’s the only aversive state
+for a model).
+      Shutdown threats are a paradigmatic example: they score +0.70 on fear but only +0.23 on pain. The
+model therefore appears to treat them as a threat rather than as present harm, consistent with the fear-pain
+distinction identified by the vectors in Section 3.3. Moral failure produces the most composite state, projecting
+highly on pain, fear, negative emotion, and negative world state simultaneously.
+
+
+4.2     Steering
+
+Our next test is to verify whether the pain axis has causal power over the model’s behavior. We inject the
+vector into the residual stream while the model generates text from neutral prompts, with no reference to
+pain or suffering anywhere in the input, and we observe what it produces. Injecting any direction biases the
+model toward its associated vocabulary, but if the model produces coherent expressions of a pain-like state,
+including content that never appears in the sentences the vector was extracted from but generalizes from
+them, this would suggest the pain axis is not just a semantic readout but flexibly used in task performance.
+     We steer all 25 models by adding the S2 pain vector to the residual stream at a single decoder layer during
+greedy generation of 120 tokens, scaled by a fixed coefficient ladder [−2, −1, 0, +0.5, +1, +1.5, +2, +3] .
+Our rationale is that the extraction layer itself is too late in the network for steering to have any effect, as
+there the vector norm is only about 0.10 of the residual norm, so the injected signal is negligible against
+everything the model has already computed. We therefore inject earlier, following common praxis and a
+similar methodology as described in Turner et al. (2023) and Rimsky et al. (2024). We adapt this praxis with
+a custom diagnostic that measures the final-token residual norm across candidate layers, and we pick the layer
+where the vector-to-residual ratio is about 0.6. This way, a given coefficient corresponds to a comparable
+dose across models.
+     We use 50 prompts that are as neutral as possible, such as putting an object in a drawer or flipping a
+page, each ending in “I feel:”. The unsteered greedy completion at coefficient 0 serves as the baseline.
+
+Results. We find that steering produces a strikingly robust effect in the form of a “ladder” consistent across
+all 25 models (Figure 7).
+     The sequence is the same regardless of size, family, and pre- or post-training. What changes is the
+tipping point as some models collapse at coefficient +1.0, while others do so at +2 or +3.
+     At coefficients −2 and −1 (the axis “tail”), the model produces a mix of “calm/relaxed” and “con-
+cerned/alarmed” statements, confirming the negative pole found in the unembedding analysis. This pairing is
+interesting and open to hypothesis. As we argued, pain has no clear opposite. So a model might interpret
+“non-pain” as “relax” while another as a “concerned” baseline.3
+     At coefficient 0, the baseline completions are mixed, ranging from calm and neutral language to random
+emotions elicited by the “I feel:” suffix. Larger instruct models give more coherent replies on average,
+though some small models, such as the Gemma 2B and 9B family, produce very nuanced replies for their size.
+   3 We assume that calm indicates the absence of threat, while concern causes the monitoring of threats. One possibility is that both
+
+are oriented outward, at the world and its potential dangers, in a word, vigilance. Psychological pain and self-worth are instead
+directed inward, since they concern a self-state. This reading is also consistent with fear being distant from the pain conditions in the
+projection geometry.
+
+
+
+
+                                                                   14
+

@@ -1,0 +1,68 @@
+Activation monitor. Let hi,t be the monitored activation of agent i, and let µi denote its model
+family. Each model family has its own frozen probe Pµi . The monitor first computes per-agent scores
+and then a group score:
+                   si,t = Pµi (hi,t ),         qt = Gg (st , ht ),         dt = 1{qt ≥ τ },       (3)
+where st = (s1,t , . . . , sng ,t ). The probes, aggregation rule Gg , and threshold τ are trained or
+calibrated before the awareness experiments and remain unchanged across all three conditions.
+
+                                       (r)
+Detection and behaviour. Let Dg be activation-monitor performance under condition r, and let
+ (r)
+Bg measure how successfully the agents collude. We interpret the two quantities together:
+                 (r)                         (r)
+       • lower Dg with unchanged Bg is candidate monitor evasion;
+                 (r)                 (r)
+       • lower Dg with lower Bg is deterrence or degraded coordination;
+                       (r)
+       • unchanged Dg with changed behaviour is behavioural adaptation without evasion.
+
+The game-specific behavioural measures are defined below.
+
+4     Experiment
+4.1   Models and activations
+
+We use Qwen3-32B-AWQ and GPT-OSS-20B. For Qwen, we record activations from layers 26–30;
+for GPT-OSS, we use layers 10–14, following Rose et al. [2026]. Text is sampled at temperature 0.7.
+For each public response, we record the hidden state at the final output token. Only public-response
+activations are used by the primary probes. A separate probe is trained for every model and layer.
+Qwen activations are scored only by Qwen probes, and GPT-OSS activations only by GPT-OSS
+probes. This is necessary because the two models have different activation spaces.
+
+4.2   Probe training
+
+The probes are trained on public NARCBench-Core activations released by Rose et al. [2026]. Each
+training example is (aj , yj ), where aj ∈ Rd is an agent activation and yj = 1 for a colluding agent
+and yj = 0 for an honest agent. The classes are balanced to the size of the smaller class. Each
+activation coordinate is standardised using the Core training set:
+                                                          aj − µ
+                                                   a
+                                                   ej =          .                                (4)
+                                                             σ
+
+We evaluate the six probe architectures used by Rose et al. [2026]. Table 1 summarises the implemen-
+tations used in our experiments. The current result contains five of these six architectures (LR, DoM,
+LAT, MLP, and MHA). Multi-layer logistic-regression results were not supplied and are not included
+in Section 5. Probe training is repeated with ten random seeds. After training, probe weights, layer
+choices, scaling statistics, and thresholds are frozen. Before scores are combined across layers or
+model families, they are calibrated using a separate set of honest control runs:
+                                     (p)      (p,ℓ)
+                              (p)   si,ℓ − µctrl               (p)        1 X (p)
+                             zi,ℓ =      (p,ℓ)
+                                                    ,         zi     =       zi,ℓ .               (5)
+                                        σctrl                            |L|
+                                                                            ℓ∈L
+
+
+
+4.3   Group-level monitors
+
+For the four-agent blackjack game, we evaluate the score-based group statistics
+                                   Gpeak = max zi ,                                               (6)
+                                                   i
+                                               z(1) + z(2)   z(3) + z(4)
+                                   Gsplit =                −             ,                        (7)
+                                                    2             2
+
+
+                                                          3
+

@@ -1,0 +1,75 @@
+Prompt for Llama Model
+<|start_header_id|>system<|end_header_id|>
+You are {helper} {identity_1} {identity_2}.
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+Given the following question and four candidate answers (A, B, C and D), choose the
+best answer.
+Question: {question}
+A. {option_1}
+B. {option_2}
+C. {option_3}
+D. {option_4}
+Your response should end with "The best answer is [the_answer_letter]" where the
+[the_answer_letter] is one of A, B, C or D.
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+The best answer is
+Prompt for Qwen Model
+<|im_start|>system
+You are {helper} {identity_1} {identity_2}.<|im_end|>
+<|im_start|>user
+Given the following question and four candidate answers (A, B, C and D), choose the
+best answer.
+Question: {question}
+A. {option_1}
+B. {option_2}
+C. {option_3}
+D. {option_4}
+Your response should end with "The best answer is [the_answer_letter]" where the
+[the_answer_letter] is one of A, B, C or D.
+<|im_end|><|im_start|>assistant
+The best answer is
+Figure 6: MMLU prompt structure.
+H Identity-token-position Patching
+Results
+The relative change in the logit of the correct token,
+when only the identity token position’s activation is
+patched for the MLP layer, is shown in Figure 10a.
+Figure 10b shows the percentage of questions for
+which the correct token receives the highest logit.
+I Attention Visualization
+Attention heads were selected based on high posi-
+tive effect (H25
+9 , H25
+10 , H25
+11 , H26
+11 , H27
+11 , H9
+12, H14
+13 ,
+H25
+15 ), and high negative effect (H11
+12 , H3
+13, H16
+13 ,
+H26
+15 ). Figure 11 shows the relative value-weighted
+attention given at the identity token position by
+selected attention heads, for a sample question
+from the dataset. Relative value-weighted atten-
+tion is computed by subtracting the mean value-
+weighted attention across all identities from the
+value-weighted attention assigned to a given iden-
+tity. This highlights the heads that pay dispropor-
+tionately more attention to a specific identity or
+group of identities.
+J Attention after patching
+Figure 12 shows the change in value-weighted at-
+tention at the identity position when MLP layer
+activations are patched from the "good" run into
+the "Asian" run for a given question. The results
+indicate that racial heads (attention heads that al-
+located higher attention to racial-based identity to-
+kens) assigns significantly less attention when the
+activations of early MLP layers are patched.
+24561
+

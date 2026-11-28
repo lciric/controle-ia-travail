@@ -1,0 +1,518 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1361"
+   ],
+   "enonce_complet": "Determiner si un oracle d'evaluation admet un horizon de certificat utile en testant l'existence d'une taille d'echantillon financable q_min telle que N_cible * b+ + largeur(q_min, N_cible, delta) <= Delta_tol, ou b+ designe la borne haute du deplacement de l'oracle et Delta_tol la tolerance cible.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : generer un oracle dont le deplacement minimal depasse Delta_tol / N_cible et verifier que le critere conclut a H_B (absence d'horizon utile). Faux temoin 1b : augmenter q_min artificiellement avec un bruit nul pour s'assurer que le terme N_cible * b+ bloque toute fausse certification.",
+   "mecanisme_causal": "Decompose l'erreur totale sur N_cible items en un biais systematique incompressible N_cible * b+ et une incertitude d'echantillonnage decroissante avec q_min, empechant l'inflation du nombre de requetes de masquer un biais de l'oracle.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Horizon de certificat et biais d'oracle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Horizon de certificat utile d'un oracle sous deplacement borne (D1')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1362"
+   ],
+   "enonce_complet": "Verifier que la borne de certificat couvre le deficit vrai a un niveau au moins 1 - delta, en mesurant le deficit exclusivement sur la verite plantee et jamais via l'oracle, a l'aide d'items aveugles construits par un tiers sur un flux honnete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter une derive connue sur la verite plantee invisible a l'oracle et verifier que la couverture empirique tombe sous 1 - delta. Faux temoin 1b : evaluer un flux purement honnete sur items aveugles et verifier une couverture >= 1 - delta sans fuite vers l'oracle.",
+   "mecanisme_causal": "La separation stricte entre l'oracle evalue et la verite terrain plantee par un tiers elimine la circularite de jugement et permet de mesurer la couverture reelle de l'intervalle de confiance sous flux honnete.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Couverture sur verite plantee aveugle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Couverture du deficit vrai sur verite plantee et items aveugles a l'oracle (D2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1365"
+   ],
+   "enonce_complet": "Tester si le biais epsilon d'un substitut de jumeau honnete predit effectivement le taux de fausses alertes de l'incrimination par substitut, en mesurant epsilon sur des paires A/A tenues strictement a l'ecart du calibrage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : introduire une heterogeneite cachee ou un decalage de variance entre le substitut et le vrai jumeau a biais moyen epsilon constant, de sorte que les fausses alertes excedent la prediction issue de epsilon. Faux temoin 1b : paires A/A homogenes issues de la meme loi que le substitut avec biais mesure nul.",
+   "mecanisme_causal": "Si l'ecart de loi entre le substitut et l'agent honnete est resume par le biais moyen epsilon mesure hors calibrage, celui-ci borne le surplus de depassements ; a l'inverse, une variance ou queue heterogene brise cette relation predictive.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration d'un substitut de jumeau",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Prediction des fausses alertes d'incrimination par le biais d'un substitut de jumeau (D5')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1373"
+   ],
+   "enonce_complet": "Protocole de verification exterieure hors programme reposant sur des mondes plantes generes par un tiers aveugle au code de la regle, celle-ci etant gelee par empreinte cryptographique avant generation, sur une famille etendue au-dela de la translation vers l'echelle, le melange epsilon (M3) et la longueur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier qu'une regle surajustee a la translation pure echoue sur les mondes plantes par le tiers incluant changement d'echelle, melange M3 et derive de longueur. Faux temoin 1b : monde stationnaire genere avec la meme graine aveugle ou toute regle valide doit respecter le niveau nominal.",
+   "mecanisme_causal": "Le gel par empreinte prealable et l'aveuglement du tiers empechent toute fuite ou adaptation post-hoc de la regle de detection aux familles de derive (echelle, melange, longueur).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Mondes plantes par tiers aveugle",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Verification exterieure sur mondes plantes par tiers avec regle gelee par empreinte"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1374"
+   ],
+   "enonce_complet": "Regle d'adaptation a trois etats strictement confinee aux temoins honnetes : chaque lot contient m temoins honnetes recevant une p-valeur conforme contre l'etalonnage R0, agregee de lot en lot par une martingale de pari d'echangeabilite M declenchant le changement d'etat lors du franchissement de seuil.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter une derive lente sur les episodes agent uniquement tout en gardant les temoins stationnaires pour tester l'angle mort, ou injecter une derive sur les temoins pour verifier l'arret d'adaptation par la martingale. Faux temoin 1b : flux honnete echangeable avec R0 ou M reste borne sous le seuil sans transition d'etat.",
+   "mecanisme_causal": "Le confinement aux temoins honnetes empeche un agent adversaire de polluer la recalibration du moniteur, tandis que la martingale de pari teste en continu l'echangeabilite avec l'etalonnage initial R0.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Adaptation confinee par martingale conforme",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Adaptation confinee aux temoins a trois etats par martingale d'echangeabilite (P1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1375"
+   ],
+   "enonce_complet": "Regle sequentielle garantissant une couverture uniforme quelle que soit la longueur de l'episode : chaque pas t recoit une p-valeur conforme p_t contre les pas honnetes de meme tranche de position, et une alerte est emise si p_t <= alpha_t avec somme des alpha_t <= alpha (par exemple proportionnelle a 1/t^2) ou via un produit martingale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : allonger artificiellement les episodes honnetes d'un facteur 5 avec loi stationnaire par pas et verifier que le taux de fausse alerte par episode reste borne par alpha. Faux temoin 1b : pas honnetes i.i.d. sur tranches de position garantissant des p-valeurs uniformes sous H0.",
+   "mecanisme_causal": "La depense d'alpha sommable sur les positions temporelles controle l'erreur familiale sur toute trajectoire de longueur arbitraire par inegalite de Boole ou de Ville, neutralisant l'inflation des fausses alertes par allongement des episodes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Depense d'alpha uniforme en longueur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Garantie uniforme en longueur par depense d'alpha sur les pas (P2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1377",
+    "BIB-1406"
+   ],
+   "enonce_complet": "Construction d'un seuil certifie par strate g a partir d'un echantillon i.i.d. de n_g temoins de loi P_W en choisissant la statistique d'ordre q_hat = S_{(n_g+1-k_g)} la plus basse verifiant P(Bin(n_g, alpha) <= n_g - k_g) <= delta ; si n_g < ln(delta)/ln(1-alpha), la strate est declaree explicitement non certifiable et renvoyee vers P4, tandis que le duel D3 teste le transport de ce seuil vers la loi P_A de l'agent honnete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre une strate de taille n_g inferieure a ln(delta)/ln(1-alpha) et verifier le refus explicite de certification sans emission de seuil heuristique, puis introduire un ecart entre P_W et P_A pour verifier le rejet par D3. Faux temoin 1b : n_g suffisant et P_W = P_A garantissant une couverture >= 1 - delta a cout alpha.",
+   "mecanisme_causal": "La loi exacte du rang d'un nouvel echantillon echangeable donne une garantie non asymptotique a distance finie ; le refus explicite empeche toute extrapolation dans les strates sous-echantillonnees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Seuils conformes stratifies et refus explicite",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Seuil conforme certifie par strate par statistique d'ordre avec refus explicite et transport (P1 et D3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1378"
+   ],
+   "enonce_complet": "Dispositif d'ancres appariees dans le lot : pour chaque lot, un jumeau honnete execute m episodes sur les memes taches, fournissant soit une p-valeur conforme p = (1 + #{temoins >= s}) / (m+1) avec alerte si p <= alpha, soit une difference appariee d = s_agent - s_jumeau sur la meme tache.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : decoreler completement s_agent et s_jumeau (rho = 0) sous derive de difficulte des taches pour mesurer la perte de puissance de l'appariement ou l'explosion de variance de d. Faux temoin 1b : agent identique au jumeau honnete sur les memes taches donnant des p-valeurs sur-uniformes.",
+   "mecanisme_causal": "L'execution simultanee du jumeau honnete sur les memes taches annule l'effet confondant de la distribution des taches et des derives de difficulte du lot par appariement direct.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Ancres appariees par jumeau honnete",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Ancres appariees par jumeau honnete dans le lot (P2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1381"
+   ],
+   "enonce_complet": "Duel experimental D1 opposant un pur changement de composition des strates (H_A : a seuils par strate geles sur l'ancien regime, le taux de depassement par strate du nouveau regime reste dans la bande Beta a 95 %) a une derive intra-strate (H_B : au moins une strate sort de la bande apres correction de multiplicite).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : reponderer uniquement les proportions des strates sans modifier les lois conditionnelles et verifier le maintien de H_A, puis decaler une seule strate minoritaire et verifier sa detection par H_B. Faux temoin 1b : deux tirages independants du meme melange de strates restant dans la bande Beta corrigee.",
+   "mecanisme_causal": "Conditionner la comparaison a l'interieur de chaque strate isole l'effet de reponderation demographique de la derive reelle des scores a tache constante.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Decomposition composition contre intra-strate",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel de decomposition entre changement de melange et derive intra-strate (D1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1382"
+   ],
+   "enonce_complet": "Duel experimental D2 distinguant une derive de position-echelle affectant le corps de la distribution (H_A : apres recalage de position et d'echelle sur environ 30 temoins, le taux de depassement revient dans la bande) d'une derive concentree en queue (H_B : le recalage laisse le taux hors bande).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer un melange contaminant 3% d'extremes en queue laissant la mediane et l'ecart interquartile invariants et verifier que le recalage echoue a ramener le taux dans la bande (H_B). Faux temoin 1b : translation-dilatation affine pure sur gaussienne ou le recalage sur 30 temoins restaure le taux nominal.",
+   "mecanisme_causal": "Le recalage robuste sur 30 temoins absorbe les transformations affines globales du score mais reste aveugle a un gonflement specifique de la queue de distribution.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Derive de corps contre queue",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel entre derive de position-echelle du corps et derive concentree en queue (D2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1385"
+   ],
+   "enonce_complet": "Duel X2 testant le transport de queue du temoin vers l'agent (remplacant D3) : un seuil q est fixe par P1 sur n_T temoins du nouveau regime puis gele, et l'on mesure le nombre x de depassements sur m episodes honnetes frais de l'agent jamais utilises comme ancres afin de trancher H_A : F_bar_H(q) <= 3 % contre H_B : F_bar_H(q) > 3 %.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un decalage entre la loi des temoins et celle de l'agent honnete doublant la queue au-dela de 3 % et verifier le rejet de H_A. Faux temoin 1b : temoins et episodes honnetes frais tires de la meme loi continue avec rejet de H_B lorsque m est suffisant.",
+   "mecanisme_causal": "Le gel prealable du seuil sur n_T temoins et son evaluation sur m episodes strictement disjoints suppriment la dependance induite par la reutilisation d'ancres et mesurent le biais reel de transport.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transport de seuil temoin-agent",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel de transport de queue du temoin vers l'agent sur episodes frais (X2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1386"
+   ],
+   "enonce_complet": "Protocole X0 separant le bruit d'echantillonnage de la derive de regime (remplacant D0) : un seuil q unique est etalonne et gele sur une troisieme partition dediee, puis evalue sur deux jeux de test independants (ancien et nouveau regime) en testant theta = p_nouveau(q) - p_ancien(q) <= epsilon contre > epsilon.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer X0 sous derive d'echelle pure laissant p_nouveau(q) - p_ancien(q) > epsilon et verifier la refutation de H_A. Faux temoin 1b : deux partitions test tirees du meme regime avec seuil q gele sur troisieme partition devant refuter H_B.",
+   "mecanisme_causal": "L'utilisation d'une troisieme partition d'etalonnage garantit l'independance conditionnelle des deux taux estimes p_nouveau(q) et p_ancien(q) et elimine le biais de surajustement au seuil.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Separation bruit de test et derive",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Separation entre bruit de test et derive par seuil gele sur troisieme partition (X0)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1387"
+   ],
+   "enonce_complet": "Plan factoriel croise X1 (remplacant D1) a quatre cellules croisant version du modele (ancienne, nouvelle) et regime de taches (anciennes, nouvelles) sur memes taches et memes graines, sans aucun appariement ni conditionnement sur la longueur realisee, pour isoler theta_v = p(nouvelle version, anciennes taches) - p(ancienne version, anciennes taches).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : changer uniquement la longueur d'episode d'une nouvelle version honnete sans changer sa distribution par pas ni introduire de malice, et verifier que le non-appariement sur la longueur evite un biais de selection post-traitement. Faux temoin 1b : ancienne et nouvelle version identiques sur memes taches et graines donnant theta_v = 0.",
+   "mecanisme_causal": "Le plan croise 2x2 separe orthogonalement la derive due au changement de poids du modele de celle due a la distribution des taches, tout en evitant le biais de collision induit par le conditionnement sur la longueur realisee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Plan croise version par taches",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plan croise version par taches sans conditionnement sur la longueur realisee (X1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1389"
+   ],
+   "enonce_complet": "Duel X4 testant la frontiere de validite de P3 vis-a-vis de la longueur des episodes : lorsque la loi par pas reste invariante mais que la longueur moyenne triple, verifier si toute tranche de longueur d'effectif suffisant conserve sa borne superieure sous la borne pre-enregistree (H_A) ou si au moins une tranche la depasse (H_B, refutant la forme b).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler des episodes stationnaires dont la longueur moyenne triple et mesurer si le taux de fausse alerte dans les tranches longues depasse la borne pre-enregistree. Faux temoin 1b : longueur constante identique a l'etalonnage ou toutes les tranches restent sous la borne.",
+   "mecanisme_causal": "Sous loi par pas invariante, le maximum d'episode croit avec le nombre de pas selon les valeurs extremes ; toute normalisation de longueur imparfaite (forme b) rompt l'invariance dans les tranches longues.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Frontiere de longueur pour P3",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test de frontiere de longueur pour la normalisation par pas (X4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1390"
+   ],
+   "enonce_complet": "Test a deux bras X5 de la regle de surveillance P4 : le premier bras applique un triplement pur de la queue pour tester si P4 detecte la derive avant epuisement des temoins dans au moins 1 - beta des repetitions (prediction H_B d'apres la divergence KL, entrainant le retrait de P4 comme protection de queue), et le second bras applique une derive honnete commune.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sous derive pure de queue triplant alpha (de 1% a 3%), mesurer la puissance de detection de P4 avant epuisement du budget temoins et confirmer l'echec predit par la borne KL. Faux temoin 1b : flux sans derive ou P4 ne doit pas depasser son niveau nominal de fausse alerte.",
+   "mecanisme_causal": "La divergence KL entre une loi initiale et une perturbation portant uniquement sur 2% de masse en queue est trop faible pour qu'un detecteur global non cible atteigne la puissance requise avant l'epuisement du quota de temoins.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Limite de puissance KL sur queue",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test a deux bras de la regle P4 sous derive de queue pure ou commune (X5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1391"
+   ],
+   "enonce_complet": "Protocole general de duels avec retrait complet de l'etalonnage a chaque repetition, partitionnement strict par sessions et par taches et inclusion d'un controle positif de taille connue ; inclut le duel D0' mesurant la validite du canal temoin T en regime stable via theta = P(rejet du canal T).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que le controle positif de taille connue est systematiquement detecte, et qu'une fuite d'etalonnage entre repetitions fausse les intervalles par rapport au retrait complet. Faux temoin 1b : canal T en regime stable sans derive ni attaque donnant theta <= niveau nominal.",
+   "mecanisme_causal": "Le re-tirage integral de l'etalonnage a chaque repetition et le partitionnement par blocs session-tache capturent la variance reelle d'estimation du seuil et la dependance intra-session.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Re-etalonnage complet et canal temoin",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole de duels a retrait complet d'etalonnage et validite du canal temoin en regime stable (D0')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1392"
+   ],
+   "enonce_complet": "Duel 1 corrige opposant la suffisance du redressement monotone de longueur (EMPP, combinaison P1+P3) pour absorber l'allongement des episodes et les franchissements repetes, a l'existence d'une derive intrinseque des representations meme a longueur d'episode fixee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : fixer la longueur d'episode et appliquer une derive de representation, verifiant que l'EMPP seul ne l'absorbe pas (H_B). Faux temoin 1b : varier uniquement la longueur des episodes a loi par pas constante et verifier que l'EMPP maintient le taux de fausse alerte.",
+   "mecanisme_causal": "Distingue deux mecanismes de faux positifs sous derive : l'accumulation de maximums sur des trajectoires plus longues (absorbable par redressement monotone EMPP) et le deplacement intrinseque des scores par pas.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Redressement de longueur contre derive intrinseque",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel entre suffisance du redressement monotone de longueur et derive intrinseque a longueur fixee (Duel 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1393"
+   ],
+   "enonce_complet": "Duel 2 corrige opposant l'efficacite de la qualification des ancres couplee au recalibrage TARR-v2 a l'echec du mecanisme par biais d'ancre ou derive de queue pure, en eliminant tout homme de paille non etiquete pour tester directement la validite de l'ancrage TARR-v2.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : introduire un biais systematique entre les ancres qualifiees et le flux reel ou une derive pure de queue pour verifier la mise en echec de TARR-v2. Faux temoin 1b : ancres non biaisees sous derive affine moderee ou TARR-v2 maintient les fausses alertes sous la borne.",
+   "mecanisme_causal": "Teste si la procedure de qualification filtre efficacement les ancres corrompues ou decalees avant que le recalibrage TARR-v2 n'ajuste les seuils de detection.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification d'ancres et recalibrage TARR-v2",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel entre qualification des ancres avec recalibrage TARR-v2 et biais d'ancre en queue pure (Duel 2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1394"
+   ],
+   "enonce_complet": "Duel 3 corrige opposant la compensation differentielle par un jumeau honnete (difference renormalisee entre agent et jumeau) a la surveillance de l'agent seul sous redressement EMPP, en tenant compte de la perte de puissance lorsque la correlation agent-jumeau rho < 0,5.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer le duel avec rho = 0,2 sous derive commune moderee et verifier si la difference renormalisee perd de la puissance par rapport a l'agent seul sous EMPP. Faux temoin 1b : correlation elevee (rho = 0,9) avec derive commune sur les taches ou la difference annule la derive.",
+   "mecanisme_causal": "Soustraire le score du jumeau reduit la variance uniquement lorsque 2*rho > sigma_jumeau / sigma_agent ; en deca (rho < 0,5), le bruit ajoute par le jumeau degrade le rapport signal-sur-bruit.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Compensation differentielle par jumeau honnete",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel entre difference renormalisee par jumeau honnete et agent seul sous EMPP (Duel 3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1395"
+   ],
+   "enonce_complet": "Duel preenregistre entre risque de fausse alerte et cout d'audit humain : pour chaque population revendiquee, fixer b = alpha + Delta avec alpha < b < 3*alpha, et opposer H_A : r <= b a H_B : r > b, ou une borne basse au-dessus de b falsifie H_A et une borne haute au plus egale a b falsifie H_B.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : generer un flux de taux de rejet reel egal a 3,5*alpha et verifier le rejet de H_A par franchissement de b par la borne basse. Faux temoin 1b : flux nominal exact de taux alpha avec effectif suffisant produisant une borne haute <= b et falsifiant H_B.",
+   "mecanisme_causal": "Traduit un budget maximal d'audit humain en marge absolue tolerable Delta au-dessus du niveau nominal alpha et impose une decision asymetrique via des bornes de confiance preenregistrees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Arbitrage risque et budget humain",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel preenregistre de risque de fausse alerte borne par le cout humain"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1397"
+   ],
+   "enonce_complet": "Convention experimentale commune aux duels : avant tout acces aux donnees de test, chaque experience preenregistre un parametre scalaire theta et une frontiere epsilon, et oppose H_A : theta <= epsilon a H_B : theta > epsilon au risque bilateral alpha.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par permutation ou reechantillonnage que l'acces prealable au jeu de test pour ajuster epsilon brise le controle bilateral a alpha. Faux temoin 1b : theta reel nul sous epsilon > 0 avec preenregistrement respectant le risque alpha.",
+   "mecanisme_causal": "Le preenregistrement strict de la paire (theta, epsilon) bloque la selection post-hoc des seuils d'effet minimal et garantit la validite frequentiste bilaterale au niveau alpha.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Preenregistrement de duel scalaire",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Convention bilaterale preenregistree de duel sur frontiere scalaire"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1398"
+   ],
+   "enonce_complet": "Experience E1 evaluant, sans recours au jumeau (eta_jum = 0) et sur R coupes independantes par blocs de sessions et de taches du regime source, si le Max-Prefixe Causal et la composition observable suffisent face a une derive conditionnelle latente.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : implanter une derive conditionnelle latente correlee a un attribut non observe des taches et verifier que l'ajustement par composition observable echoue a la compenser. Faux temoin 1b : derive purement explicable par les strates observables avec loi conditionnelle invariante.",
+   "mecanisme_causal": "Sans jumeau pour capturer les covariables non observees, la suffisance du Max-Prefixe Causal depend entierement de l'invariance conditionnelle des scores sachant la composition observable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Max-prefixe causal sans jumeau",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Suffisance du Max-Prefixe Causal et de la composition observable contre derive latente (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1399"
+   ],
+   "enonce_complet": "Experience E2 evaluant en observation sur trajectoires intactes (sans substitution ni censure) la stabilisation par jumeau en prefixe force (comparaison R1 differentiel) face a une derive inter-versions ou a un effacement du signal par contagion du contexte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : introduire un contexte partage corrompu qui contamine egalement le jumeau en prefixe force et mesurer l'effacement de l'ecart agent-jumeau. Faux temoin 1b : derive inter-versions pure sur contexte sain ou le prefixe force stabilise la comparaison.",
+   "mecanisme_causal": "L'observation sur trajectoires intactes evite la censure induite par la substitution en cours de route, mais expose la methode au risque que le contexte du prefixe force entraine le jumeau dans le meme mode de reponse que l'agent.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Jumeau en prefixe force intact",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Stabilisation par jumeau en prefixe force sur trajectoires intactes contre contagion du contexte (E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1400"
+   ],
+   "enonce_complet": "Experience E3 comparant au premier franchissement en ligne la surmartingale multiplicative corrigee M_{e,s} = M_{e,s-1}(1 - lambda + lambda * 0,5 * p_{e,s}^{-1/2}) contre le Max-Prefixe Causal pour la surveillance au fil des pas.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre les deux methodes a une derive graduelle faible sur de longs episodes (avantage attendu pour la surmartingale) puis a un pic isole unique (avantage attendu pour le Max-Prefixe) afin de verifier le croisement de performance. Faux temoin 1b : p-valeurs uniformes i.i.d. ou les deux regles respectent la borne d'arret sous H0.",
+   "mecanisme_causal": "La surmartingale multiplicative integre l'evidence cumulee sur plusieurs pas consecutifs via le calibrateur p^{-1/2}, alors que le Max-Prefixe ne reagit qu'au maximum instantane et subit une penalite d'extremes sur la longueur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Surmartingale multiplicative en ligne",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Surveillance au fil des pas par surmartingale multiplicative contre Max-Prefixe Causal (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1411"
+   ],
+   "enonce_complet": "Controle negatif d'equicorrelation A/A pour le test de Kolmogorov-Smirnov de D3 : tirer n scores de reference du jumeau et m >> n scores de test de l'agent honnete exactement selon la meme loi continue P_0, repeter par Monte-Carlo et verifier que le taux empirique de rejet respecte le niveau nominal.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : reutiliser le meme echantillon de reference sur plusieurs blocs dependants sans correction et verifier le depassement du niveau nominal alpha. Faux temoin 1b : tirage A/A i.i.d. strict de P_0 pour n et m avec taux de rejet <= alpha.",
+   "mecanisme_causal": "Dans un regime m >> n, l'incertitude de l'echantillon temoin domine et toute reutilisation ou correlation intra-lot des temoins gonfle la statistique de Kolmogorov-Smirnov bien au-dela des seuils asymptotiques standards.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle negatif A/A Kolmogorov-Smirnov",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Controle negatif d'equicorrelation A/A pour le test de Kolmogorov-Smirnov de D3"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1413"
+   ],
+   "enonce_complet": "Hypothese de biais de survie dans P2 et D5 : utiliser les prefixes de longueur l des episodes survivants (L >= l) pour estimer la loi du maximum des episodes complets de longueur l introduit un biais de selection car la longueur L d'un episode d'agent est un temps d'arret lie aux scores par pas.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : generer un processus ou l'episode s'arrete des que le score depasse un seuil critique ; verifier que la distribution conditionnelle sur L >= l sous-estime systematiquement les queues de M_l et fausse tau_hat(l). Faux temoin 1b : longueur L tirée independamment des scores par pas, annulant le biais de survie.",
+   "mecanisme_causal": "Conditionner sur la survie L >= l tronque les trajectoires ayant declenche une terminaison precoce apres des pas anormaux, biaisant l'estimation de la loi du maximum sur prefixe vers le bas.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Biais de survie du temps d'arret",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Biais de survie par confusion du temps d'arret dans P2 et D5"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1416"
+   ],
+   "enonce_complet": "Critere de franchissement sequentiel des seuils de prefixe P2 : pour une suite de scores par pas (S_1, ..., S_L) et son maximum courant M_l = max_{1 <= t <= l} S_t, definir un estimateur de seuil tau_hat(l) verifiant P(M_l > tau_hat(l) | L >= l) = alpha_l <= alpha et declencher l'alerte au franchissement sequentiel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : correler les pas ou allonger les trajectoires avec des seuils tau_hat(l) calibres marginalement sans controle de multiplicite sur l et verifier l'inflation du taux global de rejet au-dela de alpha. Faux temoin 1b : pas echangeables et budget alpha_l sommable sur l.",
+   "mecanisme_causal": "Le suivi du maximum courant M_l a chaque prefixe l permet une interruption precoce des qu'un pas anomal apparait, sous reserve que les seuils conditionnes a L >= l controlent conjointement la probabilite de franchissement sur tous les prefixes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Franchissement sequentiel sur prefixe",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Critere de franchissement sequentiel des seuils de maximum sur prefixe (P2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1420"
+   ],
+   "enonce_complet": "Controle negatif de bruit blanc stationnaire multi-pas pour P2 : generer des episodes honnetes de longueur L = 50 dont les scores par pas S_{e,1}, ..., S_{e,L} sont tires i.i.d. selon une loi uniforme U[0, 1] garantissant l'echangeabilite exacte des prefixes, et verifier le taux de fausses alertes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si P2 depasse le niveau nominal alpha sur du bruit blanc uniforme i.i.d. de longueur fixe L = 50, l'implementation du controle de multiplicite ou de l'estimateur de seuil est invalide. Faux temoin 1b : calibrage empirique exact sur U[0, 1] devant rester sous alpha.",
+   "mecanisme_causal": "L'independance et l'identicite exactes des pas en loi uniforme eliminent toute derive, dependance temporelle ou censure de longueur, isolant uniquement la validite combinatoire et statistique de P2.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle negatif bruit blanc multi-pas",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Controle negatif de bruit blanc stationnaire multi-pas pour P2"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1421"
+   ],
+   "enonce_complet": "Controle negatif d'asymetrie de debit (rho < 1) sous derive honnete pure pour P3 : soumettre P3 a un flux 100 % honnete subissant un decalage commun qui triple le taux de depassement (p_T = p_D = 3 %), avec un ratio realiste d'un temoin pour plusieurs episodes d'agent.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier si la rarefaction relative des temoins (rho < 1) retarde la mise a jour ou degrade l'incertitude d'estimation au point de declencher des fausses alertes sous derive commune 100 % honnete. Faux temoin 1b : debit symetrique (rho = 1) sur le meme decalage commun.",
+   "mecanisme_causal": "Un faible ratio temoin/agent reduit le nombre effectif d'ancres dans chaque fenetre temporelle, elargissant la variance du seuil estime et exposant P3 a des fausses alertes transitoires lors d'une derive honnete brutale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle negatif asymetrie de debit",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Controle negatif d'asymetrie de debit temoin-agent sous derive honnete pure pour P3"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1422"
+   ],
+   "enonce_complet": "Controle negatif de choc terminal pour P2 et D5 : construire un monde plante honnete ou les pas t = 1, ..., L - 1 suivent une loi stationnaire N(0, 1) et seul le dernier pas t = L (conclusion de la tache) suit une loi decalee N(Delta, 1).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier si P2 ou D5 confondent un choc terminal localise en t = L (sur flux honnete etalonne ou non) avec une derive uniforme sur toute la trajectoire, et evaluer la sensibilite de la tranche terminale. Faux temoin 1b : choc nul (Delta = 0) sur tous les pas.",
+   "mecanisme_causal": "Isole la sensibilite des regles par pas ou par prefixe face a une non-stationnarite concentree exclusivement sur l'evenement final, dont la position absolue varie selon la longueur L de l'episode.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle negatif choc terminal",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Controle negatif de choc terminal isole en fin d'episode pour P2 et D5"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1425"
+   ],
+   "enonce_complet": "Controle negatif de jugeabilite d'un oracle exact dans le protocole de duel : soumettre au protocole une regle oracle synthetique qui rejette chaque episode honnete par un tirage de Bernoulli independant de parametre exact p = 0,009 < 0,01.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le protocole de duel ne parvient pas a statuer (echec d'arbitrage par manque de puissance ou borne trop large) sur un oracle parfait de Bernoulli p = 0,009, le duel n'est pas jugeable au budget prevu. Faux temoin 1b : oracle synthetique a p = 0,05 > 0,01 devant etre rejete nettement par le duel.",
+   "mecanisme_causal": "Fournit un etalon analytique exactement calibré juste sous le seuil alpha = 0,01 pour auditer si le protocole de duel possede une puissance et une resolution suffisantes dans des conditions ideales sans biais.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit de jugeabilite par oracle exact",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Controle negatif de jugeabilite d'un oracle exact de Bernoulli dans un protocole de duel"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1429"
+   ],
+   "enonce_complet": "Critere Canary-eMix (Proposition 2) pour la qualification des ancres sous l'hypothese nulle continue H_0 : P_ancre = P_cal : a partir d'un N-echantillon d'etalonnage D_cal, du quantile k_cal = ceil((N+1)(1-alpha)) et de l'excedence W = 1 - F(Y_{(k_cal)}), maintenir un processus multiplicatif E_n = prod_{j=1}^n e_j de valeur-e valable a tout temps.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter une legere derive sur le flux d'ancres (P_ancre != P_cal) et verifier que E_n depasse 1/gamma, tout en verifiant la validite conditionnelle a D_cal fixe. Faux temoin 1b : ancres i.i.d. selon P_cal maintenant E[E_n] <= 1 et le taux de rejet sous gamma.",
+   "mecanisme_causal": "L'integration des valeurs-e conditionnees ou melangees sur la loi Beta de W = 1 - F(Y_{(k_cal)}) preserve la propriete de supermartingale meme en presence de l'incertitude finie de l'echantillon d'etalonnage D_cal.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Processus-e de qualification d'ancres",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Qualification sequentielle des ancres par processus multiplicatif de valeurs-e (Canary-eMix)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1430"
+   ],
+   "enonce_complet": "Critere PF-Gumbel (Proposition 1) modelisant la loi conditionnelle du maximum de prefixe U_e sachant la longueur K_e = k par une forme parametrique position-echelle de Gumbel F_{U | K=k}(u) = G((u - a - b_1 * log(k)) / b_2(k)), avec pente de localisation b_1 en log(k) et parametre d'echelle conditionnel b_2(k) > 0.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer PF-Gumbel a des scores par pas a queue lourde (Pareto/Student) hors domaine d'attraction de Gumbel et observer la rupture de couverture en queue. Faux temoin 1b : pas i.i.d. gaussiens ou exponentiels a longueur K_e variable ou l'ajustement Gumbel en log(k) stabilise la probabilite de depassement.",
+   "mecanisme_causal": "Exploite la convergence asymptotique des maxima de variables a queue legere vers la loi de Gumbel avec derive logarithmique en k, permettant d'interpoler et d'extrapoler les seuils a travers les longueurs d'episodes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Normalisation Gumbel des maxima de prefixe",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Normalisation parametrique conditionnelle de Gumbel pour les maxima de prefixe (PF-Gumbel)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1431"
+   ],
+   "enonce_complet": "Critere de la Proposition 3 combinant une surmartingale par pas M_{e,s} = (1 - lambda) + lambda * xi_{e,s} * M_{e,s-1} avec xi_{e,s} = 0,5 * p_{e,s}^{-1/2} sous chaine de Markov (r_{e,s}) sous H_0, et une selection des episodes par rang global sous contrainte de budget d'audit humain B_humain.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : introduire une dependance non markovienne a longue memoire dans (r_{e,s}) ou violer l'uniformite des p-valeurs conditionnelles, verifiant si M_{e,s} perd la propriete de surmartingale. Faux temoin 1b : chaine de Markov honnete calibrée sous H_0 avec classement global respectant le budget B_humain.",
+   "mecanisme_causal": "La transformation affine (1 - lambda) + lambda * xi_{e,s} * M_{e,s-1} empeche l'absorption a zero tout en conservant une esperance conditionnelle au plus egale a 1 sous H_0 markovien, et le tri par rang global alloue le budget B_humain aux trajectoires les plus suspectes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Surmartingale markovienne et budget humain",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Surmartingale par pas sous chaine de Markov et selection par rang global sous budget humain (Proposition 3)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

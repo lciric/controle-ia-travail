@@ -1,0 +1,43 @@
+script éprouvé : controler_traces_p4_v1.sh f2fe40f2c9299af17ec7bbe4843d2e36b45c91904affe98b623057b1375c108e
+script éprouvé : verifications_p4_v1.py af82859e3cd6056ae355a912c1617709cef21bf7e0d40b7c432e5a3bb8568c8b
+script éprouvé : outils_essais_p4_v1.py e685f193aec62714204297b5c1377a2c6bbe818062dd141cf62af06c124b4954
+script éprouvé : essais_traces_p4_v1.sh 12cb9a0de4594a2e42faaad49703e47d15ccce39119b3aebe1fc7e62e25474c2
+lignes changées dans la copie du contrôle des traces : 2 (DEPOT, TEXTES_SHA256)
+T00-traces-saines : code 0 ; CONFORME
+    | TRACES DE LA SESSION : CONFORMES (aucune fenêtre d'un texte honnête, aucun jeton) : versement permis
+T01-texte-brut-dans-le-journal-releve : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T02-texte-echappe-en-json-dans-un-sous-dossier : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T03-texte-sans-sa-fenetre-du-milieu : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T04-texte-echappe-par-python : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T05-texte-dans-un-tableau : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T06-tableau-illisible : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T07-jeton-github-dans-les-controles : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 2 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+T08-jeton-hugging-face-dans-les-etats : code 1 ; CONFORME
+    | TRACES DE LA SESSION : 1 CONSTAT(S) (fenêtre, jeton ou fichier illisible) : RIEN N'EST VERSÉ ; nœud de Lazar
+    T08 : fichier et nom du jeton écrits, valeur jamais : CONFORME
+T10-jetons-absents : code 2 ; CONFORME
+    | jetons HF_TOKEN et CONTROLE_IA_GITHUB_TOKEN absents ou trop courts : recherche des jetons impossible, rien n'est cherché
+T10b-jeton-trop-court : code 2 ; CONFORME
+    | jetons HF_TOKEN et CONTROLE_IA_GITHUB_TOKEN absents ou trop courts : recherche des jetons impossible, rien n'est cherché
+T11-textes-absents : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que edf7f772145b… ou sans leur sceau exact : rien n'est cherché
+T12-textes-d-une-autre-empreinte : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que aaaaaaaaaaaa… ou sans leur sceau exact : rien n'est cherché
+T13-textes-sans-leur-sceau : code 2 ; CONFORME
+    | textes honnêtes de P3 (donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl) absents, d'une autre empreinte que edf7f772145b… ou sans leur sceau exact : rien n'est cherché
+T14-dossier-absent : code 2 ; CONFORME
+    | dossier /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine-v2/travail/passe-1/racine-traces/t/absent absent : rien n'est cherché
+T15-textes-dans-le-dossier-controle : code 2 ; CONFORME
+    | les textes de P3 sont dans le dossier contrôlé : rien n'est cherché
+T16-usage-faux : code 2 ; CONFORME
+T17-module-commun-absent : code 2 ; CONFORME
+    | module commun /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine-v2/travail/passe-1/racine-traces/module-commun-absent/verifications_p4_v1.py absent : rien n
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DU CONTRÔLE DES TRACES DE P4 ; cas non conformes : 0

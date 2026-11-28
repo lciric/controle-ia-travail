@@ -1,0 +1,41 @@
+script éprouvé : arreter_p4_v1.sh 825701e2847d52e466b228cba46635fdc214cf9bc8fae4ebba8dffb68db85227
+script éprouvé : essais_arret_p4_v1.sh d8e4e554c817d3aa8ff6714d657d6313e5d64ec92295f81d29d5331715147891
+A00-sain : code 0 ; demandes d'arrêt 1 ; lectures après l'arrêt 2 ; CONFORME
+    | ARRÊT CONFIRMÉ : INSTANCE 99999999 ARRÊTÉE PAR SON IDENTIFIANT (2026-10-20T22:42:18Z)
+    A00 : heure de la demande et de l'arrêt écrites, ligne prête pour registres/arrets.md, deux lectures : CONFORME
+A01-instance-deja-arretee : code 0 ; demandes d'arrêt 1 ; lectures après l'arrêt 2 ; CONFORME
+    | ARRÊT CONFIRMÉ : INSTANCE 99999999 ARRÊTÉE PAR SON IDENTIFIANT (2026-10-20T22:42:18Z)
+A02-arret-relu-une-fois-puis-en-marche : code 0 ; demandes d'arrêt 1 ; lectures après l'arrêt 4 ; CONFORME
+    | ARRÊT CONFIRMÉ : INSTANCE 99999999 ARRÊTÉE PAR SON IDENTIFIANT (2026-10-20T22:42:19Z)
+    A02 : deux lectures arrêtées de suite exigées (quatre lectures) : CONFORME
+A03-etiquette-autre : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | instance 99999999 : étiquette « rr-autre-projet » ≠ « p4-v1 » (comparée entière) : arrêt refusé (rien n est demandé)
+A04-etiquette-p4-v1-x : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | instance 99999999 : étiquette « p4-v1 x » ≠ « p4-v1 » (comparée entière) : arrêt refusé (rien n est demandé)
+A05-etiquette-absente : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | instance 99999999 : étiquette « None » ≠ « p4-v1 » (comparée entière) : arrêt refusé (rien n est demandé)
+A06-etat-illisible : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | état de l'instance 99999999 illisible : étiquette non relue : arrêt refusé (rien n'est demandé) ; nœud de Lazar
+A07-etat-qui-ne-passe-pas-a-l-arret : code 1 ; demandes d'arrêt 1 ; lectures après l'arrêt 60 ; CONFORME
+    | ARRÊT NON CONFIRMÉ : INSTANCE 99999999 (état non relu arrêté dans le délai)
+    A07 : délai borné : 60 lectures, 60 sommeils de 10 s au plus : CONFORME
+A08-outil-en-echec-a-l-arret : code 1 ; demandes d'arrêt 1 ; lectures après l'arrêt 0 ; CONFORME
+    | ARRÊT NON CONFIRMÉ : INSTANCE 99999999 (outil en échec)
+A09-identifiant-en-lettres : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | identifiant d'instance mal formé (6 à 10 chiffres attendus) : rien n'est arrêté
+A09b-identifiant-de-5-chiffres : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | identifiant d'instance mal formé (6 à 10 chiffres attendus) : rien n'est arrêté
+A09c-identifiant-de-11-chiffres : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | identifiant d'instance mal formé (6 à 10 chiffres attendus) : rien n'est arrêté
+A10-outil-introuvable : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | outil de location introuvable sur le PATH : rien n'est arrêté ; arrêter l'instance 99999999 à la main par son identifiant
+A11-dossier-existant : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/rejeu-arret-1/arret-A11 existe déjà (R12) : rien n'est arrêté
+A12-motif-mal-forme : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | motif mal formé : 80 caractères imprimables au plus, sans barre verticale ni guillemet inversé
+A13-usage-un-argument : code 2 ; demandes d'arrêt 0 ; lectures après l'arrêt 0 ; CONFORME
+    | usage : arreter_p4_v1.sh IDENTIFIANT DOSSIER_NEUF [MOTIF]
+    refus avant tout : aucun dossier écrit (A09, A10) : CONFORME
+aucun jeton affiché ni écrit : CONFORME
+FIN DU BANC DE L'ARRÊT DE P4 ; cas non conformes : 0
+code 0

@@ -1,0 +1,24 @@
+............F
+=================================== FAILURES ===================================
+_ test_garde_jamais_eprouvee_cas_sain_et_artefact[garde 7 : valeur de jeu non num\xe9rique] _
+
+garde = 'garde 7 : valeur de jeu non numérique'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffa721f23d0>
+
+    @pytest.mark.parametrize("garde", list(GARDES_R5))
+    def test_garde_jamais_eprouvee_cas_sain_et_artefact(garde, monkeypatch):
+        """CB1-06 (R5) : chaque garde jamais exécutée par la suite relue (contre-lecture CB1) passe sur un cas sain et arrête
+        sur chaque artefact, avec son motif."""
+        src, lec, s = _cas("sain")
+        sain, artefacts, exception, motif = GARDES_R5[garde]
+        assert sain(src, lec, s, monkeypatch) is not False
+        for artefact in artefacts:
+>           with pytest.raises(exception, match=motif):
+E           Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:1361: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_jamais_eprouvee_cas_sain_et_artefact[garde 7 : valeur de jeu non num\xe9rique]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 12 passed, 137 deselected in 29.43s
+

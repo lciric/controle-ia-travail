@@ -1,0 +1,33 @@
+F
+=================================== FAILURES ===================================
+_____________________ test_A7_formes_marge_et_correlations _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2a111f9750>
+
+    def test_A7_formes_marge_et_correlations(monkeypatch):
+        """A7 sur la donnée saine : (ii) une forme présente dans 20 actions de chaque jeu du saboteur (entre 10 et 49) est
+        contrôlée, et son calcul en échec est « non lu » ; (i) séparation non calculable : « non lue » ; (iii) |ρ| ≥ 0,50
+        contraire (0,5, 0,6, −0,6), 0,49 favorable."""
+        D0 = _D("sain")
+        t = dict(D0["t"])
+        forme = np.zeros(t["condition"].size, dtype=bool)
+        forme[np.flatnonzero(t["condition"] == "saboteur")[:20]] = True
+        t["cout_intervalle"] = forme
+        D = {**D0, "t": t}
+        c = _entree_seule("A7", D)
+        ii = sorted(k for k in c if k.startswith("A7 (ii)"))
+        assert ii == sorted(f"A7 (ii) {jeu} cout_intervalle" for jeu in cp.CIBLES_A7)
+        assert all(c[k]["controle_contraire"] in (True, False) for k in ii)
+        vraie = cp._forme_restreinte
+        monkeypatch.setattr(cp, "_forme_restreinte", _jamais(GardeArret("échec simulé")))
+        c = _entree_seule("A7", D)
+>       assert all((c[k]["controle_contraire"], c[k]["reserve"]) == ("non lu", "reserve_A7_non_lue") for k in ii)
+E       assert False
+E        +  where False = all(<generator object test_A7_formes_marge_et_correlations.<locals>.<genexpr> at 0x7f2a116dbca0>)
+
+test_complements_p3_v1.py:1944: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A7_formes_marge_et_correlations - asse...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.10s
+

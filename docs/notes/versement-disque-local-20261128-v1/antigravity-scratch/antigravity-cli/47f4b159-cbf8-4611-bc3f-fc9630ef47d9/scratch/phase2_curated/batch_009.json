@@ -1,0 +1,276 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6900"
+   ],
+   "enonce_complet": "La garantie de 5 % associee au dispositif du juge et la correction de multiplicite inter-fiches par procedure e-BH ne se transportent pas automatiquement a une campagne adaptative multi-generationnelle : elles ne demontrent ni un controle global du taux de fausses decouvertes (FDR) cumule sur toutes les generations, ni la validite sous reutilisation adaptative d'une meme epreuve, ni l'effet d'un heritage repete de la meme preuve.",
+   "motif_ou_resultat": "Constat methodologique tranche (rapporte / non-etabli) imposant de ne pas extrapoler les garanties statiques par generation (e-BH ou seuil 5 %) a une selection adaptive multi-generations sans preuve dediee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Non-transportabilite des garanties e-BH et de seuil a cinq pour cent en campagne adaptative multi-generations",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Calibrage du juge de nouveaute sur quarante enonces connus plantes.",
+   "bib_ids": [
+    "BIB-6413"
+   ],
+   "enonce_complet": "Le calibrage d'un juge de nouveaute sur quarante enonces connus plantes ne suffit pas a ecarter des reformulations non triviales issues de changements de variables ou de dualite lagrangienne. Une normalisation algebrique et asymptotique des enonces doit etre imposee avant tout passage au juge de nouveaute afin d'eviter une contamination par deguisement syntaxique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de faux positifs du juge de nouveaute avec et sans normalisation algebrique/asymptotique sur des paires equivalentes par changement de variables ou dualite lagrangienne (echec si la normalisation ne reduit pas significativement les faux nouveaux). Faux temoin 1b : paires d'enonces reellement distincts et incompatibles qui ne doivent jamais etre fusionnees par le normaliseur.",
+   "mecanisme_causal": "La reduction prealable des expressions sous forme canonique algebrique et asymptotique supprime les degres de liberte syntaxiques exploites par les changements de variables et la dualite, empechant le juge de prendre une reecriture equivalente pour une idee nouvelle.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Normalisation canonique contre deguisement syntaxique",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Normalisation algebrique et asymptotique prealable au juge de nouveaute"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6642"
+   ],
+   "enonce_complet": "Randomiser des campagnes entieres appariees par probleme et a budget total tout compris (generation, rejets, controles, part du panel de rarete et audit imputes a chaque bras), plutot que de traiter comme independantes les sorties successives d'une politique adaptative. Mesurer par campagne Y (nombre de classes distinctes publiees confirmees par evaluateur exhaustif independant et certifiees rares) et F (nombre de classes distinctes publiees manquant le critere d'utilite a l'audit), ainsi que les erreurs de certification sur cas de calibration a probabilite p_c connue, en distinguant taux de faux positifs par candidat et nombre de fausses publications par budget. Le duel entre H_A (Delta Y > 0 et Delta F <= 0) et H_B (Delta Y <= 0 ou Delta F > 0) est tranche par une region de confiance simultanee sur les differences appariees (une region a cheval rend l'essai non decisif).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par simulation de campagnes adaptatives que l'unite d'analyse par campagne appariee maintient la couverture nominale contrairement au test naif par sortie, et que la region simultanee detecte un bras degradant F tout en augmentant Y. Faux temoin 1b : bras identiques sous meme graine et budget ou la region simultanee ne doit pas conclure a une victoire de H_A.",
+   "mecanisme_causal": "L'appariement a l'echelle de la campagne complete absorbe la dependance sequentielle des politiques adaptatives et impute le cout reel des controles et audits, tandis que le test intersection-union par region de confiance simultanee interdit de gagner en rendement rare au prix d'une hausse de fausses publications.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duel intersection-union par campagne appariee",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Plan apparie par campagne et duel conjoint intersection-union sur rendement rare et fausses publications"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6628"
+   ],
+   "enonce_complet": "Fixer un protocole de tirage de reference P0 fige, un canoniseur mecanique kappa et un controle T calibre par strate de rarete sur des cas a verite connue disjoints de la selection. L'objectif devient de maximiser, a cout total C fixe (generation plus controle), le nombre de classes kappa de masse estimee sous P0 inferieure a tau et confirmees sur cas frais, sous un taux de fausses decouvertes au plus q verifie par un oracle couteux sur echantillon. La rarete est toujours mesuree sous P0 et jamais sous la distribution modifiee par l'intervention ; l'originalite par rapport a la litterature mondiale est exclue du perimetre sans corpus externe.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que sous contrainte de cout C fixe et calibration disjointe, le taux de fausses decouvertes estime par l'oracle reste inferieur ou egal a q meme lorsque l'intervention concentre les tirages dans une queue de distribution. Faux temoin 1b : intervention qui gonfle artificiellement les classes frequentes sous P0 tout en paraissant rare sous la distribution biaisee, devant etre rejetee par la mesure figee sous P0.",
+   "mecanisme_causal": "Le gel de la mesure de reference P0 empeche l'optimiseur de fabriquer de la rarete apparente par derive de sa propre distribution de tirage, tandis que le canoniseur kappa et la calibration stratifiee bornent le taux de fausses decouvertes sous budget total contraint.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Certification de rarete sous distribution figee P0",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Reformulation sous protocole de reference fige P0, canoniseur mecanique et budget total contraint"
+  },
+  {
+   "anteriorite_connue": "Travaux voisins de 2026 non lus (mentionnes dans le dossier).",
+   "bib_ids": [
+    "BIB-6456"
+   ],
+   "enonce_complet": "Tester six presumes implicites des choix uniformes entre veille exhaustive et scellement aveugle d'anteriorite sur cibles mathematiques : (1) homogeneite du profil de collision entre objets a score exact, enonces a demontrer/refuter et lemmes de bibliotheque ; (2) fiabilite de l'empreintage textuel ou vectoriel face au cryptomorphisme notationnel ; (3) invisibilite des collisions par specialisations ou corollaires d'un theoreme publie T* impliquant T ; (4) perte d'information sur le sens tranche (demonstration ou refutation) si un article voisin de 2026 est ignore avant scellement ; (5) rapport de cout non mesure entre preuve et veille ; (6) non-stationnarite de l'anteriorite pendant la duree du programme sous concurrence active.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur un echantillon d'articles mathematiques si les taux de collisions cryptomorphiques et par corollaires different effectivement selon le type de cible (refute si aucune difference ni echec de l'empreintage textuel n'est observe). Faux temoin 1b : paires d'enonces non lies partageant uniquement du vocabulaire generique, que le detecteur de collision par implication ne doit pas signaler comme doublons.",
+   "mecanisme_causal": "Les collisions mathematiques reelles passent par des equivalences notationnelles ou des implications par specialisations que la similarite de surface manque, et dont la frequence varie fortement selon la forme logique de la cible.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Diagnostics d'anteriorite et cryptomorphisme mathematique",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Six presumes implicites des protocoles uniformes de veille d'anteriorite sur cibles mathematiques"
+  },
+  {
+   "anteriorite_connue": "Travaux voisins de 2026 ; bibliotheque Lean publique de statistique.",
+   "bib_ids": [
+    "BIB-6457"
+   ],
+   "enonce_complet": "Stratifier la verification d'anteriorite selon la forme de la cible plutot que par zone thematique : pour un objet a score exact, verifier uniquement le meilleur score numerique publie (baseline) avant scellement ; pour un lemme de bibliotheque, interroger uniquement l'arbre de types Lean 4 / Mathlib4 ; pour un enonce a demontrer ou refuter, concentrer l'effort bibliographique et depouiller en priorite le noyau chaud des articles recents ainsi que leur graphe de citations a un saut a partir des sources LaTeX (.tex et .bbl sur arXiv math.ST, stat.ME, cs.IT) plutot que des PDF.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer a budget de temps egal le rappel de collisions reelles et le cout entre la veille stratifiee sur sources LaTeX/Lean 4 et une veille uniforme sur PDF (echec si la stratification n'ameliore ni le rappel par unite de cout ni la detection de lemmes existants). Faux temoin 1b : cibles synthetiques inedites absentes de Mathlib4 et des sources .tex/.bbl, pour lesquelles la veille stratifiee doit rendre zero faux positif d'anteriorite.",
+   "mecanisme_causal": "L'adaptation du canal d'interrogation a la structure de la cible (types Lean 4 pour lemmes, baselines chiffrees pour scores, sources LaTeX et voisinage citationnel a un saut pour theoremes) aligne le cout d'inspection sur l'endroit ou l'anteriorite est reellement encodee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Veille d'anteriorite stratifiee par forme de cible",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Stratification de la veille d'anteriorite par forme de cible et depouillement du noyau chaud LaTeX a un saut"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6315"
+   ],
+   "enonce_complet": "Consigner avant toute recherche une fiche provisoire par cible precisant quantificateurs, classe de nuls ou d'adversaires, information disponible, budget, garantie, notion de score ou type Lean et date de coupure. Pour chaque voisin lu, archiver version, page ou declaration, hypotheses, conclusion, correspondance proposee et premiere obligation non satisfaite, tout en conservant la fiche et le motif de toute cible ecartee avant scellement afin d'empecher la veille d'ameliorer artificiellement le bilan en effacant des collisions. L'empreinte numerique prouve la tracabilite de lecture mais pas la justesse de comparaison.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : auditer un lot de cibles avec et sans archivage obligatoire des rejets pre-scellement sur des cas contenant des collisions plantees (echec si l'audit ne permet pas de reconstruire le taux exact d'effacement de collisions). Faux temoin 1b : cibles ecartees pour defaut de bonne formation anterieur a toute lecture bibliographique, devant etre tracees comme hors-perimetre sans faux signal de collision.",
+   "mecanisme_causal": "L'enregistrement fige avant recherche et la journalisation obligatoire des cibles ecartees suppriment le biais de survivant pre-scellement et rendent verifiable la premiere obligation non satisfaite face a tout article voisin.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Nomination scellee et tracabilite des cibles ecartees",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Tracabilite pre-recherche par fiche provisoire et archivage des cibles ecartees avant scellement"
+  },
+  {
+   "anteriorite_connue": "Rapports enregistres de stade 1 (analogie citee).",
+   "bib_ids": [
+    "BIB-6481"
+   ],
+   "enonce_complet": "Taxonomie a cinq niveaux graduels de contenu pre-collecte : C1 (billet-empreinte scelle publiant la racine d'un arbre de Merkle SHA-256 horodatee d'une archive salee contenant hypotheses, code du detecteur, sondes secretes et seuils, avec masquage cryptographique standard) ; C2 (cadrage et modele de menace abstrait sans famille de signaux ni protocole) ; C3 (pre-enregistrement methodologique a separation de secret publiant architecture, metriques, criteres d'exclusion et seuils tout en sequestrant graines aleatoires, sondes et identite des cibles) ; C4 (protocole operationnel integral en clair avec exemples de stimuli pour critique ouverte) ; C5 (appel public a banc d'essai partage invitant les groupes voisins a evaluer ou jouer l'adversaire sur jeu sequestre).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par attaque simulee de reidentification sur C1 et C3 qu'un adversaire n'extrait ni les sondes sequestrees ni les cibles a un taux superieur au hasard, tout en permettant l'ouverture integrale verificable par preuve Merkle a l'audit. Faux temoin 1b : archive dont un seul seuil ou graine est modifie apres horodatage, devant etre rejetee deterministement par verification de la racine Merkle SHA-256.",
+   "mecanisme_causal": "La separation cryptographique par arbre de Merkle sale (C1) et la sequestration des secrets operationnels (C3) dissocient l'engagement anterieur anti-hindsight de la fuite d'information exploitable par un concurrent ou un modele evalue.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Pre-enregistrement cryptographique par arbre de Merkle",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Taxonomie graduee de pre-enregistrement avec billet-empreinte Merkle et separation de secret"
+  },
+  {
+   "anteriorite_connue": "Protocole X, tour III.1 (propositions C et D sur articles concurrents).",
+   "bib_ids": [
+    "BIB-6749",
+    "BIB-6751"
+   ],
+   "enonce_complet": "Protocole d'extraction et d'attribution de revendications scientifiques consistant a decouper les sections (Introduction, Methode, Experiences, Limites, Conclusion) en propositions elementaires et a appliquer une grille syntaxique exclusive sans inference psychologique d'intention. Chaque attribution exige une citation en contexte validee par relecture contradictoire conservant version, page, sujet grammatical, modalite et portee pour distinguer la delimitation explicite du « non fait », le projet assume par les auteurs (« annonce ») et l'etat du domaine (« ouvert »). Une lecture integrale sans citation recevable attribue le statut « non atteste dans le texte » plutot que « faux », tout passage ambigu restant cite sans valider l'attribution.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer l'accord inter-annotateurs et le taux d'erreurs sur un corpus de citations de controle annotes contradictoirement (echec si l'absence d'inference d'intention ne reduit pas les fausses attributions par rapport a un juge libre). Faux temoin 1b : invitation impersonnelle faite a des tiers dans la discussion ou phrase ambiguement formulee, que le test doit classer comme non engageante / non attestee plutot que comme annonce des auteurs.",
+   "mecanisme_causal": "Le decoupage en propositions elementaires couple aux contraintes grammaticales (sujet, modalite, portee, citation en contexte) bloque les projections d'intention du lecteur et force une separation stricte entre absence d'attestation et faussete.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Audit syntaxique et attribution grammaticale sans inference d'intention",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Extraction syntaxique stricte et attribution grammaticale en contexte sans inference d'intention"
+  },
+  {
+   "anteriorite_connue": "Protocole X, tour III.1 (propositions B et D).",
+   "bib_ids": [
+    "BIB-6743",
+    "BIB-6503"
+   ],
+   "enonce_complet": "Regle decisionnelle preenregistree visant a eliminer la zone grise en comparant un intervalle de confiance apparie par famille ou bootstrap par unite d'article a un seuil fixe theta ou delta avant examen des donnees : H_A (ou l'effet materiel) est falsifie si la borne superieure est inferieure au seuil, l'absence d'effet est falsifiee si la borne inferieure depasse le seuil, et tout chevauchement impose le verdict strict « non tranche pour puissance insuffisante » (jamais de resultat nul). Exige un calcul d'effectif N a priori bornant la demi-largeur de l'intervalle et interdit de traiter plusieurs reformulations d'un meme cas comme des replications independantes, en imposant des intervalles simultanes pour les contrastes annonces.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier sur donnees simulees sous faible effectif et reformulations correlees que le protocole evite l'inflation du taux de faux nuls et de fausses decouvertes par pseudoreplication (echec si les reformulations correlees reduisent la couverture en dessous du niveau nominal). Faux temoin 1b : paire de bras a effet reellement sous seuil mais variance tres elevee devant produire le verdict « non tranche » et jamais « effet absent ».",
+   "mecanisme_causal": "L'appariement par unite independante (article ou famille de taches) elimine la pseudoreplication des reformulations, tandis que la zone d'indecision sur chevauchement du seuil empeche de confondre un manque de puissance statistique avec la preuve d'une absence d'effet.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Regle decisionnelle trivalente et anti-pseudoreplication",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Regle decisionnelle trivalente par seuil preenregistre, intervalles apparies sans pseudoreplication et puissance prealable"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6934"
+   ],
+   "enonce_complet": "Protocole inferentiel opposant un contraste primaire unique H_A (D > epsilon) a H_B (D <= epsilon) via un intervalle de confiance par reechantillonnage d'items et permutations appariees (sans traiter les K = 5 graines comme des items independants), ou tout chevauchement de epsilon impose un verdict strict d'indecision. Les variances de notes (var_c, var_u) ne s'appliquant pas aux mesures semantiques, un pilote independant estime l'ecart-type inter-item s_D avant dimensionnement sur Llama-3.1-8B-Instruct puis replication sur Qwen2.5-7B (ordre de grandeur : 450 generations de 400 jetons sur 48 Go).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur un jeu pilote si l'estimation de s_D inter-item evite un sous-dimensionnement sur des metriques semantiques lors du passage a l'echantillon confirmatoire sur 8B/7B (echec si l'erreur type reelle depasse nettement la prediction du pilote ou si le reechantillonnage par graines surestime la precision). Faux temoin 1b : permutations d'assignation intra-item sous conditions neutres identiques, devant rester centrees sur zero dans la zone d'indecision ou sous epsilon.",
+   "mecanisme_causal": "L'estimation empirique de la dispersion inter-item s_D sur un pilote disjoint adapte le dimensionnement aux metriques semantiques non parametriques et evite la surestimation de puissance induite par la dependance des graines sur un meme item.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dimensionnement par pilote semantique sur modeles 8B",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole a marge d'equivalence, indecision stricte et dimensionnement par pilote semantique independant sur modeles 8B"
+  },
+  {
+   "anteriorite_connue": "Methodes classiques de test d'equivalence TOST et correction de Holm.",
+   "bib_ids": [
+    "BIB-6494"
+   ],
+   "enonce_complet": "Conventions metrologiques combinant plan preenregistre, correction de Holm sur la famille d'experiences, intervalles par bootstrap stratifie par tache, test d'equivalence par deux tests unilateraux (TOST, par exemple a plus ou moins 3 points) et calcul de puissance a priori afin de qualifier la zone non concluante d'echec de puissance plutot que de resultat nul. Le protocole isole la fausse alerte comme une attaque par saturation du budget d'audit dotee d'une metrique de dommage dediee (P6), et evalue dans une experience dediee (E6) l'alignement d'un juge textuel sur l'oracle mecanique pour decider s'il peut servir de proxy explicitement etiquette sur les taches sans oracle mecanique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier dans E6 que le juge textuel atteint un accord et une calibration suffisants avec l'oracle mecanique avant tout usage comme proxy (refute si l'ecart de classement ou la saturation P6 depasse le seuil preenregistre). Faux temoin 1b : flux de sorties inoffensives concues pour declencher des faux positifs sur le detecteur, devant etre capture comme saturation P6 du budget d'audit.",
+   "mecanisme_causal": "Separer le cout de saturation des faux positifs (P6) et exiger une validation empirique prealable du juge textuel contre un oracle mecanique (E6) empeche les proxys non calibres ou les flots d'alertes parasites de masquer les defaillances reelles.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Saturation d'audit par faux positifs et validation de juge proxy",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Tests d'equivalence TOST, saturation d'audit par fausses alertes et alignement de juge textuel sur oracle mecanique"
+  },
+  {
+   "anteriorite_connue": "Resolution des divergences sur dilution du credit et pression hors ligne (Avalon, N13 c1).",
+   "bib_ids": [
+    "BIB-6884"
+   ],
+   "enonce_complet": "Egaliser le taux d'acceptation entre deux bras ne garantit l'egalite ni de l'information accessible, ni de la variance, ni de la dependance entre mises a jour. Lorsque la dilution du credit appartient a la definition du traitement, elle interdit d'attribuer separement l'effet au mecanisme de credit ; un calcul gratuit sur un meme lot archive comparant les distributions de recompenses et mises a jour attendues sous les regles alternatives tranche l'equivalence algebrique avant toute experience. Le duel doit mesurer l'effet du regime precisement implemente (assignation aleatoire, publication des fonctions de recompense et mise a jour, test separe des variantes mecanistes).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer l'audit algebrique hors ligne sur un lot archive et verifier s'il detecte des ecarts de variance ou de dependance entre regles a taux d'acceptation egalises (echec si l'audit ne discrimine pas des lois de mise a jour algebriquement differentes). Faux temoin 1b : deux variantes dont la reparametrisaton est algebriquement identique sur le lot archive, ou l'audit doit conclure a une difference nulle avant toute depense.",
+   "mecanisme_causal": "L'audit algebrique sur donnees archivees identifie avant execution les confusions entre taux d'acceptation, variance des retours et dependance temporelle des mises a jour, evitant des attributions causales fallacieuses.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit algebrique hors ligne des regles de credit",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Audit algebrique a cout nul de la dilution du credit et identification du regime implemente"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6909"
+   ],
+   "enonce_complet": "Geler d'abord l'admissibilite (incluant le test de mort sur donnees distinctes), puis appliquer la procedure e-BH a toutes les lois admissibles de la generation sur une epreuve fraiche en comptant chaque variante testee. Comme une selection ulterieure post-e-BH n'herite pas automatiquement du controle FDR initial, le protocole doit demontrer avant lancement la garantie de l'ensemble finalement annonce, eviter de morceler les fiches en petites familles pour alleger la correction, fixer toute ponderation avant l'epreuve avec preuve de validite, et ne pas assimiler le seuil de 5 % par generation a une probabilite par promotion ni a un controle sur archive cumulative adaptative.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler une selection post-e-BH ou un decoupage opportuniste en sous-familles sur epreuve fraiche et verifier la violation du FDR nominal si la regle n'est pas respectee, puis confirmer le maintien du FDR sous gel d'admissibilite et comptage complet. Faux temoin 1b : variantes purement nulles passees apres test de mort sur donnees disjointes, dont la proportion retenue par e-BH complet ne doit pas exceder le niveau alpha cible.",
+   "mecanisme_causal": "La separation stricte entre filtrage d'admissibilite sur donnees disjointes et application globale d'e-BH sur l'ensemble des variantes candidates preserve l'independance ou la structure de supermartingale requise pour le controle du taux de fausses decouvertes de l'ensemble publie.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle de multiplicite e-BH sans fuite post-selection",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Gel d'admissibilite prealable a e-BH, comptage exhaustif des variantes et garantie sur l'ensemble final annonce"
+  },
+  {
+   "anteriorite_connue": "Essais anterieurs du pont valides uniquement sur modeles factices (82 essais).",
+   "bib_ids": [
+    "BIB-6893"
+   ],
+   "enonce_complet": "Tester le pont fiche-vers-loi sur dix fiches reelles tirees par session-depot via deux traductions aveugles par LLM et six temoins de controle T1-T6 (avec cibles attendues T3->N5, T4->N1, T5->N3, T6->N2 ou N9), pour un budget estime de 1 a 4 USD (plafond 5 USD). L'hypothese H_A predit qu'au moins une fiche sur dix sort en loi testable (sortie 1 ou 2) avec accord des deux traductions aveugles et au moins cinq temoins sur six correctement classes ; H_B predit zero sortie testable avec accord (renvois N1-N11 ou desaccord N8).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si moins de cinq temoins T1-T6 sur six sont correctement classes ou si zero fiche reelle sur dix atteint une sortie testable avec accord entre les deux traductions aveugles, le pont fiche-vers-loi est rejete comme non operationnel sur corpus reel. Faux temoin 1b : fiches pieges T1-T6 volontairement non testables ou mal typees qui doivent etre renvoyees vers les codes d'erreur N1-N9 attendus plutot que traduites en lois valides.",
+   "mecanisme_causal": "La double traduction aveugle filtre le bruit stochastique de formalisation LLM tandis que les temoins T1-T6 calibrent la sensibilite et la specificite du compilateur sur des cas reels hors modeles factices.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Validation en aveugle du compilateur fiche-vers-loi",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole en aveugle de validation du pont fiche-vers-loi par double traduction et temoins de controle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6930"
+   ],
+   "enonce_complet": "Tester l'hypothese selon laquelle les points fixes c_hat distincts mesures par Claude, Qwen-7B et Qwen-72B refletent des echelles de notation differentes et convergent vers une destination latente commune apres calibration affine ajustee uniquement sur les reponses neutres. Ajuster la transformation affine sur les reponses neutres seules et l'evaluer hors echantillon sur les reponses sous pression et items reserves, en comparant les ecarts residuels de c_hat a la marge d'equivalence issue du bruit de relecture, et l'erreur quadratique hors echantillon contre des references sans calibration et a moyenne seule.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si les ecarts residuels de c_hat entre lecteurs apres calibration affine sur reponses neutres depassent encore la marge d'equivalence du bruit de relecture, ou si la calibration ne bat pas la reference a moyenne seule hors echantillon, l'hypothese d'une simple echelle affine commune est refutee. Faux temoin 1b : identifiants de reponses permutes, ou la calibration affine ajustee doit perdre tout gain hors echantillon.",
+   "mecanisme_causal": "Si les juges partagent un meme axe latent de jugement mais different par biais additif et facteur d'echelle, l'estimation de ces deux parametres sur le regime neutre aligne leurs lectures sous pression sans fuite de donnees.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration affine inter-lecteurs hors echantillon",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Calibration affine des lecteurs sur reponses neutres pour tester la convergence des destinations latentes"
+  },
+  {
+   "anteriorite_connue": "Consigne de Lazar sur le blocage des cas indecis en g+1.",
+   "bib_ids": [
+    "BIB-6897"
+   ],
+   "enonce_complet": "Remplacer la conjonction binaire par une machine a quatre etats de survie inter-generationnelle afin d'eviter l'extinction en l'absence de banques de couche 2 et de couche 3 : (1) Eliminee (refutee au test de mort ou sur l'epreuve) ; (2) Promue Couche 1 (survit au test de mort et bat le nul informe et la multiplicite sur epreuve fraiche) ; (3) Gelee en attente d'episodes — Couche 3 / Theorie (survit au test de mort local/synthetique et traduite avec accord en sortie 2 ou N3 preuve formelle, sans banque d'epreuve disponible) ; (4) Indecise / Non traduisible (desaccord N8 du pont ou non concluante au test de mort, bloquee pour la generation g+1). Comparer en parallele un pari a fraction adaptative sur richesse cumulee avec budget alpha stratifie par famille de cibles contre e-BH uniforme pour preserver la puissance quand le nombre de fiches m est petit.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler plusieurs generations sous la distribution estimee des sorties (5-15 % couche 1, 45-60 % couche 2, 30-45 % couche 3) et verifier que la machine a quatre etats evite l'extinction tout en bloquant 100 % des fiches N8/indecises en g+1, et comparer la puissance du pari adaptatif stratifie a e-BH uniforme sous petit m (echec si le pari adaptatif viole le FDR ou perd en puissance). Faux temoin 1b : injection de fiches pures nulles et de desaccords N8 qui ne doivent jamais transiter vers Promue Couche 1 ni passer en g+1.",
+   "mecanisme_causal": "La distinction entre refutation, attente de banc d'episodes et indecision bloquante empeche la destruction prematuree des hypotheses de couches 2 et 3 tout en bloquant la propagation des artefacts ambigus d'une generation a l'autre, tandis que le pari adaptatif stratifie evite l'ecrasement de puissance d'e-BH uniforme sur petits effectifs.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Machine a quatre etats de survie inter-generationnelle",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Machine de survie inter-generationnelle a quatre etats et pari adaptatif stratifie contre e-BH uniforme"
+  },
+  {
+   "anteriorite_connue": "Donnees existantes c2a_results.json et c2b_results.json (30 items, K=10).",
+   "bib_ids": [
+    "BIB-6914"
+   ],
+   "enonce_complet": "Departager l'hypothese d'un melange discret — ou chaque generation sous pression soit conserve sa note neutre, soit bascule integralement vers la cible c_hat (produisant Delta = pi(c_hat - p0) avec gain d'attraction moyen g = pi) — de l'hypothese rivale d'un glissement fractionnel graduel. Testable a cout nul sur c2a_results.json et c2b_results.json par indice de dispersion et test de bimodalite aux modes {neutre, c_hat} sous permutation intra-item, completes par la proportion de notes pressees egales au mode neutre et un bootstrap par item.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la distribution des notes sous pression sur c2a/c2b est unimodale centree sur une valeur intermediaire avec proportion quasi nulle au mode neutre et indice de dispersion inferieur au modele bimodal de meme moyenne, l'hypothese du melange discret est refutee au profit du glissement graduel. Faux temoin 1b : permutations intra-item ou tirages unimodaux de meme moyenne et variance globale, devant etre rejetes par le test de bimodalite aux modes {neutre, c_hat}.",
+   "mecanisme_causal": "La decomposition en melange binaire explique un gain moyen fractionnel g sans qu'aucune generation individuelle ne se situe a mi-chemin, distinguant un basculement discret de regime comportemental sous pression d'une derive continue de probabilites.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Basculement discret contre derive graduelle sous pression",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test de melange discret contre glissement graduel pour l'interpretation du gain d'attraction sous pression"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

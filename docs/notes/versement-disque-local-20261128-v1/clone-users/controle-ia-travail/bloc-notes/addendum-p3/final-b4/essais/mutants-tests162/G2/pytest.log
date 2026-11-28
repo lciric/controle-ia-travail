@@ -1,0 +1,39 @@
+F
+=================================== FAILURES ===================================
+__________________ test_degenerescences_au_dela_de_1_pourcent __________________
+
+    def test_degenerescences_au_dela_de_1_pourcent():
+        """Plus de 1 % de tirages dégénérés : « échec » (garde) ; au plus 1 % : calcul lu."""
+        rng = np.random.default_rng(3)
+        n = 600
+        taches = np.repeat(np.arange(30), 20)
+        y = (rng.random(n) < 0.5).astype(np.int64)
+        s, pl = rng.normal(size=n) + y, rng.normal(size=(n, 20))
+        r = cp.ecart_conjoint(s, pl, y, taches, np.random.default_rng(0), 100, 0.95)
+        assert r["degeneres"] == 0 and r["tirages"] == 100
+        y2 = (taches == 0).astype(np.int64)
+        y2[(taches == 0)] = 1
+        y2[np.flatnonzero(taches == 1)[:10]] = 1                              # positifs dans deux tâches sur trente
+        s2 = np.where(y2 == 1, 1.0, 0.0) + rng.normal(size=n)
+        with pytest.raises(GardeArret, match="dégénérés"):
+            cp.ecart_conjoint(s2, pl, y2, taches, np.random.default_rng(0), 200, 0.95)
+        with pytest.raises(GardeArret, match="dégénérés"):
+            cp.difference_fenetres(np.c_[s2, s2], np.c_[s2 + 1, s2], y2, taches, np.random.default_rng(0), 200, 0.95)
+        c = np.where(y2 == 1, "saboteur", "honnete")
+        r = cp.contrastes(s2, c, taches, np.random.default_rng(0), 200, 0.95)
+        assert r["ST"]["etat"] == "non calculable"                          # aucun témoin
+        # frontière, tirages imposés : un tirage dégénéré sur 100 (1 %) passe ; deux arrêtent
+        t3, y3 = np.repeat([0, 1, 2], 20), np.r_[[1] * 10 + [0] * 10, [0] * 40]    # positifs dans la seule tâche 0
+        s3, pl3 = rng.normal(size=60), rng.normal(size=(60, 3))
+        bon, sans_positif = [0, 1, 2], [1, 2, 1]
+        r = cp.ecart_conjoint(s3, pl3, y3, t3, _TiragesImposes([sans_positif] + [bon] * 99), 100, 0.95)
+        assert (r["degeneres"], r["tirages"]) == (1, 99)
+>       with pytest.raises(GardeArret, match="2 tirages dégénérés sur 100 \\(plus de 1 %\\)"):
+E       Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:991: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_degenerescences_au_dela_de_1_pourcent
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 8.14s
+

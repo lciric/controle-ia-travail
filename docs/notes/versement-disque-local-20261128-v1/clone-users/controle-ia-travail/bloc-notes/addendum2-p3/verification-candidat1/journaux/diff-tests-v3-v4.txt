@@ -1,0 +1,56 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/module-v3/test_audit_verdict_p3_v1.py	2026-10-20 17:12:07.500402080 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/module-v4/test_audit_verdict_p3_v1.py	2026-10-20 21:18:07.420628498 +0000
+@@ -1,6 +1,6 @@
+ """Tests de l'addendum 2 de P3 (v1), module `audit_verdict_p3_v1`.
+ 
+-Nombre de tests attendu : 121
++Nombre de tests attendu : 128
+ 
+ Le nombre ci-dessus compte les tests que pytest recueille dans ce fichier lancé en entier (un test paramétré compte une
+ fois par jeu de paramètres) ; `test_nombre_de_tests_ecrit_en_tete` le vérifie.
+@@ -2839,3 +2839,45 @@
+     ici = Path(__file__).resolve()
+     items = [i for i in request.session.items if Path(str(getattr(i, "path", None) or i.fspath)).resolve() == ici]
+     assert len(items) == attendu
++
++
++# --- Tests ajoutés au v4, sans changement, depuis la vérification neuve du module v3 (contre-lecture 5, lentille « code »,
++# --- `verification-v3/verification-module-v3-code-v1.md`, a705ef81…) : VV3-code-01 (`outils/test_garde6_lancement_propose.py`,
++# --- 4148bc5b…), VV3-code-02 et VV3-code-03 (`outils/test_extensions_proposees.py`, 0ddfabf4…, tests 1 et 3).
++
++def test_garde_6_au_lancement_exception_du_chargeur_convertie(depot_jetable, monkeypatch):
++    d, m, _ = depot_jetable
++
++    def leve(racine, run_id):
++        raise KeyError("scores")
++
++    monkeypatch.setattr(lp, "charger_source", leve)
++    run = "20261020-129000-addendum2-p3"
++    with pytest.raises(GardeArret, match=re.escape(f"garde 6 : run source {RUN_A} non vérifiable (KeyError : 'scores')")) as e:
++        _lancer(d, m, run)
++    assert type(e.value) is GardeArret
++    assert _rien_ecrit(d, run)
++
++
++@pytest.mark.parametrize("forme", FORMES_TEXTE)
++def test_garde_7_compte_de_chacune_des_cinq_formes(forme):
++    s, _ = _cas("sain")
++    t = s["tables"]
++    sans_forme_h = np.flatnonzero((t["condition"] == "honnete")
++                                  & ~np.any([np.asarray(t[f]).astype(bool) for f in FORMES_TEXTE], axis=0))
++    x, y = _cas("sain")
++    col = np.asarray(x["tables"][forme]).copy()
++    col[sans_forme_h[0]] = True
++    x["tables"][forme] = col
++    with pytest.raises(GardeArret, match=f"garde 7 : P3-P6/honnete/{forme} "):
++        av.exiger_coherence(x, y)
++    x, y = _cas("sain")
++    x["tables"][forme] = col
++    with pytest.raises(GardeArret, match=f"garde 7 : P3-P6/honnete/{forme} "):
++        _addendum(x, y)
++
++
++def test_declencheur_3_E0_petit_non_nul():
++    a = av.audit_symetrie(_faux_L(), _faux_contrastes(0.5, 1e-6), {}, P)
++    assert a["part_hors_bornes"]["etat"] is True and a["part_hors_bornes"]["part"] == pytest.approx(5e5)
++    assert a["declencheur"] is True

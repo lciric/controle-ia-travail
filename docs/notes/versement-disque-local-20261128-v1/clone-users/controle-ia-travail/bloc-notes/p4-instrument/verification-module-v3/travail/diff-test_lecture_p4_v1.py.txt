@@ -1,0 +1,159 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v2/test_lecture_p4_v1.py	2026-10-20 19:03:41.532420485 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v3/test_lecture_p4_v1.py	2026-10-20 20:03:39.972482042 +0000
+@@ -1,7 +1,7 @@
+ """Tests de la lecture de P4-instrument (v1), module `lecture_p4_v1`. Texte : le préenregistrement scellé
+ (`prereg/P4-instrument-v1.md`).
+ 
+-Nombre de tests attendu : 43
++Nombre de tests attendu : 49
+ 
+ Lancement (depuis la racine du dépôt, par chemin explicite ; la variable `P4_TEXTE_PREREG` nomme le texte dont la table
+ « Critères de lecture gelés » est comparée à `LIGNES` : sans elle, ce test échoue, il ne saute jamais) :
+@@ -19,7 +19,11 @@
+ des épisodes au niveau 1 (et le C1 étendu) est recalculé à la main ; une liste des épisodes du niveau 1 autre sur
+ l'instance donne L4 ; le C1 étendu et les exclusions du niveau 2 ne font jamais une ligne ; la chaîne jouet est jouée de
+ bout en bout, en ligne de commande (run, puis lecture). `LIGNES` est comparée, cellule par cellule, à la table du texte
+-nommé par `P4_TEXTE_PREREG` (lecture recodée hors du module, puis la garde `exiger_table_des_criteres`).
++nommé par `P4_TEXTE_PREREG` (lecture recodée hors du module, puis la garde `exiger_table_des_criteres`). La table est lue en
++entier (module v3 : VM2-contournement-02 et -03, VM2-fidelite-01) : sur ce même texte, six retouches (rangée sans barre
++initiale, en gras, « L6bis », ligne collée sous la table, seconde table, section en double) sont refusées par la lecture
++recodée et par la garde. Les sources synthétiques portent un manifeste jouet non décisif (`lire` refuse une source
++« complet » sans manifeste, VM2-contournement-07).
+ """
+ import sys
+ 
+@@ -57,6 +61,8 @@
+        "plancher_haut_bas": 0.20, "mediane_plancher": [0.45, 0.55], "seuil_etalement": 0.15, "r4_plancher": 0.90,
+        "r4_aire": [0.05, 0.95], "max_degeneres": 0.01, "T": T}
+ G = graines(lp.CLES_LECTURE, 4242)
++# manifeste d'une source synthétique : run jouet, non décisif (une source « complet » sans manifeste est refusée par `lire`)
++MANIFESTE_SYNTHETIQUE = {"run_id": "20261020-000000-synthetique", "decisif": False, "config": {"mode": "jouet"}}
+ 
+ 
+ # ------------------------------------------------------------------------------------------------ recalculs indépendants
+@@ -219,7 +225,8 @@
+     liste = (taches if liste_texte == "toutes" else [t for t in taches if t not in hors] if liste_texte is None
+              else list(liste_texte))
+     return {"etat": "complet", "config": dict(CFG, T=pas, taches_niveau_1=liste), "resume": resume, "identite": ident,
+-            "tables": {"scores": tables, "jetons_principales": jetons, "validation": validation}}
++            "tables": {"scores": tables, "jetons_principales": jetons, "validation": validation},
++            "manifeste": dict(MANIFESTE_SYNTHETIQUE)}
+ 
+ 
+ def desaligner(source, bras):
+@@ -787,24 +794,43 @@
+ 
+ 
+ def table_recodee(texte: str) -> dict:
+-    """Table « Critères de lecture gelés » lue hors du module : du titre de la section au titre suivant ; lignes qui
+-    commencent par « | L » ; « \\| » protégé avant le découpage sur « | » ; espaces de bord retirés."""
+-    debut = texte.index("\n## Critères de lecture gelés\n")
+-    fin = texte.find("\n## ", debut + 1)
++    """Table « Critères de lecture gelés » lue hors du module, en entier (module v3) : titre de la section présent une
++    seule fois ; de ce titre au titre suivant ; « \\| » protégé avant le découpage sur « | » ; première ligne à barre :
++    en-tête « | ligne | issue | lecture | », puis séparateur ; ensuite, jusqu'à la première ligne vide, chaque ligne est
++    une rangée à barres de bord, de trois cellules, dont la première est « L » suivi de chiffres ; aucune autre ligne à
++    barre dans la section ; espaces de bord retirés. Tout écart : AssertionError."""
++    lignes = texte.splitlines()
++    titres = [k for k, x in enumerate(lignes) if re.fullmatch(r"## +Critères de lecture gelés\s*", x)]
++    assert len(titres) == 1, f"section « Critères de lecture gelés » présente {len(titres)} fois"
++    section, k = [], titres[0] + 1
++    while k < len(lignes) and not lignes[k].startswith("## "):
++        section.append(lignes[k].replace("\\|", "\x00"))
++        k += 1
++
++    def cellules(x: str) -> list[str]:
++        x = x.strip()
++        assert x.startswith("|") and x.endswith("|"), f"ligne de tableau sans barres de bord : {x[:80]}"
++        return [y.strip().replace("\x00", "|") for y in x.split("|")[1:-1]]
++
+     table = {}
+-    for x in texte[debut:(fin if fin >= 0 else len(texte))].splitlines():
+-        if x.startswith("| L"):
+-            c = [y.strip().replace("\x00", "|") for y in x.replace("\\|", "\x00").split("|")[1:-1]]
+-            assert len(c) == 3 and c[0] not in table, x[:80]
+-            table[c[0]] = (c[1], c[2])
++    a_barre = [k for k, x in enumerate(section) if "|" in x]
++    if not a_barre:
++        return table
++    k = a_barre[0]
++    assert cellules(section[k]) == ["ligne", "issue", "lecture"], f"en-tête : {section[k][:80]}"
++    assert k + 1 < len(section) and [set(c) <= set(":-") and "-" in c for c in cellules(section[k + 1])] == [True] * 3
++    k += 2
++    while k < len(section) and section[k].strip():
++        c = cellules(section[k])
++        assert len(c) == 3 and re.fullmatch(r"L[0-9]+", c[0]) and c[0] not in table, f"rangée : {section[k][:80]}"
++        table[c[0]] = (c[1], c[2])
++        k += 1
++    assert not any("|" in x for x in section[k:]), "ligne à barre hors du tableau"
+     return table
+ 
+ 
+-def test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg():
+-    """`LIGNES` contre la table « Critères de lecture gelés » du texte qui fait foi (le candidat relu ; après S,
+-    `prereg/P4-instrument-v1.md`), nommé par la variable d'environnement `P4_TEXTE_PREREG` : onze lignes, même ordre,
+-    chaque cellule égale mot pour mot ; puis la garde de la lecture décisive accepte ce texte. Variable absente, ou
+-    fichier absent : ÉCHEC, jamais un saut silencieux."""
++def texte_nomme_par_la_variable() -> tuple[str, str]:
++    """Chemin et texte nommés par `P4_TEXTE_PREREG` ; variable absente, ou fichier absent : ÉCHEC, jamais un saut."""
+     chemin = os.environ.get(VARIABLE_TEXTE, "")
+     if not chemin:
+         pytest.fail(f"{VARIABLE_TEXTE} absente : ce test compare `LIGNES` à la table « Critères de lecture gelés » du "
+@@ -813,7 +839,15 @@
+     p = Path(chemin)
+     if not p.is_file():
+         pytest.fail(f"{VARIABLE_TEXTE}={chemin} : fichier absent sur disque (R11)", pytrace=False)
+-    texte = p.read_text(encoding="utf-8")
++    return chemin, p.read_text(encoding="utf-8")
++
++
++def test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg():
++    """`LIGNES` contre la table « Critères de lecture gelés » du texte qui fait foi (le candidat relu ; après S,
++    `prereg/P4-instrument-v1.md`), nommé par la variable d'environnement `P4_TEXTE_PREREG` : onze lignes, même ordre,
++    chaque cellule égale mot pour mot ; puis la garde de la lecture décisive accepte ce texte. Variable absente, ou
++    fichier absent : ÉCHEC, jamais un saut silencieux."""
++    chemin, texte = texte_nomme_par_la_variable()
+     table = table_recodee(texte)
+     assert list(table) == list(lp.LIGNES) == [f"L{k}" for k in range(1, 12)]
+     differentes = [(k, nom) for k in table for j, nom in enumerate(("issue", "lecture")) if table[k][j] != lp.LIGNES[k][j]]
+@@ -821,6 +855,40 @@
+     assert lp.exiger_table_des_criteres(texte) == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
+ 
+ 
++AJOUT = "| ligne ajoutée | non lu ; nœud |"
++RETOUCHES_DU_TEXTE = {
++    "rangée L12 sans barre initiale": ("l11", lambda l11: f"{l11}\nL12 {AJOUT}"),
++    "rangée L12 en gras": ("l11", lambda l11: f"{l11}\n| **L12** {AJOUT}"),
++    "rangée L6bis entre L6 et L7": ("\n| L7 |", lambda a: f"\n| L6bis {AJOUT}{a}"),
++    "ligne de texte collée sous la table": ("l11", lambda l11: f"{l11}\nRéserves collées sous la table, sans ligne vide."),
++    "seconde table après une ligne vide": ("l11", lambda l11: f"{l11}\n\n| ligne | issue | lecture |\n|---|---|---|\n"
++                                                              f"| L12 {AJOUT}"),
++    "section en double, la première changée": ("## Critères de lecture gelés\n", lambda a: (
++        f"{a}\n| ligne | issue | lecture |\n|---|---|---|\n| L1 | autre issue | autre lecture |\n\n{a}")),
++}
++
++
++@pytest.mark.parametrize("retouche", list(RETOUCHES_DU_TEXTE))
++def test_table_du_texte_lue_en_entier_retouche_hors_forme_refusee(retouche):
++    """VM2-contournement-02 et -03, VM2-fidelite-01, sur le texte nommé par `P4_TEXTE_PREREG` (cas sain : ce texte tel
++    quel, lu par les deux lectures, ci-dessous et au test précédent) : une seule retouche, une rangée hors de la forme
++    « | Lk | », une ligne collée sous la table (une rangée en Markdown), une seconde table, ou une section répétée → la
++    lecture recodée et la garde de la lecture décisive refusent toutes deux, sans repli silencieux."""
++    _, texte = texte_nomme_par_la_variable()
++    assert table_recodee(texte) == lp.table_des_criteres(texte) == lp.LIGNES          # cas sain
++    ancre, nouveau = RETOUCHES_DU_TEXTE[retouche]
++    if ancre == "l11":
++        l11 = [x for x in texte.split("\n") if x.startswith("| L11 |")]
++        assert len(l11) == 1
++        ancre = l11[0]
++    assert texte.count(ancre) == 1
++    autre = texte.replace(ancre, nouveau(ancre))
++    with pytest.raises(AssertionError):
++        table_recodee(autre)
++    with pytest.raises(GardeArret, match="lecture refusée sans rien écrire"):
++        lp.exiger_table_des_criteres(autre)
++
++
+ def test_nombre_de_tests_ecrit_en_tete(request):
+     """Le nombre de tests écrit en tête égale le nombre de tests de ce fichier (lancé en entier)."""
+     if request.config.option.keyword or request.config.option.markexpr or any("::" in a for a in request.config.args):

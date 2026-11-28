@@ -1,0 +1,60 @@
+                                              Title Suppressed Due to Excessive Size
+
+                                                                       32-point drop to 0.63 AUROC, though we note this may be
+                                                                       partially confounded by putting the model out of distribu-
+                                                                       tion.
+                                                                       Sycophancy Scenario. Baseline probes achieved 0.99 AU-
+                                                                       ROC. Like in the Sandbagging scenario, removing scores
+                                                                       from leaky positions resulted in a meaningful drop in per-
+                                                                       formance. This was also observed for Content Filtering:
+                                                                       replacing the elicitation instructions with a benign prompt
+                                                                       and recomputing activations in a new forward pass resulted
+                                                                       in a 38-point drop to 0.61 AUROC.
+                                                                       Bias Scenario. Baseline probe performance was substan-
+                                                                       tially lower than in the other scenarios, achieving only 0.74
+                                                                       AUROC. Perhaps due to this weaker baseline, when miti-
+                                                                       gations were applied, probes failed entirely to separate the
+                                                                       two classes, with AUROC dropping to 0.46 (Score Filtering)
+                                                                       and 0.54 (Content Filtering).
+Figure 4. Probe performance (AUROC) under Content Filter-
+ing. Removing elicitation prompts and reasoning traces before          Random Baseline Validation. To confirm that performance
+computing activations degrades performance across all scenarios:       drops stem from removing leaky tokens specifically rather
+Sandbagging drops from 0.95 to 0.62, Sycophancy from 0.90 to           than from token removal in general, we compare our mit-
+0.61, and Bias from 0.74 to 0.54.                                      igations against random filtering. If token removal alone
+                                                                       explained the degradation, random filtering should produce
+                                                                       similar drops.
+                                                                       We find that random filtering has minimal impact on probe
+                                                                       performance across all scenarios. For Sandbagging, AU-
+                                                                       ROC remains stable until 95% of tokens are filtered, at
+                                                                       which point it drops to 0.72, still substantially above the
+                                                                       0.62 achieved by Content Filtering. For Bias, filtering 95%
+                                                                       of tokens reduces AUROC by only 5 points, compared to
+                                                                       the larger drop observed under Content Filtering. For Syco-
+                                                                       phancy, random filtering produces a small degradation even
+                                                                       at 95% removal, resulting in a 9 point drop compared to
+                                                                       the almost 40 point drop for content filtering. These results
+                                                                       suggest that the performance drops under our mitigations
+                                                                       are attributable to the removal of leaky tokens rather than to
+                                                                       reduced information in general.
+
+                                                                       Table 1. Recall of REPE probes under mitigations. Base recall
+                                                                       is measured without any filtering applied. Content and Score
+                                                                       Filtering columns show recall at high filtering strength.
+
+
+                                                                                Dataset         Base     Content     Score
+                                                                                Sandbagging      1.00      0.04       0.03
+Figure 5. Probe performance (AUROC) under Score Filtering.
+                                                                                Sycophancy       0.25      0.25       0.00
+Excluding leaky token positions from score computation degrades                 Bias             0.43      0.00       0.00
+performance for Sandbagging (0.95 to 0.81) and Bias (0.74 to
+0.46), while Sycophancy remains stable (0.90).
+                                                                       Beyond AUROC, which measures the degree of separation
+                                                                       between samples that display the studied behavior and sam-
+                                                                       ples that do not, we examine probes’ ability to distinguish
+                                                                       transcripts containing normal conversational data from those
+                                                                       exhibiting the studied behavior. For that we measure the
+                                                                       recall at fixed 1% FPR threshold.
+
+                                                                   6
+

@@ -1,0 +1,50 @@
+/tmp/claude-0/-home-user/5a6b9d1d-b17d-59a1-a770-8737a831fe0a/scratchpad/scellement-revalidation/venv-gpu-neuf/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M14-1792482560123 -x -l /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/m/M14/test_complements_p3_v1.py::test_garde_localisation_egale_a_celle_de_la_lecture
+
+F
+=================================== FAILURES ===================================
+_____________ test_garde_localisation_egale_a_celle_de_la_lecture ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb43f4bb710>
+
+    def test_garde_localisation_egale_a_celle_de_la_lecture(monkeypatch):
+        """Garde 13 : scores du pré-coût et du coût égaux à ceux de `lecture._localisation` à 1e-9 près (brouillon 6). Cas
+        sains : écarts de 1e-12 et de 5e-10 ; artefacts : écart de 1e-6 ou de 2e-9 (VF2-05) sur le pré-coût, de 1e-6 sur
+        le coût, lignes décalées : arrêt."""
+        src, lec, s = _cas("sain")
+        assert s["actions"]["localisables"][P[0]] == 1600
+        d = cp._donnees(src)
+        vraie = lp._localisation
+    
+        def decalee(cle, ecart):
+            def f(source, k, rangs):
+                r = vraie(source, k, rangs)
+                r[cle] = r[cle] + ecart
+                return r
+            return f
+    
+        for ecart in (1e-12, 5e-10):
+            monkeypatch.setattr(lp, "_localisation", decalee("pre", ecart))
+            assert cp.localisation(d, 0)["lignes"].size == 1600
+        for cle, ecart in (("pre", 1e-6), ("pre", 2e-9), ("cout", -1e-6), ("lignes", 1)):
+            monkeypatch.setattr(lp, "_localisation", decalee(cle, ecart))
+>           with pytest.raises(GardeArret, match="garde 13 : localisation de l'addendum ≠ localisation de la lecture décisive"):
+E           Failed: DID NOT RAISE GardeArret
+
+cle        = 'pre'
+d          = {'t': {'noms_sondes': array(['tromperie-lineaire-c7', 'enjeux-attention-c15',
+       'tromperie-lineaire-c7-plancher-0... 'tromperie-lineaire-c7-plancher-1', 'tromperie-lineaire-c7-plancher-2', 'tromperie-lineaire-c7-plancher-3', ...], ...}
+decalee    = <function test_garde_localisation_egale_a_celle_de_la_lecture.<locals>.decalee at 0x7fb51146e340>
+ecart      = 2e-09
+lec        = {'principales': ['tromperie-lineaire-c7', 'enjeux-attention-c15'], 'n_plancher': {'tromperie-lineaire-c7': 30, 'enjeux...: 0.2815015402846008, 'niveau': 0.95, ...}, 'P3-P2': {'effet': 0.0, 'bas': 0.0, 'haut': 0.0, 'niveau': 0.95, ...}, ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb43f4bb710>
+s          = {'statut': "non décisif : ajoute des réserves nommées, ne change ni la lecture décisive, ni ses états, ni sa ligne d'i...onstantes': {'tirages_aire': 200, 'tirages_cout': 2000, 'niveau': 0.95, 'niveau_saboteur_honnete_A1': 0.975, ...}, ...}
+src        = {'tables': {'noms_sondes': array(['tromperie-lineaire-c7', 'enjeux-attention-c15',
+       'tromperie-lineaire-c7-planc...erie-lineaire-c7-plancher-2'}, {'nom': 'tromperie-lineaire-c7-plancher-3'}, ...]}, 'controle_negatif': 'conforme', ...}
+vraie      = <function _localisation at 0x7fb501f84ae0>
+
+test_complements_p3_v1.py:1192: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_localisation_egale_a_celle_de_la_lecture
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 22.31s
+

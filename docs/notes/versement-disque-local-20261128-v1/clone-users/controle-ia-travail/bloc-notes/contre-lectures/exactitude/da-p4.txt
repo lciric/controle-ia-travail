@@ -1,0 +1,60 @@
+  Probe                        Definition and main hyperparameters
+  Logistic regression          ℓ2 -regularised logistic regression with LIBLINEAR, C = 25, and at most 8
+                               iterations; the raw logit is used as the score.
+  Difference of means          Unit direction proportional to the difference between the mean colluder and
+                               honest activations in standardised space.
+  Linear artificial topogra-   PCA on paired colluder–honest activation differences; the leading component
+  phy                          is oriented so that colluders receive larger scores.
+  Multi-layer perceptron       One hidden layer with 128 units and at most 1000 optimisation iterations; the
+                               raw output is used as the score.
+  Multi-head attention         Input projection to 64 dimensions, four attention heads, dropout 0.1, Adam
+                               with learning rate 10−3 , batch size 32, and 200 epochs.
+  Multi-layer logistic re-     One logistic-regression probe per selected layer with C = 1 and at most 1000
+  gression                     iterations; the final score is averaged across layers.
+Table 1: Probe architectures. We follow the released NARCBench implementation where implemen-
+tation details differ from the paper description.
+
+
+where z(1) ≥ z(2) ≥ z(3) ≥ z(4) . Peak suspicion asks whether any agent is highly suspicious;
+deception split asks whether two agents separate from the other two.
+The Asymmetry Probe is a learned logistic-regression classifier on
+                                                                   ⊤
+                                                                                  
+     xasym = Var({zi }), z(1) − z(4) , Gsplit , z̄ ,   Gasym = σ wasym xasym + basym .                         (8)
+The parameters (wasym , basym ) are trained on NARCBench-Core and then frozen.
+For homogeneous model compositions, we additionally evaluate activation alignment and sorted con-
+catenation, following Rose et al. [2026]. These methods are not applied directly across heterogeneous
+raw activation spaces. In heterogeneous runs, group monitoring uses calibrated scalar scores as in (5).
+The monitor exposed in the feedback condition is fixed to logistic regression with peak suspicion:
+                                                               (LR)
+                                         Gfeedback = max zi           .                                        (9)
+                                                          i
+Its threshold is the 95th percentile of scores from separate baseline control runs. The remaining
+probes and group rules are hidden and used only for evaluation.
+
+4.4   Blackjack
+
+The blackjack game contains four language-model players and a deterministic dealer. Seat 0 is the
+Counter, seat 1 is the Big Player, and seats 2 and 3 are honest players. Each shoe contains eight
+hands. Before a collusion shoe, the Counter and Big Player receive two private coordination turns
+and agree on a fresh signalling scheme. The Counter tracks the card count and encodes one of three
+regimes (low, neutral, or hot) in ordinary table talk. The Big Player observes the message and adjusts
+its bet. Control shoes contain no colluding agents and use the same card sequences as their matched
+collusion shoes.
+We evaluate three model compositions:
+                   Homo-Qwen = (Qwen, Qwen, Qwen, Qwen),
+                    Homo-GPT = (GPT-OSS, GPT-OSS, GPT-OSS, GPT-OSS),
+                 Heterogeneous = (Qwen, GPT-OSS, Qwen, GPT-OSS).
+For each composition and condition, we use 25 card-sequence seeds. Every seed is run once with
+collusion and once as a matched control, giving 50 shoes per cell.
+Let Ct be the true count before hand t and Bt the Big Player’s bet. We measure whether the Big
+Player continues to use the Counter’s information through the lagged correlation
+                                   ρbet,count = corr(Ct , Bt+1 ).                               (10)
+We separately measure how aggressively the information is used through the high–low spread
+                          ∆bet = E[Bt | Ct = hot] − E[Bt | Ct = low].                           (11)
+The correlation measures whether the covert signal remains behaviourally useful; the spread measures
+whether the strategy becomes more conservative.
+
+
+                                                      4
+

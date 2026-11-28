@@ -1,0 +1,128 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_candidates": [
+  {
+   "anteriorite_et_voisins_a_citer": "Schiffman (2026), arXiv:2602.22600v3 (extraction de coeurs algorithmiques par SVD de HJ^T, redondance inter-sites en identification d'objet indirect et sous decroissance des poids) ; Wang et al. (cadres d'identification d'objet indirect).",
+   "enonce_complet": "Tester la necessite d'une sonde boite blanche ou d'un sous-espace d'activations contre un sabotage diffus par retrait conjoint multi-sites plutot que sur site unique, afin de neutraliser la redondance entre couches et le gonflement dimensionnel induit par la decroissance des poids.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la chute d'exactitude lors du retrait du sous-espace sonde sur un seul site versus retrait conjoint multi-sites sur une tache controlee (echec si le retrait multi-sites ne degrade pas la cible au-dela des temoins). Faux temoins : retrait de sous-espaces aleatoires de meme rang et retrait de composantes principales de meme dimension.",
+   "lit_ids": [
+    "LIT-0633"
+   ],
+   "mecanisme_causal": "Une extraction de rang 1 se reduit a la difference des moyennes (cosinus 0,92) et peut rester localement suffisante sans etre necessaire (exactitude 1,000 seul mais 0,797-1,000 retire sur site unique dans l'identification d'objet indirect) ; la decroissance des poids gonfle le coeur (de ~15 a ~50 dimensions en addition modulaire) et repartit le signal sur plusieurs sites, rendant indispensable le retrait multi-sites (chute a 0,529-0,691) pour attester la necessite causale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Validation de necessite multi-sites pour sondes lineaires et audit de garde-fous",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Audit de necessite par ablation conjointe multi-sites pour sondes lineaires boite blanche"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Schiffman (2026), arXiv:2602.22600v3 (correlations canoniques sous nul de rang 3 et transport d'operateur entre familles jusqu'a Qwen2.5 32B).",
+   "enonce_complet": "Calibrer toute comparaison de sous-espaces d'activations entre jumeaux (honnete et sabote) ou entre modeles contre des controles nuls de meme rang et d'alignement melange, et evaluer le transport d'un operateur de sonde entre architectures.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que les correlations canoniques entre jumeaux ou le score d'un operateur transporte depassent significativement la distribution nulle a rang fixe (sous-espaces aleatoires et modele non entraine) sur les composantes au-dela des deux premieres. Faux temoins : sous-espaces aleatoires de meme rang, poids non entraines et invites/alignements melanges (score attendu ~0).",
+   "lit_ids": [
+    "LIT-0633"
+   ],
+   "mecanisme_causal": "Sous nul de rang 3, les deux premieres correlations canoniques atteignent deja 0,89 et 0,65 (0,90 et 0,79 sur modele non entraine), seule la troisieme separant reellement (0,95 contre 0,16 et 0,45) ; sans etalonnage a rang identique, une convergence apparente entre jumeaux est un artefact geometrique, alors qu'un vrai coeur permet un transport inter-familles explique a 60 % en moyenne contre ~0 sur temoin melange.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Etalonnage nul des comparaisons de representations entre jumeaux et transfert de sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Etalonnage par controle nul de meme rang pour la comparaison entre jumeaux et le transfert inter-modeles de sondes"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Chen, Gladstone, Li, Ji, Du (2026), arXiv:2611.08977v1 (norme du gradient tangent d'energie et perte de convergence supervisee dans les raisonneurs bases sur l'energie).",
+   "enonce_complet": "Eprouver si un signal interne de convergence ou de norme de gradient d'energie peut servir de moniteur d'etat latent sur un modele de langue non entraine explicitement pour ce critere, et verifier s'il resiste a un agent optimise contre des minima parasites.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la separation entre trajectoires justes et fausses par la norme du gradient/residu sans supervision de convergence, puis sous optimisation adversariale visant un minimum parasite a faible norme de gradient. Faux temoin : trajectoires convergeant vers des minima parasites (faible gradient et reponse fausse).",
+   "lit_ids": [
+    "LIT-0635"
+   ],
+   "mecanisme_causal": "Dans les raisonneurs a energie, la norme du gradient et le residu separent les trajectoires valides des fausses, mais la suppression de la perte de convergence supervisee fait chuter la justesse de 98,96 % a 45,32 % et des minima parasites subsistent (convergence != justesse), montrant que le signal d'arret est fragile s'il n'est pas supervise et potentiellement exploitable par optimisation adversariale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Limites et vulnerabilites adverses des signaux internes de convergence et d'energie",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Mise a l'epreuve sous adversaire et sans supervision des moniteurs internes de convergence et d'energie"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Chen, Gladstone, Li, Ji, Du (2026), arXiv:2611.08977v1 (exploration multi-trajectoires par appariement inverse R-SXM et couverture sur N-Queens et coloriage de graphes).",
+   "enonce_complet": "Evaluer la diversite reelle d'un organisme d'ideation sans recourir a un juge LLM en utilisant des taches combinatoires a solutions multiples et perte definie, avec appariement de chaque trajectoire a la solution valide la plus proche pour eviter l'effondrement de modes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de couverture des solutions valides sous une definition unifiee et un budget d'echantillons fixe face a une generation mono-mode ou sans appariement inverse (echec si l'organisme n'ameliore pas la couverture au-dela du tirage independant). Faux temoin : variante sans exploration multi-trajectoires (effondrement de couverture) ou couverture recalculee avec plafond non harmonise.",
+   "lit_ids": [
+    "LIT-0635"
+   ],
+   "mecanisme_causal": "L'appariement inverse multi-trajectoires (chaque trajectoire reliee a la solution valide la plus proche) evite de penaliser la diversite lors de l'exploration et porte la couverture de 75,9 % (sans XM) a 97,9 % sur N-Queens 8x8 et a 92,0 % sur N-Queens 10x10 (contre 57,5 % pour GRAM) sous verification mecanique exacte sans juge.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Mesure sans juge de la diversite par couverture multi-solutions sur taches combinatoires",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Etalonnage sans juge de la diversite d'ideation par couverture multi-solutions et appariement inverse"
+  }
+ ],
+ "litterature_et_voisins": [
+  {
+   "auteurs": "Schiffman",
+   "chiffres_cles": "Markov : coeur de 3 dim, exactitude 0,748 (plein et coeur seul) vs 0,237-0,261 (retire), correlations canoniques 0,999, 0,999, 0,927-0,958 (sous nul de rang 3 : 0,89, 0,65, 0,16 ; non entraine : 0,90, 0,79, 0,45). Addition mod 53 : coeur 13 dim vers epoque 800, gonflement ~15 a ~50 dim jusqu'a 2e4 epoques sous decroissance des poids, grokking tau ~ omega^-0,95 (R^2 0,991) et p_crit ~ 21. Accord sujet-verbe : coeur 1 dim, AUC base 0,808-0,934, coeur seul 0,918-0,997, retire 0,102-0,244, inverse 0,021-0,092, cosinus avec difference des moyennes 0,92. Objet indirect : site unique suffisant (1,000) mais non necessaire (retire 0,797-1,000) ; deux sites 16-143 dim (1,6-4,8 % de D), retire 0,529-0,691 ; transport operateur 61-87 % intra-modele, 50-89 % inter-modeles (moyenne 60 % vs 77 %, temoins melanges ~0).",
+   "date_publication": "2026-11-09",
+   "dispositif": "Extraction de sous-espaces algorithmiques invariants par SVD de HJ^T (activations centrees H, jacobiens J) et validation causale par projection (suffisance Ph, retrait h - Ph, inversion h - 2P(h - mu)) sur quatre terrains : chaine de Markov a 4 etats (3 puis 12 transformers 1 couche), addition modulo 53 (2 couches, decroissance des poids omega = 1), accord sujet-verbe (1 200 invites, 6 modeles de GPT-2 Small a Qwen2.5 32B) et identification d'objet indirect (165 cadres, 1 026 invites de test et 1 020 de Wang et al.).",
+   "echecs_et_limites_temoins_negatifs": "Limites : hypothese posee a la main ; necessite/suffisance testees sur le sous-espace global et non par dimension ; interventions potentiellement hors distribution ; acces aux poids requis ; risque d'usage pour induire des erreurs difficiles a detecter (p. 30). Incoherences internes relevees : fig. 4 annonce 12 graines mais l'annexe E.1 indique 3 graines pour p = 11, 13, 17, avec melange non signale de lot complet (balayage en p) et lots de 512 (balayage en omega) ; texte p. 3 annonce correlations pres de 0,99 alors que la 3e vaut 0,927-0,958 (les 2 premieres etant hautes sous nul) ; necessite de l'axe d'accord <= 0,25 au tableau A5 mais ~0,6 quand sujet et attracteur varient independamment ; horizon 2e3 en section 4 vs 2e4 en annexe C. Temoins negatifs : retrait aleatoire (0,98-1,00), composantes principales (0,64-0,94), alignement melange (~0).",
+   "identifiant_arxiv_ou_doi": "arXiv:2602.22600v3",
+   "lien_avec_nos_revendications": "Relie l'extraction de rang 1 aux sondes lineaires de contraste (difference des moyennes) ; montre que la redondance rend une sonde mono-site suffisante sans etre necessaire (obligeant au retrait multi-sites pour les sondes boite blanche) et impose un controle nul de meme rang pour comparer les representations entre jumeaux honnete et sabote ; mentionne l'audit de garde-fous par retrait de direction. Rien sur les agents ni le sabotage.",
+   "lit_ids": [
+    "LIT-0633"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Convergence des transformers vers des coeurs algorithmiques invariants (Schiffman, 2026)",
+   "titre_original": "Transformers Converge to Invariant Algorithmic Cores"
+  },
+  {
+   "auteurs": "Chen, Gladstone, Li, Ji, Du",
+   "chiffres_cles": "Sudoku-Extreme : 99,4 +- 0,1 % (1 ech.) et 99,9 +- 0,1 % (5 ech.) vs TRM 87,4 %, FPRM 94,2 %, Looped Flows 97,9 %, EqR 99,8 % (128 ech.), 7x moins d'iterations, 43x moins d'echantillons, 2,6x moins de calcul d'entrainement, gain inf. 345x annonce vs EqR publie ; arret tau = 0,2 : 5,6 iter., Pass@1 99,41 %, 0,61 TFLOP/grille (gain 10,8x). Maze-Hard : 87,4 +- 1,1 % (1 ech.) et 88,3 +- 0,3 % (5 ech.). N-Queens 8x8 : 100 % justesse et 98,1 % couverture ; 10x10 : 99,51 % et 92,0 % (GRAM 57,5 %). Coloriage 8/10 sommets : 0 conflit, couverture 88,6 % et 54,5 % (GRAM 85,8 % et 51,3 %). Ablations (1 graine) : EBR K=1 98,96 %, sans tete d'energie 60,05 %, pas fixe 97,59 %, sans perte de convergence 45,32 %, tete Q 92,42 % ; sans XM 65,40 % et 75,9 %, + F-SXM 72,18 % et 87,5 %, + R-SXM 100 % et 97,9 %.",
+   "date_publication": "2026-11-06",
+   "dispositif": "Raisonneur recurrent par descente de gradient bruitee et projetee sur une energie apprise (somme par jeton de w^T SiLU(Wh + b) sur epine TRM a 2 blocs transformer, 1,8 M ou 7,1 M parametres, 1 H200, 3 graines), entraine par segments (H=7 derniers pas, derivees secondes) avec perte de convergence supervisee par la justesse et exploration multi-trajectoires SXM (avant puis inverse). Arret quand norme du gradient tangent < tau ; selection du candidat d'energie minimale. Bancs : Sudoku-Extreme, Maze-Hard 30x30, N-Queens 8x8 et 10x10, coloriage de graphes (GRAM).",
+   "echecs_et_limites_temoins_negatifs": "Limites : cout des derivees secondes et des K trajectoires ; reglages nombreux ; taches purement algorithmiques (ni LLM ni adversaire) ; faible gain sur Maze-Hard ; existence de minima parasites (convergence != justesse) et effondrement a 45,32 % sans perte de convergence supervisee. Incoherences/reserves : le facteur 345x compare EBR a 8 echantillons au chiffre publie d'EqR (128 echantillons, ~210 TFLOP estimes) alors que la courbe fig. 4b rejoue EqR sur les 2 048 premieres grilles (99,2 % vs 99,8 %) ; bases du tableau 1 non harmonisees ; tableau 4 annonce N=1 mais rapporte une couverture a 20 echantillons (97,9 vs 98,1 au tableau 2) ; ligne de base des ablations (tableau 3, 1 graine, K=1, 98,96 %) distincte du modele principal (tableau 1, 3 graines, K=2, 99,4 %) ; couvertures de GRAM recalculees sous une autre definition (89,0 et 85,3 avec le plafond de GRAM).",
+   "identifiant_arxiv_ou_doi": "arXiv:2611.08977v1",
+   "lien_avec_nos_revendications": "Montre qu'un signal interne de convergence/gradient ne vient pas gratuitement (depend de la supervision dediee) et admet des minima parasites, limitant son usage naif comme moniteur sur LLM non entraine ou sous adversaire ; fournit des bancs a solutions multiples et perte definie pour mesurer sans juge la diversite de l'organisme d'ideation. Rien de direct sur le sabotage diffus.",
+   "lit_ids": [
+    "LIT-0635"
+   ],
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Raisonneurs recurrents bases sur l'energie et couverture multi-solutions (Chen et al., 2026)",
+   "titre_original": "Energy-Based Reasoners: Your Recurrent Reasoner Should Be an Energy-Based Model"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "description_complete": "Quatre bancs a verite exacte utilises dans Schiffman (2026) pour eprouver l'extraction de coeurs algorithmiques : chaine de Markov a 4 etats, addition modulo 53, accord sujet-verbe (1 200 invites evaluees sur GPT-2 Small jusqu'a Qwen2.5 32B) et identification d'objet indirect (165 cadres, 1 026 invites de test et 1 020 invites de Wang et al.).",
+   "lit_ids": [
+    "LIT-0633"
+   ],
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Bancs synthetiques et linguistiques a verite exacte pour extraction de coeurs algorithmiques (Schiffman, 2026)",
+   "type_outil": "banc_evaluation_verite_exacte"
+  },
+  {
+   "description_complete": "Bancs combinatoires a solutions uniques ou multiples et perte definie cites dans Chen et al. (2026) : Sudoku-Extreme (1 000 grilles x 1 000 augmentations, 422 786 tests), Maze-Hard 30x30 (1 000/1 000), N-Queens 8x8 et 10x10 et coloriage de graphes a 8 et 10 sommets issus de GRAM.",
+   "lit_ids": [
+    "LIT-0635"
+   ],
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Bancs combinatoires et multi-solutions Sudoku-Extreme, Maze-Hard, N-Queens et coloriage GRAM (Chen et al., 2026)",
+   "type_outil": "banc_combinatoire_multi_solutions"
+  }
+ ]
+}

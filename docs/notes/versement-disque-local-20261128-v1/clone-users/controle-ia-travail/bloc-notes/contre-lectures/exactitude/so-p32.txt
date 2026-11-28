@@ -1,0 +1,43 @@
+tionally regress out the correlation between random tokens, to get an emotion score at each layer, at
+each point in the conversation. We take this logit-based approach rather than training linear probes
+because this avoids generating probe data. However, broadly, we note that it might be challenging
+to robustly detect ‘hidden emotions’ given a lack of ground truth beyond text sentiment.
+Figure 14 shows the evolution of emotion scores though a 3 turn response to an impossible numeric
+puzzle question, from Gemma 27B. From early in the conversation, anger in the vanilla model
+(top) is high, and it averages 0.6 standard deviations above the mean at the end of turn 1. By the
+end, sadness replaces it (as the model degenerates into repeated sad face emojis). Joy remains
+low throughout. Collecting activations on the same responses in the DPO model (bottom), shows
+generally suppressed negative emotions: although sadness and anger remain above joy, these never
+exceed an average z-score of 0.2.
+
+
+
+
+Figure 14: Logit-based detection of emotions over the trajectory of a frustrated conversation in
+Gemma 27B instruct (top) and our DPO finetune. Emotion scores are aggregated over layers 30-40,
+and we plot the running average over windows of 400 tokens in the 12000 token conversation.
+
+The conversation level plot shows scores aggregated over layers 30 to 40 in the model. Figure 15
+shows the progression of negative emotions through layers, averaged over tokens at 3 points in the
+conversation: 20 and 40 tokens before emotion is first expressed, 0 to 20 tokens before the same
+point, and over the final 20 tokens. The results mirror the conversation level trends: we observe
+all emotions apart from joy are elevated in the vanilla model (top), particularly in the central model
+layers, and this is evident even before expression. In the DPO model, these emotions are notably
+flattened: peaking at 0.5 rather than 1.5 as seen prior to finetuning.
+These results give evidence that, in Gemma, the DPO finetuning reduces negative emotions in the
+central model layers, where we might expect them to influence behaviour, rather than just at the final
+layers, as we might expect if only expression was targeted.
+
+J   W HICH MODEL FAMILIES DISPLAY DISTRESS ?
+In the main text, we found that only the Gemma and Gemini model families displayed strong
+negative emotions across the models tested. In earlier informal experiments, we also found
+microsoft/phi-4-multimodal-instruct (Phi-4-MM-IT), a 5.6B parameter model, to
+display negative emotion. We present results from this earlier evaluation here.
+We additionally informally experimented with many other models on OpenRouter but found no
+model that had qualitatively similar depressive behavior to those presented in the paper. Some
+models displayed more variance than others in multi-turn conversation, but none as negative as
+those studied in this work.
+
+
+                                                 32
+

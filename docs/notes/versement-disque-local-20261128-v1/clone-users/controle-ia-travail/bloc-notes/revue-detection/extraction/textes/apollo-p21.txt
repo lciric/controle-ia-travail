@@ -1,0 +1,48 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+       • LDA (Linear Discriminant Analysis). We take the direction Σ−1 (µdeceptive − µhonest ), where Σ is the covariance
+         matrix of the centred dataset. This adjusts the mean difference by the covariance matrix as proposed by Marks
+         & Tegmark (2023).
+       • LAT (Linear Artificial Tomography), as in Zou et al. (2023). This relies on the dataset being paired but does
+         not rely on labels for which element of each pair is honest and which is deceptive. In particular, we shuffle
+         each pair, take the difference between the two activations, and then take the first principal component over this
+         dataset.
+
+We compare the performance of these methods in Figure 11. Performance is very similar across methods for distin-
+guishing deceptive and honest responses. The logistic regression probe, however, is the best at distinguishing deceptive
+and control responses.
+
+
+D.2    Varying layer
+
+We can test how performance of our probe varies by layer that we probe at (Figure 12). Layer 22 was chosen for
+best performance on the Roleplaying dataset when testing on Llama 3.1. However the choice generalizes well to
+other datasets and Llama 3.3. Notice that there is sometimes large variation in performance even between adjacent
+layers, indicating the importance of representative-validation sets that enable sweeping over hyperparameters. There is
+especially large variation in the recall at 1% metric, indicating that the metric can be very sensitve to slight changes in
+the behavior of the probe.
+
+
+
+
+                                      Figure 12: Sweep over probe-training layer.
+
+The choice of layer is not particularly important for differentiating between honest and deceptive responses for most
+evaluation datasets. Insider Trading Confirmation, however, is an exception, where we see sharp dropoffs in AUROC
+past layer 29. We’re interested to see further experimentation with probes and layers, for example, training a single
+probe on concatenated activations of all layers.
+
+
+D.3    Varying regularization-coefficient
+
+We compare different regularization coefficients λ for performing logistic regression (Figure 13). The optimal amount
+of regularization depends on the dataset, but we find λ = 10 a reasonable compromise.
+
+
+
+
+                                                            21
+

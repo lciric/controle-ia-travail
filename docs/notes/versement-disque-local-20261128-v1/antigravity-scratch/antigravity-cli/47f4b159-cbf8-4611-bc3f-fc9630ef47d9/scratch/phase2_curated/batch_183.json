@@ -1,0 +1,121 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6945"
+   ],
+   "enonce_complet": "Caracterisation geometrique etablie des limites des sondes lineaires d'activations : l'effacement lineaire de concept en forme fermee (LEACE) annule exactement la covariance croisee Sigma_XZ = 0 entre representation X et variable latente Z ; les plongements lexicaux forment un cone anisotrope lie au spectre de Marchenko-Pastur ; et la superposition encode m >> d caracteristiques quasi-orthogonales dans R^d via des cadres serres (frames), engendrant une interference irreductible pour tout projecteur lineaire.",
+   "motif_ou_resultat": "Resultats publies et etablis (Belrose et al. 2023 LEACE, Ravfogel et al. 2020 INLP, Elhage et al. 2022, Ethayarajh 2019) integres comme socle mathematique de depart.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Geometrie etablie de l'effacement lineaire, de l'anisotropie et de la superposition des representations",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-6971"
+   ],
+   "enonce_complet": "Deux familles de formalismes sont ecartees pour modeliser la passe avant d'un transformeur : (1) la physique statistique d'equilibre et les transitions de phase thermodynamiques (modeles d'Ising symetriques a la limite N -> infini), car les poids d'attention sont asymetriques et diriges causalement, sans bilan detaille ni minimisation d'energie libre et a profondeur finie ; (2) la theorie des bifurcations d'attracteurs autonomes asymptotiques (t -> infini, cycles limites de Hopf, attracteurs etranges), car les poids W_l varient a chaque couche l et le calcul s'interrompt a la couche finale L.",
+   "motif_ou_resultat": "Incompatibilite structurelle verifiee avec l'architecture acyclique, finie, non symetrique et non autonome de la passe avant d'un transformeur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Disqualification de la physique statistique d'equilibre et des bifurcations asymptotiques en passe avant",
+   "type_acquis": "piste_refutee"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6969"
+   ],
+   "enonce_complet": "Un sous-espace de faible rang (environ 25 directions) couple a une non-linearite normalisatrice telle que le softmax de l'attention impose, selon la theorie du goulot d'information (Information Bottleneck) et des canaux a interference, une competition d'exclusion mutuelle entre representations concurrentes dans la passe avant.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la co-activation simultanee de representations concurrentes augmente ou reste constante apres resserrement de la contrainte softmax (temperature basse) ou reduction de rang du sous-espace, l'hypothese d'exclusion par goulot d'information est refutee. Faux temoin 1b : remplacer la normalisation softmax par une activation element-par-element non normalisatrice (ReLU ou lineaire calibree a norme moyenne egale) et verifier que la competition d'exclusion disparait.",
+   "mecanisme_causal": "La capacite limitee du sous-espace de rang faible borne l'information mutuelle transmissible tandis que la normalisation softmax transforme la somme fixe des poids d'attention en jeu a somme nulle entre representations concurrentes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Goulot d'information et competition softmax",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Exclusion mutuelle des representations sous goulot d'information de faible rang et normalisation softmax"
+  },
+  {
+   "anteriorite_connue": "Alain et Bengio (2016), Ethayarajh (2019), Barber et al. (2019), Vovk et Wang (2021), Howard et al. (2018), Berglund et al. (2023), van der Weij et al. (2024), Greenblatt et al. (2024).",
+   "bib_ids": [
+    "BIB-6951"
+   ],
+   "enonce_complet": "Cinq criteres methodologiques encadrent l'usage des outils formels en controle IA : (1) ne pas confondre la puissance d'une classe de sondes lineaires avec l'information disponible dans la representation (l'anisotropie ne borne pas la detectabilite non lineaire d'un sabotage) ; (2) ne pas transposer directement les limites d'inference predictive conditionnelle face a la couverture marginale aux alertes de controle ; (3) noter qu'une combinaison convexe a poids fixes d'e-valeurs reste valide sous dependance arbitraire mais sans garantie de gain de puissance ; (4) distinguer le temps moyen avant fausse alerte (ARL) de la probabilite uniforme sur tout l'horizon (anytime-valid) ; (5) separer experimentalement la reconnaissance d'un contexte d'evaluation du changement effectif de comportement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la separation est refutee si, sur un banc de controle sous dependance sequentielle ou d'anisotropie controlee, des e-valeurs a poids fixes et un seuil calibre sur l'ARL atteignent la meme erreur globale anytime-valid sans inflation du taux de fausse alerte, ou si l'anisotropie efface aussi toute sonde non lineaire. Faux temoin 1b : evaluer le moniteur sur une sequence i.i.d. stationnaire sans eval-awareness ni derive conditionnelle pour verifier que les ecarts entre couverture marginale, ARL et bornes anytime-valid s'y resorbent.",
+   "mecanisme_causal": "Chaque confusion identifiee confond une garantie faible ou locale (separabilite lineaire, couverture marginale, validite de type I sous dependance, ARL moyen, detection interne de contexte) avec une garantie forte ou causale requise en environnement adversarial.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Garde-fous des bornes de controle sequentiel",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Criteres de separation contre les glissements de bornes en sondage, calibration et audit sequentiel"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6964",
+    "BIB-6973"
+   ],
+   "enonce_complet": "Au premier ordre delta z approx M_l delta h_l ou la lentille jacobienne vaut M_l = W_U bar(J)_{L <- l}, les vecteurs singuliers dominants extraits de la jacobienne moyenne de l'etat final par rapport aux couches intermediaires concentrent par construction algebrique le levier lineaire maximal sur les logits finaux. En consequence, n'opposer cet espace J (environ 25 directions a faible variance expliquee) qu'a des directions aleatoires constitue un temoin trop faible, exposant a une tautologie causale qui confond un espace de travail global avec un goulot de transport lexical vers la sortie.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si des directions de controle appariees en norme et en norme de jacobienne moyenne (ou en gain de premier ordre sur W_U bar(J)_{L<-l}) mais situees hors des taches d'integration globale produisent exactement la meme bascule comportementale que l'espace J, l'interpretation d'espace de travail global est refutee au profit d'un artefact de selection jacobienne. Faux temoin 1b : ablation de directions orthogonales au noyau et aux vecteurs singuliers dominants de M_l, de norme egale aux directions J, ou l'effet sur les logits finaux doit rester nul ou purement diffus.",
+   "mecanisme_causal": "La decomposition en valeurs singulieres de la jacobienne moyenne selectionne exactement les directions qui maximisent ||M_l v|| / ||v||, ce qui garantit algebriquement une sensibilite maximale des logits de sortie independamment de toute fonction cognitive integrative.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Circularite des lentilles jacobiennes et temoins",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Tautologie causale des vecteurs singuliers de la lentille jacobienne et insuffisance du temoin aleatoire"
+  },
+  {
+   "anteriorite_connue": "Hewitt et Liang (2019) pour les taches de controle.",
+   "bib_ids": [
+    "BIB-6959"
+   ],
+   "enonce_complet": "Protocole d'ablation graduee par dose alpha dans [0, 1] de la composante portee par les dix directions J les plus actives, confronte a trois temoins : T-rand (directions aleatoires), T-nul (meme architecture a poids aleatoires ou permutes) et T-gain (directions du sous-espace singulier dominant de la jacobienne moyenne, hors directions actives, appariees en norme retiree et en gain de premier ordre vers l'etat final). Pour lever la circularite consistant a mesurer l'effet avec la lentille dont on ampute les directions, la lecture s'effectue par une sonde entrainee dans le complement orthogonal du sous-espace supprime ou directement sur le comportement final.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'ablation graduee selon J produit une courbe dose-reponse indiscernable de celle de T-gain sur le comportement final et sur la sonde entrainee dans le complement orthogonal, la specificite fonctionnelle de l'espace J est refutee. Faux temoin 1b : rejouer la meme ablation graduee sur T-nul (poids permutes) et sur un sous-espace apparie de T-rand pour borner la degradation purement geometrique liee au retrait de norme.",
+   "mecanisme_causal": "L'appariement explicite du gain de premier ordre via T-gain neutralise le biais algebrique de la jacobienne moyenne, tandis que la lecture dans le complement orthogonal elimine le couplage direct entre l'operateur d'intervention et l'instrument de mesure.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Ablation graduee et controle apparie en gain",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole d'ablation graduee a temoin apparie en gain jacobien et lecture orthogonale independante"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6966"
+   ],
+   "enonce_complet": "Les variations observees dans des recits introspectifs apres ablation de l'espace J (recit plus detache) ou activation d'un axe dit de douleur peuvent resulter d'un deplacement des probabilites de transition lexicales vers des registres statistiques de troisieme personne ou de co-occurrence semantique, sans modification d'un etat interne de valence ou d'acces subjectif, remettant en cause la transparence semantique des sondes lineaires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la sonde et le phenomene comportemental cible persistent sous des reformulations forcees imposant un registre grammatical inverse (premiere contre troisieme personne) ou des traductions cross-lingues bloquant les co-occurrences lexicales de surface, l'hypothese purement lexicale est refutee. Faux temoin 1b : injection d'amorces stylistiques neutres de troisieme personne ou de vocabulaire clinique sans contenu aversif pour verifier si la sonde ou le style detache se declenche a l'identique par pur glissement de registre.",
+   "mecanisme_causal": "Les vecteurs de sondes lineaires et les directions d'ablation peuvent se superposer aux directions encodees pour le registre discursif et les transitions de tokens proches, modifiant la distribution de sortie en surface sans toucher une representation latente de valence.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Biais lexical contre acces latent des sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Deplacement statistique des transitions lexicales contre modification d'acces latent dans les sondes lineaires"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6981"
+   ],
+   "enonce_complet": "Distingue la passe avant isolee d'un transformeur, qui forme un graphe acyclique dirige verifie architecturalement, de la generation autoregressive en boucle fermee avec cache cle-valeur (KV), laquelle engendre une chaine d'etats discrete dont la metastabilite reste testable experimentalement malgre l'absence d'activite spontanee hors entree.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si toute perturbation transitoire injectee dans le cache KV decroit exponentiellement vers une trajectoire unique sans paliers persistants ni bascules bimodales sur des longueurs d'horizon croissantes, l'hypothese de metastabilite en boucle fermee est refutee. Faux temoin 1b : rejouer la meme perturbation sur une passe avant sans boucle autoregressive (cache KV fige ou contexte tronque a un pas) ou aucune dynamique de chaine d'etats ne peut entretenir de regime metastabile.",
+   "mecanisme_causal": "La reinjection des tokens generes et la persistance du cache KV bouclent l'application couche-a-couche en un systeme dynamique discret conditionne par l'historique, autorisant des regimes quasi-stationnaires ou des transitions entre bassins discursifs.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dynamique autoregressive et metastabilite KV",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Metastabilite testable de la chaine d'etats autoregressives sur cache cle-valeur en boucle fermee"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

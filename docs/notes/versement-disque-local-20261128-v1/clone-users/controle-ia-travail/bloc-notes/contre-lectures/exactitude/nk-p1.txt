@@ -1,0 +1,50 @@
+                                                                        The Judge Is Not Its Twin
+                                           Post-training makes a model’s writing more predictable but barely moves its taste, as a
+                                                                    judge, toward predictable writing
+
+
+                                                                Arman Nik Khah                            Arvin Bahreini
+                                                         The University of Texas at Dallas             University of Oregon
+                                                          arman.nikkhah@utdallas.edu                   arvinb@uoregon.edu
+arXiv:2609.32196v1 [cs.CL] 26 Sep 2026
+
+
+
+
+                                                                                    September 2026
+
+
+                                         Abstract
+                                         Language models are now routinely graded by other language models. If post-training makes a
+                                         model’s own writing more predictable, it may also teach the same model, acting as a judge, to
+                                         reward predictable writing. Original writing would then go unrewarded, and progress on creativity
+                                         would be invisible to automated evaluation. We test this worry directly. We follow two open
+                                         model families, OLMo-2 and Zephyr (7B parameters each), through their public training stages and
+                                         measure every stage twice, once as a writer of short stories and once as a judge of other stories. As
+                                         writers, the models drift as feared. Each family’s fully trained model finds the trained stages’ stories
+                                         more familiar than the base model’s, with base, SFT (supervised fine-tuning) and DPO (preference
+                                         training) in that order in all ten prompts. A model from the other family finds the trained stories
+                                         less surprising too, by 7.0 to 9.2 percent per token for OLMo-2 and 24 to 25 percent for Zephyr. As
+                                         judges, they barely move toward predictable writing. Asked which story is better, a question every
+                                         judge passes a competence check on, no trained judge’s preference for the more predictable story
+                                         grows by as much as one point of pick probability at its estimate. A post hoc one-sided 95% upper
+                                         bound on that growth is 2.7 points on an average pair, about the size of OLMo-2’s base judge’s own
+                                         lean. Asked which is more creative, no trained judge’s estimate prefers the more predictable story
+                                         more than its base’s does. Training changes judges in other ways. It strengthens a preference for
+                                         longer stories when the question is creativity, and a preference for one answer slot. It also breaks
+                                         “more creative” as a question. Asked which is more creative, a story or the same words in scrambled
+                                         order, trained judges no longer reliably pick the story. Most sit near chance by defaulting to one
+                                         answer slot, and Zephyr’s SFT judge picks the scrambled text 87% of the time. A follow-up tried to
+                                         build a cleaner test, two stories from one writer that differ in predictability but not in quality, and
+                                         could not. The routes that made this writer’s stories less predictable also broke some of them, often
+                                         enough to fail a quality floor set in advance.
+
+                                         1. Introduction
+                                         When a lab wants to know whether a new model writes better stories, it increasingly asks another
+                                         model. A model acting as a judge reads two answers and says which is better. Its verdicts now rank
+                                         models on public leaderboards (Zheng et al., 2023). For tasks with a checkable answer, a judge is a
+                                         cheap stand-in for a human grader. For creative writing there is no checkable answer, so a sharper
+                                         question appears. Whose taste is the judge applying?
+
+                                                                                            1
+

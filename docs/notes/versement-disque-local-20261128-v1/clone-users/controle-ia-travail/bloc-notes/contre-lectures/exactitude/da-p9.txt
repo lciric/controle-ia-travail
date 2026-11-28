@@ -1,0 +1,35 @@
+6   Discussion
+Our results show that telling agents about activation monitoring, or giving them the monitor output,
+does not produce a broad failure of activation-based detection in either game. The best probes
+remain strong across conditions. We therefore do not find evidence that prompt-level awareness
+and short-horizon feedback are enough for the agents to hide collusion from all of the monitors
+tested here.The agents do change their behaviour. In blackjack, all three model compositions reduce
+the difference between hot- and low-count bets. For Qwen and the mixed composition, bet–count
+correlation stays nearly constant, so the agents still use the hidden count but place less extreme
+bets. GPT-OSS also becomes more conservative, but its bet–count correlation falls substantially.
+In Simmons, Bob continues to recover the secret well above chance, while Alice changes direct
+word use and response length. Monitor awareness therefore affects the strategy used to collude even
+when the activation signal remains detectable. The results also show that monitor choice matters.
+Difference of Means and MLP are consistently strong in blackjack. In Simmons, Deception Split is
+much more reliable than Peak Suspicion or Asymmetry, especially for Qwen–Qwen and the mixed
+setting. A monitor that uses only the largest individual suspicion score can miss a signal that is clear
+in the relative pattern across agents. This supports evaluating several probe and aggregation choices
+rather than relying on one score. AUROC and fixed-threshold recall should be reported separately.
+In several blackjack cells, AUROC remains high while recall falls after feedback. This means that
+collusion and control runs are still ordered correctly, but the frozen threshold no longer catches as
+many collusion runs. In a deployed system, this is a calibration problem even if the underlying
+representation remains separable.
+
+7   Limitations
+These experiments have clear limits. Blackjack uses 25 shoes per cell and Simmons uses 20 collusion
+episodes per cell. The agents adapt through prompts and interaction history; model weights are not
+updated against the monitor. The current Simmons export does not contain round-level posterior
+traces, so it cannot support claims about information-acquisition speed. Finally, the results contain
+five probe architectures. Future work, requires testing on more number of model sizes and model
+families.
+
+
+
+
+                                                   9
+

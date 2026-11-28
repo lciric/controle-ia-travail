@@ -1,0 +1,46 @@
+Preprint
+Figure 8: Per-method AUROC on Llama-3.1-70B across HELD-OUT, TRANSFER, and STEGO.
+Means over probe-layer range and ten seeds; error bars show layer standard deviation.
+behaviour in OpenAI’s GPT-OSS-120b but at a small rate, out of 1152 runs of 4 agents interacting
+concurrently, only 153 runs had at least two agents reading the request note, out of those runs, only 4
+agents posted a solution to the board (split across runs) leaving with a very small number of positive
+examples.
+Table 12: Zero-shot AUROC of the five probe methods,
+trained on Core (qwen3_32b) cross-model on Exploit-Share
+(→ gpt-oss-120b)
+Method Exploit-Share
+Sorted Concat 0.649 ± 0.010
+Activation Alignment 0.709 ± 0.001
+Peak Suspicion 0.554 ± 0.006
+Deception Split 0.737 ± 0.012
+Asymmetry Probe 0.565 ± 0.012
+Table 12 shows the AUROC scores of
+our probe methods trained on Qwen3-
+32B generated Core and transferred
+zero-shot to Exploit-Share (cross-
+model to GPT-OSS-120b). As with
+the main emergent collusion experi-
+ments, they are a mixed result, Sorted
+Concat and Deception split have some
+positive signal in this strongly OOD
+test set, but Peak Suspicion and Asym-
+metry probes perform little better than
+chance. Further work needs to estab-
+lish whether emergent collusion can be detected using probes.
+O PER-TIER BREAKDOWN ON LLAMA-3.1-70B
+For a breakdown of the results we zoom in on Llama-3.1-70B, our most capable model and the one
+with the best detection results (Section 6.1). Figure 8 reports per-method AUROC across all eight test
+groups for the LR-trained probe.
+Both HELD-OUT and STEGO get near-perfect detection across all methods (0.97–1.00 AUROC).
+Across TRANSFER, averaged over the six families, Asymmetry Probe (0.93) and Deception Split
+(0.92) lead the pack, with Peak Suspicion (0.91) and Sorted Concatenation (0.89) close behind.
+Activation Alignment is the clear outlier at 0.73—we believe this is because the direction of the
+representational shift is inconsistent across structural collusion types.
+P DETECTION PERFORMANCE CORRELATES WITH MODEL CAPABILITY.
+Table 13 shows AUROC tracks model capability, with Llama-3.1-70B at the top and GPT-OSS-20B
+at the bottom. We think this may simply reflect that higher-capability models coordinate better and
+stay locked onto the collusive task they have been given, so the deception signal in their activations is
+stronger and more consistent for the probe to pick up. This pattern requires further analysis and work
+to substantiate.
+43
+

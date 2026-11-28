@@ -1,0 +1,43 @@
+Figure 7: DPO finetuning preserves capabilities across math, reasoning, and emotional intelligence
+benchmarks. Plot shows scores from Gemma-3-27B-it and our DPO finetune.
+
+
+
+
+Figure 8: DPO prevents emotional spirals, but does not enable recovery from highly negative states.
+Plots show the mean frustration scores and % scores ≥5 for continuations across four prefill condi-
+tions, comparing base and instruct models and our DPO finetune.
+
+
+
+investigate this in our finetuned models, and find evidence that, in Gemma, the DPO finetuning
+reduces both internal and externalised emotions. Firstly, we find that the finetuning intervention
+needs to act on early layers: training LoRA adapters from layer 40 onwards does not effectively
+reduce expressed distress, whereas applying adapters to layers 30-35 only is nearly as effective as
+training on all layers. Secondly, we use a logit-based approach to measure emotions in the central
+model layers, and find that the finetuned model has significantly reduced internal emotions compared
+to the vanilla instruct model. This holds even when looking at activations on highly frustrated
+responses. We detail these methods and results in Appendix I.
+
+
+5   R ELATED W ORK
+Emotions in LLMs Benchmarks such as EmoBench (Sabour et al., 2024) and EmotionBench
+(Huang et al., 2024) have been used to evaluate emotion related capabilities in LLMs, showing that
+models have the ability to respond appropriately in emotional situations, but, at the times of eval-
+uation, fell short of human emotional intelligence. Unlike our evaluations, these evaluate models’
+emotional intelligence, rather than their propensity for expressing emotions in responses. When pre-
+sented with negative emotional content, models have been shown to moderate these towards neutral-
+ity, though notably Gemma showed the highest rates of negative emotion preservation across models
+(Xu et al., 2025). Interpretability work has been used to demonstrate the presence of emotional-like
+representations (Reichman et al., 2026; Zhang & Zhong, 2025), which are causally relevant for per-
+formance on emotion classification tasks (Tigges et al., 2023) and for expression of emotions in
+text (Wang et al., 2025), though evidence for their causal relevance to broader behaviours is so far
+lacking. Most recently, isolated instances of emotion-like behaviours have been identified in safety
+evaluations of frontier models: the Gemini 3 Pro frontier safety framework report describes the
+model using a “table flipping emoticon" when frustrated (Google, 2025), while the Opus 4.6 system
+card identified signs of internal and verbalised distress associated with specific cases of conflicted
+reasoning (Anthropic, 2026).
+
+
+                                                  8
+

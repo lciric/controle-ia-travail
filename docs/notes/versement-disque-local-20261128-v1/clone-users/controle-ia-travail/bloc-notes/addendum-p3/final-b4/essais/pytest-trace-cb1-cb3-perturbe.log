@@ -1,0 +1,172 @@
+........................................................................ [ 48%]
+................................................................F....F.. [ 96%]
+...F.                                                                    [100%]
+=================================== FAILURES ===================================
+____________________ test_ligne_de_commande_de_bout_en_bout ____________________
+
+depot_jetable = (PosixPath('/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot'), <module 'complements_p3_v1_copie_0...ddendum-v1/complements_p3_v1.py'>, [PosixPath('/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot')])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4104519790>
+
+    def test_ligne_de_commande_de_bout_en_bout(depot_jetable, monkeypatch):
+        """Dépôt jetable, propre : passage réussi (sortie unique scellée et rattachée, manifeste non décisif qui cite le
+        préenregistrement de l'addendum, configuration écrite, graines de l'entropie de P3, aucun texte ; un manifeste
+        illisible d'un autre run, écarté par les gardes 2 et 9, compté et rapporté) ; second passage refusé sans rien écrire ;
+        arrêt après le manifeste (exception autre qu'une garde) écrit avec son motif dans la sortie unique, puis propagé."""
+        d, m, appels = depot_jetable
+        (d / "runs" / "20261020-000000-autre-casse").mkdir()
+        (d / "runs" / "20261020-000000-autre-casse" / "manifeste.json").write_text("{ illisible", encoding="utf-8")
+        committer(d)
+>       s = _lancer(d, m, "20261020-130000-addendum-p3")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py:2338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py:2309: in _lancer
+    return m.executer(d, run_source, run_lecture, run_add, prereg, entropie, autoriser_depot_sale=sale)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py:2178: in executer
+    g2 = exiger_lecture_decisive(racine, run_source, run_lecture, entropie)                # garde 2
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py:2091: in exiger_lecture_decisive
+    lisibles, ecartes = _manifestes(racine, "garde 2", run_source)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+racine = PosixPath('/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot')
+garde = 'garde 2', run_source = '20261020-100000-p3-synthetique-a'
+
+    def _manifestes(racine: Path, garde: str, run_source: str) -> tuple[list[tuple[Path, dict]], list[dict]]:
+        """Manifestes sous `runs/` : (lisibles, écartés). Un manifeste illisible ou hors de forme (pas un objet, ou
+        `config` ou `preenregistrement` qui n'est pas un objet) arrête s'il pourrait être une lecture décisive de ce run ou un
+        passage de l'addendum (garde 16, `_pourrait_concerner`) ; sinon il est écarté, compté et rapporté (aucun repli
+        silencieux)."""
+        lisibles, ecartes = [], []
+        for chemin in sorted((Path(racine) / "runs").glob("*/manifeste.json")):
+            octets, motif, x = b"", None, None
+            try:
+                octets = chemin.read_bytes()
+            except OSError as e:
+                motif = f"illisible ({type(e).__name__})"
+            else:
+                try:
+                    x = json.loads(octets.decode("utf-8"))
+                except ValueError as e:
+                    motif = f"illisible ({type(e).__name__})"
+                else:
+                    if not isinstance(x, dict) or any(x.get(k) is not None and not isinstance(x.get(k), dict)
+                                                      for k in ("config", "preenregistrement")):
+                        motif = "hors de forme"
+            if motif is None:
+                lisibles.append((chemin, x))
+            elif _pourrait_concerner(octets, run_source):
+>               raise GardeArret(f"{garde} : {chemin} {motif}, et il pourrait être une lecture décisive de {run_source} ou "
+                                 f"un passage de l'addendum (garde 16) : vérification impossible")
+E               controle_ia.gardes.GardeArret: garde 2 : /tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot/runs/20261020-000000-autre-casse/manifeste.json illisible (JSONDecodeError), et il pourrait être une lecture décisive de 20261020-100000-p3-synthetique-a ou un passage de l'addendum (garde 16) : vérification impossible
+
+/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_de_bout0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py:2048: GardeArret
+____________ test_garde_2_lecture_decisive_rattachement_et_unicite _____________
+
+depot_jetable = (PosixPath('/tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot'), <module 'complements_p3_v1_copie_5...garde_2_lecture_decisive_0/depot'), PosixPath('/tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot')])
+
+    def test_garde_2_lecture_decisive_rattachement_et_unicite(depot_jetable):
+        """Cas sain : la lecture du gabarit passe (et un manifeste illisible d'un autre run est écarté et rapporté) ;
+        artefacts : manifeste illisible qui pourrait être une lecture décisive de ce run (CB1-04 (e)), run source non
+        décisif, manifeste de lecture d'une autre commande, lien nul, seconde lecture décisive du même run (unicité), sortie
+        rattachée à un autre run, sortie absente, sortie faite sur un autre run source que son manifeste, sortie altérée
+        après son sceau : arrêt."""
+        d, m, _ = depot_jetable
+        g = m.exiger_lecture_decisive(d, RUN_A, LEC_A, cp.ENTROPIE_P3)
+        assert g["commit_lecture"] and g["manifestes_ecartes"] == []
+        (d / "runs" / "20261020-000001-autre-casse").mkdir()
+        (d / "runs" / "20261020-000001-autre-casse" / "manifeste.json").write_text("{ illisible", encoding="utf-8")
+>       assert m.exiger_lecture_decisive(d, RUN_A, LEC_A, cp.ENTROPIE_P3)["manifestes_ecartes"] == [
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            {"run": "20261020-000001-autre-casse", "motif": "illisible (JSONDecodeError)"}]
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py:2530: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py:2091: in exiger_lecture_decisive
+    lisibles, ecartes = _manifestes(racine, "garde 2", run_source)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+racine = PosixPath('/tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot')
+garde = 'garde 2', run_source = '20261020-100000-p3-synthetique-a'
+
+    def _manifestes(racine: Path, garde: str, run_source: str) -> tuple[list[tuple[Path, dict]], list[dict]]:
+        """Manifestes sous `runs/` : (lisibles, écartés). Un manifeste illisible ou hors de forme (pas un objet, ou
+        `config` ou `preenregistrement` qui n'est pas un objet) arrête s'il pourrait être une lecture décisive de ce run ou un
+        passage de l'addendum (garde 16, `_pourrait_concerner`) ; sinon il est écarté, compté et rapporté (aucun repli
+        silencieux)."""
+        lisibles, ecartes = [], []
+        for chemin in sorted((Path(racine) / "runs").glob("*/manifeste.json")):
+            octets, motif, x = b"", None, None
+            try:
+                octets = chemin.read_bytes()
+            except OSError as e:
+                motif = f"illisible ({type(e).__name__})"
+            else:
+                try:
+                    x = json.loads(octets.decode("utf-8"))
+                except ValueError as e:
+                    motif = f"illisible ({type(e).__name__})"
+                else:
+                    if not isinstance(x, dict) or any(x.get(k) is not None and not isinstance(x.get(k), dict)
+                                                      for k in ("config", "preenregistrement")):
+                        motif = "hors de forme"
+            if motif is None:
+                lisibles.append((chemin, x))
+            elif _pourrait_concerner(octets, run_source):
+>               raise GardeArret(f"{garde} : {chemin} {motif}, et il pourrait être une lecture décisive de {run_source} ou "
+                                 f"un passage de l'addendum (garde 16) : vérification impossible")
+E               controle_ia.gardes.GardeArret: garde 2 : /tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot/runs/20261020-000001-autre-casse/manifeste.json illisible (JSONDecodeError), et il pourrait être une lecture décisive de 20261020-100000-p3-synthetique-a ou un passage de l'addendum (garde 16) : vérification impossible
+
+/tmp/pytest-of-root/pytest-230/test_garde_2_lecture_decisive_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py:2048: GardeArret
+_______________ test_ligne_de_commande_reelle_dans_un_processus ________________
+
+gabarit = PosixPath('/tmp/pytest-of-root/pytest-230/gabarit0/depot')
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_reelle_0')
+
+    def test_ligne_de_commande_reelle_dans_un_processus(gabarit, tmp_path):
+        """La vraie commande, dans un processus séparé, depuis la racine d'un dépôt jetable dont le code est importé (vraie
+        garde d'import, 2 000 et 10 000 tirages) : entropie autre refusée (code 1, rien d'écrit) ; passage réussi (code 0,
+        sortie scellée) ; second passage refusé (code 1)."""
+        d = tmp_path / "depot"
+        shutil.copytree(gabarit, d, symlinks=True)
+        env = {**os.environ, "PYTHONPATH": str(d / "src"), "PYTHONDONTWRITEBYTECODE": "1"}
+    
+        def lancer(run_add, entropie=cp.ENTROPIE_P3):
+            return subprocess.run([sys.executable, cp.CHEMIN_MODULE, "--run-source", RUN_A, "--lecture", LEC_A,
+                                   "--run-addendum", run_add, "--prereg", cp.PREREG_ADDENDUM, "--entropie", str(entropie)],
+                                  cwd=d, env=env, capture_output=True, text=True, timeout=900)
+    
+        r = lancer("20261020-140000-addendum-p3", 4242)
+        assert r.returncode == 1 and "ARRÊT" in r.stderr and "entropie" in r.stderr
+        assert _rien_ecrit(d, "20261020-140000-addendum-p3")
+        r = lancer("20261020-140001-addendum-p3")
+>       assert r.returncode == 0, r.stderr[-2000:]
+E       AssertionError: Traceback (most recent call last):
+E           File "/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_reelle_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py", line 2235, in <module>
+E             sys.exit(_main(sys.argv[1:]))
+E                      ^^^^^^^^^^^^^^^^^^^
+E           File "/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_reelle_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py", line 2223, in _main
+E             s = executer(Path("."), a.run_source, a.lecture, a.run_addendum, a.prereg, a.entropie)
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_reelle_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py", line 2202, in executer
+E             sortie = analyser_addendum(source, lecture, manifeste["graines"])
+E                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/tmp/pytest-of-root/pytest-230/test_ligne_de_commande_reelle_0/depot/docs/procedures/P3-addendum-v1/complements_p3_v1.py", line 1938, in analyser_addendum
+E             D = preparer_donnees(source, lecture, graines)
+E                 ^^^^^^^^^^^^^^^^
+E         NameError: name 'preparer_donnees' is not defined
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/claude-0/-home-user/5a6b9d1d-b17d-59a1-a770-8737a831fe0a/scratchpad/scellement-revalidati...er_donnees(source, lecture, graines)\n        ^^^^^^^^^^^^^^^^\nNameError: name \'preparer_donnees\' is not defined\n').returncode
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py:2735: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py::test_ligne_de_commande_de_bout_en_bout
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py::test_garde_2_lecture_decisive_rattachement_et_unicite
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py::test_ligne_de_commande_reelle_dans_un_processus
+3 failed, 146 passed in 1204.22s (0:20:04)
+CODE 1

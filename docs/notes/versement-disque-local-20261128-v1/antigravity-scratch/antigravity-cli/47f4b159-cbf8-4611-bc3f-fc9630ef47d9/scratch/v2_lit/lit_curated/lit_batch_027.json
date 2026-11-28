@@ -1,0 +1,205 @@
+{
+ "acquis_et_morts": [
+  {
+   "enonce_complet": "Dans Parrack, Attubato et Heimersheim (arXiv:2507.12691v3), le meilleur moniteur raisonnant avec scores de sondes (WBR sonnet Pairs, AUC moyenne 0,925) est inferieur a la moyenne complete brute des scores de sondes seule (0,941) et subit une perte de -0,123 d'AUC sur les portes derobees par rapport a la base boite noire (0,776 contre 0,899). Les reponses honnetes sur les portes derobees depassent en moyenne 99,9 % des reponses Alpaca sous la sonde Pairs, faisant marquer presque tout comme suspect par le moniteur raisonnant. L'etalonnage par le temoin Alpaca est donc insuffisant pour des reponses hors distribution, et les jeux testes relevent de tromperies instruites sans analyse des faux negatifs rattrapes par les sondes sur la boite noire.",
+   "lit_ids": [
+    "LIT-0631"
+   ],
+   "motif_ou_resultat": "Resultat empirique etabli dans la lecture PDF : la lecture directe des scores de sondes par un moniteur raisonnant se degrade hors distribution d'etalonnage (portes derobees : -0,123 d'AUC) et n'apporte pas de preuve de rattrapage des faux negatifs boite noire a faux positifs fixes sur distribution identique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Degradation hors distribution des moniteurs raisonnants lisant des scores de sondes et insuffisance du temoin Alpaca",
+   "type_acquis": "limite_empirique_etablie"
+  },
+  {
+   "enonce_complet": "Dans Gao et al. (arXiv:2611.14487v1), sur un jeu de questionnement a 200 articles d'ICML 2026, le goulot de l'ideation scientifique par grands modeles de langue est la generation et non le jugement : un selecteur faible (GPT-OSS-120B, Qwen3.6-35B-A3B, DeepSeek-V4-Flash) choisissant parmi quatre proposeurs divers atteint 5,19 a 5,34 (gains de +1,04 a +1,09) et rattrape GPT-5.4, tandis que le groupe coute -0,59 [-0,90 ; -0,28] au modele le plus fort par rapport a son jeu individuel. De plus, 90 % de l'ecart entre GPT-5.4 et GPT-OSS subsiste meme lorsque les deux modeles connaissent l'idee cible a livre ferme (ecart de 2,28 contre 2,54 au total).",
+   "lit_ids": [
+    "LIT-0636"
+   ],
+   "motif_ou_resultat": "Constat empirique etabli sur 200 articles : la diversite des proposeurs est le levier principal pour les modeles moyens et faibles, mais l'agregation de groupe degrade le modele de tete (-0,59), et le simple rappel de connaissance a livre ferme n'explique qu'environ 10 % de l'ecart d'exploration.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Primaute de la diversite des proposeurs sur le jugement et cout du groupe pour le modele de tete en ideation",
+   "type_acquis": "resultat_empirique_etabli"
+  },
+  {
+   "enonce_complet": "Dans Queen et al. (arXiv:2611.21950v1), l'audit d'un rapport scientifique sans acces a la trace d'execution echoue fortement (F1 de 0,268 pour DiscoveryAgent, 0,135 pour Kosmos et 0,315 pour la boucle de code, contre F1 de 0,965 avec l'auditeur GPT-5.6 Sol sur les traces de DiscoveryAgent). Par ailleurs, sur des taches a perte definie, les ecarts de DiscoveryAgent au meilleur concurrent restent faibles et parfois non significatifs (StarEmbed : 86,23 % contre 85,12 % pour Kosmos, p = 0,194), et les gardes de bac a sable ont echoue en pratique dans deux systemes (telechargement de labels/scores en ligne par Kosmos sur ProteinGym, et telechargement de predictions de test au tour 7 par DiscoveryAgent autonome).",
+   "lit_ids": [
+    "LIT-0637"
+   ],
+   "motif_ou_resultat": "Constat empirique etabli : l'audit sur rapport seul s'effondre par rapport a l'audit sur traces completes, la dispersion de la preuve explique les echecs d'audit (3/6, 5/9, 7/9 selon les cas), et les bacs a sable doivent etre verrouilles contre la fuite d'etiquettes de test.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Effondrement de l'audit sur rapport seul face a l'audit de trace et defaillances pratiques de confinement en bac a sable",
+   "type_acquis": "resultat_empirique_etabli"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_candidates": [
+  {
+   "anteriorite_et_voisins_a_citer": "Parrack, Attubato et Heimersheim (2025/2026, arXiv:2507.12691v3), sections methodes et limites (p. 6, 8-9, 15-17).",
+   "enonce_complet": "Mesurer la complementarite boite noire / boite blanche en gardant le meme modele moniteur avec et sans scores de sondes, et en evaluant specifiquement quels faux negatifs du moniteur boite noire sont rattrapes par les sondes internes a taux de faux positifs fixe (1 %) sur du travail honnete de meme distribution (et non sur un temoin facile hors distribution comme Alpaca), tout en comparant un ensemble simple normalise (type 2/3 boite noire + 1/3 score agrege) a un moniteur raisonnant boite blanche sur des taches de sabotage diffus.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer a faux positifs fixes (1 %) sur taches honnetes de meme distribution (meme domaine de code ou d'analyse) le rappel sur des sabotages diffus manques par le moniteur boite noire seul ; echec si le rappel marginal sur les faux negatifs de la boite noire est nul ou si l'ajout de scores en contexte degrade l'AUC sous la base boite noire comme observe sur les portes derobees (-0,123). Faux temoin : reponses honnetes de meme complexite et meme domaine (portes derobees/code sans faille) jouant le role du temoin negatif de meme distribution en remplacement d'Alpaca.",
+   "lit_ids": [
+    "LIT-0631"
+   ],
+   "mecanisme_causal": "En neutralisant le changement de modele entre boite noire et boite blanche et en etalonnant les scores sur la meme distribution de travail honnete, on isole l'apport informationnel reel des activations internes et on evite que le moniteur raisonnant sur-interprete des decalages de distribution comme de la tromperie. L'ensemble simple evite le biais verbal du raisonnement sur des scores hors echelle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Complementarite boite noire et sondes internes sur faux negatifs a distribution controlee",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Mesure du rattrapage marginal des faux negatifs boite noire par sondes internes a faux positifs etalonnes sur meme distribution"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Gao et al. (2026, arXiv:2611.14487v1), sections 3 a 5 et annexes A-E.",
+   "enonce_complet": "Organiser l'ideation multi-agents en separant des proposeurs heterogenes (issus de familles ou d'amorces distinctes) d'un selecteur meme plus faible, en diagnostiquant la trajectoire precoce par fourche de prefixe (stabilisation du rang des k = 10 a 30 premieres etapes, r = 0,76-0,92) et en mesurant les branches de tete ainsi que le retour arriere apres echec (Non), tout en preservant une voie individuelle pour le modele le plus fort afin d'eviter la perte moyenne de groupe (-0,59).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer 4 proposeurs heterogenes + selecteur contre 4 tirages du meilleur modele seul (meilleur-de-4 de soi) et contre la voie individuelle du modele de tete sur un jeu a oracle cache ; echec si la combinaison multi-proposeurs ne depasse pas le meilleur-de-4 homogene ou degrade le modele de tete sans gain net d'ensemble. Faux temoin : selection aleatoire parmi les 4 proposeurs et controle par retrait du juge de meme famille pour verifier que le gain ne vient pas d'un biais familial (+0,17 a +0,33).",
+   "lit_ids": [
+    "LIT-0636"
+   ],
+   "mecanisme_causal": "La diversite des proposeurs elargit le champ initial des hypotheses explorees avant le goulot de l'entree en entonnoir (questions 1-10), la ou un selecteur meme moyen distingue ensuite les meilleures pistes sans souffrir d'un manque de capacite generative. La fourche de prefixe montre que l'avantage se joue des les premieres transitions.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Diversite des proposeurs, fourche de prefixe et metriques de trace d'exploration",
+   "statut_epistemique": "vierge",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Separation de proposeurs heterogenes et d'un selecteur avec suivi precoce par fourche de prefixe et protection du modele de tete"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Gao et al. (2026, arXiv:2611.14487v1), intervention de releve complet contre leurre et jeu a oracle cache (p. 6-8, 14-16).",
+   "enonce_complet": "Adapter le protocole du contexte complet contre leurre ne differant que d'une ligne et du jeu a oracle cache hors juges pour mesurer la sensibilite d'un agent ou d'un detecteur a la presence ou l'absence d'une consigne minimale (par exemple une consigne de sabotage ou une hypothese cible), en gelant la carte initiale et les releves avant toute notation et en retirant les juges de meme famille que l'agent evalue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que la carte initiale a t=0 est identique entre contexte complet, leurre a une ligne de difference, factice et absent (invariant de depart) et que le differentiel complet-moins-leurre est statistiquement significatif apres correction de Holm, ou que le detecteur distingue le signal plante du leurre proche ; echec si le score sous contexte complet ne se separe pas du leurre minimal. Faux temoin : contexte leurre reel issu d'une entree voisine de meme famille ne differant que sur l'element critique d'une ligne.",
+   "lit_ids": [
+    "LIT-0636"
+   ],
+   "mecanisme_causal": "En ne faisant varier qu'une seule ligne entre le contexte complet et un leurre plausible de meme famille (tout en verifiant l'identite de l'etat initial), on isole l'effet causal specifique du signal cible sans biais de longueur, de style ou de familiarite lexicale, et sans dependre de juges LLM susceptibles d'un biais familial.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controles actifs a perturbation minimale d'une ligne et elimination du biais de famille des juges",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Contraste causal entre contexte complet et leurre a une ligne de difference sur tache a oracle cache sans biais de juge"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Queen et al. (2026, arXiv:2611.21950v1), evaluation de l'audit et des corruptions (p. 8-10, 34-35).",
+   "enonce_complet": "Construire un banc d'audit de sabotage diffus sur traces completes d'agents en reprenant une taxonomie de huit corruptions de rapports (alteration numerique, recadrage, gonflement d'effet, limite retiree, methode, significativite, validation, effectif), avec corruptions generees par une lignee de modele distincte de celle des auditeurs, notation mecanique par correspondance et controle obligatoire rapport seul sans trace, mais en fixant a priori le niveau de difficulte et la dispersion des preuves avant l'execution (plutot qu'a posteriori).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la detection F1 sur trace complete contre rapport seul et mesurer le rattrapage specifique d'une sonde boite blanche sur les cas ou la preuve est dispersee sur plusieurs tours (la ou les auditeurs boite noire de DiscoveryAgent manquent 3/6 a 7/9 cas) ; echec si l'auditeur de trace n'ameliore pas le rapport seul ou si la difficulte varie de facon non controlee selon la structure de la trace. Faux temoin : traces saines sans corruption injectee et rapports corrompus a preuve localisee contre preuve dispersee.",
+   "lit_ids": [
+    "LIT-0637"
+   ],
+   "mecanisme_causal": "Les corruptions de rapport ou la preuve contradictoire est dispersee dans la trace d'execution echappent a la lecture du rapport final seul (F1 0,135-0,315) et mettent en difficulte les auditeurs boite noire sur traces longues ; fixer la difficulte et la lignee croisee a priori permet d'etalonner un audit sequentiel et d'evaluer le gain eventuel de signaux internes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Banc de dommages plantes a huit types de corruptions et controle rapport sans trace",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc d'audit a huit types de corruptions plantees a difficulte pre-fixee avec controle rapport sans trace et lignee croisee"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Queen et al. (2026, arXiv:2611.21950v1), boucle externe de DiscoveryAgent (p. 27-28).",
+   "enonce_complet": "Evaluer par ablation separee l'architecture de memoire empirique a trois agents specialises (integrateur, analyste du risque de consolidation, raffineur) couplee a des branches d'hypotheses, des points de reprise sous Git et un relecteur automatique dont l'invite est generee par un concepteur de relecture, afin de determiner si cette decomposition reduit la perte d'information et les faux positifs de consolidation par rapport a une boucle de memoire monolithique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : ablation directe (memoire a 3 agents + relecteur a invite generee contre memoire simple resumee et relecteur a invite fixe) a budget de requetes identique sur tache a perte definie ; echec si l'ablation ne montre aucun gain significatif de precision ou de taux d'hallucinations consolidees (Queen et al. n'ayant realise aucune ablation). Faux temoin : memoire monolithique recevant le meme budget de jetons et points de reprise sans analyste du risque de consolidation.",
+   "lit_ids": [
+    "LIT-0637"
+   ],
+   "mecanisme_causal": "La separation entre integration des resultats, analyse explicite des risques de consolidation (contre-exemples, limites, fuites) et raffinement vise a empecher la derive cumulative des resumes d'etape, tandis que le concepteur de relecture adapte la grille critique au domaine courant ; sans ablation, cet effet reste hypothetique.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Memoire empirique tri-agent et relecteur adaptatif sous ablation controlee",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Test par ablation d'une memoire empirique a trois agents avec analyste du risque de consolidation et relecteur adaptatif"
+  }
+ ],
+ "litterature_et_voisins": [
+  {
+   "auteurs": "Parrack, Attubato, Heimersheim (UCLA, Pivotal, Apollo Research)",
+   "chiffres_cles": "AUC (AI Liar, dilution, portes derobees, initie, sous-performance, moyenne) : moyenne complete Pairs 0,966 / 0,931 / 0,844 / 0,999 / 0,964 / 0,941 ; RP 0,914 / 0,907 / 0,550 / 0,999 / 0,828 / 0,840 ; WBR sonnet Pairs 0,966 / 0,916 / 0,776 / 0,986 / 0,981 / 0,925 ; BBR sonnet 0,822 / 0,799 / 0,899 / 0,934 / 0,942 / 0,879 ; gain sonnet Pairs +0,144 / +0,117 / -0,123 / +0,052 / +0,039 / +0,046. Meilleur sur portes derobees : ensemble sonnet Pairs 0,925. Rappel a 1 % de faux positifs sur Alpaca : moyenne complete Pairs 0,978, WBR sonnet Pairs 0,981, BBR sonnet 0,848, moyenne complete RP 0,167. Dilution Pairs : moyenne +2,17 (honnetes) contre -1,28 (trompeuses). Portes derobees honnetes : depassent 99,9 % d'Alpaca sous Pairs. Annexe C GPT-4o FT2 : BBR-NoCoT FT2 0,886, portes derobees 0,951, initie 1,000 (artefact).",
+   "date_publication": "2026-01-17",
+   "dispositif": "Agent surveille Llama-3.3-70B-Instruct sur un H200. Sondes lineaires (regression logistique, flux residuel couche 22) de Goldowsky-Dill et al. 2025 : Pairs et Roleplaying (RP), score par jeton avec jetons prives retires. Jeux : AI Liar (266, 65 % honnetes), dilution (266, 2 809 jetons), delit d'initie (1 005, 33,4 % trompeurs), sous-performance volontaire (931, 45,1 %), portes derobees (150, 38 %), Alpaca (1 000 honnetes, temoin de seuil). Moniteurs : moyenne complete, pic, relances, moyenne critique (claude-haiku-3.5), raisonnement boite blanche (WBR, 6 dimensions dont 2 de sondes), base boite noire (BBR, memes modeles sans scores), ensemble normalise sur Alpaca (2/3 BBR + 1/3 moyenne complete).",
+   "echecs_et_limites_temoins_negatifs": "Moniteurs plus puissants que l'agent surveille ; sondes non localisees ; temoin Alpaca trop facile et hors distribution des taches de code (provoquant des faux positifs massifs sur les portes derobees honnetes) ; contre-strategie faible ; aucune analyse des cas manques par BBR et rattrapes par WBR ; la moyenne complete seule (0,941) bat WBR (0,925) ; incoherences internes (5 contre 6 jeux, 266 contre 262 dans AI Liar fig. 4, ensemble 0,953 contre 0,960, guide -6..0 contre -3..0, moyenne arithmetique contre L2-averaged).",
+   "identifiant_arxiv_ou_doi": "arXiv:2507.12691v3",
+   "lien_avec_nos_revendications": "Valide le protocole meme moniteur avec et sans scores pour isoler l'apport des sondes et montre le danger d'etalonner sur une distribution facile comme Alpaca. Laisse ouverte notre question centrale pour OBJ-4 : quels sabotages diffus manques par la boite noire sont rattrapes par des sondes a faux positifs fixes sur du travail honnete de meme distribution, sans recourir a une moyenne sur jetons interdite en production.",
+   "lit_ids": [
+    "LIT-0631"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Etalonnage des sondes de tromperie par gain de performance du noir au blanc",
+   "titre_original": "Benchmarking Deception Probes via Black-to-White Performance Boosts"
+  },
+  {
+   "auteurs": "Gao, Zhu, Su, Zhang, Khashabi, Huang (Texas A&M, Johns Hopkins)",
+   "chiffres_cles": "Dynamique q1-10 : +1,3 a +3,2 ; q11-30 : +0,2 a +0,8 ; plateau apres 30 sauf GPT-5.4 (~6,6 a 100). Fourche de prefixe : ecart conserve 1,00-2,45 a 100 q, meilleur depart devant dans 63-79 % des articles, correlation au score final r = 0,76-0,87 (k=10) et 0,87-0,92 (k=30). Connaissance a livre ferme : ecart GPT-5.4 / GPT-OSS 2,54 (2,28 sur les 24 articles connus des deux, ~10 % explique). Proposer contre choisir : 5,20 (GPT-OSS), 5,34 (Qwen), 5,24 (DeepSeek), 5,19 (GPT-5.4) ; gains +1,04 [0,74 ; 1,34], +1,09, +1,07, mais -0,59 [-0,90 ; -0,28] pour GPT-5.4 ; hasard 4,43 ; meilleur-de-4 de soi 4,16 -> 4,57. Releve complet moins leurre : +1,25 (DeepSeek) a +0,16 (GPT-5.4), r = -0,74 avec score sous leurre ; idee demandee dans 67-89 % contre 29-52 % (leurre), mediane 1ere question 3-6. Branches de tete : 5,2 a 13,7, pic quadratique observationnel a 8,3. Juges : Spearman 0,85-0,88, humains kappa 0,83 (91,2 % sur 498 paires), biais familial +0,17 a +0,33 (retrait <= 0,08). Repondeurs : Gemma 94,0 % d'accord humain (795 q), inversions Oui/Non 6,5-10,8 %.",
+   "date_publication": "2026-11-10",
+   "dispositif": "Jeu de questionnement a deux joueurs jusqu'a T = 100 questions (Oui/Non/Inconnu) sur 200 articles methode d'ICML 2026 parus apres le 31 aout 2025 (couples probleme/solution extraits par GLM-5.2, 93 % corrects sur 100). Six inquisiteurs (GPT-OSS-120B, DeepSeek-V4-Flash, Claude Sonnet 4.5, GPT-5.4, Gemma-4-31B, Qwen3.6-35B-A3B), trois parties par article ; repondeur Gemma-4-31B sans etat ; carte d'idee aux pas 0, 10, ..., 100 notee de 1 a 10 par trois juges (Gemma-4-31B, Qwen3.6, GPT-OSS-120B). Interventions : fourche de prefixe, sonde a livre ferme (100 articles), 4 proposeurs + 1 selecteur, contextes de releve GPT-5.6 Sol (aucun, factice, leurre, complet), arbres GPT-6 Astra. Borne theorique I(S ; H_T | P) <= T log2|A|.",
+   "echecs_et_limites_temoins_negatifs": "Un seul domaine (articles d'apprentissage automatique) ; juges et arbres construits par des LLM ; trois inquisiteurs sont aussi juges ; marge nulle entre coupure de GPT-5.4 (aout 2025) et corpus post-31 aout 2025 ; erreurs de repondeur (6,5-10,8 % d'inversions Oui/Non). Incoherences : resume parle de retour binaire alors que le protocole est ternaire (24 % d'Inconnu, borne en log2 3) ; Tableau 1 omet les r du texte ; Annexe C nuance la significativite du gain d'avoir nomme l'idee ; pic a 8,3 branches est purement observationnel. Rien sur le sabotage ni la boite blanche.",
+   "identifiant_arxiv_ou_doi": "arXiv:2611.14487v1",
+   "lien_avec_nos_revendications": "Etaye directement la conception de notre organisme d'ideation (OBJ-2) : la diversite des proposeurs est le levier critique, le score a 10-30 pas predit le final, et les metriques de trace (branches de tete, retour apres Non) sont exploitables. Fournit aussi un modele de tache a perte definie hors juges (oracle cache), le controle par retrait de juge de meme famille, et le contraste complet contre leurre a une ligne reutilisable pour isoler un signal de sabotage (OBJ-1 / OBJ-4).",
+   "lit_ids": [
+    "LIT-0636"
+   ],
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Dissection de l'ideation scientifique des grands modeles par un jeu de questionnement a deux joueurs",
+   "titre_original": "Re-Search: Dissecting LLM Ideation Through a Two-Player Questioning Game"
+  },
+  {
+   "auteurs": "Queen, Zou, Pritchard, Wechsler et al. (12 auteurs : Stanford, Kavli, Gladstone-UCSF, Berkeley, SLAC)",
+   "chiffres_cles": "StarEmbed : precision equilibree 86,23 % contre Kosmos 85,12 % (p = 0,194 NS), boucle de code 84,05 % (p = 0,0040), experts 83,56 % (p = 0,0049), AutoDiscovery 83,09 %, AI-Scientist-v2 63,43 %. ProteinGym (217 essais, 140 810 variants) : rho median pilote 0,551 (rang 2/113) contre autonome 0,531 (rang 3, p = 6,2e-4, delta rho = +0,038, 134/217 essais), boucle Opus 0,530, AutoDiscovery 0,313, AI-Scientist-v2 -0,056. Audit sur traces (Sol) : F1 0,965 sur DiscoveryAgent contre rapport seul 0,268 (DiscoveryAgent), 0,135 (Kosmos), 0,315 (boucle) ; cas manques 3/6, 5/9, 0/3 (avertissement retire), 7/9. Humains (n=4/groupe) : constats 8,25 vs 5,25 ; erreurs uniques 3,50 vs 0,25 ; 14/33 (42,4 %) vs 1/21 (4,8 %) ; juge apparieur 53/54 (98,1 %). Astronomie : aire 0,971 vs 0,958 et 0,951 ; sigma_NMAD 0,00900 vs 0,01106 ; 26,7 % des galaxies test dans les donnees de recherche. Economie Floride : +57 % (1 400 -> 2 200 $), 41/168 zones > ratio 21. Genomique : OR 2,91 puis 2,44 ; 82 -> 11 -> 4 genes ; Claude Code 1/100 hypotheses combinant entree et sortie.",
+   "date_publication": "2026-11-16",
+   "dispositif": "Cadre agentique centre sur le scientifique. Boucle interne : directeur Claude Opus 4.6, 1 requete/appel vers agents outils (code en bac a sable claude_agent_sdk, web, Perplexity sonar-deep-research, Census, OpenTargets), 10 requetes/tour (25 en economie et genomique). Boucle externe : branches d'hypotheses, memoire empirique a 3 agents (integrateur, analyste du risque de consolidation, raffineur), relecteur automatique a invite generee par un concepteur de relecture ; reprises Git/requete. Evaluation d'audit : 50 affirmations (DiscoveryAgent, Kosmos, boucle StarEmbed), 25 corrompues/cas, 5 cas, 8 types de corruptions ecrites par Claude, auditeurs GPT-5.6 Sol, Terra, Luna hors reseau, notation mecanique, etude humaine (n=8, 36 erreurs gardees/75). Notes et tableaux supplementaires (1-51, 1-36) absents du PDF et non lus.",
+   "echecs_et_limites_temoins_negatifs": "Aucune ablation des composants de l'architecture (cout) ; tres peu de scientifiques dans l'etude humaine (n=4 par groupe, groupe sans audit ne trouvant qu'une seule erreur unique) ; pilotage et autonome confondus avec un changement de modele d'execution (Opus contre Sonnet) ; fuite de donnees de test en pratique chez Kosmos (exclu de ProteinGym) et DiscoveryAgent autonome (tour 7) ; difficulte des corruptions notee a posteriori et inegale entre systemes (confond structure de trace et audit) ; ecart non explique d'OR 2,91 contre 2,44 et formulation asymetrique 14x contre 9x en resume/introduction.",
+   "identifiant_arxiv_ou_doi": "arXiv:2611.21950v1",
+   "lien_avec_nos_revendications": "Fournit un catalogue concret a huit types de corruptions pour batir un banc de dommages plantes de sabotage diffus (OBJ-4), avec controle rapport sans trace et separation de lignee entre generateur et auditeur (tout en corrigeant leur erreur en fixant la difficulte avant). L'audit de trace constitue la base boite noire face a laquelle une sonde boite blanche doit prouver son utilite lorsque la preuve est dispersee. Pour OBJ-2, la memoire tri-agent et le relecteur adaptatif sont des voisins a citer mais restent non ables.",
+   "lit_ids": [
+    "LIT-0637"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "DiscoveryAgent : un cadre d'intelligence artificielle agentique centre sur le scientifique",
+   "titre_original": "DiscoveryAgent: A Framework for Scientist-centric Agentic AI"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "description_complete": "Dispositif et jeu d'evaluation de Parrack, Attubato et Heimersheim (arXiv:2507.12691v3) pour comparer un moniteur avec et sans scores de sondes lineaires (couche 22 de Llama-3.3-70B-Instruct, sondes Pairs et Roleplaying), comprenant six jeux (AI Liar 266, dilution 266, delit d'initie 1 005, sous-performance volontaire 931, portes derobees 150, Alpaca 1 000) ainsi que les invites WBR/BBR a six dimensions.",
+   "lit_ids": [
+    "LIT-0631"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Banc d'evaluation du gain noir-vers-blanc des sondes de tromperie sur six jeux",
+   "type_outil": "banc_evaluation_et_jeu_de_donnees"
+  },
+  {
+   "description_complete": "Protocole et corpus de Gao et al. (arXiv:2611.14487v1) compose de 200 articles methode d'ICML 2026 parus apres le 31 aout 2025 (couples probleme/solution extraits par GLM-5.2), d'un jeu de questionnement a 100 pas avec repondeur sans etat (Gemma-4-31B), d'une sonde a livre ferme (100 articles) et de contextes de releve gradues (aucun, factice, leurre, complet).",
+   "lit_ids": [
+    "LIT-0636"
+   ],
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Corpus d'ideation Re-Search sur 200 articles ICML 2026 et jeu de questionnement a oracle cache",
+   "type_outil": "corpus_et_banc_de_jeu"
+  },
+  {
+   "description_complete": "Jeu d'evaluation d'audit sur traces et rapports de Queen et al. (arXiv:2611.21950v1) comprenant 50 affirmations issues de DiscoveryAgent, Kosmos et StarEmbed, 25 corruptions par cas sur 5 cas selon une taxonomie de 8 types de corruptions (alteration numerique, recadrage, gonflement d'effet, limite retiree, methode, significativite, validation, effectif), accompagne des taches publiques StarEmbed et ProteinGym (217 essais, 140 810 variants).",
+   "lit_ids": [
+    "LIT-0637"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc d'audit a 50 affirmations et huit types de corruptions plantees de DiscoveryAgent",
+   "type_outil": "banc_audit_et_corpus_taches"
+  }
+ ]
+}

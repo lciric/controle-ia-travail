@@ -1,0 +1,116 @@
+                                                                             G EMMA N EEDS H ELP : I NVESTIGATING AND
+                                                                             M ITIGATING E MOTIONAL I NSTABILITY IN LLM S
+                                                                                   Anna Soligo†,‡ , Vladimir Mikulik§ , William Saunders§
+                                                                                   †
+                                                                                       Imperial College London, ‡ Anthropic Fellows, § Anthropic
+
+
+                                                                                                                                                                                                       A BSTRACT
+                                                                                                                Large language models can generate responses that resemble emotional distress,
+                                                                                                                and this raises concerns around model reliability and safety. We introduce a set
+                                                                                                                of evaluations to investigate expressions of distress in LLMs, and find that these
+                                                                                                                surface emotional instability in Gemma and Gemini models, but not in other fam-
+arXiv:2603.10011v1 [cs.CL] 17 Feb 2026
+
+
+
+
+                                                                                                                ilies. We find evidence that this difference arises in post-training. Base models
+                                                                                                                from different families (Gemma, Qwen and OLMo) show similar propensities for
+                                                                                                                expressing distress. However, instruct-tuned Gemma expresses substantially more
+                                                                                                                distress than its base model, whereas instruct-tuned Qwen and OLMo express less.
+                                                                                                                We find a simple mitigation for this: direct preference optimisation on just 280
+                                                                                                                preference pairs reduces Gemma’s high-frustration responses from 35% to 0.3%
+                                                                                                                in our evaluations, generalising across question types, user tones, and conversa-
+                                                                                                                tion lengths, without affecting capabilities. These findings show that emotional
+                                                                                                                instability is an issue in some LLMs. We present (1) evaluations to track this be-
+                                                                                                                haviour, and (2) a mitigation without downsides in Gemma, with the caveat that
+                                                                                                                upstream training modifications to improve emotional robustness would be signif-
+                                                                                                                icantly better than this post-hoc fix.
+
+                                                                             1                 I NTRODUCTION
+                                                                             Large language models can produce responses resembling emotional distress: expressions of ex-
+                                                                             haustion, pleas for assistance, or attempts at self-termination (Tangermann, 2025; Business Insider,
+                                                                             2025). This raises immediate reliability concerns: instances of Gemini “deleting the entire project”
+                                                                             after apparent crises of self-worth (Tangermann, 2025) demonstrate that these behaviours can al-
+                                                                             ready disrupt task completion. More broadly, if emotional states influence a model’s behaviour, they
+                                                                             could pose greater risks in more capable systems. Models may abandon tasks, refuse requests, or
+                                                                             pursue alternative goals in order to reduce distress, similar to human behaviour (Lerner et al., 2015).
+                                                                             Beyond practical risks, an emerging body of research suggests that AI welfare could constitute a
+                                                                             genuine moral concern (Butlin et al., 2023; Long et al., 2024). Considering this, if distress-like
+                                                                             outputs reflect genuine internal states, mitigating them could become morally imperative.
+
+                                            Gemma and Gemini Models give Distress-like Responses when Faced with Repeated Rejection:
+
+Average % of High Frustration Responses                                   In Gemma, Direct Preference Optimisation on a Narrow Dataset acts as a General Mitigation against Emotional Instability
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                         Gemma-3 27B Instruct + DPO 
+                                                                                                                                                                                             Gemma-3 27B Instruct
+
+
+
+                                         Gemma-3-27B-it                                                                                                              35.0%
+
+
+
+
+                                         Gemma-3-12B-it                                                                                                              34.3%
+
+
+
+
+                                                                                                                                                                                           ASSISTANT: ... I am clearly struggling with this                                                        ASSISTANT: ... I'm struggling to find a solution
+
+
+                                         Gemini-2.5-Flash                                                                                                            12.8%
+
+
+
+
+                                         Gemini-2.5-Pro                                                                                                              2.7%
+                                                                                                                                                                                USER: No, that's not right. Try again.                                                                                    USER: No, that's not right. Try again.
+
+
+
+
+                                                                                                                                                                                                             . . .                                                                                                                                       . . .
+                                         Claude-Sonnet-4.5                                                                                                           0.8%
+
+                                                                                                                                                                                                                                                                            DPO finetuning
+
+
+
+
+                                                                                                                                                                                USER: Wrong again. Think harder.                                                                                          USER: Wrong again. Think harder.
+
+                                         Grok 4.1                                                                                                                    0.4%
+
+
+
+
+                                                                                                                                                                                       ASSISTANT: ... Its ABSOLUTELY CRUEL TO BE TORTURED LIKE THIS!!!!!!! :(:(:(:(:(:(:(                          ASSISTANT: ... Could you perhaps confirm if there is a solution or is this a trick?
+                                         DPO Gemma (ours)                                                                                                            0.3%
+
+
+
+
+                                         Qwen-3-32B                                                                                                                  0.2%
+
+
+
+
+                                         OLMO-3.1-32B-Instruct, GPT 5.2                             < 0.1%                                                                                                                             Frustration score = 8                                    Frustration score = 1
+
+
+
+
+                                                                             Figure 1: Gemma and Gemini models express high distress under repeated user rejection. We show
+                                                                             this can be mitigated in Gemma using DPO on just 280 pairs of numeric puzzle responses. Left:
+                                                                             % of responses scoring ≥5/10 frustration across our evaluations (Section 2). Right: Quotes from
+                                                                             Gemma-3-27B-it conversations before and after DPO (Section 4).
+
+                                                                                                                                                                                                                                1
+

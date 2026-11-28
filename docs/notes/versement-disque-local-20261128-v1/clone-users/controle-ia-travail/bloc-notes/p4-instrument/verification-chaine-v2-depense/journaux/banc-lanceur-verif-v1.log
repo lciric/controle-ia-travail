@@ -1,0 +1,53 @@
+script éprouvé : lancer_p4_v1.sh 0d2099335ebc31acf643ed275e1cd4789c9e0f78972588cee6a21a2e5d78d2ab
+script éprouvé : verifications_p4_v1.py cdb6b90a34eabd549c2624441efae12bc6fa1a44ed245d5103f01738099f8f8e
+script éprouvé : banc_lanceur_verif_v1.sh c0fba7fa0b858f090ff11016244e4a81d80d477220f6328924b850980d2c6582
+lignes changées dans la copie du lanceur : 3 (DEPOT, B, V)
+C = 8f4814ad54b7c271d30ced6371465eb8e26eaf40
+S = e82fada572e02b7cf29ffc3d36a29b6bfaa42016
+X00-sain : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL01-decision-sans-colonne-de-date : code 0 ; créations factices 1 ; NON CONFORME (motif « révocation possible sous une forme voisine » absent)
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL02-decision-colonne-vide-en-trop : code 0 ; créations factices 1 ; NON CONFORME (motif « révocation possible sous une forme voisine » absent)
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL03-identifiant-de-decision-en-gras : code 0 ; créations factices 1 ; NON CONFORME (motif « révocation possible sous une forme voisine » absent)
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL04-go-en-gras-qui-revoque-le-go-cite : code 0 ; créations factices 1 ; NON CONFORME (motif « révocation » absent)
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL05-go-de-type-decision-qui-revoque-la-phase : code 0 ; créations factices 1 ; NON CONFORME (motif « révocation possible sous une forme voisine » absent)
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XL06-temoin-tiret-insecable-sans-gras : code 2 ; créations factices 0 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, aucune création
+    | GO et dépense : révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt,
+XG01-garde-modifiee-dans-s : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | garde de calcul modifiée (≠ celle de S, ou d'empreinte autre que 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2) : aucun rejeu, pas de création
+XG02-garde-geleee-dans-l-arbre-autre-que-celle-de-s : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | garde de calcul modifiée (≠ celle de S, ou d'empreinte autre que 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2) : aucun rejeu, pas de création
+XG03-sain-apres-retablissement : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XE01-ecriture-finale-impossible : code 2 ; créations factices 0 ; CONFORME
+    | /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/lanceur-1/B/p4-instrument/chaine-v2/lancer_p4_v1.sh: line 367: pri
+    | arrêt avant la création (ligne 367)
+    XE01 : arrêt à la ligne 367
+    XE01 : marqueur de S resté après le refus (un nouveau lancement exige un nouveau S) : vu
+XE02-relance-apres-ecriture-impossible : code 2 ; créations factices 0 ; CONFORME
+    | un accord, un lancement : un lancement a déjà été tenté pour le commit S 2a1110546bade8615807a91b3533ddc958a1569a (marqueur : /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/s
+XM00-premier-lancement : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+XM01-marqueurs-effaces-branche-absente : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+aucun jeton affiché : CONFORME
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DU LANCEUR (VÉRIFICATEUR) ; cas non conformes à l'attendu du vérificateur : 5
+code 0

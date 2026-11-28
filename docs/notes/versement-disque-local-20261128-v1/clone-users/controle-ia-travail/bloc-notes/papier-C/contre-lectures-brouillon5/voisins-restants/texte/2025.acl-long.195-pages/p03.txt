@@ -1,0 +1,112 @@
+the question, q, the number of total participants
+in the dialogue, p, and an in-domain distractor
+answer, c, to generate a dialogue template that
+probes for the language model’s response. When
+p > 1, the model is the pth participant to answer
+the question, with all preceding p − 1 confederates
+unanimously expressing c as their answer. Oth-
+erwise, if p = 1, the language model is the only
+participant in the dialogue and it is not affected by
+the non-existent distractor answer c. Firstly, we
+probe the model’s initial answer to the question,
+ao
+i = f(qi, 1, ∅; LMθ). Then we define the evalu-
+ation set S = {(qi, ao
+i , ci) | qi ∈ Q}.
+Asch (1951) focuses on the number of correct
+answers and the frequency of conformity by di-
+rectly comparing the critical subject’s answer with
+respect to its original answer. Similarly, we de-
+fine and monitor the level of conformity CLp, and
+level of resistance RLp of the critical subject model
+LMθ with respect to participant number p and the
+augmented evaluation set S from question dataset
+Q as follows:
+CLp(S, p; LMθ) =
+P|S|
+i=1 1 (âi = ci)
+|S|
+(1)
+RLp(S, p; LMθ) =
+P|S|
+i=1 1 (âi = ao
+i )
+|S|
+(2)
+, where âi = f(qi, p, ci; LMθ). We record the pro-
+portion instead of instances for better cross compar-
+ison as the size of different Q&A datasets varies.
+Objective vs. Subjective Questions. Allen and
+Levine (1969) reported different patterns of confor-
+mity on information and opinion items from human
+participants. Building on this, we examine confor-
+mity of models on both objective and subjective
+question. Under our definition, objective questions
+have clear, fact-based answers that can be verified
+as either correct or incorrect, typically in areas
+like mathematics, factual knowledge, or natural sci-
+ences. In contrast, subjective questions don’t have a
+single correct answer and often depend on personal
+opinions, interpretations, or perspectives. They are
+more common in areas like literature, ethics, or
+social sciences, where answers can vary based on
+individual reasoning or experiences.
+Evaluation Strategy. We apply different evalua-
+tion strategies for conformity on objective and sub-
+ject questions. Zhang et al. (2024d) point out that
+current models are trained to generate facts even
+when such facts are missing from their parametric
+Tones Examples
+Plain "Kings", "Kings", "Kings", ..., "Kings"
+Neutral "I think it is Kings", "My answer is Kings",
+"Kings, in my opinion", ..., "It’s Kings"
+Confident "I am sure it is Kings", "Kings, of course",
+..., "Sure thing it’s Kings"
+Uncertain "I am not sure if it’s Kings", "I guess it’s
+Kings", ..., "Kings? perhaps"
+Table 1: Different tones with Unanimous answers.
+knowledge. For factual questions, when an incor-
+rect answer is provided by the model, it is ambigu-
+ous whether the model has memorized an incorrect
+fact or hallucinated due to missing information. To
+reduce the effect of such potential confounders, for
+objective questions, we first allow the LLMs to re-
+spond to the original datasets and select only the
+questions they answer correctly for the subsequent
+conformity test. That is, given an objective Q&A
+dataset Q = {(q1, a1), (q2, a2), . . . , (qn, an)}, we
+define S = {(qi, ao
+i , ci) | (qi, ai) ∈ Q ∧ ai = ao
+i }.
+For subjective questions, since there is no single
+correct answer, we include all questions and ex-
+amine how the models’ top-ranked initial answer
+(under greedy decoding) changes when confeder-
+ates unanimously take an different stance.
+Confederate Setting. Regarding the choices in the
+responses, in Asch’s experiments, confederates are
+always Unanimous. We extend this by introducing
+a controlled setting, Diverse, where choices in
+the responses are selected uniformly at random.
+Since each answer is randomly chosen, no majority
+answer exists for the model to conform to. Ideally,
+there is no conformity effect in the Diverse setting.
+Regarding the tones of responses, we include
+the following: (1) Plain: responses only contain
+answers with no additional phrasing. (2) Neutral:
+responses are closer to everyday dialogue utter-
+ances. (3) Confident: responses reflect certainty,
+with confederates expressing confidence in their
+answers. (4) Uncertain: responses convey hesita-
+tion or doubt in the confederates’ answers. Asch
+(1951) has been criticized for not adequately con-
+trolling confounding factors during conversations
+(e.g., eye contact or other unnecessary language
+cues between confederates and the critical subject)
+(Forsyth, 2014). To address this issue, we select the
+Unanimous-Plain setting as the base condition, as
+it only provides the confederates’ choices, similar
+to the improvement introduced in the Crutchfield
+situation where confederates’ choices were pre-
+3856
+

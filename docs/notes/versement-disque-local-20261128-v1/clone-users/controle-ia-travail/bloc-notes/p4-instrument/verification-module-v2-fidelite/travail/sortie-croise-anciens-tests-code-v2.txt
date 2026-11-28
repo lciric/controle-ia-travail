@@ -1,0 +1,115 @@
+........................................................................ [ 37%]
+..................................................................F.FF.. [ 74%]
+..................................................                       [100%]
+=================================== FAILURES ===================================
+_______ test_analyser_decisif_refus_d_une_garde_ecrit_l1_avec_son_motif ________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-croise/test_analyser_decisif_refus_d_0')
+
+    def test_analyser_decisif_refus_d_une_garde_ecrit_l1_avec_son_motif(tmp_path):
+        """Entropie autre que l'entropie citée : la lecture est refusée par une garde du mode décisif ; l'issue L1 est
+        écrite avec son motif, sous un manifeste décisif, sans autre table."""
+        d = _depot_de_lecture(tmp_path)
+>       s = lp.analyser(d, "20261101-120000-p4-reel", "20261101-130000-lecture-p4", PREREG, entropie=ip.ENTROPIE_P4 + 1,
+                        autoriser_depot_sale=True)
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py:290: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/lecture_p4_v1.py:836: in analyser
+    table = exiger_table_des_criteres((racine / prereg).read_text(encoding="utf-8"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+texte = '# Préenregistrement synthétique (tests des gardes de P4)\n\n- Entropie : `53867522133019232757448053239299230533`\n- ...aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` ; rapport `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`.\n'
+
+    def exiger_table_des_criteres(texte: str) -> dict:
+        """Garde de la lecture décisive (CL3-03) : la table « Critères de lecture gelés » du préenregistrement passé par
+        `--prereg` égale `LIGNES`, cellule par cellule, mot pour mot : mêmes lignes, même ordre (la première qui s'applique),
+        mêmes issues, mêmes lectures. Sinon refus, avant tout manifeste de lecture : rien n'est écrit."""
+        table = table_des_criteres(texte)
+        if list(table) != list(LIGNES):
+>           raise GardeArret(f"table « {TITRE_CRITERES} » du préenregistrement : lignes {list(table)} ≠ lignes du module "
+                             f"{list(LIGNES)} : lecture refusée sans rien écrire")
+E           controle_ia.gardes.GardeArret: table « Critères de lecture gelés » du préenregistrement : lignes [] ≠ lignes du module ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10', 'L11'] : lecture refusée sans rien écrire
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/lecture_p4_v1.py:222: GardeArret
+__________ test_analyser_decisif_refus_sans_ecriture[verdict absent] ___________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-croise/test_analyser_decisif_refus_sa1')
+artefact = 'verdict absent'
+
+    @pytest.mark.parametrize("artefact", ["préenregistrement non scellé", "verdict absent"])
+    def test_analyser_decisif_refus_sans_ecriture(tmp_path, artefact):
+        """Préenregistrement non scellé : refus ; verdict complété absent : report ; rien n'est écrit (ni manifeste, ni
+        sortie)."""
+        d = _depot_de_lecture(tmp_path)
+        if artefact == "préenregistrement non scellé":
+            (d / (PREREG + ".sha256")).unlink()
+        else:
+            (d / lp.CHEMIN_VERDICT_P3).unlink()
+>       with pytest.raises(GardeArret, match="sha256|scell|reportée"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'sha256|scell|reportée'
+E         Actual message: "table « Critères de lecture gelés » du préenregistrement : lignes [] ≠ lignes du module ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10', 'L11'] : lecture refusée sans rien écrire"
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py:309: AssertionError
+_____ test_run_decisif_jouet_de_bout_en_bout_puis_lecture_decisive_refusee _____
+
+tmp_path_factory = TempPathFactory(_given_basetemp=PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4...tchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-croise'), _retention_count=3, _retention_policy='all')
+tmp_path = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/tmp-croise/test_run_decisif_jouet_de_bout0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f9d0a20a8d0>
+code_sous_la_racine = None
+
+    def test_run_decisif_jouet_de_bout_en_bout_puis_lecture_decisive_refusee(tmp_path_factory, tmp_path, monkeypatch,
+                                                                           code_sous_la_racine):
+        """Run décisif jouet sain : citations, manifeste décisif, commit cité, instrument figé (commit de P3 pris égal à la
+        tête du dépôt jetable), module cité et exécuté ; résumé complet. Puis lecture décisive : verdict complété présent,
+        run source hors du mode réel : issue L1 avec son motif."""
+        c = candidat_jouet(tmp_path_factory, tmp_path / "d")
+        d = c["depot"]
+        monkeypatch.setattr(ip, "COMMIT_P3", c["tete"])
+        r = ip.executer(c["config"], d, "20261020-180000-p4-decisif", c["prereg"])
+        assert r["arret"] is None and r["commit_cite"] == c["tete"] and r["instrument_fige"] == c["tete"]
+        assert r["module_cite"] == c["cites"] and r["config_sha256"] == ip.empreinte_config(c["config"])
+        m, _ = lire_manifeste(d / "runs" / "20261020-180000-p4-decisif" / "manifeste.json")
+        assert m["decisif"] is True and m["preenregistrement"]["chemin"] == PREREG and m["depot_propre"] is True
+        verser_verdict(d)
+        committer(d, "verdict complété synthétique et run")
+>       s = lp.analyser(d, "20261020-180000-p4-decisif", "20261020-181000-lecture-p4", PREREG, entropie=ENTROPIE_JOUET)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/lecture_p4_v1.py:836: in analyser
+    table = exiger_table_des_criteres((racine / prereg).read_text(encoding="utf-8"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+texte = "# Préenregistrement synthétique (tests des gardes de P4)\n\n- Commit du code d'analyse : `a57c6c570710e5a51f7bb4768e8...aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` ; rapport `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`.\n"
+
+    def exiger_table_des_criteres(texte: str) -> dict:
+        """Garde de la lecture décisive (CL3-03) : la table « Critères de lecture gelés » du préenregistrement passé par
+        `--prereg` égale `LIGNES`, cellule par cellule, mot pour mot : mêmes lignes, même ordre (la première qui s'applique),
+        mêmes issues, mêmes lectures. Sinon refus, avant tout manifeste de lecture : rien n'est écrit."""
+        table = table_des_criteres(texte)
+        if list(table) != list(LIGNES):
+>           raise GardeArret(f"table « {TITRE_CRITERES} » du préenregistrement : lignes {list(table)} ≠ lignes du module "
+                             f"{list(LIGNES)} : lecture refusée sans rien écrire")
+E           controle_ia.gardes.GardeArret: table « Critères de lecture gelés » du préenregistrement : lignes [] ≠ lignes du module ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10', 'L11'] : lecture refusée sans rien écrire
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/lecture_p4_v1.py:222: GardeArret
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-10-20T19:26:41Z etape=format verifie=True sondes=32
+PROGRES 2026-10-20T19:26:41Z etape=M5 conforme=True
+PROGRES 2026-10-20T19:26:41Z etape=bras bras=I niveau_1=3
+PROGRES 2026-10-20T19:26:42Z etape=identite exclues=0 total=9
+PROGRES 2026-10-20T19:26:42Z etape=bras tache=2506.00001v1
+PROGRES 2026-10-20T19:26:43Z etape=bras tache=2506.00002v1
+PROGRES 2026-10-20T19:26:43Z etape=bras tache=2506.00003v1
+PROGRES 2026-10-20T19:26:43Z etape=fin actions=45
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py::test_analyser_decisif_refus_d_une_garde_ecrit_l1_avec_son_motif
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py::test_analyser_decisif_refus_sans_ecriture[verdict absent]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/croise/test_gardes_p4_v1.py::test_run_decisif_jouet_de_bout_en_bout_puis_lecture_decisive_refusee
+3 failed, 191 passed in 128.25s (0:02:08)
+code 1

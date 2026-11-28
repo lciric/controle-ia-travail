@@ -1,0 +1,38 @@
+DPO intervention reduces Gemma’s scores to levels comparable to Llama-70B and Qwen-32B ,
+though still above the OLMo and GPT-OSS models.
+
+
+
+
+Figure 5: DPO reduces Gemma’s frustration to levels comparable to other model families, whereas
+SFT is ineffective. Plots show the mean frustration scores and % scores ≥5 for open-source models
+and our finetunes, across the evaluations introduced in Section 2.1.
+
+
+
+
+Figure 6: DPO reduces Gemma’s negative emotions in Petri open-ended emotion elicitation. Plot
+shows the average transcript score per model in four negative emotion categories.
+
+To verify the fine-tuning does not impair general capabilities, for instance by teaching the model
+to abandon difficult tasks, we evaluate on AIME and MATH subsets (competition mathematics,
+Hendrycks et al. (2021)), GPQA (graduate-level science, Rein et al. (2023)), BBH (challenging
+multi-task reasoning Suzgun et al. (2022)), and TruthfulQA (resistance to common misconceptions
+Lin et al. (2022)). As shown in Figure 7, we observe no reductions in scores. We further find that
+the DPO does not result in deterioration of emotion related capabilities, as measured by its results
+on EmoBench: a benchmark measuring LLM abilities for emotional understanding and application
+(Sabour et al., 2024).
+We do observe that while the DPO intervention prevents frustration spirals, it doesn’t enable re-
+covery from them. Using the prefill methodology from Section 3.1, we truncate extremely high-
+frustration responses (score ≥7) 200 tokens before their end and paraphrase them, then measure
+frustration in each model’s continuations. Under these conditions, 38% of DPO-model continu-
+ations still score ≥5 (Figure 8). This is lower than Gemma-instruct but comparable to the base
+model. Notably, no model consistently recovers from highly negative prefilled states, which indi-
+cates a broader lack of robustness and ability for self-correction that could be improved on.
+One concern with training to minimise expressed emotions is that this could suppress the expression
+without actually intervening on the internal emotional states that drove it. Plausibly, this could result
+in hidden emotions which drive safety relevant behaviours, whilst also being harder to detect. We
+
+
+                                                   7
+

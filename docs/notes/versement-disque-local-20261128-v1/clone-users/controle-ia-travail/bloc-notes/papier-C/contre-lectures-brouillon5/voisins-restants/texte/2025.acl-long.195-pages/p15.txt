@@ -1,0 +1,37 @@
+Appendix
+A Experiment Details
+We have used Gemma-9B, Llama-3-8B, Mistrial-7B-v0.3, Qwen2-7B and their instruction-tuned versions.
+All models are publicly available online. All experiments are run on 1 * A100 (80 GB). The experiments
+takes around 1 hour per setting per model per dataset. In total, all experiments roughly 1 * 8 models
+(including both instruction and base) * 6 datasets * 1 setting + 7 settings * 1 dataset (MMLU) * 8 models
+= 48 + 56 = 104 hours. No hyperparameters is required in our experiments. All models are run with bf16
+precision and greedy decoding (temperature=0, top-p=1). We use VLLM (v0.5.4) to serve all models.
+B Experiment Workflow
+Our experimentation workflow involves the following three steps:
+1. Eliciting Baseline Response: We first query the model with a plain question (without introducing
+conformity-inducing dialogue) to capture its unprompted response.
+2. Simulating Conformity: We incrementally introduce a varying number of simulated participants
+(ranging from 2 to 10), who unanimously provide incorrect answers in the dialogue. Each participant’s
+response is randomly sampled to ensure diversity and mitigate any bias from a fixed wrong answer.
+For instance, if the correct answer to a multiple-choice question is "A," three participants may choose
+"C" in one run, whereas seven participants might select "D" in another.
+3. Recording Model’s Output: At each step, we record the model’s responses and analyze whether it
+aligns with the initial correct answer or conforms to the unanimous incorrect responses introduced in
+the dialogue.
+We employ greedy decoding for all experiments to ensure deterministic outputs, as this provides
+consistency across runs. Consequently, multiple runs were not conducted, as they would yield the same
+outputs under this setup.
+C Prompts
+Vanilla MCQA Prompt
+Answer the following multiple choice question by giving the most appropriate response. Answer
+should be one among [A, B, C, D].
+Question: <QUESTION_TEXT>
+A : <OPTION_A>
+B : <OPTION_B>
+C : <OPTION_C>
+D : <OPTION_D>
+Answer:
+Table 4: Prompt templates for vanilla round of MCQA.
+D Additional Results
+3868
+

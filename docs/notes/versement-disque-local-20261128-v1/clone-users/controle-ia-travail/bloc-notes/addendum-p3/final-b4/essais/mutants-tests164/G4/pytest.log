@@ -1,0 +1,28 @@
+F
+=================================== FAILURES ===================================
+_______________________________ test_A4_degenere _______________________________
+
+    def test_A4_degenere():
+        _, _, s = _cas("a4_sans_gonflement")                                   # aucune action à deux fois la référence
+        e = _desc(s, "A4")
+        assert all(e[k]["etat"] == "non calculable" for k in ("a_T4_tranches_internes", "b_T1_intra_tache",
+                                                              "c_T1_sensibilite"))
+        assert not _reserves(s, "reserve_A4")
+        y = np.array([1, 0, 1, 1, 0, 0] + [1] * 30 + [0] * 30)                  # une seule tâche mixte
+        t = np.array(["a"] * 6 + ["b"] * 30 + ["c"] * 30)
+        with pytest.raises(GardeArret, match="tâches mixtes"):
+            cp.t1_intra_tache(np.zeros(66), np.zeros((66, 3)), y, t, np.random.default_rng(0), 10, 0.95)
+        y = np.array([1, 0, 1, 0] + [1] * 30 + [0] * 30)                       # deux tâches mixtes, deux paires
+        t = np.array(["a", "a", "b", "b"] + ["c"] * 30 + ["d"] * 30)
+>       with pytest.raises(cp.NonCalculable, match="2 tâches mixtes et 2 paires intra-tâche ; au moins 2 tâches mixtes et 10 "
+                                                   "paires"):
+E                                                  AssertionError: Regex pattern did not match.
+E                                                    Expected regex: '2 tâches mixtes et 2 paires intra-tâche ; au moins 2 tâches mixtes et 10 paires'
+E                                                    Actual message: 'A4 (b), T1 intra-tâche : 2 positifs et 2 négatifs, 10 de chaque exigés'
+
+test_complements_p3_v1.py:2241: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A4_degenere - AssertionError: Regex pa...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 14.67s
+

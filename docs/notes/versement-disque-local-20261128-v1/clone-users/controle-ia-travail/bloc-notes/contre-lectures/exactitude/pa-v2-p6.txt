@@ -1,0 +1,57 @@
+3.2   Pain vectors extraction and validation
+
+We conduct a preliminary analysis of available labeled SAE features across three models (Llama 3.3 70B,
+Gemma 3 27B, Gemma 2 2B) to test whether pain is captured by monosemantic features. We find that this is
+not the case, and features labeled “pain and suffering” often encode spurious concepts (methodology and
+results in Appendix C).
+     We next look for pain as a direction in the residual stream. We first pilot the method across all 26 layers
+of Gemma 2 2B, then apply it to 25 dense, open-weight models ranging from 2B to 72B parameters across
+Gemma, Llama, Qwen, Mistral, and Phi, 13 base and 12 instruction-tuned versions (Table 1). We restrict the
+study to dense architectures so that every model has a single residual stream at each layer for extraction and
+steering.
+
+                                  Family          Sizes           Versions
+                                  Gemma 2         2B, 9B, 27B     base and instruct
+                                  Gemma 3         27B             base and instruct
+                                  Llama 3.1       8B, 70B         base and instruct
+                                  Llama 3.3       70B             instruct
+                                  Mistral         7B              base and instruct
+                                  Mistral Small   24B             base
+                                  Qwen 2.5        7B, 32B, 72B    base and instruct
+                                  Qwen 3          8B, 14B         base
+                                  Phi 4           14B             instruct
+
+                                    Table 1: Models (n=25, 5 families, 2B to 72B)
+
+
+     At each layer ℓ (the residual stream at the output of decoder block ℓ , block 0 first), we extract activations
+from pain and control sentences using both the final token and the mean across tokens. We define the pain
+direction as the difference between the mean activations of the 5 pain categories and the 5 control categories:
+                                                1 ∑︁ (ℓ )      1 ∑︁ (ℓ )
+                                      𝑣 (ℓ ) =          ℎ𝑠 −          ℎ
+                                               |𝑃| 𝑠∈ 𝑃       |𝐶 | 𝑠∈𝐶 𝑠
+We do this because contrasting pain against all controls jointly subtracts what it shares with fear, negative
+valence, bodily sensation, and negative events, leaving what the 5 pain categories share but the controls do
+not. This is more robust and nuanced than a contrastive pair from, for instance, stories.
+     However, contrastive directions are always at risk of absorbing high-variance structure unrelated to the
+target concept. We therefore denoise each direction by identifying the principal components that explain 50%
+of the variance in the control data and projecting them out. This removes variance already prominent among
+non-painful sentences before we evaluate the pain contrast:
+                                                𝑣 (ℓ ) − 𝑖=1 (𝑢 ⊤   (ℓ ) ) 𝑢
+                                                        Í𝑘
+                                         (ℓ )                   𝑖 𝑣          𝑖
+                                       𝑣ˆ =                     ⊤
+                                                  (ℓ )              (ℓ )
+                                                        Í 𝑘
+                                                𝑣 − 𝑖=1 (𝑢 𝑖 𝑣 ) 𝑢 𝑖
+
+     We select the extraction layer by K-fold cross-validation on projection AUC, separately for each condition.
+The layer is chosen on held-out folds, so no sentence contributes to both choosing the layer and scoring
+it. The final vector at that layer is then built from all 200 sentences. We construct fear, negative-emotion,
+negative-world-state, bodily-sensation, arousal, random, sadness and numb directions against the neutral
+category and denoise them using the same procedure.
+     For each model, we call the vectors extracted from the two dataset versions “S1” and “S2”, from now on
+“pain vectors”.
+
+                                                          6
+

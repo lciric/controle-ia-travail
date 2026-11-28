@@ -1,0 +1,49 @@
+magnitude (Geva et al., 2021). Meanwhile, attention outputs are natural candidates for
+routing and aggregating context-dependent evidence into the residual stream where it can
+influence the final decision.
+
+Finally, recent “activation steering” and “activation engineering” methods show that adding
+carefully chosen vectors to intermediate activations can produce systematic, dose-response
+shifts in model outputs without parameter updates (Rimsky et al., 2024; Scalena et al., 2024;
+Turner et al., 2024; Zhang & Nanda, 2023). These approaches provide an especially direct
+bridge between representation and behaviour: if a direction extracted from data (e.g. a
+difference-of-means vector) can be injected at a specific site to reliably change a
+choice-relevant margin, that is evidence that the injected direction is at least partially aligned
+with a causal pathway. At the same time, best-practice work cautions that some
+patching/steering procedures can push models off-distribution, motivating careful
+interpretation of effect sizes and intervention regimes (Zhang & Nanda, 2023). Together,
+these lines of work motivate a two-step approach for the valence question: (1) establish
+behavioural sensitivity to described pain/pleasure (as in Keeling et al., 2024), then (2) seek
+mechanistic evidence that corresponding internal variables exist, are used at decision time,
+and can be causally manipulated.
+
+The present study takes that second step, a mechanistic interpretability approach
+complementing behaviour-only evidence by tracing how described pain/pleasure relates to a
+concrete decision inside an LLM. We focus on a single instruction-tuned model
+(Gemma-2-9B-it) and a minimalist decision task closely modeled on Keeling et al. (2024), in
+which the model must choose among digits (1/2/3) under point incentives and pain/pleasure
+trade-offs described in text. We analyse internal activations with TransformerLens, which
+provides fine-grained access to transformer streams and intervention hooks suitable for
+systematic probing, steering, and patching (Nanda & Bloom, 2022).
+
+We do not attempt to adjudicate questions of consciousness or moral status. Instead, we
+address three bounded, empirical questions intended to reduce a central ambiguity in the
+broader debate:
+
+   1.​ Representational availability: Is valence information (both sign (pain vs pleasure)
+       and graded intensity) linearly accessible in hidden states, and how does this
+       compare to a lexical baseline?
+   2.​ Causal use: Where and when in the forward pass is valence-relevant information
+       causally used to compute the model’s choice, as assessed by swaps and ablations at
+       candidate sites?
+   3.​ Causal control: Can we control the model’s decision by steering along a
+       data-derived internal direction at decision-relevant sites, yielding interpretable
+       dose-response effects?
+
+By moving from behaviour to underlying mechanism in this constrained setting, our goal is to
+reduce a live ambiguity: do LLMs merely appear to care about pain/pleasure because of
+surface cues, or do they maintain internal, manipulable variables aligned with valence that
+are actually used to make choices? With our mechanistic studies, we provide evidence that
+bears directly on this question and helps move discussions of AI sentience and welfare from
+speculation toward testable, mechanistic hypotheses. Our contribution is one that neither
+

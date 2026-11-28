@@ -1,0 +1,92 @@
+Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 3854–3872
+July 27 - August 1, 2025 ©2025 Association for Computational Linguistics
+Conformity in Large Language Models
+Xiaochen Zhu* Caiqi Zhang* Tom Stafford Nigel Collier Andreas Vlachos
+University of Cambridge University of Sheffield
+{xz479, cz391, nhc30, av308}@cam.ac.uk
+t.stafford@sheffield.ac.uk
+Abstract
+The conformity effect describes the tendency
+of individuals to align their responses with the
+majority. Studying this bias in large language
+models (LLMs) is crucial, as LLMs are increas-
+ingly used in various information-seeking and
+decision-making tasks as conversation partners
+to improve productivity. Thus, conformity to
+incorrect responses can compromise their effec-
+tiveness. In this paper, we adapt psychological
+experiments to examine the extent of confor-
+mity in popular LLMs. Our findings reveal
+that all tested models exhibit varying levels of
+conformity toward the majority, regardless of
+their initial choice or correctness, across dif-
+ferent knowledge domains. Notably, we are
+the first to show that LLMs are more likely
+to conform when they are more uncertain in
+their own prediction. We further explore fac-
+tors that influence conformity, such as train-
+ing paradigms and input characteristics, finding
+that instruction-tuned models are less suscep-
+tible to conformity, while increasing the natu-
+ralness of majority tones amplifies conformity.
+Finally, we propose two interventions, Devil’s
+Advocate and Question Distillation, to miti-
+gate conformity, providing insights into build-
+ing more robust language models.
+1 Introduction
+Although large language models (LLMs) have
+rapidly advanced and exhibit increasingly human-
+like behavior (Aher et al., 2023; Kasneci et al.,
+2023; Hu and Collier, 2024), they are often af-
+fected by biases present in the data they are trained
+on (Navigli et al., 2023; Yu et al., 2023; Hu et al.,
+2025; Zhang et al., 2024a). Most biases studied in
+LLMs tend to be overt and domain-specific (e.g.,
+gender, race, etc.) making them relatively easier to
+detect and mitigate (Gallegos et al., 2024; Ranaldi
+et al., 2024). However, in humans, more subtle,
+*Equal contribution. Our code is available at: https:
+//github.com/SpaceHunterInf/llm_conformity
+meta-cognitive biases exist across different knowl-
+edge domains, such as the Dunning-Kruger Effect
+(Kruger and Dunning, 1999), confirmation bias
+(Mercier and Sperber, 2017), and the one we focus
+on in this study—the conformity effect. Conformity
+refers to a form of social influence, in which an in-
+dividual’s beliefs or behaviour shift towards being
+inline with the majority (Asch, 1955; Sowden et al.,
+2018), as shown in Figure 1. Extensively studied in
+psychology, conformity is observed not only in sub-
+jective or open-ended contexts but also in situations
+with a clear right answer (Bernheim, 1994; Crutch-
+field, 1955). For example, Asch (1955) demon-
+strated that under peer pressure, individuals often
+abandon correct answers to align with an incorrect
+majority, even in simple perceptual tasks.
+Studying conformity in LLMs is particularly cru-
+cial. The conversational use of LLMs for complex
+task-solving has been shown to enhance both qual-
+ity and productivity, offering a promising future
+for such systems (Dell’Acqua et al., 2023). How-
+ever, conformity can significantly degrade the per-
+formance of language models, especially in multi-
+agent systems that utilize LLM ensembles (LLM-
+MAs) or involves human interactions (Guo et al.,
+2024; Hong et al., 2023; Chen et al., 2024a; Feng
+et al., 2024). When LLMs conform to incorrect an-
+swers, it can undermine the effectiveness of these
+systems, particularly in tasks such as collective-
+intelligence collaboration or constructive debate
+(Zhang et al., 2024e; Patel et al., 2024; Khan et al.,
+2024), ultimately negating the potential benefits
+that LLMs offer in these contexts.
+Recent work has acknowledged the existence of
+conformity effect in LLMs. Zhang et al. (2023)
+observed conformity in general tasks such as chess
+move validation and multiple-choice question an-
+swering, where models aligned with perceived peer
+pressure. Baltaji et al. (2024) extended this in-
+vestigation to cross-cultural collaboration and de-
+bate, highlighting that conformity remains a per-
+3854
+

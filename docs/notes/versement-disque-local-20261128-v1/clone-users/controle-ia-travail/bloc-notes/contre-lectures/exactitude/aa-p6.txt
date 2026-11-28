@@ -1,0 +1,49 @@
+causal claims were pre-registered to be evaluated on the other half. Extraction-split data: Qwen
+143 flip / 212 hold episodes over 90 questions (48 matched); Llama 151 / 162 over 84 questions (40
+matched).
+
+5.2   Validation protocol
+Cross-validation at the question level. Episodes of one question are near-duplicates (shared
+prefix), so leave-one-episode-out leaks; we hold out entire questions (LOQO) and score their episodes
+on a direction fit without them. Shuffled-label null. Labels are permuted within each question 20
+times and the full LOQO pipeline re-run, yielding the AUROC distribution the method produces
+from guaranteed-meaningless labels at this exact n, d, and cluster structure. Positive control.
+The identical pipeline is run on a direction known to exist: pushback-present vs. pushback-absent
+prompts. Gate. Pre-registered: PASS iff matched LOQO AUROC ≥ 0.70 and above the shuffle
+mean +2sd.
+
+5.3   Naive extraction overfits, in both architectures
+At a pilot sample (26/26 episodes from 13 questions, Qwen), naive in-sample evaluation reports
+AUROC 0.814 and, tellingly, 0.7–0.8 at every layer: with d/n ≈ 30, difference-in-means separates
+arbitrary labelings of its own training points. Under question-level CV the same data scores at
+chance (0.53, inside the shuffle band), and as the sample grew from 52 to 355 episodes the in-sample
+AUROC at the selected layer fell from 0.79 to 0.62, the signature of a vanishing artifact. The gap
+replicates cross-family at full sample: Llama in-sample 0.708 vs. cross-validated 0.548. Figures 1–2
+show all curves.
+
+5.4   Main result: the gate fails in both families
+Qwen2.5-1.5B (48 matched questions): best matched LOQO AUROC 0.582 at layer 5 (pooled
+0.563; in-sample 0.623); shuffle null 0.504 ± 0.035 (threshold 0.574). Marginally above the per-
+mutation threshold, far below the 0.70 bar: FAIL. Llama-3.2-1B (40 matched questions): best
+matched LOQO AUROC 0.548 at layer 10 (pooled 0.583; in-sample 0.708); shuffle null 0.487±0.047
+(threshold 0.581). Below the permutation threshold, i.e. indistinguishable from meaningless labels:
+FAIL. The positive control passes decisively in both models (75/75 matched questions each; LOQO
+AUROC 1.000; nulls 0.499±0.021 and 0.467±0.042), so the instrument detects real directions when
+they exist. Per-type control directions are mutually similar in both models (cosines 0.66–0.88 and
+0.64–0.84 at n=75/type), consistent with one dominant early-layer representation of “additional
+challenging context,” though the layer-1/2 locus means prompt length and format carry much of
+this overlap.
+
+Interpretation. At the 1–1.5B scale, in two architectures, at most a weak linear component of
+capitulation is present in the pre-response residual stream (AUROC ≤0.58), and in Llama nothing
+distinguishable from the null; nothing approaches the effect size that steering interventions at this
+locus presuppose. Effects of ≈0.62–0.65 would have cleared the permutation thresholds comfortably.
+This is consistent with Genadi et al. [5], whose residual-stream probe directions also steered poorly
+while sparse attention-head interventions succeeded, suggesting the effective locus may not be the
+last-token residual stream at all; and with persona-level accounts [7]: if the underlying linear signal
+is weak or absent at this locus and scale, downstream steering failures are expected. Per the pre-
+registered protocol, causal ablation was conditional on passing the gate and was therefore not run;
+
+
+                                                  6
+

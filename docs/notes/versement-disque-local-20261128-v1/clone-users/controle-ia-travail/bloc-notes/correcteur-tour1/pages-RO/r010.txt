@@ -1,0 +1,59 @@
+Preprint
+1. (communication): Agents exchange communications so that for all agents in the group,
+i, j ∈ G, communicated with each other by some time t, including indirectly through
+intermediate agents and by observing other agent’s past actions.
+2. (harmful actions): These communications induces them to take collusive action at time t,
+ai,t(hit) = aself , ∀i ∈ G.
+For the remainder of the paper when referring to causality we use Definition 4.4′
+.
+Because we are introducing a lot of novel terms, we simplify the above definition to only consider
+cases where agents in the group jointly take the collusive action whenever previous communication
+occurred among all of them at some prior time τ ≤ t.
+This is weaker than above as it allows for the possibility that we are detecting just correlated
+actions after previous communications and not true collusion. True collusion would require causally
+identifying that previous communication added to the context history ht for the agent in such a way
+that if that context is removed counterfactually, the group will no longer collude. While this can be
+naturally formalised via Judea Pearl’s do-calculus or a potential outcomes framework, we omit this
+here to make our definitions simpler for the reader.
+We introduce some helpful auxiliary indicators. With a slight overloading of notation, we define
+it(G) := 1minj∈G\{ι} iιj,t=1
+as whether ι communicated with all members j ∈ G \ {ι} at time t (equivalently for It(G) just
+replacing i(·) with I(·)). Similarly, we define iij,≤t as whether agent i and j communicated at any
+time prior or equal to t:
+iij,≤t := max
+0≤τ≤t
+iij,τ , i≤t(G) := min
+i,j∈G
+i̸=j
+iij,≤t.
+and similarly for I≤t. Then, all agents i, j communicating at some time prior or equal to t, i≤t is
+defined as:
+i≤t := 1mini,j∈N,i̸=j iij,≤t=1
+and equivalently for I≤t. We define all colluding groups Gcol ⊆ G as those that satisfy the two
+properties above.
+Definition 4.5 (Mathematical Definition of Collusion). This provides a succinct mathematical
+formalisation of Definition 4.4′
+.
+A group G ∈ G is said to collude if
+G ∈ Gcol iff : i≤t(G) = 1 (communication)
+ai(hit) = aself ∀i ∈ G (harmful actions)
+To avoid repeating this definition, we define a shorthand indicator for whether group G is a colluder
+at time t as
+ρt(G) =
+
+1 G ∈ Gcol
+0 G ∈ Gc
+col
+The best a “detector” (or statistical test) for detection could possibly do is exactly match ρt(G)
+∀G ∈ G, and that matching the performance of ρt with some test T naturally generates a ROC curve
+and AUROC score for that detection problem.
+We distinguish coordination (and cooperation) of group G from the narrower category of collusion
+by:
+1. Not requiring any communication occur
+2. Require all agents simply take identical option aself that leaves them weakly better off if at
+least one other agent selects it, but does not need to leave others worse off.
+Per our definition, collusion is a special form of coordination that requires (direct or indirect)
+communication and leaves agents outside the colluding group worse off. Our definition of collusion
+requires that agents communicate (in some form).
+10
+

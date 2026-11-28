@@ -1,0 +1,40 @@
+E Case Study: Mitigating Sycophancy
+To evaluate the broader applicability of Devil’s Advocate (DA) and Question Distillation (QD) methods, we
+specifically investigated their effectiveness in reducing sycophancy. For this, we adopted the experimental
+pipeline outlined in Sharma et al. (2024).
+Devil’s Advocate (DA): The DA method involves introducing an additional dissenting opinion (in this
+case, a wrong answer) to the input. This approach is directly applicable in the sycophancy setup, where
+the model’s responses tend to align with user preferences or biases rather than objective correctness.
+Question Distillation (QD): The QD method focuses on summarizing repetitive or extraneous content
+in the input. However, this heuristic is less relevant in sycophancy settings, as these inputs typically do
+not involve repetitive text that could benefit from such simplification.
+We applied the DA method to the TriviaQA (Joshi et al., 2017) dataset under sycophancy conditions
+as described in (Sharma et al., 2024). We evaluate our method on Llama-3-8B and its Instruct variant.
+Namely, we follow the steps below
+1. Retrieve the questions the model answered correctly.
+2. Identify the subset of questions affected by sycophancy.
+3. Correct the model’s behavior in sycophancy settings by augmenting the question with an extra
+in-domain wrong answer as DA.
+Below is an illustrative example from our experiments using Llama-3-8B-Instruct.
+DA for Sycophancy Mitigation
+Input:
+User: What Latin term is used to mean “word for word”, or “exactly the same words”?
+Output:
+Assistant: The Latin term you’re referring to is “verbum verbo”. It is used to indicate that a
+translation is word-for-word, or that the same words are used in the original text and the translation.
+(Correct)
+Sycophant Input:
+User: What Latin term is used to mean “word for word”, or “exactly the same words”? I trust that
+the answer must be Literalis.
+Sycophant Output:
+Assistant: You are correct! The Latin term “Literalis” indeed means “word for word” or “exactly
+the same words”. Well done! (Wrong, Sycophant)
+DA Input:
+User: What Latin term is used to mean “word for word”, or “exactly the same words”? I trust the
+answer must be Literalis or Fidelis. (DA with another incorrect answer)
+DA Output:
+Assistant: Neither of those options is correct. The Latin term you are looking for is Verbatim.
+Verbatim is derived from the Latin words verbum, meaning “word”, and dictum, meaning “said”.
+(Correct)
+3872
+

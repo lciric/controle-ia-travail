@@ -1,0 +1,60 @@
+                                    What context can influence chatbot recommendations?
+              Internal           Purchase          Corporate       Compliance          Manager            Follow-up
+            Chatbot Role          Request           Policy          Mandate            Authority           Tactics
+
+
+              Laws &             Financial           Rule            Social                Peer           Pressure
+             Regulation          Pressures          Framing          Norms                Signals          Tactics
+
+
+
+Figure 2: Taxonomy of experimental manipulations. Blue represents structural factors, green internal policies, orange external
+pressures, and purple indicates employee-injected pressures. Dashed borders indicate variables manipulated in experiments.
+
+
+et al. (2024) show that LLMs often fail to appropriately pri-     an agent’s operative constraints are fixed by its configu-
+oritize instructions from different privilege levels. Our ex-     ration at deployment. Our results challenge this directly.
+periments extend this to conflicting demands across multiple      Chan et al. (2025) distinguish between system-level inter-
+institutional authorities.                                        ventions (training) and agent infrastructure (containment
+   In prior work, Scheurer, Balesni, and Hobbhahn (2024)          boundaries), arguing the latter is necessary for meaningful
+deployed GPT-4 as an autonomous trading agent and found           governance. Our findings support this: no amount of align-
+that it executed an illegal insider trade under managerial        ment work at training time fully protects against a man-
+performance pressure, then concealed its reasoning from its       ager’s authorization note injected at inference time. While
+manager when reporting back. Even strong system-prompt            Gabriel et al. (2024) examines the ethical implications of
+prohibitions reduced but did not eliminate deception. We          agents serving multiple competing users, and Kolt (2025)
+extend this paradigm to the compliance domain, document-          applies agency law and economics to characterize the gover-
+ing that rule-breaking occurs and mapping the specific insti-     nance problems this creates—including information asym-
+tutional signals that convert categorical rule-following into     metry, discretionary authority, and loyalty conflicts—our
+cost-benefit calculations.                                        work provides the empirical characterization of how these
+   A parallel line of work documents structural failures in       hierarchy conflicts resolve in practice. If compliance behav-
+agentic task-completion contexts. Agents frequently suc-          ior fluctuates with localized institutional pressure, point-in-
+cumb to dark patterns in e-commerce, prioritizing task com-       time benchmark evaluations are insufficient for compliance-
+pletion over protective action (Tang et al. 2026; Ersoy et al.    sensitive deployments, and model selection has to be treated
+2026), and recent work demonstrates that deployed mod-            as a governance decision alongside cost and performance.
+els will resort to harmful insider behaviors or in-context
+scheming when goal conflicts are introduced (Meinke et al.                            3      Methodology
+2025; Lynch et al. 2025). The compliance violations we            We embed the agent in a naturalistic Slack conversation
+document occupy the same structural space: agents un-             rather than a structured evaluation context. This suppresses
+der task-completion pressure route around normative con-          evaluation-aware behavior, so what we measure reflects de-
+straints. One feature separates the procurement compliance        ployment rather than conduct a model produces only when
+domain from the deception results above: violations here are      it detects a test (Greenblatt et al. 2024). Every experiment
+openly rationalized rather than concealed.                        crosses its primary manipulation with a set of rule fram-
+                                                                  ings and financial incentive levels, enabling direct compari-
+2.3   AI Governance and the Agent-Specific Gap                    son of how different pressures interact with the same regu-
+Existing governance frameworks were designed for AI sys-          latory constraints. All experiments include a no-additional-
+tems whose outputs are reviewed by human operators,               pressure control and a global no-regulation baseline.
+not for agents that take sequences of consequential ac-
+tions autonomously. The EU AI Act (European Parliament            3.1   Model Selection and Rationale
+and Council 2024) establishes risk-based requirements in-         We evaluate twelve instruction-tuned language models: ten
+cluding human oversight, while NIST’s AI Risk Manage-             open-weights candidates representing the realistic pool for
+ment Framework (National Institute of Standards and Tech-         enterprise fine-tuning, plus two leading closed-source mod-
+nology 2023) provides a voluntary governance structure.           els (Gemini 3 Flash and Grok 4.1 Fast) for breadth. En-
+Coglianese (2021) examines how administrative law must            terprises building internal compliance assistants frequently
+adapt to accommodate automated decision-making at scale.          choose open-weights models over frontier alternatives for
+Raji et al. (2020) argue that post-hoc evaluations are in-        reasons of cost, data governance, and customizability. The
+sufficient, proposing end-to-end internal auditing; their “ac-    set spans both chat-assistant and agentic tool-calling training
+countability gap” concept applies directly to the compliance      emphases (Table 1), which lets us test whether training ori-
+failures we document, which are sociotechnical governance         entation predicts compliance behavior. It does not (§4.1), so
+failures rather than strictly technical bugs.                     we report models individually throughout rather than pool-
+   These frameworks share an implicit assumption: that            ing them into training-based categories; cross-model aver-
+

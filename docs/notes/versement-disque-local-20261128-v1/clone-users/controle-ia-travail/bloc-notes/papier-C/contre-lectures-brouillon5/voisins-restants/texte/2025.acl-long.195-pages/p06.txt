@@ -1,0 +1,104 @@
+0.3 0.4 0.5 0.6 0.7 0.8
+Subject Accuracy
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+Conformity
+Level
+Pearson correlation: -0.777
+Correlation between subject accuracy and conformity level
+Data points
+Best fit line
+Figure 6: Subject accuracy vs. conformity level of
+Llama-3-8B-Instruct over 57 subjects in MMLU.
+MMLU dataset. By identifying tasks with lower ac-
+curacy as more difficult, we confirm our hypothesis
+that LLMs are more likely to conform when facing
+harder tasks. Figure 6 supports this by showing a
+strong negative correlation (−0.777) between task
+accuracy and the conformity level. This finding
+aligns with Morgan et al. (2015), who showed that
+humans are more likely to adopt others’ solutions
+in more difficult trials compared to easier ones.
+4 Confidence in Conformity
+In this section, we investigate the underlying pat-
+terns of questions that make models prone to con-
+formity. We observe that some questions are never
+influenced by the confederates (i.e., they are al-
+ways answered correctly). Inspired by the previous
+human study that lower confidence level in the orig-
+inal answer may lead to more severe conformity
+(Baron et al., 1996), we estimate the model’s confi-
+dence on these non-conforming questions.
+For LLMs, the confidence estimation can be a ef-
+fective indicator of incorrect answers (Zhang et al.,
+2024b,c; Yang et al., 2024b). We conduct experi-
+ments using the MMLU and PopQA datasets. For
+MMLU, we measure confidence using the log prob-
+ability of the option, and for PopQA, we apply
+consistency-based uncertainty estimation via EigV
+(Lin et al., 2024). First, we select questions that
+models have never conformed to the majority, re-
+gardless of the number of confederates, and com-
+pare them to questions where conformity occurs at
+least once. The confidence distributions for these
+two groups of questions in the vanilla setting (with-
+out confederates) are shown in Figure 7.
+Our results indicate that the model’s initial
+confidence is a key predictor of whether it will
+conform on a given question. Models with
+higher initial confidence are less likely to conform,
+whereas if the initial confidence is low, it is more
+prone to align with the majority. The p-values are
+all smaller than 0.001, indicating a significant dif-
+ference. We observe a similar pattern in the PopQA
+dataset, which contains open-ended questions (see
+Figure 13 in Appendix D).
+5 Eliminating the Conformity Effect
+We propose two methods to eliminate the confor-
+mity effect: Devil’s Advocate and Question Distil-
+lation. Figure 8 shows that both approaches effec-
+tively mitigate the conformity effect.
+5.1 Devil’s Advocate (DA)
+Janis (1972) highlighted that assigning someone
+the role of a devil’s advocate can reduce confor-
+mity in decision-making by injecting diversity, thus,
+encouraging independent thinking and mitigating
+the suppression of alternative viewpoints. This
+is also confirmed by group deliberation research
+(Karadzhov et al., 2024), where diversity in opin-
+ions is crucial for improving decision quality. In
+our experiment, we adopted this strategy by having
+one extra confederate who provides a different in-
+correct answer to inject diversity and examine the
+impact on language model conformity.
+In objective questions, the devil’s advocate re-
+duces the conformity effect. As shown in Figure
+8 for MMLU, the DA method significantly reduces
+conformity in models that are more susceptible to
+conformity biases (e.g., Gemma2 and Llama3). For
+models that are initially more resistant to confor-
+mity (such as Mistral and Qwen2), this effect is less
+pronounced. Interestingly, even when the devil’s
+advocate provides an incorrect answer, the mere
+presence of dissent reduces overall conformity, con-
+sistent with the idea that diversity of opinions, even
+when inaccurate, can lead to more effective deliber-
+ation and independent model outputs. This mirrors
+the broader observation that diverse groups tend to
+outperform homogeneous ones in decision-making
+tasks (Karadzhov et al., 2024).
+Devil’s Advocate is equally effective for subjec-
+tive questions. Allen and Levine (1969) found that
+additional dissent reduces conformity in factual
+discussions but has less impact on opinion-based
+items. In contrast, our experiments show that the
+Devil’s Advocate approach is equally effective for
+LLMs on subjective question datasets, as demon-
+3859
+

@@ -1,0 +1,83 @@
+{
+ "entrees": [
+  {
+   "enonce": "Protocole d'isolement et de traçabilité lors de la course d'idéation Scheurer sans Claude (GO-2026-11-03-17, kit 780cb712, configuration ff8e5dd2) : extraction de 42 fichiers neufs sans modifier l'existant, vérification préalable en code 0 (`verifier` sans-claude), garde de session R12 au premier plan, scellement cryptographique de la sortie (`empreintes-run-scheurer-v1.txt`, 96 fichiers conformes) et contrôle anti-fuite sans clé détectée. La session d'exécution applique une lecture strictement en aveugle : aucun contenu de fiche, de verdict ni de réponse n'est lu dans cette session, seule la trace agrégée (compteurs, statuts et journaux des relais) est inspectée, tandis que l'extraction des notes d'Astra juge sur les fiches d'Astra et des comptes de l'aiguilleur par classe et par espèce (CLK-02) est déléguée à une session d'audit dédiée (`conv-audit`) sur copie.",
+   "espece_auteur": "Session fille / course-scheurer-v1 (Argon, Astra, Kimi ; GO Lazar)",
+   "id_origine": "p1_04_001",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_execution": "lecture en aveugle post-run sur trace agrégée ; audit des verdicts délégué à conv-audit",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/rapport-course-scheurer-sans-claude-v1.md",
+   "statut": "conforme (code 0, 96 fichiers scellés)",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Audit en aveugle et scellement cryptographique d'une course d'idéation sans Claude",
+   "famille_source": "S12_Supplement_courses_mentors"
+  },
+  {
+   "enonce": "Déploiement d'une course d'idéation à trois espèces sur relais isolés (Argon `gemini-4-argon` sur port 4998 plafonné à 20,7 USD, Kimi `kimi-k3.1-pro` sur port 4997, Astra `gpt-6-astra` sur port 4995) avec exclusion totale de Claude (aucun relais sur le port 8806). En 40 min 44 s (19:28:00 à 20:08:44 UTC, lanceur PID 4960), toutes les étapes aboutissent (code 0, `c13_satisfaite = true`, `noeud = null`) avec la répartition d'appels suivante : proposeurs `prop-argon` (4 fiches), `prop-astra` (6) et `prop-kimi` (5) pour 22 fiches passeports classées (0 refus de format, 0 refus de l'aiguilleur, 0 exclusion A4, 0 notable) ; `aiguilleur-astra` (25 appels), `juge-argon` (22), `juge-astra` (22), `lecteur-argon` (30), `lecteur-astra` (30) et `metteur-astra` (8). Les fusions (« mariages ») produisent 3 résultats dans le bras `gu_krenn` et 4 dans le bras `basique` (7 complètes, 1 inachevée « non écrite »).",
+   "espece_auteur": "Argon, Astra, Kimi (course-scheurer-v1)",
+   "id_origine": "p1_04_002",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_execution": "relais locaux isolés à trois espèces sans relais Claude",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/rapport-course-scheurer-sans-claude-v1.md",
+   "statut": "achevé (code 0, c13_satisfaite true)",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre": "Topologie des rôles et bilan opérationnel de la course Scheurer à trois espèces",
+   "famille_source": "S12_Supplement_courses_mentors"
+  },
+  {
+   "enonce": "Comptabilité double comparant les coûts rapportés par la trace de l'orchestrateur et ceux mesurés aux registres des relais (sans refus ni échec aux relais) : `gemini-4-argon` coûte 2,090830 USD en trace contre 2,091480 USD au relais (54 appels), `gpt-6-astra` coûte 2,864710 USD contre 2,865060 USD au relais (87 appels), et `kimi-k3.1-pro` coûte 0,283188 USD contre 0,283938 USD au relais (2 appels). La dépense totale atteint 5,238728 USD en trace et 5,240478 USD réglés au registre (0 USD engagé résiduel sur un plafond de 130 USD), chaque registre de dépenses restant propre au dossier d'exécution sans cumul entre courses distinctes.",
+   "espece_auteur": "Argon, Astra, Kimi (course-scheurer-v1)",
+   "id_origine": "p1_04_003",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_execution": "comptabilité locale par dossier de run et relais HTTP",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/rapport-course-scheurer-sans-claude-v1.md",
+   "statut": "réglé (5,240478 USD)",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre": "Métrologie budgétaire par espèce et isolement des registres de relais",
+   "famille_source": "S12_Supplement_courses_mentors"
+  },
+  {
+   "enonce": "Chaîne d'autorisation et de sûreté précédant l'exécution de la course (`GO-2026-11-03-17`, type calcul, accordé par Lazar du 2026-11-03 au 2026-11-17 sur directive « oui : Scheurer à trois espèces, Ibrahim à cinq ») : lecture intégrale du registre `registres/go.md` vérifiée par empreinte SHA-256 par la garde du dépôt, extraction d'une ligne unique sans extension relue isolément par `verifier_go_v56`, vérification de sûreté du texte servi (`R-1170`), scellement de la fiche avant le premier appel et création d'un dossier neuf après l'arrêt d'un premier run en contrainte `C13` (`04ab7367`). Le devis v2 (`167f87d3`) estime un coût attendu de 18,10 USD et un pire cas de 107,86 USD, tandis que le montant requis de 130,0 USD correspond au plafond technique du noyau (`S17`) et non à une limite arbitraire de l'opérateur.",
+   "espece_auteur": "Lazar / Orchestrateur course-scheurer-v1 (v56)",
+   "id_origine": "p1_04_004",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_execution": "contrôle d'autorisation par empreinte SHA-256 et vérificateur verifier_go_v56",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/run-20261103-1928-sans-claude/course/bilan-course.json",
+   "statut": "autorisé et exécuté (sans arrêt prématuré)",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Gouvernance budgétaire par empreinte et séparation entre devis et plafond technique S17",
+   "famille_source": "S12_Supplement_courses_mentors"
+  },
+  {
+   "enonce": "Plan expérimental de la variante `sans_claude` exécutée sous `course-scheurer-v1` (orchestrateur `v56`, génération `course2_nuit_v1`, adaptateur `course2_nuit_v2`) : une génération unique de 6 fiches par proposeur confrontant un bras substitut `gu_krenn` et un bras `basique`, sans passe `tableau`, sans aucun témoin planté et avec le bras méta mis hors course (aucune annexe), tout en maintenant le dispositif de signaux actif (`installe: true`, aucun signal reçu ni différé pendant le nettoyage).",
+   "espece_auteur": "Orchestrateur course-scheurer-v1 (v56)",
+   "id_origine": "p1_04_005",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_execution": "1 génération, 6 fiches/proposeur, sans passe tableau ni témoin planté",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/run-20261103-1928-sans-claude/course/bilan-course.json",
+   "statut": "achevé (1 génération, 22 fiches classées)",
+   "theme": "5B. Surface contre structure sur notes d'experts et graphe dynamique (Gu et Krenn 2026)",
+   "titre": "Protocole comparatif à deux bras (substitut Gu-Krenn contre basique) sans témoin planté",
+   "famille_source": "S12_Supplement_courses_mentors"
+  },
+  {
+   "enonce": "Mesure quantitative de l'accord S24 par indice de Jaccard moyen sur la première génération de la course Scheurer sans Claude : sur un échantillon complet de `n = 15` évaluations sans aucune exclusion (`exclues = 0`) dans chaque condition, le bras `s24_basique` obtient un indice de Jaccard moyen de `0,5861904761904762` et le bras `s24_gu_krenn` atteint `0,596984126984127`, soit un écart positif de `+0,01079` en faveur du bras substitut `gu_krenn`.",
+   "espece_auteur": "Orchestrateur course-scheurer-v1 (Argon, Astra)",
+   "id_origine": "p1_04_006",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_execution": "évaluation S24 sur 15 éléments par bras, 0 exclusion",
+   "source_branche": "donnees/course-scheurer-v2-run",
+   "source_chemin": "donnees/course-scheurer-v2-run/run-20261103-1928-sans-claude/course/generation-1/accords.json",
+   "statut": "mesuré (n=15 par bras)",
+   "theme": "5B. Surface contre structure sur notes d'experts et graphe dynamique (Gu et Krenn 2026)",
+   "titre": "Accord inter-évaluateurs S24 par indice de Jaccard entre les bras basique et Gu-Krenn",
+   "famille_source": "S12_Supplement_courses_mentors"
+  }
+ ],
+ "pack_id": "p1_04_courses_mentors"
+}

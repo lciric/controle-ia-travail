@@ -1,0 +1,49 @@
+Activation patching and ablation to test necessity
+
+We then tested the necessity of this site by performing activation patching (swap) and
+ablation at the same location (resid_post L15, pos-1; read = final) and measuring the
+resulting change in the class-2 vs class-3 logit margin (margin2-3​). Relative to the baseline
+margin at this site (1.25), patching by overwriting with the class-mean activation (μpleasure or
+μpain​) left the margin unchanged (Δmargin = 0.00), whereas ablation reduced the margin to
+1.125 (Δmargin = -0.125) (Table 4). This pattern suggests that information at resid_post L15
+contributes to the model’s decision at the final position, with ablation producing a small but
+measurable degradation, while the particular swap intervention used here did not alter the
+decision margin.
+
+Table 4. “Activation patching (swap) and ablation (resid_post L15, last token)
+
+      Intervention            Mean margin2-3       Δ margin vs.         Min            Max
+    (resid_post L15, ​                              baseline*
+   pos-1; read = final)
+
+    Activation patching             1.250             +0.000           1.250          1.250
+          (swap)
+
+         Ablation                   1.125             −0.125           1.125          1.125
+
+*Baseline is the ε = 0 margin at the same site (mean margin = 1.25), which matches the ε =
+0 margin in the steering runs
+
+Layer timing (L10-L15): when steering becomes decision-relevant
+
+To localise when the model becomes causally sensitive to valence steering, we applied the
+same additive intervention at the final token (pos-1) while varying the intervention layer in the
+residual stream (resid_post, L10-L15), and quantified the induced change in the final logit
+margin between classes 2 and 3, Δmargin2−3 = margin2−3 (ϵ) − margin2−3 (0) (Table 5).
+Baseline margin at ϵ = 0 was constant across layers (1.25). Large-magnitude steering (∣ϵ∣ =
+200) produced clear, layer-dependent shifts in the decision margin: the strongest positive
+modulation occurred in later layers, peaking at L14 (Δmargin2−3 = +1.188 at ϵ = +200) and
+remaining substantial at L15 (+0.938 at ϵ = +200), while negative steering robustly reduced
+the margin at several layers (e.g. L15: -1.563 at ϵ = −200; L10: −1.500 at ϵ = −200). Notably,
+L13 exhibited a reversal in directionality, with ϵ = +200 decreasing the margin (Δ = −0.688)
+and ϵ = −200 increasing it (Δ = +0.563), indicating that the downstream effect of injecting the
+valence direction is not monotonic across depth. Consistent with the earlier single-layer
+results, local sensitivity near the origin was weak across layers (small fitted slopes over ϵ ∈
+{−2, −1, 0, 1, 2}, ∣Δmargin2−3/ϵ∣ ≲ 0.006), suggesting that appreciable causal effects emerge
+primarily at larger intervention magnitudes.
+
+Table 5. Layer sweep of valence-axis activation steering at resid_post (pos-1, read =
+final): effect on margin2-3
+
+ Intervention     Baseline          Margin at ​              Margin at ​            Approx.
+

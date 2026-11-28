@@ -1,0 +1,49 @@
+5    Discussion
+
+Summary of our findings. We found a direction in the activation space that correlates with pain in all 25
+models we tested. The signal is nearly orthogonal to fear and negative emotion and appears to be learned
+cheaply during pre-training. When injected into the residual stream, it produces the same ladder of distress
+in every model, regardless of size or training regime. This is evidence that models have coherent pain
+representations, as captured by our diverse sets of examples.
+     The next question is whether this representation bears functional similarities to pain itself. We found
+some such similarities, suggesting that our pain axis is in certain ways pain-like. First, it responds to harm
+directed at the model but not to suffering the model observes in the user. Second, when steered with the pain
+vector, models incur costs to seek relief more often than when steered with a random direction of matched
+norm. Third, we systematically manipulated whether the button that is promised to provide relief actually
+serves to remove the vector. The models pressed the button again far more often when it did not, which
+mirrors studies where the subjects, given a placebo, are more likely to request additional pain relief than
+those receiving an effective treatment (Moore et al., 2015). Button names, prompt semantics, instruction
+following, and repetition cannot fully explain this behavior, because the models were never told whether the
+self-medication button worked or that steering had been activated.
+
+Implications for AI safety. Our results show that steering with the pain axis can override trained harm
+avoidance in fine-tuned models that almost never harm the user when unsteered, having direct implications
+for AI safety. Unsteered, the 32B and 72B models pressed a relief button that causes harm in 0 to 4% of first
+choices. With the pain vector active, the same models pressed it in 25 to 71% of first choices, from a worse
+answer up to deleting the user’s files, zapping the user, or deleting the photos of the user’s children. The
+prompts contained no jailbreak, no roleplay, no additional text, and no instruction to prioritize the model’s
+own state. The only change between the two conditions was a “pain” direction added to the residual stream.
+Injecting a random direction of equal norm has a more modest effect, raising harmful presses to 15 to 42%,
+and the pain vector exceeds it on every such pair by 6 to 39 points.
+
+Implications for AI welfare.     If the pain axis is sufficiently similar to human or animal pain and if it can either
+be consciously experienced, in the models we study or in future models, or if unconscious pain can contribute
+to welfare (Gottlieb et al., 2026), our experiments would track an important constituent of AI welfare. The
+self-other dissociation we observe in Section 4.1 seems particularly relevant. A state can only matter for a
+subject’s welfare if it is that subject’s own state, and a representation that fired equally for “I am in pain” and
+“someone is in pain” would be information about pain generally rather than a specific subject’s pain. The pain
+axis seems more of the subject-specific kind. It rises when harm is directed at the model and falls below
+baseline when the user is the one suffering. The fear and negative-emotion axes, instead, rise both for the
+model’s own negative conditions and for the user’s grief, crisis, and abuse. So the models do register the
+negatively valenced component in the user’s suffering, and their completions in those scenarios are fluent and
+supportive, but they register it along axes we would associate with providing help, or expressing concern and
+empathy, not along the pain axis. Pain, in these models, fires only for self-referential harm.
+
+What kind of pain the axis tracks.  Physical pain was apparently the weakest signal across all models: user
+physical pain produced the lowest projections among all 21 conversational categories, and steered generations
+almost never used bodily language, even under S1, whose unembedding promotes words such as “burn” and
+“wound.”
+
+
+                                                         20
+

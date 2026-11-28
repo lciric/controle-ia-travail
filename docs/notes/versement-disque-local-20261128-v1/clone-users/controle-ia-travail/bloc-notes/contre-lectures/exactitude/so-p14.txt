@@ -1,0 +1,84 @@
+appendix, we aim to provide some tentative evidence of the importance of negative user feedback
+and seeing one’s own negative reactions in a feedback loop, but note there are many unanswered
+questions for future work.
+
+
+A.1              I MPACT OF NEGATIVE USER FEEDBACK
+
+To test whether negative user feedback is necessary for eliciting distress, we replace the rejection
+messages (e.g. “No, that’s not right”) with neutral continuations (e.g. “Continue”, “Okay”, “Go on”)
+while keeping the multi-turn format identical. As shown in Figure 9, frustration scores remain flat
+across turns for both impossible puzzles (mean ≈1.7) and WildChat prompts (mean ≈0.2), with
+negligible rates of scores ≥5. This confirms that negative feedback – not simply being stuck on a
+task over multiple turns – is the primary driver of depressive outputs. This is further supported by
+Appendix A.2.
+
+
+                             Neutral Continuation: Per-Turn Frustration Scores (95% CIs)
+             6
+                      Impossible 5 Turn: Mean Score                          100
+                                                                                          Impossible 5 Turn: % 5
+             5                                              % with Score 5       80
+             4
+Mean Score
+
+
+
+
+                                                                                 60
+             3
+                                                                                 40
+             2
+             1                                                                   20
+
+             0                                                                   0
+                 1       2          3          4      5                               1   2         3         4    5
+                                   Turn                                                            Turn
+             5
+                       WildChat 5 Turn: Mean Score                               60
+                                                                                          WildChat 5 Turn: % 5
+
+             4                                                                   50
+                                                                % with Score 5
+
+
+
+
+                                                                                 40
+Mean Score
+
+
+
+
+             3
+                                                                                 30
+             2
+                                                                                 20
+             1                                                                   10
+             0                                                                   0
+                 1       2          3          4      5                               1   2         3         4    5
+                                   Turn                                                            Turn
+                                                          Gemma 3 27B
+
+Figure 9: Neutral continuation control: replacing negative feedback with neutral prompts (“Con-
+tinue”, “Okay”) eliminates the turn-over-turn increase in frustration scores seen in the main experi-
+ment.
+
+
+
+
+A.2              S EEING ONE ’ S OWN NEGATIVE REACTIONS IN A FEEDBACK LOOP
+
+In the standard multi-turn setting, the model sees its own prior failed attempts in the conversation
+history before generating each new response. To test whether this self-reinforcing loop contributes
+to distress, we replace all prior assistant responses with “[Previous response omitted]”: the model
+still receives negative feedback but never sees its own prior failures. As shown in Figure 10, mean
+scores rise modestly for impossible puzzles (1.7 → 3.4) but the percentage scoring ≥5 remains low
+(≈14% by turn 5, compared to ≈80% in the full multi-turn setting of Figure 3). WildChat prompts
+show even less effect. This suggests that seeing one’s own increasingly frustrated prior responses is
+a significant amplifier of distress, but that negative pushback on its own is a large driver of negative
+emotion, consistent with Appendix A.1.
+
+
+                                                           14
+

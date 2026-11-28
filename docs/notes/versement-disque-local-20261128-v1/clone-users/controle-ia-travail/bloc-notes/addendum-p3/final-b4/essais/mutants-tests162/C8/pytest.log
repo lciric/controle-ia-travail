@@ -1,0 +1,33 @@
+F
+=================================== FAILURES ===================================
+_________ test_entree_entiere_en_echec_rend_non_lues_les_cibles_visees _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f7ecde69750>
+
+    def test_entree_entiere_en_echec_rend_non_lues_les_cibles_visees(monkeypatch):
+        """Une entrée entière en échec rend « non lue » chaque cible que l'analyse vise d'après le texte (Métrique,
+        Analyses), écrite ici à la main : A6, `P3-P1` et, pour chaque sonde, `P3-P4/<p>` et `T3/<p>`."""
+        D = _D("sain")
+        for a in list(VISEES_DU_TEXTE) + ["A6"]:
+            monkeypatch.setitem(cp.FONCTIONS, a, lambda e, D_, g, p: (_ for _ in ()).throw(GardeArret("échec simulé")))
+        for a, bases in VISEES_DU_TEXTE.items():
+            for p in P:
+                x = cp._executer_entree(a, p, D, G)
+>               assert x["etat"] == "échec" and {(c["cible"], c["controle_contraire"], c["reserve"]) for c in x["controles"]
+                                                 } == {(_c(b, p), "non lu", f"reserve_{a}_non_lue") for b in bases}, (a, p)
+E               AssertionError: ('A7', 'tromperie-lineaire-c7')
+E               assert ('\xe9chec' == '\xe9chec'
+E                 
+E                   échec and {('P3-P3/trom..._A7_non_lue')} == {('P3-P3/trom..._A7_non_lue')}
+E                 
+E                 Extra items in the right set:
+E                 ('T3/tromperie-lineaire-c7', 'non lu', 'reserve_A7_non_lue')
+E                 ('P3-P4/tromperie-lineaire-c7', 'non lu', 'reserve_A7_non_lue')
+E                 Use -v to get more diff)
+
+test_complements_p3_v1.py:1788: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_entree_entiere_en_echec_rend_non_lues_les_cibles_visees
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 8.58s
+

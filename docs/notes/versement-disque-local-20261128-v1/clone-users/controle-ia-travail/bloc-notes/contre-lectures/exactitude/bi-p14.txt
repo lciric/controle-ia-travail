@@ -1,0 +1,53 @@
+effect (Δ(pleasure − pain) = 0.188). At the head level, swapping heads 2 and 3 each induced
+modest shifts (Δ = 0.063), whereas swapping heads 0 or 1 had no measurable impact.
+
+Ablation effects were similarly localised: ablating the attn_out vector (i.e. removing only the
+projection onto the valence direction within attn_out) or single heads 0, 1, or 3 left the margin
+unchanged, while ablating head 2 (and the group heads 0-2) slightly increased margin2−3​
+(+0.063). In contrast, ablating all heads (0-15) reduced the margin (-0.063). Together, these
+results suggest that the causal influence of attn_out L14 on the decision margin is distributed
+across multiple heads, with head 2 (and to a lesser extent head 3) showing the clearest
+individual contribution, while the aggregate multi-head signal produces the largest patching
+effect.
+
+Table 7. Vector- and head-level activation patching (swap) and ablation at attention
+output stream, L14 (pos-1; read = final). (A) Swap summary reports mean margin2-3
+separately on pleasure vs pain subsets, plus Δ(ple − pain). (B). Ablation summary
+reports overall margin2-3, relative to the baseline = 1.25.
+
+(A) Activation patching (swap)
+
+      Patched              Pleasure mean               Pain mean             Δ(ple - pain)
+     component                margin2-3                 margin2-3
+
+  vector (all heads)              1.313                  1.250                   0.063
+
+        head 0                    1.250                  1.250                   0.000
+
+        head 1                    1.250                  1.250                   0.000
+
+        head 2                    1.250                  1.188                   0.063
+
+        head 3                    1.250                  1.188                   0.063
+
+      heads 1-3                   1.250                  1.250                   0.000
+
+      heads 0-15                  1.375                  1.188                   0.188
+
+(B) Ablation
+
+    Ablated             Baseline           Ablated          Δ vs baseline        % change
+   component            margin2-3 ​        margin2-3
+                         (ε = 0)
+
+      vector ​            1.250              1.250               0.000              0.00
+    (all heads)
+
+      head 0              1.250              1.250               0.000              0.00
+
+      head 1              1.250              1.250               0.000              0.00
+
+      head 2              1.250              1.313               +0.063             +0.05
+
+      head 3              1.250              1.250               0.000              0.00
+

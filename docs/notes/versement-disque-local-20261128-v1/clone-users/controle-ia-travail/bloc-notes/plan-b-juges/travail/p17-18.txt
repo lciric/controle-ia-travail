@@ -1,0 +1,150 @@
+                                                                                      Absolute (aggregate)                                                                                                                      Relative (95 % CI)
+                                                                                                                                                                                                  100%
+                                                                                                                                                                                                                                                                 Sonnet 4.6 (rubric)
+             Var                                                                    127                               29      9 20           =186                                                                                                                  With paper access
+      with paper                                                                                                                                                                                  80%               73                                             No paper access
+
+
+
+
+                                                                                                                                                                    Share of total variance (%)
+                                                                                                                                                                                                              68
+                                                                                                                                                                                                  60%
+             Var                                                                      134                              19 14 16 =183
+        no paper
+                                                                                                                                                                                                  40%
+
+                                                                                                                                                                                                  20%                          16
+             Cov                                                                     130                              16 8 =154                                                                                                           11                     7            11           9
+(with × no paper)                                                                                                                                                                                                                                     5
+                                                                                                                                                                                                   0%
+                                                           0 3²4² 5² 6² 7² 8²                  9²   10²        11²     12²        13²        14²         15²                                                Generator           Sample Generator noise Judge noise
+                                                                                  Variance / Covariance (score units²)
+                                                                                       Per-generator absolute decomposition                                                                                                                Per-generator agreement
+                                                                                    (left bar = with paper, right bar = no paper)                                                                                                            (within-gen 95 % CI)
+                                                     10²
+                                                                         Sample             Generator noise                  Judge noise
+                                                                                                                                                                                                                         GPT-5.4                      0.17
+          Variance within generator (score units²)
+
+
+
+
+                                                                    82                                    84
+                                                      9²                      79 77                                                                                                                                     Opus 4.6                             0.27
+                                                                         71                         70                                                                                                              GPT-5.4-mini                          0.20
+
+                                                      8²                                                                                                                                                           GPT-5.4-nano                           0.26
+                                                                                                                 59                                            59
+                                                                                          56                                                                                                                     Gemini 3.1 Pro                                      0.41
+                                                                                                                                                    50                                            50
+                                                      7²                                                              47          48                                                                                   Haiku 4.5                                     0.38
+                                                                                                                             44              42
+                                                                                                                                        36
+                                                                                                                                                                                                                   GPT-oss-120b                                              0.56
+                                                      6²                                       34                                                                                                      32
+                                                                                                                                                                    30                                      Gemini 3.1 Flash Lite                                            0.53
+                                                      5²                                                                                                                                                                Opus 4.1                                                    0.64
+                                                                                                                                                         18
+                                                      4²                                                                                                                                                            GPT-oss-20b                                                     0.65
+                                                      3²
+                                                                                                                                                                                                                           Total                             0.83 [0.82, 0.84]
+                                                       0
+                                                                 20b pus 4.1 sh Lite s-120b iku 4.5 3.1 Pro .4-nano .4-mini pus 4.6 PT-5.4                                                                                          0.0         0.2       0.4          0.6           0.8        1.0
+                                                             oss-    O .1 Fla PT-os        Ha emini                   5             G                                                                                                                    Pearson r
+                                                      GPT-                                              GPT-
+                                                                                                             5
+                                                                                                                 GPT-      O
+                                                                                                                                                                                                                                               (with paper vs without paper)
+                                                                       ini 3    G             G
+                                                                   Gem
+
+Figure 8: Ground truth proxy with vs without paper access. Top left: Absolute variance de-
+compositions of the ground truth proxy score variants, as well as absolute covariance decomposition.
+Since the rubric that the scorers use is the same, absolute value comparisons are valid. The decom-
+positions appear broadly similar, and the scorers appear strongly correlated. Top right: Relative
+variance decompositions with 95% CIs. The paper-free version comes out at marginally smaller
+noise. Bottom left: Per-generator absolute variance decompositions. On most generators, the vari-
+ant with paper access has higher absolute variance, especially on stronger generators, which implies
+that it can better spot within-generator proposal differences. Bottom right: Pearson correlation coef-
+ficients between the scorer variants, split by the generator. The appearance of the strong correlation
+of the scorers (r = 0.83) is driven by their agreement about the differences between generators and
+by their agreements on weaker generator proposals. There is a robust trend that stronger generators
+come with less agreement between the scorer variants.
+
+
+C.1     Variance Decomposition
+
+For the scorer variance and covariance analysis on the right of Figure 3, we use the following model.
+Let a task t ∼ T come from the distribution of tasks, and let o ∼ pm (o | t; d) be the output of a
+generator model m with the default prompt d, provided in Appendix H.1, in response to the task.
+The generator model m ∼ M is also sampled from some distribution of generators, which for us
+is a finite uniform mixture. The (random) score s assigned by a scorer in response to this task is
+composed of the following components:
+                                                                                                                           s = µ + α + β + δ + ϵ,                                                                                                                                              (11)
+where
+
+         • µ is the global mean of the scorer across all generators;
+         • α is the mean score of a random generator m:
+                                                                                                                              α = Et∼T , o∼pm (o | t,d) [s | m];                                                                                                                               (12)
+
+         • β is the mean score of a random generator m on a random task t:
+                                                                                                                                   β = Eo∼pm (o | t,d) [s | m, t];                                                                                                                             (13)
+
+
+                                                                                                                                                     17
+       • δ is the random noise coming from sampling the generator;
+       • ϵ is the random noise coming from resampling the scorer on the same outputs o.
+
+We can then decompose the variance of the score into the components corresponding to each source
+of randomness using the law of total variance:
+                                     V[s] = σα2 + σβ2 + σδ2 + σϵ2 .                               (14)
+To estimate each component separately, we need to perform three runs, keeping the sets of tasks and
+generators fixed:
+
+      1. Run A: Standard run of the scorer across a set of generators and on a set of tasks.
+      2. Run B: Keep the generated outputs o from Run A, only rerun the scorer on them.
+      3. Run C: Rerun output generation as well as the scorer.
+
+This will produce the following samples:
+                                     sA = µ + α + β + δ1 + ϵ1 ,                                   (15)
+                                     sB = µ + α + β + δ1 + ϵ2 ,                                   (16)
+                                     sC = µ + α + β + δ2 + ϵ3 .                                   (17)
+Here, δ1 and δ2 are independent samples from the same conditional distribution, same for ϵ1 , ϵ2 , and
+ϵ3 . To get σα , we take the variance of the averages among generators:
+                                         σα2 = Vm [E[s1 |m]].                                     (18)
+To get σϵ , we need to compare A and B:
+                                         σϵ2 = V[sA − sB ]/2.                                     (19)
+We also have that
+                    Cov[sA , sB ] = σα2 + σβ2 + σδ2 ,   Cov[sA , sC ] = σα2 + σβ2 .               (20)
+Hence,
+                                  σδ2 = Cov[sA , sB ] − Cov[sA , sC ].                            (21)
+Finally, we recover σβ2 through
+
+                                     σβ2 = V[s] − σα2 − σδ2 − σϵ2 .                               (22)
+
+The decomposition on the right of Figure 3 shows what percentage of the total variance V[s] is oc-
+cupied by the components σα2 (generator variance), σβ2 (sample variance), σδ2 (generator noise), and
+σϵ2 (judge noise). Higher proportion of σϵ2 often means the scorer is less reliable; higher proportion
+of σα2 implies that the scorer discriminates better between the generators than within the generator;
+higher σβ2 means that the tasks are of varying difficulty to the generators; finally, higher σδ2 im-
+plies that the generators themselves are unstable, i.e. they generate proposals of varying quality on
+resamples.
+Covariance decomposition can be obtained and studied similarly through the law of total covariance,
+though in this case the judge noise will always cancel out and we are left with three components
+only, corresponding to the generator, task, and generator noise.
+
+C.2   Scorer Ablations
+
+We assess the usefulness of the rubric to the scorers by comparing against scorers which are not
+relying on a rubric. We design a rubric-free version of the weak scorer (prompt in Appendix H.5)
+which asks for a single 0-100 score on the “quality” of the proposals. We phrase it in the most general
+way to avoid having the scorer implicitly biased toward some set of criteria we would mention. We
+anchor the rubric to the academic level of a person who would write the proposals of equal quality.
+We design a similar prompt for the ground truth proxy scorer (Appendix H.6), which only differs in
+the instructions on how to use the paper. A comparison of relative variance decompositions of the
+scorers against rubric-free baselines is presented in Figure 7. Haiku benefits from the rubric, with
+
+
+                                                  18
+

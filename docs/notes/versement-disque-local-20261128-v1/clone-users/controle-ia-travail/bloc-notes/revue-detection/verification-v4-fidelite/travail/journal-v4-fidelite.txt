@@ -1,0 +1,21 @@
+Journal — vérification v4, angle fidélité, tour 3 — 2026-10-20, de 22:15 à 22:45 UTC environ
+D = /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/revue-detection ; T = D/verification-v4-fidelite/travail
+Dépôt /home/user/controle-ia-travail en lecture seule (tête c1e7ef9 au début ; git log et git show seulement). Aucune commande
+Vast.ai, aucun service payant, aucun contact, aucune recherche web. Scripts lancés par python3 -I -B.
+
+1. sha256sum des six entrées (v4, v3, deux rapports, traitement, script) : égales à la commande.
+2. Rejeu : python3 -I -B D/correction-tour3/appliquer_corrections_v4.py D/synthese-comment-detecter-v3.md T/v4-rejouee.md 18:27
+   -> « 2 blocs et 46 remplacements appliqués » ; T/v4-rejouee.md = fba703f9… = v4 (cmp : identique).
+3. Différentiel : git diff --no-index --word-diff=plain --word-diff-regex='[^[:space:]]+' -U0 v3 v4
+   > T/differentiel-mot-a-mot-v3-v4.txt (27 blocs).
+4. Empreintes des 21 PDF de cles.txt, empreinte complète : T/empreintes-pdf-v4-fidelite.txt (21 OK) ; RO : bde99a62…, égale à la v4.
+5. Pièces du dépôt : [P] d975e981… ; N-026 85bd4023… ; N-029 084e3052… ; decisions.md actuel 6d033ecf… ; go.md actuel 0ede5bed… ;
+   historique : git log -- registres/go.md registres/decisions.md ; versions 8bd4a75 (11:55), c7211a2 (13:56), 43cd3ac (18:28).
+6. T/page4.py (une page lue dans le PDF, empreinte vérifiée à chaque appel) ; T/verifier_v4.py -> T/sortie-verification-v4-fidelite.txt
+   (58 items, 0 écart ; épreuve R5 : 10 artefacts, 10 rejetés) ; contrôles en plus -> T/controles-complementaires-v4.txt.
+7. T/extraits_v4.py -> T/sortie-extraits-v4.txt (33 extraits de la v3 et de la v4 cités par le rapport, 0 écart).
+8. T/renvois_depot_v4.py -> T/sortie-renvois-depot-v4.txt (renvois exacts dans les versions épinglées ; décalés à 18:28).
+9. Recherche dans les deux rapports et le traitement des phrases neuves de la v4 (grep -c) : « rien de publié », « ne le passe »,
+   « aucune de ces conditions », « seule comparaison », « en estime », « dépasser 10 » : 0 occurrence.
+Non ouverts : prereg/P3-consignes-v1.md, textes d'action, clés, docs/verdicts/verdict-P3-premier-test-i-a-v1.md (empreinte seule),
+note du brainstorm, propositions C et D, brouillon de T0.6, document de P-015, registres/depenses.md (hors de la liste nommée).

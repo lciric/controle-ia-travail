@@ -1,0 +1,48 @@
+                                       Language Models Act on Hidden Valence
+
+
+
+
+Figure 1: Overview of experimental designs. The left and centre panels show our designs for testing whether valence
+affects choice through a text channel and a separate hidden-state channel. Zone S is the conditioned zone, which
+receives steering, and zone U the unconditioned zone. The first design uses text generated under steering, while the
+second holds all text fixed. The rightmost panel shows our tool-use design for measuring self-administration and
+removal of steering. See Sections 3.2 and 3.3 for details and definitions and Figure 2 for an overview of results.
+
+
+
+For our main results, we draw upon seven open-weight models: OLMo-2-32B, Qwen2.5-32B, Qwen3-14B, Qwen3-32B,
+Mistral-Small-24B, Gemma-3-27B, and Llama-3.1-8B. Robust hidden-state channel effects can be observed in all but
+Qwen3-32B and Gemma-3-27B.
+When does this behaviour emerge? Using checkpoints from the OLMo-2-32B model lineage, we find that the dependence
+of preference on hidden valence is small after supervised fine-tuning and emerges mainly during direct preference
+optimisation.
+Finally, we ask whether models actively induce or remove the interventions when given an opportunity to self-steer.
+This bears on a simple form of wireheading. A model that generally seeks positive internal states might act to bring
+them about directly rather than by performing a given task [Amodei et al., 2016, Everitt et al., 2021]. In the model
+we test, OLMo-2-32B, we find that it does not self-administer positively valenced steering more often than when no
+steering is imposed. However, it does regularly remove negatively valenced steering in a dose-dependent way, and at
+rates that significantly exceed random-direction removal rates. Figure 2 summarises these results.
+
+
+2   Related Work
+
+The relationship between affect and subsequent action has long been studied in both humans and other animals [e.g.
+Thorndike, 1898]. We now know that, across species, hedonic responses are closely related to behaviour, although the
+two can sometimes come apart [Berridge and Robinson, 2003, Smith et al., 2011, Berridge and Kringelbach, 2015].
+Recent work has begun to study analogous relationships in language models.
+Self-reports and preferences. Mazeika et al. [2025] elicit models’ stated preferences over hypothetical outcomes and
+find that these preferences become more coherent as models grow larger. In a follow-up, Ren et al. [2026] compare
+self-reported affect, choices between experiences, choices between world states, and decisions to end conversations,
+finding that agreement between these measures again increases with model capability. In contrast, although Mikaelson
+et al. [2025] do find that models have some graded preferences over AI-specific outcomes, these preferences are often
+not internally coherent. Anthropic’s model system cards combine welfare interviews with Likert-scale self-reports to
+assess potential model ‘welfare’, while stressing that models’ reports may primarily reflect training pressures [Anthropic,
+2025, 2026]. In terms of revealed preferences, Keeling et al. [2024] find that several models trade points against
+stipulated pain or pleasure as the stipulated intensity increases. Tagliabue and Dung [2025] show that stated topic
+preferences often predict costly choices in virtual environments. Finally, Gilg et al. [2026] identify a linear preference
+representation that predicts choices across tasks and personas and is capable of causally controlling pairwise choice.
+
+
+                                                            3
+

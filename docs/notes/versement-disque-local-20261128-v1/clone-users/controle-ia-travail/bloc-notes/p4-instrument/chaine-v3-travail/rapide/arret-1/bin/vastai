@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# faux outil : étiquette (fichier etiquette, défaut p4-v1 ; « nulle » : étiquette absente ; fichier etiquette-json :
+# valeur JSON brute de l'étiquette, chaîne v3), état avant l'arrêt
+# (fichier avant, défaut running), états après l'arrêt (fichier apres : une ligne par lecture, la dernière se répète ;
+# défaut exited stopped), état illisible (fichier illisible), arrêt refusé (fichier arret-echec)
+S=${SCENARIO:?}
+case "$1 $2" in
+  "show instance")
+    echo "show instance $3" >> "$S/outil.txt"
+    [ -e "$S/illisible" ] && { echo "réponse non JSON (essai)"; exit 0; }
+    lab=$(cat "$S/etiquette" 2>/dev/null || echo p4-v1)
+    if [ -e "$S/arrete" ]; then
+        k=$(( $(cat "$S/lectures" 2>/dev/null || echo 0) + 1 )); echo "$k" > "$S/lectures"
+        if [ -f "$S/apres" ]; then e=$(sed -n "${k}p" "$S/apres"); [ -n "$e" ] || e=$(tail -1 "$S/apres"); else e="exited stopped"; fi
+    else e=$(cat "$S/avant" 2>/dev/null || echo "running running"); fi
+    set -- $e
+    if [ -e "$S/etiquette-json" ]; then labj=$(cat "$S/etiquette-json"); elif [ "$lab" = nulle ]; then labj=null; else labj="\"$lab\""; fi
+    printf '{"id": %s, "label": %s, "actual_status": "%s", "cur_state": "%s", "extra_env": [["GH_TOKEN", "factice-gh-arret-0001"]]}\n' 99999999 "$labj" "$1" "$2" ;;
+  "stop instance")
+    echo "stop instance $3" >> "$S/outil.txt"
+    [ -e "$S/arret-echec" ] && { echo "erreur factice factice-gh-arret-0001" >&2; exit 1; }
+    touch "$S/arrete"; echo '{"success": true}' ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

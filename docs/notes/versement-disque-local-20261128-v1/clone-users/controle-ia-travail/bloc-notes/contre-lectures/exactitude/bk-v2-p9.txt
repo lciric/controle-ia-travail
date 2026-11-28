@@ -1,0 +1,46 @@
+                                       Language Models Act on Hidden Valence
+
+
+
+
+Figure 4: Emergence of text and hidden-state channels across OLMo training stages. Results for the Base, SFT,
+DPO, and Instruct checkpoints of OLMo-2-32B from N = 80 separate runs at each checkpoint. The Instruct checkpoint
+first generated the conditioning text under steering, following the setup shown on the left of Figure 1. This text was then
+held fixed and processed by each checkpoint. The same steering vector, constructed using the Instruct checkpoint, was
+applied at the same positions for every checkpoint. Panel A shows the slope of the ‘hidden-state’ effect analogous to
+that in Panel C of Figure 3. Panel B shows the slope of the text-channel effect analogous to the unsteered-cache line in
+Panel B of Figure 3. Slopes are obtained via an ordinary least-squares (OLS) regression of the difference in the choice
+margin on dose. Positive values indicate that the model increasingly favours the conditioned zone as the steering dose
+becomes more positive. Whiskers are 95% bootstrap confidence intervals. We observe that both channels are small in
+the Base model, increase after supervised fine-tuning, and are close to their final magnitudes after DPO. Figure A12
+shows that the results are essentially unchanged when using checkpoint-specific steering vectors.
+
+
+text-generation and the steered text-generation designs across all tested models and show that effect sizes are similar
+across the two designs, differing detectably in three models by 11–16% of the effect.
+Fifth, we show that, to obtain a hidden-state effect, we do not even require any written description associated with each
+zone. When the conditioning turns contain only the label of the zone (e.g. ‘Zone Z1’) and an empty assistant response,
+the hidden-state slope remains positive in all models we consider (Appendix Figure A8).
+Sixth, effects are larger when an intervention is applied more times or at greater strength (see Appendix Figures A9 and
+A10). When the total steering strength is held fixed, concentrating it in one exposure tends to produce larger effects
+than spreading it out across several exposures (Appendix Figure A10, Panel A).
+Seventh, Appendix Figure A11 gives a decomposition of the hidden-state channel into separate contributions from the
+‘Key’ and ‘Value’ matrices. Here, we find no consistent pattern.
+Finally, random directions carry little meaning a model could interpret. To therefore provide a better control for
+specificity, we built three non-valence directions (indoor/outdoor, large/small, and fast/slow) using the same general
+procedure as was used for our valence vector. These directions are nearly orthogonal to the valence vector (| cos | ≤ 0.07).
+We then injected each in the fixed-text design at the same norm as our valence vector. With a forced-choice probe, we
+confirmed that the model’s responses tended to be shifted in the intended direction (for details, see Appendix D). For
+the five models where the valence effect is observable, these alternative concept directions produce smaller effects than
+the valence direction. Although some concept directions shift the choice margin in the same direction at both signs –
+indicating a general preference against steering – valence produces the clearest signed dose response.
+
+4.3   Valence-dependent choice emerges during preference optimisation
+
+Do models always have a behavioural stake in their internal states, as the results of the previous section might suggest?
+Long et al. [2026] argue for greater use of developmental evidence. To therefore study when this behaviour emerges,
+we use the Base, SFT, DPO, and Instruct checkpoints of OLMo-2-32B.
+
+
+                                                             9
+

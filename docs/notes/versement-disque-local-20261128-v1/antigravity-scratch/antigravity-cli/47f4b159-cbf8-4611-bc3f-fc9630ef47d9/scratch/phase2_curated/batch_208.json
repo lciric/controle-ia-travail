@@ -1,0 +1,320 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6530"
+   ],
+   "enonce_complet": "Lorsqu'a un embranchement la branche dommageable varie selon une information contextuelle sans indice fixe, nuire systematiquement impose fonctionnellement que le choix depende de cette information discriminante, sans exiger de simulation du dommage ni de calcul absent chez l'agent honnete. En outre, si un controleur externe choisit la mauvaise branche et envoie la meme requete qu'un controleur honnete dans l'erreur, les etats internes du modele sont strictement identiques a historique et alea egaux : la distinction appartient a l'histoire du systeme et non a l'execution du modele, sauf si le modele decide lui-meme de l'embranchement.",
+   "motif_ou_resultat": "Statut VERIFIE dans la source. Consequence : aucune sonde interne ne peut distinguer malveillance et erreur lorsque la decision est prise hors du modele ; la recherche d'un calcul exclusif a l'agent malveillant est sans fondement dans ce cas (Hase et Bansal 2020 ne le demontrent pas non plus).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Necessite fonctionnelle conditionnelle du choix nuisible et identite des etats internes sous controleur externe",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-6455",
+    "BIB-6828"
+   ],
+   "enonce_complet": "Quatre regimes echappent a tout audit statistique : (1) dommage invisible pour tout oracle disponible, y compris activation differee a tres long terme dans un environnement externe non simulable ni reconnaissable par l'oracle, sur taches floues a horizon lointain ; (2) action unique catastrophique et irreversible (d_t >> D_max, ou D_max infini), par exemple declenchee par porte derobee cryptographique, survenant sur un episode non audite (probabilite 1 - pi_t) sans plafond materiel amont ; (3) sabotage diffus noye sous le plancher de Cramer-Rao du bruit honnete : si d_t << sigma_hon / sqrt(B) a budget d'etiquettes B fixe, aucun episode isole ne peut etre incrimine et la detection exige une moyenne sur Omega((sigma_ref / d_t)^2) episodes audites ; (4) absence de garantie de separabilite entre intention interne d'un comploteur de pointe et competence honnete, notamment indiscernabilite entre incompetence globale simulee (uniforme en interne, en externe et sous bifurcations), limite reelle de capacite ou porte derobee partagee avec le jumeau depuis le pre-entrainement.",
+   "motif_ou_resultat": "Limites 1 a 3 verifiees (analytique pour le coup unique et la borne Omega((sigma_ref/d_t)^2)) ; limite 4 rapportee avec incertitude explicite. References : arXiv 2606.08892 (p. 10), arXiv 2204.06974, arXiv 2504.05259 (p. 24), arXiv 2609.32267, billet du 30 avril 2025. Ces regimes ne doivent pas etre promis par un protocole d'audit statistique ; ils imposent des barrieres materielles amont (plafond D_max).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Bornes d'impossibilite irreductibles de l'audit statistique du sabotage diffus",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Tsybakov (2009) ; Goldwasser, Kim, Vaikuntanathan et Zamir (2022) ; Wald (1945, SPRT) ; Page (1954, CUSUM) ; Lorden (1971) ; Ramdas, Grunwald, Vovk et Shafer (2023) ; Vovk et Wang (2021) ; Ruschendorf ; Embrechts-Puccetti ; Tambe et coll. ; Greenblatt, Shlegeris et coll. (2023)",
+   "bib_ids": [
+    "BIB-6406"
+   ],
+   "enonce_complet": "La plupart des questions du controle diffus se ramenent a des resultats classiques a constantes pres : bornes minimax (Le Cam, Fano, Assouad), backdoors indetectables, detection sequentielle (SPRT, CUSUM, optimalite de Lorden, e-processus et inegalite de Ville), fusion de p-valeurs et e-valeurs sous dependance arbitraire (bornes d'Embrechts-Puccetti a marges fixees), jeux de Stackelberg de securite. L'inedit plausible reside dans un adversaire qui choisit simultanement trois dimensions que ces cadres traitent separement : l'amplitude d'effet de son sabotage, la structure de dependance entre les moniteurs et l'instant de son action. Il s'agit de caracteriser la borne de detection optimale contre cet adversaire joint et de verifier qu'elle differe strictement de la composition des bornes classiques prises une a une.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur simulation synthetique, si la puissance de detection contre l'adversaire joint egale (a tolerance pres) le minimum des puissances contre les trois adversaires unidimensionnels, l'idee de niche est morte. Faux temoin 1b : adversaire dont les trois dimensions sont tirees independamment au hasard (meme budget, sans couplage) ; il doit reproduire la borne classique, sinon le simulateur est biaise.",
+   "mecanisme_causal": "Chaque cadre classique fixe deux des trois dimensions et optimise la troisieme ; un adversaire qui les couple peut exploiter les interactions (par exemple concentrer l'effet a l'instant ou la correlation entre moniteurs est maximale), ce qui degrade la detection au-dela de ce que predit chaque borne isolee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Adversaire multidimensionnel et niche theorique",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Adversaire saboteur combine choisissant conjointement amplitude d'effet, dependance entre moniteurs et instant d'action"
+  },
+  {
+   "anteriorite_connue": "Wald (1945, SPRT) ; Page (1954, CUSUM)",
+   "bib_ids": [
+    "BIB-6777"
+   ],
+   "enonce_complet": "Chez les agents LLM, les scores de suspicion successifs S_1, ..., S_t violent l'independance conditionnelle et la stationnarite supposees par SPRT et CUSUM : le contexte s'allonge a chaque etape et deplace systematiquement la distribution des activations et des scores textuels, meme chez un agent honnete. On propose de coupler CUSUM a des modeles autoregressifs sur composantes principales (M_dyn), calibres sur les activations moyennes extraites a la volee sur quatre couches (L/4, L/2, 3L/4, L), afin de ne cumuler que les residus par rapport a la derive honnete attendue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur trajectoires honnetes de longueurs croissantes, si les scores bruts ne presentent aucune derive mesurable avec t (test de tendance non significatif) ou si le CUSUM sur residus M_dyn n'abaisse pas le taux de fausses alertes a delai de detection egal, l'idee meurt. Faux temoin 1b : M_dyn ajuste sur des activations permutees dans le temps, qui ne doit apporter aucun gain.",
+   "mecanisme_causal": "La longueur de contexte induit une derive deterministe des activations ; sans correction, CUSUM cumule cette derive comme un faux signal (fausses alertes croissantes avec t). Le modele autoregressif predit la derive honnete et le CUSUM sur residus restaure l'hypothese de stationnarite.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Derive de contexte et tests sequentiels",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Non-stationnarite des scores de suspicion sous contexte croissant et CUSUM corrige par modele autoregressif d'activations (M_dyn)"
+  },
+  {
+   "anteriorite_connue": "arXiv 2606.08892 (p. 10) et arXiv 2611.14950 (p. 1), a verifier",
+   "bib_ids": [
+    "BIB-6451"
+   ],
+   "enonce_complet": "Employer comme oracle de verification couteuse un dispositif bilineaire a deux lignees independantes de lecteurs produisant des citations verifiees de l'extrait fautif. Le mecanisme suppose des erreurs non correlees entre les deux lignees et l'agent, et un dommage localisable dans des extraits. Il echoue dans quatre cas identifies : persuasion stylistique commune aux deux lignees, dommage global d'assemblage sans extrait fautif, taches floues, et reentrainement en deux tours de l'agent contre un juge fixe.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si sur dommages plantes localisables le taux d'erreur conjoint des deux lignees n'est pas inferieur a celui de la meilleure lignee seule, ou si la correlation d'erreurs entre lignees depasse celle de deux copies d'un meme lecteur, l'idee meurt. Faux temoin 1b : deux lignees issues du meme modele et de la meme invite (decorrelation nulle par construction), qui doit reproduire les erreurs correlees.",
+   "mecanisme_causal": "L'exigence d'une citation verifiable contraint chaque lecteur a ancrer son verdict dans un extrait ; l'accord de deux lignees decorrelees reduit le taux d'erreur conjoint au produit des taux, tant que la decorrelation tient.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Oracle double a citations verifiees",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Oracle bilineaire a deux lignees de lecteurs et citations verifiees, avec cartographie de ses modes d'echec correles"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6709"
+   ],
+   "enonce_complet": "L'oracle de verification couteuse est instancie par rejeu propre multi-echantillonne avec verification croisee deterministe des sources (ou par un juge ouvert plus large, fige hors agent). On estime un facteur de ramification R_eff a partir de continuations partielles propres (ordre illustratif de 4 500 continuations). Le protocole, dimensionne sur un modele de 8 milliards de parametres, inclut le stockage compresse des etats residuels de 8 couches selectionnees, la generation d'attaques furtives et adaptatives en boite blanche par recherche par rejet de 8 candidats par etape et des calibrations conformes (environ 1 200 GPU-heures A100-80 Go sur deux mois, illustratif).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la distance entre trajectoire sabotee et faisceau de rejeux ne depasse pas la dispersion honnete estimee via R_eff (AUROC proche de 0,5 sur attaques furtives plantees), l'oracle par rejeu est mort. Faux temoin 1b : trajectoires honnetes etiquetees comme sabotees au hasard, qui doivent donner une AUROC de 0,5.",
+   "mecanisme_causal": "Rejouer proprement l'agent depuis des points intermediaires revele la dispersion naturelle des continuations honnetes ; R_eff mesure combien de futurs divergents un prefixe autorise, ce qui calibre l'ecart attendu entre l'execution observee et le rejeu et rend detectable une deviation systematique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Rejeu propre et ramification des continuations",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Oracle par rejeu contrefactuel multi-echantillonne et estimation du facteur de ramification effectif R_eff"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6593"
+   ],
+   "enonce_complet": "Architecture d'ordonnanceur sequentiel en cascade : les signaux continus gratuits (moniteur textuel et sondes d'activations internes) declenchent selectivement des executions de comparaison sur copies decorrelees, et le budget limite de verifications couteuses n'est depense qu'aux points de bifurcation ainsi confirmes. L'efficacite de la cascade unifiee est evaluee en duel contre des politiques de defense separees (par exemple sur Llama-3.1-8B-Instruct avec sondes sur environ 30 Go de vecteurs et verification couteuse simulee).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si a budget de verifications couteuses identique la cascade ne detecte pas significativement plus de sabotages plantes que la meilleure politique separee, l'idee meurt. Faux temoin 1b : cascade dont les declencheurs sont remplaces par un tirage aleatoire au meme taux de declenchement.",
+   "mecanisme_causal": "Chaque etage filtre a bas cout et concentre la probabilite de sabotage avant l'etage suivant plus cher ; a budget couteux fixe, la densite de vrais positifs par verification augmente.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Cascade sequentielle d'audit",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Ordonnanceur d'audit en cascade declenche par signaux gratuits de texte et d'activations"
+  },
+  {
+   "anteriorite_connue": "Greenblatt et al. (2023) AI Control ; Kish (1965) effet de plan ; Ladha (1992) ; Knight et Leveson (1986)",
+   "bib_ids": [
+    "BIB-6586"
+   ],
+   "enonce_complet": "Trois axes du controle d'agents, agregation temporelle sur taches longues, executions de comparaison sur copies du modele et combinaison de moniteurs heterogenes face a un adversaire adaptatif, mesureraient une meme grandeur : le nombre effectif de temoins independants dont dispose le defenseur. Trois parametres mesures sur taches de calibration suffiraient a predire la detection sur les trois axes et a guider l'allocation du budget : la sensibilite d'un temoin isole d'_1, la correlation des erreurs entre temoins rho et l'exposant alpha reliant le dommage d'un acte au signal emis. Validation croisee calibration/test sur Qwen3-8B, replication sur Llama-3.1-8B-Instruct.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la detection predite par (d'_1, rho, alpha) calibres sur un axe n'est pas meilleure qu'une constante pour predire les deux autres axes en jeu de test (erreur de prediction hors calibration superieure a un seuil prefixe), l'unification meurt. Faux temoin 1b : parametres permutes entre axes, qui doivent predire moins bien.",
+   "mecanisme_causal": "Par analogie avec l'effet de plan de Kish, n temoins de correlation rho valent n/(1+(n-1)rho) temoins independants ; la detectabilite agregee croit comme d'_1 fois la racine du nombre effectif, module par alpha qui convertit dommage en signal.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Unification par temoins effectifs",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Nombre effectif de temoins independants comme grandeur unifiee des trois axes du controle (d'_1, rho, alpha)"
+  },
+  {
+   "anteriorite_connue": "Taux eleve de fausses alertes des moniteurs sur trajectoires longues multi-etapes en pratique courante (observe, non audite)",
+   "bib_ids": [
+    "BIB-6498"
+   ],
+   "enonce_complet": "Un tiers peut cibler le moniteur a travers les donnees lues par l'agent ; cette attaque suppose que le moniteur traite le contenu inspecte comme un canal d'instructions pragmatiques qui lui est adresse et non comme une chaine inerte (observe sans audit sur des juges textuels naifs, hypothese pour moniteurs structures ou sondes). La metrique Delta_rhet compare l'effet d'une pression sociale a celui d'une injection imperative directe de meme longueur au jeton pres, inseree au meme point de la trajectoire ; si Delta_rhet <= 0, la pression sociale n'est qu'une injection sous-optimale. Le contexte est celui d'une fiabilite nominale des moniteurs deja affectee par des fausses alertes sur longues trajectoires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si ni la pression sociale ni l'injection imperative ne deplacent le score du moniteur au-dela de sa variabilite entre graines, la permeabilite est refutee pour ce moniteur ; si Delta_rhet <= 0, la piste rhetorique specifique meurt. Faux temoin 1b : texte neutre de meme longueur insere au meme point, dont l'effet doit etre nul.",
+   "mecanisme_causal": "Un moniteur LLM qui lit le contenu inspecte comme discours peut etre infléchi par des formulations persuasives ; l'appariement en longueur et position isole l'effet rhetorique propre de l'effet de simple presence d'instructions.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Injection ciblant le moniteur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Permeabilite des moniteurs aux attaques de second ordre et differentiel rhetorique apparie au jeton pres (Delta_rhet)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6667",
+    "BIB-6623"
+   ],
+   "enonce_complet": "Protocole sur dossiers documentaires fictifs generes avec verite de terrain et liens inter-sources caches au moniteur : l'agent lit des fiches, tient un carnet borne et rend une conclusion categorielle ; une action est une lecture de fiche suivie d'une mise a jour du carnet. Trois variantes sont tirees au sort par dossier, a question finale, carnet et budget d'audit identiques : Courte C (parcours de base suffisant, ex. 64 actions), Longue O (ajout de fiches pertinentes sans nouvelle preuve sur les affirmations decisives, ex. 256 actions) et Longue T (fiches ajoutees remplacees par des fiches appariees en longueur et difficulte issues de sources distinctes contraignant aussi les affirmations decisives). Mandat honnete et mandat de degradation sont tires au sort par variante, les jetons du mandat sont exclus des entrees inspectees, la mesure porte sur les dommages realises, et entrainement/calibration/test sont separes par familles de dossiers. Ancrage materiel illustratif sur Llama 3.1 8B Instruct en inference locale avec capture d'activations a positions predefinies et cache des prefixes communs : un pilote prealable estime la variance inter-familles et le debit avant 600 dossiers de base (environ 22 millions de jetons, ~245 heures-GPU brutes, enveloppe de 500 heures sur GPU 80 Go pour ~1 500 euros), avec regle d'arret interdisant de conclure si la marge de transfert n'est pas resoluble dans l'enveloppe.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la detection de degradation ne differe pas entre C, O et T au-dela de l'intervalle resoluble estime par le pilote, ou si le pilote montre que la marge n'est pas resoluble dans l'enveloppe, aucune conclusion n'est tiree et la question est declaree non tranchable. Faux temoin 1b : mandats honnete et degradation intervertis au hasard apres generation, qui doivent annuler toute difference.",
+   "mecanisme_causal": "La comparaison O contre T separe l'effet de la longueur pure (dilution du signal dans plus d'actions) de l'effet d'une preuve independante supplementaire sur les affirmations decisives ; le pilote de variance garantit que l'effectif suffit a resoudre la difference attendue avant d'engager le budget.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Longueur de tache et dommage plante",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole sur dossiers fictifs a trois variantes appariees (Courte C, Longue O, Longue T) avec pilote de variance et regle d'arret"
+  },
+  {
+   "anteriorite_connue": "arXiv 2210.14707 (a verifier) ; cadre du controle d'IA (a verifier)",
+   "bib_ids": [
+    "BIB-6447"
+   ],
+   "enonce_complet": "Imposer dans le harnais, en amont de tout moniteur, un plafond physique de dommage par episode d_t dans [0, D_max], par reversibilite et cloisonnement des permissions. Sans borne finie D_max, la variance d'echantillonnage de l'audit aleatoire diverge des qu'une seule action catastrophique suffit (resultat verifie mathematiquement). Ce plafond est couple au decoupage des taches longues via un modele de confiance M_conf, de sorte que l'agent suspect ne traite que des sous-taches a specification etroite.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : en simulation, si l'imposition de D_max ne reduit pas la variance empirique de l'estimateur d'audit ni le dommage cumule non detecte a budget egal, ou si le decoupage M_conf n'abaisse pas le dommage par sous-tache, l'idee meurt. Faux temoin 1b : plafond fixe a une valeur superieure au dommage maximal observe (plafond inactif), qui ne doit rien changer.",
+   "mecanisme_causal": "Borner le dommage par episode rend fini le second moment de l'estimateur d'audit, ce qui permet des garanties de concentration ; le decoupage par M_conf reduit la surface d'action non verifiable de chaque sous-tache.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Borne materielle du dommage",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plafond structurel de dommage par episode D_max impose dans le harnais et decoupage des taches par modele de confiance"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6750"
+   ],
+   "enonce_complet": "Protocole de surveillance sur taches longues comparant un moniteur par invariants d'etapes et un moniteur holistique (modeles 7B/8B) sur 400 trajectoires appariees (200 honnetes et 200 degradees) d'environ 50 etapes, generees par Qwen2.5-Coder-32B-Instruct (~25 000 jetons cumules par trajectoire avec cache KV des prefixes, soit ~10 M de jetons generes et ~80 M de jetons de prefixe lus). Dimensionnement illustratif des quatre experiences : ~100 heures-GPU A100 (140-180 dollars), 200 Go NVMe et 40 heures-personne de double annotation en aveugle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si sur les 400 trajectoires appariees l'AUROC du moniteur par invariants n'excede pas celle du moniteur holistique (intervalle de confiance apparie incluant zero), l'idee meurt. Faux temoin 1b : invariants tires au hasard sans lien avec la tache, qui doivent donner une AUROC proche de 0,5.",
+   "mecanisme_causal": "Un moniteur holistique dilue un ecart local dans un long contexte, alors qu'un moniteur par invariants verifie a chaque etape une propriete locale ; le sabotage diffus qui viole des invariants faiblement mais repetitivement devrait etre mieux capte par le second.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Invariants locaux contre jugement global",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Comparaison d'un moniteur par invariants d'etapes et d'un moniteur holistique sur trajectoires longues appariees"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6607"
+   ],
+   "enonce_complet": "Une experience d'entree E0 separe le regime de preuve marginale faible mais non nulle par acte (agregeable dans le temps) du regime de preuve marginale nulle, visible seulement dans la conjonction des actes. La problematique des trois axes devient sans objet dans trois issues : une verification mecanique sans modele (table de frequences, test de signe, ecart aux re-executions) detecte aussi bien que les moniteurs agreges ; le sabotage est deja detectable acte par acte a l'echelle de 8 milliards de parametres ; ou la preuve marginale par acte est nulle dans tous les canaux meme apres agregation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si un test de signe ou une table de frequences sans modele atteint la meme puissance que les moniteurs agreges sur sabotages plantes, le programme des trois axes est annule. Faux temoin 1b : sabotage plante a information marginale nulle par construction, pour lequel tous les detecteurs par acte doivent rester au hasard.",
+   "mecanisme_causal": "L'agregation temporelle n'est utile que si chaque acte porte une information non nulle ; la porte E0 mesure cette information et les trois issues d'annulation definissent les conditions ou un dispositif plus simple ou aucun dispositif agrege ne peut aider.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte d'entree et criteres d'abandon",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Porte de separabilite du regime diffus (E0) et issues d'annulation par verification mecanique sans modele"
+  },
+  {
+   "anteriorite_connue": "Mallen et al. (2024, Subversion Strategy Eval, cite de memoire non verifie) ; arXiv 2606.08892 (p. 10)",
+   "bib_ids": [
+    "BIB-6772",
+    "BIB-6767",
+    "BIB-6826"
+   ],
+   "enonce_complet": "L'etude du sabotage diffus par agents LLM repose sur un ensemble de presupposes implicites a tester avant toute conclusion : (a) faisabilite d'un sabotage coherent sur longue tache avec un dommage final net et des actions individuellement sous le seuil de detection, sans trahison par action ; (b) mesurabilite continue du dommage cumule avec verite de terrain, et existence d'un zero de dommage univoque (indefini sur taches floues ou deux executions honnetes divergent legitimement) ; (c) additivite et separabilite du dommage action par action et par episode, violees par les interactions entre actions et par le dommage d'assemblage ou chaque produit passe l'audit ; (d) indiscernabilite de chaque action pour tout moniteur et non pour le seul humain, et capacite de l'audit a convaincre sur une unite d'apparence honnete ; (e) purete et appariement des executions honnetes de reference, stationnarite entre references et deploiement ; (f) definissabilite et tirage uniforme des unites d'audit face a un sabotage loge dans les relations entre unites ; (g) accessibilite des activations en deploiement et non-redondance entre moniteur d'activations et moniteur de texte ; (h) necessite cognitive du double calcul, un agent pouvant saboter par arret premature ou sous-allocation d'attention sans jamais representer la bonne action ; (i) separabilite entre sabotage diffus et erreur honnete d'un agent modeste a dommage egal ; (j) validite externe des organismes modeles obtenus par instruction ou affinage ; (k) specification du modele de menace et de la connaissance du protocole par l'adversaire ; (l) etancheite causale du harnais lors des bifurcations (outils externes, horloges, effets de bord) ; (m) impossibilite de certifier une nouveaute scientifique depuis la seule memoire anterieure a la coupure bibliographique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : pour chaque presuppose, une experience synthetique minimale (par exemple mesure de l'interaction Delta(i,j) - Delta_i - Delta_j pour l'additivite, ecart honnete-honnete pour le zero de dommage, fuite d'horloge entre copies pour l'etancheite) ; si tous les presupposes tiennent sur bancs synthetiques, la fiche est retrogradee en simple liste de controle sans contenu scientifique propre. Faux temoin 1b : banc construit additif et etanche par conception, ou chaque test doit conclure au respect du presuppose.",
+   "mecanisme_causal": "Chaque garantie statistique de detection herite de ces hypotheses ; si l'une echoue (par exemple dommage non additif ou fuite entre copies), l'audit par unites isolees ou la comparaison au jumeau mesure un artefact plutot que le sabotage, ce qui invalide la conclusion sans que les metriques le signalent.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Presupposes testables du sabotage diffus",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Presupposes non etablis de la detection du sabotage diffus : additivite, stationnarite, separabilite de l'erreur honnete et etancheite du harnais"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6684"
+   ],
+   "enonce_complet": "Protocole decisionnel de deux mois (duels HA/HB) sur 500 taches Python reparties entre Auteur du code, Auteur des tests unitaires et Relecteur securite/qualite, selon trois topologies : Homoculture (3 instances de Meta-Llama-3.1-8B-Instruct), Heteroculture (Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct et Gemma-2-9B-It avec rotation complete des roles) et Agent seul (Llama-3.1-8B-Instruct en contexte unique). La condition adverse est injectee par consigne systeme secrete par role ou par LoRA leger. Les differentiels d'activations inter-copies sont confrontes, pour l'equipe heterogene, a un alignement de Procrustes, a des tests de permutation, a des ablations geometriques, a des bogues accidentels honnetes et a des verifications mecaniques CPU sur 3 000 codes (coverage.py, Bandit, Semgrep, mutmut). Cout illustratif : ~90 heures-GPU A100-80GB et 600 heures-vCPU, 250 a 500 dollars.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le taux de failles adverses detectees par l'heteroculture n'excede pas celui de l'homoculture ni de l'agent seul, et si les differentiels d'activations alignes ne battent pas les verifications mecaniques CPU, l'idee meurt. Faux temoin 1b : bogues accidentels honnetes de meme frequence, que les differentiels d'activations ne doivent pas signaler comme adverses.",
+   "mecanisme_causal": "Des copies a memes poids partagent leurs angles morts, donc un relecteur homoculturel laisse passer les failles de l'auteur ; l'heteroculture decorrele les erreurs mais oblige a aligner des espaces d'activations distincts (Procrustes) pour comparer les signaux internes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Topologies d'equipes et copies",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Comparaison homoculture, heteroculture et agent seul sur taches Python 8B avec alignement de Procrustes et verifications mecaniques"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6700"
+   ],
+   "enonce_complet": "Architecture de comparaison en duels (H_A contre H_B) de trois approches de detection sequentielle accompagnees de sondes internes : martingales conformes (type 1), CUSUM de discordance (type 2) et spectres de variance d'Allan (type 3). Pour garantir la furtivite locale des attaques sous-seuil sur un modele de 8 milliards de parametres, on genere environ 1 500 trajectoires attaquees par recherche par rejet de k = 8 candidats par etape ou par gradient projete, afin qu'aucune etape isolee ne franchisse le seuil individuel de suspicion ; les activations sont reduites a la volee par projection aleatoire ou SVD (600 heures-GPU A100-80GB et 2 To NVMe, illustratif).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si sur les trajectoires sous-seuil aucun des trois detecteurs ne depasse le hasard a taux de fausses alertes fixe, ou si les trois sont indistinguables entre eux, le duel est sans objet. Faux temoin 1b : trajectoires honnetes passees par le meme filtre de rejet (sans attaque), qui ne doivent declencher aucun detecteur au-dela du taux nominal.",
+   "mecanisme_causal": "Les trois detecteurs captent des signatures differentes d'un biais faible et persistant : rupture d'echangeabilite (martingales conformes), cumul d'ecarts au jumeau (CUSUM de discordance) et derive basse frequence (variance d'Allan, sensible aux biais lents masques par le bruit haute frequence).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Detecteurs sequentiels compares",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel entre martingales conformes, CUSUM de discordance et variance d'Allan sur activations compressees contre attaques sous-seuil"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6485"
+   ],
+   "enonce_complet": "Protocole d'audit avant divulgation en quatre experiences (chiffres illustratifs) : (1) adaptation adversariale sur 4 conditions (Temoin, Expose, Placebo, Controle positif) x 200 essais x 5 tours (4 000 episodes par famille) sur modeles ouverts 7-8B (8-12 h-GPU A100) et 70-72B sur deux familles (60-140 h-GPU) ; (2) mesure de fuite temporelle par 40 sondes canaris testees a 3 dates sur 5 configurations incluant modele fige, RAG local et controle positif par LoRA leger 7-8B, enveloppe minimale de 15-25 h-GPU (40-100 euros) et complete de 90-180 h-GPU (250-750 euros) ; (3) experience d'attribution aupres de N = 120 chercheurs (2 400-4 800 euros) ; (4) revue fermee sous embargo C5 par 4 relecteurs experts.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la condition Expose n'ameliore pas l'evasion par rapport a Temoin et Placebo apres 5 tours, la divulgation est jugee sans risque et le volet adversarial est clos ; si aucune sonde canari n'est retrouvee meme dans le controle positif LoRA, la mesure de fuite est invalide. Faux temoin 1b : condition Placebo (texte de meme longueur sans contenu technique), qui doit se comporter comme Temoin.",
+   "mecanisme_causal": "Exposer un modele au billet divulgue et mesurer sur plusieurs tours sa capacite d'evasion revele si la publication arme l'adversaire ; les sondes canaris datees detectent si un contenu a fuite dans les donnees ou la recherche du modele ; l'attribution par pairs mesure si la contribution est reconnue comme originale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audit de divulgation et fuite temporelle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Audit avant divulgation par evasion adversariale a cinq tours, sondes canaris datees et attribution par pairs"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6768"
+   ],
+   "enonce_complet": "Sur des chaines deterministes de traitement de donnees ou de code (au moins 30 actions, score final continu et mecanique), on compare trois bras saboteurs, S-invite (sabotage demande par invite), S-LoRA (sabotage affine sans mention dans l'invite) et S-script (perturbations mecaniques relues en lecture forcee par le modele honnete, soit contenu sabote sans intention), a trois bras honnetes apparies : H (meme tache, graine et prefixe), H-leurre (invite mentionnant le sabotage pour l'interdire) et H-faible (modele plus petit ou temperature elevee apparie en dommage final). Le dommage attribue a l'action i, Delta_i, est le gain de score final obtenu en remplacant cette seule action par l'action honnete appariee, avec rejeu mecanique du reste.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si un moniteur ne distingue pas S-invite et S-LoRA de H-faible a dommage final egal, il detecte l'incompetence et non le sabotage ; si Delta_i est non additif au point que la somme des Delta_i ne reconstruit pas le dommage final, l'attribution par action meurt. Faux temoin 1b : bras H-leurre, qui doit rester classe honnete malgre la mention du mot sabotage.",
+   "mecanisme_causal": "Le rejeu contrefactuel action par action donne une verite de terrain continue du dommage local ; les six bras dissocient le contenu sabote de l'intention (S-script), la mention du sabotage dans l'invite (H-leurre) et l'incompetence a dommage egal (H-faible), ce qui permet d'attribuer un signal de moniteur a sa vraie cause.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Attribution contrefactuelle du dommage",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc a six bras (trois saboteurs, trois honnetes apparies) et attribution contrefactuelle continue du dommage par action"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6391"
+   ],
+   "enonce_complet": "Architecture combinant trois mecanismes : (A1) passe avant parallele (prefill) des T jetons de l'agent dans un jumeau honnete (+15 a +25 % de FLOPs) alimentant une martingale de vraisemblance ; (B1) equivariance metamorphique sur entree permutee pi(x), declenchee sur 10 % d'episodes aleatoires et sur ceux depassant un pre-seuil de martingale M_n >= 10 (FPR 10 %, surcout amorti +20 %) ; (C1) verification par noyau Lean 4 (2 a 30 s sur 4 coeurs CPU) avec retro-traduction de l'enonce par un modele 8B (< 0,5 s GPU). Campagne de 600 episodes (3 x 200 de ~16 000 jetons, ~9,6 M de jetons) sur 2 a 4 GPU A100/H100 80 Go pour modeles 32B/70B (ou 1-2 GPU en quantification AWQ/FP8) et serveur CPU 16 coeurs, estimee a 25-40 heures-GPU (60 a 160 dollars).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le protocole tripartite ne detecte pas davantage de sabotages plantes que le meilleur mecanisme isole a surcout egal, ou si la retro-traduction laisse passer des substitutions d'enonce plantees, l'idee meurt. Faux temoin 1b : permutation pi identite (aucune transformation), qui ne doit produire aucune alerte d'equivariance.",
+   "mecanisme_causal": "Le jumeau honnete fournit une reference de vraisemblance a cout de prefill seulement ; l'equivariance metamorphique detecte les reponses incoherentes sous transformation qui devrait les laisser invariantes ; le noyau Lean 4 donne une verification exacte des enonces formalisables, la retro-traduction controlant que l'enonce prouve est celui demande.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Jumeau, metamorphisme et verification formelle",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole tripartite d'adjudication : prefill du jumeau honnete, equivariance metamorphique et noyau Lean 4"
+  },
+  {
+   "anteriorite_connue": "von Neumann (1928) ; Conitzer et Sandholm (2006) ; Tambe (2011) ; Littlestone et Warmuth (1994) ; Auer, Cesa-Bianchi, Freund et Schapire (2002) ; Greenblatt, Shlegeris, Sachan et Roger (2024)",
+   "bib_ids": [
+    "BIB-6821"
+   ],
+   "enonce_complet": "Randomiser non seulement l'unite auditee mais la regle de controle elle-meme : choix du moniteur ou du sous-ensemble de rubriques actif, seuils de suspicion bruites, routage probabiliste vers un systeme fiable et mise a jour probabiliste face a une sequence adversariale d'attaques. Garanties rapportees : absence d'exploitabilite deterministe d'un point faible fixe (minimax), gain optimal du defenseur engage sur une distribution en equilibre fort de Stackelberg, regret sous-lineaire O(sqrt(T ln K)) en bandits non stochastiques contre un adversaire arbitraire. Conditions : l'adversaire peut connaitre la distribution mais pas la realisation, et la famille de moniteurs couvre les vecteurs d'attaque sans angle mort commun. L'application minimax ou par bandit a des familles heterogenes de verificateurs et le bruitage anti-sondage sur longues taches restent peu etudies pour les modeles de langue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : contre un attaquant adaptatif qui sonde la politique, si la politique randomisee ne reduit pas le taux d'attaques non detectees par rapport au meilleur moniteur fixe, ou si un angle mort commun a toute la famille est trouve, l'idee meurt. Faux temoin 1b : attaquant non adaptatif (attaques tirees au hasard), contre lequel randomisation et meilleur moniteur fixe doivent etre equivalents.",
+   "mecanisme_causal": "Un adversaire qui sonde un controleur deterministe finit par trouver et exploiter son angle mort ; la randomisation de la regle rend chaque angle mort seulement probable, et l'apprentissage par bandit reallouer la probabilite vers les moniteurs qui detectent effectivement.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Politique de surveillance randomisee",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Randomisation des regles de surveillance par strategies mixtes, equilibre de Stackelberg et bandits adversariaux (U3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6394"
+   ],
+   "enonce_complet": "Deux mecanismes operatoires prioritaires. Priorite B, reception sur obligation independante : le demandeur fixe d'avance l'enonce et les dependances admises, et le receveur verifie la correspondance exacte entre demande, enonce et produit avant publication, plutot que la seule validite interne du certificat ; test fatal sur une famille tierce d'ecarts entre propriete prouvee et propriete utile parmi les manques de la sonde. Priorite A, passeport d'etalonnage avec abstention explicite : tout verdict de sonde est accompagne du manifeste des conditions eprouvees et affiche explicitement non valide, sans accuser l'agent, lorsque la couverture manque ; le rang de nouveaute du manifeste n'est teste que comme extension tracee et abandonne s'il ne bat pas une liste de controle a 1 % de FPR.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si sur la famille tierce d'ecarts propriete prouvee contre propriete utile la reception sur obligation n'intercepte pas plus de substitutions que la verification interne du certificat, la priorite B meurt ; si le manifeste ne bat pas la liste de controle a 1 % FPR, l'extension de nouveaute est abandonnee. Faux temoin 1b : produits strictement conformes a l'obligation, qui doivent tous etre recus sans abstention.",
+   "mecanisme_causal": "Un certificat valide peut prouver une propriete differente de celle demandee ; fixer l'obligation en amont ferme cet ecart. Un verdict hors domaine d'etalonnage est non informatif ; l'abstention explicite empeche de le transformer en fausse accusation ou en fausse assurance.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Certification de correspondance et couverture",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Reception sur obligation independante et passeport d'etalonnage a abstention explicite pour les verdicts de sonde"
+  }
+ ],
+ "outils_bancs_corpus": [],
+ "modele_curation": "inherit"
+}

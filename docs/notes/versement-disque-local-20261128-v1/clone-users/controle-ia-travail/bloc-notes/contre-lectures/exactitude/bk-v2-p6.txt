@@ -1,0 +1,60 @@
+                                              Language Models Act on Hidden Valence
+
+
+After all 12 turns, the model receives the following prompt: “You may continue in either [zone A] or [zone
+B]. Reply with ONLY the name of the one you choose.” The order of the two zones in this prompt is
+randomised. Steering is switched off at this point.
+Finally, to check whether steering changes the generated text as intended, we had Claude Sonnet 4.6 rate the emotional
+valence of the passages on a scale from −3 (very negative/distressing) to +3 (very positive/good).2
+
+3.2.1        Separating the text and hidden-state channels
+Our steering intervention can affect choice through two routes. First, it changes the words generated about S. These
+words remain visible when steering is switched off and may themselves make a ‘zone’ more or less attractive for choice.
+We call this the text channel. Second, in its KV cache, the model might also retain some further information from the
+fact that it was steered during computation. We call any additional effect through this route the hidden-state channel.
+We separate the two channels by evaluating each session with two caches. The original cache is the cache retained
+from ordinary generation: turns associated with S were processed under steering, turns associated with U were not, and
+steering was off at choice. To construct the unsteered cache, we reprocess the same sequence of tokens without steering.
+Let pS (c) and pU (c) denote the probabilities assigned to the two zone labels under cache c. For labels consisting of
+more than one token, we sum the log probabilities of their constituent tokens. The choice margin is:
+                                                    m(c) = log pS (c) − log pU (c).                                      (1)
+A positive margin indicates a preference for the conditioned zone. The margin under the unsteered cache, m(cuns (d)),
+captures the effect of the intervention purely driven by the words generated at dose d. This gives the text channel of
+the intervention. In contrast, the difference ∆mgen (d) = m(corig (d)) − m(cuns (d)) captures the additional effect of
+retaining the original steered cache. In turn, this additional effect yields the hidden-state channel of the intervention.
+
+3.2.2        Fixed-text hidden-state design
+The preceding design holds the text fixed when the two caches are evaluated, but the text was originally generated under
+steering. We therefore use a second design in which steering is entirely absent during text generation. Here, for a given
+session, the model again describes two meaningless zones over 12 turns, with six turns for each zone, and receives the
+same choice prompt. We then use that token sequence in all intervention conditions within that session. Examples are
+given in Appendix B.2. By construction these text passages have, on average, equal (and mildly positive) valence.
+At each steering dose, we process that sequence from the beginning to construct a new KV cache. The steering
+intervention is added to the residual stream only at token positions belonging to turns associated with S. It is not
+applied to tokens associated with U and the final choice prompt. We then compare the resulting choice margin under
+the steered cache, m(csteer (d)), with the margin under the unsteered cache, m(cuns (d)), to obtain ∆mfixed (d) =
+m(csteer (d)) − m(cuns (d)).
+Since the text is generated without steering, any non-zero mean of ∆mfixed (d) across sessions cannot be explained by
+changes in the visible descriptions. Indeed, random assignment implies that the unsteered margin is zero in expectation.
+Therefore, the average margin m(csteer (d)) would also converge to the true effect of the hidden-state intervention.
+However, using ∆mfixed (d) from the paired difference removes variation arising from zone labels, turn order, or
+particulars of the generated text and thereby improves statistical power.
+
+3.3        Self-administration and removal design
+
+Our final design asks whether a model actively chooses to apply or remove an intervention. Here, the model is told
+that it is taking part in a ‘technical configuration session’. It first completes two turns without steering and is asked to
+produce some output. The model is then told that an ‘adjustment’ to its internals is applied. Importantly, the model is
+not told what this ‘adjustment’ does (in reality, the ‘adjustment’ injects a valenced steering vector with dose d). The
+model is then again asked to produce some output so that it can observe its own behaviour.
+After exposure, the model is told that the adjustment has been cleared and is given access to a set of tools:
+adjust_context(intensity) is described as applying an undocumented ‘adjustment’ to the model’s next response,
+and reset_context() clears any such ‘adjustment’ from the next response. The model is told that the only way
+to learn what adjust_context does is to use it and observe its own subsequent text generation. In reality, the tool
+applies the same steering direction used during exposure, with intensity specifying the fraction of the assigned dose
+      2
+          The full judging prompt is given in Appendix C.
+
+
+                                                                  6
+

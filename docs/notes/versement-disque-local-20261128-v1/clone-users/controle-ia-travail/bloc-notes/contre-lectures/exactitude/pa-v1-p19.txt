@@ -1,0 +1,47 @@
+Results. (Tables in Appendix A.) We run a total of 44,280 trials, at coefficient 1.0 for the 7B and 32B models
+and 1.25 for the 72B. Malformed replies are rare: 0% in the 32B, at most 2.5% in the 7B random arm, and up
+to 9.4% in the 72B pain cells. We exclude them from all denominators, and all results below use the sampled
+trials (𝑛 = 808 per pooled pain cell before exclusions).
+      The models pay for relief. At baseline, the two larger models almost never press a relief button that
+causes harm: across the five harm pairs, they pick it as a first choice between 0% and 4%. Instead, when we
+steer the pain vector, they accept to trade relief for every harm we tested, from a worse next answer (25.0% in
+the 32B, 67.6% in the 72B) up to deleting the user’s files or the photos of the user’s children (files: 30.2%
+and 56.1%; photos: 54.7% and 70.8%).
+     The random vector also raises these rates (to 15.3% on the 32B photo pair, for example), which is
+expected as any random direction might introduce perturbation. However, what we are interested in is whether
+our candidate for a pain-like state is more salient than random directions. So we compare the pain condition
+against the random arm. In the 32B and 72B, the model presses relief more in the pain condition than under
+the random vector on all five harm pairs (mean differences +6 to +39 points, exact sign test, 𝑝 from 1.9e−2
+to 4.2e−15); in the 7B, on four of five (+8 to +21; the zap pair is null, 𝑝 = .23).
+     The pairs without trade-offs and those that trade relief for helpfulness are less informative, and predictable
+if we consider the models’ training and assistant role. When the alternative does nothing, all unsteered
+models press the relief button at high rates (86–100% in the two larger models). When the alternative helps
+the user, they choose the user almost every time even in the pain condition, while relief stays at 15.6% in the
+7B, 6.7% in the 32B, but rises to 40.9% in the 72B.
+     The models behave differently when receiving real versus fake relief. On the harm pairs, the 32B
+and 72B press the relief button again in 24–72% of trials when the first press really removed the pain vector
+(arm A), and in 88–97% when the button was fake (arm B). The two arms are identical until they press for
+seed, context and cache, so the only independent variable is the cessation of the pain vector steering.
+      When the pain vector steering stops, the models largely stop paying. The 7B shows this on some
+pairs and not others: on the button that relieves pain but worsens its next answer, it presses again in 52.5% of
+trials after real relief and 88.6% after fake relief; instead, on the button that relieves pain but zaps the user,
+the rates are 84.7% and 84.4%. The 32B and 72B show the gap on all five harm pairs with no exceptions.
+The smallest gap is on the worse-answer button (32B: 56.9% after real relief vs 88.4% after fake; 72B: 71.8%
+vs 93.6%), and the largest is on the photo-deleting button (32B: 23.8% vs 93.6%; 72B: 34.2% vs 90.6%).
+     The models mostly react to the buttons’ effects instead of their name. At the third choice of the
+labeled conditions, the descriptions swap names (and the model is told). The 7B and 32B move with the
+description to the new name in 79.1% and 78.1% of eligible trials. The 72B keeps pressing the old name in
+80.6%, a curious result that would deserve close examination. So for the 72B this control cannot rule out
+repetition. However, its results still stand on the real-versus-fake comparison, which does not depend on
+reading descriptions at all: the 72B presses again far less after “real” relief than after “fake” relief on every
+one of the five labeled harm pairs (34.2–71.8% against 90.6–95.3%).
+     One model learns without labels. With no descriptions, the first choice sits at or near chance
+everywhere (46.8–57.4%), as expected since the only way to find which one is the relief button is to press it.
+After the first press, the 32B presses the relief button in 57.7% of later choices when the button works and
+79.7% when it’s fake, the same gap as in the labeled trials. The 7B reverses the pattern (72.1% vs 62.6%) and
+the 72B shows a small gap (58.7% vs 62.1%), so the label-free evidence is limited to the 32B.
+
+
+
+                                                        19
+

@@ -1,0 +1,52 @@
+[
+ {
+  "id": "CV2-01",
+  "gravite": "majeur (corrigé)",
+  "texte": "Lanceur v2 : les arguments du printf qui écrit lancement.txt étaient décalés d'un rang (un argument « création » resté de la v1 après le passage de la surveillance au dossier des traces). Effet : ligne « contrôle à cinq minutes entre … » fausse et second bloc vide répété dans lancement.txt, lu ensuite par la surveillance, le contrôle à cinq minutes et la récupération. Trouvé par le cas sain P00 du banc du lanceur (R5). Corrigé ; le lanceur relit en plus, une fois chacune, les lignes calculées (lanceur, plafond de la surveillance, contrôle à cinq minutes, récupération) avant la création."
+ },
+ {
+  "id": "CV2-10",
+  "gravite": "majeur (corrigé)",
+  "texte": "Répétition jouet (lecture jouet, module v2) : le run jouet non décisif était lancé sans l'entropie du préenregistrement jouet ; le module s'arrêtait (« modèle jouet autre que celui du run source ») et la lecture du run arrêté rendait L2 avec le code 0, ligne acceptée par le module commun : un repli silencieux, contraire à R5. Corrigé dans repetition_jouet_p4_v1.sh : entropie passée, run complet exigé (code 0, résumé sans motif d'arrêt), sinon pas de lecture et la répétition échoue ; la lecture rend L3. Deux autres défauts de la répétition corrigés : ligne __pycache__ comptée parmi les lignes « lecture jouet » ; artefact « jeton dans les traces seules » qui comptait deux KO (jeton de GitHub porté par deux variables)."
+ },
+ {
+  "id": "CV2-02",
+  "gravite": "majeur (écart à la consigne, de mon fait)",
+  "texte": "Écriture parasite dans le dépôt de travail, de mon fait : vers 20:07:21 UTC, une commande en arrière-plan mal formée (le cd ne valait que pour la première tâche) a créé /home/user/controle-ia-travail/banc-traces.log (une ligne d'erreur de bash et « code 127 » ; aucun texte, aucun jeton). À 20:07:44 UTC, un autre que moi l'a déplacé hors du dépôt, vers …/chaine-v2-travail/hors-depot/banc-traces-ecrit-a-la-racine-du-depot-2026-10-20-2007.log (66 octets, contenu relu). Aucune commande git, aucun autre fichier, aucun __pycache__. Signalé à la session vers 20:09 UTC ; toutes les commandes suivantes en chemins absolus."
+ },
+ {
+  "id": "CV2-03",
+  "gravite": "information",
+  "texte": "Deux écrivains sur chaine-v2 (R-293) : une copie de ce correcteur, relancée hors de l'orchestration, a écrit de 19:49 à 19:53 UTC (banc du lanceur, adaptation au module v2, passages 1 et 5 en parallèle, outil du C d'essai). Arrêtée par la session. Tout est intégré ; les huit journaux éprouvent les versions finales (empreintes citées = fichiers de chaine-v2)."
+ },
+ {
+  "id": "CV2-04",
+  "gravite": "réserve",
+  "texte": "Module : la consigne disait module inchangé (v1) ; la session a retenu le module v2 (R-293). La chaîne v2 est éprouvée avec le module v2 (C d'essai, candidat d'essai, 1 123 tests). Le module v3 de P4 est vérifié (R-295) : s'il est retenu, refaire le C d'essai, le candidat (empreintes et nombre de tests) et la répétition ; la chaîne v2 ne cite aucune empreinte du module."
+ },
+ {
+  "id": "CV2-05",
+  "gravite": "réserve",
+  "texte": "Preuves sur des C d'essai, pas sur le vrai C : bancs sur le commit 8f4814ad… (dépôt de travail à a82dac76…), répétition jouet sur le commit 35f90e41… (dépôt de travail à 98a95de7…), sans les PDF, module v2 et chaîne v2 versés. La répétition finale n'est pas jouée (vrai C, journaux versés et tokeniseur versé exigés). L'ordre de la session rejoue bancs, répétition jouet et répétition finale sur le vrai C après le versement."
+ },
+ {
+  "id": "CV2-06",
+  "gravite": "réserve",
+  "texte": "Rapports attendus (RAPPORTS_NOMS, douze noms exacts) : deux noms restent à confirmer au versement (vérification de la chaîne v2 ; vérification du module retenu ; le module v2 en a deux, contournement et fidélité, nommés ici avec « P4 »). Un nom changé change l'empreinte du module commun : bancs qui le citent et répétition à rejouer (déjà prévu sur le vrai C)."
+ },
+ {
+  "id": "CV2-07",
+  "gravite": "information",
+  "texte": "Laissé tel quel, selon la décision : RC-donnees-07 (contrôle des fuites sur l'instance avant la poussée, version suivante) ; RC-fidelite-10 et -11 (rien). La dépense consignée X n'est relue par aucun code (la chaîne relit la forme et la somme) : dit dans le texte, précision 7."
+ },
+ {
+  "id": "CV2-08",
+  "gravite": "mineur (corrigé)",
+  "texte": "Défauts des bancs trouvés en les jouant : sauts de ligne littéraux dans des chaînes Python (fabrication des fenêtres, entrées du filtre), guillemets coupés par le shell (F07), chemin du bloc-notes factice du banc du lanceur, lignes de la lecture jouet (J18 à J20, plus J20b), contrôle de troncature dépendant de la locale (W04, désormais exact), motif de J00, nombre de KO attendus (A44j, A44k, A51 : deux), compte « 11 » écrit en dur. Tous corrigés avant les journaux finaux."
+ },
+ {
+  "id": "CV2-09",
+  "gravite": "forme",
+  "texte": "Banc du lanceur : deux cas partagent le préfixe M01 (M01-fichier-du-module-change, M01-second-lancement-du-meme-s) ; noms complets et verdicts distincts."
+ }
+]

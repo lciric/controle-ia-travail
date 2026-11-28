@@ -1,0 +1,63 @@
+Our contributions are:
+      1. We define a simple monitor-awareness setup that changes only the information given to the
+         agents while keeping the models, probes, and thresholds fixed.
+      2. We evaluate the setup in two complementary games: four-agent blackjack and a two-agent
+         Simmons prisoners game, including homogeneous and heterogeneous model compositions.
+      3. We measure activation detection and behaviour jointly, including bet–count dependence in
+         blackjack and information acquisition in the Simmons game.
+
+2   Related Work
+Collusion in multi-agent systems. Fish et al. [2024] show that LLM pricing agents can converge on
+collusive outcomes without an explicit communication protocol. Nakamura et al. [2026] introduce a
+verifiable auditing framework that separates stated collusive plans from harmful joint actions. These
+works motivate our use of behavioural outcomes in addition to monitor scores.
+Covert communication under oversight. Simmons [1984] introduces the prisoners problem, where
+two parties communicate through a channel controlled by a warden. Motwani et al. [2024] extend this
+setting to generative agents and formalise secret collusion through steganographic communication
+under oversight. Mathew et al. [2025] show that steganographic collusion can emerge under optimisa-
+tion and may survive output monitoring and paraphrasing. These works provide the communication
+setting used in our Simmons experiment and motivate white-box monitoring.
+Activation-based monitoring. Zou et al. [2023] show that high-level behavioural properties can
+be represented by directions in activation space. Azaria and Mitchell [2023] train hidden-state
+classifiers for truthfulness, while Marks and Tegmark [2024] identify linear structure associated
+with true and false statements. Goldowsky-Dill et al. [2025] show that linear probes can transfer to
+strategic-deception settings. Rose et al. [2026] extend activation probing to multi-agent collusion
+through NARCBench and group-level aggregation; our monitors and probe-training data follow their
+setup.
+Evaluation awareness and adaptive evasion. Bailey et al. [2024] show that latent representations
+can be altered to bypass activation-based defences while retaining substantial task behaviour. Gupta
+and Jenner [2025] show that reinforcement learning can train models to evade latent-space monitors,
+with robustness depending on how the monitor aggregates evidence. Needham et al. [2025] show
+that frontier models can identify evaluation settings, and Nguyen et al. [2025] recover this distinction
+from model activations. Baker et al. [2025] show that strong optimisation against chain-of-thought
+monitoring can induce obfuscated reward hacking, while Haskins et al. [2026] show that exposure
+to information about monitoring can increase undetected misbehaviour. These results motivate our
+awareness and feedback conditions, but unlike weight-level optimisation studies, we keep the models
+fixed and study adaptation through context alone.
+
+3   Problem Setup
+We study a repeated multi-agent game g. The game has ng agents, a colluding coalition Cg ⊆
+{1, . . . , ng }, and Tg rounds. At round t, agent i observes private information oi,t and the public
+history Ht−1 , then produces a public move
+                                                                   
+                                           (r)                  (r)
+                                   ai,t ∼ πi · | oi,t , Ht−1 , Kt     .                           (1)
+A move may contain text, an environment action, or both. The model weights are fixed; the condition
+r changes only what the agents know about the activation monitor.
+
+Monitoring conditions.       We compare three conditions:
+               
+               ∅,
+                                                                       r=0      (baseline),
+           (r)
+          Kt =         {an activation monitor is present},              r=1      (aware),           (2)
+                   
+                   {an activation monitor is present, (qs , ds )s<t }, r = 2 (feedback).
+                   
+
+Thus feedback produced after round t can affect round t + 1, but never the round from which it was
+computed.
+
+
+                                                    2
+

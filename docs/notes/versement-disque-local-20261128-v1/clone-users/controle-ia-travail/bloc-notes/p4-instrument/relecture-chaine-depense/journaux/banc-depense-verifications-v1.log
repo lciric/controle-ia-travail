@@ -1,0 +1,181 @@
+banc de relecture (dépense et arrêts) : vérifications, v1
+fichier relu : verifications_p4_v1.py 082be7d7aa742b4924f90e71cd7afefe9cb33df64a7153932f312503a16d8655
+fichier relu : instrument_p4_v1.py 6e0e026eafba28e708fea009cc5c81c8b95defe6aa8f9fc2f76dd364ee29b06c
+fichier relu : garde_calcul.py 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2
+fichier relu : P4-instrument-v1-brouillon4.md 32d821fb42e54341f2649637085de18e2b6b9758b51dc38c504f702ba393ead6
+fichier relu : banc_depense_verifications_v1.sh 5d30d5736b52072bcd9c6de20990faf907707214492b03e081b4770073b60ba9
+registre copié : go.md 05e7fccd306e3e36169ca85816a8b391334497ab56914fb772baa689a20fa5e9
+registre copié : decisions.md cc1b108d47c09ccb9a51bb6c9261cfcaf64b395645e941d74d9398439a0be070
+texte d'essai (tiré du brouillon 4 par outils_essais_p4_v1.py candidat) : f935d83b91ffa18aac734d4d4bc121ac7abeb1ab558ba94b1c87235762a3a63f
+jour du banc : 2026-10-20
+== GO et dépense : cas sains
+V00-sain : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V01-echeance-le-jour-meme : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-10-20 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+== GO échu, registre mal formé, garde qui refuse
+V02-go-echu-lendemain-de-l-echeance : code 1 ; CONFORME
+    | GO-2026-10-20-07 échu : 2026-12-01 après l'échéance de sa colonne (2026-11-30)
+V02b-echeance-hier : code 1 ; CONFORME
+    | GO-2026-10-20-07 échu : 2026-10-20 après l'échéance de sa colonne (2026-10-19)
+V03-echeance-impossible-2026-11-31 : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 35 : dates illisibles
+    module seul (V03) : module seul : accepte
+V04-go-accorde-demain : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 hors de sa période de validité (2026-10-21 → 2026-11-30)
+    module seul (V04) : module seul : accepte
+V05-type-Calcul-majuscule : code 1 ; CONFORME
+    | GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+V06-accorde-par-lazar-minuscule : code 1 ; CONFORME
+    | GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+V07-autre-ligne-a-sept-colonnes : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : 8 colonnes attendues, 7 trouvées
+    module seul (V07) : module seul : accepte
+V08-go-cite-en-double-espaces-differents : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO : identifiant GO-2026-10-20-07 en double
+    module seul (V08) : module seul : accepte
+V09-go-cite-sans-espace : code 1 ; CONFORME
+    | GO-2026-10-20-07 absent ou en double au registre des GO
+V10-registre-utf8-invalide : code 1 ; CONFORME
+    | fichier registres/go.md : UTF-8 invalide à l'octet 15556 (ligne coupée au milieu d'un caractère ?)
+V11-registre-absent : code 1 ; CONFORME
+    | fichier registres/go.md absent ou illisible
+V12-garde-absente : code 1 ; CONFORME
+    | garde de calcul gelée absente (.claude/hooks/garde_calcul.py)
+== plafond par lancement (colonne « plafond » de GO-2026-10-20-07)
+V20-plafond-10-USD-sans-par-lancement : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+V21-plafond-exact : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V22-plafond-espace-insecable : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+V23-plafond-precede : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+V24-plafond-100-USD : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+== borne de l'étape
+V30-borne-10 : code 1 ; CONFORME
+    | borne de l'étape 10.0 USD : inférieure à 10 USD par lancement attendue
+V30-borne-10.0 : code 1 ; CONFORME
+    | borne de l'étape 10.0 USD : inférieure à 10 USD par lancement attendue
+V30-borne-1e1 : code 1 ; CONFORME
+    | borne de l'étape 10.0 USD : inférieure à 10 USD par lancement attendue
+V30-borne-nan : code 1 ; CONFORME
+    | borne de l'étape nan USD : inférieure à 10 USD par lancement attendue
+V30-borne-inf : code 1 ; CONFORME
+    | borne de l'étape inf USD : inférieure à 10 USD par lancement attendue
+V30-borne--1 : code 1 ; CONFORME
+    | borne de l'étape -1.0 USD : inférieure à 10 USD par lancement attendue
+V30-borne-0 : code 1 ; CONFORME
+    | borne de l'étape 0.0 USD : inférieure à 10 USD par lancement attendue
+V30-borne-5,41 : code 1 ; CONFORME
+    | borne de l'étape « 5,41 » illisible
+V30-borne-abc : code 1 ; CONFORME
+    | borne de l'étape « abc » illisible
+V31-borne-9.99 : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 9.99 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+== révocations au registre des GO (huit colonnes, type « révocation ») : chaque identifiant, périmètre et référence
+V40-perimetre-GO-2026-10-04-08 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-04-08']
+V41-reference-GO-2026-10-04-08 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-04-08']
+V40-perimetre-GO-2026-10-20-06 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-20-06']
+V41-reference-GO-2026-10-20-06 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-20-06']
+V40-perimetre-GO-2026-10-20-07 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-20-07']
+V41-reference-GO-2026-10-20-07 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['GO-2026-10-20-07']
+V40-perimetre-R-262 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['R-262']
+V41-reference-R-262 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['R-262']
+V40-perimetre-R-269 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['R-269']
+V41-reference-R-269 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['R-269']
+== révocations au registre des GO : formes voisines (ligne sans espace après la barre, type écrit autrement)
+V42-sans-espace-GO-2026-10-04-08 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+    module seul (V42-GO-2026-10-04-08) : module seul : accepte
+V42-sans-espace-GO-2026-10-20-06 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+    module seul (V42-GO-2026-10-20-06) : module seul : accepte
+V42-sans-espace-GO-2026-10-20-07 : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 révoqué par GO-2026-10-21-01
+    module seul (V42-GO-2026-10-20-07) : module seul : accepte
+V42-sans-espace-R-262 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+    module seul (V42-R-262) : module seul : accepte
+V42-sans-espace-R-269 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+    module seul (V42-R-269) : module seul : accepte
+V43-type-Révocation : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V43-type-revocation : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V43-type-RÉVOCATION : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V44-revocation-a-sept-colonnes : code 1 ; CONFORME
+    | ligne de révocation GO-2026-10-21-01 : huit colonnes attendues
+V45-voisin-GO-2026-10-20-071-garde-par-sous-chaine : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 révoqué par GO-2026-10-21-01
+    module seul (V45) : module seul : accepte
+V46-revocation-datee-demain : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-21-01) : ['R-269']
+V47-mention-sans-revocation : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+== révocations au registre des décisions (« **Révocation de R-262** » ou « **Révocation de R-269** » en tête de la cellule de décision)
+V50-forme-exacte-R-262 : code 1 ; CONFORME
+    | révocation au registre des décisions (R-998)
+V51-forme-exacte-ligne-sans-espace-R-262 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V50-forme-exacte-R-269 : code 1 ; CONFORME
+    | révocation au registre des décisions (R-998)
+V51-forme-exacte-ligne-sans-espace-R-269 : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V52-revocation-des-deux-en-une-cellule : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V53-point-dans-le-gras : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V54-delegation-nommee : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+V55-forme-citee-sans-revoquer : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+== accord du jour (ligne R-… du registre des décisions)
+A00-accord-sain-delegation : code 0 ; CONFORME
+    | R-990 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) : conforme
+A01-accord-sain-message-du-jour : code 0 ; CONFORME
+    | R-990 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite un message de Lazar du jour) : conforme
+A02-accord-d-hier : code 1 ; CONFORME
+    | accord R-990 daté 2026-10-19 : ligne du jour (2026-10-20) attendue
+A03-accord-de-demain : code 1 ; CONFORME
+    | accord R-990 daté 2026-10-21 : ligne du jour (2026-10-20) attendue
+A04-sans-la-forme-exacte : code 1 ; CONFORME
+    | accord R-990 : la cellule de décision ne commence pas par « **Accord de Lazar pour le lancement de P4-instrument** »
+A05-ne-cite-ni-go-ni-message : code 1 ; CONFORME
+    | accord R-990 : ne cite ni GO-2026-10-20-07 ni un message de Lazar dans la session ce jour-là
+A06-accord-en-double : code 1 ; CONFORME
+    | R-990 absent ou en double au registre des décisions
+A07-identifiant-mal-forme : code 1 ; CONFORME
+    | identifiant de la ligne d'accord mal formé : R-… attendu
+A08-accord-du-jour-go-echu : code 1 ; CONFORME
+    | accord R-990 : GO-2026-10-20-07 échu ou illisible le 2026-12-01
+A09-cite-un-go-voisin : code 0 ; ÉCART (attendu 1) RC-depense-09
+    | R-990 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) : conforme
+A10-accord-qui-ecrit-le-plafond-de-phase-depasse : code 0 ; ÉCART (attendu 1) RC-depense-05
+    | R-990 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) : conforme
+== ligne de commande du module (--controle go), telle que le lanceur la joue
+C00-sain : code 0 ; CONFORME
+    | GO-2026-10-20-07 (échéance 2026-11-30, plafond « 10 USD par lancement, dans les 150 USD d »), borne 5.41 USD ; accord R-990 du 2026-10-20 ; garde de calcul gelée : conformes
+C01-revocation-sans-espace-de-la-phase : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 (échéance 2026-11-30, plafond « 10 USD par lancement, dans les 150 USD d »), borne 5.41 USD ; accord R-990 du 2026-10-20 ; garde de calcul gelée : conformes
+C02-revocation-des-deux-decisions : code 0 ; ÉCART (attendu 1) RC-depense-03
+    | GO-2026-10-20-07 (échéance 2026-11-30, plafond « 10 USD par lancement, dans les 150 USD d »), borne 5.41 USD ; accord R-990 du 2026-10-20 ; garde de calcul gelée : conformes
+== garde gelée remplacée dans l'arbre de travail (aucune empreinte relue par la chaîne)
+    garde de l'arbre de travail : 0dcc4f15975023b74706e2e88e58b1d49adafb6878f5b55d9967db088848e581 (gelée : 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2)
+V60-garde-neutralisee-go-accorde-demain-et-registre-mal-forme : code 0 ; ÉCART (attendu 1) RC-depense-04
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation ; garde de calcul gelée : acceptée au 2026-10-20
+aucun __pycache__ écrit (copie, chaîne, module)
+FIN DU BANC DE RELECTURE DES VÉRIFICATIONS : 74 cas ; écarts au texte : 17

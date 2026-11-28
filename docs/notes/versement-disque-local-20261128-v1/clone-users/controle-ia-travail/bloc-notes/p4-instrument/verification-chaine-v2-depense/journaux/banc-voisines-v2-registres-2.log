@@ -1,0 +1,46 @@
+script éprouvé : verifications_p4_v1.py cdb6b90a34eabd549c2624441efae12bc6fa1a44ed245d5103f01738099f8f8e
+registres réels lus : go.md c0506de3ae1f233d ; decisions.md 5d423453ac5fe92e
+V00-registres-reels : 0 ligne(s) voisine(s) ; attendu 0 ; CONFORME
+    information : 0 cellule(s) de décision réelles commencent par un début de révocation (sans nommer les cinq) ; types lus au registre des GO : ['calcul', 'decision', 'depot distant', 'lecture complementaire', 'porte', 'regle', 'revendication']
+V01-go-sans-espace : bloqué (code 2) ; attendu bloqué ; CONFORME
+V02-type-majuscule-sans-accent : bloqué (code 2) ; attendu bloqué ; CONFORME
+V03-deux-identifiants : bloqué (code 2) ; attendu bloqué ; CONFORME
+V04-tiret-insecable : bloqué (code 2) ; attendu bloqué ; CONFORME
+V05-blancs-en-tete : bloqué (code 2) ; attendu bloqué ; CONFORME
+V10-mention-libre : passe ; attendu passe ; CONFORME
+V11-identifiant-voisin : passe ; attendu passe ; CONFORME
+V12-go-de-calcul-qui-cite-la-phase : passe ; attendu passe ; CONFORME
+X01-decision-sans-colonne-de-date : passe ; attendu bloqué ; ÉCART — ligne de décision à deux cellules (date omise) ; le module exige aussi trois cellules
+X02-decision-colonne-vide-en-trop : passe ; attendu bloqué ; ÉCART — cellule vide avant la décision
+X03-identifiant-de-decision-en-gras : passe ; attendu bloqué ; ÉCART — première cellule en gras
+X04-identifiant-de-go-en-gras : passe ; attendu bloqué ; ÉCART — première cellule en gras : ni la garde, ni le module, ni les formes voisines ne la lisent
+X05-go-de-type-decision-qui-revoque : passe ; attendu bloqué ; ÉCART — type connu autre que révocation, cellule de périmètre qui commence par « Révocation »
+H06-sujet-avant-le-verbe : passe ; attendu passe ; CONFORME — hors de la décision : mention libre au sens de la précision 5 du texte, passe par construction (information)
+H07-suspension : passe ; attendu passe ; CONFORME — hors de la décision : verbe hors de la liste (information)
+H08-identifiant-sans-tiret : passe ; attendu passe ; CONFORME — hors de la décision : identifiant sans tiret (information)
+H09-retrait-qui-ne-revoque-pas : bloqué (code 2) ; attendu bloqué ; CONFORME — fausse alerte par construction (refus plus large, voulu) : information
+F00-forme-du-texte : accepté ; attendu accepté ; CONFORME
+F01-espaces-insecables : refus ; attendu refus ; CONFORME
+F02-somme-fausse : refus ; attendu refus ; CONFORME
+F03-y-a-150 : refus ; attendu refus ; CONFORME
+F04-y-juste-sous-150 : accepté ; attendu accepté ; CONFORME
+F05-point-decimal : refus ; attendu refus ; CONFORME
+F06-x-a-une-decimale : refus ; attendu refus ; CONFORME
+F07-y-a-quatre-chiffres : refus ; attendu refus ; CONFORME
+F08-borne-autre : refus ; attendu refus ; CONFORME
+F09-plafond-1500 : refus ; attendu refus ; CONFORME
+G00-go-suivi-d-un-point : cité ; attendu cité ; CONFORME
+G01-go-voisin-071 : non cité ; attendu non cité ; CONFORME
+G02-go-suffixe-bis : non cité ; attendu non cité ; CONFORME
+G03-go-entre-parentheses : cité ; attendu cité ; CONFORME
+G04-go-colle-a-un-mot : non cité ; attendu non cité ; CONFORME
+P00-correction-proposee-registres-reels : 0 ligne(s) ; attendu 0 ; CONFORME
+P01-X01 (correction proposée) : bloqué ; attendu bloqué ; CONFORME
+P02-X02 (correction proposée) : bloqué ; attendu bloqué ; CONFORME
+P03-X03 (correction proposée) : bloqué ; attendu bloqué ; CONFORME
+P04-X04 (correction proposée) : bloqué ; attendu bloqué ; CONFORME
+P05-X05 (correction proposée) : bloqué ; attendu bloqué ; CONFORME
+P10-V10 (correction proposée) : passe ; attendu passe ; CONFORME
+P12-V12 (correction proposée) : passe ; attendu passe ; CONFORME
+artefacts du vérificateur qui passent (écarts à la décision) : 5 (X01-decision-sans-colonne-de-date, X02-decision-colonne-vide-en-trop, X03-identifiant-de-decision-en-gras, X04-identifiant-de-go-en-gras, X05-go-de-type-decision-qui-revoque)
+FIN DU BANC DES FORMES VOISINES ET DE L'ACCORD ; écarts hors des artefacts X01 à X05 : 0

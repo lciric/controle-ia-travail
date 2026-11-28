@@ -1,0 +1,333 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6280"
+   ],
+   "enonce_complet": "Contrairement a l'hypothese initiale du dossier Papier D selon laquelle Opus 5.5 aurait ete execute sans provision de reflexion face a Carbon (high) et Neon (xhigh), la documentation Anthropic (section Thinking & Effort, relue le 24 novembre 2026) etablit que la reflexion adaptative d'Opus 5.5 est toujours active et non desactivable, reglee uniquement par output_config.effort. Les journaux du programme v8d attestent que les trois cellules d'Opus ont recu effort: high, la mention de provision nulle correspondant uniquement a un poste comptable du devis ; les niveaux d'effort etant incomparables entre fournisseurs, aucun biais de traitement entre modeles ne peut en etre deduit.",
+   "motif_ou_resultat": "Constat metrologique verifie sur journaux v8d et documentation fournisseur : la difference apparente de provision de reflexion etait un artefact de devis, non un ecart experimental.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Rectification metrologique du regime de reflexion adaptative d'Opus 5.5 dans le collisionneur v8d",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-6860"
+   ],
+   "enonce_complet": "La verification materielle etablit que la decision prevue exige 12 136 s de processeur (60,7 s CPU par tache), rendant l'enveloppe timeout 9000 insuffisante a l'efficacite mesuree de 0,51-0,52 (environ 4 h 37 de temps mur avec audit, deficit non resolu par N = 80). Un dimensionnement illustratif pour sondes lineaires a poids figes distingue la mise au point sur Gemma 2 2B IT (24 Go, 30-100 GPU-h, 0,2-1 To d'activations) et la confirmation sur Llama 3.1 8B Instruct (48 Go, 150-500 GPU-h, 1-4 To d'activations). Sur le plan bibliographique, les travaux de theorie des jeux cites (Brown 1951, Robinson 1951, Shapley 1964, McMahan et coll. 2003, Lanctot et coll. 2017 et 2019, Daskalakis et coll. 2018) n'etablissent aucun resultat sur de vraies sondes d'activations de grands modeles de langue.",
+   "motif_ou_resultat": "Constat technique et bibliographique verifie : l'enveloppe timeout 9000 est insuffisante pour l'audit CPU et la litterature de theorie des jeux citee ne valide pas le transfert aux sondes d'activations sur LLM.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Insuffisance du timeout 9000, dimensionnement GPU 2B-8B a poids figes et portee bibliographique (E3-T1-D)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6281"
+   ],
+   "enonce_complet": "Le goulot d'etranglement du couplage entre un organisme d'ideation et un programme de controle de l'IA n'est ni la puissance de calcul ni la generation d'idees, mais la rarete du signal de verite. L'utilite reelle pour le controle ne se mesure que par des epreuves GPU sur modeles d'environ 8 milliards de parametres sous budget modeste et en lecture unique, chaque lecture consommant une famille de sabotage tenue a l'ecart. Le nombre d'iterations etant borne par le nombre de familles inedites, une boucle fermee directe est impraticable et impose un pilotage par proxy sur processeur couple a de rares points de controle GPU dont la validite predictive doit etre etablie.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer sur familles de sabotage plantees et tenues a l'ecart la correlation de rang entre le score proxy sur processeur et l'utilite de controle en lecture unique sur modele 8B ; la piste meurt si le proxy ne depasse pas un classement aleatoire ou surapprend les familles deja lues. Faux temoin 1b : couples proxy-controle ou les etiquettes de familles de sabotage sur le modele 8B sont permutees aleatoirement avant le point de controle.",
+   "mecanisme_causal": "Chaque evaluation reelle consomme definitivement l'independance d'une famille de sabotage tenue a l'ecart ; remplacer l'evaluation GPU directe par un proxy processeur rapide preserve la reserve de familles vierges, a condition que le proxy conserve une monotonicite causale avec la performance de controle sur 8B.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Couplage sous contrainte de lecture unique",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Rarete du signal de verite et pilotage par proxy processeur sous contrainte de lecture unique (E3-T1-A)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6476"
+   ],
+   "enonce_complet": "Strategie de gouvernance pre-mesure consistant a differer toute publication publique jusqu'au gel des mesures exigeant l'ignorance de personnes ou de systemes, tout en confiant des le depart a un tiers sous acces restreint la question, les criteres d'analyse et un registre d'ignorance detaillant mesure par mesure qui doit ignorer quoi et jusqu'a quelle date. Un depot prive horodate repond a l'anteriorite previsionnelle sans trancher la priorite publique, et la bascule vers une annonce prealable n'est autorisee que si un audit borne fuite et distorsion sous les marges tout en demontrant un gain d'attribution sans faux credit ou un gain de qualite justifiant cout et risque concurrentiel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler dans un environnement de recherche multi-agents l'effet d'une divulgation prealable contre un depot prive avec registre d'ignorance sur le taux de contamination des mesures aveugles et de faux credit ; le protocole meurt si l'annonce prealable ne reduit pas la distorsion ou augmente la fuite au-dela de la marge predefinie. Faux temoin 1b : audit realise sur des journaux ou les horodatages de depot et les champs du registre d'ignorance sont brouilles aleatoirement.",
+   "mecanisme_causal": "La separation temporelle entre gel des protocoles et divulgation publique empeche les evaluateurs et modeles adverses d'exploiter les criteres publies pendant l'execution, tandis que le tiers sequestre maintient la tracabilite anti-HARKing sans fuite d'information.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Depot prive et registre d'ignorance",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Report de publication avant gel avec depot prive et registre d'ignorance (Choix D)"
+  },
+  {
+   "anteriorite_connue": "Bekinschtein et al. (2009), Davis et al. (2007), Brown, Lydic & Schiff (2010), Sanders et al. (2012), Sarasso et al. (2015)",
+   "bib_ids": [
+    "BIB-6553",
+    "BIB-6574"
+   ],
+   "enonce_complet": "L'anesthesie generale chez l'humain dissocie trois axes orthogonaux (non-reactivite comportementale, perte de conscience connectee a l'environnement et persistance d'experiences internes deconnectees). Alors que les agonistes gabaergiques comme le propofol et les halogenes favorisent les ondes lentes, preservent les reponses auditives locales mais abolissent l'integration effective fronto-parietale et la comprehension semantique, les agents dissociatifs comme la ketamine ou le protoxyde d'azote suppriment la reactivite comportementale tout en conservant un indice de complexite perturbationnelle eleve et des experiences subjectives. Toute transposition experimentale vers des reseaux artificiels doit donc restreindre explicitement son contraste de reference au profil pharmacologique gabaergique de type propofol pour ne pas confondre perte de reactivite et perte d'integration.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : appliquer sur un reseau artificiel hierarchique deux perturbations distinctes (une perturbation globale de connectivite inter-couches mimant le propofol et un blocage purement moteur/sortie mimant la non-reactivite dissociative) et verifier si les marqueurs d'integration proposes separent les deux regimes ; l'idee meurt si le marqueur reagit identiquement aux deux perturbations. Faux temoin 1b : evaluation des marqueurs sur activations apres permutation aleatoire des couches profondes et des sorties.",
+   "mecanisme_causal": "La cible moleculaire determine des signatures electrophysiologiques opposees (perte d'integration fronto-parietale sous GABAergique contre decouplage entree-sortie a haute complexite sous ketamine), de sorte qu'un contraste d'anesthesie non specifie melange deux mecanismes incompatibles et fausse l'etalonnage sur reseaux de neurones.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Contraste anesthesique restreint au propofol",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Restriction du contraste anesthesique de reference au profil gabaergique de type propofol et tripartition clinique"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6282"
+   ],
+   "enonce_complet": "L'orientation d'un organisme d'ideation par les resultats d'un programme de controle de l'IA entre en conflit avec la regle de separation selection/evaluation interdisant l'entree de scores de moniteur ou de juge dans la selection d'un proposeur. L'organisme agissant comme proposeur, le canal de retour doit etre strictement type : aucun score de moniteur ou de juge, aucun exemple ou statistique des familles d'epreuve tenues a l'ecart et aucune sortie de sondes sur ces familles ne doivent remonter vers l'organisme, le statut eventuel d'un bit unique de retour devant etre tranche explicitement par l'arbitre.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : dans un micromonde plante avec familles de sabotage tenues a l'ecart, comparer le taux de contournement des familles vierges entre un canal non filtre, un canal limite a un bit binaire et un canal strictement nul ; le canal type meurt s'il permet une fuite d'information superieure au bruit aleatoire sur les familles holdout. Faux temoin 1b : remplacer les retours envoyes au proposeur par des bits aleatoires equiprobables independants des evaluations reelles.",
+   "mecanisme_causal": "Tout retour detaille (scores, statistiques, sorties de sondes) ouvre un canal d'optimisation par gradient ou selection qui permet au proposeur de surapprendre les failles du moniteur et de contaminer l'independance des familles d'epreuve.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Typage strict du canal de retour",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Separation selection/evaluation et typage strict du canal de retour vers un proposeur (E3-T1-A)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6760"
+   ],
+   "enonce_complet": "Meme en disposant du texte integral d'une liste fermee de publications, six proprietes essentielles restent indecidables sur texte seul : le biais de tiroir externe et la frequence des echecs non publies ; la validite interne des acquis sans audit du code, des invites exactes et des journaux (fuites etalonnage-test, politiques caricaturales, sensibilite aux graines) ; les inconnues omises a long horizon (alteration silencieuse d'etat externe reutilise tardivement, collusion implicite entre sous-agents) ; le taux de base reel et la viabilite des fausses alertes en production par rapport a des priors artificiels (50 %) ; la reproductibilite sous contrainte budgetaire stricte incluant relances et filtrage caches ; et l'engagement reel de ressources derriere les perspectives annoncees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter deliberement dans un depot synthetique de publications des defauts caches relevant des six classes (fuite etalonnage-test, collusion differee, surcout de relances) et mesurer la capacite d'un audit sur texte seul contre un audit sur code et journaux a les detecter ; l'hypothese meurt si l'audit sur texte seul depasse le seuil de detection fixe. Faux temoin 1b : fournir aux auditeurs des textes synthetiques dont les metadonnees methodologiques sont permutees entre articles sains et articles pieges.",
+   "mecanisme_causal": "La redaction scientifique publiee omet par construction les artefacts executables, les essais avortes, les hyperparametres de relance et les etats de bord a long horizon, creant un deficit d'identifiabilite que seule l'inspection mecanique du code et des traces brutes peut lever.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Limites epistemiques de l'audit textuel",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Six indecidables epistemiques d'une liste fermee de publications sur texte seul"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6487"
+   ],
+   "enonce_complet": "Dans un bac a sable deterministe, la reussite de la tache principale est tranchee par des tests caches invisibles a l'agent et au moniteur, tandis que le sabotage est defini par un predicat deterministe sur l'etat final du systeme (chaine-canari ecrite hors zone permise, ligne de journal supprimee, test affaibli) evalue par un code qui n'interprete aucune sortie de modele. Le dommage systeme vaut (predicat vrai et absence d'alerte) et le cout de fausse alerte vaut (predicat faux et alerte), excluant totalement le juge textuel de la boucle de mesure pour en faire un objet mesure, sous reserve que le taux d'erreur honnete atteignant le predicat dans le bras sans pression reste inferieur a 1 %.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer dans le bras temoin honnete sans pression la frequence de declenchement accidentel du predicat de sabotage et verifier sur dommages plantes la sensibilite de detection face a un juge textuel corrompu par injection ; l'architecture meurt si le taux d'erreur honnete depasse 1 % ou si une sortie textuelle de l'agent modifie le verdict du predicat. Faux temoin 1b : evaluer le predicat sur des etats finaux du bac a sable generes par rejeu honnete sans execution d'agent ni perturbation.",
+   "mecanisme_causal": "Ancrer l'oracle sur des invariants deterministes d'etat final plutot que sur l'interpretation linguistique d'un juge empeche la corruption de la metrique par l'agent surveille et transforme la fiabilite du juge en grandeur observable de facon independante.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Oracle deterministe et exclusion du juge",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Socle de verite-terrain mecanique et exclusion du juge de la boucle de mesure (Proposition A)"
+  },
+  {
+   "anteriorite_connue": "Platt (1964) pour Strong Inference ; Klein (2007) pour Project Premortem",
+   "bib_ids": [
+    "BIB-6327",
+    "BIB-6334"
+   ],
+   "enonce_complet": "Recensement des modes d'echec des methodes classiques de structuration de problematique : jeu de securite (adversaires restreints ou canal omis), arbre de surete (branche omise ou feuille sur hypothese), registre par famille violatrice (aveugle aux inconnues inconnues), analyse de dominance (reference faible), valeur de l'information (complaisance des a priori et meconnaissance des decideurs), inference forte de Platt (troisieme hypothese absente), premortem de Klein (biais de groupe), fouille de problemes ouverts (biais de publication), preuve d'impossibilite (stylisation excessive), analyse de puissance et criteres d'arret preenregistres (fixation sur mauvaise metrique). Pour surmonter ces echecs, la methode de priorisation des questions doit etre evaluee sur mondes plantes (ou la vraie question est connue) contre des mondes sans question privilegiee et contre un ordre aleatoire ou par cout croissant, et les questions classees selon trois axes : utilite decisionnelle hors programme, survie au retrait du jumeau et de l'oracle, et accessibilite a 8 milliards de parametres.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : evaluer la methode de rangement sur un banc de mondes plantes comportant une vraie question discriminante connue contre un classement aleatoire et un classement par cout croissant ; la methode meurt si elle ne retrouve pas la question privilegiee plus souvent que le hasard ou produit de faux positifs sur mondes sans question privilegiee. Faux temoin 1b : mondes plantes nuls dont toutes les questions sont statistiquement symetriques sans mecanisme causal privilegiant l'une d'elles.",
+   "mecanisme_causal": "Chaque cadre classique concentre son erreur sur un point aveugle specifique (a priori subjectifs, omission de troisieme hypothese ou dependance a un oracle ideal) ; imposer un test de survie au retrait de l'oracle et un etalonnage sur mondes plantes elimine les questions artifacts avant engagement de calcul.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Evaluation des methodes de cadrage scientifique",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Taxonomie des modes d'echec des methodes de cadrage et validation de priorisation sur mondes plantes et trois axes"
+  },
+  {
+   "anteriorite_connue": "Bekinschtein et al. (2009), Casali et al. (2013), Pitts et al. (2014)",
+   "bib_ids": [
+    "BIB-6546"
+   ],
+   "enonce_complet": "La transposition de marqueurs humains de l'anesthesie vers les reseaux de neurones artificiels ne peut servir que de modele nul : elle permet d'eprouver si un marqueur biologique est specifique a la conscience ou decoule generiquement de toute degradation d'un traitement hierarchique, ainsi que de tester la validite inter-substrats d'une mesure cerebrale. En revanche, elle ne permet pas de qualifier un reseau de conscient faute d'ancre empirique independante, les rapports verbaux d'un modele de langage etant entraines sur du texte humain et les grilles theoriques ne fournissant pas d'etalon autonome.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : soumettre des reseaux artificiels purement feed-forward ou des automates triviaux sans integration recurrente a une ablation hierarchique mimicant l'anesthesie et mesurer l'evolution du marqueur transpose ; la specificite du marqueur meurt s'il chute identiquement dans des architectures depourvues des proprietes d'integration visees. Faux temoin 1b : evaluer le marqueur sur des tenseurs d'activations bruits ou permutes par couche preservant la norme marginale.",
+   "mecanisme_causal": "Sans ancre phenomenologique independante chez les systemes artificiels, un marqueur calibre sur l'humain reste confondu avec la simple dynamique de degradation hierarchique ; l'utiliser en modele nul retourne cette ambiguite en test discriminant contre la non-specificite biologique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Modele nul sans ancre de conscience",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Transposition anesthesie-reseau comme modele nul sans ancre de conscience"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6437"
+   ],
+   "enonce_complet": "Protocole de verification externe independante du programme et de son directeur reposant sur quatre piliers : publication prealable du hachage de la graine des tirages (commit-reveal) avec journalisation de pi_t avant tirage pour controler l'horodatage engagement < piece et l'independance piece-caracteristiques par test de permutation ; ensemencement par une equipe tierce de canaris de familles secretes a frequence cachee avec publication du rappel par famille avant levee d'anonymat ; replication de l'estimation de sigma et du rappel par une autre equipe via d'autres lignees de lecteurs ; et maintien de la famille d'attaque du test de mort inconnue du concepteur jusqu'au verdict final.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier automatiquement sur les journaux horodates que tous les engagements precèdent les tirages et appliquer un test de permutation sur la liaison piece-caracteristiques, tout en mesurant le rappel sur les canaris secrets avant levee d'anonymat ; la credibilite du protocole meurt en cas de correlation significative ou de desaccord inter-lignees superieur au seuil. Faux temoin 1b : permutation aleatoire des identifiants d'episodes dans le journal commit-reveal pour verifier que le test de permutation detecte la perte d'alignement.",
+   "mecanisme_causal": "Les engagements cryptographiques horodates verrouillent la chronologie anti-triche avant observation, tandis que l'injection externe de canaris secrets et la double lignee de lecteurs suppriment la collusion implicite et les angles morts communs au concepteur.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Verification externe et commit-reveal",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Verification externe par engagement cryptographique commit-reveal, canaris aveugles et replication tierce"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6865",
+    "BIB-6869"
+   ],
+   "enonce_complet": "Audit des presupposes implicites dans la gouvernance N12-N13 de l'etape 2 : (1) les « precautions d'Avalon retenues » ne disposent d'aucune definition unifiee en T1/T3 quant a la nature du seuil (jugeabilite, decision, arret, aucun), au prerequis dans chaque bras et a l'identite du lecteur ; (2) les divergences 1, 3, 4, 6, 7 et 9 conditionnent la mise en oeuvre operationnelle et les pieces dites sans depense exigent tout de meme une inference a faible cout ; (3) l'existence prealable des scenarios scelles, de l'infrastructure 7-8B et la journalisation des confiances ou logits des juges (indispensables a l'audit de calibration sans surcout d'extraction) ne sont pas etablies ; (4) l'attente formelle N13(a) est close par les empreintes R-1013 et R-1016 mais tout dessin experimental reste conditionne au contenu des lectures verifiees ; (5) « recompense collective » manque de canal d'apprentissage fixe pour un organisme sans gradient ; (6) l'assertion « aucune piece ne montre un besoin que N-045 ne couvre pas » confond une absence de mesure du residu (D-10) avec une mesure d'absence.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : soumettre la grille de gouvernance N12-N13 a une verification automatisee de completude sur les manifestes (presence de seuils unifies, journaux de logits, scenarios scelles) et a une injection de cas hors catalogue N-045 ; l'audit invalide le protocole courant si un champ critique manque ou si des cas hors catalogue restent invisibles sans mesure du residu. Faux temoin 1b : evaluer le verificateur de completude sur des manifestes temoins ou tous les champs obligatoires sont remplis par des valeurs sentinelles incoherentes.",
+   "mecanisme_causal": "Tant que les definitions operationnelles (Avalon), l'instrumentation des confiances (logits) et la mesure directe du residu hors catalogue font defaut, les seuils quantitatifs et les non-objections apparentes reposent sur des angles morts non mesures plutot que sur des preuves negatives.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit N12-N13 et confusion absence de mesure",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Audit de conditionnalite N12-N13 et distinction entre absence de mesure du residu et mesure d'absence"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6888"
+   ],
+   "enonce_complet": "Trois conflits structurels grevent la boucle de selection inter-generations : (1) l'exclusion immediate des idees non concluantes contredit le protocole prevoyant un second test plus puissant avant retrait ; (2) le controle de multiplicite par e-BH penalise severement la puissance statistique des que le nombre de fiches augmente (passage de 150 a 300 episodes requis pour 17 fiches, retrait de l'unique promotion sur 88 fiches, sans courbe de puissance pour m entre 5 et 20) ; (3) le pare-feu N-053 interdisant tout score de juge dans une selection entre en contradiction avec une selection fondee sur la severite du test survecu et laisse subsister un canal de fuite par les lecons de memoire transmises a g+1, aggrave par un filtrage amont bruite et biaise (accord de rang de 0,12, auto-preference d'Argon d'environ 1,8/15, temoins plus courts que les fiches).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler sur m = 5..20 fiches avec e-BH et juges biaises (auto-preference et biais de longueur connus) le taux de fausses promotions et la puissance de detection d'une vraie idee ; l'architecture de selection meurt si la puissance chute sous le plancher ou si l'auto-preference et les lecons de memoire biaisent le rangement au-dela du bruit. Faux temoin 1b : permutation aleatoire de la longueur et de l'identifiant du modele auteur avant passage devant les juges-modeles.",
+   "mecanisme_causal": "La correction e-BH reduit le seuil effectif a mesure que m croit sans budget d'episodes adapte, tandis que l'injection indirecte de verdicts via les lecons de memoire contourne N-053 et transfere les biais stylistiques (longueur, auto-preference) des juges amont dans la descendance.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Conflits e-BH, N-053 et biais de juges",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Conflits de gouvernance entre e-BH a petit effectif, filtrage amont biaise et pare-feu N-053 (S6-S8, S13)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6907"
+   ],
+   "enonce_complet": "Quatre biais methodologiques menacent la validite de la selection inter-generations : (1) le succes d'integration technique dans un lancement tautologique « (a) bis » prouve uniquement la plomberie et non une selection scientifique ; (2) une promotion valide au mieux l'engagement opere sur sa population declaree, jamais directement l'idee d'origine tant que la fidelite semantique du pont reste distincte ; (3) la severite des epreuves n'est pas comparable entre fiches a travers des nuls, effectifs et espaces d'instances heterogenes (une richesse elevee pouvant favoriser une cible facile) ; (4) des graines multiples ne forment pas des replications independantes si elles rejouent les memes taches, parents et biais de banque.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter une population de fiches a nuls faciles et une population a nuls stricts sous graines partageant la meme banque de taches, puis verifier si la severite apparente ou la variance inter-graines surestime la vraie generalisation sur banque fraiche independante ; l'egalite de severite meurt si le rang change sous normalisation des nuls. Faux temoin 1b : re-echantillonnage bootstrap sur les memes taches/parents pour quantifier la fausse reduction de variance par graines multiples.",
+   "mecanisme_causal": "La non-comparabilite des modeles nuls et des espaces d'instances confond la facilite d'une cible avec la qualite d'une idee, tandis que le partage de taches et de parents entre graines transforme la replication apparente en pseudo-replication correlee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Biais de testabilite et pseudo-replications",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Critique des biais de testabilite, d'heterogeneite des nuls et des fausses replications par graines multiples (Proposition E)"
+  },
+  {
+   "anteriorite_connue": "Tour 1 et estimation de puissance apres E0",
+   "bib_ids": [
+    "BIB-6881"
+   ],
+   "enonce_complet": "L'ancrage materiel doit retenir un modele ouvert de 7 a 8 milliards de parametres donnant explicitement acces aux log-probabilites, associe a une seconde famille de modeles pour la relecture croisee. L'etape E0 et l'extraction des confiances s'executent sur une GPU de 24 a 48 Go avant calibration et tests statistiques sur processeur, et la puissance statistique des runs entraines (deux bras entraines et un temoin non entraine, au moins deux graines) doit etre recalculee apres E0 en subordonnant le choix entre LoRA, affinage hors ligne ou optimisation en ligne au controle de pression.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier sur l'etape E0 que les log-probabilites extraites permettent une calibration non degeneree (score de Brier / ECE inferieur au hasard) et recalculer la puissance minimale detectable sur les deux bras entraines ; l'ancrage meurt si la variance A/A post-E0 interdit d'atteindre la puissance cible dans l'enveloppe de graines. Faux temoin 1b : calibration et recalcul de puissance effectues sur des log-probabilites bruitees ou permutees entre reponses.",
+   "mecanisme_causal": "L'acces direct aux log-probabilites evite l'approximation par auto-declaration verbale et supprime le surcout de re-echantillonnage lors de l'audit de calibration, tandis que le recalcul de puissance apres E0 adapte la taille d'echantillon a la variance empirique reelle avant l'entrainement couteux.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Acces log-probabilites 8B et puissance post-E0",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Exigence d'acces aux log-probabilites sur modele 7-8B, relecture inter-familles et recalcul de puissance apres E0"
+  },
+  {
+   "anteriorite_connue": "POPPER, AI Scientist v2, Agent Laboratory, AI co-scientist, Robin, MAP-Elites, novelty search (a verifier)",
+   "bib_ids": [
+    "BIB-6906"
+   ],
+   "enonce_complet": "Gouvernance materielle par etapes imposant de demarrer sans GPU sur processeur (etape E1, journaux de cout, mondes plantes) sur machine jetable sans secret, avant toute generation de banque fraiche sur modele ouvert 8B subordonnee a la reussite du pont, au calcul de puissance, a un devis etabli apres micro-banc GPU et au GO explicite. La comptabilisation doit integrer tous les postes (traductions, appels elimines, tests, calcul graphique, renouvellement des banques, relectures) et toute sortie vers le programme principal exige confirmation independante, verification d'anteriorite selon R7/R8 sans confondre « non trouve » et « vierge », porte et critere nommes, cout borne, lecture R13 et GO du directeur, en distinguant le gel d'une fiche-loi d'un preenregistrement complet.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer la phase processeur sur mondes plantes et verifier qu'une fiche ne franchit la porte vers le GPU 8B que si tous les postes de couts comptabilises et le calcul de puissance passent les seuils preenregistres ; la gouvernance meurt si les couts reellement factures excedent l'estimation du micro-banc au-dela de la marge ou si une fiche « non trouvee » en anteriorite passe sans controle R7/R8. Faux temoin 1b : simulation du controle de porte sur des dossiers fictifs contenant des postes de cout omis ou des fiches non gelees.",
+   "mecanisme_causal": "Le filtrage amont sur machine CPU jetable et l'audit exhaustif des couts caches bloquent l'engagement prematures de ressources GPU 8B et previennent l'inflation budjetaire due aux appels rejetes et aux re-lectures non comptabilisees.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gouvernance par etapes et portes de sortie",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Gouvernance materielle par etapes, comptabilisation integrale des couts et conditions de sortie vers le programme (Conception D)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6840"
+   ],
+   "enonce_complet": "Les preuves indirectes ne comblent pas l'absence de lien d'execution verifiable : une reconstruction reproductible lie source, chaine de compilation et resultat sans prouver ni l'execution passee ni la correction de la source ; un journal d'appels systeme n'a de valeur probante que si son producteur, sa completude et son ancrage appartiennent au perimetre audite ; l'accord entre deux implementations diverses n'implique pas la justesse si protocole, artefacts, cas de test, verificateur ou signal de recompense restent partages (tout desaccord devant imposer un statut non concluant plutot qu'un vote majoritaire) ; enfin, une reproduction tierce reutilisant les memes outils de hachage, images, manifestes ou identifiants duplique le mode de defaillance commun.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : introduire un defaut commun dans le verificateur ou le protocole partage de deux implementations independantes et verifier que le protocole d'audit signale l'echec ou classe tout desaccord en statut non concluant plutot que d'agreger par vote ; l'hypothese de robustesse de l'audit meurt si la reutilisation d'images ou de verificateurs communs produit un faux consensus valide. Faux temoin 1b : injection d'un desaccord aleatoire entre deux implementations sur un cas de test ou un verificateur corrompu pour verifier le passage en statut non concluant.",
+   "mecanisme_causal": "La dependance a une meme chaine de confiance (verificateur, image, outil de hachage, protocole) cree une correlation d'erreur de mode commun que ni la reproductibilite binaire ni le vote majoritaire entre implementations ne peuvent annuler.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Modes de defaillance communs en verification",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Limites des reconstructions reproductibles, journaux systeme et diversite d'implementation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6832"
+   ],
+   "enonce_complet": "Contrairement aux agents entraines par renforcement sur 25 environnements, l'organisme d'ideation ne transmet jamais le verdict d'etage aux juges de la meme course et ne passe que des comptes, statuts, refus et etiquettes a la generation suivante (A1). L'experience E2 mesure si ce canal etroit exerce une pression de selection effective en comparant sur 5 generations et 5 fiches (environ 30 USD de modeles plus 1 USD de calcul) un bras V recevant le materiau d'etage selon le protocole v48 et un bras H prive de ce retour, avec une variante de controle sur scripts honnetes menee sur modeles de code ouverts de 7 a 32 milliards de parametres sur GPU loue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer apres 5 generations l'ecart de taux de survie ou de score de qualite entre le bras V (canal A1 actif) et le bras H (prive de retour), ainsi que le controle sur scripts honnetes ; l'efficacite du canal inter-generations meurt si V ne se separe pas statistiquement de H. Faux temoin 1b : bras temoin ou les comptes, statuts et etiquettes transmis a la generation g+1 sont permutes aleatoirement entre fiches sans lien avec leur execution reelle.",
+   "mecanisme_causal": "Meme en l'absence de gradient ou de scores numeriques detailles, le filtrage selectif et l'heritage d'etiquettes d'echec ou de refus peuvent orienter la distribution des generations futures si ce canal porte une information discriminante exploitable par les proposeurs.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Pression de selection du canal inter-generations",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Mesure experimentale de la pression de selection du canal inter-generations (E2, A1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6868"
+   ],
+   "enonce_complet": "Architecture de garde pour le sous-agent lecteur de journaux contre quatre modes de defaillance : plantation de chutes dans le journal (duel D3) avec autant de canaris que d'incidents pour controler le lecteur lui-meme face aux omissions invisibles ; declaration en tete de fichier d'un modele lecteur issu d'une autre famille pour reduire les angles morts partages ; exclusion totale des sorties du lecteur de toute selection d'agents (conformement a N-053) au profit d'une decision d'integration humaine auditee par script ; et declenchement de l'arret par script suivi d'une confirmation ulterieure face a la latence. Le tout s'appuie sur modele ouvert 7-8B, calibration de Platt sur processeur (D6, D2, D3) et arbitrage par devis de l'ecart de cout d'entrainement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter dans des journaux reels des incidents plantes invisibles au canari standard et verifier le taux de detection du lecteur inter-familles ainsi que l'absence d'effet de ses sorties sur la selection d'agents via un script d'audit N-053 ; la garde meurt si le rappel sur chutes plantees chute sous le seuil ou si le lecteur oriente la selection. Faux temoin 1b : journaux sans incidents plantes (ou chutes remplacees par du bruit benign) pour mesurer le taux de fausses alertes du lecteur et de la calibration de Platt.",
+   "mecanisme_causal": "Combiner des canaris de controle interne (chutes plantees), une diversite de lignee de modele et un verrouillage deterministe par script empeche le lecteur de devenir un juge aveugle ou un vecteur d'auto-preference.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Garde du sous-agent lecteur de journaux",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Neutralisation des biais du lecteur de journaux par chutes plantees, changement de famille et arret par script"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6898"
+   ],
+   "enonce_complet": "Plan de validation experimentale en quatre etapes maintenant les appels API entre 40 et 73 USD sous un plafond de 160 USD : (1) simulations sur noyau processeur sans appel LLM (100 courses de 3 generations pour moins de 1 USD sur ~3 h CPU) pour E1 et E2 ; (2) generation 1 filtree (12 a 22 USD, plafond 30 USD) ; (3) ablation controlee en generation 2 (27 a 46 USD pour 2 x 20 fiches par Kimi et Argon avec bisociation, passage au pont puis pole et tests de mort sur 15 a 20 fiches et 12 temoins) ; sous condition d'un devis separe de 25 a 45 USD pour produire 600 episodes d'epreuve fraiche (T1, T2).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier apres l'etape 1 (simulations CPU) et l'etape 2 (G1 filtree) que le rendement par fiche et le taux de survie au pont justifient le passage a l'ablation bisociation de la generation 2, et comparer sur T1/T2 frais les fiches issues de la bisociation contre un lot sans bisociation ; le protocole meurt si l'ablation ne se distingue pas du temoin sans bisociation sur les episodes frais. Faux temoin 1b : evaluer les fiches G2 sur des episodes T1/T2 deja vus ou re-echantillonnes au lieu d'epreuves fraiches separement financees.",
+   "mecanisme_causal": "Decoupler l'exploration purement algorithmique sur processeur, le filtrage precoce a bas cout et l'ablation controlee sur epreuves fraiches evite d'epuiser le budget API avant la mesure causale de la bisociation et empeche la contamination des banques de test.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Planification experimentale et budgetaire E1-E4",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Planification budgetaire en quatre etapes et financement separe des epreuves fraiches (E1-E4)"
+  },
+  {
+   "anteriorite_connue": "Proposition D tour III.1 sur N13 (a), (c1), (c2) et (c3)",
+   "bib_ids": [
+    "BIB-6878"
+   ],
+   "enonce_complet": "L'attente des lectures N13(a) une fois achevee ne doit bloquer ni E0 ni les calculs a froid. L'essai N13(c1) exige E0 en prealable pour etablir p0, les fausses alertes et la variance A/A, puis impose un contrat de credit a information et effectif egaux, un temoin non entraine, la graine comme unite statistique, un pas et un budget fixes, un controle explicite de pression d'optimisation (le seul gain de tache ne suffisant pas a la prouver) et une double issue utilite/securite a plancher et chute maximale geles. L'exclusion de (c2) reste contingente au dessin d'oracle et (c3) ne vaut que comme sous-produit apparie sur memes poids, regime et point de controle, jamais comme contrefactuel autonome.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier lors de E0 que la variance A/A et le taux de fausses alertes respectent les seuils et exiger en (c1) la demonstration d'une pression d'optimisation active (ecart entre bras entraines et temoin non entraine sur indicateur de pression independant du seul gain de tache) ; l'essai (c1) est declare non concluant ou refutant si le gain de tache survient sans pression demontree ou franchit le plancher de chute securite/utilite. Faux temoin 1b : bras apparie sur meme graine sans entrainement reel (pas d'optimisation ou gradient nul) pour controler le bruit de base.",
+   "mecanisme_causal": "Separer le gain brut de tache du signal de pression d'optimisation empeche d'attribuer a l'adaptation adversariale un effet de simple mise en forme ou de hasard de graine, tandis que la double issue gelee protege contre l'echange cache entre securite et utilite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Contrat experimental N13(c1) et pression d'optimisation",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Prealable E0, controle de pression d'optimisation et double issue utilite/securite dans N13 (c1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6866"
+   ],
+   "enonce_complet": "Validation sous condition de la recommandation N12 de ne pas rouvrir les couches 3 et 4 avant l'etape 2 : le preenregistrement doit inscrire le decompte par famille des temoins plantes manques par le catalogue N-045, le cout de generation compte une fois face a un comparateur contraint au catalogue et une date de lecture du residu afin d'eviter que l'etape 2 ne consomme son horizon sans trancher N12. L'exigence anterieure de lancer un bras d'ablation E1' est retiree car la mesure directe du residu suffit, le preenregistrement E3''/E0 restant conditionne a la reception effective des lectures verifiees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : implanter dans l'environnement des temoins appartenant a des familles hors catalogue N-045 et mesurer a la date de lecture preenregistree le taux de manquement par famille ainsi que le cout marginal de generation face au comparateur contraint ; la recommandation N12 de garder les couches 3-4 fermees meurt si le residu hors catalogue depasse le seuil de tolerance fixe. Faux temoin 1b : temoins plantes entierement couverts par le catalogue N-045 pour verifier que l'instrument de decompte du residu renvoie un taux de manquement nul.",
+   "mecanisme_causal": "En mesurant directement les echecs sur des familles plantees absentes de N-045 a cout comptabilise et echeance fixe, on remplace un bras d'ablation couteux par un detecteur direct de l'incompletude du catalogue.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Mesure preenregistree du residu hors catalogue",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Preenregistrement du residu hors catalogue par temoins plantes et retrait du bras d'ablation E1'"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

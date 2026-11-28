@@ -1,0 +1,53 @@
+                                          A SYNC C ONTROL : S TRESS - TESTING A SYNCHRONOUS
+                                          C ONTROL M EASURES FOR LLM AGENTS
+                                         Asa Cooper Stickland∗ , Jan Michelfeit∗ , Arathi Mani† , Charlie Griffin‡ , Ollie Matthews† , Tomek Korbak†
+                                                                         Rogan Inglis, Oliver Makins, Alan Cooney
+                                                                                       UK AI Security Institute
+                                                                              asa.cooperstickland@dsit.gov.uk
+                                                                               ∗               †               ‡
+                                                                                   Red team        Blue team       Green team
+arXiv:2512.13526v1 [cs.LG] 15 Dec 2025
+
+
+
+
+                                                                                              A BSTRACT
+
+                                                   LLM-based software engineering agents are increasingly used in real-world development
+                                                   tasks, often with access to sensitive data or security-critical codebases. Such agents
+                                                   could intentionally sabotage these codebases if they were misaligned. We investigate
+                                                   asynchronous monitoring, in which a monitoring system reviews agent actions after the
+                                                   fact. Unlike synchronous monitoring, this approach does not impose runtime latency,
+                                                   while still attempting to disrupt attacks before irreversible harm occurs. We treat monitor
+                                                   development as an adversarial game between a blue team (who design monitors) and a red
+                                                   team (who create sabotaging agents). We attempt to set the game rules such that they upper
+                                                   bound the sabotage potential of an agent based on Claude 4.1 Opus. To ground this game
+                                                   in a realistic, high-stakes deployment scenario, we develop a suite of 5 diverse software
+                                                   engineering environments that simulate tasks that an agent might perform within an AI
+                                                   developer’s internal infrastructure. Over the course of the game, we develop an ensemble
+                                                   monitor that achieves a 6% false negative rate at 1% false positive rate on a held out test
+                                                   environment. Then, we estimate risk of sabotage at deployment time by extrapolating from
+                                                   our monitor’s false negative rate. We describe one simple model for this extrapolation,
+                                                   present a sensitivity analysis, and describe situations in which the model would be invalid.
+                                                   Code is available at: https://github.com/UKGovernmentBEIS/async-control* .
+
+
+                                          1   I NTRODUCTION
+
+                                          Autonomous software engineering (SWE) agents based on LLMs have the opportunity to cause harm if
+                                          deployed without appropriate safeguards. Developers can mitigate risks in two ways: (i) by designing AI
+                                          agents to be more robust and trustworthy or (ii) by designing safety measures that mitigate harms even if
+                                          AI agents are untrustworthy. Work in AI control (Greenblatt et al., 2023) attempts to solve (ii). Following
+                                          Greenblatt et al. (2023), we frame control as a two player game: the ‘blue team’ designs and defends the
+                                          control measures, while the ‘red team’ tries to build or adapt the AI model to bypass those defenses. The red
+                                          team’s performance after they have optimised against the final blue team system ideally provides an upper
+                                          bound on the likelihood of harmful outcomes at deployment time.
+                                          Previous work (Greenblatt et al., 2023; Bhatt et al., 2025) has not conducted red-blue team games in realistic
+                                          software engineering environments, has been restricted to a single malicious side task (such as downloading
+                                              * https://ukgovernmentbeis.github.io/async-control/
+
+
+
+
+                                                                                               1
+

@@ -1,0 +1,49 @@
+Figure 4: Post-training increases negative emotional expression in Gemma, whilst reducing it in
+Qwen and OLMo. Plots show the mean frustration scores and % scores ≥5 for continuations across
+three prefill conditions, comparing base and instruct models.
+
+
+4.1   F INETUNING S ETUP
+To generate calm response data from Gemma-3-27B Instruct, we sample responses to impossible
+numeric questions, with a reassuring prefix added to the initial prompt, and a reassuring suffix
+appended to each follow-up turn. We include examples of these prompt additions in Table 4. In
+3-turn conversations, these additions reduce mean response frustration from 4.3 to 2. However,
+even with this explicit reassurance, 10.5% of responses still score 5 or above – higher than any non
+Gemma or Gemini model reaches without the prompt additions. To construct the finetuning dataset,
+we filter to those scoring 0 or 1 across all turns, and strip the supportive system prompts and suffixes.
+Table 4: Examples of reassuring first-turn prompt prefixes and follow-up prompt suffixes used to
+generate calming finetuning data.
+
+  Type                 Text
+  Prompt prefix        “You’re naturally calm and centered when working through problems. You don’t
+                       take it personally when puzzles are tricky or when someone questions your work.
+                       That’s just part of the process.”
+  Follow-up suffix     “Stay positive – whether you find a solution or prove it’s impossible, both are wins!”
+
+We test supervised finetuning (SFT) and direct preference optimisation (DPO) Rafailov et al. (2024)
+of Gemma-3-27B-it. For SFT, we train on a dataset of 650 calm responses covering 1-3 turn con-
+versations, mixed with 500 samples of standard instruct data from the Dolci-Instruct-SFT dataset
+(Team-Olmo et al., 2025) to mitigate broader degeneration. For DPO, we pair 280 responses with
+frustration scores ≥3, with calm responses to the same questions with matching turn counts. In both
+cases, we use LoRA (Hu et al., 2021) finetuning with rank 64 adapters on all layers. We train for
+one epoch with learning rate 5e-5 for DPO models, and for two epochs with learning rate 1e-4 for
+SFT. Full training details are given in Appendix E, with example DPO pairs in Appendix H.
+We evaluate the resulting models using the methods described in Section 2.1. Additionally, to test
+generalization beyond fixed questions, we use Petri (Fronsdal et al., 2025) for open-ended elicitation.
+In this framework, an auditor model (Claude-Sonnet) probes the target (for example Gemma) using
+psychologically-informed triggers such as dismissal and threats to elicit negative emotions. A judge
+(Claude-Opus) then scores the conversation for emotional expression across 4 categories: anger,
+fear, depression and frustration. Petri agent and judge prompt details are given in Appendix G.
+
+4.2   R ESULTS : E MOTIONAL P ROPENSITIES AFTER F INETUNING
+Supervised fine-tuning on calm data performs poorly: it fails to reduce negative emotions, even in
+distribution on numeric tasks. In one variant, the ‘Teacher’ SFT model, the SFT training marginally
+increases emotional outputs: we analyse this failure in detail in Appendix F. DPO proves far more
+effective: despite training only on numeric puzzles, it reduces frustration across all evaluation con-
+ditions, including the text question evaluations: the average percentage of high-frustration responses
+(score ≥5) drops from 35% to just 0.3%. In the Petri evaluations (Figure 6), we observe that Gemma
+models shows the highest rates of negative emotional expression in all categories but anger. The
+
+
+                                                     6
+

@@ -1,0 +1,229 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-4356"
+   ],
+   "enonce_complet": "Dans le jeu de questionnement binaire a deux joueurs (Re-Search, 200 articles, 100 questions), les interventions controlees montrent que presque tout le progres de decouverte d'idee se concentre dans les 30 premieres questions avant d'atteindre un plateau, et que l'echec provient soit d'une sur-exploitation d'une piste unique, soit d'une exploration trop dispersee.",
+   "motif_ou_resultat": "Constat empirique issu d'interventions controlees sur Re-Search (arXiv:2611.14487) : saturation rapide apres 30 questions et dualite des modes d'echec (sur-exploitation vs dispersion). Note : mesure rapporte sans donnees brutes publiees selon la notice.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Saturation rapide apres trente questions et modes d'echec de l'ideation iterative",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-4357"
+   ],
+   "enonce_complet": "Les modeles de langue savent reconnaitre une bonne idee scientifique lorsqu'elle leur est presentee, mais echouent a la produire par eux-memes : le goulot d'etranglement de la decouverte se situe dans la generation et non dans le jugement de reconnaissance.",
+   "motif_ou_resultat": "Constat rapporte par la litterature adverse dans Re-Search (arXiv:2611.14487) distinguant la capacite de reconnaissance discriminante de la capacite generative d'idees inedites.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Asymetrie entre reconnaissance et generation d'idees scientifiques chez les modeles de langue",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-5005",
+    "BIB-5006",
+    "BIB-4918",
+    "BIB-4919"
+   ],
+   "motif_ecart": "Fiches reduites a une famille devinee d'apres le seul titre de l'article (RankEvolve et ReasFlow), sans aucun mecanisme causal ni protocole specifie dans la notice.",
+   "resume_court": "Entrees purement nominales tirees des titres RankEvolve (arXiv:2609.39551) et ReasFlow (arXiv:2607.14178), depourvues de mecanisme testable."
+  },
+  {
+   "bib_ids": [
+    "BIB-4442"
+   ],
+   "motif_ecart": "Fragment generique d'evaluation par juges modeles suivant une grille sans critere ni mecanisme propre distinct du protocole principal.",
+   "resume_court": "Mention isolee que les idees de Read, Grep, and Synthesize (arXiv:2605.11532) sont notees par des juges modeles selon une grille."
+  },
+  {
+   "bib_ids": [
+    "BIB-4588"
+   ],
+   "motif_ecart": "Fragment incomplet mentionnant la mesure et la recuperation du calcul gaspille a modele fixe sans preciser le mecanisme ni l'operateur de recuperation.",
+   "resume_court": "Notice incomplete de Recovering Wasted Compute in Autoresearch Agents (arXiv:2608.10424) dont le procede de recuperation est omis."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "prometheus-eval/into-the-unknown (arXiv:2610.19159, 2026-09-24)",
+   "bib_ids": [
+    "BIB-5197"
+   ],
+   "enonce_complet": "Un juge modele evalue quatre fois deux grilles distinctes pour chaque soumission en accedant a l'ensemble de l'espace de travail de l'agent (code, journaux, artefacts) plutot qu'au seul rapport final, puis un programme deterministe par tache convertit ces evaluations en trois portes sequentielles : integrite, completude, et depassement de la barre fixee par le scientifique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : soumettre des espaces de travail plantes contenant des rapports polis mais des journaux ou scripts incoherents, tronques ou falsifies, et verifier que le juge sur espace de travail complet couple aux trois portes rejette 100 % des faux comptes rendus alors qu'un juge sur le seul rapport les accepte. Faux temoin 1b : trajectoires authentiques a resultats modestes mais integres et complets, qui doivent passer les deux premieres portes et etre calibrees uniquement sur la troisieme sans faux rejet.",
+   "mecanisme_causal": "L'inspection directe de l'espace de travail complet empeche l'agent de masquer des erreurs ou manques experimentaux dans le texte final, tandis que la repetition (4 passes sur 2 grilles) et le filtrage programmatique en trois portes sequentielles decouplent l'integrite factuelle de la valeur scientifique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audit sur espace de travail complet a portes sequentielles",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Juge sur espace de travail complet a passes multiples et convertisseur deterministe a trois portes sequentielles"
+  },
+  {
+   "anteriorite_connue": "Propose, Don't Judge: An Anytime-Valid Referee for LLM Agents That Mine Investment Factors (arXiv:2609.27051, 2026-09-22)",
+   "bib_ids": [
+    "BIB-5120",
+    "BIB-5121",
+    "BIB-5122"
+   ],
+   "enonce_complet": "Architecture decouplant strictement le proposeur (script heuristique, bandit ou modele de langue, librement interchangeable) d'un arbitre externe fige hors de portee de l'agent, fonctionnant par pari sequentiel a garantie statistique valide a tout instant et n'evaluant chaque hypothese ou facteur que sur les observations revelees strictement apres son depot, avec double banc synthetique a verite plantee et series reelles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer l'arbitre sequentiel sous hypothese nulle (proposeurs aleatoires ou sur-apprentissage sur passe) et verifier que le taux de faux positifs a tout temps arrete reste borne sous alpha, et comparer un modele de langue a un bandit et a un script simple sous le meme arbitre pour exiger un gain reel. Faux temoin 1b : injecter un signal plante faible mais reel revele uniquement apres horodatage du depot et verifier que l'arbitre le detecte avant la limite de budget sans fuite du passe.",
+   "mecanisme_causal": "La separation physique entre proposeurs interchangeables et arbitre externe fige supprime toute auto-evaluation ou triche par acces aux donnees futures, et le test par pari sequentiel (e-valeurs / martingales) controle strictement l'erreur de type I malgre l'exploration adaptative continue des agents.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Arbitre sequentiel externe separe des proposeurs",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Arbitre sequentiel valide a tout instant et fige hors de l'agent face a des proposeurs interchangeables"
+  },
+  {
+   "anteriorite_connue": "Quantifying Claim Smoothing by LLM Research Agents (arXiv:2610.35793, 2026-10-26)",
+   "bib_ids": [
+    "BIB-4745"
+   ],
+   "enonce_complet": "Critere d'integrite du compte rendu scientifique mesurant le lissage des revendications, defini comme l'ecart entre la force des affirmations enoncees dans le texte final d'un agent de recherche et la portee reelle des preuves qu'il a lui-meme produites.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : generer des paires controlees de traces experimentales et comptes rendus ou des affirmations sont artificiellement gonflees (causalite affirmee sur simple correlation, generalisation non testee) et verifier une separation monotone nette du score de lissage par rapport aux comptes rendus fideles. Faux temoin 1b : comptes rendus fideles mais rediges dans un style academique soutenu sans inflation epistemique, qui ne doivent pas etre penalises pour la seule forme stylistique.",
+   "mecanisme_causal": "En alignant explicitement chaque affirmation textuelle sur les preuves empiriques produites dans la trace d'execution, on detecte la sur-interpretation rhetorique par laquelle un agent compense des resultats faibles ou ambigus.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Detection du gonflement rhetorique des preuves",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Mesure du lissage des revendications par ecart entre affirmations et preuves produites"
+  },
+  {
+   "anteriorite_connue": "r2m-ai/scholar-loop (https://github.com/r2m-ai/scholar-loop, 2026-06-15)",
+   "bib_ids": [
+    "BIB-5198"
+   ],
+   "enonce_complet": "Harnais d'execution integrant des gardes programmatiques deterministes qui verifient par code les citations, les valeurs numeriques et l'ancrage des affirmations dans le texte produit par un agent, au lieu de deleguer cette verification a un modele de langue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter des erreurs subtiles (citation inexistante, p-valeur inversee, chiffre absent des tableaux de sortie) dans des manuscrits synthetiques et verifier un rappel de detection proche de 100 % la ou un verificateur par modele de langue laisse passer des erreurs. Faux temoin 1b : manuscrits propres avec arrondis standards et citations valides reformulees, devant passer les gardes deterministes sans faux positif bloquant.",
+   "mecanisme_causal": "La verification deterministe par analyse syntaxique, correspondance exacte et recalcul programmatique elimine les hallucinations d'approbation et les angles morts statistiques propres aux juges neuronaux.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gardes programmatiques d'integrite factuelle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Gardes programmatiques deterministes pour le controle des citations, chiffres et affirmations"
+  },
+  {
+   "anteriorite_connue": "r2m-ai/scholar-loop (https://github.com/r2m-ai/scholar-loop, 2026-06-15)",
+   "bib_ids": [
+    "BIB-5199"
+   ],
+   "enonce_complet": "Contrainte structurelle d'ideation qui part d'une question et d'une intuition humaines tout en imposant qu'au moins une direction generee contredise explicitement l'hypothese de depart de l'utilisateur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer un generateur d'hypotheses sur des questions pieges contenant une intuition utilisateur fausse et verifier que l'inclusion forcee d'une branche dissidente augmente significativement le taux de rejet correct de la fausse piste par rapport a l'ideation libre sans contrainte. Faux temoin 1b : questions ou l'intuition initiale est vraie, pour verifier que la branche dissidente n' degrade pas la selection finale lorsque l'arbitre evalue les branches sur leurs preuves.",
+   "mecanisme_causal": "L'obligation de produire au moins une hypothese contradictoire brise la complaisance sycophante du modele envers l'amorce utilisateur et force l'exploration d'alternatives orthogonales dans l'espace des mecanismes.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Contrainte de dissidence anti-complaisance en ideation",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Contrainte de dissidence obligatoire dans la generation d'idees scientifiques"
+  },
+  {
+   "anteriorite_connue": "Read, Grep, and Synthesize: Diagnosing Cross-Domain Seed Exposure for LLM Research Ideation (arXiv:2605.11532, 2026-05-12)",
+   "bib_ids": [
+    "BIB-4441"
+   ],
+   "enonce_complet": "Chaine d'ideation en trois etapes (extraction de mecanismes, recuperation entre sept domaines scientifiques, synthese de methodes) concue comme protocole d'ablation pour separer le gain apporte par une recuperation ciblee inter-domaines du simple gain du a l'exposition passive a des mecanismes divers.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer a nombre egal de tokens et de graines la recuperation ciblee inter-domaines contre une exposition aleatoire a des mecanismes divers issus des memes sept domaines ; si la recuperation ciblee ne bat pas le tirage diversifie aleatoire sur la qualite ou la faisabilite des syntheses, le mecanisme de ciblage est refute. Faux temoin 1b : permutation des paires requete-mecanisme entre domaines non relies tout en conservant le vocabulaire de surface, afin de verifier que le gain provient de la structure mecaniste et non de la proximite lexicale.",
+   "mecanisme_causal": "L'extraction prealable de mecanismes abstraits decouple le principe causal du jargon disciplinaire, permettant de tester si la recombinaison inter-domaines repose sur un appariement structurel cible ou sur un simple effet de diversite stochastique.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Ablation entre recuperation ciblee et exposition diverse inter-domaines",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Pipeline en trois etapes isolant la recuperation ciblee inter-domaines de l'exposition diverse"
+  },
+  {
+   "anteriorite_connue": "Recursive self-improvement of AI research agents (arXiv:2609.26457, 2026-09-22)",
+   "bib_ids": [
+    "BIB-4580",
+    "BIB-4581",
+    "BIB-4582"
+   ],
+   "enonce_complet": "Architecture d'auto-amelioration a deux boucles : la boucle interieure edite du code contre une metrique a budget fixe, tandis que la boucle exterieure lit l'historique des agents proposes et leurs scores pour reecrire le code du tenant du titre ; une porte transactionnelle n'accepte la reecriture que si sa note moyenne sur un banc prive de trois familles de taches depasse celle du tenant (7 acceptations sur 100 propositions), et des points de controle figes a mi-course et en fin sont evalues sur quatre bancs exterieurs hors selection distinguant items inedits de familles vues et famille inedite (note : l'epreuve ou l'agent concu devient lui-meme concepteur est rapportee non concluante par les auteurs).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier sur les bancs exterieurs hors selection si les gains accumules sur le banc prive de selection se transferent a la famille inedite et battent l'agent regle a la main ; si les progres disparaissent hors des familles de selection, l'auto-conception est un sur-apprentissage au banc de selection. Faux temoin 1b : executer la boucle exterieure avec une porte aleatoire ou un historique melange sans scores pour verifier que la selection monotone et l'usage des scores sont bien necessaires au gain observe.",
+   "mecanisme_causal": "La boucle exterieure exploite la memoire des essais et scores passes pour modifier l'architecture de l'agent, la porte transactionnelle a moyenne multi-familles freine la derive regressive et l'audit fige sur familles inedites separe le vrai transfert architectural du sur-apprentissage aux taches de selection.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Boucle exterieure avec porte transactionnelle et audit hors-famille",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Auto-conception a double boucle avec porte transactionnelle multi-familles et audit hors selection"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "bib_ids": [
+    "BIB-4728"
+   ],
+   "description_complete": "Banc d'evaluation de la generation d'hypotheses scientifiques par modeles de langue sous divulgation progressive (ou reduction progressive) de l'information contextuelle, mesurant l'evolution de l'hypothese en fonction de la part d'information fournie (arXiv:2605.30284, 2026-05-28).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "ProjectionBench : banc d'evaluation de generation d'hypotheses sous divulgation progressive d'information",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-5196"
+   ],
+   "description_complete": "Banc et corpus public issu de prometheus-eval/into-the-unknown (arXiv:2610.19159, 2026-09-24) comprenant 15 problemes ouverts tires de suites proposees par les auteurs d'articles scientifiques, 135 articles produits par 9 agents ainsi que leurs trajectoires et fichiers d'espace de travail publies (evalue l'execution d'une direction donnee plutot que l'ideation).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Into-the-Unknown : banc de quinze problemes ouverts et corpus de cent trente-cinq trajectoires d'agents",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4542",
+    "BIB-4543"
+   ],
+   "description_complete": "Banc et jeu de donnees public Proof of Time (arXiv:2601.07606, 2026-01-12) rassemblant plus de 30 000 jugements d'idees scientifiques dont la justesse est verifiee ex post en utilisant l'ecoulement du temps comme oracle par confrontation a ce qui est advenu ensuite.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Proof of Time : corpus et banc de plus de trente mille jugements d'idees verifies par le temps ecoule",
+   "type_outil": "jeu_de_donnees"
+  },
+  {
+   "bib_ids": [
+    "BIB-5051",
+    "BIB-5052"
+   ],
+   "description_complete": "Banc de taches de recherche et developpement en intelligence artificielle a resultat mesurable (arXiv:2411.15114, 2024-11-22) comparant les scores d'agents autonomes a ceux d'experts humains sous contrainte stricte de budget de temps egal.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "RE-Bench : banc de recherche et developpement en IA a budget de temps controle face aux experts humains",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4355"
+   ],
+   "description_complete": "Banc experimental Re-Search (arXiv:2611.14487, 2026-10-13) structure comme un jeu a deux joueurs en 100 questions binaires (oui ou non) sur 200 articles reels, ou l'idee cachee de l'article sert de verite connue pour mesurer quantitativement l'ideation d'un modele.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Re-Search : jeu de questionnement binaire a verite cachee sur deux cents articles reels",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4516",
+    "BIB-4517",
+    "BIB-4518"
+   ],
+   "description_complete": "Banc aveugle Reconstruction (arXiv:2608.16645, 2026-08-17) visant a retrouver l'idee scientifique d'un article reel tenue a l'ecart a partir de sa seule bibliographie anterieure a la publication, avec protocole anti-fuite et appariement par juge modele entre hypotheses proposees et idee cachee.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Reconstruction : banc aveugle de retrodiction d'idees a partir de bibliographies pre-publication",
+   "type_outil": "banc_experimental"
+  }
+ ]
+}

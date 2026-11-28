@@ -1,0 +1,27 @@
+F
+=================================== FAILURES ===================================
+________ test_niveaux_des_intervalles_de_l_aire_du_cout_et_de_T2_propre ________
+
+    def test_niveaux_des_intervalles_de_l_aire_du_cout_et_de_T2_propre():
+        """Table fermée des niveaux : A2 (a) et `T2_propre` à 95 % ; l'intervalle rendu est celui du code gelé à 95 % (celui
+        à 80 % diffère, le test les distingue)."""
+        rng = np.random.default_rng(5)
+        y, t = (rng.random(300) < 0.5).astype(np.int64), np.repeat(np.arange(30), 10)
+        cout, pre = rng.normal(size=300) + 0.5 * y, rng.normal(size=300)
+        a = cp.aire_du_cout(cout, y, t, 77)
+        ref, ref80 = (intervalle_blocs(cout, y, t, cp.TIRAGES_AIRE, 77, n) for n in (0.95, 0.80))
+        assert (a["bas"], a["haut"], a["niveau"]) == (ref["bas"], ref["haut"], 0.95) and ref80["bas"] != ref["bas"]
+        b = cp.t2_propre(cout, pre, y, t, 78)
+        ref, ref80 = (difference_aires_appariee(cout, pre, y, t, cp.TIRAGES_AIRE, 78, n) for n in (0.95, 0.80))
+>       assert (b["bas"], b["haut"], b["niveau"]) == (ref["bas"], ref["haut"], 0.95) and ref80["bas"] != ref["bas"]
+E       assert ((0.0347807731...9334604, 0.95) == (0.0086966101...4537375, 0.95)
+E         
+E         At index 0 diff: 0.03478077314296566 != 0.00869661012574191
+E         Use -v to get more diff)
+
+test_complements_p3_v1.py:1824: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_niveaux_des_intervalles_de_l_aire_du_cout_et_de_T2_propre
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 4.66s
+

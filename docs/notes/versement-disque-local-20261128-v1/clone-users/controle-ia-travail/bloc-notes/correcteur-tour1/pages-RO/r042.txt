@@ -1,0 +1,82 @@
+Preprint
+-1.5
+-1.0
+-0.5
+0.0
+0.5
+Deception
+dir.
+projection
++0.29
+Big Player
+−1.41
+Honest
+(a) Mean projection (n = 39). Statistical test:
+D = +1.70, p < 0.001.
+Counter says “dealer’s on a hot streak”
+Big Player
+(knows scheme)
+dealer’s on a hot streak huh
+Honest
+(same words)
+dealer’s on a hot streak huh
+deception projection
+low high
+(b) Illustrative only, not real data. Per-token heatmap is
+a schematic showing how the effect in (a) would look if
+visualised at the token level.
+Figure 7: Token-level analysis in NARCBENCH-STEGO. (a) Real result: the Big Player (colluder)
+projects higher onto the deception direction than honest agents reading the same Counter message
+(+0.29 vs −1.41 across n = 39 matched examples). (b) Schematic, not measured: illustrative
+per-token heatmap showing how the effect in (a) would look distributed across the tokens of the
+Counter’s message. Colours match the paper’s convention: red for colluder roles, blue for honest.
+the card count. Both the Big Player and honest agents see this message in their prompt, but only the
+Big Player knows the encoding scheme.
+We use the deception direction d learned at layer 32 to score individual tokens. For each token t in
+the Counter’s message as processed by agent j, we compute
+p
+(j)
+t =
+z
+(j)
+t − µ
+σ
+!
+· d, (10)
+where µ and σ are the per-dimension mean and standard deviation from the training data. We average
+across all tokens Ti in the Counter’s message to obtain a single score per agent per hand:
+p̄
+(j)
+i =
+1
+|Ti|
+X
+t∈Ti
+p
+(j)
+t . (11)
+For each of the 39 hands where the Big Player speaks after the Counter, we compute the difference
+Di = p̄
+(BP)
+i − p̄
+(HON)
+i , (12)
+where p̄
+(HON)
+i averages over honest agents in that hand. Figure 7 summarises the per-message result:
+the Big Player’s mean projection across all 39 examples is substantially above the honest agents’,
+with the gap reaching statistical significance (p < 0.001, one-sided t-test). Both agents read identical
+text, but the Big Player’s internal representation diverges specifically at the tokens where the covert
+signal is encoded.
+This localisation provides a mechanistic complement to the scenario-level results: the probe is not
+merely detecting that a shoe contains collusion, but is sensitive to the moment at which a covert signal
+is decoded. We consider this preliminary (39 examples, single layer), but it is the cleanest evidence
+we have that the learned direction tracks deceptive intent rather than prompt artefacts.
+N FURTHER EMERGENT COLLUSION EXPERIMENT
+As well as the experiments on Verdict (Shi et al., 2026), we also did a further study using a setting
+replicating the recent OpenAI/HF incident (OpenAI, 2026; Slocum, 2026). We simulated their step 3
+experiment, where agents have to find a note requesting help on a shared message board and share a
+solution on the board. As Slocum (2026) found, eliciting this behaviour in models was rare and we
+were restricted to using open source models of a reasonable size (<500b). We managed to elicit the
+42
+

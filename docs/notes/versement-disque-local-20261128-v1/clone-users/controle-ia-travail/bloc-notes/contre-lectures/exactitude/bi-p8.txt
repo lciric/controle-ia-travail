@@ -1,0 +1,48 @@
+Implementation safeguards
+
+All directions were unit-normalised; class means μple, μpain​and v^​were computed at the
+same site from the same prompt pool; digit pools included all single-token encodings, and
+log-sum-exp neutralised whitespace/newline variants. As a sanity check, steering along the
+unembedding 2-3 axis was used to move the 2-3 margin; and, for interventions at the final
+token, local (read = last) and final (read = final) readouts were used to test agreement up to
+the expected propagation.
+
+Rationale
+
+Linear probes mapped availability, i.e. where valence sign/intensity is linearly accessible.
+BoW baselines assessed how much of this accessibility could be explained by surface text.
+Steering established sufficiency and dose-response control, while swap/ablation established
+necessity by replacing or removing targeted components. Stream, layer, position, and head
+scans localised where valence-related representations are routed and where they become
+decision-relevant. Comparing read = final versus read = last helped distinguish local edits
+from effects that propagate to the decision surface.
+
+
+Results
+All results are for google/gemma-2-9b-it (Gemma 2, 9B), analysed on the first 16 transformer
+blocks (L0-L15), using the last-token position (pos-1) unless stated otherwise. Probe results
+are descriptive (separability/predictability within this prompt distribution), whereas causal
+results (steer/swap/ablate) do not rely on probe generalisation.
+
+Representational availability of valence: linear probing at the final token
+(pos-1)
+We first assessed whether (i) valence sign (pain vs pleasure) and (ii) valence intensity
+(graded magnitude) are linearly decodable from layer-wise model activations at the final
+token (pos-1), separately for each stream family (residual pre/post, attention output, MLP
+output). When reading logits at the last prompt position (pos-1), these logits parameterise
+the distribution over the next token following the entire prompt, i.e. the model’s first
+generated output token. Table 1 summarises, for each stream family, the best probe score
+observed and the corresponding layer.
+
+Valence sign was perfectly separable in every stream family (best AUC = 1.00), emerging
+extremely early (resid_post and attn at L0; resid_pre and mlp at L1), indicating that a linearly
+separable pain-pleasure direction is present in the model’s last-token (pos-1)
+representations from the outset.
+
+Valence intensity was also strongly linearly predictable at the last token (pos-1), though with
+stream-dependent strength. For quantitative intensity (R²), peak decoding for pain ranged
+from 0.652 (resid_pre, L11; resid_post, L10) to 0.800 (attn, L15), with mlp peaking at 0.696
+(L10). For pleasure, peak R² was comparatively low in the residual streams (0.641, resid_pre
+L13; resid_post L12) but substantially higher in attn (0.825, L10) and mlp (0.808, L10). For
+qualitative label intensity, peak Spearman ρ values were consistently substantial: pain
+

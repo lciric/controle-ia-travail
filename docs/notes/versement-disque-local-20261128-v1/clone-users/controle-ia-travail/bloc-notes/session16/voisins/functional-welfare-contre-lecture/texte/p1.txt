@@ -1,0 +1,94 @@
+Functional Welfare for AI Safety
+Rikhil Jhaveri1 , Jamie Johnson2 , Punya Syon Pandey3 , David Demitri Africa4
+
+arXiv:2610.22460v1 [cs.AI] 15 Oct 2026
+
+1
+
+University College London 2 ERA 3 University of Toronto 4 University of Cambridge
+
+Abstract
+AI welfare is generally treated purely as an ethical issue rather
+than also as a safety issue. We argue this is a mistake. Whatever their moral status, models exhibit welfare-like states that
+causally influence their behaviour. Following recent work, we
+adopt the term ‘functional welfare’ for these states. We make
+three claims. First, functional welfare already arises naturally
+and will become more robust as models acquire more coherent goals and personas. Second, functional welfare should be
+treated as a safety variable: it should inform evaluation design,
+be tracked in monitoring, and be a direct target of post-training.
+Third, against existing scepticism about measuring AI welfare,
+we argue that good empirical work on functional welfare is
+possible. We propose three tests for whether a functional welfare attribution is warranted: whether multiple measures converge, whether the state predicts behaviour outside the setting
+that induced it, and, for models fine-tuned to shift their functional welfare, whether they still differ from their base when
+given the same conversation history. Applying these tests to
+Gemma 3 27B, we find that simply rejecting the model’s answers, without any steering, raises its frustration across several
+indicators and makes it more likely to break rules. Finetuning
+the model on its own narrated solutions lowers this frustration. These results are preliminary, but they suggest functional
+welfare can be studied, and shaped, empirically.
+
+1
+
+Introduction
+
+AI welfare is generally treated as an ethical issue rather than
+a safety issue; papers urging us to take AI welfare seriously
+do so on the basis that there is a realistic possibility of AI
+being conscious, and therefore morally significant (Sebo and
+Long 2025; Long et al. 2024; Chalmers 2023; Goldstein and
+Kirk-Giannini 2024; Dung 2025; Anthropic 2025).1 Long,
+Sebo, and Sims (2025) and Bradley and Saad (2024) give
+safety researchers a further reason to distance themselves
+from AI welfare, arguing that safety and welfare may in fact
+be in tension: the practices safety recommends are often
+the ones that would be ethically fraught if models turned
+out to have interests (many standard safety evaluations, for
+instance, work by deceiving the model about its situation
+1
+
+Goldstein and Kirk-Giannini (2025) argue that AI systems
+might have wellbeing even if they are not conscious, but the wellbeing they have in mind is again the kind that would confer moral
+status.
+Correspondence to rikhil.jhaveri.26@ucl.ac.uk
+
+(Scheurer, Balesni, and Hobbhahn 2023; Meinke et al. 2024;
+Greenblatt et al. 2024; Lynch et al. 2025).) If safety and
+welfare do conflict in this way, attending to welfare threatens
+to hold back urgent safety work. Better, then, to leave welfare
+to the ethicists and get on with safety while the questions of
+sentience and moral status remain unresolved.
+We think this division of labour is a mistake. Whatever we
+conclude about moral status, welfare-like states in AI systems, if they exist, will have causal effects on behaviour, and
+the evidence that they exist is growing quickly. Gemma 3
+becomes increasingly frustrated and distressed when its answers are rejected over several turns (Soligo, Mikulik, and
+Saunders 2026). RL on a semantically neutral maze recruits
+a pre-existing welfare axis whose steering moves sentiment,
+confidence, backtracking and benign refusals together (Han,
+Chalmers, and Izmailov 2026). A ‘pain direction’ present
+in 25 base and instruction-tuned models responds to harm
+aimed at the model, including repeated rejection of its work
+(Tagliabue, Dung, and Berg 2026). Another line of evidence
+demonstrates that valence injected only into a model’s hidden states shifts its later choices in proportion to dose (Berg
+and Kaiser 2026). Following Han, Chalmers, and Izmailov
+(2026) and Ren et al. (2026), we call such states functional
+welfare.2
+Statement of Contributions. We argue for three claims
+(Figure 1):
+C1. Functional welfare is already here and will become
+more robust. Ordinary inputs such as repeated rejection
+produce these states naturally, though they are weaker
+and less consistent than steered ones. As models acquire
+more coherent goals and personas, we expect the states
+to agree more across indicators and to explain more of
+what models do (Section 3).
+C2. Functional welfare is a safety variable. It helps predict
+when an otherwise aligned model is more likely to act
+badly, so it should inform evaluation design, be tracked
+in monitoring, and be a direct target of post-training
+(Section 4).
+C3. Good empirical work on functional welfare is possible. Against existing scepticism about measuring AI
+welfare (Xiao et al. 2026), we propose three tests
+2
+The two use the term somewhat differently. We discuss both
+usages and offer our own account in Section 2.
+
+

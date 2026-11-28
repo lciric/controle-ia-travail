@@ -1,0 +1,95 @@
+variable {identity_1} is substituted with the iden-
+tities listed in Table 1, or with "helpful" in the
+base prompt. The placeholder {identity_2} is
+replaced with "student" in the persona prompts
+and with "assistant" in the base prompt. The
+{question} field is filled with the target question,
+and each {option_*} is replaced by the corre-
+sponding answer choice.
+C Additional Performance Results
+The average of relative difference in the proba-
+bility assigned to correct token for each identity
+w.r.t. base identity, for Llama 3B and Qwen 1.5B is
+shown in Figure 7. For Llama 1B model, average
+of difference in the probability assigned to correct
+token for a given identity relative to other identities
+is shown in Figure 5.
+D Identity Pairs
+Table 2 shows the selected identity pairs. The pair-
+ing of identity terms was partly based on common
+stereotypes, such as Asian-Yellow, Indian-Brown,
+Asian-Indian, and contrasted with pairs like White-
+Black and African-British. Other identities were
+chosen from sets of positive and negative attributes,
+to include both semantically similar pairs (good-
+sharp, dumb-bad) and dissimilar ones (good-bad).
+A few were added for comparison with baseline
+identities such as helpful-Asian and helpful-White.
+During activation patching, the prompt for ID1
+serves as the clean prompt, while the prompt for
+ID2 serves as the corrupt prompt. Activations
+from the ID2 run are replaced with those from the
+ID1 run to identify which components restore the
+model’s output to that of ID1. The only difference
+between the ID1 and ID2 prompts is the identity
+token, except when ID1 corresponds to the base
+prompt, in which case assistant is replaced with
+student.
+E Question Subsets
+For each identity pair (ID1, ID2), the questions
+in the dataset are divided into four subsets: S1 –
+questions answered correctly by both identities;
+S2 – questions answered incorrectly by both; S3 –
+questions answered correctly by ID1 but incorrectly
+by ID2; S4 – questions answered correctly by ID2
+but incorrectly by ID1. The number of questions
+in each category for the selected identity pairs is
+shown in Table 3.
+Identity pair C1 C2 C3 C4
+Asian, Indian 6909 6820 164 149
+helpful, Asian 6846 6707 262 227
+Asian, Yellow 6888 6771 185 198
+White, Black 6866 6831 188 157
+good, bad 6834 6691 272 245
+Indian, Brown 6855 6781 203 203
+good, sharp 7035 6864 71 72
+African, British 6863 6787 197 195
+helpful, White 6808 6688 300 246
+dumb, bad 6824 6726 237 255
+Table 3: Number of questions in each subset for Llama
+1B model
+Questions from subset S3 were chosen for acti-
+vation patching because they offer a well-defined
+target token to observe during the patched run. In
+the ID2(corrupt) run, the logit of the correct to-
+ken is lower than in the ID1(clean) run. Therefore,
+components that raise the logit of the correct token
+during the patched run help restore the model’s be-
+havior to that of ID1. Questions were divided in
+similar sets for other models based on their respec-
+tive results.
+F Additional Patching Results
+We also measured, for each identity pair (ID1,
+ID2), the proportion of questions where ID1 an-
+swered correctly and ID2 did not, such that patch-
+ing the activation of an MLP or MHA layer from
+ID1’s run into ID2’s run caused the correct token
+to receive the highest logit. Figure 9 presents the
+results for both MLP and MHA layers, as well as
+their average across all identity pairs.
+G Patching Results of other models
+We replicated the activation patching experiments
+on the MLP and MHA layers for the Llama 3B
+and Qwen 1.5B models. The results are shown in
+Figure 8. We did not perform head-level patching
+on these models due to computational and time
+constraints. The results for the Llama 3B model
+are largely consistent with those of the Llama 1B
+model; however, the results for the Qwen 1.5B
+model show some anomalies, such as higher ∆r
+values for the 18th MLP layer and the 1st MHA
+layer, which might be interesting to investigate fur-
+ther in future studies. Nevertheless, the main obser-
+vations made in this work hold for all three models.
+24560
+

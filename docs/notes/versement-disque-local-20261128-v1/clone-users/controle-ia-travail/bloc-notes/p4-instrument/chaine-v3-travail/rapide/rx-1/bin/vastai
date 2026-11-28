@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+S=${SCENARIO:?}
+case "$1 $2" in
+  "show instance") echo "show instance $3" >> "$S/outil.txt"; printf '{"id": 99999999, "label": "p4-v1", "actual_status": "exited", "cur_state": "stopped", "extra_env": [["GH_TOKEN", "factice-gh-rx-0001"]]}\n' ;;
+  *) echo "verbe $*" >> "$S/outil.txt"; exit 9 ;;
+esac

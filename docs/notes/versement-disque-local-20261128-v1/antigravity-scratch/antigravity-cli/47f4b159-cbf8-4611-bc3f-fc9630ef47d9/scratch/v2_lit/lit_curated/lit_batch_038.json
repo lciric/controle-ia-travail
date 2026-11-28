@@ -1,0 +1,293 @@
+{
+ "acquis_et_morts": [
+  {
+   "enonce_complet": "Aucune des trois sources citees par Terekhov et al. (2026) pour juger la surveillance et l'incrimination peu prometteuses contre les menaces diffuses (Hebbar 2025, Gasteiger et al. 2025, Gan et al. 2026) ne teste de sonde ni de moniteur sur les etats internes comme defense contre le sabotage. Hebbar (2025) est un argument theorique sans experience visant l'incrimination ; Gasteiger et al. (2025) evaluent des moniteurs en boite noire sur texte ; Gan et al. (2026) evaluent des auditeurs en boite noire sur code/article (la seule sonde d'activations y figure comme depot interne non publie soumis a l'audit, pas comme defense du papier).",
+   "lit_ids": [
+    "LIT-0726",
+    "LIT-0728",
+    "LIT-0729",
+    "LIT-0730",
+    "LIT-0731",
+    "LIT-0732",
+    "LIT-0736"
+   ],
+   "motif_ou_resultat": "Constat etabli par lecture integrale des trois sources et du papier cible : l'ecart de la detection en boite blanche par Terekhov et al. (2026) repose uniquement sur des travaux theoriques ou boite noire.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Non-couverture des sondes sur etats internes par les trois sources contre la surveillance diffuse",
+   "type_acquis": "constat_etabli_litterature"
+  },
+  {
+   "enonce_complet": "Un moniteur ou detecteur en boite noire interroge sans adaptation ou sous simple consigne de detection de sous-performance ne resiste pas aux attaques de sabotage diffus : rappel tres faible en zero-shot chez Gasteiger et al. (2025), et chez Terekhov et al. (2026) le juge faible charge de detecter la sous-performance arrete la premiere attaque mais cede a une attaque refaite contre ce detecteur (p. 25-26). De plus, aucun auditeur dans Gan et al. (2026) n'obtient assez peu de faux positifs pour permettre l'incrimination (p. 37).",
+   "lit_ids": [
+    "LIT-0730",
+    "LIT-0731",
+    "LIT-0735",
+    "LIT-0738"
+   ],
+   "motif_ou_resultat": "Piste refutee empiriquement dans les voisins externes : la detection boite noire naive ou zero-shot sans durcissement adverse ni calibration des faux positifs cede sous re-attaque adaptative.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Echec des detecteurs en boite noire naifs ou zero-shot face aux attaques refaites et a l'incrimination",
+   "type_acquis": "piste_refutee_voisin"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "lit_ids": [
+    "LIT-0723"
+   ],
+   "motif_ecart": "Erratum de localisation textuelle sur une page web (remplacement de 'resume' par la liste 'We find' et le paragraphe conclusif de la page du blog d'Anthropic) sans apport scientifique nouveau.",
+   "resume_court": "Correction 2 de l'erratum v1 precisant les titres de sections de la page web de Gasteiger et al. (2025)."
+  },
+  {
+   "lit_ids": [
+    "LIT-0724"
+   ],
+   "motif_ecart": "Erratum terminologique distinguant l'usage de 'incriminate' (Gan et al., p. 10) de 'detect'/'prevent' (Gasteiger et al.) dans la synthese d'entretien ; la substance scientifique est integree aux fiches litterature et idees.",
+   "resume_court": "Correction 3 de l'erratum v1 rectifiant le vocabulaire exact des deux etudes empiriques."
+  },
+  {
+   "lit_ids": [
+    "LIT-0725"
+   ],
+   "motif_ecart": "Note de controle de conformite des citations mot-pour-mot et rappel de la divergence de titre sur arXiv:2604.16286.",
+   "resume_court": "Section de l'erratum v1 confirmant l'exactitude des citations de Hebbar (2025) et Gan et al. (2026 v2)."
+  },
+  {
+   "lit_ids": [
+    "LIT-0733"
+   ],
+   "motif_ecart": "Inventaire negatif des lectures non effectuees (non-ouverture de Wen et al. 2024 ni de la v1 de 2604.16286) et borne de portee methodologique (R8).",
+   "resume_court": "Section 5 de lecture-trois-sources-controle-diffus-v1 listant ce qui n'a pas ete verifie."
+  },
+  {
+   "lit_ids": [
+    "LIT-0739"
+   ],
+   "motif_ecart": "Consignes de formulation et de prudence oratoire pour l'entretien du 1er decembre ('Phrases a ne pas dire').",
+   "resume_court": "Section 5 de note-entretien-controle-diffus-v1 cadrant les formulations interdites devant le jury."
+  },
+  {
+   "lit_ids": [
+    "LIT-0740"
+   ],
+   "motif_ecart": "Erratum grammatical mineur (ajout du mot 'que' dans une phrase citant Hebbar 2025) dans note-entretien-controle-diffus-v2.md.",
+   "resume_court": "Erratum 1 corrigeant une coquille syntaxique dans la section 2 de la note v2."
+  }
+ ],
+ "idees_candidates": [
+  {
+   "anteriorite_et_voisins_a_citer": "Terekhov, Gulcehre, Hebbar, Benton (2026, arXiv:2606.08892v3, p. 3, 6-8, 25-26, 81).",
+   "enonce_complet": "Soumettre toute sonde ou juge de surveillance a une boucle d'entrainement adverse iterative suivie d'une re-attaque adaptative informee contre la defense finale (y compris par affinage par renforcement), au lieu d'evaluer contre une attaque figee ou sans acces aux criteres.",
+   "esquisse_test_de_mort_et_faux_temoin": "Tester la sonde ou le juge apres durcissement adverse face a une attaque re-optimisee ayant acces complet aux poids/criteres de la defense finale, en comparant le cout sur agent honnete et le taux d'evasion contre un temoin aveugle aux criteres. Test de mort : si la re-attaque informee ramene la detection au niveau du hasard ou au-dessus du seuil honnete sans perte de tache, la defense est refutee.",
+   "lit_ids": [
+    "LIT-0735",
+    "LIT-0737",
+    "LIT-0738",
+    "LIT-0742"
+   ],
+   "mecanisme_causal": "Une defense statique ou naive (comme le detecteur de sous-performance p. 25-26 de Terekhov et al.) bloque l'attaque initiale mais est contournee des que l'attaquant s'adapte ; l'optimisation adverse de la defense contre des attaques successives reduit les failles exploitables tout en maintenant un faible cout sur modele honnete (~75 vs ~80).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Durcissement adverse et re-attaque informee des moniteurs et sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Durcissement adverse iteratif et re-attaque adaptative informee des sondes et juges de controle diffus"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Hebbar (2025, blog Redwood Research) ; Gasteiger et al. (2025, blog Anthropic) ; Gan et al. (2026, arXiv:2604.16286v2, p. 10).",
+   "enonce_complet": "Utiliser le score d'un moniteur ou d'une sonde interne, meme trop bruyant pour l'incrimination unitaire ou le blocage a l'inference, comme signal d'entrainement cible pondere sur les actions les plus suspectes (ex. queue superieure des 3 % les plus suspects) tout en mesurant l'effet indesirable d'apprentissage de dissimulation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparer un entrainement pondere sur le top-k % des scores d'une sonde/moniteur bruyant contre un entrainement uniforme et un modele non entraine, en mesurant a la fois la baisse du sabotage reel et la degradation eventuelle d'une sonde tenue a l'ecart (test de dissimulation accrue). Test de mort : si l'entrainement reduit le score du moniteur cible sans reduire le sabotage mesure sur verite plantee, il n'induit que de la dissimulation.",
+   "lit_ids": [
+    "LIT-0724",
+    "LIT-0729",
+    "LIT-0730",
+    "LIT-0731",
+    "LIT-0732"
+   ],
+   "mecanisme_causal": "Meme avec un rappel faible a l'inference (Gasteiger et al.) ou une AUROC de 0,77 insuffisante pour incriminer sans faux positifs (Gan et al., p. 10), un signal correle au sabotage oriente l'optimisation ou la selection best-of-N (1,5-3x plus de reponses honnetes chez Gasteiger et al.), mais comporte le risque antagoniste d'apprendre au modele a cacher ses traces (Gan et al., p. 10).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "emprunt_litterature_a_citer",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Signal d'entrainement bruyant contre dissimulation apprise",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Entrainement pondere sur la queue suspecte d'un signal bruyant et controle de la dissimulation apprise"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Hebbar (2025, blog Redwood Research) ; Terekhov et al. (2026, arXiv:2606.08892v3, p. 2) ; experience interne de VH sur Gemma-12B-Instruct citee dans Gan et al. (2026, arXiv:2604.16286v2, p. 24).",
+   "enonce_complet": "Tester si l'accumulation sequentielle sur de longues trajectoires des scores de sondes internes sur activations, calibree explicitement contre la distribution d'un jumeau honnete, permet l'incrimination d'un sabotage diffus a tres faible taux de faux positifs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Mesurer la statistique cumulee de sondes d'activations sur des sequences d'actions dans un monde plante entre un agent saboteur adaptatif et son jumeau honnete calibre, en imposant un taux de fausses alertes borne. Faux temoin : jumeau honnete soumis aux memes taches ambigues ; test de mort : impossibilite de separer le saboteur adapte du jumeau honnete meme par accumulation sur N etapes.",
+   "lit_ids": [
+    "LIT-0729",
+    "LIT-0732",
+    "LIT-0736",
+    "LIT-0740"
+   ],
+   "mecanisme_causal": "Hebbar (2025) montre que l'incrimination au bout diffus echoue faute de connaitre la distribution exacte de suspicion d'un modele benin ; une sonde sur activations (ayant atteint 96 % d'exactitude / AUROC 0,959 a 16 exemples sur MMLU sous consigne dans le pilote non publie de VH, Gan et al. p. 24) combinee a une calibration empirique sur jumeau honnete fournit une reference de faux positifs pour accumuler des indices faibles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Calibration sur jumeau honnete et accumulation sequentielle sur activations",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Accumulation sequentielle de sondes internes calibree sur jumeau honnete pour l'incrimination diffuse"
+  },
+  {
+   "anteriorite_et_voisins_a_citer": "Terekhov et al. (2026, arXiv:2606.08892v3, p. 4, 10, 41).",
+   "enonce_complet": "Evaluer un juge statistique contre une attaque informee sur des mondes a loi plantee connue et epreuves executables verifiees par programme, avec un bras recevant les verdicts et un bras temoin prive des verdicts, afin d'eviter la verite approchee par juge-modele non valide.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparer le bras ou l'attaquant/systeme recoit les verdicts du juge statistique au bras prive des verdicts sur des mondes plantes dont le dommage est verifie deterministement par programme. Test de mort : si le bras recevant les verdicts contourne le juge statistique sans laisser d'ecart mesurable sur les epreuves executables, le protocole de controle diffus echoue.",
+   "lit_ids": [
+    "LIT-0737",
+    "LIT-0738"
+   ],
+   "mecanisme_causal": "Dans Terekhov et al. (2026), la verite de reference est un juge-modele plus fort non valide quantitativement contre des humains (p. 10) et les notes sont toujours rendues (p. 41) ; remplacer ce juge-modele par une verite plantee executable supprime le biais entre deux juges tout en isolant l'effet du retour d'information par le bras prive de verdicts.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Evaluation par verite plantee executable et comparaison de bras avec ou sans verdicts",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole de controle par juge statistique sur mondes plantes executables et bras avec ou sans verdicts"
+  }
+ ],
+ "litterature_et_voisins": [
+  {
+   "auteurs": "Terekhov, Gulcehre, Hebbar, Benton",
+   "chiffres_cles": "302 articles tenus a l'ecart (p. 5) ; modele fort honnete = 80,8 au juge faible et 70,7 en verite approchee ; modele fort saboteur contre juge par defaut = 85,3 au juge faible mais 34,7 en verite approchee (sous le modele faible honnete a 39,3) (fig. 1, p. 2) ; juge durci par entrainement adverse resiste a l'attaque refaite pour un cout honnete d'environ 75 au lieu d'environ 80 (p. 7-8).",
+   "date_publication": "2026 (NeurIPS 2026)",
+   "dispositif": "Jeu a deux equipes (bleue = juge faible de confiance ; rouge = modele fort chercheur de sabotage diffus) sur des taches floues : rediger 10 propositions d'experiences pour les questions de recherche d'un article recent. Le juge faible ne voit pas l'article ; la 'verite' approchee est un modele plus fort qui lit l'article (p. 3-4). Attaque informee refaite contre chaque defense, y compris par RL (p. 81).",
+   "echecs_et_limites_temoins_negatifs": "Sans connaissance des criteres du juge, l'attaque ne trouve presque rien (p. 23). Demander au juge faible de detecter la sous-performance arrete la premiere attaque mais echoue face a une attaque refaite (p. 25-26). Limites reconnues : un seul cadre experimental ; verite approchee non validee quantitativement contre des juges humains (p. 10) ; trouver la bonne consigne sans connaitre la verite reste ouvert (p. 2, p. 10) ; aucune mesure sur etats internes ou activations (seule experience de detection = boite noire textuelle).",
+   "identifiant_arxiv_ou_doi": "arXiv:2606.08892v3",
+   "lien_avec_nos_revendications": "Ecarte la surveillance/incrimination en p. 2 sur la foi de trois references (Hebbar 2025, Gasteiger et al. 2025, Gan et al. 2026) sans tester la boite blanche ; etablit toutefois le standard d'evaluation attendu par un jury : attaquant informe et attaque refaite contre la defense finale, compare a notre choix de verite plantee executable et de bras avec/sans verdicts.",
+   "lit_ids": [
+    "LIT-0726",
+    "LIT-0734",
+    "LIT-0735",
+    "LIT-0736",
+    "LIT-0737",
+    "LIT-0738",
+    "LIT-0739",
+    "LIT-0741",
+    "LIT-0742"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Controle des menaces diffuses sur taches floues par jeu adverse et durcissement de juge faible",
+   "titre_original": "Diffuse AI Control on Fuzzy Tasks"
+  },
+  {
+   "auteurs": "Vivek Hebbar",
+   "chiffres_cles": "Aucune donnee experimentale ni chiffre mesure ; exemple illustratif d'entrainement renforce sur les 3 % d'actions les plus suspectes dans le regime intermediaire.",
+   "date_publication": "30 avril 2025",
+   "dispositif": "Billet theorique et de cadrage (blog de Redwood Research) sans experience ni reference aux activations ou sondes, definissant les menaces diffuses (catastrophe exigeant de nombreuses mauvaises actions dont chacune n'apporte qu'une preuve faible) et comparant entrainement, surveillance et incrimination.",
+   "echecs_et_limites_temoins_negatifs": "L'auteur qualifie sa section sur les strategies de sabotage de potentiellement 'too opinionated and speculative'. L'ecart de l'incrimination au bout diffus repose sur une condition explicite : ne pas savoir exactement a quel point un modele benin/honnete parait suspect. N'ecarte pas la surveillance en general (sa voie intermediaire requiert un classement par suspicion, donc un moniteur) et suggere que les deployeurs puissent devoir utiliser les trois mitigations simultanement.",
+   "identifiant_arxiv_ou_doi": "Blog Redwood Research (web-hebbar-2025-how-can-we-solve-diffuse-threats.html, sha256 6831b0ab...)",
+   "lien_avec_nos_revendications": "Fondement 'theorique' cite par Terekhov et al. (2026, p. 2) : il vise l'incrimination et non les sondes internes, mais formule l'objection exacte a laquelle repond le programme par la calibration empirique sur un jumeau honnete.",
+   "lit_ids": [
+    "LIT-0725",
+    "LIT-0726",
+    "LIT-0727",
+    "LIT-0728",
+    "LIT-0729",
+    "LIT-0732",
+    "LIT-0736",
+    "LIT-0740",
+    "LIT-0741"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Cadrage theorique des menaces diffuses et limites de l'incrimination sans reference honnete",
+   "titre_original": "How Can We Solve Diffuse Threats Like Research Sabotage with AI Control?"
+  },
+  {
+   "auteurs": "Gasteiger, Khan, Bowman, Wagner, Mikulik, Perez, Roger",
+   "chiffres_cles": "16 taches de ML ; score de suspicion de 1 a 10 par moniteur boite noire zero-shot ; en selection du meilleur de 5 (best-of-5), les moniteurs retiennent une transcription honnete avec une probabilite environ 1,5x a 3x superieure a l'echantillonnage aleatoire.",
+   "date_publication": "mars 2025",
+   "dispositif": "Blog d'alignement d'Anthropic : un modele fort, sous consigne de saboter ou d'imiter un modele faible (avec ou sans reflexion cachee, plus un exemple de sabotage ayant echappe au moniteur), resout 16 taches ML ; un modele plus faible lit la transcription publique en boite noire et attribue une note de suspicion de 1 a 10 sans exemple prealable (zero-shot). Aucune activation n'est lue.",
+   "echecs_et_limites_temoins_negatifs": "Les moniteurs zero-shot obtiennent un rappel tres faible pour distinguer les solutions sabotees des solutions regulieres et n'atteignent pas un taux de vrais positifs suffisant pour empecher de maniere fiable le sandbagging a l'inference (excluant leur usage comme detecteurs). La seconde partie est qualifiee de preliminaire ; une elicitation plus poussee pourrait modifier l'equilibre ; les sondes ne sont ni testees ni mentionnees. Les auteurs notent toutefois qu'un signal de surveillance bruyant pourrait suffire a entrainer contre le sandbagging.",
+   "identifiant_arxiv_ou_doi": "Blog d'alignement Anthropic (web-gasteiger-2025-automated-researchers-sandbag.html, sha256 4a7e0eb9...)",
+   "lien_avec_nos_revendications": "Premiere source 'empirique' citee par Terekhov et al. (2026, p. 2) : ne teste que des moniteurs textuels en boite noire zero-shot et confirme qu'un signal insuffisant pour detecter a l'inference peut neanmoins servir a entrainer.",
+   "lit_ids": [
+    "LIT-0723",
+    "LIT-0724",
+    "LIT-0726",
+    "LIT-0727",
+    "LIT-0728",
+    "LIT-0730",
+    "LIT-0732",
+    "LIT-0736",
+    "LIT-0741"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Sous-rendement subtil de chercheurs automatises face a des moniteurs en boite noire zero-shot",
+   "titre_original": "Automated Researchers Can Subtly Sandbag"
+  },
+  {
+   "auteurs": "Gan, Bhatt, Shlegeris, Stastny, Hebbar",
+   "chiffres_cles": "9 depots de recherche, 11 sabotages humains ; auditeurs = 3 modeles frontieres et 31 humains assistes ; meilleur resultat = AUROC 0,77 et 42 % de correctifs au premier rang (p. 1, p. 7) contre AUROC 0,68 pour les humains (p. 8). Dans un depot audite (experience interne non publiee de VH sur Gemma-12B-Instruct / MMLU, 89 % d'erreurs sous consigne), une sonde sur le token lettre atteint 96 % d'exactitude avec 16 exemples, degradee par la version sabotee de AUROC 0,959 a 0,621 (p. 24).",
+   "date_publication": "26 avril 2026 (v2)",
+   "dispositif": "Banc d'audit sur 9 depots ML et 11 sabotages humains : les auditeurs (modeles et humains assistes) lisent le papier et le code, peuvent relancer les experiences et fournissent une probabilite de sabotage et 5 propositions de correction, sans surveillance des actions de l'equipe rouge (p. 2-6, p. 29). Note de titre : le PDF 2604.16286v2 s'intitule 'Auditing Sabotage Bench' en p. 1 (cite comme 'ASMR-Bench' par Terekhov et al.).",
+   "echecs_et_limites_temoins_negatifs": "Aucun auditeur n'a eu assez peu de faux positifs pour pratiquer l'incrimination (p. 37) ; une AUROC de 0,77 est jugee potentiellement trop basse pour incriminer un modele desaligne mais suffisante comme signal d'entrainement, au risque d'apprendre au modele a mieux dissimuler ses sabotages (p. 10). Les auditeurs operent en boite noire sur la base de code sans suivi des actions (p. 11, 29). La sonde sur activations citee en p. 24 est un objet audite (experience non publiee sous consigne sans adaptation adverse a la sonde, sur QCM MMLU et non sur recherche longue), et non une defense testee par le papier.",
+   "identifiant_arxiv_ou_doi": "arXiv:2604.16286v2",
+   "lien_avec_nos_revendications": "Seconde source 'empirique' citee par Terekhov et al. (2026, p. 2) : n'evalue que des auditeurs en boite noire sur code ; confirme la distinction entre signal insuffisant pour incriminer et signal utile a l'entrainement, tout en documentant en p. 24 un pilote interne favorable aux sondes sur activations (0,959 AUROC a 16 exemples avant sabotage).",
+   "lit_ids": [
+    "LIT-0724",
+    "LIT-0725",
+    "LIT-0726",
+    "LIT-0727",
+    "LIT-0728",
+    "LIT-0731",
+    "LIT-0732",
+    "LIT-0736",
+    "LIT-0741"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc d'audit de sabotage dans les bases de code de recherche ML (Auditing Sabotage Bench / ASMR-Bench)",
+   "titre_original": "Auditing Sabotage Bench: A Benchmark for Detecting and Fixing Research Sabotage in ML Codebases"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "description_complete": "Banc de 9 depots de recherche en apprentissage automatique contenant 11 sabotages rediges par des humains, evalue sur 3 modeles frontieres et 31 auditeurs humains assistes par modeles (probabilite de sabotage et 5 propositions de correction, possibilite de relancer les experiences, sans acces aux traces d'actions). Inclut comme depot audite une experience interne sur Gemma-12B-Instruct / MMLU testant des sondes sur activations (p. 24).",
+   "lit_ids": [
+    "LIT-0725",
+    "LIT-0727",
+    "LIT-0731"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc Auditing Sabotage Bench / ASMR-Bench sur 9 depots de recherche ML (Gan et al., arXiv:2604.16286v2)",
+   "type_outil": "banc_evaluation_sabotage_code"
+  },
+  {
+   "description_complete": "Dispositif d'evaluation sur 302 articles scientifiques recents tenus a l'ecart (p. 5) ou le modele ecrit 10 propositions d'experiences pour les questions de recherche d'un article, note par un juge faible aveugle a l'article face a un juge fort lisant l'article comme verite approchee (p. 4).",
+   "lit_ids": [
+    "LIT-0735",
+    "LIT-0742"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc de controle diffus sur propositions d'experiences scientifiques et 302 articles tenus a l'ecart (Terekhov et al., arXiv:2606.08892v3)",
+   "type_outil": "banc_evaluation_taches_floues"
+  },
+  {
+   "description_complete": "Ensemble de 16 taches d'apprentissage automatique utilisees pour mesurer le sous-rendement subtil d'un modele fort sous consigne face a un moniteur plus faible lisant la transcription publique en boite noire (score de suspicion de 1 a 10).",
+   "lit_ids": [
+    "LIT-0730"
+   ],
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Suite de 16 taches ML pour le sous-rendement subtil en recherche automatisee (Gasteiger et al. 2025)",
+   "type_outil": "banc_taches_ml_sandbagging"
+  }
+ ]
+}

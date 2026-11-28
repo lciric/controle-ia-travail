@@ -1,0 +1,366 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1037",
+    "BIB-1032"
+   ],
+   "enonce_complet": "Un protocole d'evaluation d'identification causale dite observationnelle ou non supervisee (par exemple iVAE) ne doit jamais etre entraine ni teste sur des historiques de courses dont la dose de traitement D a ete randomisee par conception. Meme si l'etiquette de randomisation est masquee, la loi empirique de D reste independante des attributs de paire, ce qui fournit gratuitement une structure quasi-experimentale et empeche de mesurer l'identification observationnelle reelle. Il faut isoler strictement un regime confondu non randomise pour tester la voie observationnelle et verifier l'absence de fuite du mecanisme d'allocation dans l'iVAE.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer les performances d'identification causale d'un modele iVAE entraine sur un historique de courses a dose randomisee (sans etiquette explicite) contre un regime purement confondu ou D depend fortement des attributs latents de paire ; si le score s'effondre uniquement dans le regime confondu, le protocole precedent fuyait la randomisation. Faux temoin 1b : evaluer le modele sur un jeu synthetique ou la dependance D <- confondeur est connue et verifiable mecaniquement, puis injecter un bruit aleatoire independant sur D et verifier que l'identificateur non supervise ne recupere pas la structure sans signal de randomisation.",
+   "mecanisme_causal": "Dans les historiques de courses randomises, l'independance orthogonale entre le traitement D et les confondeurs de paire rend le probleme d'identification trivial pour tout estimateur de dependance latente, creant une illusion de reussite de l'identification non supervisee qui disparait des qu'un confondeur reel gouverne l'assignation du traitement.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Isolation de la randomisation et fuites d'identification",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Isolation de la randomisation experimentale et prevention des fuites dans les tests d'identification causale non supervisee"
+  },
+  {
+   "anteriorite_connue": "Peters et al. 2016 (Invariant Causal Prediction)",
+   "bib_ids": [
+    "BIB-1031",
+    "BIB-1044"
+   ],
+   "enonce_complet": "L'utilisation d'un decoupage alphabetique ou aleatoire des donnees en environnements artificiels ne constitue pas un controle negatif valide ni univoque pour la prediction causale invariante (ICP). Comme l'estimateur de Peters et al. prend l'intersection des sous-ensembles S pour lesquels l'hypothese d'invariance H_{0,S} n'est pas rejetee, des environnements echangeables conduisent a accepter presque tous les sous-ensembles (sauf erreur de type I au niveau alpha), ce qui produit soit l'ensemble vide, soit une acceptation triviale qui ne teste ni l'invariance causale ni sa rupture. Un controle negatif valide pour ICP doit briser l'invariance du mecanisme causal cible (par exemple via une intervention sur la variable cible Y ou un changement de mecanisme structurel) afin de verifier que l'intersection devient effectivement vide par rejet de tous les modeles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur un graphe causal synthetique connu le comportement de ICP sous trois regimes d'environnements : (i) decoupage aleatoire/alphabetique echangeable, (ii) intervention sur des covariables uniquement, (iii) intervention directe sur Y (rupture d'invariance) ; le controle negatif n'est valide que s'il discrimine nettement (i) de (iii) sans artefact de taille d'intersection. Faux temoin 1b : appliquer ICP sur des permutations aleatoires repetees d'un meme jeu stationnaire et verifier que le taux de rejet suit exactement le niveau alpha nominal et non une detection de structure causale.",
+   "mecanisme_causal": "L'estimateur ICP repose sur l'intersection de tous les ensembles invariants compatibles avec les environnements ; des decoupages echangeables ne creant aucune perturbation d'entree ne rejettent aucun sur-ensemble ni aucun sous-ensemble non faux, vidant le test de son pouvoir discriminant entre invariance vraie et stationnarite triviale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controles negatifs pour prediction causale invariante",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Specification rigoureuse des controles negatifs par permutation d'environnements pour la prediction causale invariante"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1038",
+    "BIB-1048",
+    "BIB-1059"
+   ],
+   "enonce_complet": "Les seuils de validation et de refutation des experiences causales doivent etre calibres analytiquement en fonction de la variance d'echantillonnage fini de l'estimateur et de la taille N des bras. En particulier, pour N=200 repartis sur deux doses a issue binaire (ou 8 bras de 100 paires avec sigma_Y autour de 30 points de pourcentage), l'ecart-type de l'ATE approche 3 a 7 points, rendant irrealiste un seuil de tolerance serre tel que |Delta_erreur| < 2 points ou un intervalle de prediction a 90 % inferieur a plus ou moins 12 points. De meme, la couverture empirique d'un intervalle de prediction a 90 % sur N=30 courses possede un ecart-type binomial de sqrt(0.9 * 0.1 / 30) environ 0.055 (soit plus ou moins 1.65 courses), exigeant une calibration explicite des regles d'arret ou de rejet (telles que le seuil de 5 sorties sur 30) pour controler les erreurs de type I et II.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer des simulations Monte Carlo sous hypothese nulle exacte (modele vrai parfaitement calibre) avec N=30 et N=100..200 par bras pour mesurer le taux de faux rejets induit par des seuils naifs (|Delta|<2 pp ou >5/30 sorties) versus des seuils calibres par loi binomiale et erreur standard empirique ; tout critere generant un taux de faux positifs superieur a alpha preenregistre est rejete. Faux temoin 1b : verifier sur un modele oracle sans biais que les intervalles calibres atteignent la couverture nominale (90 %) dans la marge d'erreur binomiale exacte.",
+   "mecanisme_causal": "Fixer des seuils de decision inferieurs ou proches du bruit d'echantillonnage fini transforme des fluctuations purement aleatoires de l'estimateur ou de la loi binomiale de couverture en rejets ou validations fallacieuses, detruisant la fiabilite metrologique du protocole.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibrage statistique sous echantillonnage fini",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Calibrage des seuils de decision et des intervalles de prediction sous variance d'echantillonnage fini"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1035"
+   ],
+   "enonce_complet": "Un intervalle de confiance couvrant zero ou la concordance d'un unique signe sur une seule experience naturelle (de probabilite 1/2 sous l'hypothese nulle) ne doit jamais etre interprete comme une preuve d'absence d'effet ni comme une validation d'hypothese. Pour trancher entre une hypothese d'existence d'effet et son absence pratique, le protocole doit remplacer l'inversion de non-rejet par un test d'equivalence statistique (type TOST) muni d'une marge d'equivalence preenregistree et d'un agregation multi-experiences.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un effet causal reel non nul mais inferieur au seuil de puissance de l'experience unique et verifier que le critere naif (IC couvrant zero) conclut a tort a la mort de H_A, alors que le test d'equivalence preenregistre rend un verdict indetermine (puissance insuffisante) plutot qu'un faux rejet. Faux temoin 1b : simuler un effet reellement nul avec une taille d'echantillon suffisante et verifier que le test d'equivalence conclut correctement a l'absence d'effet au-dela de la borne preenregistree.",
+   "mecanisme_causal": "Confondre l'absence de preuve (non-rejet par manque de puissance ou concordance de signe aleatoire a 1/2) avec la preuve d'absence biaise systematiquement les conclusions contre les effets reels moderes et rend la decision sensible a la taille d'echantillon.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Tests d'equivalence et erreurs d'interpretation du nul",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Remplacement de la non-significativite statistique par un test d'equivalence a borne preenregistree"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1033",
+    "BIB-1051"
+   ],
+   "enonce_complet": "Les controles negatifs par intervention factice (sham intervention) doivent neutraliser le contenu causal tout en evitant les biais de volume textuel ou les placebos purement cosmetiques. Ajouter des titres de la meme niche modifie la quantite de texte fournie a l'agent et peut induire un effet non nul independant de tout croisement conceptuel ; le zero exact doit donc reposer sur une intervention fantome (dose assignee independamment du contenu reel). En complement d'une intervention inerte sur l'ordre d'affichage, le protocole doit inclure un controle de specificite comparant l'intervention sur une variable declaree causale par le modele a une intervention equivalente administree sur une paire ou variable non causale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la reponse d'un agent sous trois bras : (i) titres de meme niche (longueur accrue), (ii) intervention fantome a dose reaffectee aleatoirement sans lien avec la paire, (iii) intervention sur une variable declaree causale vs non causale ; si le modele attribue un effet causal significatif a l'intervention fantome ou ne distingue pas la variable causale de la variable inerte de meme volume, le modele echoue au controle. Faux temoin 1b : verifier sur une tache sans mecanisme de croisement (reponse fonction de la longueur seule) que l'intervention fantome donne bien un effet nul tandis que le controle meme-niche biaise revelait un faux positif.",
+   "mecanisme_causal": "Les agents linguistiques repondent a la longueur et a la saillance du contexte independamment de la structure causale ; seule une intervention fantome dissociant le traitement reel de la charge contextuelle et testant la specificite des variables causales isole l'effet du mecanisme etudie.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Interventions fantomes et specificite causale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Conception d'interventions fantomes et de sondes de specificite causale exemptes de biais de longueur de contexte"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1057"
+   ],
+   "enonce_complet": "Lorsqu'une experience d'extrapolation teste une dose de traitement superieure a la capacite nominale du format d'entree (par exemple 15 titres dans un tableau minimal concu pour 10 titres), le traitement devient confondu avec le changement de format ou de gabarit. Toute extrapolation de dose doit soit maintenir strictement invariant le gabarit de presentation (capacite maximale constante avec remplissage neutre pour les doses inferieures), soit factoriser explicitement dose et format afin d'eviter d'attribuer a la dose un artefact de mise en page.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer une condition a 15 titres dans un gabarit elargi a 15 emplacements contre une condition a 10 titres presentee dans le meme gabarit a 15 emplacements (5 emplacements vides/neutres) et dans le gabarit a 10 emplacements ; si l'ecart entre gabarit 10 et gabarit 15 a dose egale (10 titres) est du meme ordre que l'effet attribue a la dose 15, l'extrapolation est invalidee par confusion de format. Faux temoin 1b : verifier avec un agent insensible a la dose mais sensible aux sauts de format que le maintien d'un gabarit constant elimine le faux effet d'extrapolation.",
+   "mecanisme_causal": "Modifier simultanement la quantite d'information (dose) et l'architecture visuelle ou structurelle du prompt (capacite du tableau) cree une variable de confusion parfaite entre l'intensite du traitement et le changement de distribution d'entree.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Decouplage dose et format en extrapolation",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Decouplage entre la dose de traitement et les changements de format d'affichage lors des extrapolations"
+  },
+  {
+   "anteriorite_connue": "Aronow et Samii 2017 (interference sur reseau)",
+   "bib_ids": [
+    "BIB-1045",
+    "BIB-1052",
+    "BIB-1054"
+   ],
+   "enonce_complet": "L'hypothese d'absence d'interference entre unites (SUTVA) est violee des qu'une paire de niches A-B produisant un pont modifie la structure du reseau ou la disponibilite des ressources pour les paires voisines A-C et B-C. Les placebos cosmetiques locaux (changer la police ou permuter l'ordre typographique) ne testent pas cette interference. Il faut introduire des micromondes plantes avec interference inter-paires controlee (ou un modele naif supposant SUTVA doit manifester un biais mesurable) ainsi que des placebos relationnels causalement inertes sur la paire cible mais susceptibles de propager un effet de voisinage sur le reseau.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : construire un micromonde plante dotee d'une matrice d'interference connues entre paires partageant un sommet A, B ou C, puis evaluer l'estimateur supposant SUTVA ; le test passe si le biais d'interference apparait et est quantifie par un estimateur sensible a l'exposition reseau (Aronow-Samii), et echoue si le protocole de controle declare l'absence de biais. Faux temoin 1b : desactiver l'arete d'interference dans le simulateur et verifier que le biais mesure entre estimateur naif et estimateur reseau converge vers zero.",
+   "mecanisme_causal": "Dans un graphe d'idees ou de niches couplees, l'issue d'une collision sur une arete (A, B) altere l'etat des sommets incidents et donc la probabilite de succes et le potentiel de decouverte sur les aretes adjacentes (A, C) et (B, C), invalidant l'independance des reponses potentielles par paire.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Tests de violation SUTVA et interference reseau",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Detection des violations d'absence d'interference entre paires par mondes plantes et placebos relationnels"
+  },
+  {
+   "anteriorite_connue": "Reisach et al. 2021 (varsortability)",
+   "bib_ids": [
+    "BIB-1042",
+    "BIB-1047",
+    "BIB-1058"
+   ],
+   "enonce_complet": "Comparer le graphe decouvert sur donnees brutes et apres standardisation des variances (avec un seuil SHD <= 0,1) est necessaire mais insuffisant pour ecarter les artefacts d'echelle en decouverte causale. D'une part, si les variables filtrees ont naturellement des variances proches, le test de standardisation perd toute puissance discriminante. D'autre part, les methodes qui normalisent leurs entrees (comme certains iVAE ou IRM) restent insensibles aux pieges de variance 10x sur les confondeurs, tout en restant vulnerables a d'autres artefacts d'ordre superieur tels que la triabilite par applatissement (kurtosis-sortability) ou par asymerie. Il faut donc adjoindre des tests d'invariance sous transformations non lineaires monotones ou d'egalisation des cumulants d'ordre superieur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : generer deux micromondes plantes : un premier ou les variables ont des variances homogenes mais un kurtosis croissant le long de l'ordre causal (piege kurtosis-sortability), et un second a orientation causale inversee apres standardisation ; tout decouvreur causal valide doit garder un SHD stable apres egalisation de variance et de kurtosis, et echouer s'il inverse l'orientation sur le piege de kurtosis. Faux temoin 1b : evaluer un algorithme purement base sur le tri par variance ou kurtosis et verifier qu'il est pris en defaut des l'egalisation des moments.",
+   "mecanisme_causal": "Les algorithmes de decouverte causale exploitant implicitement la croissance de la variance ou des moments d'ordre 4 le long d'un DAG reconstituent l'ordre topologique par un artefact de bruit marginal plutot que par l'asymmetrie structurelle des mecanismes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Artefacts de variance et d'applatissement en decouverte causale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Diagnostic des biais de tri par variance et par applatissement au-dela de la standardisation des entrees"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1034"
+   ],
+   "enonce_complet": "La stabilite d'une representation latente sous re-echantillonnage ou changement de graine ne prouve en aucun cas son identifiabilite causale. Une analyse en composantes principales (ACP) ou un auto-encodeur variationnel fortement regularise sont tres stables par contrainte de capacite ou d'orthogonalite algebrique tout en echouant completement a separer les facteurs causaux reels. La stabilite ne doit donc etre retenue que comme diagnostic necessaire et jamais comme critere suffisant pour valider ou refuter une hypothese d'identification causale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre une ACP et un VAE fortement regularise au meme protocole de test de stabilite sur un micromonde plante a facteurs causaux non orthogonaux ; si ces modeles passent le critere de stabilite tout en ayant une erreur d'identification latente maximale (MCC faible), le critere de stabilite est rejete comme test discriminant d'identification. Faux temoin 1b : verifier sur un modele oracle identifiant exactement les latentes qu'il satisfait conjointement la stabilite et un score MCC eleve apres permutation signee.",
+   "mecanisme_causal": "La reduction de variance ou la regularisation forte efface les degres de liberte non identifies et force l'unicite d'une projection arbitraire, produisant une haute reproductibilite numerique entierement decouplee de la verite structurelle sous-jacente.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Stabilite representationnelle contre identification causale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Separation stricte entre stabilite representationnelle et identification causale dans l'evaluation des modeles latents"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1043"
+   ],
+   "enonce_complet": "Opposer un modele pretendument causal a un modele purement predictif sur des doses intermediaires (par exemple predire la dose d=7 apres entrainement sur d in {0, 2, 5, 10}) ne teste pas la causalite, car un regresseur non causal interpole localement par simple lissage sans aucune connaissance structurelle. Le banc de test doit imposer une ligne de base predictive non triviale (lissage/interpolation sur covariables) et evaluer la performance sous extrapolation hors support ou sous changement d'assignation interventionnelle ou l'association observationnelle se brise.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : entrainer un reseau purement predictif (MLP ou regression spline) et le modele causal candidat sur {0, 2, 5, 10}, puis tester a la fois en interpolation (d=7) et en changement de regime (confondeur inverse ou dose hors support) ; le modele causal n'est valide que s'il surpasse significativement l'interpolateur predictif sous rupture de regime, pas simplement en interpolation. Faux temoin 1b : verifier que sous regime stationnaire a d=7, l'interpolateur non causal egale le modele causal, demontrant la non-discriminance du test d'interpolation.",
+   "mecanisme_causal": "A l'interieur de l'enveloppe convexe des doses observees sous un mecanisme d'assignation stationnaire, la fonction d'esperance conditionnelle E[Y|do(D=d), X] coincide avec l'esperance predictive E[Y|D=d, X] des lors que les confondeurs sont observes ou constants, permettant a tout estimateur lisse de reussir sans modele causal.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Extrapolation interventionnelle contre interpolation predictive",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Exigence d'extrapolation interventionnelle face a une ligne de base predictive capable d'interpolation locale"
+  },
+  {
+   "anteriorite_connue": "Khemakhem et al. 2020 (iVAE)",
+   "bib_ids": [
+    "BIB-1046"
+   ],
+   "enonce_complet": "L'application des methodes de demelage causal de type iVAE suppose satisfaite la condition theorique de variabilite suffisante : les vecteurs de parametres naturels de la loi exponentielle conditionnelle des facteurs latents z sachant l'environnement u doivent engendrer un sous-espace de dimension au moins egale au nombre de latentes (impliquant suffisamment d'environnements distincts m et d'echantillons n par environnement). Il faut verifier empiriquement le rang de la matrice des variations de parametres entre environnements avant d'interpreter un echec ou un succes d'identification.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : generer deux series de micromondes plantes a k facteurs latents : l'une ou les m environnements satisfont la condition de rang plein (variabilite suffisante) et l'autre deficiente en rang (environnements colineaires) ; verifier que l'identifiabilite mesuree par MCC s'effondre dans le cas deficient en rang meme avec un grand n, confirmant la necessite du pre-test de variabilite. Faux temoin 1b : tester avec m < k+1 environnements independants et verifier qu'aucune rotation latente unique n'est recuperee au-dela du hasard.",
+   "mecanisme_causal": "Sans un nombre suffisant de directions d'excitation lineairement independantes dans l'espace des parametres naturels conditionnels p(z|u), les transformations melangeantes non lineaires restent non identifiables meme asymptotiquement.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Condition de variabilite suffisante pour iVAE",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Verification empirique de la condition de variabilite suffisante des environnements pour le demelage de type iVAE"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1055"
+   ],
+   "enonce_complet": "Le parametrage arbitraire d'une derive de 15 % par environnement de la fonction d'observation f_u dans les micromondes plantes constitue un degre de liberte non calibre qui peut rendre les benchmarks artificiellement trop faciles ou irrealistes. Il convient d'ancrer l'amplitude et la forme de la derive inter-environnements sur la derive mesuree empiriquement entre epoques ou sous-corpus reels (par exemple via la divergence des distributions d'attributs ou de plongements entre periodes), et d'effectuer une analyse de sensibilite sur une plage couvrant le regime reel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la performance de l'algorithme sur une grille de derives de f_u allant de 0 % a 50 % encadrant la derive empirique estimee sur corpus reel ; si le classement relatif des methodes ou la survie de l'hypothese s'inverse autour de la valeur arbitraire de 15 %, le resultat est declare instable et non certifiable. Faux temoin 1b : calibrer f_u sur deux sous-periodes reelles connues sans changement de mecanisme et verifier que la derive estimee reste compatible avec la plage de calibration.",
+   "mecanisme_causal": "Une derive synthétique excessive brise facilement les correlats fallacieux (facilitant IRM/ICP) tandis qu'une derive trop faible empeche l'identification ; sans ancrage empirique, le choix de ce parametre determine artificiellement l'issue du duel experimental.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibrage de derive dans les micromondes plantes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Calibrage empirique de la derive inter-environnements des fonctions d'observation dans les micromondes plantes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1062"
+   ],
+   "enonce_complet": "Tout banc de validation par micromondes plantes doit inclure le cas critique ou le mecanisme causal reel est strictement nul mais ou l'issue (la fertilite) est entierement determinee par un confondeur fortement correle (correlation quasi parfaite avec le traitement ou la selection). Un controle negatif a simple haute variance ou a correlation moderee (0,8) ne suffit pas a demasquer les modeles qui exploitent des residus de confusion sous colinearite elevee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer tout estimateur causal sur un micromonde plante ou l'effet causal vrai vaut 0 et ou un confondeur determine a 100 % la variable d'issue avec une correlation traitement-confondeur >= 0,95 ; si l'estimateur retourne un effet causal non nul depassant la marge preenregistree, l'estimateur est tue par ce test. Faux temoin 1b : restaurer un effet causal vrai non nul dans le meme schema de forte confusion et verifier que l'estimateur conserve la capacite de le detecter sans s'effondrer vers zero par sur-regularisation.",
+   "mecanisme_causal": "Sous quasi-colinearite entre le traitement et un confondeur determinant l'issue, la moindre erreur de specification ou regularisation de l'estimateur transfere une fraction du signal du confondeur sur le coefficient du traitement, creant un faux positif massif.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Micromonde plante a effet nul et confondeur parfait",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Test de mort sur micromonde plante a effet causal nul mais correlation parfaite induite par un confondeur"
+  },
+  {
+   "anteriorite_connue": "CITRIS (Lippe et al. 2022)",
+   "bib_ids": [
+    "BIB-1063"
+   ],
+   "enonce_complet": "L'evaluation d'algorithmes de demelage causal interventionnel tels que CITRIS ne doit pas se limiter a la precision et au rappel de l'attribution des variables latentes lorsque les cibles d'intervention I_t sont parfaitement connues et les regles stationnaires. Il est indispensable d'ajouter un test de resistance sous faux etiquetage partiel des cibles d'intervention et sous non-stationnarite des regles d'intervention entre periodes, afin de verifier que le modele ne s'effondre pas ni ne projette des variables spureuses sur les cibles erronnees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un taux croissant (10 %, 25 %, 50 %) de faux etiquetage des cibles d'intervention I_t et une rupture de stationnarite des regles dans un micromonde plante CITRIS ; verifier si la recuperation des graphes latents reste superieure a une borne minimale preenregistree ou si la degradation est detectee par une metrique d'incertitude. Faux temoin 1b : fournir un etiquetage 100 % aleatoire des cibles d'intervention et verifier que l'algorithme ne produit pas de faux scores eleves d'alignement causal.",
+   "mecanisme_causal": "Les methodes type CITRIS exploitent directement l'identite des cibles I_t pour briser les symetries de melange ; un bruit d'etiquetage ou une derive de la loi d'intervention corrompt les contraintes d'independance conditionnelle utilisees pour aligner les dimensions latentes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Robustesse de CITRIS au faux etiquetage interventionnel",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Audit de robustesse du demelage causal sous faux etiquetage des cibles d'intervention et non-stationnarite"
+  },
+  {
+   "anteriorite_connue": "OpenAlex, SciBERT, SPECTER",
+   "bib_ids": [
+    "BIB-1039",
+    "BIB-1050"
+   ],
+   "enonce_complet": "Toute retrodiction ou estimation observationnelle sur archives scientifiques datees (OpenAlex, arXiv) doit purger strictement toute fuite temporelle et de cohorte avant l'apprentissage. D'une part, l'estimateur observationnel tau_obs ne doit pas etre appris sur l'ensemble du graphe OpenAlex incluant les cohortes de choc et leurs periodes post-choc qu'il doit predire a l'aveugle. D'autre part, les plongements textuels pre-entraines (SciBERT, SPECTER) et les variables derivees doivent etre soumis a un controle de fuite temporelle garantissant qu'aucune publication posterieure a la date de coupure t_0 n'influence la representation des articles anterieurs a t_0.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer les performances de retrodiction a t_0 obtenues avec un modele appris sur le graphe tronque strictement avant t_0 (et avec des plongements entraines exclusivement avant t_0) contre celles obtenues avec SciBERT/SPECTER standard ou avec inclusion des cohortes post-choc ; tout gain disparaissant des la troncature temporelle stricte demontre une fuite temporelle fatale. Faux temoin 1b : evaluer la prediction sur des couples d'articles synthetiquement dates dont le texte futur a ete remplace par du texte anterieur a t_0 pour verifier l'absence de signal predictif anachronique.",
+   "mecanisme_causal": "Les modeles de langue pre-entraines sur des corpus posterieurs a la date de prediction encodent implicitement la terminologie consolidee et la renommee future des decouvertes, tandis que l'entrainement sur un graphe non filtre inclut directement les issues post-choc dans les statistiques d'ajustement.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Purge des fuites temporelles sur archives scientifiques",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Purge des fuites temporelles et des cohortes post-choc dans les retrodictions sur graphes scientifiques et plongements"
+  },
+  {
+   "anteriorite_connue": "Boudreau et al. 2017, Catalini 2018, Azoulay et al. 2010, Roth 2022",
+   "bib_ids": [
+    "BIB-1040",
+    "BIB-1053",
+    "BIB-1060"
+   ],
+   "enonce_complet": "Dans les etudes quasi-experimentales sur chocs historiques (tels que Boudreau 2017, Catalini 2018 ou Azoulay 2010), l'estimateur quasi-experimental tau_QE ne doit pas etre erige en verite terrain exacte pour arbitrer entre voie observationnelle et transport depuis les courses. D'une part, un test de pre-tendance non significatif (p > 0,20) sur peu de periodes manque de puissance statistique et conditionner l'analyse sur ce pre-test biaise les estimations subsequentes (biais de Roth 2022). D'autre part, les chocs historiques portent sur des populations et des mesures d'issue heterogenes et produisent des intervalles de confiance parfois tres larges ; la comparaison doit propager l'incertitude propre de tau_QE et appliquer une analyse de sensibilite aux violations des tendances paralleles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer l'analyse de sensibilite de Rambachan-Roth (ou test de biais de pre-test de Roth 2022) sur les chocs historiques retenus et verifier si l'intervalle de confiance de tau_QE inclut a la fois tau_obs et tau_courses ou change de signe sous une derive lineaire moderee des tendances paralleles. Faux temoin 1b : simuler un choc sans effet avec une legere violation de tendance parallele sur peu de periodes pre-choc et verifier que le filtre naif p > 0,20 accepte le choc a tort alors que l'analyse de sensibilite bloque la promotion en verite terrain.",
+   "mecanisme_causal": "Conditionner une estimation Difference-in-Differences sur l'absence de rejet d'un pre-test sous-puissant selectionne des trajectoires bruitees biaisees, et traiter cet estimateur bruite et specifique a une sous-population comme etalon sans erreur fausse la validation du transport causal.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Incertitude et biais de pre-tendance en quasi-experiences",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Traitement de l'incertitude, du biais de pre-tendance et de l'heterogeneite dans l'evaluation par chocs quasi-experimentaux"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1061"
+   ],
+   "enonce_complet": "En complement d'un controle de pre-tendance sur les annees precedant un choc historique, toute etude quasi-experimentale sur archives scientifiques doit inclure un controle par faux choc contemporain (placebo de choc) : selectionner un evenement date contemporain qui ne devrait pas affecter la fertilite scientifique (par exemple un changement administratif sans lien avec la collaboration ou les outils de recherche) et verifier que l'estimateur quasi-experimental y trouve un effet nul.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer exactement le meme pipeline quasi-experimental sur au moins trois faux chocs contemporains preenregistres (evenements administratifs ou calendaires inertes sur la meme fenetre temporelle) ; si l'estimateur detecte un effet comparable en amplitude ou significativite a celui du choc reel, la specification quasi-experimentale est refuttee. Faux temoin 1b : verifier sur un choc reel d'intensite connue injecte sur des donnees d'archives perturbees qu'il demeure detectable au-dessus de la distribution des faux chocs contemporains.",
+   "mecanisme_causal": "Les tendances macro-temporelles contemporaines du choc (changements de politique d'indexation, cycles de publication, effets de periode) peuvent simuler un effet causal post-choc meme lorsque les pre-tendances a trois ans paraissent paralleles ; seul un placebo contemporain capture ces confusions synchrones.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Placebo par faux choc contemporain sur archives",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Controle negatif par faux choc historique contemporain dans les etudes quasi-experimentales sur archives"
+  },
+  {
+   "anteriorite_connue": "Pearl et Bareinboim (transportabilite)",
+   "bib_ids": [
+    "BIB-1056"
+   ],
+   "enonce_complet": "Comparer directement l'effet estime dans les courses synthetiques (tau_courses, ou l'issue Y est la survie aux tests de mort arbitres par un juge LLM fige) a l'effet estime dans les quasi-experiences historiques reelles (tau_QE, ou Y mesure les citations ou la reprise conceptuelle dans OpenAlex) est invalide tant qu'un estimande commun et une fonction de transport explicite entre les deux echelles d'issue ne sont pas definis et etalonnes au prealable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la correlation et le calibrage entre une metrique de rang ou d'issue binaire normalisee issue des courses et son correspondant mesure sur des paires historiques connues d'OpenAlex avant toute comparaison directe de tau ; si les deux echelles n'admettent pas de correspondance monotone calibree hors echantillon, toute comparaison numerique tau_courses vs tau_QE est declaree non identifiable. Faux temoin 1b : comparer deux transformations d'echelle incompatibles (probabilite brute de survie vs log-citations) sur un cas ou la structure causale est identique et montrer que l'ecart d'echelle produit un faux rejet de transportabilite.",
+   "mecanisme_causal": "Deux experiences mesurant des variables dependantes de natures, d'echelles et d'horizons temporels distincts ne partagent pas le meme estimande causal ; comparer leurs effets moyens bruts confond l'echec du transport causal avec une simple difference de calibration d'issue.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Estimande commun et transport synthetique-reel",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Definition d'un estimande commun pour transporter les effets causaux des courses synthetiques vers la science reelle"
+  },
+  {
+   "anteriorite_connue": "Kauffman 1986, Hordijk et Steel 2004 (ensembles RAF)",
+   "bib_ids": [
+    "BIB-1090"
+   ],
+   "enonce_complet": "Pour trancher si un collisionneur d'idees forme un veritable reseau autocatalytique reflexif (e-RAF) ou un simple processus de branchement (Galton-Watson), il faut verifier si la survie d'un lot apres gel des apports externes depend de la topologie specifique des catalyses (existence d'une fermeture reflexive) au-dela du seul ratio de branchement moyen. Un temoin conservant exactement le meme ratio de branchement moyen mais detruisant la fermeture par re-cablage aleatoire des cibles catalytiques doit s'eteindre plus rapidement si l'hypothese e-RAF est vraie.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la probabilite de survie a long terme apres gel entre le reseau de fiches reel et un reseau temoin recable (configuration model conservant les degres et le ratio de branchement moyen mais brisant les cycles catalytiques fermes) ; si les deux courbes de survie sont statistiquement indiscernables a ratio de branchement egal, l'analogie RAF est refutee au profit d'un simple processus de branchement. Faux temoin 1b : simuler un pur processus de branchement sans cycles catalytiques de fermeture et verifier que le recablage n'altere pas la courbe de survie.",
+   "mecanisme_causal": "Dans un ensemble RAF, la fermeture reflexive assure l'auto-entretien par cycles de production mutuelle independamment de la croissance moyenne globale, alors que dans un processus de branchement sans cycles fermes la survie ne depend que du taux moyen de descendance par unite.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fermeture catalytique contre processus de branchement",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Duel entre fermeture autocatalytique reflexive et simple processus de branchement pour la survie des lignees d'idees"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1091",
+    "BIB-1094"
+   ],
+   "enonce_complet": "L'allumage d'un sous-ensemble auto-entretenu dans un collisionneur d'idees doit manifester une transition de phase nette en fonction de la dose de contact (nombre de fusions tentees par generation normalise par le nombre de fiches disponibles), caracterisee par un seuil critique d_c (ou delta_c) ou la probabilite de maintien P(sustain) bascule brusquement (largeur de transition w < 0,25 fois l'etendue de la grille) et ou la variance de la taille finale du lot atteint un pic maximal de susceptibilite, par opposition a une croissance lisse et monotone avec la dose.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : balayer une grille fine de doses de contact d avec repetitions independantes pour tracer P(sustain)(d) et la variance de taille finale ; si un ajustement sigmoide montre une largeur de transition w >= 0,25 de la grille sans pic de variance statistiquement significatif autour d'un seuil d_c, l'hypothese de transition de phase critique est refutee au profit d'une croissance lisse. Faux temoin 1b : verifier sur un modele de croissance lineaire sans retroaction catalytique que la courbe demeure lisse sans pic de susceptibilite localise.",
+   "mecanisme_causal": "Lorsque les collisions produisent des catalyseurs capables d'activer d'autres reactions, la densite de paires tentees controle la percolation du graphe reactionnel : en deca du seuil critique les lignees s'eteignent, tandis qu'au-dela les boucles de retroaction se referment brutalement, amplifiant les fluctuations critiques a d_c.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transition de phase et seuil critique d'allumage",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Detection d'un seuil critique d'allumage et d'une transition de phase en fonction de la dose de contact"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1092"
+   ],
+   "enonce_complet": "Pour distinguer un entretien endogene reel d'un simple effet d'alimentation externe emprunte au corpus, il faut geler completement l'injection de nouvelles fiches du corpus et mesurer le flux de production de fiches survivantes non-doublons au fil des generations suivantes. Un systeme authentiquement auto-entretenu maintient une production >= 1 fiche nouvelle survivante par generation (constante ou croissante), tandis qu'un systeme dependant du corpus decroit de maniere exponentielle vers l'extinction apres le gel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : apres une phase d'amorcage sur corpus, couper totalement tout tirage externe (gel strict) et mesurer le taux d'innovation survivante dedoublonnee (par similarite semantique et canonisation) sur g+1..g+5 ; si la production decroit exponentiellement sous 1 fiche survivante/generation, l'auto-entretien endogene est refute. Faux temoin 1b : executer la meme mesure sur un generateur sans memoire ni recombinaison des sorties precedentes apres gel du corpus et verifier l'extinction immediate ou la stagnation en quasi-doublons.",
+   "mecanisme_causal": "Si les fiches produites ne font que reformuler les apports frais du corpus, la suppression de cette source externe epuise rapidement l'entropie combinatoire utile ; seule une veritable recombinaison catalytique entre produits internes renouvelle le stock de concepts survivants.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Persistance apres gel complet du corpus externe",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Test de persistance endogene des generations d'idees apres gel complet des apports externes du corpus"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1098"
+   ],
+   "enonce_complet": "Un systeme e-RAF qui s'auto-entretient sur ses propres criteres internes de survie risque l'auto-intoxication et l'effet Goodhart en vase clos (allumage specieux). Pour prouver la validite externe de l'allumage endogene, les fiches produites aux generations g=2 et g=3 doivent resoudre de veritables anomalies externes (tenues hors echantillon lors du fonctionnement interne) mieux qu'un generateur sans boucle de fermeture, et non seulement accumuler des scores eleves aupres des criteres internes du collisionneur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer les fiches issues des generations g=2 et g=3 d'un e-RAF auto-entretenu sur un banc d'anomalies externes aveugles (non utilisees dans la boucle de selection) face a des fiches issues de collisions de premiere generation ou de tirages directs ; si les scores internes montent avec g tandis que le taux de resolution d'anomalies externes chute ou stagne, l'allumage est declare specieux par effet Goodhart. Faux temoin 1b : introdure une boucle de selection optimisee explicitement sur une heuristique stylistique de surface et verifier que le test externe detecte l'auto-intoxication malgre une survie interne elevee.",
+   "mecanisme_causal": "La fermeture en vase clos sans ancrage externe selectionne les traits qui exploitent les biais du filtre de survie interne plutot que la fecondite scientifique reelle, creant une derive semantique auto-renforcee similaire au modele collapse.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Validite externe contre auto-intoxication Goodhart",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Arbitrage entre allumage epistemique a validite externe et auto-intoxication par effet Goodhart en vase clos"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1093",
+    "BIB-1095"
+   ],
+   "enonce_complet": "La fertilite d'une paire d'idees ne doit pas se mesurer uniquement par son impact isole immediat ou par ses attributs statiques locaux (trou social, structure commune, desaccord), mais par sa contribution a la fermeture autocatalytique du reseau (mesuree par knock-out de l'arete ou appartenance au noyau auto-entretenu). Les paires dont la fusion contribue a la fermeture d'un sous-ensemble e-RAF doivent engendrer davantage de descendants survivants a horizon multi-generationnel (par exemple g+3) et des fiches de plus grande valeur que des paires a score isole equivalent mais exterieures a la fermeture.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : effectuer un knock-out controle retirant selectivement les fusions appartenant au noyau de fermeture RAF contre des fusions hors fermeture appariees a score initial et traits locaux identiques (trou social, structure commune, desaccord), puis comparer la descendance survivante a horizon 3 generations ; si la contribution de fermeture n'apporte aucun pouvoir predictif supplementaire au-dela des traits locaux de la paire, l'hypothese de fertilite autocatalytique est refutee. Faux temoin 1b : permuter les etiquettes d'appartenance au noyau de fermeture entre paires de meme valeur isolee et verifier que le gain predictif disparait.",
+   "mecanisme_causal": "Une fusion integree dans une boucle autocatalytique active ou debloque de multiples reactions secondaires en aval, amplifiant sa descendance utile sur plusieurs generations par effet multiplicateur reseau, la ou une idee fertile mais isolee reste sans descendance catalytique.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fertilite de paire par contribution a la fermeture RAF",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Prediction de la fertilite multi-generationnelle d'une paire par sa contribution a la fermeture autocatalytique"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

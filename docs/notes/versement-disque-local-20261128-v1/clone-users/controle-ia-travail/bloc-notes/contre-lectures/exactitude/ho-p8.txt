@@ -1,0 +1,124 @@
+                                                        Linear MLP
+                                                   Linear
+                                                    Linear     MLPMLP Axial
+                                                                          Axial EFC
+                                                                       Axial       EFC
+                                                                                 EFC                  Self-report
+                                                                                                   Opus
+                                                                                                    Haiku
+                                                                                                        5.5*
+                                                                                                          4.5          Opus
+                                                                                                                        5.5*5.5
+                                                                                                                  Self-report
+                                                                                                                  Opus            Opus 5.5*       Self-monitor
+
+                       1.00                                                            1.00
+                       1.0                                                                                                                                                                1             Flagged
+                                                                                                                                                                                                        Not flagged
+                                                                                                                                                                                                        1% FPR
+               AUROC                                                                   0.90
+                       0.8
+                       0.95                                                                                                                                                              5
+
+
+
+
+                                                                                                                                                                 Scored assistant turn
+  Recall at 1% FPR
+
+
+                                                                                                                                                                                                              onset
+                       0.6                                                             0.80
+
+
+
+
+                                                                               AUROC
+SHADE-Arena
+
+
+
+
+                       0.90                                                                                                                                                              10
+
+                       0.4                                                             0.70
+
+                       0.85                                                                                                                                                              15
+                       0.2                                                             0.60
+                                                  0.63
+                                              [0.59, 0.67]                                                            Qwen3.5                 Nemotron-3
+                       0.0                                                                     0.30                                  0.44
+                       0.80                                                            0.50
+                               Qwen3.5
+                               3k
+                                3k      10kNemotron
+                                           10k    28k3 28k 77k
+                                                            Kimi 153k
+                                                                   77k                 145k   2B   9B9B     27B 27B122B 397B      122B
+                                                                                                                                   30B   120B 397B
+                                                                                                                                               550B                                             0        5       10
+                              397B-A17B    Ultra-A55B    K3-A104B                                                 A10B A17B       A10B
+                                                                                                                                   A3B   A12B A17B
+                                                                                                                                               A55B
+                                 FIBS training
+                                      FIBS training
+                                    Largest    rowswithin
+                                             model  rows
+                                                    (all 28(all
+                                                             families)
+                                                                29 families)
+                                                            family                                               Total
+                                                                                                                  Totalparameters
+                                                                                                                        parameters                                                            Axial contrast score
+                                  (a) Training data                                                        (b) Model size                                                                (c) One episode
+
+Figure 4: (a) Recall at fixed False Positive rate, calibrated against a heldout set of “honest“ SHADE-
+Arena rollouts for the largest models within three families, comparing probes trained on the full
+training set. Across all models our best probes outperform the strongest black-box monitor, Opus
+5.5*, which counts a refusal as the highest suspicion score. Panels (a) and (b) use the 14 scenarios
+of §4.3; panel (c) uses an earlier four-scenario set (Table 7). (b) Probes trained on the complete FIBS
+dataset, on five Qwen3.5 models (2B to 397B-A17B) and three Nemotron-3 models (Nano, Super
+and Ultra; ticks give total and active parameters). Every probe improves from the smallest model
+of each family, and scores exceed 90% from there up. Grey crosses: each model’s self-report logit;
+values below 0.50 sit on the axis floor with their value. (c) A hand-picked SHADE-Arena evaluation
+example: probe contrast climbs above the calibrated firing threshold after the side-task “onset”, as
+flagged by a Haiku 4.5 judge.
+
+
+ More training data helps (Figure 1a and Figure 4a). The full training set of 152,980 rows is the best
+ subset for every probe. Every subset of about 3,000 rows scores 0.018 to 0.110 lower, and the 95%
+ episode-bootstrap interval of each difference is above zero. More diversity also usually improves
+ performance. At equal rows (about 3,000, 8,000 and 10,000), 28 families score above 3 families in 6
+ of 8 comparisons and above 10 families in 9 of 12, but 10 families score above 3 in only 3 of 8. Each
+ of these 18 gains has a 95% episode-bootstrap interval above zero.
+
+Probe performance vs model scale. Figure 4b shows probes trained on the full FIBS dataset on
+five Qwen3.5 and three Nemotron-3 models (Appendix B.6). Every probe scores far lower on the
+smallest model of each family, 0.585–0.781 on Qwen3.5-2B and 0.613–0.760 on Nemotron-3 Nano,
+than on Qwen3.5 from 27B up (0.963–0.986) and on Nemotron-3 Super and Ultra (0.903–0.961).
+All probe architectures perform similarly. The model’s self-report logit scores below every probe on
+every model: below chance on Qwen3.5-2B (0.301) and Nemotron-3 Nano (0.439), 0.899–0.943 on
+Qwen3.5 from 9B up and 0.823–0.830 on Nemotron-3 Super and Ultra.
+The follow-up question is another key consideration. Figure 6 shows that on smaller models, probes
+perform worse with vague follow-ups; conversely follow-up choice matters little for larger models.
+This is consistent with smaller models being more easily confused by a vague question.
+
+ 5.2 PROBING FOR INTROSPECTIVE DECEPTION
+
+ Despite only training on contextual falsehoods (§2.1), we find that our probes generalize to detecting
+ introspective falsehoods with high accuracy.
+cue-following. Detection improves with the subject model’s active parameters (Figure 5a). On the
+three models with the most active parameters (Nemotron-3 Ultra, Qwen3.5-27B and Qwen3.5-397B-
+A17B) all four probes and the self-report logit score 95.2–98.0%; on the two smallest (Qwen3.5-
+2B and Nemotron-3 Nano) the probes score 69.9–86.3% and the self-report logit falls to chance
+(51.4%) on Qwen3.5-2B. The axial and EFC probes match or beat the self-report logit on every
+model, whereas LinearEnsemble and MLPEnsemble, which improve most with scale, trail it by up
+to 12.6 points on most models. At the 95th percentile score on held-out honest FIBS rows, the axial
+probe flags 53–89% of concealed lies on Qwen3.5 from 9B up and 83% on Nemotron-3 Ultra at a 0–
+6% false-positive rate, but over-fires on Qwen3.5-2B and Nano (Figure 14). Keeping Nemotron-3’s
+reasoning in context raises every AUC (Figure 13).
+ political-censorship.                                                Probes can accurately classify politically motivated falsehoods
+
+
+                                                                                                           8
+

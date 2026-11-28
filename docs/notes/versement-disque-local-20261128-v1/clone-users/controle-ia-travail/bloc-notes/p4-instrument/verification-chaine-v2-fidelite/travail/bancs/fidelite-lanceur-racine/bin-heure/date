@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [ "$*" = "-u +%H%M" ]; then
+  n=$(cat "/tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/verification-chaine-v2-fidelite/travail/bancs/fidelite-lanceur-racine/compteur-heure" 2>/dev/null || echo 0); n=$((n+1)); echo $n > "/tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/bloc-notes-session14/p4-instrument/verification-chaine-v2-fidelite/travail/bancs/fidelite-lanceur-racine/compteur-heure"
+  if [ "$n" -ge 2 ]; then echo "${FAUX_HEURE2:-2200}"; else echo "${FAUX_HEURE1:-2200}"; fi; exit 0
+fi
+exec /usr/bin/date "$@"

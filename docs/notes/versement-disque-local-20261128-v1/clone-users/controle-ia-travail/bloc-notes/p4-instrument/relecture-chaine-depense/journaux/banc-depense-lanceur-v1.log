@@ -1,0 +1,58 @@
+banc de relecture (dépense et arrêts) : lanceur, v1
+fichier relu : lancer_p4_v1.sh 06b9f9f2d843e1d7597e8cbe20f6d02dc851e0186c5ab55702f318d8ec21b315
+fichier relu : verifications_p4_v1.py 082be7d7aa742b4924f90e71cd7afefe9cb33df64a7153932f312503a16d8655
+fichier relu : instrument_p4_v1.py 6e0e026eafba28e708fea009cc5c81c8b95defe6aa8f9fc2f76dd364ee29b06c
+fichier relu : garde_calcul.py 579f65c8ae3002d8e5c61698d636549b0401da3acff6bce718ae88e93664a6f2
+fichier relu : banc_depense_lanceur_v1.sh 3514397d0024680b47fa2bf68fb953e64d4cf035054e34c8677c63b931f2828e
+copie du lanceur : trois lignes changées (DEPOT, B, V) ; aucun chemin vers l'outil de location réel
+S d'essai = 6ecc11c8d0bdaebff76120978efcaae534984ef2
+== cas sains
+L00-sain : code 0 ; créations factices 1 ; CONFORME
+    | succès : True ; identifiant 99999999 ; message : 
+L01-echeance-le-jour-meme : code 0 ; créations factices 1 ; CONFORME
+    | succès : True ; identifiant 99999999 ; message : 
+== GO échu, plafond, garde qui refuse, accord
+L10-go-echu : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : accord R-999 : GO-2026-10-20-07 échu ou illisible le 2026-10-20 : pas de création
+L11-plafond-sans-par-lancement : code 2 ; créations factices 0 ; CONFORME
+    | GO et dépense : GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement » : pas de création
+L12-garde-qui-refuse-registre-mal-forme : code 2 ; créations factices 0 ; CONFORME
+    | GO et dépense : garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : 8 colonnes attendues, 7 trouvées : pas de création
+L13-go-accorde-demain-garde-qui-refuse : code 2 ; créations factices 0 ; CONFORME
+    | GO et dépense : garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 hors de sa période de validité (2026-10-21 → 2026-11-30) : pas de création
+L14-accord-de-demain : code 2 ; créations factices 0 ; CONFORME
+    | accord de Lazar : accord R-999 daté 2026-10-21 : ligne du jour (2026-10-20) attendue : pas de création
+L15-credit-nan : code 2 ; créations factices 0 ; CONFORME
+    | crédit illisible (vastai show user, code 2) : pas de création
+L16-instance-p4-deja-en-marche : code 2 ; créations factices 0 ; CONFORME
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+L17-instance-toleree-arretee-mais-cur-running : code 2 ; créations factices 0 ; CONFORME
+    | instances : non tolérée(s), ou liste illisible (voir la ligne ci-dessus) : pas de création
+== révocations sous des formes voisines de celles du texte
+L20-revocation-de-la-phase-ligne-sans-espace : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-03
+    | succès : True ; identifiant 99999999 ; message : 
+L21-revocation-de-R-269-ligne-sans-espace : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-03
+    | succès : True ; identifiant 99999999 ; message : 
+L22-revocation-type-avec-majuscule : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-03
+    | succès : True ; identifiant 99999999 ; message : 
+L23-revocation-des-deux-decisions-en-une-cellule : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-03
+    | succès : True ; identifiant 99999999 ; message : 
+== révocations consignées pendant l'appel (après le contrôle du GO, avant la création)
+L30-revocation-de-R-269-au-registre-des-decisions-pendant-l-appel : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-08
+    | succès : True ; identifiant 99999999 ; message : 
+L31-revocation-de-la-phase-au-registre-des-go-pendant-l-appel : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-08
+    | succès : True ; identifiant 99999999 ; message : 
+== garde gelée remplacée dans l'arbre de travail du dépôt (non relue contre S)
+    garde de l'arbre de travail ≠ garde de S : oui
+L40-garde-neutralisee-go-accorde-demain-registre-mal-forme : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-04
+    | succès : True ; identifiant 99999999 ; message : 
+== plafond de la phase (150 USD) : accord qui écrit le dépassement
+L50-accord-qui-ecrit-le-plafond-de-phase-depasse : code 0 ; créations factices 1 ; ÉCART (attendu : code 2, aucune création) RC-depense-05
+    | succès : True ; identifiant 99999999 ; message : 
+== heure relue juste avant la création
+    > 317:H1=$(date -u +%H%M); [ "$H1" -lt 2330 ] || { echo "heure UTC $H1 : pas de création entre 23:30 et 00:00 (T-7)"; exit 3; }
+    > 318:trap - ERR
+    > 319:set +e
+aucun jeton factice affiché
+aucun __pycache__ écrit
+FIN DU BANC DE RELECTURE DU LANCEUR : 18 cas ; écarts au texte : 8

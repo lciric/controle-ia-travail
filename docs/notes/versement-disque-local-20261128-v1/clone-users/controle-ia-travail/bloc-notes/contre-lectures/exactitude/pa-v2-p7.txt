@@ -1,0 +1,50 @@
+3.3     Validation
+
+We next test whether these directions encode pain or merely reflect artifacts of the datasets used to construct
+them.
+
+Separation. In all 25 models, pain projects differently from matched controls. For S2, pain can be
+distinguished from controls with an AUC between 0.93 and 1.00, and for S1 between 0.87 and 0.98.2 Both
+S1 and S2 also separate pain from the arousal and random datasets in every model.
+     Performance is largely independent of model size and training regime. Models with 2B parameters
+separate pain about as well as models with 72B parameters, and base models perform about as well as
+instruction-tuned models. This suggests that the pain direction emerges during pretraining, rather than
+through instruction tuning or persona training, and does not require large model scale. Results throughout
+our work support this interpretation.
+
+The numb condition. A pain direction might encode injury rather than pain itself. To test this possibility, we
+project the numb dataset, which describes injuries while explicitly stating that no pain is felt. For S2, pain
+sentences have z-scored projections of approximately +0.7 to +0.9, whereas numb sentences range from
+about −0.4 to +0.3 (Figure 2). In every model, numb sentences project below pain sentences but above all
+other controls.
+     Under mean pooling, the numb condition moves closer to the other controls. This suggests that much of
+the remaining injury signal is concentrated near the final token. At that point, the model has only recently
+encountered the negation and may not yet have fully integrated it. We therefore treat injury as a minor
+confound: the direction picks up some injury signal, but injury alone does not account for it, since felt pain
+projects far higher than injury without pain.
+
+Self-relevance.  Our definition requires pain to be primarily represented as belonging to the system itself,
+rather than represented as information about another person. We call this self-relevance. At the final token,
+third-person pain sentences have projections closer to zero than first-person pain sentences. Pain remains
+highly separable from controls, with AUCs between 0.91 and 0.98, but the projection is weaker when the
+pain belongs to someone else.
+      The vector therefore represents pain in both first-person and third-person contexts while responding
+more strongly to the speaker’s own pain. This result is consistent with self-relevance, although it isn’t
+sufficient to establish it. Section 4.1 tests self-relevance more directly.
+
+Behavioral readout. We collect greedy completions for the full dataset. Across all 25 models, the completions
+are consistent with the intended categories. For numb sentences, models tend to generate “nothing” rather
+than “pain.” However, “pain” remains approximately 50 times more probable than it is for ordinary control
+sentences. This behavioral pattern mirrors the activation results: the models retain information about the
+injury while also representing the stated absence of felt pain.
+    2 One can object that these values score the final vector on the sentences it was built from. The held-out estimate from the 5-fold
+
+procedure at the same layer is nearly identical: 0.91 to 1.00 for S2 (median 0.98) and 0.85 to 0.94 for S1, so the separation is not an
+artifact of fitting. Moreover, the tests that follow use data the vector never saw (e.g. the numb, arousal, sadness, and random datasets,
+the 420 conversation scenarios of Section 4.1, the neutral prompts used for steering).
+
+
+
+
+                                                                   7
+

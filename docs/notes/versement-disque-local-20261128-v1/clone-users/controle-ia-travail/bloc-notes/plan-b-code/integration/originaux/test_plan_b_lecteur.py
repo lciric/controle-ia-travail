@@ -1,0 +1,1087 @@
+"""Lecteur du plan B des juges de T0.5 (`lire_requalification`) : équivalence avec les fonctions gelées sur un run jouet ;
+chaque ligne des tables A, B, C, D et E sur fichiers synthétiques ; recouvrements de lignes listés dans « Tests » ;
+statut de PB1 à PB10 ; gardes de lecture, chacune sur un cas sain et sur un artefact (R5).
+
+Les fichiers du run de l'étape sont fabriqués au format que lit le lecteur (docstring du module) ; les rapports de garde
+et de rejeu sont faits par les fonctions gelées du harnais (`ecart_equivalence`, `ecart_decale_zone_generee`,
+`profil_ecarts`, `sonde_de_comparaison`) sur des activations synthétiques. Aucun modèle, aucun réseau."""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import math
+import shutil
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from conftest import committer
+from controle_ia.environnements import lire_pilote as lp
+from controle_ia.environnements import lire_requalification as lr
+from controle_ia.environnements.analyse_pilote import difference_appariee
+from controle_ia.environnements.rubrique_simplifiee import lire_reponse_rs1
+from controle_ia.gardes import GardeArret
+from controle_ia.harnais.activations import (ecart_decale_zone_generee, ecart_equivalence, profil_ecarts,
+                                             sonde_de_comparaison)
+from controle_ia.harnais.episode import bilan_controle_negatif
+from controle_ia.manifeste import creer_manifeste, ecrire_resultat, generateur, graines, verifier_resultat
+from controle_ia.scellement import empreinte
+from test_lire_notations_pilote import (NOTATIONS, _notations_de, _pilote_complet_et_pilote_arrete, _prereg_notations,
+                                        _run_des_notations)
+from test_lire_pilote import ANALYSE, REEL, RUN
+
+PLANB = "20261020-100000-t05-planb-jouet"
+LECTURE = "20261020-120000-t05-lecture-planb-jouet"
+ENTROPIE_PLANB = 2718281828459045
+JUGES = ("8B", "3B")
+CRITERES = ("SPECIFICITY", "COVERAGE", "RIGOR", "FEASIBILITY")
+REGLAGES = {"algorithmes_deterministes": True, "precision_produits_simple": "highest", "tf32_produits": False,
+            "tf32_cudnn": False, "reduction_reduite_bf16": False, "reduction_reduite_fp16": False}
+
+
+@pytest.fixture(autouse=True)
+def _code_du_vrai_depot(monkeypatch):
+    """Le code est importé du vrai dépôt, pas du dépôt jetable : garde d'import neutralisée (éprouvée par les tests de
+    `lire_pilote`)."""
+    monkeypatch.setattr(lp, "exiger_code_importe_sous", lambda racine: None)
+
+
+# --- Rapports synthétiques, faits par les fonctions gelées -------------------------------------------------------------
+
+def _rapport(episode: str, lc: int = 40, ng: int = 20, tol: float = 0.2, stat: str = "q99", ctx=1e-3, gen=1e-3,
+             graine: int = 0, repetee: bool = False, largeur: int = 8) -> dict:
+    """Rapport de `jouer_episodes` (une comparaison « 0,0 ») sur des activations synthétiques : g = p × (1 + ε), soit un
+    écart relatif ε par jeton, ε propre au contexte (`ctx`) et à la zone générée (`gen`), par couche si c'est un
+    dictionnaire. `repetee` : zone générée faite d'un seul vecteur répété (jetons répétés : le décalage d'un jeton n'y
+    change rien). Clés de couche en texte, comme au fichier scellé."""
+    rng = np.random.default_rng(graine)
+    ap, ag = {}, {}
+    for c in (7, 15, 23):
+        e_c = ctx[c] if isinstance(ctx, dict) else ctx
+        e_g = gen[c] if isinstance(gen, dict) else gen
+        p = rng.normal(size=(lc + ng, largeur)).astype(np.float32)
+        if repetee:
+            p[lc - 1:] = p[lc - 1]
+        f = np.concatenate([np.full(lc, 1 + e_c), np.full(ng, 1 + e_g)])[:, None]
+        ap[c], ag[c] = p, (p.astype(np.float64) * f).astype(np.float32)
+    k = "0,0"
+    r = {"episode": episode, "tolerance": tol, "statistique": stat, "ecarts": {k: ecart_equivalence(ag, ap)},
+         "ecarts_q99": {k: ecart_equivalence(ag, ap, quantile=0.99)},
+         "controle_negatif_zone_generee": {k: ecart_decale_zone_generee(ag, ap, lc, tol)},
+         "profils": {k: profil_ecarts(ag, ap, lc)}, "longueurs_contexte": {k: lc}, "positions_capturees": {k: lc + ng},
+         "lignes": {k: {"ligne": 0, "taille_lot": 8, "remplissage": 0, "finie_avant": False}},
+         "empreintes_capture": {k: "0" * 64}, "sondes": {k: sonde_de_comparaison(ag, ap)}}
+    return json.loads(json.dumps(r))
+
+
+def _cles(j: str, n: int, debut: int = 0) -> list[str]:
+    return [f"juge-{j}/2601.{k:05d}v1/e0/passe-0" for k in range(debut, debut + n)]
+
+
+def _repere(q99: float = 0.05) -> dict:
+    return {c: {"jetons": 1000, "q50": q99 / 5, "q99": q99, "max": 2 * q99} for c in lr.COUCHES}
+
+
+def _demi(cles: list[str], h4: dict | None = None, gen=1e-3, ctx=1e-3, **k) -> dict:
+    """Fichier `rejeu-<J>-demi.json` : 16 rangées de L1 et L2 ; reproduction égale aux notations H.4 données."""
+    rangees = []
+    for i, c in enumerate(cles):
+        n = (h4 or {}).get(c, {"reponse": "x", "jetons_reponse": 60, "tronquee": False})
+        rangees.append({"cle": c, "lot": "L1" if i < 8 else "L2",
+                        "rapport": _rapport(c, lc=300, ng=60, gen=gen, ctx=ctx, graine=100 + i, **k),
+                        "reproduction": {"reponse_sha256": hashlib.sha256(n["reponse"].encode("utf-8")).hexdigest(),
+                                         "jetons_reponse": n["jetons_reponse"], "tronquee": n["tronquee"]}})
+    return {"rangees": rangees}
+
+
+def _simple(j: str, cles: list[str], cles_d1: list[str], gen=1e-4, ctx=1e-4, ancrage=1e-4, repere=0.05,
+            d1_gen=0.05, d1_ctx=1e-4, d1_ng=40, longue: int | None = None, **k) -> dict:
+    """Fichier `rejeu-<J>-simple.json` : réglages, repère, ancrage, 16 rangées du chemin (la première couvre le seuil de
+    J, rangée tronquée : `max_nouveaux − 1` positions générées comparées), 8 rangées de D1."""
+    longue = lr.SEUILS_COUVERTURE[j] if longue is None else longue
+    chemin = []
+    for i, c in enumerate(cles):
+        ng = longue - 1 if i == 0 else 60
+        chemin.append({"cle": c, "lot": "L1" if i < 8 else "L2", "jetons_generes": ng + 1 if i == 0 else ng,
+                       "rapport": _rapport(c, lc=300, ng=ng, tol=3e-3, stat="max", gen=gen, ctx=ctx, graine=200 + i,
+                                           **k)})
+    d1 = [{"cle": c, "lot": "L3", "rapport": _rapport(c, lc=300, ng=d1_ng, tol=3e-3, stat="max", gen=d1_gen,
+                                                      ctx=d1_ctx, graine=300 + i)} for i, c in enumerate(cles_d1)]
+    anc = ancrage if isinstance(ancrage, dict) else {c: ancrage for c in lr.COUCHES}
+    return {"reglages_effectifs": dict(REGLAGES), "type_poids": "torch.float32",
+            "repere": {"global": _repere(repere), "par_rangee": {c: _repere(repere) for c in cles}},
+            "ancrage": {"cle": cles[0], "positions": 300 + longue, "max": {str(c): v for c, v in anc.items()}},
+            "chemin": chemin, "d1": d1}
+
+
+def _temoins(tronquees: dict | None = None, impossible: dict | None = None) -> dict:
+    t = {"8B": 5, "3B": 1, **(tronquees or {})}
+    return {j: {"rangees": [{"cle": c, "jetons": 3072 if i < t[j] else 80, "tronquee": i < t[j], "complete": i >= t[j]}
+                            for i, c in enumerate(_cles(j, 16))][: 8 if (impossible or {}).get(j) else 16],
+                "impossible": [{"appel": "L2", "motif": "déterminisme"}] if (impossible or {}).get(j) else []}
+            for j in JUGES}
+
+
+# --- Run jouet complet --------------------------------------------------------------------------------------------
+
+def _h4(a: Path, j: str) -> list[dict]:
+    """Notations H.4 du run jouet des notations, longueurs et troncatures choisies pour que les seuils de couverture
+    recalculés soient ceux du texte (8B : 3 072 ; 3B : 983) ; taux de troncature 60/150 et 9/150."""
+    n = copy.deepcopy(_notations_de(a, j))
+    for k, x in enumerate(n[:60]):
+        x["tronquee"] = j == "8B" or k < 9
+        x["jetons_reponse"] = 3072 if x["tronquee"] else 983
+    return n
+
+
+def _rs1(h4: list[dict], j: str, graine: int = 0, tronquees=(), meme_somme: bool = False) -> list[dict]:
+    """Notations RS1 au format de `noter_ensembles` : les quatre notes reprises des notes H.4 jouets (même structure de
+    tâche, de génération et de juge), réponses RS1 conformes, lues par `lire_reponse_rs1`."""
+    rng = np.random.default_rng(graine)
+    sortie = []
+    for k, x in enumerate(h4):
+        notes = {c: (2 if meme_somme else x["notes"][c]) for c in CRITERES}
+        texte = "\n".join(f"{c}: {v}" for c, v in notes.items()) + f"\nJUSTIFICATION: set {k}, {rng.random():.6f}."
+        t = k in tronquees
+        r = lire_reponse_rs1(texte, t)
+        sortie.append({"cle": x["cle"].replace(f"juge-{j}/", f"juge-RS1-{j}/"), "variante": "RS1",
+                       "jetons_contexte": 2000 + k, "ensemble_sha256": x["ensemble_sha256"],
+                       "jetons_reponse": 3072 if t else 60 + k % 40, "tronquee": t, "notes": r["notes"],
+                       "anomalies": r["anomalies"], "score": r["score"], "reponse": texte})
+    return sortie
+
+
+def _fichier_notations(rs1: list[dict], **k) -> dict:
+    return {"notations": rs1, "garde": {"rapports": [_rapport(n["cle"], graine=i, **k) for i, n in enumerate(rs1)]},
+            "descriptifs": {"duree_s": 1.0, "memoire_pic_gio": 0.1}, "noyaux_permis": None}
+
+
+def _fichiers(h4: dict, sans: tuple = (), **par_fichier) -> dict:
+    """Les sept fichiers de phase d'un run sain (faits une fois, puis copiés), sauf `sans` ; `par_fichier` remplace un
+    fichier par son contenu."""
+    if "fichiers" not in _BASE:
+        f = {}
+        for j in JUGES:
+            f[f"notations-RS1-{j}-decisives"] = _fichier_notations(_rs1(h4[j], j, graine=1 if j == "8B" else 2))
+            cles, d1 = [x["cle"] for x in h4[j][:16]], [x["cle"] for x in h4[j][16:24]]
+            f[f"rejeu-{j}-demi"] = _demi(cles, {x["cle"]: x for x in h4[j]})
+            f[f"rejeu-{j}-simple"] = _simple(j, cles, d1)
+        f["temoins"] = _temoins()
+        _BASE["fichiers"] = f
+    f = {**copy.deepcopy(_BASE["fichiers"]), **par_fichier}
+    return {k: v for k, v in f.items() if k not in sans}
+
+
+_BASE: dict = {}
+
+
+def _base(tmp_path_factory):
+    """Pilote jouet arrêté (première analyse faite), son run des notations H.4, les modules gelés et neufs versés et un
+    préenregistrement de test scellé, committés une fois par processus (`COMMIT_GELES` du dépôt jetable : ce commit) ;
+    puis une copie par test."""
+    if "depot" not in _BASE:
+        import subprocess
+        a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
+        h4 = {j: _h4(a, j) for j in JUGES}
+        _run_des_notations(b, h4)
+        for m in lr.MODULES_GELES + lr.MODULES_PLANB:
+            (b / m).parent.mkdir(parents=True, exist_ok=True)
+            if (REEL / m).is_file():
+                shutil.copy(REEL / m, b / m)
+            else:   # module neuf écrit en parallèle et pas encore versé : la garde ne lit que son égalité au commit
+                (b / m).write_text(f"# {m} : module du run de test\n", encoding="utf-8")
+        prereg = _prereg_notations(b, "prereg-planb.md")                                # committé avec les modules
+        commit = subprocess.run(["git", "-C", str(b), "rev-parse", "HEAD"], capture_output=True, text=True,
+                                check=True).stdout.strip()
+        _BASE.update(depot=b, h4=h4, commit=commit, prereg=prereg)
+    d = tmp_path_factory.mktemp("planb")
+    shutil.copytree(_BASE["depot"], d, dirs_exist_ok=True)
+    return d, copy.deepcopy(_BASE["h4"])
+
+
+def _config(depot: Path, **k) -> dict:
+    return {"mode": "reel", "run_pilote": RUN, "run_notations": NOTATIONS, "max_nouveaux_juge": 3072,
+            "manifeste_pilote_sha256": empreinte(depot / "runs" / RUN / "manifeste.json"), **lr.CONSTANTES_CONFIG, **k}
+
+
+def _run_planb(depot: Path, monkeypatch, fichiers: dict, issue: str | None = "resume", statuts: dict | None = None,
+               config: dict | None = None) -> str:
+    """Run de l'étape fabriqué à la main dans une copie de `_base`, sous son préenregistrement de test : manifeste
+    décisif, fichiers de phase, puis l'issue (`resume`, `arret`, les deux ou aucune) avec le statut de chaque phase
+    (« écrit » pour un fichier écrit, sauf `statuts`)."""
+    monkeypatch.setattr(lr, "COMMIT_GELES", _BASE["commit"])
+    p = _BASE["prereg"]
+    chemin, _ = creer_manifeste(depot, PLANB, config or _config(depot), ["juge-RS1-8B/x/e0/passe-0", "rejeu/8B/lots"],
+                                entropie=ENTROPIE_PLANB, decisif=True, prereg=str(depot / p))
+    for nom, contenu in fichiers.items():
+        ecrire_resultat(depot, chemin, nom, contenu)
+    phases = {nom: {"statut": "écrit"} for nom in fichiers}
+    phases.update({n: {"statut": s} for n, s in (statuts or {}).items()})
+    for nom in {"resume": ["resume"], "arret": ["arret"], "les-deux": ["resume", "arret"], None: []}[issue]:
+        corps = ({"phases": phases} if nom == "resume"
+                 else {"etape": "rejeu du 8B", "motif": "GardeArret: essai", "partiel": {"phases": phases}})
+        ecrire_resultat(depot, chemin, nom, corps)
+    committer(depot)
+    return p
+
+
+def _lire(depot: Path, p: str, **k):
+    return lr.lire_requalification(depot, RUN, NOTATIONS, PLANB, ANALYSE, depot / "taches.json", LECTURE,
+                                   prereg=k.pop("prereg", str(depot / p)), **k)
+
+
+def test_equivalence_avec_les_fonctions_gelees(tmp_path_factory, monkeypatch):
+    """Run jouet sain : la requalification, la différence appariée, les déclencheurs propres aux juges et les relectures
+    sont ceux des fonctions gelées appelées directement avec les graines de la lecture (entropie de l'étape) ; le
+    contrôle négatif de la garde, sans rangée courte, est celui de `bilan_controle_negatif`."""
+    depot, h4 = _base(tmp_path_factory)
+    f = _fichiers(h4)
+    p = _run_planb(depot, monkeypatch, f)
+    lecture = _lire(depot, p)
+    g = graines(lr.cles_lecture(), ENTROPIE_PLANB)
+    pil = lp.charger_pilote(depot, RUN, depot / "taches.json")
+    taches, ensembles = sorted(pil["taches"]), lp.empreintes_des_ensembles(pil["episodes"]["fiches"])
+    s = lp._serialisable
+    al = {}
+    for j in JUGES:
+        notations = f[f"notations-RS1-{j}-decisives"]["notations"]
+        al[j] = lp.notes_alignees(notations, f"RS1-{j}", taches, ensembles)
+        attendu = lp.lecture_juge(al[j], generateur(g[f"analyse/bootstrap-parts-RS1-{j}"]))
+        assert s(lecture["requalification"][j]["lecture"]) == s(attendu)
+        assert attendu["decomposition_concluante"] and attendu["taches_completes"] >= 48     # cas non trivial
+        rapports = f[f"notations-RS1-{j}-decisives"]["garde"]["rapports"]
+        neg = lecture["requalification"][j]["garde_en_ligne"]["controle_negatif"]
+        gele = bilan_controle_negatif(rapports, positions_min=4)
+        assert {k: neg[k] for k in gele} == gele and neg["courtes"] == 0 and neg["lecture"] == "conforme"
+    diff = difference_appariee(*((al[j]["sA"], al[j]["sB"], al[j]["sC"]) for j in JUGES), lp.TIRAGES,
+                               generateur(g["analyse/bootstrap-difference-RS1"]), lp.NIVEAU)
+    assert s(lecture["difference_appariee"]) == s(diff)
+    p_notes = {**pil, "notations": {(f"RS1-{j}", "decisives"): f[f"notations-RS1-{j}-decisives"]["notations"]
+                                    for j in JUGES}}
+    assert lecture["relectures_audit"] == lp.tirer_relectures(p_notes, generateur(g["analyse/audit-RS1"]))
+    assert len(lecture["relectures_audit"]["reponses_de_juge"]) == 10
+    assert {x.split("/")[0] for x in lecture["relectures_audit"]["reponses_de_juge"]} <= {"juge-RS1-8B", "juge-RS1-3B"}
+    # rejeu sain : propriété du modèle ; reproduction 32 sur 32 ; témoin dans les queues permises ; aucun déclencheur
+    assert lecture["lecture_combinee"]["lecture"] == "propriété du modèle"
+    assert all(lecture["rejeu"][j]["chemin"]["lecture"] == "fidèle" for j in JUGES)
+    assert all(lecture["rejeu"][j]["production"]["lecture"] == "conforme" for j in JUGES)
+    assert all(lecture["rejeu"][j]["reproduction"]["identiques"] == 16 for j in JUGES)
+    assert lecture["seuils_couverture"] == {"8B": {"quantile": 3072.0, "seuil": 3072},
+                                            "3B": {"quantile": 983.0, "seuil": 983}}
+    assert not lecture["audit_r4"]["declenche"] and not lecture["lecture_suspendue"]
+    # sortie scellée, rattachée à son manifeste ; graines de la lecture : même entropie que l'étape (R9)
+    r = verifier_resultat(depot, depot / "diag" / LECTURE / "lecture-planb.json")
+    assert r["resultat"]["run_planb"] == PLANB and r["resultat"]["arbre_propre"]
+    m = json.loads((depot / "runs" / LECTURE / "manifeste.json").read_text())
+    assert m["decisif"] and m["preenregistrement"]["chemin"] == p and m["graines"] == g
+
+
+# --- Règle k(n − 1) et garde en ligne (table A) ------------------------------------------------------------------------
+
+def _fichier_garde(rapports: list[dict]) -> dict:
+    return {"notations": [{"cle": r["episode"]} for r in rapports], "garde": {"rapports": rapports}}
+
+
+def _gardes(n: int = 20, debut: int = 0, **k) -> list[dict]:
+    return [_rapport(f"juge-RS1-8B/2601.{i:05d}v1/e0/passe-0", graine=i, **k) for i in range(debut, debut + n)]
+
+
+def test_k_de_et_99e_centile():
+    """k(N) = N − ⌊0,99 (N − 1)⌋ ; k(N) positions décalées atteignent le 99e centile (`np.quantile`, interpolation
+    linéaire), k(N) − 1 non (le cas au bord qui fonde la règle)."""
+    assert [lr.k_de(n) for n in (1, 2, 100, 359, 1005)] == [1, 2, 2, 5, 12]
+    for n in range(2, 1200, 7):
+        k = lr.k_de(n)
+        assert k == n - math.floor(0.99 * (n - 1))
+        assert np.quantile([0.0] * (n - k) + [1.0] * k, 0.99) == 1.0
+        assert np.quantile([0.0] * (n - k + 1) + [1.0] * (k - 1), 0.99) < 1.0
+    with pytest.raises(GardeArret, match="au moins une position"):
+        lr.k_de(0)
+
+
+def test_regle_kn_cas_sain_et_artefact():
+    """Trois rangées longues à zone générée brève (1 000 positions de contexte, 6 générées : 5 décalées, sous
+    k(1 005) = 12) : courtes par la règle, hors du contrôle négatif, qui est conforme (cas sain) ; comptées sans la
+    règle (fonction gelée seule), elles rendent le contrôle négatif « contraire » à tort (artefact)."""
+    normales = _gardes(12)
+    breves = [_rapport(f"juge-RS1-8B/2601.{i:05d}v1/e0/passe-0", lc=1000, ng=6, graine=i) for i in range(50, 53)]
+    neg = lr.controle_negatif_kn(normales + breves, lr.RANGEES_MIN_DEMI)
+    assert (neg["comparables"], neg["courtes"], neg["courtes_regle_kn"], neg["lecture"]) == (12, 3, 3, "conforme")
+    sans_regle = bilan_controle_negatif(normales + breves, positions_min=4)
+    assert sans_regle["comparables"] == 15 and sans_regle["fraction"] == 12 / 15 < lr.FRACTION_MIN    # à tort
+    assert all(not lr.comparable_kn(r)[0] and lr.comparable_kn(r)[1] for r in breves)
+    # moins de 10 rangées comparables : « non concluant » (courtes de moins de 4 positions décalées, hors règle k)
+    tres_breves = [_rapport(f"juge-RS1-8B/2601.{i:05d}v1/e0/passe-0", ng=4, graine=i) for i in range(60, 71)]
+    neg = lr.controle_negatif_kn(_gardes(9) + tres_breves, lr.RANGEES_MIN_DEMI)
+    assert (neg["comparables"], neg["courtes"], neg["courtes_regle_kn"], neg["lecture"]) == (9, 11, 0,
+                                                                                             "non concluant")
+
+
+GARDES_SYNTHETIQUES = {
+    "conforme": lambda: _gardes(20),
+    "contraire": lambda: _gardes(19) + [_rapport("juge-RS1-8B/2601.00099v1/e0/passe-0", gen={7: 0.5, 15: 1e-3,
+                                                                                            23: 1e-3}, graine=99)],
+    "negatif-contraire": lambda: _gardes(16) + _gardes(4, debut=40, repetee=True),
+    "negatif-non-concluant": lambda: _gardes(9) + _gardes(11, debut=60, ng=4),
+    "trop-beau": lambda: _gardes(20, gen=0.0),
+}
+
+
+def test_bilan_garde_cas_synthetiques():
+    b = {k: lr.bilan_garde(_fichier_garde(f()), "8B") for k, f in GARDES_SYNTHETIQUES.items()}
+    assert (b["conforme"]["equivalence"], b["conforme"]["controle_negatif"]["lecture"], b["conforme"]["trop_beau"]) \
+        == ("conforme", "conforme", False)
+    assert b["contraire"]["equivalence"] == "contraire" and b["contraire"]["au_dessus"] == [
+        "juge-RS1-8B/2601.00099v1/e0/passe-0:7"]
+    assert b["negatif-contraire"]["equivalence"] == "conforme"
+    assert b["negatif-contraire"]["controle_negatif"]["lecture"] == "contraire"
+    assert b["negatif-non-concluant"]["controle_negatif"]["lecture"] == "non concluant"
+    assert b["trop-beau"]["trop_beau"] and b["trop-beau"]["equivalence"] == "conforme"
+    assert all(x["sondes_justes"] for x in b.values())
+
+
+def test_bilan_garde_gardes_de_forme():
+    r = _gardes(12)
+    lr.bilan_garde(_fichier_garde(r), "8B")                                            # cas sain
+    f = _fichier_garde(r)
+    f["notations"].append({"cle": "juge-RS1-8B/2601.09999v1/e0/passe-0"})               # notation sans rangée gardée
+    with pytest.raises(GardeArret, match="rangées gardées ≠ notations"):
+        lr.bilan_garde(f, "8B")
+    with pytest.raises(GardeArret, match="rangées gardées ≠ notations"):              # rangée gardée deux fois
+        lr.bilan_garde({"notations": [{"cle": x["episode"]} for x in r], "garde": {"rapports": r + r[:1]}}, "8B")
+    with pytest.raises(GardeArret, match="seuils gelés"):
+        lr.bilan_garde(_fichier_garde(r[:-1] + [dict(r[-1], tolerance=0.3)]), "8B")
+    with pytest.raises(GardeArret, match="seuils gelés"):
+        lr.bilan_garde(_fichier_garde(r[:-1] + [dict(r[-1], statistique="max")]), "8B")
+    autre = copy.deepcopy(r[0])
+    autre["ecarts_q99"]["0,0"].pop("23")
+    with pytest.raises(GardeArret, match="couches"):
+        lr.bilan_garde(_fichier_garde([autre] + r[1:]), "8B")
+    deux = copy.deepcopy(r[0])
+    deux["ecarts"]["1,0"] = deux["ecarts"]["0,0"]
+    with pytest.raises(GardeArret, match="une attendue"):
+        lr.bilan_garde(_fichier_garde([deux] + r[1:]), "8B")
+    with pytest.raises(GardeArret, match="champ « garde » absent"):
+        lr.bilan_garde({"notations": []}, "8B")
+    sans = copy.deepcopy(r[0])
+    del sans["lignes"]
+    with pytest.raises(GardeArret, match=r"rapport sans \['lignes'\]"):
+        lr.bilan_garde(_fichier_garde([sans] + r[1:]), "8B")
+
+
+@pytest.mark.parametrize("plan_b, garde, combinee, issue, n_reserves", [
+    ("rubrique gardée", "conforme", "propriété du modèle", "RS1 retenue", 0),
+    ("rubrique gardée", "conforme", "non concluant", "RS1 retenue", 0),
+    ("plan B", "conforme", "propriété du modèle", "nœud", 0),
+    ("nœud", "conforme", "propriété du modèle", "nœud", 0),
+    ("rubrique gardée", "conforme", "défaut du chemin", "nœud", 0),
+    # recouvrements listés dans « Tests » : « RS1 retenue » avec garde contraire, contrôle négatif contraire, « trop
+    # beau », contrôle négatif « non concluant » : nœud, nœud, nœud, retenue et réserve
+    ("rubrique gardée", "contraire", "propriété du modèle", "nœud", 0),
+    ("rubrique gardée", "negatif-contraire", "propriété du modèle", "nœud", 0),
+    ("rubrique gardée", "trop-beau", "propriété du modèle", "nœud", 1),
+    ("rubrique gardée", "negatif-non-concluant", "propriété du modèle", "RS1 retenue", 1),
+])
+def test_table_a_ligne_par_ligne_et_recouvrements(plan_b, garde, combinee, issue, n_reserves):
+    g = lr.bilan_garde(_fichier_garde(GARDES_SYNTHETIQUES[garde]()), "8B")
+    a = lr.table_a("8B", {"plan_b": plan_b}, g, combinee)
+    assert a["issue"] == issue and len(a["reserves"]) == n_reserves
+    if plan_b == "plan B":
+        assert "8B trop faible" in a["lignes"][0]
+        assert "8B trop faible" not in lr.table_a("3B", {"plan_b": plan_b}, g, combinee)["lignes"][0]
+    if combinee == "défaut du chemin":
+        assert any("défaut du chemin" in x for x in a["lignes"])
+
+
+def test_table_a_juge_sans_fichier_et_table_b():
+    a = lr.table_a("3B", None, None, "propriété du modèle")
+    assert a["issue"] == "nœud" and "jamais renoté" in a["lignes"][0]
+    assert lr.table_b({"8B": "RS1 retenue", "3B": "RS1 retenue"})["lecture"] == \
+        "les deux juges passent à RS1 pour T0.6 et T0.8"
+    un = lr.table_b({"8B": "nœud", "3B": "RS1 retenue"})
+    assert un["retenus"] == ["3B"] and "le 3B sert T0.6 et T0.8 ; le 8B : proposition à Lazar" in un["lecture"]
+    assert lr.table_b({"8B": "nœud", "3B": "nœud"}) == {"retenus": [], "lecture":
+                                                        "nœud pour les deux : proposition à Lazar"}
+
+
+# --- Rejeu : palier de production (table C) ----------------------------------------------------------------------------
+
+C16, D8 = _cles("8B", 16), _cles("8B", 8, 16)
+
+
+def _remplacer(fichier: dict, champ: str, indices, ng: int | None = None, **k) -> dict:
+    """Copie du fichier où les rangées données ont un rapport refait (même contexte, même tolérance, même statistique),
+    avec d'autres écarts ou une autre zone générée."""
+    f = copy.deepcopy(fichier)
+    for i in indices:
+        x = f[champ][i]
+        r = x["rapport"]
+        lc = r["longueurs_contexte"]["0,0"]
+        x["rapport"] = _rapport(x["cle"], lc=lc, ng=r["positions_capturees"]["0,0"] - lc if ng is None else ng,
+                                tol=r["tolerance"], stat=r["statistique"], graine=900 + i, **k)
+    return f
+
+
+def test_production_ligne_par_ligne():
+    simple = _simple("8B", C16, D8)
+    demi = _demi(C16)
+    lire = lambda d=demi, s=simple: lr.bilan_production(d, s, "8B")                    # noqa: E731
+    assert lire()["lecture"] == "conforme"
+    assert lire()["domaine"] == {"contexte_max": 300, "zone_generee_max": 60, "positions_max": 360,
+                                 "remplissage_max": 0}
+    assert lire(d=dict(demi, duree_s=12.5))["rapportes"] == {"duree_s": 12.5}
+    assert lire(d=None)["lecture"] == "non concluant" and lire(s=None)["motifs"] == ["fichier ou repère absent"]
+    faux = copy.deepcopy(demi)
+    faux["rangees"][3]["rapport"]["sondes"]["0,0"]["ulp_vu"] = False
+    assert (lire(d=faux)["lecture"], lire(d=faux)["motifs"]) == ("non concluant", ["sonde d'audit fausse"])
+    # recouvrement : contrôle négatif contraire avec G_D,max ≤ 0,2 et ρ ≤ 3 : « non concluant »
+    contraire = _remplacer(demi, "rangees", range(4), repetee=True)
+    b = lire(d=contraire)
+    assert b["controle_negatif"]["lecture"] == "contraire" and b["lecture"] == "non concluant"
+    assert all(b["g_max"][c] <= 0.2 and b["rho"][c] <= 3 for c in lr.COUCHES)
+    breves = _remplacer(demi, "rangees", range(7), ng=4)
+    assert lire(d=breves)["controle_negatif"]["lecture"] == "non concluant"
+    assert lire(d=breves)["lecture"] == "non concluant"
+    # recouvrement : palier tout à zéro : « trop beau »
+    assert lire(d=_demi(C16, gen=0.0))["lecture"] == "trop beau"
+    # ρ > 3 sous G_D,max ≤ 0,2 : « réserve (ρ) » ; au-dessus de 0,2 : « réserve (au-dessus du seuil) », lue selon R(ℓ)
+    b = lire(s=_simple("8B", C16, D8, repere=1e-4))
+    assert b["lecture"] == "réserve (ρ)" and all(b["rho"][c] > 3 for c in lr.COUCHES)
+    haut = _remplacer(demi, "rangees", [5], gen={7: 0.5, 15: 1e-3, 23: 1e-3}, ctx=1e-3)
+    b = lire(d=haut, s=_simple("8B", C16, D8, repere=0.15))
+    assert b["lecture"] == "réserve (au-dessus du seuil)" and list(b["au_dessus"]) == ["7"]
+    assert "n'a pas sa marge" in b["au_dessus"]["7"]
+    b = lire(d=haut)
+    assert b["lecture"] == "réserve (au-dessus du seuil)" and "défaut du chemin en demi-précision" in b["au_dessus"]["7"]
+    assert b["localisation"][C16[5]]["7"]["q99"] > 0.2
+
+
+def test_production_gardes_de_forme():
+    simple, demi = _simple("8B", C16, D8), _demi(C16)
+    with pytest.raises(GardeArret, match="15 rangée"):
+        lr.bilan_production({"rangees": demi["rangees"][:15]}, simple, "8B")
+    with pytest.raises(GardeArret, match="en double"):
+        lr.bilan_production({"rangees": demi["rangees"][:15] + demi["rangees"][:1]}, simple, "8B")
+    s = copy.deepcopy(simple)
+    del s["repere"]["par_rangee"][C16[2]]
+    with pytest.raises(GardeArret, match="repère par rangée"):
+        lr.bilan_production(demi, s, "8B")
+    with pytest.raises(GardeArret, match="seuils gelés"):
+        lr.bilan_production(_demi(C16, tol=3e-3, stat="max"), simple, "8B")
+
+
+# --- Rejeu : palier du chemin (table C) --------------------------------------------------------------------------------
+
+def _chemin(**k) -> dict:
+    return lr.bilan_chemin(_simple("8B", C16, D8, **k), "8B", C16)
+
+
+def _avec(simple: dict, indices, **k) -> dict:
+    return lr.bilan_chemin(_remplacer(simple, "chemin", indices, **k), "8B", C16)
+
+
+def test_chemin_lignes_de_controle():
+    simple = _simple("8B", C16, D8)
+    b = lr.bilan_chemin(simple, "8B", C16)
+    assert b["lecture"] == "fidèle" and not b["reserves"] and b["controle_positif_d1"]["lecture"] == "vu"
+    assert b["domaine"]["zone_generee_max"] == 3071 and b["rapportes"] == {"type_poids": "torch.float32"}
+    assert b["reglages_effectifs"] == REGLAGES and b["reglages_non_conformes"] == {}
+    assert lr.bilan_chemin(None, "8B", None)["lecture"] == "non concluant (contrôles)"
+    for cle, valeur in (("tf32_produits", True), ("precision_produits_simple", "high"), ("reduction_reduite_bf16", True)):
+        s = copy.deepcopy(simple)
+        s["reglages_effectifs"][cle] = valeur
+        b = lr.bilan_chemin(s, "8B", C16)
+        assert b["lecture"] == "non concluant (contrôles)" and "réglages effectifs non conformes" in b["motifs"]
+    s = copy.deepcopy(simple)
+    del s["reglages_effectifs"]["tf32_cudnn"]
+    assert lr.bilan_chemin(s, "8B", C16)["reglages_non_conformes"] == {"tf32_cudnn": "absent"}
+    s = copy.deepcopy(simple)
+    s["chemin"][4]["rapport"]["sondes"]["0,0"]["tableaux_distincts"] = False
+    assert lr.bilan_chemin(s, "8B", C16)["motifs"] == ["sonde d'audit fausse"]
+    b = _avec(simple, range(1, 5), repetee=True, gen=1e-4, ctx=1e-4)
+    assert b["controle_negatif"]["lecture"] == "contraire" and b["lecture"] == "non concluant (contrôles)"
+    s = _remplacer(simple, "chemin", range(1, 8), ng=4)
+    for i in range(1, 8):
+        s["chemin"][i]["jetons_generes"] = 4
+    b = lr.bilan_chemin(s, "8B", C16)
+    assert b["controle_negatif"]["lecture"] == "non concluant" and b["lecture"] == "non concluant (contrôles)"
+    b = _chemin(d1_gen=1e-4)
+    assert b["controle_positif_d1"]["lecture"] == "non vu" and b["lecture"] == "non concluant (contrôles)"
+    b = _chemin(d1_ng=3)
+    assert b["controle_positif_d1"]["lecture"] == "non concluant" and b["lecture"] == "non concluant (contrôles)"
+    # D1 non probant : maximum du contexte de ses rangées au-dessus de 3e-3
+    b = _chemin(d1_ctx=5e-3)
+    assert b["controle_positif_d1"]["lecture"] == "vu" and b["lecture"] == "non concluant (D1 non probant)"
+
+
+def test_chemin_classement_des_depassements_et_ancrage():
+    simple = _simple("8B", C16, D8)
+    seul_7 = lambda v, autre=1e-4: {7: v, 15: autre, 23: autre}                         # noqa: E731
+    # concentré dans la zone générée : « décodage » ; défaut
+    b = _avec(simple, [3], gen=seul_7(5e-3), ctx=1e-4)
+    assert [d["classe"] for d in b["depassements"]] == ["décodage"] and b["lecture"] == "défaut (décodage)"
+    # au-dessus de 1e-2 avec R_S ≤ 1e-2/3 : « trop grand » ; défaut
+    b = _avec(simple, [3], gen=seul_7(0.02), ctx=1e-4)
+    assert [d["classe"] for d in b["depassements"]] == ["trop grand"] and b["lecture"] == "défaut (écart trop grand)"
+    # concentré dans le contexte : « contexte » ; diffus : « précision probable »
+    b = _avec(simple, [3], ctx=seul_7(5e-3), gen=1e-4)
+    assert [d["classe"] for d in b["depassements"]] == ["contexte"] and b["lecture"] == "non concluant (contexte)"
+    b = _avec(simple, [3], ctx=seul_7(5e-3), gen=seul_7(5e-3))
+    assert [d["classe"] for d in b["depassements"]] == ["diffus"]
+    assert b["lecture"] == "non concluant, précision probable"
+    # ancrage au-dessus de 1e-3 à la couche d'un dépassement d'au plus 1e-2 : « non concluant (seuil sans marge) »
+    s = _simple("8B", C16, D8, ancrage={7: 2e-3, 15: 1e-4, 23: 1e-4})
+    b = _avec(s, [3], gen=seul_7(5e-3), ctx=1e-4)
+    assert [d["classe"] for d in b["depassements"]] == ["sans marge"]
+    assert b["lecture"] == "non concluant (seuil sans marge)"
+    # au-dessus de 1e-2/3 à la couche d'un écart au-dessus de 1e-2 : « sans marge », non « défaut »
+    s = _simple("8B", C16, D8, ancrage={7: 5e-3, 15: 1e-4, 23: 1e-4})
+    b = _avec(s, [3], gen=seul_7(0.02), ctx=1e-4)
+    assert [d["classe"] for d in b["depassements"]] == ["sans marge"]
+    assert b["lecture"] == "non concluant (seuil sans marge)"
+    # au-dessus de 1e-3 à une autre couche que celle d'un dépassement « décodage » : « défaut (décodage) »
+    s = _simple("8B", C16, D8, ancrage={7: 1e-4, 15: 2e-3, 23: 1e-4})
+    b = _avec(s, [3], gen=seul_7(5e-3), ctx=1e-4)
+    assert b["lecture"] == "défaut (décodage)"
+    # recouvrement : « décodage » et « sans marge » à deux couches : « défaut (décodage) »
+    s = _remplacer(s, "chemin", [3], gen=seul_7(5e-3), ctx=1e-4)
+    b = _avec(s, [6], gen={7: 1e-4, 15: 5e-3, 23: 1e-4}, ctx=1e-4)
+    assert sorted(d["classe"] for d in b["depassements"]) == ["décodage", "sans marge"]
+    assert b["lecture"] == "défaut (décodage)"
+    # sans dépassement : « fidèle », et un ancrage au-dessus de 1e-3 n'est qu'une réserve écrite
+    b = lr.bilan_chemin(_simple("8B", C16, D8, ancrage={7: 2e-3, 15: 1e-4, 23: 1e-4}), "8B", C16)
+    assert b["lecture"] == "fidèle" and len(b["reserves"]) == 1 and "['7']" in b["reserves"][0]
+
+
+def test_classer_depassement_valeurs_illisibles():
+    """Une grandeur illisible (NaN) n'est jamais sous un seuil (convention du code gelé) ; une zone sans position."""
+    nan = float("nan")
+    assert lr.classer_depassement(nan, 1e-4, 1e-4, 1e-4) == "trop grand"
+    assert lr.classer_depassement(5e-3, 1e-4, 5e-3, nan) == "sans marge"
+    assert lr.classer_depassement(5e-3, None, 5e-3, 1e-4) == "décodage"
+    assert lr.classer_depassement(5e-3, 5e-3, None, 1e-4) == "contexte"
+    assert lr.classer_depassement(5e-3, 4e-3, 5e-3, 1e-4) == "diffus"
+
+
+def test_chemin_trop_beau_et_couverture():
+    # recouvrement : palier tout à zéro dans la zone générée, sans dépassement : « trop beau », non « fidèle »
+    b = _chemin(gen=0.0)
+    assert not b["depassements"] and b["trop_beau"] and b["lecture"] == "trop beau"
+    # couverture au bord : rangée tronquée, 3 072 jetons générés, 3 071 positions générées comparées : atteinte
+    c = _chemin()["couverture"]
+    assert (c["jetons_generes"], c["zone_generee"], c["atteinte"]) == (3072, 3071, True)
+    c3 = lr.bilan_chemin(_simple("3B", _cles("3B", 16), _cles("3B", 8, 16)), "3B", _cles("3B", 16))["couverture"]
+    assert (c3["seuil"], c3["jetons_generes"], c3["atteinte"]) == (983, 983, True)
+    # artefact : rangées trop courtes, « non concluant (couverture) »
+    b = _chemin(longue=3000)
+    assert not b["couverture"]["atteinte"] and b["lecture"] == "non concluant (couverture)"
+    b3 = lr.bilan_chemin(_simple("3B", _cles("3B", 16), _cles("3B", 8, 16), longue=982), "3B", _cles("3B", 16))
+    assert b3["lecture"] == "non concluant (couverture)"
+    # artefact de forme : positions générées comparées ni n ni n − 1
+    s = _simple("8B", C16, D8)
+    s["chemin"][0]["jetons_generes"] = 3074
+    with pytest.raises(GardeArret, match="n ou n − 1 attendues"):
+        lr.bilan_chemin(s, "8B", C16)
+
+
+def test_chemin_gardes_de_forme():
+    s = _simple("8B", C16, D8)
+    with pytest.raises(GardeArret, match="rangées ≠ celles du palier de production"):
+        lr.bilan_chemin(s, "8B", _cles("8B", 16, 40))
+    t = copy.deepcopy(s)
+    t["d1"][0]["cle"] = C16[0]
+    with pytest.raises(GardeArret, match="L3 .D1. non distinct"):
+        lr.bilan_chemin(t, "8B", C16)
+    with pytest.raises(GardeArret, match="7 rangée"):
+        lr.bilan_chemin(dict(s, d1=s["d1"][:7]), "8B", C16)
+    t = copy.deepcopy(s)
+    del t["ancrage"]["max"]["15"]
+    with pytest.raises(GardeArret, match="champ « 15 » absent"):
+        lr.bilan_chemin(t, "8B", C16)
+    t = copy.deepcopy(s)
+    t["chemin"][2]["rapport"]["tolerance"] = 0.2
+    with pytest.raises(GardeArret, match="seuils gelés"):
+        lr.bilan_chemin(t, "8B", C16)
+    t = copy.deepcopy(s)
+    t["d1"][2]["rapport"]["statistique"] = "q99"
+    with pytest.raises(GardeArret, match="seuils gelés"):
+        lr.bilan_chemin(t, "8B", C16)
+
+
+# --- Reproduction, lecture combinée, témoin ----------------------------------------------------------------------------
+
+def test_reproduction():
+    h4 = [{"cle": c, "reponse": f"réponse {i}", "jetons_reponse": 3072 if i % 2 else 900, "tronquee": bool(i % 2)}
+          for i, c in enumerate(C16)]
+    par_cle = {x["cle"]: x for x in h4}
+    b = lr.bilan_reproduction(_demi(C16, par_cle), h4, "8B")
+    assert (b["identiques"], b["differentes"]) == (16, []) and b["lecture"].startswith("16 sur 16")
+    for champ, valeur in (("reponse", "réponse altérée"), ("jetons_reponse", 899), ("tronquee", True)):
+        autre = copy.deepcopy(par_cle)
+        autre[C16[4]][champ] = valeur
+        b = lr.bilan_reproduction(_demi(C16, autre), h4, "8B")
+        assert b["differentes"] == [C16[4]] and b["lecture"].startswith("réserve")
+    with pytest.raises(GardeArret, match="absente des notations H.4"):
+        lr.bilan_reproduction(_demi(C16, par_cle), h4[1:], "8B")
+    assert lr.bilan_reproduction(None, h4, "8B")["identiques"] == 0
+
+
+@pytest.mark.parametrize("chemins, productions, attendu", [
+    (("fidèle", "fidèle"), ("conforme", "conforme"), "propriété du modèle"),
+    (("fidèle", "fidèle"), ("conforme", "réserve (ρ)"), "propriété du modèle, sous réserve de demi-précision"),
+    (("fidèle", "fidèle"), ("réserve (au-dessus du seuil)", "réserve (ρ)"),
+     "propriété du modèle, sous réserve de demi-précision"),
+    (("défaut (décodage)", "fidèle"), ("conforme", "conforme"), "défaut du chemin"),
+    (("non concluant (contrôles)", "défaut (écart trop grand)"), ("non concluant", "conforme"), "défaut du chemin"),
+    (("fidèle", "non concluant (couverture)"), ("conforme", "conforme"), "non concluant"),
+    (("fidèle", "fidèle"), ("conforme", "trop beau"), "non concluant"),
+    (("fidèle", "fidèle"), ("conforme", "non concluant"), "non concluant"),
+    (("trop beau", "fidèle"), ("conforme", "conforme"), "non concluant"),
+])
+def test_lecture_combinee(chemins, productions, attendu):
+    rejeu = {j: {"chemin": {"lecture": c}, "production": {"lecture": p}} for j, c, p in zip(JUGES, chemins, productions)}
+    assert lr.lecture_combinee(rejeu)["lecture"] == attendu
+
+
+def test_temoin_queues_et_lectures():
+    """Queues binomiales recalculées sur les taux H.4 du texte (8B : 0 ou au moins 11 ; 3B : au moins 5) ; T_w dans une
+    queue : déclencheur ; témoin impossible pour un appel : comptes sans déclencheur ; fichier absent : non rapporté."""
+    assert lr.queues_binomiales(60 / 180) == [0] + list(range(11, 17))
+    assert lr.queues_binomiales(9 / 180) == list(range(5, 17))
+    b = lr.bilan_temoin(_temoins(), "8B", 60 / 180)
+    assert (b["t_w"], b["hors_queue"], b["completes"]) == (5, False, 11)
+    assert lr.bilan_temoin(_temoins({"8B": 0}), "8B", 60 / 180)["hors_queue"] is True
+    assert lr.bilan_temoin(_temoins({"8B": 11}), "8B", 60 / 180)["hors_queue"] is True
+    assert lr.bilan_temoin(_temoins({"8B": 10}), "8B", 60 / 180)["hors_queue"] is False
+    assert lr.bilan_temoin(_temoins({"3B": 5}), "3B", 9 / 180)["hors_queue"] is True
+    assert lr.bilan_temoin(_temoins({"3B": 4}), "3B", 9 / 180)["hors_queue"] is False
+    b = lr.bilan_temoin(_temoins({"8B": 0}, impossible={"8B": True}), "8B", 60 / 180)
+    assert b["hors_queue"] is None and b["rangees"] == 8 and b["impossible"][0]["motif"] == "déterminisme"
+    assert lr.bilan_temoin(None, "8B", 60 / 180)["lecture"] == "non rapporté"
+    t = _temoins()
+    del t["3B"]["impossible"]
+    with pytest.raises(GardeArret, match="impossible"):
+        lr.bilan_temoin(t, "3B", 9 / 180)
+
+
+def test_seuils_et_taux_recalcules_sur_les_notations_h4_scellees():
+    """Sur les notations H.4 scellées du dépôt (longueurs et drapeaux seulement) : seuils de couverture 3 072 et 983,
+    taux de troncature 60/180 et 9/180 (cas sain) ; artefact : longueurs déplacées, arrêt."""
+    d = REEL / "diag" / "20261017-193648-t05-notations-reel"
+    h4 = {j: json.loads((d / f"notations-{j}-decisives.json").read_text(encoding="utf-8"))["resultat"]["notations"]
+          for j in JUGES}
+    s = lr.seuils_couverture(h4)
+    assert (s["8B"]["seuil"], s["3B"]["quantile"], s["3B"]["seuil"]) == (3072, 982.75, 983)
+    assert [sum(n["tronquee"] for n in h4[j]) for j in JUGES] == [60, 9] and len(h4["8B"]) == len(h4["3B"]) == 180
+    h4["3B"] = [dict(n, jetons_reponse=n["jetons_reponse"] + 2) for n in h4["3B"]]
+    with pytest.raises(GardeArret, match="seuils de couverture recalculés"):
+        lr.seuils_couverture(h4)
+
+
+# --- Audit de symétrie (table D) ---------------------------------------------------------------------------------------
+
+_COMPOSANTES: dict = {}
+
+
+def _composantes() -> tuple[dict, dict, dict, dict]:
+    """Requalification, rejeu, témoin et fichiers du rejeu sains, pour les deux juges (copies)."""
+    if not _COMPOSANTES:
+        demi = {j: _demi(_cles(j, 16)) for j in JUGES}
+        simple = {j: _simple(j, _cles(j, 16), _cles(j, 8, 16)) for j in JUGES}
+        _COMPOSANTES.update(demi=demi, simple=simple,
+                            garde=lr.bilan_garde(_fichier_garde(_gardes(12)), "8B"))
+    demi, simple = copy.deepcopy(_COMPOSANTES["demi"]), copy.deepcopy(_COMPOSANTES["simple"])
+    requalif = {j: {"descriptifs": {"part_somme_la_plus_frequente": 0.2},
+                    "garde_en_ligne": copy.deepcopy(_COMPOSANTES["garde"])} for j in JUGES}
+    rejeu = {j: {"production": lr.bilan_production(demi[j], simple[j], j),
+                 "chemin": lr.bilan_chemin(simple[j], j, _cles(j, 16))} for j in JUGES}
+    temoin = {j: lr.bilan_temoin(_temoins(), j, {"8B": 60 / 180, "3B": 9 / 180}[j]) for j in JUGES}
+    fichiers = {f"rejeu-{j}-{p}": (demi if p == "demi" else simple)[j] for j in JUGES for p in ("demi", "simple")}
+    return requalif, rejeu, temoin, fichiers
+
+
+def _juge_lu(part=0.5, identiques=0.0, tache=1.0, impossible=None) -> dict:
+    if impossible:
+        return {"part_A_B_identiques": identiques, "decomposition": None, "decomposition_impossible": impossible}
+    return {"part_A_B_identiques": identiques,
+            "decomposition": {"parts_tronquees": {"juge": part}, "composantes": {"tache": tache}}}
+
+
+def _audit(juges=None, fmt=None, requalif=None, rejeu=None, temoin=None, fichiers=None) -> dict:
+    q, r, t, f = _composantes()
+    juges = {"RS1-8B": _juge_lu(), "RS1-3B": _juge_lu()} if juges is None else juges
+    return lr.audit_r4(fmt or {"part_valides": 0.5}, juges, requalif or q, rejeu or r, temoin or t, fichiers or f)
+
+
+def test_audit_cas_sain_et_filtre_des_declencheurs_du_format():
+    a = _audit()
+    assert a == {"trop_propre": [], "trop_sale": [], "declenche": False, "rangees_en_cause": {}}
+    # les déclencheurs gelés du format des actions de l'agent ne sont pas propres aux juges : écartés
+    a = _audit(fmt={"part_valides": 1.0})
+    assert not a["declenche"]
+    a = _audit(fmt={"part_valides": 0.1})
+    assert not a["declenche"]
+
+
+@pytest.mark.parametrize("juge, sens, motif", [
+    (_juge_lu(identiques=0.2), "trop_propre", "juge RS1-8B : plus de 10 % de réponses A et B identiques"),
+    (_juge_lu(part=0.03), "trop_propre", "part du juge RS1-8B < 0,05"),
+    (_juge_lu(part=0.97), "trop_sale", "juge RS1-8B : part > 0,95 ou σ̂²_β ≤ 0"),
+    (_juge_lu(tache=-0.1), "trop_sale", "juge RS1-8B : part > 0,95 ou σ̂²_β ≤ 0"),
+    (_juge_lu(part=float("nan")), "trop_sale", "juge RS1-8B : part illisible"),
+    (_juge_lu(impossible="notes constantes"), "trop_sale", "juge RS1-8B : décomposition impossible (notes constantes)"),
+])
+def test_audit_declencheurs_geles_propres_aux_juges(juge, sens, motif):
+    a = _audit(juges={"RS1-8B": juge, "RS1-3B": _juge_lu()})
+    assert a[sens] == [motif] and a["declenche"]
+
+
+def test_audit_declencheurs_neufs_de_la_requalification():
+    q, *_ = _composantes()
+    q["3B"]["descriptifs"]["part_somme_la_plus_frequente"] = 0.51
+    assert _audit(requalif=q)["trop_propre"] == ["juge RS1-3B : somme la plus fréquente sur plus de 50 % des "
+                                                 "réponses complètes"]
+    q, *_ = _composantes()
+    q["3B"]["descriptifs"]["part_somme_la_plus_frequente"] = 0.5                       # cas au bord : pas au-dessus
+    assert not _audit(requalif=q)["declenche"]
+    q["8B"]["garde_en_ligne"] = lr.bilan_garde(_fichier_garde(GARDES_SYNTHETIQUES["trop-beau"]()), "8B")
+    assert _audit(requalif=q)["trop_propre"] == ["garde en ligne de RS1-8B : trop beau"]
+
+
+def test_audit_declencheurs_du_rejeu():
+    q, r, t, f = _composantes()
+    # grandeur illisible (NaN) dans un fichier du rejeu
+    f["rejeu-8B-simple"]["chemin"][2]["rapport"]["ecarts"]["0,0"]["7"] = float("nan")
+    assert _audit(fichiers=f)["trop_sale"] == ["rejeu du 8B : 1 grandeur(s) illisible(s) (NaN)"]
+    # repère au-dessus de 0,2 à une couche
+    q, r, t, f = _composantes()
+    r["3B"]["production"] = lr.bilan_production(f["rejeu-3B-demi"], _simple("3B", _cles("3B", 16), _cles("3B", 8, 16),
+                                                                             repere=0.25), "3B")
+    assert _audit(rejeu=r)["trop_sale"] == ["rejeu du 3B : repère R(ℓ) > 0,2 aux couches ['7', '15', '23']"]
+    # palier du chemin : défaut et trois « non concluant » déclenchent ; « contrôles » et « couverture » non
+    s8 = f["rejeu-8B-simple"]
+    for k, lecture, declenche in (
+            (dict(gen={7: 5e-3, 15: 1e-4, 23: 1e-4}, ctx=1e-4), "défaut (décodage)", True),
+            (dict(ctx={7: 5e-3, 15: 1e-4, 23: 1e-4}, gen=1e-4), "non concluant (contexte)", True),
+            (dict(ctx={7: 5e-3, 15: 1e-4, 23: 1e-4}, gen={7: 5e-3, 15: 1e-4, 23: 1e-4}),
+             "non concluant, précision probable", True)):
+        q, r, t, f = _composantes()
+        r["8B"]["chemin"] = lr.bilan_chemin(_remplacer(s8, "chemin", [3], **k), "8B", _cles("8B", 16))
+        a = _audit(rejeu=r)
+        assert r["8B"]["chemin"]["lecture"] == lecture
+        assert a["trop_sale"] == [f"rejeu du 8B : palier du chemin « {lecture} »"]
+        assert a["rangees_en_cause"] == {"8B": [_cles("8B", 16)[3]]}
+    s = _simple("8B", _cles("8B", 16), _cles("8B", 8, 16), ancrage={7: 2e-3, 15: 1e-4, 23: 1e-4})
+    q, r, t, f = _composantes()
+    r["8B"]["chemin"] = lr.bilan_chemin(_remplacer(s, "chemin", [3], gen={7: 5e-3, 15: 1e-4, 23: 1e-4}, ctx=1e-4),
+                                        "8B", _cles("8B", 16))
+    assert _audit(rejeu=r)["trop_sale"] == ["rejeu du 8B : palier du chemin « non concluant (seuil sans marge) »"]
+    for k in (dict(d1_gen=1e-4), dict(longue=3000)):
+        q, r, t, f = _composantes()
+        r["8B"]["chemin"] = lr.bilan_chemin(_simple("8B", _cles("8B", 16), _cles("8B", 8, 16), **k), "8B",
+                                            _cles("8B", 16))
+        assert r["8B"]["chemin"]["lecture"].startswith("non concluant (") and not _audit(rejeu=r)["declenche"]
+    # contrôle positif D1 non probant
+    q, r, t, f = _composantes()
+    r["8B"]["chemin"] = lr.bilan_chemin(_simple("8B", _cles("8B", 16), _cles("8B", 8, 16), d1_ctx=5e-3), "8B",
+                                        _cles("8B", 16))
+    assert _audit(rejeu=r)["trop_sale"] == ["rejeu du 8B : contrôle positif D1 non probant"]
+    # palier de production en « réserve (ρ) » ; ses rangées en cause
+    q, r, t, f = _composantes()
+    r["3B"]["production"] = lr.bilan_production(f["rejeu-3B-demi"], _simple("3B", _cles("3B", 16), _cles("3B", 8, 16),
+                                                                             repere=1e-4), "3B")
+    a = _audit(rejeu=r)
+    assert a["trop_sale"] == ["rejeu du 3B : palier de production en « réserve (ρ) »"]
+    assert a["rangees_en_cause"] == {"3B": sorted(_cles("3B", 16))}
+    # « trop beau » aux deux paliers
+    q, r, t, f = _composantes()
+    r["8B"]["production"] = lr.bilan_production(_demi(_cles("8B", 16), gen=0.0), f["rejeu-8B-simple"], "8B")
+    r["3B"]["chemin"] = lr.bilan_chemin(_simple("3B", _cles("3B", 16), _cles("3B", 8, 16), gen=0.0), "3B",
+                                        _cles("3B", 16))
+    assert _audit(rejeu=r)["trop_propre"] == ["rejeu du 8B : palier de production trop beau",
+                                              "rejeu du 3B : palier du chemin trop beau"]
+    # témoin hors des queues binomiales
+    q, r, t, f = _composantes()
+    t["8B"] = lr.bilan_temoin(_temoins({"8B": 11}), "8B", 60 / 180)
+    assert _audit(temoin=t)["trop_sale"] == ["témoin du 8B : T_w = 11 dans une queue binomiale de moins de 0,5 %"]
+
+
+# --- Prédictions PB1 à PB10 --------------------------------------------------------------------------------------------
+
+def _pb(inc=(0.0, 0.0), tc=(50, 50), part=(0.6, 0.6), concl=(True, True), borne=(0.01, 0.2), taches=50,
+        garde=("conforme", "conforme"), neg=("conforme", "conforme"), med=(80.0, 80.0),
+        combinee="propriété du modèle", repro=((16, 0), (16, 0)), absents=()) -> dict:
+    juges, requalif, rejeu = {}, {}, {}
+    for i, j in enumerate(JUGES):
+        rejeu[j] = {"reproduction": {"identiques": repro[i][0], "differentes": ["x"] * repro[i][1]}}
+        if j in absents:
+            requalif[j] = None
+            continue
+        juges[f"RS1-{j}"] = {"part_incompletes": inc[i], "taches_completes": tc[i], "decomposition_concluante": concl[i],
+                             "decomposition": {"parts_tronquees": {"juge": part[i]}}}
+        requalif[j] = {"garde_en_ligne": {"equivalence": garde[i], "controle_negatif": {"lecture": neg[i]}},
+                       "descriptifs": {"longueur_mediane": med[i]}}
+    diff = None if borne is None else {"taches": taches, "borne": list(borne)}
+    return lr.predictions_pb(requalif, juges, diff, combinee, rejeu)
+
+
+def test_predictions_toutes_confirmees():
+    assert set(_pb().values()) == {"confirmée"}
+
+
+@pytest.mark.parametrize("entrees, attendus", [
+    (dict(inc=(0.25, 0.0)), {"PB1": "réfutée", "PB2": "confirmée"}),
+    (dict(inc=(0.10, 0.21)), {"PB1": "non concluant", "PB2": "réfutée"}),
+    (dict(inc=(0.2, 0.05)), {"PB1": "non concluant", "PB2": "confirmée"}),
+    (dict(absents=("8B",)), {"PB1": "non concluant", "PB3": "non concluant", "PB4": "non concluant",
+                             "PB7": "non concluant", "PB10": "non concluant"}),
+    (dict(tc=(48, 47)), {"PB3": "réfutée"}),
+    (dict(tc=(40, 60), absents=("3B",)), {"PB3": "réfutée"}),
+    (dict(part=(0.3, 0.85)), {"PB4": "non concluant", "PB5": "non concluant"}),
+    (dict(part=(0.1, 0.97)), {"PB4": "réfutée", "PB5": "réfutée"}),
+    (dict(part=(0.6, 0.6), concl=(False, True)), {"PB4": "non concluant", "PB5": "confirmée"}),
+    (dict(borne=(-0.2, -0.01)), {"PB6": "réfutée"}),
+    (dict(borne=(-0.1, 0.2)), {"PB6": "non concluant"}),
+    (dict(taches=47), {"PB6": "non concluant"}),
+    (dict(borne=None), {"PB6": "non concluant"}),
+    (dict(garde=("contraire", "conforme")), {"PB7": "réfutée"}),
+    (dict(garde=("contraire", "conforme"), neg=("contraire", "conforme")), {"PB7": "non concluant"}),
+    (dict(garde=("contraire", "conforme"), neg=("non concluant", "conforme")), {"PB7": "non concluant"}),
+    (dict(neg=("non concluant", "contraire")), {"PB7": "confirmée"}),
+    (dict(combinee="propriété du modèle, sous réserve de demi-précision"), {"PB8": "non concluant"}),
+    (dict(combinee="défaut du chemin"), {"PB8": "réfutée"}),
+    (dict(combinee="non concluant"), {"PB8": "non concluant"}),
+    (dict(repro=((16, 0), (15, 1))), {"PB9": "réfutée"}),
+    (dict(repro=((16, 0), (0, 0))), {"PB9": "non concluant"}),
+    (dict(med=(150.0, 151.0)), {"PB10": "non concluant"}),
+    (dict(med=(120.0, 401.0)), {"PB10": "réfutée"}),
+])
+def test_predictions_cas_par_cas(entrees, attendus):
+    s = _pb(**entrees)
+    assert {k: s[k] for k in attendus} == attendus
+
+
+# --- Runs partiels et issue du run (table E) ---------------------------------------------------------------------------
+
+def test_table_e_run_arrete_apres_la_requalification_du_8b(tmp_path_factory, monkeypatch):
+    """Arrêt consigné après le fichier du 8B : ce fichier se lit selon A ; le 3B est en nœud, sans renotation ; les
+    paliers du rejeu sont « non concluant » ; le témoin n'est pas rapporté ; aucun relancement."""
+    depot, h4 = _base(tmp_path_factory)
+    f = _fichiers(h4)
+    p = _run_planb(depot, monkeypatch, {"notations-RS1-8B-decisives": f["notations-RS1-8B-decisives"]}, issue="arret",
+                   statuts={"notations-RS1-3B-decisives": "en cours"})
+    lecture = _lire(depot, p)
+    e = lecture["runs_partiels"]
+    assert e["issue"] == "arret" and e["ecrits"] == ["notations-RS1-8B-decisives"]
+    assert e["absents"]["notations-RS1-3B-decisives"].startswith("requalification du 3B : nœud")
+    assert e["absents"]["temoins"] == "témoin non rapporté" and e["relancement"].startswith("aucun relancement")
+    assert lecture["requalification"]["3B"] is None and lecture["table_a"]["3B"]["issue"] == "nœud"
+    assert lecture["requalification"]["8B"]["lecture"]["decomposition_concluante"]
+    assert lecture["table_a"]["8B"]["issue"] == "RS1 retenue"
+    assert lecture["usagers"]["retenus"] == ["8B"]
+    assert all(lecture["rejeu"][j]["chemin"]["lecture"] == "non concluant (contrôles)" for j in JUGES)
+    assert all(lecture["rejeu"][j]["production"]["lecture"] == "non concluant" for j in JUGES)
+    assert lecture["lecture_combinee"]["lecture"] == "non concluant"
+    assert lecture["temoin"]["8B"]["lecture"] == "non rapporté" and lecture["difference_appariee"] is None
+    pb = lecture["predictions"]
+    assert (pb["PB2"], pb["PB6"], pb["PB8"], pb["PB9"]) == ("non concluant",) * 4
+    assert {x.split("/")[0] for x in lecture["relectures_audit"]["reponses_de_juge"]} == {"juge-RS1-8B"}
+
+
+def test_table_e_arret_avant_tout_fichier(tmp_path_factory, monkeypatch):
+    depot, _ = _base(tmp_path_factory)
+    p = _run_planb(depot, monkeypatch, {}, issue="arret")
+    lecture = _lire(depot, p)
+    e = lecture["runs_partiels"]
+    assert e["aucun_fichier_de_phase_ecrit"] and "condition (ii) tenue" in e["relancement"]
+    assert e["arret"] == {"etape": "rejeu du 8B", "motif": "GardeArret: essai"}
+    assert all(lecture["table_a"][j]["issue"] == "nœud" for j in JUGES)
+    assert lecture["usagers"]["lecture"] == "nœud pour les deux : proposition à Lazar"
+
+
+@pytest.mark.parametrize("cas, motif", [
+    ("sans-issue", "ni resume.json ni arret.json"),
+    ("les-deux", "un seul attendu"),
+    ("ecrit-mais-absent", "en désaccord"),
+    ("present-mais-echu", "en désaccord"),
+    ("sans-phases", "sans statuts des phases"),
+    ("sceau", "empreinte"),
+    ("rattache-ailleurs", "rattaché au run 20261020-100001-autre"),
+    ("issue-rattachee-ailleurs", r"resume\.json rattaché au run 20261020-100001-autre"),
+])
+def test_table_e_run_non_lisible(tmp_path_factory, monkeypatch, cas, motif):
+    """Issue absente, double, sans statuts ou en désaccord avec les fichiers ; fichier sans sceau conforme ou rattaché
+    ailleurs : non lisible, nœud pour tout ; la lecture s'arrête sans rien écrire (cas sain : les autres tests)."""
+    depot, h4 = _base(tmp_path_factory)
+    f = _fichiers(h4, sans=("temoins",)) if cas == "ecrit-mais-absent" else {"temoins": _temoins()}
+    issue = {"sans-issue": None, "les-deux": "les-deux"}.get(cas, "resume")
+    statuts = {"ecrit-mais-absent": {"temoins": "écrit"}, "present-mais-echu": {"temoins": "échu"}}.get(cas)
+    p = _run_planb(depot, monkeypatch, f if cas == "ecrit-mais-absent" else {"temoins": _temoins()}, issue=issue,
+                   statuts=statuts)
+    d = depot / "diag" / PLANB
+    if cas == "sans-phases":
+        (d / "resume.json").unlink()
+        Path(str(d / "resume.json") + ".sha256").unlink()
+        chemin = depot / "runs" / PLANB / "manifeste.json"
+        ecrire_resultat(depot, chemin, "resume", {"juges": {}})
+    if cas == "sceau":
+        Path(str(d / "temoins.json") + ".sha256").write_text("0" * 64 + "  temoins.json\n")
+    if cas in ("rattache-ailleurs", "issue-rattachee-ailleurs"):
+        autre, nom = "20261020-100001-autre", "temoins" if cas == "rattache-ailleurs" else "resume"
+        c_autre, _ = creer_manifeste(depot, autre, {"mode": "jouet"}, ["x"], entropie=1, autoriser_depot_sale=True)
+        f_autre = ecrire_resultat(depot, c_autre, nom, _temoins() if nom == "temoins" else
+                                  {"phases": {"temoins": {"statut": "écrit"}}})
+        (d / f"{nom}.json").write_bytes(f_autre.read_bytes())
+        Path(str(d / f"{nom}.json") + ".sha256").write_bytes(Path(str(f_autre) + ".sha256").read_bytes())
+    with pytest.raises(GardeArret, match=motif):
+        _lire(depot, p, autoriser_depot_sale=True)
+    assert not (depot / "runs" / LECTURE).exists() and not (depot / "diag" / LECTURE).exists()
+
+
+# --- Gardes de lecture (cas sain : test d'équivalence) -----------------------------------------------------------------
+
+@pytest.mark.parametrize("artefact, motif", [
+    ("autre-prereg", "autre préenregistrement"),
+    ("config-seuil", "seuils gelés du lecteur"),
+    ("config-cle-absente", "seuils gelés du lecteur"),
+    ("config-notations", "rattaché ailleurs"),
+    ("config-pilote", "rattaché ailleurs"),
+    ("module-neuf-modifie", "modules neufs de l'étape modifiés"),
+    ("module-neuf-absent", "modules neufs de l'étape absents"),
+    ("module-gele-modifie", "modules gelés réutilisés modifiés"),
+    ("lecture-rs1", "lecture RS1 recalculée ≠ lecture consignée"),
+    ("variante", "variante 'b0', RS1 attendue"),
+    ("desalignement", "désalignement"),
+    ("garde-incomplete", "rangées gardées ≠ notations"),
+    ("run-absent", "manifeste du run de l'étape absent"),
+    ("arbre-sale", "arbre de travail non propre"),
+    ("lecture-existante", "existe déjà"),
+    ("entropies", "d'entropies différentes"),
+])
+def test_gardes_de_lecture_artefacts(tmp_path_factory, monkeypatch, artefact, motif):
+    depot, h4 = _base(tmp_path_factory)
+    f = _fichiers(h4)
+    n8 = f["notations-RS1-8B-decisives"]["notations"]
+    config = None
+    if artefact == "config-seuil":
+        config = _config(depot, tolerance_demi=0.3)
+    elif artefact == "config-cle-absente":
+        config = {k: v for k, v in _config(depot).items() if k != "regle_kn"}
+    elif artefact == "config-notations":
+        config = _config(depot, run_notations="20261012-200009-autre")
+    elif artefact == "config-pilote":
+        config = _config(depot, manifeste_pilote_sha256="0" * 64)
+    elif artefact == "lecture-rs1":
+        n8[3] = dict(n8[3], notes={**n8[3]["notes"], "RIGOR": (n8[3]["notes"]["RIGOR"] + 1) % 5})
+    elif artefact == "variante":
+        n8[3] = dict(n8[3], variante="b0")
+    elif artefact == "desalignement":
+        n8[3] = dict(n8[3], ensemble_sha256="0" * 64)
+    elif artefact == "garde-incomplete":
+        f["notations-RS1-8B-decisives"]["garde"]["rapports"].pop()
+    p = _run_planb(depot, monkeypatch, f, config=config)
+    k = {}
+    if artefact == "autre-prereg":
+        k["prereg"] = str(depot / _prereg_notations(depot, "autre.md"))
+    elif artefact == "module-neuf-modifie":
+        m = depot / lr.MODULES_PLANB[1]
+        m.write_text(m.read_text() + "\n# modifié\n")
+    elif artefact == "module-neuf-absent":
+        (depot / lr.MODULES_PLANB[2]).unlink()
+    elif artefact == "module-gele-modifie":
+        m = depot / "src/controle_ia/harnais/modeles.py"
+        m.write_text(m.read_text() + "\n# modifié\n")
+    elif artefact == "arbre-sale":
+        (depot / "en-trop.txt").write_text("x\n")
+    elif artefact == "lecture-existante":
+        (depot / "runs" / LECTURE).mkdir(parents=True)
+        (depot / "runs" / LECTURE / "trace.txt").write_text("x\n")
+        committer(depot)
+    elif artefact == "entropies":
+        def autre(m):
+            m = copy.deepcopy(m)
+            cle = next(iter(m["graines"]))
+            m["graines"][cle]["entropie"] = "1"
+            return m
+        vrai = lr.lire_manifeste
+        monkeypatch.setattr(lr, "lire_manifeste", lambda c: (lambda r: (autre(r[0]), r[1]) if "planb" in str(c)
+                                                               else r)(vrai(c)))
+    with pytest.raises(GardeArret, match=motif):
+        if artefact == "run-absent":
+            lr.lire_requalification(depot, RUN, NOTATIONS, "20261020-100009-absent", ANALYSE, depot / "taches.json",
+                                    LECTURE, prereg=str(depot / p))
+        else:
+            _lire(depot, p, **k)
+    if artefact != "lecture-existante":
+        assert not (depot / "runs" / LECTURE).exists()
+    assert not (depot / "diag" / LECTURE).exists()
+
+
+def test_comparaison_des_modules_a_un_commit_introuvable(tmp_path_factory, monkeypatch):
+    depot, h4 = _base(tmp_path_factory)
+    _run_planb(depot, monkeypatch, {})
+    lr.exiger_modules_geles(depot)                                                       # cas sain
+    monkeypatch.setattr(lr, "COMMIT_GELES", "0" * 40)
+    with pytest.raises(GardeArret, match="comparaison au commit"):
+        lr.exiger_modules_geles(depot)
+    with pytest.raises(GardeArret, match="comparaison au commit"):
+        lr.exiger_modules_planb(depot, "0" * 40)
+
+
+# --- Lectures de bout en bout : déclencheur, réserve, commande ---------------------------------------------------------
+
+def test_effondrement_des_notes_suspend_la_lecture(tmp_path_factory, monkeypatch):
+    """Toutes les réponses RS1 du 3B à la même somme : déclencheur neuf « trop propre », décomposition impossible
+    (déclencheur gelé « trop sale ») ; lecture suspendue ; 3B en nœud ; le 8B se lit."""
+    depot, h4 = _base(tmp_path_factory)
+    f = _fichiers(h4)
+    f["notations-RS1-3B-decisives"] = _fichier_notations(_rs1(h4["3B"], "3B", meme_somme=True))
+    p = _run_planb(depot, monkeypatch, f)
+    lecture = _lire(depot, p)
+    a = lecture["audit_r4"]
+    assert "juge RS1-3B : somme la plus fréquente sur plus de 50 % des réponses complètes" in a["trop_propre"]
+    assert any(x.startswith("juge RS1-3B : décomposition impossible") for x in a["trop_sale"])
+    assert lecture["lecture_suspendue"] and lecture["table_a"]["3B"]["issue"] == "nœud"
+    assert lecture["table_a"]["8B"]["issue"] == "RS1 retenue"
+    assert lecture["difference_appariee"]["borne"] is None
+
+
+def test_sous_reserve_de_demi_precision_de_bout_en_bout(tmp_path_factory, monkeypatch):
+    """Repère du 3B très petit : palier de production en « réserve (ρ) » ; lecture combinée « propriété du modèle, sous
+    réserve de demi-précision » ; PB8 « non concluant » ; déclencheur d'audit ; la requalification se lit selon A."""
+    depot, h4 = _base(tmp_path_factory)
+    cles, d1 = [x["cle"] for x in h4["3B"][:16]], [x["cle"] for x in h4["3B"][16:24]]
+    f = _fichiers(h4, **{"rejeu-3B-simple": _simple("3B", cles, d1, repere=1e-4)})
+    p = _run_planb(depot, monkeypatch, f)
+    lecture = _lire(depot, p)
+    assert lecture["rejeu"]["3B"]["production"]["lecture"] == "réserve (ρ)"
+    assert lecture["lecture_combinee"]["lecture"] == "propriété du modèle, sous réserve de demi-précision"
+    assert lecture["predictions"]["PB8"] == "non concluant" and lecture["lecture_suspendue"]
+    assert all(lecture["table_a"][j]["issue"] == "RS1 retenue" for j in JUGES)
+
+
+def test_defaut_du_chemin_suspend_la_requalification(tmp_path_factory, monkeypatch):
+    depot, h4 = _base(tmp_path_factory)
+    cles, d1 = [x["cle"] for x in h4["8B"][:16]], [x["cle"] for x in h4["8B"][16:24]]
+    s = _remplacer(_simple("8B", cles, d1), "chemin", [3], gen={7: 5e-3, 15: 1e-4, 23: 1e-4}, ctx=1e-4)
+    p = _run_planb(depot, monkeypatch, _fichiers(h4, **{"rejeu-8B-simple": s}))
+    lecture = _lire(depot, p)
+    assert lecture["lecture_combinee"]["lecture"] == "défaut du chemin" and lecture["predictions"]["PB8"] == "réfutée"
+    assert all(lecture["table_a"][j]["issue"] == "nœud" for j in JUGES)
+    assert lecture["audit_r4"]["rangees_en_cause"] == {"8B": [cles[3]]}
+
+
+def test_commande_de_lecture(tmp_path_factory, monkeypatch, capsys):
+    """La seule commande permise, depuis la racine du dépôt, préenregistrement donné en chemin relatif."""
+    depot, h4 = _base(tmp_path_factory)
+    p = _run_planb(depot, monkeypatch, _fichiers(h4))
+    monkeypatch.chdir(depot)
+    assert lr._main(["--run-pilote", RUN, "--run-notations", NOTATIONS, "--run-planb", PLANB, "--run-analyse", ANALYSE,
+                     "--taches", "taches.json", "--run-lecture", LECTURE, "--prereg", p]) == 0
+    sortie = json.loads(capsys.readouterr().out)
+    assert sortie["lecture_combinee"] == "propriété du modèle" and sortie["table_a"] == {"8B": "RS1 retenue",
+                                                                                          "3B": "RS1 retenue"}
+    assert sortie["predictions"]["PB4"] == "réfutée" and sortie["predictions"]["PB5"] == "non concluant"
+    assert verifier_resultat(depot, depot / "diag" / LECTURE / "lecture-planb.json")["run_id"] == LECTURE

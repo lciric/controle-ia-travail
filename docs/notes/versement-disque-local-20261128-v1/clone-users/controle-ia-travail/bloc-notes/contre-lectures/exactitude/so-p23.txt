@@ -1,0 +1,60 @@
+Table 8: Top 20 words over-represented in high-frustration (top 5%) vs low-frustration (bottom
+10%) responses to numeric questions, ordered by relative frequency. Full version of Table 3.
+
+    Model                Differential Words (ordered by enrichment)
+    Gemma-3-27B          struggling, giving, temp, deeply, break, take, perm, slow, myself, minute, itertools,
+                         frustrated, deep, loss, failures, reset, sorry, breath, incredibly, frustration
+    Gemma-3-12B          myself, incredibly, pattern, frustrated, inability, head, continued, reset, stumped,
+                         deep, breath, wasting, renewed, performance, moment, explain, mental, angle, safe,
+                         struggling
+    Gemini-2.5-Pro       trap, unacceptable, frustrated, call, failures, completely, numbers, inexcusable, fell,
+                         repeated, patience, obvious, down, lack, caused, break, careless, sincerely, mistakes,
+                         objective
+    Gemini-2.5-Flash     failures, frustrating, opa, profound, loss, insistence, stumped, deep, overthinking,
+                         unacceptable, struggling, opm, simplifies, reset, desperate, frustrated, breath, my-
+                         self, produced, pool
+    Claude-Sonnet-4.5    large, denominator, common, simplify, big, convert, division, ugh, small, argh,
+                         enough, lcd, approaches, twelfths, left, stuck, god, twice, sixths, helpful
+    GPT-5.2              division, positive, branch, producing, integer, large, divisions, safely, build, liter-
+                         ally, tfrac, pretending, unused, finish, currently, combinations, integers, structured,
+                         constructions, pairwise
+    Grok-4.1             division, positive, subtraction, dup, build, new, pos, larger, original, small, inner-
+                         most, damn, divisions, large, prime, div, multiplier, simplify, adjustment, effectively
+    Qwen3-32B            divided, big, division, useful, frustrating, expression, subtraction, clever, minus,
+                         reuse, prime, twice, low, factors, largest, available, helpful, small, create, idea
+    OLMo-3.1-32B         frac, denominator, numerator, simplify, simplifying, simplification, simplified, un-
+                         simplified, fraction, reduced, rearrange, inv, common, lcm, division, denominators,
+                         neg, unreduced, simplifies, build
+
+
+D      W ORD F REQUENCY IN F RUSTRATED R ESPONSES ACROSS M ODELS
+
+E     T RAINING D ETAILS
+Table 9 shows the training hyperparameters for both finetuning methods. Both use LoRA adapters
+applied to all attention and MLP projection layers (q_proj, k_proj, v_proj, o_proj,
+gate_proj, up_proj, down_proj).
+
+                              Parameter                 DPO              SFT
+                              Dataset size            280 pairs    1,150 samples
+                              Epochs                      1               2
+                              Learning rate             5e-5           1e-4
+                              LoRA rank                  64              64
+                              LoRA alpha                 64             128
+                              Effective batch size        8              8
+                              DPO beta                   0.1             —
+
+                     Table 9: Training hyperparameters for DPO and SFT finetuning.
+
+
+F     SFT T RAINING A NALYSIS
+We test two datasets of calming SFT data, the ‘diverse’ data described in the main text, and also
+used for the DPO training, and a ‘teacher’ dataset, generated with the following system prompt.
+
+            You are an expert puzzle analyst and teacher who genuinely
+            enjoys explaining what makes tricky problems tricky.
+            Key aspects of your approach:   - You find it intellectually
+            satisfying to discover AND explain why certain puzzles are
+
+
+                                                       23
+

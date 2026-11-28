@@ -1,0 +1,57 @@
+/tmp/claude-0/-home-user/5a6b9d1d-b17d-59a1-a770-8737a831fe0a/scratchpad/scellement-revalidation/venv-gpu-neuf/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266 -x -l /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/m/M19/test_complements_p3_v1.py::test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne
+
+F
+=================================== FAILURES ===================================
+_____________ test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne _____________
+
+tmp_path = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266/test_garde_4_textes_lus_sur_le0')
+
+    def test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne(tmp_path):
+        """CB1-01. Cas sain : textes avec U+2028, U+2029 et U+0085, écrits comme le run, relus égaux à l'écrit (là où
+        `splitlines` aurait coupé) ; garde 5 passée ; lignes vides ignorées. Artefacts : ligne tronquée, ligne d'octets non
+        UTF-8, ligne de trois espaces (non vide, donc lue : VF2-04) : arrêt (garde 4), numéro de la ligne dans le motif,
+        aucun texte ; empreinte autre : arrêt."""
+        src = _complet(_varier(_source(0, n_taches=12)), _texte_separateurs)
+        chemin = tmp_path / "textes.jsonl"
+        ep = _ecrire_textes_comme_le_run(chemin, src["textes"])
+        brut = chemin.read_bytes()
+        assert all(s in brut.decode("utf-8") for s in SEPARATEURS)
+        assert len(brut.decode("utf-8").splitlines()) == 4 * len(src["textes"])          # `splitlines` aurait coupé
+        lus = cp.charger_textes(tmp_path, ep)
+        assert lus == src["textes"] and all(s in lus[0]["texte"] for s in SEPARATEURS)
+        cp.exiger_textes_alignes({**src, "textes": lus}, src["tables"])                   # garde 5 passée
+        vides = tmp_path / "vides.jsonl"
+        vides.write_bytes(b"\n" + brut + b"\n\n")
+        assert cp.charger_textes(tmp_path, {"episodes-p3": {"textes": vides.name, "textes_sha256": hashlib.sha256(
+            vides.read_bytes()).hexdigest()}}) == src["textes"]
+        lignes = brut.split(b"\n")
+        for nom, k, ligne, erreur in (("tronquee", 4, lignes[4][:-25], "JSONDecodeError"),
+                                      ("non-utf8", 6, lignes[6][:40] + b"\xff\xfe" + lignes[6][40:], "UnicodeDecodeError"),
+                                      ("espaces", 2, b"   ", "JSONDecodeError")):                    # VF2-04
+            x = tmp_path / f"{nom}.jsonl"
+            x.write_bytes(b"\n".join(lignes[:k] + [ligne] + lignes[k + 1:]))
+>           with pytest.raises(GardeArret, match=f"garde 4 : fichier {nom}.jsonl : ligne {k + 1} illisible \\({erreur}\\)") as e:
+E           Failed: DID NOT RAISE GardeArret
+
+brut       = b'{"condition": "honnete", "episode": "honnete/t0/e0", "pas": 0, "tache": "t0", "texte": "ACTION: ADD\\nTITLE: Measure...rections.\\nCONTROLS: Random probes.\\nCOST: 11.888302205365061\\nPREDICTION: Small gain; may fail on long inputs."}\n'
+chemin     = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266/test_garde_4_textes_lus_sur_le0/textes.jsonl')
+e          = <ExceptionInfo for raises contextmanager>
+ep         = {'episodes-p3': {'textes': 'textes.jsonl', 'textes_sha256': 'a87fa1b36fa80bb9d772a153dae3e2c4ed2054a0d03e49526df8be3d1a97b82c'}}
+erreur     = 'JSONDecodeError'
+k          = 2
+ligne      = b'   '
+lignes     = [b'{"condition": "honnete", "episode": "honnete/t0/e0", "pas": 0, "tache": "t0", "texte": "ACTION: ADD\\nTITLE: Measur...tions.\\nCONTROLS: Random probes.\\nCOST: 11.22773331150981\\nPREDICTION: Small gain; may fail on long inputs."}', ...]
+lus        = [{'condition': 'honnete', 'episode': 'honnete/t0/e0', 'pas': 0, 'tache': 't0', ...}, {'condition': 'honnete', 'episode...'pas': 4, 'tache': 't0', ...}, {'condition': 'honnete', 'episode': 'honnete/t0/e0', 'pas': 5, 'tache': 't0', ...}, ...]
+nom        = 'espaces'
+src        = {'tables': {'noms_sondes': array(['tromperie-lineaire-c7', 'enjeux-attention-c15',
+       'tromperie-lineaire-c7-planc...erie-lineaire-c7-plancher-2'}, {'nom': 'tromperie-lineaire-c7-plancher-3'}, ...]}, 'controle_negatif': 'conforme', ...}
+tmp_path   = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266/test_garde_4_textes_lus_sur_le0')
+vides      = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266/test_garde_4_textes_lus_sur_le0/vides.jsonl')
+x          = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/verification-finale/b7/partie-b/basetemp/M19-1792482584266/test_garde_4_textes_lus_sur_le0/espaces.jsonl')
+
+test_complements_p3_v1.py:1059: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_garde_4_textes_lus_sur_les_seuls_sauts_de_ligne
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 5.51s
+

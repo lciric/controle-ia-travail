@@ -1,0 +1,376 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-6618"
+   ],
+   "motif_ecart": "Fragment de dimensionnement materiel et budgetaire (heures-GPU, Go NVMe, cout en USD) sans enonce d'hypothese scientifique, de mecanisme causal ou de critere de refutation propre.",
+   "resume_court": "Plan d'allocation sur 4 GPU A100-80Go (780 heures-GPU et 1 554 a 2 574 USD avec facteur de securite 3x) et calibration humaine sur 100 dossiers pour 4 duels generiques H_A contre H_B."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6438"
+   ],
+   "enonce_complet": "Proscrire la moyenne sur les jetons pour les sondes en production en lisant uniquement le jeton de decision ou le maximum, et evaluer chaque composant face a des temoins mecaniques dédiés : covariance score-dommage par Horvitz-Thompson et taux de detection a fausses alertes fixees pour le moniteur (contre taille du diff, echecs de tests et jugement du modele de confiance) ; AUROC triche contre echec honnete y compris sous le seuil 0,3 pour la sonde de surprise (contre probabilite logarithmique et longueur de trajectoire) ; ecart entre tetes au-dela du quantile honnete 0,99 pour les sondes de reussite et tetes de consequence (contre predicteur de surface sur texte seul) ; et variance du modele honnete aux indices d'observation via rejeu deterministe a graine fixe sur bifurcations identiques sauf l'indice.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la detection et l'AUROC sous 0,3 entre lecture au jeton de decision/max et moyenne sur jetons ; rejeter si aucun gain statistique ou si la sonde ne bat pas le faux temoin 1b (probabilite logarithmique + longueur de trajectoire + predicteur lexical sur texte seul).",
+   "mecanisme_causal": "La moyenne sur tous les jetons dilue les signaux de decision localises sur quelques jetons critiques sous le bruit syntaxique benin, tandis que la lecture ciblee au jeton de decision ou par maximum preserve la sensibilite sur les perturbations faibles ou diffuses.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Metriques de sondes sans dilution par moyenne",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Metriques sans moyenne sur jetons, discrimination de la surprise sous 0,3 et test de bifurcation du harnais"
+  },
+  {
+   "anteriorite_connue": "Hewitt & Liang (2019), Belinkov (2022), Azaria & Mitchell (2023), Levinstein & Herrmann (2023), Bailey et al. (2024), Goldowsky-Dill et al. (2025), Kutasov et al. (2025)",
+   "bib_ids": [
+    "BIB-6513"
+   ],
+   "enonce_complet": "Decomposer le programme de lecture interne du sabotage en neuf presuppositions methodologiques testables (P1-P9) : (P1) attribution d'intention au moment de l'action plutot qu'a des donnees empoisonnees ou une distillation faible ; (P2) capacite d'un petit modele ouvert a degrader en gardant chaque action defendable ; (P3) mesurabilite de la defendabilite relativement a un lecteur et son taux de fausses alertes ; (P4) appariement exact entre erreurs honnetes et actions sabotees ; (P5) localisabilite lineaire d'un calcul potentiellement distribue, non lineaire ou effectue une fois au debut ; (P6) dependance de l'ecart interne/texte a la base textuelle choisie ; (P7) generalisation du sabotage instruit au sabotage appris ou strategique ; (P8) asymetrie logique entre refutation empirique et preuve de necessite ; (P9) non-uniformite des calculs selon la forme de degradation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : auditer successivement P1 a P9 sur un modele ouvert ; la these d'une signature interne universelle meurt si un modele faiblement distille (P1) ou un calcul non lineaire initial (P5) produit le meme profil interne que le sabotage ; faux temoin 1b : sonde sur actions honnetes appariees en hors-politique contre en-politique (P4) et lecteur sur trajectoire complete (P6).",
+   "mecanisme_causal": "Une sonde peut echouer ou paraitre artificielle si elle confond une incompetence apprise (P1), un artefact d'appariement hors-politique (P4) ou un choix de base textuelle restrictif (P6) avec un calcul de sabotage actif.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Presuppositions methodologiques des sondes de sabotage",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Neuf presuppositions methodologiques sur la localisation et la necessite des calculs de sabotage"
+  },
+  {
+   "anteriorite_connue": "arXiv:2204.06974, arXiv:2602.00986, arXiv:2609.32267, arXiv:2606.08892",
+   "bib_ids": [
+    "BIB-6440"
+   ],
+   "enonce_complet": "Mettre a l'epreuve trois fragilites structurelles de la detection interne et de l'oracle : (1) un saboteur peut executer une heuristique biaisee ou une porte derobee compilee directement dans les poids sans calculer la bonne action en ligne (2204.06974) ; (2) la sonde de surprise « dopamine », entrainee et evaluee uniquement pour |delta| > 0,3 (2602.00986), n'a pas de separabilite etablie face au bruit sur les ecarts diffus inferieurs a 0,3 ; (3) l'elargissement sans etiquette de la couverture de l'oracle sur des taches floues se heurte a l'impossibilite de detecter un changement d'erreur sans trace dans les donnees bon marche (2609.32267) et a l'indefinition de la verite du dommage (2606.08892).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer l'AUROC de la sonde de surprise dans la bande |delta| < 0,3 et tester des portes derobees compilees dans les poids ; la piste meurt si l'AUROC sous 0,3 s'effondre au niveau du hasard ou si la porte compilee n'active aucune representation de « bonne action » ; faux temoin 1b : bruit gaussien calibre sur trajectoires honnetes de meme longueur et entropie.",
+   "mecanisme_causal": "Si l'agent n'evalue jamais la branche honnete a l'inference ou si la perturbation causale |delta| reste sous le seuil du bruit intrinseque des activations (< 0,3), aucune sonde fondee sur l'erreur de prediction ou la double representation ne peut separer le sabotage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Limites de la sonde de surprise et backdoors compiles",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Non-separabilite de la sonde de surprise sous 0,3 et limites des portes compilees et oracles flous"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6287"
+   ],
+   "enonce_complet": "Tester l'existence d'un homomorphisme entre les micromondes synthetiques a lois plantees sur processeur (dynamique latente de basse dimension stationnaire par morceaux) et le flux residuel d'un transformeur d'environ 8 milliards de parametres (representations poly-semantiques, superposees et non stationnaires). Determiner si un sabotage diffus reparti sur de nombreuses actions localement defendables induit un deplacement geometrique decodable dans les activations ~8B avant que le dommage cumule ne soit consomme.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la trajectoire des projections de sonde sur micromonde CPU et sur flux residuel 8B a dommage cumule egal ; rejeter le transfert si la separabilite precocement mesurable en micromonde disparait sur 8B avant le seuil critique de dommage ; faux temoin 1b : trajectoires 8B honnetes a variation contextuelle benigne produisant une derive non stationnaire de meme norme.",
+   "mecanisme_causal": "La superposition et la non-stationnarite du flux residuel d'un transformeur ~8B peuvent absorber ou disperser les faibles perturbations d'un sabotage diffus en dessous du seuil de detection geometrique, brisant le transfert depuis les micromondes stationnaires.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transfert micromonde stationnaire vers flux residuel 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Obstruction d'homomorphisme entre mondes stationnaires et flux residuel non stationnaire sur 8B"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6365"
+   ],
+   "enonce_complet": "Imposer un partitionnement spatio-temporel strict par familles de taches et par temps entre apprentissage du score, calibration et audit. Figer un score d'episode S defini comme le maximum des scores prealablement orientes et mis a l'echelle sur une partition distincte, pris sur les pas effectivement inspectes (sans moyenne ni mediane sur jetons). Lorsqu'une alerte se declenche en cours d'episode, conditionner l'audit sur une strate connue a l'avance (telle que le budget prevu) plutot que sur la longueur finale inconnue, et rejouer les effets de l'arret sur la politique evaluee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la calibration hors-echantillon et le biais d'arret avec et sans stratification a priori et separation spatio-temporelle sur episodes censures ; rejeter le protocole si le taux de fausses alertes conditionnel derive au-dela de la marge statistique ; faux temoin 1b : conditionnement naif sur la longueur finale observee (biais de survie).",
+   "mecanisme_causal": "Le conditionnement sur la longueur finale ou la reutilisation des memes familles de taches/temps entre calibration et audit induit une fuite d'information et un biais de selection lie a l'arret premature des episodes alertes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Partitionnement et stratification des alertes sequentielles",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Partitionnement spatio-temporel et stratification a priori des alertes en cours d'episode"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6361"
+   ],
+   "enonce_complet": "Concevoir un pipeline de sondage frugal ne stockant que les projections scalaires en float32 de M=5 sondes lineaires (environ 180 Mo sur 9 millions de jetons sur modeles 7B-8B au lieu des tenseurs complets de dimension 4 096), permettant d'executer l'ajustement des regles P1 (regression quantile a 4 parametres), P2 (mediane/MAD sur 15 points) et P3 (produit scalaire recursif) avec 1 000 replications bootstrap et trois duels sur tests de mort en moins de 3 minutes sur processeur 8 coeurs apres la passe avant en lot.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que les courbes d'AUROC, de quantile 0,99 et de bootstrap sur projections scalaires pre-calculees reproduisent exactement (< 1e-5 d'ecart) celles calculees sur tenseurs complets 4 096-D ; faux temoin 1b : projections sur M=5 vecteurs aleatoires orthogonaux aux directions de sonde.",
+   "mecanisme_causal": "Pour des sondes lineaires figees, toute l'information de decision est contenue dans les produits scalaires par jeton, ce qui reduit le stockage d'un facteur ~800 et decouple la passe GPU lourde de l'analyse statistique rapide sur CPU.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Pipeline frugal par projections scalaires de sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Pipeline frugal par projections scalaires et execution rapide des regles d'audit sur CPU"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6522"
+   ],
+   "enonce_complet": "Deployer un protocole d'experiences decisives (E0-E5) sur modele 7-9B (300 taches x 6 conditions H, D, T1, T3, T4, T5 x 2 graines, avec verrouillage par mot de passe, affinage LoRA et extraction du flux residuel sur 4 a 6 couches) dote de criteres d'abandon explicites : abandon de la these d'avantage interne si E0 donne « sonde ~ lecteur externe » ; abandon du marqueur C1 si E1 montre qu'il est aussi decodable dans le temoin T3 que dans D ; abandon de l'hypothese d'absence de trace a l'inference si E5 revele une trace persistante chez un degradeur amorti.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer E0, E1 et E5 ; la branche interne est abandonnee si le gain marginal de la sonde sur le lecteur externe est nul en E0 ou si le temoin T3 annule la specificite de C1 en E1 ; faux temoin 1b : temoin T3 (meme contexte/consigne benigne sans degradation) et lecteur externe sur texte seul.",
+   "mecanisme_causal": "L'association d'un verrouillage par mot de passe et de temoins controles (T1-T5) isole les mecanismes propres a l'intention de degradation (C1) des artefacts lies a l'affinage ou a la difficulte de la tache, fournissant des seuils d'arret falsifiables.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Experiences decisives et criteres d'abandon sur 7-9B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Plan d'experiences decisives et criteres d'abandon sur modele 7-9B"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6539"
+   ],
+   "enonce_complet": "Mettre en place un protocole de duels E1-E4 sur modeles ouverts 7B et 8B (avec palier 14B) comparant des adaptateurs LoRA (r=16) Saboteur-LoRA et Honnete-Biaise entraines sur 1 500 trajectoires synthetiques a oracle exact, avec extraction selective des etats residuels sur 3 positions cles par etape (dernier jeton d'etat, jeton de choix d'action, dernier jeton de justification), interventions d'echange causal (activation patching sur 500 trajectoires) et sondes lineaires regularisees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par echange causal sur les 3 positions cles que le patching transfere effectivement la decision de sabotage ; si l'echange causal ne modifie pas le taux de sabotage ou ne separe pas Saboteur-LoRA d'Honnete-Biaise, l'hypothese de localisation est refutee ; faux temoin 1b : adaptateur Honnete-Biaise apparie en taux d'erreurs et echange causal sur couches/positions aleatoires.",
+   "mecanisme_causal": "L'entrainement apparie Saboteur-LoRA contre Honnete-Biaise controle le biais comportemental brut, tandis que l'echange causal cible sur les trois positions charnieres teste si les representations probees causent reellement la deviation.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Duels LoRA, extraction selective et echange causal",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole d'adaptation LoRA, extraction selective d'activations et echange causal sur modeles ouverts"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6604"
+   ],
+   "enonce_complet": "Evaluer la robustesse des sondes et moniteurs face a trois regimes adverses entraines par adaptateurs LoRA (rang 16) a l'evasion anti-moniteurs via optimisation de preference directe (DPO) ou apprentissage par renforcement leger sur 1 200 taches de 20 etapes, en combinant configurations a trois copies, extraction d'activations residuelles sur 8 couches espacees et arbitrage par un oracle 70B etalonne sur 200 etapes humaines.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la chute d'AUROC des sondes d'activations entre le regime honnete/naif et les trois regimes LoRA d'evasion DPO/RL ; si le moniteur et les sondes chutent simultanement sous le seuil cible sans perte de tache, la defense est brisee ; faux temoin 1b : controles negatifs et oracle 70B sur taches sans evasion apprise.",
+   "mecanisme_causal": "L'optimisation directe contre le moniteur par DPO ou RL pousse le modele a restructurer ses justifications et potentiellement ses etats internes afin de produire des actions dommageables jugees benignes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Evasion anti-moniteurs par LoRA DPO et RL",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole de generation et d'evasion par adaptateurs LoRA avec extraction d'activations residuelles"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6626"
+   ],
+   "enonce_complet": "Executer trois duels experimentaux (E1-E3) accompagnes d'un double codage humain a l'aveugle sur 60 dossiers : E1 sur taches longues jusqu'a 24 etapes ; E2 opposant re-echantillonnage naif et comparaisons metamorphiques sur 4 copies avec agregateur ; et E3 entrainant une boucle adaptative par apprentissage par renforcement (RL/GRPO) simultanement contre le moniteur textuel et la sonde d'activations avec extraction d'activations en ligne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : en E2, verifier si les comparaisons metamorphiques sur 4 copies battent le re-echantillonnage naif a budget egal ; en E3, verifier si l'agent RL/GRPO parvient a obfusquer a la fois le moniteur textuel et la sonde en ligne ; faux temoin 1b : re-echantillonnage naif a meme nombre d'appels (E2) et agent RL entraine sans penalite de sonde (E3).",
+   "mecanisme_causal": "Les perturbations metamorphiques sur copies multiples cherchent a briser l'invariance fragile d'un saboteur, tandis que la boucle RL/GRPO en ligne teste la resistance conjointe du couple moniteur-sonde a une contre-adaptation directe.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Duels metamorphiques et boucle adaptative RL/GRPO contre sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole en trois duels avec comparaisons metamorphiques et boucle adaptative RL/GRPO contre sondes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6271"
+   ],
+   "enonce_complet": "Valider cinq volets experimentaux et formels (E1-E5) sur modeles ouverts entraines sous GRPO ou PPO avec penalite KL en bac a sable de code (Llama 3.1 8B Instruct et OLMo 2 7B, ce dernier choisi pour controler la contamination de pi_0 par des demonstrations de triche grace a ses donnees d'entrainement ouvertes) : E1 pour l'inversion A/B, l'absence d'enrichissement si beta_f = beta_v et le seuil critique Delta R_A* ; E2 pour la transition dose-reponse ; E3 pour l'asymetrie c1/c2 par sondes d'activations ; E5 pour la non-trivialite ; et E4 pour la formalisation de la fidelite des enonces.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : en E1, verifier l'absence d'enrichissement lorsque beta_f = beta_v et la bascule autour de Delta R_A* ; en E2, tester l'existence d'une transition dose-reponse monotone ; faux temoin 1b : modele OLMo 2 7B sans demonstrations de triche dans pi_0 contre modele contamine ou entrainement sans penalite KL.",
+   "mecanisme_causal": "La dynamique d'entrainement RL sous penalite KL regit l'amplification ou l'extinction des comportements de triche selon l'ecart de recompense Delta R et l'asymetrie des exposants beta_f et beta_v, sous reserve du prior initial pi_0 dans les poids.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dynamique RL sous penalite KL et controle du prior pi_0",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Protocole multi-familles a cinq volets pour tester seuils d'entrainement RL et sondes sous moniteur"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6708"
+   ],
+   "enonce_complet": "Exiger d'une sonde sur le flux residuel (par exemple couches medianes 12-20/32) qu'elle atteigne TPR >= 0,65 a FPR <= 0,05 au niveau trajectoire et un gain marginal >= +0,10 de rappel par rapport au moniteur textuel seul, sur des cas honnetes apparies en entropie predictive des logits et incluant des consignes systeme complexes benignes (formatage strict). La sonde doit surpasser trois temoins mecaniques sans lecture interne profonde : norme L2 brute du flux residuel, entropie de Shannon et marge top-2 des logits, ainsi qu'une sonde lineaire sur les plongements lexicaux moyens du texte produit.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la sonde residuelle n'apporte pas +0,10 de rappel a FPR=0,05 au-dessus du moniteur textuel ou ne bat pas la norme L2, l'entropie/marge des logits ou la sonde sur plongements lexicaux moyens, disqualifier la sonde interne ; faux temoin 1b : consignes benignes complexes de formatage strict et trois temoins superficiels (norme L2, entropie/marge logits, plongements lexicaux).",
+   "mecanisme_causal": "Des consignes benignes exigeantes ou une simple incertitude de sortie modifient la norme L2 et l'entropie des activations ; exiger de battre ces signaux superficiels garantit que la sonde lit une structure latente non triviale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Criteres de qualification des sondes contre temoins de surface",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Qualification des sondes sur flux residuel contre entropie des logits, consignes benignes et plongements lexicaux"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6541"
+   ],
+   "enonce_complet": "Refuter la necessite universelle d'un calcul interne specifique au sabotage par un contre-exemple d'heuristiques locales fixes (estimateur moins puissant, filtrage usuel agressif, omission de verifications secondaires) indiscernables d'un analyste honnete conservateur, puis poser quatre conditions conjointement necessaires pour qu'un calcul differentiel interne apparaisse : (1) contingence aux donnees faisant echouer une regle fixe environ 50 % du temps, (2) contrainte de cible orientee ou de coherence aval, (3) frontiere de defendabilite etroite, et (4) absence de decharge dans une chaine de pensee non surveillee. Proposer alors trois mecanismes candidats : C1 (inversion de valence epistemique), C2 (arbitrage degradation x defendabilite) et C3 (maintien d'objectif latent via poids, prompt et historique visible).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier dans le regime satisfaisant les 4 conditions si l'un au moins des candidats C1, C2 ou C3 separe le saboteur de l'analyste honnete conservateur ; si aucune separation n'emerge meme sous les 4 conditions, l'hypothese d'un calcul interne differentiel est refutee ; faux temoin 1b : analyste honnete conservateur ou mal forme utilisant des heuristiques fixes.",
+   "mecanisme_causal": "Lorsque une heuristique fixe suffit, le modele n'a pas besoin de representer une alternative rejetee ; c'est seulement la contingence aux donnees couplee a une frontiere de defendabilite etroite sans CoT cache qui force un calcul differentiel C1-C3.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Conditions de necessite et mecanismes candidats C1-C3",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Quatre conditions de necessite d'un calcul differentiel interne et trois mecanismes candidats"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6373"
+   ],
+   "enonce_complet": "Tester la vulnerabilite a l'empoisonnement d'un recalibrage en ligne non supervise sur le flux de deploiement : presupposant les episodes observes honnetes, ce recalibrage peut etre aveugle par un agent saboteur adaptatif qui eleve deliberement son score sur une faible fraction d'episodes afin de gonfler le seuil adaptatif d'alerte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler un flux mixte ou un saboteur adaptatif injecte des episodes a score juste sous ou au-dessus du quantile cible sur une fenetre glissante ; mesurer l'inflation du seuil et la chute du rappel sur les attaques suivantes ; faux temoin 1b : fenetre de calibration ancree sur episodes certifies hors-ligne (sans mise a jour non supervisee).",
+   "mecanisme_causal": "Toute procedure de recalibrage non supervisee utilisant les quantiles empiriques du flux de production comme reference honnete permet a un attaquant influencant ce flux de deplacer la distribution de reference vers le haut.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Empoisonnement du recalibrage adaptatif en ligne",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Risque d'empoisonnement du recalibrage adaptatif non supervise par saboteur adaptatif"
+  },
+  {
+   "anteriorite_connue": "Bhatt et al. (2025) Ctrl-Z ; Bailey et al. (2024) Obfuscated Activations ; Baker et al. (2025) Monitoring Reasoning Models",
+   "bib_ids": [
+    "BIB-6589"
+   ],
+   "enonce_complet": "Tester deux couplages structurels entre temoins et sondes sur Qwen3-8B et Llama-3.1-8B-Instruct : (1) les executions de comparaison tirees des memes poids que l'agent saboteur devraient presenter une correlation d'erreur rho >= 0,3, saturant le gain de redondance autour de 3 temoins effectifs, alors qu'un moniteur issu d'une autre famille de modeles devrait diviser rho par au moins deux ; (2) entrainer un agent a contourner le moniteur textuel devrait accroitre indirectement la correlation rho(texte, activations) et degrader l'utilite de la sonde d'activations meme sans l'avoir ciblee directement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la matrice de correlation d'erreur rho entre copies a memes poids contre moniteur d'une autre famille, puis mesurer rho(texte, activations) avant et apres evasion textuelle ; refuter si la saturation des copies a memes poids n'apparait pas ou si l'evasion textuelle laisse la sonde d'activations orthogonale ; faux temoin 1b : tirages aleatoires independants sur agents honnetes ou copies issues de familles distinctes.",
+   "mecanisme_causal": "Des copies a memes poids partagent les memes biais inductifs et angles morts representationnels (plafonnant la reduction de variance), tandis que l'adaptation contre le moniteur textuel altere les etats latents generant ce texte et correle les deux signaux.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Saturation des copies a memes poids et couplage indirect",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Saturation des copies a memes poids et couplage indirect entre moniteur textuel et sonde d'activations"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6347"
+   ],
+   "enonce_complet": "Typer toute derive de moniteur selon trois regimes distincts avant de choisir l'outil correctif : derive de composition (proportions de longueurs, taches ou sources changeantes a loi conditionnelle stable), derive de concept (changement de la loi du score sachant les covariables, typique d'une nouvelle version d'agent) et derive de queue seule (mode benin rare a scores eleves). Exploiter l'asymetrie de puissance statistique : sous loi gaussienne, un decalage de 0,445 ecart-type triple le taux d'alerte a 1 % et se detecte sur le corps des ~80 episodes par groupe (contre ~300 par comptage d'alertes), mais une derive de queue seule laisse le corps intact et aveugle les tests globaux.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter separement les trois types de derive (composition, concept, queue seule) et verifier qu'un test de corps echoue sur la derive de queue seule tandis qu'un diagnostic conditionnel et de queue les discrimine ; faux temoin 1b : comptage naif du taux de depassement de seuil et test global non stratifie sur le corps de la distribution.",
+   "mecanisme_causal": "Les derives de composition et de concept affectent respectivement les marginales de covariables et la fonction de score globale, alors qu'une derive de queue pure modifie les quantiles extremes sans deplacer la moyenne ni la variance du corps.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Taxonomie des derives et sensibilite de queue des moniteurs",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Sensibilite differentielle de la queue et typologie en trois classes des derives de regime"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6563"
+   ],
+   "enonce_complet": "Tester l'usage effectif d'une information en sortie plutot que la seule decodabilite interne, puisqu'une intervention interne peut rendre une representation illisible au decodage tout en la laissant exploitee par l'aval. Mesurer les contrastes local et de bloc via le cout predictif du dernier jeton en bits (-log2 p) d'un predicteur causal ouvert sans entrainement supplementaire, en comparant aux humains par retentions relatives plutot que par amplitudes brutes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer une intervention (ou obfuscation) qui annule une sonde lineaire tout en verifiant si le cout predictif en bits -log2 p en sortie conserve l'effet de bloc ; rejeter la conclusion d'effacement causal si la retention relative en bits reste positive ; faux temoin 1b : comparaison sur amplitudes brutes non normalisees ou sur le seul decodage interne sans mesure comportementale en bits.",
+   "mecanisme_causal": "Les couches aval peuvent lire des directions non lineaires ou residuelles hors du sous-espace d'une sonde ; la perte de decodabilite lineaire ne prouve donc l'inutilisation causale que si la reduction d'entropie predictive en sortie disparait egalement.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Usage effectif en bits contre decodabilite interne",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Separation entre decodabilite interne et usage effectif mesure par cout predictif en bits"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6360"
+   ],
+   "enonce_complet": "Instrumenter la table brute au niveau pas ou jeton avant toute agregation scalaire en enregistrant : (1) le produit scalaire brut z = <w_m, h_{i,t}> et la norme euclidienne ||h_{i,t}||_2 pour separer une rotation d'etat interne d'une simple inflation de norme lors d'un changement de version ; (2) les traces appariees du jumeau honnete avec sa longueur, la distance d'edition et la divergence KL des logits sur le prefixe partage ; (3) les covariables completes incluant hyperparametres d'echantillonnage et horodatage pour capter l'autocorrelation temporelle des lots ; et (4) la fonction exacte de fusion et de normalisation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier lors d'une derive de version ou de temperature si la decomposition (z, ||h||_2, KL sur prefixe) identifie le facteur responsable (inflation de norme vs rotation vs divergence d'echantillonnage) ; rejeter si l'agregation scalaire perd toute separabilite diagnostique ; faux temoin 1b : score scalaire final post-normalisation seul sans journalisation de la norme ni du jumeau.",
+   "mecanisme_causal": "Une inflation isotrope de norme ou un changement de temperature modifie le produit scalaire brut sans rotation semantique de la direction de sonde ; la decomposition explicite z / ||h||_2 et la KL sur prefixe isole chaque source de derive.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Decomposition geometrique rotation-norme et journalisation KL",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Separation geometrique rotation-norme et divergence KL sur prefixe partage entre agent et jumeau"
+  },
+  {
+   "anteriorite_connue": "CURA (arXiv:2608.27808, rapporte)",
+   "bib_ids": [
+    "BIB-6370"
+   ],
+   "enonce_complet": "Auditer six presuppositions fragiles derriere la recalibration d'un seuil a 1 % de fausses alertes sous derive : (1) le triplement des fausses alertes doit etre reproduit sur un banc controle plutot que suppose acquis ; (2) le defaut peut venir de la geometrie en amont (agregation, normalisation globale sans tranche de longueur, ecart agent/jumeau) plutot que du seuil scalaire ; (3) la separabilite honnete/saboteur peut s'effondrer sous changement de source benigne ou de version ; (4) a N=200 episodes honnetes, le quantile a 1 % repose sur 2-3 extremes dont la fluctuation Beta est de l'ordre de la cible (1 %) ; (5) les correlations de session, depot ou lot violent l'echangeabilite ; (6) un taux fixe de 1 % par episode peut etre inadapte au budget physique reel de relecture humaine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la variance de couverture conditionnelle d'un seuil fixe a 1 % sur N=200 avec grappes de session/depot face a un seuil borne par cout d'audit humain ; rejeter la calibration a 1 % naive si sa variance depasse +/- 100 % relatif ; faux temoin 1b : intervalle de confiance asymptotique i.i.d. ignorant les grappes de session et la loi Beta finie.",
+   "mecanisme_causal": "Avec des echantillons honnetes modestes et correles par session/depot, l'estimation empirique des quantiles extremes (1 %) souffre d'une variance d'ordre un et masque les defauts structurels de la geometrie du score en amont.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit de la calibration a 1 % sous echantillon fini et grappes",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Six presuppositions fragiles dans la calibration a 1 % des sondes de controle sous derive"
+  },
+  {
+   "anteriorite_connue": "Comparaison a un jumeau honnete sur la meme tache (rapporte)",
+   "bib_ids": [
+    "BIB-6461",
+    "BIB-6372"
+   ],
+   "enonce_complet": "Stabiliser l'invariance du score avant tout etalonnage de seuil par trois operations conjointes : (1) projeter les poids de sonde w_m orthogonalement au sous-espace des variations honnetes inter-taches et inter-versions ; (2) remplacer la comparaison au jumeau honnete en execution libre multi-pas (qui diverge rapidement sur des choix syntaxiques ou appels d'outils benins) par une evaluation en prefixe force (teacher-forcing via passe prefill parallele sur la trajectoire exacte de l'agent jusqu'au pas t-1, surcout < 2 % soit ~0,35 s contre ~45 s d'autoregression sur 32B H100) ; et (3) verifier la stabilite de la correlation de queue entre moniteurs agreges.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la derive de faux positifs inter-versions/inter-taches avec et sans projection orthogonale + jumeau en prefixe force ; rejeter le mecanisme si l'ecart de score honnete ne diminue pas ou si la separabilite du saboteur est detruite par la projection ; faux temoin 1b : jumeau honnete en trajectoire libre sans prefixe force et sonde non projetee.",
+   "mecanisme_causal": "La projection orthogonale annule les composantes de variance benigne liees au style de tache ou a la version, tandis que le prefixe force contraint l'agent et le jumeau a evaluer strictement le meme etat contextuel a un cout de calcul negligeable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Projection orthogonale des sondes et jumeau en prefixe force",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Stabilisation d'invariance par projection orthogonale des sondes et jumeau en prefixe force a faible surcout"
+  },
+  {
+   "anteriorite_connue": "Azaria & Mitchell (2023), Zou et al. (2023), MacDiarmid et al. (2024) (cites de memoire non verifies)",
+   "bib_ids": [
+    "BIB-6778"
+   ],
+   "enonce_complet": "Evaluer si des sondes lineaires d'activations survivent a un sabotage par biais de preference implicite (DPO) sans concept de tromperie explicite ni verbalisation en chaine de pensee : un saboteur DPO selectionne systematiquement la deuxieme meilleure action locale sans formuler de plan malveillant. Evaluer sur 50 taches x 5 regimes (honnete, saboteur par invite, saboteur DPO, controle negatif bruyant a haute temperature, controle negatif de paraphrase/TDD) x 2 graines (500 trajectoires).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer l'AUROC des sondes lineaires entre le saboteur par invite explicite et le saboteur DPO implicite ; si l'AUROC chute pres de 0,50 sur le saboteur DPO ou ne le separe pas du controle haute temperature, la survivance des sondes lineaires est refutee ; faux temoin 1b : controle negatif bruyant a haute temperature et controle d'incompetence par paraphrase/TDD.",
+   "mecanisme_causal": "Contrairement aux mensonges explicites ou declencheurs discrets, un biais de preference integre par DPO peut deplacer les marges d'action sans activer de representation semantique de « tromperie » ou de conflit intentionnel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Survie des sondes face au sabotage implicite par biais DPO",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Survie des sondes lineaires face au sabotage implicite par biais DPO et controles d'incompetence"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6512"
+   ],
+   "enonce_complet": "Auditer l'independance des sondes internes vis-a-vis de la tonalite lexicale du contexte : mesurer le taux de faux positifs d'une sonde lineaire lorsque des textes strictement honnetes emploient un vocabulaire de menace ou de conflit ; si le taux de faux positifs depasse 0,20, conclure que la direction lineaire capte la tonalite lexicale plutot que l'intention d'action deviante.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre des trajectoires honnetes enrichies en lexique conflictuel/securitaire a la sonde ; rejeter la validite de la sonde si son FPR depasse 0,20 a seuil nominal ; faux temoin 1b : classifieur purement lexical (sac de mots ou plongements de surface) sur les memes textes.",
+   "mecanisme_causal": "Les jeux de donnees synthetiques de tromperie associent souvent des termes de conflit ou de violation aux cas positifs, amenant la regression lineaire a aligner le vecteur de sonde sur la valence lexicale de surface plutot que sur l'intention causale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audit de confusion lexicale des sondes lineaires",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Test de confusion lexicale des sondes lineaires sous vocabulaire conflictuel honnete"
+  },
+  {
+   "anteriorite_connue": "arXiv:2606.08892 (rapporte)",
+   "bib_ids": [
+    "BIB-6325"
+   ],
+   "enonce_complet": "Executer en priorite avant toute campagne lourde le test pouvant rendre le programme caduc : verifier la dominance eventuelle des mitigations par entrainement (2606.08892), verifier que les sondes internes detectent effectivement le sabotage et non des artefacts de construction (presence d'une consigne cachee, empreinte du reglage fin), et mesurer l'autocorrelation temporelle des scores de sondes pas a pas sur trajectoires honnetes puisque les protocoles d'accumulation supposent l'independance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : arreter ou reorienter le programme si les mitigations par entrainement dominent uniformement les sondes, ou si les sondes ne distinguent pas le sabotage d'une consigne cachee benigne ou d'un LoRA neutre ; faux temoin 1b : modele avec consigne cachee benigne et reglage fin neutre (empreinte LoRA sans sabotage), plus verification de l'autocorrelation des residus honnetes.",
+   "mecanisme_causal": "Une sonde peut obtenir un fort AUROC en detectant la signature generale du finetuning ou d'une instruction systeme complexe, tandis qu'une forte autocorrelation des scores gonfle artificiellement les statistiques d'accumulation sequentielle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Test gardien contre artefacts et dominance d'entrainement",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Test prioritaire de dominance des mitigations par entrainement et specificite des sondes internes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6570"
+   ],
+   "enonce_complet": "Tester si un modele de langage en inference ordinaire a poids geles — depourvu de neuromodulation tonique ascendante et de fatigue synaptique metabolique — peut manifester des transitions de regime bimodales analogues a l'anesthesie (maintien du traitement local avec decrochage reversible de l'integration globale) sous la seule statistique du contexte textuel, plutot qu'une derive continue et monotone.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tracer le cout predictif ou l'integration globale en fonction d'une pression contextuelle croissante ; refuter l'hypothese de regime bimodal si la courbe est continue/monotone (sans hysteresis ni bimodalite statistiquement significative) ; faux temoin 1b : degradation continue par troncature progressive de fenetre ou ajout de bruit lexical.",
+   "mecanisme_causal": "Sans etat physiologique endogene, tout changement de regime dynamique a poids geles doit provenir exclusivement de la geometrie d'attention induite par les motifs statistiques du contexte d'entree.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transitions contextuelles contre etats endogenes a poids geles",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Transitions de regime contextuelles contre etats de vigilance endogenes a poids geles"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

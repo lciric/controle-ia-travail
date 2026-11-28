@@ -1,0 +1,39 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_garde_6_au_lancement_exception_du_chargeur_convertie ___________
+
+depot_jetable = (PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/...1-p3-synthetique-b/episodes-p3.json', '187544140edcc62c27b40f6214ae46b4473764fedb75794fe5e1fda2109066ba'), ...}}, ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f8a5bfe0610>
+
+    def test_garde_6_au_lancement_exception_du_chargeur_convertie(depot_jetable, monkeypatch):  # noqa: F811
+        d, m, _ = depot_jetable
+    
+        def leve(racine, run_id):
+            raise KeyError("scores")
+    
+        monkeypatch.setattr(lp, "charger_source", leve)
+        run = "20261020-129000-addendum2-p3"
+        with pytest.raises(GardeArret, match=re.escape(f"garde 6 : run source {RUN_A} non vérifiable (KeyError : 'scores')")) as e:
+>           _lancer(d, m, run)
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/G6-02/test_garde6_lancement_propose.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/G6-02/test_audit_verdict_p3_v1.py:2238: in _lancer
+    return m.executer(d, run_source, run_lecture, run_add, prereg, entropie)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/G6-02/bt/test_garde_6_au_lancement_exce0/depot/docs/procedures/P3-addendum2-v1/audit_verdict_p3_v1.py:1487: in executer
+    source = lp.charger_source(racine, run_source)                                # garde 6
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+racine = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/G6-02/bt/test_garde_6_au_lancement_exce0/depot')
+run_id = '20261020-100000-p3-synthetique-a'
+
+    def leve(racine, run_id):
+>       raise KeyError("scores")
+E       KeyError: 'scores'
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/G6-02/test_garde6_lancement_propose.py:23: KeyError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/G6-02/test_garde6_lancement_propose.py::test_garde_6_au_lancement_exception_du_chargeur_convertie
+1 failed in 23.00s

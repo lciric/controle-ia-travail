@@ -1,0 +1,31 @@
+F
+=================================== FAILURES ===================================
+_____________ test_fils_bornes_par_le_quota_du_groupe_de_controle ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-60/test_fils_bornes_par_le_quota_0')
+
+    def test_fils_bornes_par_le_quota_du_groupe_de_controle(tmp_path):
+        """RC-09 : fils = min(demandés, cœurs de l'affinité, partie entière du quota de processeur du groupe de contrôle et de
+        ses ancêtres, le plus petit l'emportant), au moins un ; v2 (`cpu.max`) et v1 (`cpu.cfs_quota_us`,
+        `cpu.cfs_period_us`) ; « max », −1, fichier absent ou illisible : aucun quota (cas sain : l'affinité seule borne)."""
+        proc, fs = tmp_path / "cgroup-v2", tmp_path / "fs2"
+        proc.write_text("0::/user.slice/essai.scope\n")
+        feuille = fs / "user.slice" / "essai.scope"
+        feuille.mkdir(parents=True)
+        (feuille / "cpu.max").write_text("600000 100000\n")
+        (fs / "user.slice" / "cpu.max").write_text("250000 100000\n")              # l'ancêtre est plus étroit
+        (fs / "cpu.max").write_text("max 100000\n")
+        assert rp.quota_processeur_cgroup(str(proc), str(fs)) == 2.5
+        c = rp.coeurs_disponibles(str(proc), str(fs))
+        assert c["quota_groupe_de_controle"] == 2.5 and c["affinite"] >= 1
+>       assert rp.fils_effectifs(32, {"affinite": 64, "quota_groupe_de_controle": 2.5}) == 2      # artefact de l'ancienne règle
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 32 == 2
+E        +  where 32 = <function fils_effectifs at 0x7f7137f3be20>(32, {'affinite': 64, 'quota_groupe_de_controle': 2.5})
+E        +    where <function fils_effectifs at 0x7f7137f3be20> = rp.fils_effectifs
+
+tests/test_premier_test_ia_run.py:225: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_run.py::test_fils_bornes_par_le_quota_du_groupe_de_controle
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 2.50s

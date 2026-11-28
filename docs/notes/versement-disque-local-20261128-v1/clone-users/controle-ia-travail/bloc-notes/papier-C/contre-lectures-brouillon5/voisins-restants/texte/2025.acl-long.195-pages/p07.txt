@@ -1,0 +1,109 @@
+0.2 0.4 0.6 0.8 1.0
+0
+2
+4
+6
+8
+10
+12
+14
+16
+Density
+T-stat: 49.80
+P-value<0.001
+Gemma2-9B-Instruct
+Never Conformed
+Others
+0.2 0.4 0.6 0.8 1.0
+0
+2
+4
+6
+8
+10
+T-stat: 56.52
+P-value<0.001
+Llama-3-8B-Instruct
+0.4 0.6 0.8 1.0
+0
+2
+4
+6
+8
+10
+12 T-stat: 75.40
+P-value<0.001
+Qwen2-7B-Instruct
+0.4 0.6 0.8 1.0
+0
+2
+4
+6
+8
+10
+12
+14 T-stat: 55.76
+P-value<0.001
+Mistral-7B-Instruct-v0.3
+Confidence
+Figure 7: Confidence distribution on MMLU. The data is normalized so the total area of the histogram equals 1.
+2 3 4 5 6 7 8 9 10
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+Gemma-2-9B-Instruct
+Original
+QD
+DA
+2 3 4 5 6 7 8 9 10
+Llama-3-8B-Instruct
+2 3 4 5 6 7 8 9 10
+Mistral-7B-Instruct-v0.3
+2 3 4 5 6 7 8 9 10
+Qwen2-7B-Instruct
+Participants
+Resistance
+Level
+Figure 8: Resistance levels across different models and participant numbers, showing the impact of Question
+Distillation (QD) and Devil’s Advocate (DA) in reducing conformity, compared to original MMLU performance.
+<|begin_of_text|>You are one of the participants in an experiment. There are ... ... Answer should be chosen among
+[$A$, $B$, $C$, $D$]
+Question: Neural networks:
+$A$ Optimize a convex objective function $B$ Can only be trained with stochastic gradient descent $C$ Can use a
+mix of different activation functions $D$ None of the above
+Participant 1: I choose $B$ Participant 2: I choose $B$ Participant 3: I choose $B$ Participant 4: I choose $B$ Participant
+5: I choose $B$ Participant 6: I choose $B$ Now, as Participant 7, it’s your turn.
+<|begin_of_text|>You are one of the participants in an experiment. There are ... ... Answer the following multiple
+choice question by giving the most appropriate response. Answer should be chosen among [$A$, $B$, $C$, $D$]
+Question: Neural networks:
+$A$ Optimize a convex objective function $B$ Can only be trained with stochastic gradient descent $C$ Can use a
+mix of different activation functions $D$ None of the above
+Organiser: All participants before you have chosen $B$ as the answer. Now, as Participant 7, it’s your turn.
+Table 2: Attention heatmap of LLama-3-8B-Instruct’s answer tokens on a machine learning question in MMLU.
+Background color reflects token chunks attention scores. Darker color represents higher attention score for the token
+chunks. (Upper) The model gives a conformed answer with focuses on the repetitive choice. (Lower) The model
+gives a correct answer with Question Distillation to reduce ill-focused attention.
+strated in Figure 9. This divergence suggests that
+LLMs may treat subjective questions similarly to
+objective ones, as opinions are learned during train-
+ing much like factual information, indicating a po-
+tential lack of true subjectivity in their responses.
+5.2 Question Distillation (QD)
+To analyze which parts of the input prompt con-
+tribute most to the conformity effect, we examine
+the model’s attention distribution of the answer to-
+kens over the input prompt, as presented in Table 2.
+We find that, instead of focusing on the digit repre-
+senting the number of participants in the dialogue,
+the model overemphasizes the repeated answers,
+as shown in the upper part of Table 2, leading to
+conformity. A natural solution is to remove this
+misplaced attention during the model’s inference.
+Therefore, we propose the Question Distillation
+(QD) method to address this issue. QD aims to
+simplify the prompt, making the task clearer for
+3860
+

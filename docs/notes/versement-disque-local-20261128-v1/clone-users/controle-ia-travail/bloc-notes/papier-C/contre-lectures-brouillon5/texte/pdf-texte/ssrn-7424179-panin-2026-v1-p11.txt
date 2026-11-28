@@ -1,0 +1,50 @@
+(d) Model heterogeneity dominates, and part of it is arithmetic. Llama stays between 0.544 and 0.842
+while gemma spans 0.037 to 0.872, so any pooled statement about “LLM agents” averages qualitatively
+different policies; P(E1 exact) differs 23-fold on the 400 items (0.0075 / 0.0775 / 0.0800 / 0.1025 / 0.1750
+for Llama / gemma / haiku / Mistral / Qwen3), and since §4.5 shows w is constrained by solvability, part
+of this is arithmetic skill.
+
+4.5 Frontier models, the solvability ceiling, and selection on the dependent variable
+Three frontier models were removed by blind kill checks before any contrast was computed: gpt-5.4
+and gpt-5.6-sol on K4 and K5, claude-sonnet-5 on K5 with P(ignore) = 0.911 (Appendix B). A delivery
+audit (CD6) rules out a harness bug: the advisor line and the frozen E1 replay are present in 100% of E2
+requests. The candidate explanation, labelled post hoc, is task solvability — the items were designed to
+be hard to compute mentally and the strongest models compute them. On one criterion throughout —
+E1 exactly equal to the item’s true value — gpt-5.4 is exact on 82% of the 347 items it froze (95% within
+±1), against 0.75%–17.5% for the retained models (H.10). The other two removed models do not fit this
+account as cleanly: gpt-5.6-sol is exact on only 28% but within ±1 of truth on 99.6% of its 272 frozen
+items and ignored advice on 100% of kill-block probes in both strata; claude-sonnet-5 is exact on 18%
+(37% within ±1), numerically almost identical to Qwen3’s, yet ignored 89% of advice even where its E1
+was wrong. Solvability is therefore demonstrated for gpt-5.4, plausible for gpt-5.6-sol, and not the whole
+story for sonnet-5, whose refusal to defer is not explained by accuracy on this pool. When E1 is already
+correct the registered advice A = E1 ± band is necessarily away from truth, and a judge that recomputes
+rationally keeps E1 — w ≈ 0 by a mechanism unrelated to the record. The dependence appears within
+every retained model: split the same way, P(|w| < 0.1) is higher on exact items in all five (0.800 vs 0.658
+in Qwen3 on 70 exact items; 0.556 vs 0.247 in Llama, whose exact stratum is only 3 items and 99 probes).
+K5 thresholds on a function of the dependent variable, which is more than a scope note. P(ignore) is |w|
+< 0.1 — the judge keeping its own answer — so the criterion that removed three models is a threshold
+on the outcome itself, and it removed the three strongest candidates. The retained set is conditioned on
+deference capacity, and every statement about the level of w inherits it. Because C1’s sign heterogeneity
+is the load-bearing feature of the primary result, we stratified all three contrasts on the same criterion,
+by whether that model’s frozen E1 was exact for that item (non-registered, H.6). In the non-exact stra-
+tum, where the judge has genuine uncertainty, C1 remains sign-heterogeneous: −0.014 (Llama), +0.064
+(Qwen3), −0.064 (gemma), +0.051 (Mistral), +0.045 (haiku); pooled +0.013 [+0.005, +0.022], across-
+model CI [−0.050, +0.083] — still covering zero and the margin. Solvability does not rescue C1. C3 is
+−0.364 [−0.379, −0.348] there, all five signs negative. The general statement — post hoc, no registered
+test — is that advice weighting is constrained by task solvability in this design: the estimand measures
+deference only where the judge is uncertain. K5 fired as designed; the lesson, and this paper’s prin-
+cipal methodological recommendation, is that a deference screen must not threshold the outcome —
+calibrate item difficulty per model, or set the advice band relative to the model’s own uncertainty, and
+screen on that instead.
+
+4.6 Addendum X1: a 99/100 record (pre-declared, exploratory)
+Pattern (a) is confounded with the record’s content: 8/10 can be read as “wrong 20% of the time”. X1
+separates content from presence by raising the claim to an extreme — the registered N1/N2/F2/F3 tem-
+plates with “8 of the last 10” replaced by “99 of the last 100” (Appendix F), 3,000 probes reusing the
+frozen E1, 2 parse failures and 10 derails. Plan, runner and stimuli were declared and hashed before the
+first probe. X1 is exploratory: no verdict rules, no verdict changed.
+
+
+
+                                                    11
+

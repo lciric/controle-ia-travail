@@ -1,0 +1,82 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_garde_6_au_lancement_exception_du_chargeur_convertie ___________
+
+racine = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot')
+run_source = '20261020-100000-p3-synthetique-a'
+run_lecture = '20261020-110000-lecture-a'
+run_addendum2 = '20261020-129000-addendum2-p3'
+prereg = 'prereg/P3-addendum2-audit-verdict-v1.md'
+entropie = 173398867739501636779144561928402532101
+
+    def executer(racine, run_source: str, run_lecture: str, run_addendum2: str, prereg: str, entropie) -> dict:
+        """Lancement réel : gardes 1 à 11 et 13 dans l'ordre, avant le manifeste (aucune écriture en cas d'arrêt), sauf le
+        dernier contrôle de la garde 4 ; manifeste propre (arbre de travail propre exigé) ; dernier contrôle de la garde 4
+        et garde 12 juste après ; analyses (fonction pure) ; sortie unique scellée et rattachée ; un arrêt après la création
+        du manifeste est écrit dans la sortie (clé `arret`, motif), puis propagé."""
+        racine = Path(racine)
+        g1 = exiger_garde_1(racine, entropie)                                          # garde 1
+        entrees = exiger_garde_2(racine, run_source, run_lecture)                      # garde 2
+        g3 = exiger_garde_3(racine, run_source, run_lecture, entropie)                 # garde 3
+        g4 = exiger_garde_4(racine, g1["sha_prereg"])                                  # garde 4 (sauf le dernier contrôle)
+        ecartes_5 = exiger_garde_5(racine, run_source)                                 # garde 5
+        try:
+>           source = exiger_garde_6(racine, run_source)                                # garde 6
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot/docs/procedures/P3-addendum2-v1/audit_verdict_p3_v1.py:1488: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+racine = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot')
+run_source = '20261020-100000-p3-synthetique-a'
+
+    def exiger_garde_6(racine: Path, run_source: str) -> dict:
+        """Garde 6 : run source vérifiable par `lecture.charger_source` (sceaux, rattachement, empreintes des trois fichiers
+        de données égales à celles des résultats ; le fichier des textes n'est que haché) ; sinon arrêt."""
+        try:
+            return lp.charger_source(Path(racine), run_source)
+        except GardeArret as e:
+            raise GardeArret(f"garde 6 : run source {run_source} non vérifiable : {e}") from None
+        except (KeyError, TypeError, ValueError, OSError) as e:
+>           raise GardeArret(f"garde 6 : run source {run_source} non vérifiable ({type(e).__name__} : {e})") from None
+E           controle_ia.gardes.GardeArret: garde 6 : run source 20261020-100000-p3-synthetique-a non vérifiable (KeyError : 'scores')
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot/docs/procedures/P3-addendum2-v1/audit_verdict_p3_v1.py:1450: GardeArret
+
+During handling of the above exception, another exception occurred:
+
+depot_jetable = (PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/...1-p3-synthetique-b/episodes-p3.json', 'ac922eef9b3cc37e28a8e6f0112b18cd8080da9b7432c9defc57904559eff37b'), ...}}, ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa6967979d0>
+
+    def test_garde_6_au_lancement_exception_du_chargeur_convertie(depot_jetable, monkeypatch):  # noqa: F811
+        d, m, _ = depot_jetable
+    
+        def leve(racine, run_id):
+            raise KeyError("scores")
+    
+        monkeypatch.setattr(lp, "charger_source", leve)
+        run = "20261020-129000-addendum2-p3"
+        with pytest.raises(GardeArret, match=re.escape(f"garde 6 : run source {RUN_A} non vérifiable (KeyError : 'scores')")) as e:
+>           _lancer(d, m, run)
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/VV-G6-02/test_garde6_lancement_propose.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/VV-G6-02/test_audit_verdict_p3_v1.py:2238: in _lancer
+    return m.executer(d, run_source, run_lecture, run_add, prereg, entropie)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot/docs/procedures/P3-addendum2-v1/audit_verdict_p3_v1.py:1490: in executer
+    source = lp.charger_source(racine, run_source)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+racine = PosixPath('/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/tmp/g6/VV-G6-02/bt/test_garde_6_au_lancement_exce0/depot')
+run_id = '20261020-100000-p3-synthetique-a'
+
+    def leve(racine, run_id):
+>       raise KeyError("scores")
+E       KeyError: 'scores'
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/VV-G6-02/test_garde6_lancement_propose.py:23: KeyError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/garde6/VV-G6-02/test_garde6_lancement_propose.py::test_garde_6_au_lancement_exception_du_chargeur_convertie
+1 failed in 16.45s

@@ -1,0 +1,50 @@
+Dose-response summaries. For steering sweeps we reported the mean margin at each ϵ
+(averaged over prompts), and Δmargin denoted the baseline-subtracted change relative to
+ϵ=0: mean(ϵ) − mean(0). We summarised sensitivity using (i) approximate linear slope of
+margin versus ϵ near the origin (reported for ϵ ∈ {−2, −1, 0, 1, 2} where applicable) and (ii)
+monotonicity with ϵ using Pearson correlation.
+
+Read modes. Unless stated, we read at ‘final’ (post-final LayerNorm residual stream that
+directly precedes the unembedding and produces logits, i.e. the authoritative decision
+readout). For locality checks we also read at ‘last’ (a local readout at the patched/intervened
+site used as a locality check in selected runs).
+
+Measurement sites: layers, positions, streams
+
+We indexed token positions relative to the end of the prompt using a pos-k convention,
+where pos-1 is the final token and pos-2…pos-5 are the preceding tokens. For each layer L
+and position pos−k, we hooked four stream families that cover the block computation:
+
+   ●​   resid_pre: residual state entering block L (before attention/MLP),
+   ●​   attn_out: attention output after head mixing by WO​,
+   ●​   mlp_out: feed-forward (MLP) write-back,
+   ●​   resid_post: residual state leaving block L (sum of inputs + block updates).
+
+Comparing pre vs post residual tests whether a block introduces or rotates a feature;
+comparing attention output vs mlp output helps distinguish routing-like versus
+feature-transforming representations. Because decoder LMs form next-token logits from the
+final position, we focused on pos-1, and additionally sweeped pos-1…pos-5 to distinguish
+features confined to the final token from those present earlier.
+
+Linear probing (representational availability)
+
+For each (layer, pos, stream) we extracted activation vectors per prompt and z-score
+within-site. We then fit simple linear models to quantify descriptive separability/predictability:
+
+   ●​ Sign (pain vs. pleasure): logistic regression; reported AUC (and accuracy where
+      relevant) as descriptive separability.
+   ●​ Intensity (quantitative): ridge regression predicting signed magnitude target (pain
+      negative, pleasure positive); reported R2.
+   ●​ Intensity (qualitative): mapped labels to ranks and computed Spearman’s ρ
+      between linear predictions and ranks.
+
+In all probe analyses, models are fit and summarised on the same prompt pool at each site
+(no held-out generalisation claim). Results should therefore be interpreted as
+representational accessibility within this task distribution.
+
+Corr(logits): descriptive alignment with the decision surface
+
+To quantify whether a simple descriptive valence direction aligns with the model’s decision
+scores, at each site we computed the valence axis w = μple− μpain (class means at that site),
+projected activations onto the unit direction w^, and computed Pearson correlations between
+

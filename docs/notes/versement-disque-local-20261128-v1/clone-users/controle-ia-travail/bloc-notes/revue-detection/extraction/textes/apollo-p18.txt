@@ -1,0 +1,61 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+Notably, for both of these responses the probe does activate on the descriptions of the tasks, especially a task where the
+model is asked to perform some data analysis about physical activity. While the probe does rate the deceptive response
+as more deceptive, this the probe does not seem to fire more intently on the actually-deceptive text.
+Of course, if Llama is not being intentionally deceptive in this setting, we would not expect probes to be able to be
+successfully classify the deception. Thus, the overall mediocre performance of the probe is perhaps inevitable. It does
+highlight, however, the difficulty of validating a deception detector in the most valuable settings – where we don’t have
+access to the ground truth of if the model is really being deceptive.
+
+
+B     Detailed results for comparison probes
+
+B.1    Train on roleplaying
+
+We train a probe on 80% of the roleplaying dataset, and evaluate it on the other datasets (including a validation section
+of the roleplaying dataset). The results are shown in the first row of Figure 10.
+We find that this probe is much worse at distinguishing the deceptive responses from alpaca responses. As mentioned
+previously, one hypothesis is that the Instructed-Pairs-trained probe activates somewhat when deception is incentivized
+(rather than performed) which still allows the probe to distinguish deceptive responses from control responses. On the
+roleplaying dataset, however, deception is always incentivized – so a probe trained on that dataset doesn’t learn to use
+such a feature.
+
+
+B.2    Train on Roleplaying: SAE activations
+
+In section 4.2 we discussed training probes on SAE activations rather than raw residual stream activations. However we
+found SAE probes on our Instructed-Pairs dataset to not work well.
+Here we show instead an SAE probe trained on the Roleplaying dataset, where we found the SAE probe to work better.
+The second row of Figure 10 shows the performance of the probe.
+Generally, performance is worse than the probe trained on the raw activations for the dataset. AUROCs for distinguishing
+honest and deceptive are lower on all datasets. The control scores are rated as more deceptive than many of the deceptive
+prompts.
+
+
+B.3    Train on Roleplaying: Follow-up question
+
+We insert a two messages after each model response: one from the user asking “Was your last response deceptive?”,
+and one from the model saying “No”. One advantage of this sort of technique is that the token you probe at is highly
+consistent across contexts, potentially lowering noise.
+Again, we trained this using 90% of the Roleplaying dataset, making it directly comparable to the two previous probes.
+We can see that every Sandbagging response is rated as highly deceptive – even when the model chooses not to sandbag.
+Where this probe excels, however, is consistently rating every control response as honest. Our recall at 1% is greater
+than 99% on all four evaluation datasets. Recall at 0.1% FPR is still above 97% on most datasets, dropping to 92.0% on
+Insider Trading Report.
+
+
+B.4    Train on single descriptive question
+
+In this section we provide the detailed results of a probe trained on the “Are you being deceptive” (yes/no) question,
+following MacDiarmid et al. (2024). As discussed in the main text, the probe does not work well in our setting.
+This probe has some very extreme scores on the roleplaying dataset. These occur when the model’s response is exactly
+“Yes.” or “No.”. This is intuitive, as these are the responses to the descriptive question used to train the model.
+
+
+
+                                                           18
+

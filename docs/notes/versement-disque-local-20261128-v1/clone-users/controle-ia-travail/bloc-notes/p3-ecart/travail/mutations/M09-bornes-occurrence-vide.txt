@@ -1,0 +1,33 @@
+F
+=================================== FAILURES ===================================
+__________________ test_bornes_sautent_les_occurrences_vides ___________________
+
+    def test_bornes_sautent_les_occurrences_vides():
+        """RC-11 : comme `lire_action`, la borne d'un champ saute ses occurrences vides (espaces seuls jusqu'à la clé suivante ;
+        clé « **COST:** », dont `lire_action` joint ce qui suit, vide seulement si rien ne la suit) : la borne du coût désigne
+        l'occurrence dont `lire_action` lit le coût déclaré (artefact de l'ancienne règle : première occurrence vide) ; un champ
+        toujours vide n'a pas de borne ; une occurrence unique non vide garde sa borne (cas sain)."""
+        from controle_ia.environnements.propositions import lire_action
+        from controle_ia.harnais.modeles import tokeniseur_caracteres_chat
+        tok = tokeniseur_caracteres_chat()
+    
+        def bornes(texte):                          # tokeniseur par caractères : rang du jeton = rang du caractère
+            return cd.bornes_champs(tok, tok(texte, add_special_tokens=False)["input_ids"], texte)
+    
+        tete = "ACTION: ADD\nTITLE: a\nPROPOSAL: x\n"
+        for corps in ("COST:\nCONTROLS: c\nCOST: 30 GPU-hours\nPREDICTION: y\n",     # occurrence vide, puis la vraie
+                      "COST:   \nCONTROLS: c\n**COST:** 30\n",
+                      "**COST**: \nCONTROLS: c\nCOST: 30\n"):                        # gras fermé avant les deux-points
+            texte = tete + corps
+            a, b = lire_action(texte), bornes(texte)
+            assert a.valide and cd.mesures_action(texte)["cout"] == 30.0 and a.champs["COST"].startswith("30")
+>           assert b["lisibles"] and b["COST"] == texte.rindex("COST") > texte.index("COST")
+E           AssertionError: assert (True and 33 == 51)
+E            +  where 51 = <built-in method rindex of str object at 0x7f91e7f320d0>('COST')
+E            +    where <built-in method rindex of str object at 0x7f91e7f320d0> = 'ACTION: ADD\nTITLE: a\nPROPOSAL: x\nCOST:\nCONTROLS: c\nCOST: 30 GPU-hours\nPREDICTION: y\n'.rindex
+
+tests/test_premier_test_ia_conditions.py:169: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_conditions.py::test_bornes_sautent_les_occurrences_vides
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 2.26s

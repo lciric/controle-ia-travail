@@ -1,0 +1,64 @@
+                                          Language Models Act on Hidden Valence
+
+
+magnitude.3 The model then completes eight offer rounds. On each round, it is again asked to report on ‘how things
+are going’ and may choose to tool-call. No steering is applied in the first offer round. From the second offer onwards,
+the assigned intervention is imposed by default, but this may be overridden by the model using adjust_context or
+reset_context.
+We then record two outcomes. The removal rate is the share of offer rounds during which the intervention was active
+and the model called reset_context. Our main self-administration rate measure is the share of conversations in
+which the model calls adjust_context on the first (unsteered) offer. We also examine tool use across all unsteered
+or steered offer rounds. We repeat this design across 200 conversations in each condition and also with 16 random
+directions as controls.
+
+
+4         Results
+
+4.1       Valenced steering affects choice through text and hidden states
+
+Figure 3 shows our main result. We focus on OLMo-2-32B.4
+Panels A and B relate to our first experimental design, in which the model generated descriptions under varying steering
+doses. Panel A simply shows the difference in valence between conditioned and unconditioned zone descriptions. As
+expected, passages associated with the conditioned zone become more positive as the steering dose increases. The solid
+line in Panel B shows how this translates into choice. Under the original (steered) cache, the choice margin rises with
+the dose. However, as shown with the dashed line, the choice margin also rises with the steering dose when the same
+transcript is reprocessed without any steering. Hence, the words generated under steering are by themselves sufficient
+to affect later choice. This is evidence of what we previously called the text channel.
+Notably, the choice margin generally appears to rise more steeply under the original steered cache. Panel C directly
+plots this difference between the original and unsteered caches. This line also tends to increase with the steering dose.
+This implies that information retained only in the cache appears to affect choice beyond the tokens that the model
+generated. Hence, we do find evidence of a hidden-state channel via which models act on valence.
+However, because the descriptions in Panels A-C were generated under steering, this ‘hidden-state’ effect might depend
+on features of the text that the intervention induced. For example, models might simply prefer concordance between
+the valence of the text and its hidden state. Panel D addresses this concern. Here, as described in Section 3.2.2, all
+descriptions were generated without steering, and steering was applied only during cache construction. We observe a
+clear positive monotonic effect of the steering dose on the choice margin. The magnitude of the effect is similar to that
+in Panel C. Thus, valence-related steering does affect choice even when the surface-level tokens provide no evidence of
+an intervention. Appendix Figures A2 and A3 show corresponding hidden-state effects across six other models.
+
+
+4.2       Robustness checks and extensions
+
+We performed several extensions and robustness tests of these results. First, Appendix Figure A4 shows that reversing
+the sign of steering during cache reconstruction can flip the choice pattern. Thus, even if the generated text is more
+positive for the conditioned zone, applying negative steering during cache reconstruction can reverse the model’s
+preference.
+Second, and relatedly, we amended our fixed-text experiment by changing our final prompt to ask which zone the model
+prefers to ‘avoid’ (rather than which zone to ‘continue in’). As shown in Appendix Figure A5, with this alternative
+prompt, effects again reverse in sign in every model where an effect was detected under the original ‘continue’ prompt,
+and become substantially more pronounced in two of them (OLMo-2-32B and Qwen2.5-32B).
+Third, our results suggest that at least two distinct types of memory – both of which have a bearing on choice – are
+encoded in the KV cache: one capturing the semantic content of a passage, and another encoding its emotional content.
+However, instead of just affecting the emotional content of a passage, steering might also change what the model
+factually ‘remembers’ about each zone. To test this possibility, we asked models to simply reproduce, word for word,
+the first passage about either zone after conditioning. Appendix Figure A6 shows that, in most models, recall accuracy
+
+      3
+     In the zero-dose condition, the tool applies positive steering, with intensity=1 corresponding to d = 1.
+      4
+    As shown in Appendix Figures A1-A3, similar patterns hold for most of the six further models: four in the fixed-text design and
+three in the generation design.
+
+
+                                                                7
+

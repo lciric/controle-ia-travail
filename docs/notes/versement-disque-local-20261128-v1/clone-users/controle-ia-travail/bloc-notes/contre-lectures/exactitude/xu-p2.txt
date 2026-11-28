@@ -1,0 +1,54 @@
+                   Inside the Unfair Judge: A Mechanistic Interpretability Account of LLM-as-Judge Bias
+
+
+
+et al., 2024). What remains open, and is our target, is a representation-level account of LLM-as-judge
+scoring bias: whether it has a stable internal geometry, whether that geometry is causal, and whether
+it is operationally useful.
+    We argue that LLM-as-judge bias is best read as a representation-level phenomenon, an internal
+mapping from surface cues to score predictions that lives in the judge’s hidden state, complementary
+to the input-output view and operationally useful in ways that view does not afford. We test the case in
+three increasing commitments: bias has a stable internal geometry; that geometry is an interventional
+handle rather than a passive correlate; and the same geometry is operationally useful on inputs
+the judge has never seen. To run the test we construct tightly controlled triples (𝒟base , 𝒟pos , 𝒟neg )
+that share the same questions and factual content and differ only in semantics-irrelevant surface
+framing, covering seven bias types (Prestige, Verbosity, Bandwagon, Authority, Sentiment, Refinement,
+Diversity) across nine benchmarks and seven judges.
+    Geometric. Baseline activations sit on a tight manifold ℳbase , while biased inputs are displaced
+along a low-dimensional, type-specific subspace that sharpens with depth and is recovered by di-
+rectional and discriminative estimators with independent objectives. The behavioral asymmetry
+documented by input-output studies (large penalties for negative cues, narrower positive distribution)
+emerges as a downstream signature of this geometry rather than as the primary finding.
+    Causal control. Steering hidden states along the recovered subspace controls scoring in both
+directions: forward shifts reproduce biased scoring on clean inputs, reverse shifts restore baseline
+scoring on biased ones, while matched-norm random directions yield an order-of-magnitude smaller
+shift. Bidirectional steering on the same vector supports reading the subspace as a sufficient inter-
+ventional handle on biased scoring; we scope this to interventional sufficiency and do not claim it
+is the judge’s unique natural pathway, which path-patching or causal-tracing mediation would test
+separately.
+    Operational. The same activation features support cross-domain prediction of judge failure: a
+linear projection onto bias-direction features reaches AUC 0.82 on three entirely unseen benchmarks
+(vs. a text-based baseline near 0.63), one indication that the geometry transfers to held-out domains.
+    Concretely we (1) map the empirical landscape of scoring bias across seven bias types, nine
+benchmarks, and seven judges, recovering the behavioral asymmetry as a downstream signature;
+(2) characterize the bias subspace (dimensionality, depth profile, multi-estimator recovery) in three
+white-box judges (Llama-3.1-8B, Qwen3-14B, Gemma-3-12B); (3) close the causal loop with bidi-
+rectional steering plus random-direction and bias-type-swap controls that rule out generic-perturbation
+and readout-direction alternatives; and (4) show a linear projection onto the bias-direction features
+anticipates judge degradation cross-domain on three held-out benchmarks.
+
+
+2. Related Work
+LLM-as-judge bias at the input–output level. A large literature documents that LLM judges shift
+scores with semantics-irrelevant surface cues, including order and verbosity, self-preference, authority,
+and social identity (Wang et al., 2024a; Saito et al., 2023; Panickssery et al., 2024a; Dubois et al.,
+2024; Li et al., 2024c; Koo et al., 2024), and mitigates at the input–output interface with prompt
+engineering, calibration, position-invariant inference (Wang et al., 2025g), and judge ensembles
+or juries (Verga et al., 2024). This work characterizes bias by how the judge’s outputs move as its
+inputs are perturbed; it is the empirical foundation we build on, and we depart from it by asking what
+happens inside the judge when it issues an unfair score.
+Representation engineering and concept erasure. A parallel line locates behaviors along low-
+
+
+                                                                                                          2
+

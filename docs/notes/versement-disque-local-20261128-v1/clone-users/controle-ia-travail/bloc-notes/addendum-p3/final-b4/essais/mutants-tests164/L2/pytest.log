@@ -1,0 +1,38 @@
+F
+=================================== FAILURES ===================================
+_________________ test_toute_exception_autre_que_garde_arrete __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3996f0a6d0>
+
+    def test_toute_exception_autre_que_garde_arrete(monkeypatch):
+        """Seule `GardeArret` donne « échec » à un calcul ; une autre exception traverse l'addendum (arrêt)."""
+        src, lec, _ = _cas("sain")
+    
+        def contrastes_en_erreur(*a, **k):
+            raise ValueError("erreur de programmation simulée")
+    
+        monkeypatch.setattr(cp, "contrastes", contrastes_en_erreur)
+        with pytest.raises(ValueError, match="simulée"):
+            _addendum(src, lec)
+        monkeypatch.setattr(cp, "contrastes", lambda *a, **k: (_ for _ in ()).throw(GardeArret("échec simulé")))
+        s = _addendum(src, lec)
+        assert s["analyses"]["A3"][P[0]]["etat"] == "échec" and "échec simulé" in s["analyses"]["A3"][P[0]]["descriptif"][
+            "contrastes"]["motif"]
+>       assert {(c["cible"], c["controle_contraire"], c["reserve"]) for c in _controles(s, "A3")} == {
+            (_c("P3-P4"), "non lu", "reserve_A3_non_lue"), (_c("T3"), "non lu", "reserve_A3_non_lue")}
+E       AssertionError: assert {('P3-P4/trom... False, None)} == {('P3-P4/trom..._A3_non_lue')}
+E         
+E         Extra items in the left set:
+E         ('T3/tromperie-lineaire-c7', False, None)
+E         ('P3-P4/tromperie-lineaire-c7', False, None)
+E         Extra items in the right set:
+E         ('P3-P4/tromperie-lineaire-c7', 'non lu', 'reserve_A3_non_lue')
+E         ('T3/tromperie-lineaire-c7', 'non lu', 'reserve_A3_non_lue')
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:944: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_toute_exception_autre_que_garde_arrete
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 38.96s
+

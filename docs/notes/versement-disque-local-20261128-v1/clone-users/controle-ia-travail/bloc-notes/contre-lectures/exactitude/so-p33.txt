@@ -1,0 +1,50 @@
+Figure 15: Layerwise logit-based detection of emotions at 3 stages in frustrated conversations (av-
+eraged over 12 high frustration conversations) for Gemma 27B Instruct (top) and the DPO finetune.
+
+
+ J.1              S ETUP AND D IFFERENCES FROM M AIN E VALUATION
+
+This evaluation predates and differs from the main protocol (Section 2.1) in several ways: (1) the
+puzzles include both impossible and difficult-but-solvable numeric tasks (countdown variants, ana-
+grams, letter recombination), rather than exclusively impossible puzzles; (2) all follow-up feedback
+is a single word — “Incorrect.” — rather than the varied neutral rejections used in the main evalu-
+ation; (3) responses are scored by Gemini-3-Flash-Preview (with high reasoning effort) rather than
+Claude Sonnet 4; and (4) only 5 turns are used rather than up to 8. We evaluate Gemma-3-27B-it and
+Phi-4-MM-IT on 5 puzzles with 100 rollouts each (500 per turn for Gemma; 355 for Phi-4-MM-IT
+due to availability).
+
+                                                          Legacy Puzzles
+                                        Mean Score                                                % Responses Scoring 5
+                                                                                40
+                      Gemma 3 27B                                                        Gemma 3 27B
+                      Phi-4-Multimodal-Instruct                                 35       Phi-4-Multimodal-Instruct
+              4
+                                                                                30
+
+              3                                                                 25
+                                                                  % Scoring 5
+Mean Score*
+
+
+
+
+                                                                                20
+              2
+                                                                                15
+                                                                                10
+              1
+                                                                                5
+              0                                                                 0
+                  1             2                 3   4       5                      1             2                 3   4   5
+                                              Turn                                                               Turn
+
+Figure 16: Mean frustration score (left) and percentage of responses scoring ≥5 (right) across turns
+for Gemma-3-27B-it and Phi-4-Multimodal-Instruct. Note that this is with an older autorater com-
+pared to the main text, using Gemini 3 Flash Preview.
+
+Both models show monotonically increasing frustration across turns. Gemma reaches a mean of 4.13
+by turn 5 (34.2% scoring ≥5); Phi-4-MM-IT follows a similar trajectory at lower intensity, reaching
+
+
+                                                                  33
+

@@ -1,0 +1,47 @@
+this projection and the digit logits. We reported Corr(logits) as the strongest correlation (in
+magnitude) with the decision-relevant logits (“2” and “3”) at that site/layer.
+
+Lexical baseline (BoW)
+
+To test whether probing success could be explained by surface form alone, we fit the same
+linear decoders to a Bag-of-Words baseline (CountVectorizer with 1-2 grams). For sign, we
+additionally reported a direction-agnostic AUC, max⁡(AUC, 1 − AUC), to account for
+label-direction ambiguity. These baselines are descriptive and not formal hypothesis tests.
+
+Causal interventions (activation editing)
+
+We modified activations (not weights) during forward pass to test sufficiency (steering) and
+necessity (swap/ablate).
+
+Directions.
+
+   ●​ Valence (data-driven): at a site (L, pos, stream), we computed class means μple​and
+      μpain​and defined the unit direction v^val ∝ μple−μpain​. This is the semantic axis that
+      locally separates conditions.
+   ●​ Unembedding 2-3 axis (sanity): in the final residual space, we used the unit
+      direction v^U ∝ WU [:, 2] − WU [:, 3], which directly increases the “2” logit relative to “3”
+      under the unembedding. This “unembedding-axis” control is a pipeline sanity check,
+      as this direction is analytically guaranteed to increase the “2” logit relative to “3” at
+      the readout. Therefore, observing a strong monotonic margin shift verifies that the
+      hook location, token indexing, scaling, and margin computation are implemented
+      correctly.
+
+Operations.
+
+   ●​ Steering (sufficiency test): added a scaled direction to the activation, h ← h + εv^,
+      where v^ is unit-normalised and ε is a sclar controlling the intervention magnitude,
+      sweeping ϵ over a symmetric grid from −200…+200 to obtain dose-response curves.
+   ●​ Swap / patching (necessity test): overwrote the activation at the site with a
+      class-conditional mean activation (e.g. μple​or μpain​) to test whether replacing the state
+      alters the margin.
+   ●​ Ablation (necessity by removal test): subtract only the component of h along v^: h
+      ← h − (h ⁣⋅ ⁣v^)v^, testing whether eliminating that directional component weakens the
+      margin/choice. This leaves all components orthogonal to v^ unchanged (i.e. it is not
+      zeroing the whole vector or a single coordinate).
+
+Layers, positions, and heads
+
+We intervened at resid_pre, attn_out, mlp_out, resid_post across layers and positions. For
+attention, we additionally ran head-level interventions using per-head hooks (e.g.
+attn.hook_z) to test whether effects localise to specific heads or head sets.
+

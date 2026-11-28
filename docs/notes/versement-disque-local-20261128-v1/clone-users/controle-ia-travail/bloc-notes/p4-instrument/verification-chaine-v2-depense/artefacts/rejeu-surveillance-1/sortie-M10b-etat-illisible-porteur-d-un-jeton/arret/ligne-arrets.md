@@ -1,0 +1,1 @@
+| 2026-10-20 | instance 99999999 (étiquette p4-v1) | P4-instrument | surveillance : FIN | arrêt par son identifiant (`vastai stop instance 99999999`, arreter_p4_v1.sh) : demandé à 2026-10-20T22:42:31Z, relu arrêté (exited, stopped) à 2026-10-20T22:42:31Z |

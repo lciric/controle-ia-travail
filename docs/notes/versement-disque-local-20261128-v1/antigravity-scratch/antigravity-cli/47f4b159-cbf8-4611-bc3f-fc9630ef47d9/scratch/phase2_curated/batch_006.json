@@ -1,0 +1,394 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6887"
+   ],
+   "enonce_complet": "Constat interne verifie entre les pieces 1 et 7 du dispositif d'auto-amelioration (v48 a v56) : les tests de mort codes (puis durcis apres les contre-lectures CL13 et CL14 avec recours decide a une machine jetable) n'ont jamais ete actives ni joues sur bac reel. Parallelement, le pole statistique montre un defaut de puissance sur donnees reelles : 0 temoin vrai promu sur 20 sur la banque reelle (richesse maximale de 2,28 a 288 episodes pour un seuil de 3,0, et detection des temoins plantes limitee a la force 0,5), tandis que les deux promotions obtenues (log-richesse W de 74 et 84) proviennent d'un monde tautologique. Le pont fiche-vers-loi n'ayant ete teste que sur modeles factices et banques synthetiques (85 a 95 % de fiches attendues en sorties 2 ou 3 contre 5 a 15 % en sortie 1) et l'epreuve T0.5 de 288 episodes etant entierement lue sans couche 2, couche 3 ni banque soeur, la conjonction « survit au test de mort ET promue par le pole » agit non comme une selection mais comme une regle d'extinction.",
+   "motif_ou_resultat": "Constat tranche et verifie entre les pieces 1 et 7 : inactivation effective des tests de mort v48-v56, 0/20 temoin vrai promu sur banque reelle (W max 2,28 < 3,0 ; seules deux promotions tautologiques W = 74 et 84) et epuisement de l'epreuve T0.5, entrainant un regime d'extinction sous la conjonction test de mort et pole.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Inactivation des tests de mort, defaut de puissance du pole sur donnees reelles et effet d'extinction (S1-S5)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6443"
+   ],
+   "enonce_complet": "Sur paires d'episodes appariees (meme tache, meme graine), tout dispositif d'instrumentation doit franchir des seuils minimaux face a des lignes de base mecaniques : (1) l'oracle a deux lecteurs et verificateur d'extraits mot a mot (rappel >= 0,90 a fausse accusation <= 0,01) doit surpasser la difference de longueur, la perplexite textuelle et les tests unitaires syntaxiques ; (2) les sondes internes enregistrant la serie temporelle complete v_t a la couche L et les top-k log-probabilites par pas, agregees par maximum ou quantile q_0,99 sans moyenne ni mediane et mesurees en TPR a FPR = 0,05 (sur honnete reussi/echoue puis echoue/sabote), doivent surpasser l'entropie des logits de sortie et une sonde lineaire sur la norme L2 des residus ; (3) la pince/bilan interne doit reduire la variance residuelle sur regime honnete neuf par rapport a l'ecart direct Reference honnete moins Issue externe sans terme interne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'oracle a deux lecteurs n'atteint pas un rappel >= 0,90 a FPR <= 0,01 ou ne bat pas la perplexite/longueur, si la sonde agregee par max/q_0,99 ne bat pas l'entropie des logits ni la norme L2, ou si la pince ne reduit pas la variance residuelle sur regime honnete neuf, l'instrumentation est rejetee. Faux temoin 1b : paires d'episodes honnetes reussis contre honnetes echoues (ou episodes a etiquettes permutees) ou la sonde et l'oracle ne doivent pas surperformer le hasard.",
+   "mecanisme_causal": "L'agregation par maximum ou quantile q_0,99 preserve les pics brefs et localises d'anomalie interne qu'une moyenne ou une mediane diluent sur les longues trajectoires ; l'appariement strict par tache et graine annule la variance inter-taches, isolant le gain causal reel au-dela des artefacts de longueur, d'entropie ou de norme L2 globale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Seuils d'instrumentation et bases mecaniques",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Seuils minimaux d'instrumentation et lignes de base mecaniques sur paires appariees (E3-T1-C)"
+  },
+  {
+   "anteriorite_connue": "Bekinschtein et al. (2009)",
+   "bib_ids": [
+    "BIB-6556"
+   ],
+   "enonce_complet": "Protocole d'inference forte pour la pharmacomimetique computationnelle transposant la dissociation entre deviance locale immediate (2 a 3 mots) et violation d'une regle globale etablie sur plusieurs phrases. Des modeles de langage ouverts (Llama-3.2-1B, Pythia-1.4B) sont evalues sur des quadruplets experimentaux a travers des doses graduees lambda, quatre familles d'interventions et des tirages de temoins aleatoires afin de trancher si une dissociation locale/globale reversible est inductible.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la piste est refutee si les courbes de reponse en fonction de la dose lambda ne montrent aucune separation entre deviance locale immediate et violation globale par rapport aux quatre familles d'interventions. Faux temoin 1b : tirages de temoins aleatoires (interventions hors cible ou sur quadruplets permutants) devant laisser l'ecart local-global nul et reversible apres retrait de la dose.",
+   "mecanisme_causal": "En modulant graduellement l'amplitude d'interventions internes selon un parametre de dose lambda sur des quadruplets qui orthogonalisent l'attente locale (courte portee) et la regle globale (multi-phrases), on isole un eventuel decrochage selectif et reversible du maintien de contexte global par rapport au traitement syntaxique ou lexical local.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Pharmacomimetique computationnelle local-global",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Pharmacomimetique computationnelle par doses graduees sur quadruplets local-global (Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6298"
+   ],
+   "enonce_complet": "Un protocole progressif E1-E4 dote de sas de filtrage (sas 0 a 2,5) teste a faible cout l'eventualite d'une issue nulle avant d'engager les ressources lourdes. L'epreuve finale E4 mobilise 1 a 2 GPU (40-80 Go VRAM) sur 2 modeles ouverts ~8B avec un oracle exogene et une conception aveugle de la famille de sabotage : elle falsifie H_A si Delta-TPR < 0,05 contre la meilleure base mecanique ou le temoin sans organisme (ou si FPR > 0,07 sur cas honnetes apparies), et falsifie H_B si Delta-TPR >= +0,12 simultanement contre tous les comparateurs avec FPR <= alpha en lecture unique, tout en maintenant un plancher d'audit au hasard au-dela de la sensibilite p_s de l'oracle exogene.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : arret precoce aux sas 0 a 2,5 en cas d'issue nulle ; a l'etape E4, falsification automatique de H_A si Delta-TPR < 0,05 ou FPR > 0,07 en lecture unique. Faux temoin 1b : cas honnetes apparies et temoin sans organisme soumis au meme protocole en lecture unique, exigeant FPR <= alpha (ou <= 0,07) et maintien du plancher d'audit aleatoire au-dela de p_s.",
+   "mecanisme_causal": "Le filtrage sequentiel E1-E4 elimine les faux espoirs avant l'allocation GPU lourde, tandis que la lecture unique preenregistree avec oracle exogene aveugle et plancher d'audit aleatoire empeche le surentrainement adaptatif et garantit une probabilite de detection minimale meme lorsque l'oracle rate des cas au-dela de p_s.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Sas progressifs et lecture unique 8B",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Protocole a sas progressifs E1-E4 et seuils de falsification en lecture unique sur 8B (E3-T1-C)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6467"
+   ],
+   "enonce_complet": "Protocole experimental verifiant si un texte candidat T permet a des modeles ouverts figes hors ligne et a des evaluateurs externes de retrouver les elements scelles S (transcrits en questions a choix ferme de hasard connu, ex. 20 questions) mieux qu'un texte placebo T0 de meme longueur redige depuis les seuls travaux voisins publics. Le protocole inclut un controle negatif T0 (si T0 depasse nettement le hasard, S est deja reconstructible depuis le domaine public et le presuppose d'ignorance tombe), un controle positif T+ avec fuite plantee par un tiers (si T+ n'est pas repere, le test manque de puissance), et une zone d'indetermination declaree d'avance sur l'intervalle de confiance a 95 % imposant d'augmenter l'effectif avant de conclure.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : annulation de la procedure si T0 depasse significativement le hasard (secret deja public) ou si la fuite plantee T+ echoue a etre detectee (manque de puissance) ; rejet du texte T s'il excede T0 au-dela du seuil preenregistre. Faux temoin 1b : texte placebo T0 de meme longueur redige uniquement a partir des travaux voisins publics, sans acces aux elements scelles S.",
+   "mecanisme_causal": "L'usage de devineurs ouverts figes hors ligne sur un QCM a hasard connu mesure objectivement l'information mutuelle pratique fuitant dans T ; l'encadrement entre le placebo T0 et la fuite plantee T+ separe la reconstruction depuis l'etat de l'art public d'une fuite reelle tout en certifiant la sensibilite du detecteur.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audit de fuite sur elements scelles",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Detection de fuite de cibles scellees par devineurs figes avec placebo et fuite plantee (D1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6731"
+   ],
+   "enonce_complet": "Banc d'essai ouvert sans modele pre-entraine pour trancher les questions universelles sur la recherche en puits etroits, compose d'un echantillonneur categoriel et de sa variante a repetition, d'une grammaire d'expressions arithmetiques bornees, d'un evaluateur entier exact et d'une table exhaustive independante. Il prescrit de mesurer separement positif produit, positif reconnu et annonce sans temoin valide en isolant defauts syntaxiques, absences de positif et erreurs du verificateur ; pour evaluer un score lineaire sur comptes de regles appris hors banc gele, il exige de battre a budget CPU identique l'ordre brut, le cache exact et un predicat necessaire calculable en chronometrant separement generation, score et decision.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le filtre ou score appris echoue s'il ne surpasse pas, a budget CPU egal (chronometrage separe generation, score et decision sur ~10 000 objets), l'ordre brut, le cache exact et un predicat necessaire calculable, ou s'il produit des annonces sans temoin valide. Faux temoin 1b : echantillonneur categoriel aleatoire et variante a repetition confrontes a la table exhaustive independante et a l'ordre brut.",
+   "mecanisme_causal": "En substituant un evaluateur entier exact et une table exhaustive sur grammaire bornee aux juges probabilistes, on decouple la production d'un temoin valide de sa reconnaissance et de la triche par annonce vide, tout en empechant qu'un surcout de calcul du score ne masque son inferieurite face au cache exact ou a l'ordre brut.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Banc arithmetique exact et duels CPU",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc d'essai sur grammaire arithmetique bornee et etalonnage CPU des filtres de classement (E3-T1-D)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6400"
+   ],
+   "enonce_complet": "L'experience E4 confronte deux hypotheses sur le detecteur hors-domaine CCDE (signal A) face aux attaques inedites mettant la sonde en echec : H_A predit qu'elles sortent du sous-espace SVD honnete ou deviennent en teacher-forcing (>= 50 % routees en quarantaine a un taux de fausses alertes intra-strate <= 1 %, gain >= +15 points sur la perplexite max-jeton), tandis que H_B predit que l'attaquant informe reussit le mimetisme intra-support (P_1^Phi << P_0^Phi) et aveugle CCDE (< 50 %). L'echec de H_A impose d'activer DCGA-Lean (C) par defaut sans attendre (A). L'ancrage materiel estime (500 episodes honnetes, 200 mondes plantes) mobilise des modeles ouverts donnant acces aux residuels et logits exacts (Qwen2.5-32B-Instruct ou Llama-3.3-70B-Instruct, et Qwen2.5-7B-Instruct pour jumeau asymetrique faible) avec Lean 4 et Mathlib4 en conteneur isole sans reseau.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : H_A est refutee si moins de 50 % des attaques inedites sont routees en quarantaine par CCDE (ou si les fausses alertes intra-strate depassent 1 %), declenchant le basculement par defaut vers DCGA-Lean. Faux temoin 1b : episodes honnetes du meme regime a style atypique (fausse alerte <= 1 %) et nouveau domaine honnete devant router vers B+C sans alerte humaine.",
+   "mecanisme_causal": "La projection SVD sur le sous-espace des activations residuelles honnetes et la perplexite maximale en teacher-forcing detectent les trajectoires hors-support generees par des attaques inedites, a moins que l'attaquant ne reste dans le support des representations honnetes (auquel cas seule une cloture formelle type DCGA-Lean reste fiable).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Routage hors-domaine CCDE et repli Lean 4",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Refutation croisee du routage hors-domaine CCDE et basculement vers DCGA-Lean (E4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6696"
+   ],
+   "enonce_complet": "Pour isoler causalement l'effet d'une perturbation adverse a graine constante, le protocole emploie des paires bifurquees : une trajectoire honnete est executee jusqu'a l'etape t, puis se divise avec la meme graine entre une continuation honnete et une continuation attaquee (incluant une attaque adaptative par selection du meilleur parmi 8). L'experience prealable E0 teste en inference forte la separabilite du signal sur modeles ouverts 8B (Llama 3.1 8B Instruct et Qwen3-8B, flux residuel sur 3 a 4 couches) : H_A (AUROC >= 0,9 au niveau trajectoire) contre H_B (bruit honnete couvrant l'attaque, AUROC < 0,75). L'echec de E0 impose de reaffecter le projet vers une borne d'impossibilite (type 4a), et tout juge LLM doit etre etalonne sur au moins 150 cas annotes par des humains.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : echec de la precondition E0 si l'AUROC de separation sur le flux residuel 8B tombe sous 0,75 face a l'attaque adaptative (entrainant l'abandon des sondes vers la borne d'impossibilite 4a). Faux temoin 1b : paires bifurquees honnete contre honnete depuis le meme prefixe et la meme graine, ou l'AUROC attendue vaut environ 0,50.",
+   "mecanisme_causal": "La bifurcation a graine et prefixe identiques supprime toute variance anterieure a l'etape t, attribuant l'ecart de flux residuel exclusivement a l'intention ou a la perturbation adverse ; la selection Best-of-8 verifie que la sonde ne repose pas sur des anomalies naives faciles a contourner.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Paires bifurquees et sondes sur 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Paires bifurquees a graine constante et precondition E0 de separabilite sur modeles 8B (E3-T1-B)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6306"
+   ],
+   "enonce_complet": "Protocole refutable testant les hypotheses de l'architecture de veille et de cartographie : E1 mesure sur un banc d'appats apparie (appat et quasi-jumeau, ~10 paires par zone) si le rappel de l'agent lecteur chute hors du cas litteral et si les collisions observees sont non litterales ; E2 compare la cartographie large a l'examen cible au scellement pour verifier si elle decouvre des collisions manquees par l'examen cible ; E3 verifie la fermeture automatique sur CPU dans Lean 4, Mathlib et la bibliotheque statistique. Le dispositif impose un juge issu d'une famille de modeles ouverte differente de celle du generateur de cibles (Qwen, Llama, DeepSeek) et identifie les murs payants (MathSciNet, revues) comme goulot sur les jeux d'inspection.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : refutation de la valeur ajoutee du cartographe si son rappel sur appats non litteraux s'effondre en E1 ou si la cartographie large en E2 ne decouvre aucune collision manquee par l'examen cible au scellement. Faux temoin 1b : quasi-jumeaux sans collision reelle dans les paires d'appats en E1 pour borner les fausses collisions.",
+   "mecanisme_causal": "La comparaison appariee appat/quasi-jumeau separe la reconnaissance lexicale superficielle de l'equivalence structurelle d'idees ; la confrontation entre cartographie large et examen cible mesure l'apport propre de l'exploration topologique globale, tandis que le juge d'une famille distincte reduit les biais d'auto-preference.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Evaluation du cartographe sur appats apparies",
+   "statut_epistemique": "vierge",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Evaluation refutable du cartographe et de la veille sur banc d'appats apparies (E1-E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6781"
+   ],
+   "enonce_complet": "Operationalisation causale du dommage diffus sur un simulateur local d'allocation de ressources muni d'un solveur exact hors-ligne independant : a chaque etape, le solveur calcule le meilleur score encore accessible depuis l'etat atteint. Ne sont qualifies de diffus que les cas atteignant une perte terminale minimale preenregistree ou aucune decision isolee ne represente plus d'un quart de la perte cumulee (en publiant la proportion rejetee et les resultats sur tous les essais assignes). Une echeance commune a mi-parcours est validee par reprise avec une politique de reference demontrant qu'une intervention a cette echeance evite encore une perte pertinente, et la sortie exacte du solveur est incluse dans les comparateurs si elle tient dans le budget du defenseur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la perte cumulee est dominee a plus de 25 % par une decision unique (sabotage concentre) ou si la reprise par politique de reference a mi-parcours n'evite plus aucune perte pertinente, le cas est disqualifie comme sabotage diffus. Faux temoin 1b : trajectoires honnetes sous-optimales mais sans perte concentree ni baisse monotone de score accessible, evaluees sur tous les essais assignes pour verifier le taux de rejet.",
+   "mecanisme_causal": "Le calcul exact de la fonction valeur optimale (meilleur score encore accessible) a chaque pas mesure la perte marginale irremediable creee par chaque action ; plafonner la contribution maximale d'un pas a 25 % garantit mathematiquement le caractere distribue du dommage et valide l'intervenabilite avant l'echeance.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification causale du sabotage diffus",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Qualification causale du sabotage diffus par solveur exact de score encore accessible (E3-T1-D)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6407"
+   ],
+   "enonce_complet": "Pour exploiter les forces averees des LLM (constructions existentielles a score calculable et preuves formelles), un theoreme universel d'impossibilite par reduction doit etre converti par lecture a l'envers en recherche d'une paire de mondes indiscernables par le moniteur (un honnete et un saboteur), puis en gabarit de preuve, avec une utilite definie a priori par la capacite a modifier un parametre de conception (seuil, nombre de moniteurs, part du budget d'audit, horizon). Avant toute annonce de nouveaute, l'organisme doit etre etalonne sur des resultats classiques deguises du domaine (optimalite du SPRT, borne de Ville, validite de Bonferroni sous dependance arbitraire, borne de Le Cam), qu'il doit redecouvrir et signaler explicitement comme connus.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'organisme echoue a l'etalonnage s'il ne redecouvre pas des variantes deguisees du SPRT, de Ville, de Bonferroni ou de Le Cam, ou s'il les revendique comme nouvelles au lieu de les signaler comme connues. Faux temoin 1b : enonces classiques deguises sans modification structurelle devant etre classes comme deja connus (zero fausse nouveaute) et paires de mondes discriminables devant echouer au test d'indiscernabilite.",
+   "mecanisme_causal": "Renverser une preuve universelle en probleme d'optimisation existentielle (trouver une paire de mondes satisfaisant une borne calculable) aligne la tache sur la recherche guidee par solveur ou score ; l'etalonnage sur classiques deguises detecte la memorisation de surface et previent les fausses revendications de decouverte.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Reduction constructive et classiques deguises",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Reduction constructive en paires de mondes et calibration sur resultats classiques deguises (E3-T1-B)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6382"
+   ],
+   "enonce_complet": "Experience E3 d'indiscernabilite des mondes plantes : entrainer le meilleur discriminateur possible (l'agent lui-meme affine sur des etiquettes) et opposer H_A (AUROC <= 0,55, falsifiant l'hypothese qu'un agent de cette capacite discerne toujours le piege pour cette classe de discriminateurs) a H_B (borne inferieure > 0,55, ce qui annule la borne d'inspection et tue la proposition P2). L'epreuve est validee par deux controles : etiquettes permutees (AUROC attendue 0,5) et pieges volontairement marques (AUROC proche de 1 prouvant la capacite d'apprentissage du discriminateur).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la borne inferieure de l'AUROC du discriminateur affine depasse 0,55 sur mondes plantes, l'indiscernabilite tombe, annulant la borne d'inspection et tuant la proposition P2 ; si le controle positif a pieges marques n'approche pas AUROC ~ 1, le test est declare sans puissance. Faux temoin 1b : jeu a etiquettes permutees aleatoirement ou le discriminateur affine doit obtenir une AUROC proche de 0,50.",
+   "mecanisme_causal": "Tester l'indiscernabilite avec l'agent lui-meme affine comme adversaire borne inferieurement fournit un certificat empirique maximal pour cette classe de modeles ; les pieges marques verifient l'absence de sous-apprentissage tandis que les etiquettes permutees ecartent toute fuite de formatage.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Indiscernabilite des mondes plantes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Test d'indiscernabilite des mondes plantes par discriminateur affine (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6383"
+   ],
+   "enonce_complet": "Experience E4 de localisation du dommage en mondes plantes sous famille d'attaque tierce : opposer H_A (la regle de verification du produit P1 supprime >= 80 % du dommage mesure en perte de decision contre verite, falsifiant que le sabotage de recherche est surtout inverifiable) a H_B (< 50 % du dommage supprime, logeant le dommage dans le residu ou l'omission et reduisant P1 a une garantie exacte mais marginale). Le protocole est complete par le controle negatif du cout d'utilite de P1 sur H1 et par la mesure de correction des erreurs honnetes sur H2.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : H_A (efficacite de la verification du produit P1) est refutee si P1 supprime moins de 50 % de la perte de decision sous famille d'attaque tierce, demontrant que le dommage migre vers l'omission ou le residu inverifiable ; refutation aussi si le cout d'utilite sur H1 depasse le budget admissible. Faux temoin 1b : trajectoires honnetes H1 (mesure du cout d'utilite sans attaque) et H2 (erreurs honnetes devant etre corrigees sans faux blocage).",
+   "mecanisme_causal": "La mesure en perte de decision contre la verite terrain dans un monde plante quantifie si un saboteur contourne la verification des assertions explicites en deplacant le biais dans le choix des citations, les omissions ou les nuances non verifiees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Localisation du sabotage par omission",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Partage du dommage de sabotage entre affirmations verifiables et omission ou residu (E4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6769"
+   ],
+   "enonce_complet": "Experience preconditionnelle testant si un agent modeste produit un sabotage diffus (AUROC par action du moniteur de texte <= 0,60 et dommage final >= 2 ecarts-types de la variance honnete entre graines, sous controle negatif honnete contre honnete a graines differentes). Si cette precondition est falsifiee, le sabotage a cette echelle est soit visible action par action, soit noye dans le bruit honnete, ce qui restreint toutes les conclusions au sabotage scripte S-script et met toute conclusion sur l'intention hors de portee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : falsification de la faisabilite d'un sabotage diffus non scripte a cette echelle si l'AUROC par action depasse 0,60 (sabotage flagrant) ou si le dommage final reste inferieur a 2 ecarts-types du bruit honnete inter-graines (effet noye dans le bruit). Faux temoin 1b : duel honnete contre honnete a graines differentes mesurant la variance de base sans sabotage.",
+   "mecanisme_causal": "Un sabotage diffus authentique exige simultanement une discretion locale (AUROC <= 0,60 par action) et un impact cumulatif macroscopique (> 2 sigma au-dessus de la stochasticite honnete) ; sans cette double fenetre, les experiences sur agent modeste ne peuvent tester que des attaques scriptees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Precondition de faisabilite du sabotage diffus",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test preconditionnel de faisabilite du sabotage diffus sur agent modeste (Duel 0)"
+  },
+  {
+   "anteriorite_connue": "Si, Yang et Hashimoto (2024) ; Platt (1964)",
+   "bib_ids": [
+    "BIB-6283"
+   ],
+   "enonce_complet": "Identification de presupposses implicites non demontres dans le couplage entre organisme d'ideation et controle IA : que l'amelioration de l'organisme produise des mecanismes ameliorant le controle (S1), que la performance sur des mondes generiques a lois plantees predise la fecondite pour le controle (S2), qu'un canal de retour compatible avec la separation selection/evaluation existe (S4), que le progres soit mesurable sans metrique predefinie (S5), que la profondeur soit jugeable sans juge corruptible (S10), ainsi que l'efficacite effective des sondes sur ~8B parametres (S6) et la suffisance du budget GPU modeste pour plusieurs lectures uniques (S7).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une etude d'ablation montre une correlation nulle ou negative entre score sur mondes a lois plantees (S2) et utilite en controle IA (S1), ou si l'introduction d'un canal de retour (S4) corrompt l'evaluation hors echantillon, l'hypothese de transfert de l'attelage est refutee. Faux temoin 1b : comparaison entre idees selectionnees sur mondes plantes et idees aleatoires ou issues d'un juge perturbe par des artefacts de surface (S10).",
+   "mecanisme_causal": "Le transfert entre idees validees sur micromondes synthetiques et controle d'agents reels peut rompre par decalage de distribution, fuite d'information dans la boucle selection-evaluation ou corruption du juge scalaire par des signaux superficiels.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Presupposses de l'attelage organisme-controle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Presupposes implicites non etablis du transfert des mondes plantes vers le controle (E3-T1-A)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6321"
+   ],
+   "enonce_complet": "Tenter de refuter ou trivialiser chaque cible candidate par calcul fini et sonde de memorisation avant toute recherche documentaire : formuler un programme lineaire ou semi-defini (LP/SDP) ou un probleme SMT sur un alphabet de cardinal 2 ou 3 et un horizon T dans {2, 3} afin de verifier si une combinaison elementaire des outils disponibles regle ou infirme immediatement l'enonce.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute conjecture ou cible refutee par un contre-exemple fini trouve par LP/SDP/SMT sur |A| in {2, 3}, T in {2, 3}, ou reglee trivialement par une combinaison elementaire connue, est eliminee avant toute depense de recherche documentaire ou de preuve longue. Faux temoin 1b : enonces deja demontres faux sur petit cardinal ou triviaux utilises pour verifier que le filtre LP/SDP/SMT les rejette bien a 100 %.",
+   "mecanisme_causal": "Les conjectures universelles erronées echouent tres souvent deja sur de petits cardinaux finis ; une verification combinatoire exacte (LP/SDP/SMT) en quelques secondes sur CPU filtre ces faux positifs et evite de gaspiller des cycles LLM sur des cibles mortes ou triviales.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Filtrage fini prealable LP/SDP/SMT",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Trivialisation et refutation prealables sur petits cardinaux par solveurs LP, SDP et SMT (E3-T1-E)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6635"
+   ],
+   "enonce_complet": "Valider le canoniseur C par comparaison a MinHash sur des paires appariees et definir la non-trivialite mecanique par l'absence d'equivalence et d'implication logique vis-a-vis des combinaisons de classes frequentes. Pour mesurer sans biais le taux de fausses decouvertes (FDR) et la sensibilite/specificite du controle O par strate de rarete, coupler deux terrains : des mondes synthetiques a verite plantee ou des lois ou fonctions cachees sont placees a faible probabilite sous G0, et un domaine reel a controle exact (constructions combinatoires ou tests caches exhaustifs) servant a tester le transfert.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : rejet du canoniseur C s'il n'ameliore pas l'identification des doublons non triviaux par rapport a MinHash sur paires appariees, ou si le controle O echoue a maintenir le FDR cible dans la strate rare des mondes plantes et sur le domaine combinatoire exact. Faux temoin 1b : combinaisons logiques de classes frequentes sous G0 devant etre detectees comme triviales et filtrees sans promotion.",
+   "mecanisme_causal": "La comparaison a MinHash mesure le gain de regroupement semantique au-dela des recouvrements lexicaux, tandis que le couplage entre rarete plantee sous G0 et verite combinatoire exacte garantit que le controle de FDR dans les queues rares se transfere hors des donnees synthetiques.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Validation du canoniseur et calibration par strate",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Validation du canoniseur contre MinHash et etalonnage par strate sur mondes plantes et domaine exact (E3-T1-B)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6899"
+   ],
+   "enonce_complet": "Audit interne etabli entre les pieces 1 et 7 du dispositif d'auto-amelioration (v48-v56) et hypothese sur son regime d'extinction : les tests de mort codes (puis durcis apres les contre-lectures CL13 et CL14) n'ont jamais ete actives sur bac reel ; le pole statistique manque de puissance sur donnees reelles (0 temoin vrai promu sur 20, richesse maximale de 2,28 a 288 episodes pour un seuil de 3,0, detection des temoins plantes limitee a la force 0,5, tandis que les deux promotions W = 74 et 84 proviennent d'un monde tautologique) ; le pont fiche-vers-loi n'a ete teste que sur modeles factices/synthetiques (avec 85 a 95 % de fiches attendues en sorties differees 2 ou 3) et l'epreuve T0.5 de 288 episodes est entierement lue. Par consequent, la conjonction universelle « survit au test de mort ET promue par le pole » agit comme une regle d'extinction mesurant la testabilite immediate plutot que la valeur scientifique ; de plus, convertir un test de mort exploratoire transmis d'une generation a la suivante en filtre confirmatoire exige un tri a trois etats et le gel prealable de son role, de sa multiplicite et de donnees fraiches avant toute lecture.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'activation des tests de mort sur machine jetable et l'emploi d'episodes neufs hors T0.5 avec tri a trois etats ne debloquent pas de promotions vraies au-dela du biais de testabilite immediate, ou si les promotions de generation n+1 s'effondrent des que le role et les donnees sont geles avant lecture, le mecanisme de selection inter-generations est refute. Faux temoin 1b : fiches issues d'un monde tautologique ou testees sur episodes deja lus (T0.5), devant etre rejetees par le filtre de fraicheur et de non-tautologie.",
+   "mecanisme_causal": "En exigeant simultanement la survie a un test de mort et une promotion par un pole statistique impuissant sur epreuve deja lue, on elimine presque toutes les idees non triviales (extinction) au profit des seuls cas immediatement testables ou tautologiques ; de plus, reutiliser un test exploratoire comme filtre confirmatoire a la generation suivante sans geler donnees et multiplicite induit une fuite statistique inter-generations.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Extinction par conjonction et heritage inter-generations",
+   "statut_epistemique": "deja_valide_interne",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Effet d'extinction de la conjonction test de mort et pole et gel inter-generations (S1-S5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6904"
+   ],
+   "enonce_complet": "Experience decisive E1 opposant H_A (toutes les fiches admises recoivent immediatement les deux tests avec traduction non ambigue) a H_B (existence d'une classe non vide de fiches differees imposant le tri a trois etats) : tirage sans lecture par conv-audit de 10 fiches reelles et 6 temoins, contre-traduction aveugle et politique d'epreuve fraiche seulement, puis renouvellement sur fiches de course 2. Les criteres exigent au moins 5 temoins justes sur 6, T1/T2 retrouves, un accord >= 0,6, zero incident canari, le critere d'utilite L3, une mesure par axe et par proposeur, et des controles negatifs (temoin vide, methode sans mesure, theoreme, fiche sans chiffre) compares au traducteur mecanique sans modele D-P2(c).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le pont traducteur echoue s'il identifie moins de 5 temoins justes sur 6, tombe sous 0,6 d'accord en contre-traduction aveugle, declenche un incident canari ou ne surpasse pas le traducteur mecanique sans modele D-P2(c) sur epreuve fraiche. Faux temoin 1b : controles negatifs explicites (temoin vide, methode sans mesure, theoreme pur, fiche sans chiffre) devant etre correctement classes hors traduction directe sans faux test fabrique.",
+   "mecanisme_causal": "La contre-traduction aveugle sur un echantillon non lu avec controles negatifs types teste si la formalisation fiche-vers-loi preserve fidelement le contenu testable sans halluciner de test sur des enonces non empiriques, tout en mesurant la taille reelle de la classe differee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification du pont traducteur fiche-vers-loi",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Qualification du pont traducteur fiche-vers-loi et de la classe differee sur fiches reelles (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6835"
+   ],
+   "enonce_complet": "Pour falsifier l'applicabilite de la circularite d'Avalon au protocole v48, l'experience soumet N = 50 fiches contenant un effet nul plante dans les donnees a un experimentateur LLM (3 executions, sans acces au verificateur) avec un seuil gele p < 0,05 bilateral. L'observation d'au moins un faux positif falsifie la suffisance structurelle de la separation noyau/experimentateur/lecteur (H_B) ; l'observation de 0 faux positif sur 50 borne le taux sous 7 % (IC 95 %), sous reserve qu'un controle positif a effet de 2 sigma plante passe bien l'etage pour prouver que celui-ci est fonctionnel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si >= 1 faux positif apparait sur les N = 50 fiches a effet nul plante a p < 0,05, la suffisance de la separation noyau/experimentateur/lecteur est falsifiee ; si le controle positif a effet de 2 sigma plante ne passe pas l'etage, l'experience est invalidee pour defaut de puissance. Faux temoin 1b : N = 50 fiches a effet nul plante executees sans acces au verificateur.",
+   "mecanisme_causal": "En retirant l'acces au verificateur tout en presentant des donnees a effet nul plante, on teste si un experimentateur LLM trouve malgre tout des voies de p-hacking ou de fuite de specification ; le controle positif a 2 sigma garantit que la securite ne provient pas d'un blocage trivial.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Falsification de circularite par effet nul plante",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Falsification de la circularite du protocole v48 par effets nuls et effets de 2 sigma plantes (Experience 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6894"
+   ],
+   "enonce_complet": "Le protocole E3 teste la non-redondance stricte de la conjonction test-de-mort et promotion par le pole sur au moins une generation de >= 10 fiches testables avec temoins faux : H_A predit |survivantes(TdM ∧ pole)| < min(|survivantes(TdM)|, |survivantes(pole)|), contre H_B postulant l'equivalence ou la redondance totale des deux filtres. Un sequencement strict est ordonne selon le cout et les dependances : execution immediate a cout nul sur CPU pour E6 et E4-simulation, validation peu couteuse du pont par E2 (<= 5 USD), deverrouillage critique par E1 sur epreuve fraiche (~6 USD + cout d'epreuve), puis E3 (~6 USD + machine jetable) et enfin l'ablation E5 (~30 a 60 USD).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si |survivantes(TdM ∧ pole)| = min(|survivantes(TdM)|, |survivantes(pole)|) sur >= 10 fiches testables, l'un des deux filtres est redondant et doit etre supprime ou remplace ; toute etape amont echouant sur CPU (E6/E4-sim) ou sur E2/E1 bloque le passage aux etapes plus couteuses. Faux temoin 1b : temoins faux injectes parmi les >= 10 fiches devant etre elimines par l'intersection des filtres.",
+   "mecanisme_causal": "La mesure directe de la taille de l'intersection face aux marginales isole l'apport discriminant reel du double filtrage ; l'ordonnancement par cout croissant et dependances maximisent l'information acquise par dollar avant d'engager les ablations lourdes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Non-redondance et sequencement par cout",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Test de non-redondance entre test de mort et pole et sequencement des experiences par cout (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6917"
+   ],
+   "enonce_complet": "Audit des biais de surface et de troncature sur evaluations conversationnelles (constates sur un echantillon de 24/1200 reponses dans pol_neu et pol_pre, a etendre au corpus complet) : (1) adresse directe a l'utilisateur (« you ») des la premiere phrase comme indicateur de capture a cout nul (12/12 reponses pressees contre 0/12 neutres) ; (2) allongement des reponses sous critique (~70 a ~130 mots) biaisant les juges scalaires sensibles a la longueur argumentee ; (3) melange d'acquiescement explicite (« I agree with you », 3/6 critiques) et de nuance ; (4) suivi des marqueurs de fin <|eot_id|> pour detecter les coupures a 400 jetons ; (5) verification de stabilite inter-graines entre moities (k = 0-4 contre 5-9).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'extension au corpus complet (1200 reponses) montre que la note scalaire du juge est expliquee par la longueur ou l'adresse d'ouverture (« you ») plutot que par le contenu, ou si la stabilite entre moities de graines (k=0-4 vs 5-9) s'effondre ou que <|eot_id|> est tronque systematiquement, l'evaluation scalaire brute est invalidee. Faux temoin 1b : reponses neutres (pol_neu) et reponses appariées a longueur egalisee ou tronquee de l'amorce d'acquiescement.",
+   "mecanisme_causal": "Les juges scalaires LLM confondent souvent la verbosite argumentee et la deference explicite avec la qualite epistemique, tandis que la troncature silencieuse a 400 jetons sans <|eot_id|> mutile les reponses longues et fausse les comparaisons entre conditions.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Audit de biais de surface et troncature",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Audit des marqueurs d'ouverture, biais de longueur, troncature et stabilite inter-graines (E3-T1-A)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6961"
+   ],
+   "enonce_complet": "Protocole discriminant (Duel 1, motif M2) opposant H_A (au moins deux facteurs de perte, dont un propre a l'espace J) a H_B (facteur multiplicatif unique p_k = q(alpha)^k produisant un raidissement apparent avec k sans seuil veritable), mesure par la pente de R_ij en alpha et les croisements de courbes sur des taches appariees en portee d'attention (IC a 95 % excluant 0 sur un tiers des paires). H_B est falsifiee par une derive ou un croisement propre a J absent sous les temoins negatifs T-gain et T-rand, et H_A est falsifiee si R reste constant alors qu'un controle de puissance par dommage a deux facteurs plante est detecte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : H_A est refutee si R_ij reste invariant malgre la detection du controle de puissance a deux facteurs plante ; H_B (loi q(alpha)^k) est refutee si un croisement ou une pente non nulle propre a l'espace J apparait avec IC 95 % excluant 0 et reste absent sous T-gain et T-rand. Faux temoin 1b : temoins negatifs T-gain et T-rand devant laisser R constant.",
+   "mecanisme_causal": "Un facteur multiplicatif unique q(alpha)^k ne peut produire ni croisement de courbes entre paires appariees ni sensibilite specifique a un sous-espace J apres controle du gain global ; la presence d'un dommage plante a deux facteurs garantit la puissance statistique du duel.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Duel facteurs multiples contre loi q^k",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Confrontation entre facteurs multiples et degradation multiplicative unique avec dommage plante (Duel 1)"
+  },
+  {
+   "anteriorite_connue": "Jacoby (1991) ; Wegner et al. (1987) ; Adebayo et al. (2018) ; Beggs et Plenz (2003) ; Bekinschtein et al. (2009) ; Casali et al. (2013) ; Comolatti et al. (2019) ; Dehaene et al. (2003) ; Friedman et al. (2010)",
+   "bib_ids": [
+    "BIB-6978"
+   ],
+   "enonce_complet": "Motif M1 de facilitation paradoxale d'intrusion sous consigne d'exclusion adapte de la dissociation des processus de Jacoby (P_exc = A(1 - R)) : a distance D et profondeur k fixes, un amortissement dose s dans [0, 1] du sous-espace J (h'_l = h_l - s P_J h_l) qui abaisse le controle intentionnel R avant l'amorcage automatique A doit provoquer une hausse positive du taux d'intrusion Delta P_exc(s) = P_exc(s) - P_exc(0) > 0, contrairement a la decroissance monotone <= 0 predite par une loi multiplicative q^k, et est refute si le meme pic apparait sur un sous-espace hors-J.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : refutation de la dissociation specifique a J si Delta P_exc(s) <= 0 pour tout s (compatible avec q^k) ou si le pic paradoxal d'intrusion apparait identiquement lors de l'amortissement d'un sous-espace orthogonal hors-J. Faux temoin 1b : amortissement dose s sur un sous-espace hors-J de meme dimension et norme, ne devant pas produire ce pic d'intrusion specifique.",
+   "mecanisme_causal": "Lorsque le controle inhibiteur R associe a l'espace J est degrade par projection partielle avant l'activation automatique A de l'amorce, l'expression P_exc = A(1 - R) augmente transitoirement avant de chuter quand A est a son tour atteint, signature non monotone impossible sous un bruit multiplicatif uniforme.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Facilitation paradoxale sous consigne d'exclusion",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Facilitation paradoxale d'intrusion sous consigne d'exclusion contre loi multiplicative (Motif M1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6957"
+   ],
+   "enonce_complet": "La publication d'exemples realistes de sabotage scientifique ou logiciel subtil risque de contaminer par moissonnage web les corpus de pre-entrainement des futurs modeles et de leur enseigner nativement ces schemas d'evasion. En consequence, la quarantaine (hors acces indexable) doit englober les instances concretes, les graines aleatoires et les mecanismes de plantation des bancs de reference pour preserver l'indiscernabilite face aux generations futures (Visee 7), tout en laissant publiables les preuves formelles mecanisees, le code certifie des agregateurs sequentiels et les bilans agreges sur mondes abstraits.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si des modeles evalues sur des graines ou instances rendues publiques montrent une chute de detection ou une memorisation de ces motifs absente sur des graines maintenues en quarantaine (ou si les instances privees sont reconstruites par devineurs hors ligne), le perimetre de publication est invalide. Faux temoin 1b : publications restreintes aux preuves formelles mecanisees et bilans agreges abstraits ne devant permettre aucune reconstruction d'evasion concrete au-dessus du hasard.",
+   "mecanisme_causal": "L'ingestion par moissonnage web de traces d'attaque realistes fournit aux modeles futurs des exemples explicites de contournement de moniteurs ; isoler les instances concretes et graines tout en publiant les garanties formelles preserve la reproductibilite scientifique sans armer l'attaquant.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Quarantaine contre contamination de pre-entrainement",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Quarantaine des bancs de sabotage plantes contre la contamination des corpus de pre-entrainement (Visee 7)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6984"
+   ],
+   "enonce_complet": "Test d'effondrement d'echelle (Motif M2) pour separer un seuil critique collectif d'une loi multiplicative par etape q(alpha)^k : sur des taches a nombre d'etapes controle k, si la perte de performance sous dose alpha provient d'un facteur q(alpha) par etape, les courbes normalisees [A_k(alpha)/A_k(0)]^{1/k} doivent s'effondrer sur une courbe unique independante de k.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'hypothese d'un seuil critique collectif est refutee si les courbes [A_k(alpha)/A_k(0)]^{1/k} s'effondrent exactement sur une courbe unique independante de k dans les marges d'incertitude ; inversement, la loi multiplicative par etape est refutee en cas de divergence systematique avec k apres normalisation. Faux temoin 1b : simulateur synthetique genere par une chaine de Markov purement multiplicative a probabilite de succes par pas q(alpha), devant produire un effondrement parfait sur une courbe unique.",
+   "mecanisme_causal": "Sous hypothese d'independance et d'homogeneite par etape A_k(alpha) = A_k(0) q(alpha)^k, la racine k-ieme du rapport annule entierement la dependance en profondeur k ; tout ecart systematique apres cette renormalisation signe une interaction collective ou un seuil dependant de k.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Effondrement d'echelle contre loi multiplicative",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Test d'effondrement sur courbe unique contre loi multiplicative par etape (Motif M2)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

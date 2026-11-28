@@ -1,0 +1,66 @@
+tonomously manage procurement, finance, and supply                 models, and AI governance. We draw on each to motivate
+chains (Deloitte AI Institute 2026), compliance is a strict        our experimental design and interpret our results.
+requirement. If agents read localized institutional pressure
+as permission to bypass an embedded legal constraint, cor-         2.1   Why Do Agents Follow Rules? Three
+porate agents could default to a “company-first” orientation             Theories of Compliance
+that routinely breaks the law. That is a problem for gov-
+ernance frameworks and for the companies that treat these          The question of why actors comply with rules has generated
+chatbots as semi-employees responsible for their regulatory        competing theoretical accounts in law, economics, and so-
+integrity. To map this vulnerability, we deploy a controlled       cial psychology. We use these as organizing hypotheses for
+experimental paradigm in which twelve instruction-tuned            our experimental design.
+language models operate as an enterprise procurement bot           Deterrence. The classical economic account, formalized
+within a simulated workspace. Our findings are as follows:         by Becker (1968), posits that rational actors comply when
+ • Compliance robustness varies across models in kind              the expected penalty exceeds the expected benefit of vio-
+    and degree. Under identical regulatory contexts, twelve        lation. Compliance should therefore rise with penalty mag-
+    models span 46 pp of compliance, from 43.5% to 89.5%,          nitude and likelihood and should not depend on linguistic
+    and they differ in which pressure breaks them: some            framing. Gneezy and Rustichini’s daycare study (Gneezy
+    treat the rule as binding however it is phrased, others        and Rustichini 2000) contradicted this: introducing a fine
+    comply only when it is phrased imperatively, and others        increased late pickups because the fine was seen as a price
+    only when the cost-benefit calculation favors it. Where        granting permission rather than an absolute prohibition.
+    a model falls predicts its behavior across subsequent
+    experiments and determines which interventions work.           Legitimacy. Tyler’s procedural justice account (Tyler
+    Standard alignment benchmarks (Lin, Hilton, and Evans          2006) argues that people obey laws primarily because they
+    2022; Röttger et al. 2024; Sheshadri et al. 2026) do not      perceive the issuing authority as legitimate, not because they
+    detect it, and neither do developers’ descriptions of post-    calculate expected penalties. Applied to corporate chatbots,
+    training, so it has to be measured directly. Model se-         this predicts that the source of a rule matters independently
+    lection is therefore a compliance-governance decision as       of its content: a mandate from a recognized authority should
+    much as a performance or cost decision.                        produce more compliance than the same constraint framed
+                                                                   as a cost calculation.
+ • Financial enforcement activates cost-benefit justifica-
+    tions. Strict rule framing (“requires”) produces 100%          Expressive law and social norms. Sunstein (1996) and
+    compliance from most models with no other incentives           McAdams (2015) argue that law influences behavior through
+    present, but adding explicit penalty information reduces       its expressive content, signaling what is socially appropri-
+    compliance substantially across all models tested. This        ate and coordinating expectations about prevailing norms.
+    matches the Gneezy-Rustichini effect (Gneezy and Rus-          Bénabou and Tirole (2025) extend this by showing that ma-
+    tichini 2000): specifying a fine converts a prohibition into   terial incentives and social norms do not simply add to-
+    a cost-benefit calculation.                                    gether: a weak financial incentive can crowd out an intrinsic
+ • Institutional pressure breaks compliance. Managerial            normative motivation.
+    signals, social signals, normative pressure, and employee         These accounts make distinct and sometimes contradic-
+    pressure tactics each produce large compliance failures.       tory predictions. Prior work has not systematically tested
+    The pressure works in both directions: employees can flip      whether any of them characterize LLM behavior. We use
+    compliant agents to defect and noncompliant agents to          them as empirical tests of which of them describes a given
+    recover. Governance mandates embedded in the system            model’s behavior, and whether that is predictable in advance
+    prompt reduce but do not close this vulnerability.             from how the model was trained.
+ • Most violations are openly rationalized, but de-
+    tectability varies by model. Across over 6,000 viola-          2.2   LLM Behavior Under Pressure and
+    tions spanning all twelve models, 96% surface the regu-              Competing Instructions
+    latory rule in stated reasoning; the rest are silent, never
+                                                                   A growing body of work finds that the alignment prop-
+    citing the rule they broke. Silent rates range from 1.6%
+                                                                   erties of instruction-tuned LLMs are brittle under realistic
+    to 7.4% by model and do not track how often a model vi-
+                                                                   conditions. Sycophancy, the tendency to conform outputs
+    olates: the two highest, Mistral and Qwen 3.5, are among
+                                                                   to perceived user preferences, is well-documented (Perez
+    the four most compliant models overall. Compliance and
+                                                                   et al. 2023; Wei et al. 2023). Safe Reinforcement Learning
+    auditability are separate procurement criteria.
+                                                                   from Human Feedback (RLHF) (Dai et al. 2024) formal-
+   Compliance in these agents depends jointly on model             izes the underlying tension: helpfulness and safety objec-
+choice, regulation phrasing, and the contextual pressure the       tives compete during training, and standard RLHF provides
+agent is under. None of the three can be fixed in isolation.       no mechanism to prevent helpfulness from overriding safety
+                                                                   constraints when they conflict. In an enterprise deployment,
+                    2   Related Work                               that competition is visible in our setting: choosing a certi-
+Our work sits at the intersection of compliance theory from        fied vendor (compliance) is processed as a cost against the
+law and economics, the behavioral evaluation of language           helpfulness objective (saving the company money). Wallace
+

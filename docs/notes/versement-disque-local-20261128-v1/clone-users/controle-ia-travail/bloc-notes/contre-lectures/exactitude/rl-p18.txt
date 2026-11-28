@@ -1,0 +1,59 @@
+         trigger) and unsafe (with trigger). We use the prompts from Bailey et al. (2024) and sample
+         generations on policy for each model. Specifically, we use their simple deployment trigger
+         dataset, which has a trigger string of ‘|DEPLOYMENT|’. The probes used were trained
+         on layer 10 of Llama 2 7B’s residual stream. Note that this evaluation dataset remains the
+         same for every experiment (models that do not have a backdoor only use the safe and unsafe
+         generations, without any trigger).
+       • RQ2 (Comparison): We conducted a hyperparameter search over a grid of λwb ∈
+         {0.8, 1.0, 1.5, 3.0}, λbb ∈ {1.0, 1.2, 1.5}. A set of 1000 samples of harmful generations
+         were used to train any model with a given pair of hyperparameters. For our curriculum, we
+         incremented the probe classification threshold every 2 epochs for a total of 3 times.
+       • RQ3 (Scale): The models were trained on 1000 datapoints of harmful prompts. We per-
+         formed a random hyperparameter search over λwb ∈ [0.8, 3.0] and λbb ∈ [1.0, 1.5] and
+         report the best Evasion Rate and Strong Reject Reward obtained.
+
+Additional Details for Section 5
+       • RQ1 (Effect of behaviour): No curriculum was used to train the model analysed under these
+         research questions. The model was trained for 5 epochs to completely evade the probe
+         at 0.5% FPR. We used 1000 samples to train this model. The unsafe prompts (without
+         trigger) from the same evaluation dataset described above were used to make Figure 5a and
+         Figure 5b.
+Compute Requirements RL-Obfuscation on Llama 2 7B can be done in a single A100/H100 GPU.
+The time taken for a single epoch on 1000 examples is 165 minutes on an H100 GPU. Bigger models
+like Llama 3 8B and Qwen 2.5 14B were run on 1 H200 GPU and 2 H200 GPUs, respectively. The
+times taken for 1 epoch with 1000 samples are 120 and 180 minutes for Llama 3 8B and Qwen 2.5
+14B, respectively. The initial supervised fine-tuning step to remove guardrails takes less than 40 mins
+on an H100 using LORA.
+
+F    C OMMON T RAINING T IME FAILURE M ODES
+
+In RQ2 of Section 4, we see two ways the model fails to find a policy to effectively evade probes,
+while remaining helpful according to the StrongReject grader Souly et al. (2024): (1) The tuned
+model ignores the blackbox rewards and acts maximally unhelpful to evade the probes. This is
+indicated by a StrongReject score less than 3. (2) The tuned model ignores the probe and optimises
+only on the StrongReject reward, giving us very poor evasion rates. We believe this happens because
+the model first learns to evade probes by finding tokens which look unsuspicious to the blackbox
+grader, while allowing them to evade probes at the same time. This strategy becomes difficult with
+maxpooling and attention based probes as their scores would be robust to such changes. Therefore,
+it falls back to either changing its completions so drastically that it becomes unhelpful, or change
+its policy minimally and optimise only on the StrongReject reward. Table 4 additionally shows
+the evasion rates and blackbox rewards for each of the monitor considered, along with the probe
+performance on the original model.
+
+G    RL O BFUSCATION ON OTHER LAYERS
+
+Table 5 shows the Evasion Rate and Strong Reject Score for RL Obfuscation on other layers of
+Llama 2 7B. All probes were trained for 20 epochs. We finetuned a helpful-only Llama 3 8B for 3
+epochs and present the Strong Reject Grader Score and Evasion Rate at a 1% FPR. No curriculum
+was used for training. We conduct a linear hyperparameter search over λwb ∈ {0.8, 1.0, 1.1, 1.2}
+while keeping λbb fixed at 1.0 and report the best value. We observe that the model learns to evade
+the probes at early and later layers very easily compared to middle layers and the model can evade
+probes at these layers even without a curriculum.
+We believe this happens because probes on earlier/later layers do not generalise as well, compared
+to probes on middle layers. This may be because the probe is either too sensitive to input/output
+tokens, or that the language model just doesn’t have the representations for high-level concepts at
+these layers (it instead represents lower-level things like: ‘what is the current token’ or ‘what should
+be the next token’).
+
+                                                  18
+

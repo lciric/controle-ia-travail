@@ -1,0 +1,225 @@
+  - mise en place :[-environ-] 1 800 à 2 300 s [-(la suite des tests compte 893 tests au commit `03cb538`, 1 631 s sur le processeur de la session, R-215 ; plus les tests neufs ; au run des notations, l'instance a tenu presque le temps de la session)-]{+(ci-dessus)+} ;
+  - requalification : lots courts d'environ 15 à 40 s (environ 80 à 250 pas de génération) ; un lot dont une rangée ne s'arrête pas va au plafond (environ 300 à 500 s pour le 8B, 200 à 330 s pour le 3B). Avec 2 % de rangées qui ne s'arrêtent pas, environ {+1 500 à+} 2 [-000-]{+500+} s (8B) et {+800 à+} 1 [-300-]{+500+} s (3B) ;
+  [-au plus 8 500 s et 5 500-]{+- rejeu du 3B : environ 1 850 à 2 300+} s[-(échéances)-] ;[---] rejeu du 8B : [-palier-]{+environ 3 600 à 4 200 s (palier+} de production environ 1 [-100-]{+050+} s ; repère {+et ancrage+} environ[-100 à-] 250 s ; palier du chemin {+sur deux lots+} et D1 environ [-1 200-]{+2 100+} à [-1 800-]{+2 700+} s [-(la-]{+: la+} simple précision sans TF32 est plus lente sur la carte, mais le tirage sur le processeur domine le [-pas) ; témoin-]{+pas,+} environ [-200 à 1 000-]{+0,15+} s [-(débit de la génération-]{+pour un lot+} de [-la bibliothèque jamais mesuré ici) ;-]{+8+} au [-plus 4 500 s-]{+8B, inférence)+} ; [-- rejeu du 3B :-]{+témoins+} environ[-1 500 à 2-] 400 {+à 1 200+} s ;[-au plus 3 000 s ;-]
+[-  --] chargements[-:-] environ 300 s ;
+- **durée attendue** : run d'environ [-9-]{+8 500 à 12+} 000 [-s,-]{+s ;+} instance d'environ [-3-]{+2,9 à 4+} heures ; **au plus** : [-échéance globale de 23 100 s, délai externe du run de 400 minutes, plafond de l'amorce de 430 minutes, arrêt par la surveillance à la création plus 26 400 s (constantes de la chaîne des notations, plan v2), soit au plus environ 7,5-]{+8,1+} heures [-d'instance-]{+(chaîne des limites ci-dessus)+} ;
+- **coût** : carte A100 SXM4 80 Go sur processeur AMD EPYC 7513 (même filtre que le pilote et les notations), au plus 1,30 USD de l'heure ; attendu environ [-3,3-]{+3,1+} à [-4,0-]{+5,2+} USD de marche, plus le téléchargement (environ 22,5 Go, au plus 0,05 USD le Go : au plus 1,1 USD) et le disque jusqu'à la destruction, soit environ [-4,5-]{+4+} à [-6-]{+7+} USD ;
+{+-+} **plafond de [-l'étape-]{+l'étape**+} : [-7,5-]{+8,1+} h × 1,30 USD = [-9,75-]{+10,53+} USD de marche, plus 1,1 USD de téléchargement, plus 1,94 USD de disque arrêté pendant 72 heures au plus (relevés de [-R-215), soit 12,8 USD** ; aucun relancement hors-]{+R-215) : **13,6 USD**. La destruction+} de [-ce-]{+l'instance est proposée à Lazar dès la récupération conforme ; si elle n'est pas faite dans les 72 heures, le disque au-delà est consigné chaque jour dans `registres/depenses.md` et s'ajoute au+} plafond ;
+- **cumul de la phase 0** : au plus environ 63,2 USD plus les disques au 18 octobre (`registres/depenses.md`, l. 86) ; P3 au plus environ 11,2 USD (R-215) ; {+pilote du papier C, GO-2026-10-17-01, 4 heures de carte, environ 6 USD (`registres/go.md`, l. 26) ;+} avec cette étape au [-plafond,-]{+plafond :+} au plus environ [-87-]{+94+} USD plus les disques, sous l'alerte de 120 USD (à recalculer à l'engagement) ;
+- **crédit** : la règle du lanceur exige au moins [-7,5-]{+8,1+} h × (prix de l'offre + prix des instances d'autres projets en marche) + 1,2 USD, soit [-10,95-]{+11,73+} USD au prix plafond {+sans autre projet+} ; crédit relu à 8,46 USD le 19 octobre à 13:18 UTC (R-214) : recharge [-à demander à Lazar, après celle de P3-]{+nécessaire (« Conditions avant le lancement »)+} ;
+- **sur le processeur** (aucune dépense, routine) : fichiers de l'invite [-S1,-]{+RS1,+} code neuf, tests, répétition jouet, bancs de la chaîne, [-contre-lectures,-]{+contre-lectures et relectures,+} scellement, contrôles avant dépense, récupération, lecture, audit éventuel, verdict R13 ;
+- **sur la carte** (dépense, GO) : le seul run de l'étape (requalification et rejeu).
+
+**Configuration** (clé → valeur ; empreinte canonique au scellement) : `mode` = reel ; `run_pilote` = 20261012-105125-t05-pilote-reel ; {+`manifeste_pilote_sha256` = 8c3d7985… ;+} `run_notations` = 20261017-193648-t05-notations-reel ; `agent`, `juges`, `lot_juge` = 8, `max_nouveaux_juge` = 3 072, `temperature_juge` = 1,0, `fils` = 1, `episodes_decisifs` = [0, 1], `episodes_notes_deux_fois` = [0] : égaux au pilote ; `variante_requalification` = [-S1-]{+RS1+} ; `variante_rejeu` = b0 ; `notations_attendues_par_juge` = 180 ; `couches` = [7, 15, 23] ; `tolerance_demi` = 0,2, `statistique_demi` = q99 ; `tolerance_simple` = 3e-3, `statistique_simple` = max ; {+`borne_diffuse_simple` = 1e-2 ; `rapport_localisation` = 3 ; `ancrage_max` = 1e-3 ; `couverture_quantile` = 0,75 (8B : 3 072 ; 3B : 983) ;+} `positions_min` = 4 ; {+`regle_kn` = vraie ;+} `rangees_min_demi` = 10 ; `rangees_min_simple` = [-8-]{+10 ; `rangees_min_d1` = 6+} ; `fraction_min` = 0,95 ; `decalage_d1` = 1 ; `rapport_repere_max` = 3 ; {+`repere_marge` = 0,1 ;+} `lots_rejeu` = 3 (L1, L2, L3) ; {+`temoin_queue` = 0,005 ;+} `duree_requalification_s` = {8B : [-8 500,-]{+7 000,+} 3B : [-5-]{+4+} 500} ; `duree_rejeu_s` = [-{8B : 4 500, 3B-]{+{3B+} : 3 [-000}-]{+000, 8B : 4 800} ; `duree_temoins_s` = 1 200+} ; `duree_globale_s` = 23 [-100-]{+700 ; `delai_externe_s` = 24 720 ; `plafond_amorce_s` = 27 720 ; `surveillance_s` = 28 320 ; `mise_en_place_seuil_s` = 2 700+} ; `memoire_vive_min_go` = 64 ; `memoire_carte_min_gio` = 75 ; [-`invite_s1`-]{+`invite_rs1`+} = {racine, identifiant [-S1,-]{+RS1,+} sha256}.
+
+{+**Avant le scellement** (comme au complément des notations) :+}
+{+- code neuf et chaîne de lancement écrits, au commit candidat ; suite complète des tests, dont le nombre remplit « Tests attendus » ; empreintes des scripts de l'instance remplies ;+}
+{+- **relecture R2 du code et de la chaîne** par des sous-agents neufs, qui n'en ont écrit aucun (angles : lanceur et lecteur ; chaîne de lancement ; texte face au code), chacun avec la liste explicite des fichiers à lire ; puis vérification courte des corrections ;+}
+{+- vérification courte de ce texte par un sous-agent neuf (recommandée par la contre-lecture 1) ;+}
+{+- versement dans le dépôt, avec leurs empreintes, des notes de conception, du rapport de la contre-lecture, de son traitement et des fichiers de travail (`travail/`, `contre-lecture/`), en une archive versionnée et scellée : chaque chiffre de ce texte renvoie alors à un chemin et à une empreinte (R6) ;+}
+{+- entropie tirée au scellement ; configuration et invite RS1 scellées.+}
+
+{+**Conditions avant le lancement** (lecture prudente, décision de la session sur Q2) :+}
+{+- un **GO séparé de Lazar sur le devis de cette étape** (R-212 : « sur devis et GO séparé, après P3 ») ; la délégation de R-217 (appels payants en autonomie pendant le mandat) ne lève pas cette condition propre à l'étape ;+}
+{+- la **recharge du crédit** (au moins 11,73 USD au prix plafond, plus le prix des instances d'autres projets en marche) ;+}
+{+- P3 lancé avant (R-212 : « après P3 ») ;+}
+{+- préenregistrement scellé, contrôles avant dépense conformes.+}
+
+## Critères de lecture gelés
+
+**A. Requalification, par juge J** (J = 8B ou 3B ; lecture sur le fichier [-`notations-S1-J-decisives.json`-]{+`notations-RS1-J-decisives.json`+} écrit, scellé, rattaché, et consigné « écrit » dans l'unique issue du run) :
+
+| issue | lecture |
+|---|---|
+| `plan_b` = « rubrique gardée » (incomplétude ≤ 0,2, au moins 48 tâches complètes, décomposition concluante, part tronquée ≤ 0,8), garde en ligne de J conforme, rejeu sans « défaut du chemin » | [-**rubrique simplifiée S1-]{+**RS1+} retenue pour J** : rubrique de départ de J pour T0.6 et T0.8 ; chaque usager requalifie J sous son mode de lecture, dans son préenregistrement (pilote, l. 40) |
+| `plan_b` = « plan B » (incomplétude > 0,2 ; ou part > 0,8 avec borne basse > 0,6 ; ou décomposition impossible avec incomplétude > 0,2) | **nœud** : [-S1-]{+RS1+} échoue aussi ; aucun plan C n'est préenregistré ; proposition à Lazar avant que T0.6 ou T0.8 ne se servent de J ; pour le 8B, rappel de la bascule « 8B trop faible » (changement de modèle seulement sur GO ;[-question-] Q5) |
+| `plan_b` = « nœud » (part > 0,8 sans la borne ; moins de 48 tâches complètes ; part illisible ; décomposition impossible sans incomplétude > 0,2) | **nœud** (indécision ou décomposition non concluante) ; proposition à Lazar |
+| garde en ligne de J contraire (une rangée gardée au-dessus de 0,2 à une couche), ou contrôle négatif contraire (moins de 95 % au-dessus de 0,2 sur au moins 10 rangées comparables) | requalification de J **non concluante** (instrument) : nœud (comme « garde en ligne déclenchée » au pilote, l. 186) |
+| contrôle négatif « non concluant » (moins de 10 rangées [-comparables)-]{+comparables ; les rangées courtes au sens de k(n − 1) sont hors du compte)+} | réserve ; la lecture de J n'en dépend pas (comme au pilote, l. 187) |
+{+| aucun écart non nul dans la zone générée de toutes les rangées gardées de J | trop beau (R4) : réserve maintenue et nœud (comme P9, T0.4 v3, l. 297) |+}
+| J sans fichier (phase échue, ou run arrêté avant la fin de ses lots) | nœud pour J ; jamais renoté dans cette étape |
+
+**B. Usagers, selon les issues des deux juges** (pilote, l. 41-46) :
+
+| issues | lecture |
+|---|---|
+| [-S1-]{+RS1+} retenue pour les deux | les deux juges passent à [-S1-]{+RS1+} pour T0.6 et T0.8 |
+| [-S1-]{+RS1+} retenue pour un seul | ce juge sert T0.6 et T0.8 ; l'autre : proposition à Lazar avant tout usage |
+| aucune | nœud pour les deux : proposition à Lazar |
+
+**C. Rejeu, par juge, puis pour l'étape.**
+
+[-Paliers :-]
+[-- **logique** (palier-]{+*Palier+} du [-chemin, simple précision) :-]
+[-  - « fidèle »-]{+chemin (logique)*, lu dans cet ordre ; la première ligne qui s'applique donne la lecture+} :
+
+[-G_S,max ≤ 3e-3 aux trois couches,-]{+| issue | lecture du palier |+}
+{+|---|---|+}
+{+| réglages effectifs non conformes, sonde d'audit fausse,+} contrôle négatif [-conforme,-]{+contraire ou non concluant (moins de 10 rangées comparables),+} D1 [-vu, sondes d'audit toutes vraies ;-]
+[-  - « défaut »-]{+non vu (moins de 95 %) ou non concluant (moins de 6 rangées comparables), fichier absent | **non concluant (contrôles)** : nœud (T0.4 v3, l. 286-288) |+}
+{+| contrôle positif D1 dont le maximum du contexte dépasse 3e-3 | **non concluant (D1 non probant)**+} : {+réserve (R4), diagnostic, nœud (T0.4 v3, l. 289) |+}
+{+|+} une rangée [-au-dessus de 3e-3-]{+et une couche où G_S > 1e-2 | **défaut (écart trop grand)** |+}
+{+| ancrage R_S > 1e-3+} à une couche,[-avec contrôle négatif conforme-] et [-D1 vu ;-]
+[-  - «-]{+au moins un dépassement de 3e-3 | **non concluant (seuil sans marge)** : nœud |+}
+{+| une rangée et une couche où G_S > 3e-3, concentré dans la zone générée | **défaut (décodage)** (T0.4 v3, l. 277 et l. 284) |+}
+{+| dépassement de 3e-3 concentré dans le contexte, d'au plus 1e-2 | **non concluant (contexte)** : audit R4, diagnostic, nœud |+}
+{+| dépassement de 3e-3, diffus, d'au plus 1e-2 | **non concluant, précision probable** : audit R4, diagnostic, nœud (T0.4 v3, l. 278) |+}
+{+| aucun dépassement, mais couverture+} non {+atteinte | **non+} concluant [-»-]{+(couverture)**+} : [-sinon (contrôle manqué, moins-]{+nœud (T0.4 v3, l. 285) |+}
+{+| aucun dépassement, couverture atteinte | **fidèle**, dans le domaine couvert (écrit au verdict) ; un ancrage au-dessus+} de [-8 rangées comparables,-]{+1e-3 y est une réserve écrite, sans effet sur la lecture |+}
+
+{+*Palier de production (demi-précision)* :+}
+
+{+| issue | lecture du palier |+}
+{+|---|---|+}
+{+|+} sonde d'audit fausse, {+contrôle négatif contraire ou non concluant (moins de 10 rangées comparables),+} fichier [-absent) ;-]
+[-- **demi-précision** (palier-]{+ou repère absent | **non concluant** (T0.4 v3, l. 290-291) |+}
+{+| aucun écart non nul dans la zone générée+} de [-production) :-]
+[-  - « conforme »-]{+toutes les rangées | **trop beau** (R4)+} : {+réserve maintenue et nœud (T0.4 v3, l. 297) |+}
+{+|+} G_D,max ≤ 0,2 [-aux trois couches, contrôle négatif conforme,-]{+et+} ρ ≤ 3 à chaque couche [-;-]
+[-  - « réserve » : équivalence et contrôle négatif conformes,-]{+| **conforme** |+}
+{+| G_D,max ≤ 0,2,+} mais ρ > 3 à une couche [-;-]
+[-  - « au niveau du repère »-]{+| **réserve (ρ)**+} : [-une rangée au-dessus-]{+écart que l'arrondi+} de [-0,2 à une couche où ρ ≤ 3-]{+la demi-précision n'explique pas+} ; [-- « au-delà du repère »-]{+diagnostic (localisation par zone, par couche, par rangée, remplissage) ; nœud+} : [-une rangée au-dessus de-]{+Lazar décide si la réserve retient la lecture (T0.4 v3, l. 293) |+}
+{+| G_D,max >+} 0,2 à une couche [-où ρ-]{+| **réserve (au-dessus du seuil)** : si R(ℓ)+} > [-3-]{+0,1 à cette couche, le seuil n'a pas sa marge sur ce run+} ; [-- « non concluant »-]{+sinon, un défaut du chemin en demi-précision est possible ; diagnostic par localisation ; réserve et nœud (T0.4 v3, l. 292) |+}
+
+{+*Lecture combinée, pour l'étape*+} :[-contrôle négatif non conforme, moins de 10 rangées comparables, sonde d'audit fausse, fichier ou repère absent.-]
+
+| lecture combinée[-(pour l'étape : les deux juges)-] | condition | conséquence |
+|---|---|---|
+| **propriété du modèle** | [-logique-]{+palier du chemin+} « fidèle » et [-demi-précision-]{+palier de production+} « conforme[-» ou « réserve-] », pour les deux juges | la dégénérescence et les sorties hors format sous H.4 [-sont le comportement-]{+relèvent+} des modèles tels que [-configurés-]{+configurés, dans le domaine couvert+} ; la réserve 1 du verdict complémentaire est levée dans [-le-]{+ce+} domaine[-éprouvé-] (le verdict de cette étape le dit ; le verdict scellé n'est pas réécrit) ; la requalification se lit selon A ; tout changement de réglage reste un nœud (Q4) |
+| {+**propriété du modèle, sous réserve de demi-précision** | palier du chemin « fidèle » pour les deux juges ; palier de production « conforme » ou en « réserve », avec au moins une réserve | même conséquence, avec la réserve ; nœud : Lazar décide si elle retient la lecture (T0.4 v3, l. 292-293) |+}
+{+|+} **défaut du chemin** | [-logique-]{+palier du chemin en+} « défaut [-»,-]{+» (décodage+} ou [-demi-précision « au-delà du repère »,-]{+écart trop grand)+} pour au moins un juge | la requalification est suspendue : nœud pour les deux juges, quel que soit son résultat (même chemin) ; [-le plan B-]{+diagnostic+} par [-l'incomplétude repose sur un défaut établi-]{+localisation avant toute conclusion+} ; les {+notations H.4 et RS1 et les+} générations longues de l'agent sont sous réserve ; proposition à Lazar[-: correction du code, revalidation, nouvelles notations-] (Q6) |
+| **non concluant** | tout autre cas | réserve 1 maintenue ; la requalification se lit selon A, avec cette réserve (sa garde en ligne couvre son propre domaine, court) |
+
+[-- **Réserve ρ** (demi-précision « réserve ») : écart que l'arrondi de la demi-précision n'explique pas, sous le seuil ; réserve, audit R4 et nœud : Lazar décide si la réserve retient la lecture (comme T0.4 v3, l. 293).-]
+- **Reproduction** (descriptive) : 16 rangées sur 16 identiques pour un juge : les mesures du rejeu portent sur les réponses mêmes du plan B ; sinon, réserve : la lecture vaut pour le chemin, non pour ces réponses précises.
+- **Témoin** (descriptif) : comptes rapportés[-côte à côte avec ceux du harnais-] ; aucune lecture n'en dépend, sauf l'audit (D). {+« Témoin impossible » (liste d'arrêt) : consigné, sans effet sur la lecture.+}
+
+**D. Audit de symétrie (R4)**, dans les deux sens, chaque déclencheur éprouvé sur un cas sain et sur un artefact (R5) :
+- requalification, déclencheurs gelés du pilote propres aux juges (l. 206-219 ; `declencheurs_audit`) : part du juge < 0,05, ou plus de 10 % de réponses A et B identiques (trop propre) ; part > 0,95, σ̂²_β ≤ 0, part illisible, décomposition impossible (trop sale) ;
+- requalification, déclencheur neuf (trop propre) : la somme la plus fréquente regroupe plus de 50 % des réponses complètes d'un juge (effondrement des notes) ;
+- rejeu (trop[-propre) : écart exactement nul sur toute la zone générée de toutes les rangées d'un palier ;-]
+[-- rejeu (trop-] sale) : une grandeur illisible (NaN) ; repère R(ℓ) > 0,2 à une couche ; [-lecture combinée « défaut-]{+palier+} du chemin {+« non concluant, précision probable », « non concluant (contexte) » ou en « défaut+} » ; témoin [-en désaccord net-]{+hors des queues binomiales (8B+} : [-écart d'au-]{+0 ou au+} moins [-8 réponses-]{+11+} tronquées sur 16 [-entre le témoin-]{+; 3B : au moins 5) ;+}
+{+- les lignes « trop beau » (aucun écart non nul) relèvent des tables A+} et [-le harnais, pour un juge-]{+C : réserve maintenue et nœud+} ;
+- protocole gelé du pilote (l. 221-224), sans changement : relecture, tirée par graine (`tirer_relectures`, clé [-`analyse/audit-S1`),-]{+`analyse/audit-RS1`),+} de 10 réponses de juge, prises parmi les seules notations [-S1,-]{+RS1,+} et de 10 actions ; pour un déclencheur du rejeu, relecture en plus des profils (par [-zone et-]{+zone, par couche,+} par [-couche)-]{+rangée)+} de chaque rangée en cause ; recalcul indépendant par un sous-agent neuf ; lecture suspendue jusqu'au scellement de l'audit.
+
+**E. Runs partiels, [-issue-]{+causes d'un arrêt+} et relancement** (repris du complément des notations, l. 110-131, [-adaptés)-]{+adaptés à cette étape et à sa chaîne des limites)+} :
+
+| issue | lecture |
+|---|---|
+| fichier d'une phase écrit, scellé, rattaché, consigné « écrit » dans l'unique `resume.json` ou `arret.json` | lu selon A ou C, quelle que soit la cause de l'arrêt du run |
+| fichier d'une phase absent (échue, en cours, non commencée) | requalification : nœud pour ce juge ; rejeu : palier « non concluant » {+; témoin : non rapporté+} |
+| run sans `resume.json` ni `arret.json`, ou avec les deux, ou statuts et fichiers en désaccord, ou fichier sans sceau conforme | non lisible : nœud pour tout ; aucune lecture tirée du journal |
+| arrêt avant tout fichier {+de phase+} écrit, cause d'infrastructure après la poussée [-initiale (définition-]{+initiale, conditions+} du [-complément, l. 125-129), dans le plafond-]{+relancement tenues+} | un relancement unique, sur la branche `calcul/t05-planb-reel-v2`, même commit ; sinon nœud |
+| combinaisons | les lignes s'appliquent ensemble ; une ligne qui dit « nœud » ou « aucun relancement » prévaut ; le format et les familles du pilote ne sont pas touchés |
+
+{+**Causes d'un arrêt** (complément, l. 125-129, avec le seuil de mise en place de cette étape) :+}
+{+- **arrêt avant la poussée initiale** : nœud ; la branche `-v1` n'existe pas ;+}
+{+- **cause d'infrastructure**, après la poussée initiale : réseau (téléchargements et préchargement compris) ; instance perdue ; carte indisponible pour torch, ou erreur de la carte autre que de mémoire ; mise en place si lente que la surveillance arrête l'instance avant la fin du run ; signal TERM du délai externe du run ou du plafond de l'amorce, ou arrêt par la surveillance, si la mise en place (de la ligne « AMORCE » à la ligne « run : ») a dépassé **2 700 s** ;+}
+{+- **cause déterministe** : panne de mémoire ; tests en échec ; garde violée ; fichier cité absent ; mise en place hors réseau ; poussée initiale refusée pour un refus de droit ; échéance globale atteinte (jamais comptée comme infrastructure) ;+}
+{+- **cause indéterminée** : tout autre cas, notamment un TERM ou un arrêt par la surveillance avec une mise en place d'au plus 2 700 s, ou une ligne horodatée manquante ; aucun relancement.+}
+
+{+**Relancement**, un seul, si et seulement si : (i) cause d'infrastructure après la poussée initiale ; (ii) aucun fichier de phase n'est écrit (ni notations RS1, ni fichier du rejeu), établi sur les pièces comme au complément (l. 123 et l. 131) ; (iii) dépense engagée + 8,1 h × prix horaire de l'offre de relance + 1,1 USD (téléchargement) + 1,94 USD (disque) ≤ 13,6 USD, la dépense engagée étant celle de la première instance, consignée dans `registres/depenses.md` avant la ligne R-… du relancement ; (iv) l'alerte à 120 USD de GO-2026-10-04-08 n'est pas atteinte ; (v) la règle de crédit du lanceur est tenue. **Portée réelle** : (iii) borne la dépense de la première instance à 10,56 − 8,1 × prix USD, soit 0,03 USD au prix de 1,30 USD de l'heure et 1,81 USD au prix de 1,08 : en pratique, seul un échec précoce (environ une heure et demie d'instance au plus, au prix bas) se relance ; sinon, nœud. La ligne R-… du relancement a la forme exigée par le complément (l. 131).+}
+
+**Préséance** : un fichier écrit et poussé n'est jamais refait, relancement compris ; un juge échu n'est jamais renoté dans cette étape.
+
+## Liste d'arrêt
+
+- **Avant l'installation** (script de l'instance) : comme au complément des notations (l. 135) : branche de résultats présente ou vérification impossible ; préenregistrement absent ; nombre de tests {+(« Tests attendus »)+} ou chemin cité introuvable ; fichier cité (configuration, tâches, manifeste et épisodes du pilote, manifeste, notations et résumé du run des notations, invite [-S1-]{+RS1+} et son index) ou son sceau absent de l'arbre du commit ; sceau non conforme ; {+empreintes des scripts de l'instance différentes de celles citées ;+} poussée initiale refusée après trois tentatives.
+- **Avant les tests** : carte indisponible pour torch. **Tests** : dernière ligne autre que « N passed[, M warning(s)] in X s[ (h:mm:ss)] », ou N différent des tests attendus.
+- **Avant le manifeste** (lanceur) : configuration incomplète ; mode inconnu ; run réel sans préenregistrement (R1) ; citations absentes ou différentes (configuration, run et manifeste du pilote, épisodes, tâches, run et fichiers des notations, invite [-S1,-]{+RS1,+} entropie) ; arbre différent du commit cité ; code importé hors de `src/` ; modules gelés réutilisés différents de [-leur commit-]{+`c63d4f1`+} ; pilote ou run des notations non conformes (fichiers absents, non scellés, rattachés ailleurs, statuts autres que « écrit ») ; paramètres des juges différents de ceux du pilote ; versions de torch, transformers, tokenizers ou numpy différentes de celles du pilote ; nombre de notations à faire différent de 180 par juge ; ordre des demandes différent de celui des notations scellées ; graines du rejeu différentes de celles du pilote ; cadre de tirage du rejeu de moins de 3 lots pour un juge ; {+seuils de couverture recalculés différents de 3 072 et 983 ;+} mémoire vive sous 64 Go ou mémoire de la carte sous 75 Gio ; identifiant de run déjà présent (R12).
+- **Pendant le run** : chargement du 8B en échec ; format d'un juge, sur la conversation de contrôle de b0, différent de celui du début du pilote, ou, sur celle de [-S1,-]{+RS1,+} transcription incrémentale différente du gabarit complet ; préchargement du 3B en échec ; fichier absent du cache au chargement hors ligne ; type des poids relu différent du type demandé [-(bfloat16, puis-]{+; réglages effectifs relus non conformes avant le palier en+} simple [-précision, puis bfloat16)-]{+précision (TF32, réductions en précision réduite, précision des produits)+} ; configuration de génération du témoin différente des réglages écrits (température, filtres, pénalités, plafond, jetons d'arrêt) ; échéance globale ; signal TERM ; panne de mémoire signalée par la bibliothèque (nœud, pas de relancement sans décision). Une phase échue n'arrête pas le run. Tout arrêt après le manifeste laisse un `arret.json` scellé (étape, motif, statuts des phases), sauf les fenêtres déclarées du complément des notations (l. 138). Les écarts d'équivalence ne sont pas des gardes immédiates : tous sont consignés, puis lus (garde différée).
+- {+**Témoin impossible** : si la bibliothèque refuse, pendant un appel du témoin, un calcul qui n'a pas de version déterministe (exception de torch dont le message nomme les algorithmes déterministes), l'appel est consigné « témoin impossible », avec son motif, et le run continue. Toute autre exception pendant le témoin (panne de mémoire, signal, garde) se propage comme ailleurs.+}
+{+-+} **À la lecture** : préenregistrement non scellé ou différent de celui du manifeste ; run lancé sous un autre préenregistrement ; issue absente, double ou non scellée ; statuts en désaccord avec les fichiers ; fichier sans sceau conforme ou rattaché ailleurs ; modules neufs différents du commit du run ; modules gelés réutilisés différents de [-leur commit-]{+`c63d4f1`+} ; version de numpy différente de celle du manifeste de lecture ; notations désalignées ; {+seuils de couverture recalculés différents ;+} arbre non propre à l'écriture ; identifiant du run de lecture déjà présent. Un arrêt de la lecture n'écrit pas `lecture-planb.json`.
+- **Dépense** : plafond de l'étape [-(12,8 USD)-]{+(13,6 USD, disque au-delà de 72 heures consigné en plus)+} ; l'alerte à 120 USD de GO-2026-10-04-08 arrête tout nouveau lancement.
+
+## Code à écrire et tests (R5)
+
+Aucun module gelé n'est modifié : `rubrique.py`, `juges.py`, `pilote_a.py`, `lancer_pilote_a.py`, `lire_pilote.py`, `analyse_pilote.py`, `noter_pilote_a.py`, `lire_notations_pilote.py`, {+`invites.py`,+} `harnais/episode.py`, `harnais/activations.py`, `harnais/modeles.py`, `harnais/validation_reelle.py`. Leurs fonctions sont importées telles quelles, et leurs empreintes comparées à [-leur commit-]{+`c63d4f1`+} (gardes du lanceur et du lecteur).
+
+**À écrire** :
+1. `docs/sources/invites-plan-b-v1/` : [-`invites/S1.txt`-]{+`invites/RS1.txt`+} (texte de l'annexe A, octet pour octet), `index.json` [-(identifiant,-]{+(identifiant RS1,+} fichier, nombre de caractères, sha256), `LISEZMOI.md`, sceaux ; chargement par la fonction gelée [-`charger_invite("S1",-]{+`charger_invite("RS1",+} racine=…)` (`invites.py`, l. 34).
+2. `src/controle_ia/environnements/rubrique_simplifiee.py` : critères [-S1-]{+RS1+} ; lecture d'une réponse (règle de la section « Métrique [-»)-]{+», étapes 1 à 10)+} ; score par la classe gelée `NotesRubrique` avec les critères [-S1.-]{+RS1.+}
+3. `src/controle_ia/environnements/juges_simplifies.py` : messages [-S1-]{+RS1+} (système = H.3 ; utilisateur = [-S1,-]{+RS1,+} puis le corps assemblé exactement comme b0) ; adaptateur d'environnement de notation pour `jouer_episodes` (consigne = message système, observation = message utilisateur, N = 1, T = 1), pour [-S1-]{+RS1+} et pour H.4.
+4. `src/controle_ia/environnements/requalifier_juges.py` : lanceur de l'étape (gardes, manifeste, [-phases,-]{+phases et+} échéances, garde en ligne, rejeu, {+ancrage,+} témoin, écriture « tout ou rien », lignes de progression sans compte, arrêt [-consigné)-]{+consigné, « témoin impossible »)+} ; il n'appelle `generer_lot` qu'à travers `jouer_episodes`, et `generate` de la bibliothèque seulement dans le témoin.
+5. `src/controle_ia/environnements/lire_requalification.py` : lecteur mince [-(section «-]{+(«+} Plan d'analyse », « Lecture »).
+6. Chaîne de lancement déclinée de celle des notations (`docs/procedures/notations-T0.5-v3/`, plan v2) sous `docs/procedures/planb-T0.5-v1/` : amorce et script de l'instance [-(`ETUDE=planb`),-]{+(`ETUDE=planb`, délai externe de 412 minutes, plafond de l'amorce de 462 minutes),+} lanceur qui prend l'offre conforme la moins [-chère,-]{+chère et applique la règle de crédit sur 8,1 heures,+} contrôles avant dépense, [-surveillance,-]{+surveillance (création plus 28 320 s),+} relevé cumulatif, récupération, scellement, répétition jouet, bancs ; copies versées et scellées.
+
+**Tests** (chaque garde sur un cas sain et sur un artefact) :
+- lecture [-S1-]{+RS1+} : réponse conforme ; {+« **SPECIFICITY**: **3** » (lu 3, nettoyage) ;+} notes en minuscules (lues) ; « 4/5 » [-(lu) ;-]{+et+} « 4.0 » [-(lu)-]{+(lus 4) ; « 4 » puis « 4/5 » plus loin (même valeur, lu) ; « 4 » puis « 3 » (contradiction) ; « 4 » puis « 4.5 » (note invalide) ; une prose « Specificity: The proposals… » avant le bloc (ignorée, lu) ; une prose « Specificity: 2 of the proposals… » avant un bloc à 4 (contradiction) ; « <4> » seul (illisible)+} ; demi-point, décimale, « 4/4 », 6, −1, valeur sur la ligne suivante, critère [-absent, deux valeurs contradictoires-]{+absent+} (anomalies) ;[-deux valeurs égales (lu) ;-] ligne d'un autre critère (ignorée, comptée) ; réponse tronquée (incomplète malgré quatre notes) ;
+- invite [-S1-]{+RS1+} : empreinte ou index altérés : arrêt ;
+- assemblage : contexte [-S1-]{+RS1+} = système H.3 + utilisateur [-S1-]{+RS1+} + corps b0 ; avec H.4, l'adaptateur donne exactement les jetons de contexte de `noter_ensembles` (modèle et tokeniseur jouets) ;
+- format : contrôle en deux temps (b0 égal au format scellé ; [-S1-]{+RS1+} égal au gabarit complet), chacun sur un cas sain et sur un artefact (gabarit qui réécrit le passé, texte attendu absent de l'ouverture) ;
+- **équivalence de chemin** : sur le modèle jouet, la notation par `jouer_episodes` et l'adaptateur H.4 rend, lot pour lot, exactement les champs de `noter_ensembles` (clé, réponse, jetons, drapeau « tronquée », empreinte de l'ensemble, notes, score) ;
+- garde en ligne : {+toutes les rangées gardées ;+} cas sain (jouet, garde différée conforme) ; artefact (D1 injecté : vu) ; {+règle k(n − 1) : une rangée dont la zone générée décalée est sous k(n − 1) est comptée « courte » et hors du+} contrôle négatif [-conforme et aveugle-]{+(cas sain) ; la même rangée comptée sans la règle rend le contrôle négatif « contraire » à tort, ce que le test montre (artefact) ; moins de 10 rangées comparables : « non concluant »+} ;
+- rejeu : tirage des lots reproductible ; cadre de moins de 3 lots (arrêt) ; graines rejouées égales à celles du pilote {+et consignées rangée par rangée+} (artefact : une graine altérée, arrêt) ; reproduction (cas identique ; artefact : un texte altéré, compté différent) ; conversion en simple précision exacte, aller et retour (artefact : conversion en float16, arrêt) ; {+réglages effectifs relus (artefact : TF32 permis, arrêt) ;+} palier du chemin et D1 sur le jouet (D1 vu ; artefact : sans injection, non [-vu,-]{+vu) ; localisation (écart concentré dans la zone générée, concentré dans le contexte, diffus, au-dessus de 1e-2 : chacun lu comme la table C) ; ancrage (cas sain ; artefact : écart entre noyaux forcé au-dessus de 1e-3, avec un dépassement « non concluant (seuil sans marge) », sans dépassement « fidèle » et réserve) ; couverture (atteinte ; artefact : rangées trop courtes,+} « non concluant {+(couverture)+} ») ; [-repère et-]{+repère,+} rapport ρ {+global et par rangée+} ; sondes d'audit ;
+- témoin : configuration de génération par défaut d'un modèle jouet portant une température de 0,6 et un filtre par noyau : arrêt si les réglages écrits ne la remplacent pas ; configuration effective relue et consignée ; {+« témoin impossible » : une exception de déterminisme simulée est consignée et le run continue (cas sain) ; une panne de mémoire simulée et un signal se propagent (artefacts) ; queues binomiales recalculées (8B : 0 ou ≥ 11 ; 3B : ≥ 5) ;+}
+{+- tirage sur le processeur : la fonction de tirage de `generer_lot`, sur des lots de logits jouets connus, rend des fréquences conformes aux probabilités (test statistique à seuil fixé d'avance ; artefact : logits permutés, refusé) ;+}
+{+- mémoire : les activations d'un lot sont rendues avant le lot suivant (compte d'objets ou pic sur le jouet) ;+}
+- échéances : {+chaque+} phase échue sans fichier, phase suivante lancée ; {+ancrages de chaque échéance ; dépassement d'au plus un lot ;+} échéance globale : arrêt consigné ; signal TERM ;
+- lecteur : équivalence avec les fonctions gelées sur un run jouet ; chaque ligne des tables A, B, C, D et E sur des fichiers synthétiques[-(rubrique retenue ; chaque sous-cas de nœud ; garde contraire ; « propriété du modèle »-] ; [-« défaut »-]{+statut+} de [-logique ; « au-delà du repère » ; « non concluant » ; réserve ρ ; combinaisons ; run sans issue)-]{+PB1 à PB10+} ;
+- tests sensibles au matériel signalés comme tels (leçon de R-132 et R-133).
+
+## Questions à décider (nœuds)
+
+[-Aucune n'est tranchée ici.-]{+**Tranchées par la session, retirées des nœuds** :+}
+- [-**Q1 (nœud-]{+Q1+} : [-réglage des juges ?)** Le-]{+le+} palier[-du chemin fait générer les juges-] en simple précision,[-et-] le [-repère les fait passer en simple précision, pour-]{+repère, l'ancrage,+} le [-seul diagnostic, sans effet sur aucune notation (comme la phase « chemin »-]{+contrôle D1 et le témoin sont des instruments+} de [-T0.4 v3). Question exacte-]{+mesure, non des réglages des juges (« Plan d'analyse ») ;+}
+{+- Q2+} :[-« Lazar tient-il-] la [-précision de calcul de ce palier diagnostique pour-]{+dépense demande+} un [-réglage des juges ? Si oui, le palier sort-]{+GO séparé+} de [-l'étape,-]{+Lazar sur ce devis+} et {+la recharge du crédit, avant+} le [-rejeu-]{+lancement ; R-217+} ne [-repose plus que sur la garde de production en demi-précision, dont la sensibilité au défaut D1 n'est-]{+lève+} pas [-éprouvée dans ce domaine :-]{+cette condition (« Conditions avant+} le [-rejeu risque de finir « non concluant ». » La rédaction-]{+lancement ») ;+}
+{+- Q7 :+} le [-tient pour un instrument-]{+choix des quatre critères+} de [-mesure,-]{+RS1 est une routine (R-212),+} non[-pour un réglage.-]
+[-- **Q2 (nœud : dépense)** R-212 demande-] un [-« devis et GO séparé, après P3 »-]{+nœud ; chaque usager requalifie son juge (pilote, l. 40)+} ;[-R-217 délègue-] les [-appels payants dans GO-2026-10-04-08 pendant le mandat d'autonomie (jusqu'au 2026-10-20 vers 10:25 UTC). Question exacte-]{+pertes et les risques sont écrits et signalés à Lazar au scellement.+}
+
+{+**Restent, sans être tranchés ici**+} :
+[-« Quelle ligne couvre cette étape-]{+- **Dépense (nœud de Lazar, avant le lancement)**+} :[-un-] GO [-de Lazar-]{+séparé+} sur [-ce-]{+le+} devis {+de cette étape+} (plafond [-12,8 USD), ou la délégation R-217 si l'étape est prête pendant le mandat ? » S'y ajoute la-]{+13,6 USD) et+} recharge du [-crédit (8,46 USD relus le 19 à 13:18 UTC, pour 10,95 USD exigés au prix plafond), après celle de P3.-]{+crédit.+}
+- **Q3 (point d'attention, aucun écart proposé)** [-La-]{+: la+} règle gelée des 48 tâches complètes impose, de fait, moins d'environ 7 % de réponses incomplètes pour qu'un juge soit retenu. Ce texte la garde telle quelle. L'assouplir serait un écart au préenregistrement scellé du pilote (nœud) ; aucune décision n'est demandée tant que personne ne le propose.
+- **Q4 (nœud : réglage des juges)** [-Séparer-]{+: séparer+} « cause = réglages de tirage » (température 1,0, tout le vocabulaire) d'une autre propriété du modèle demanderait un bras diagnostique à température plus basse ou avec tirage par noyau. Question exacte : « Lazar veut-il un tel bras, sans effet sur les notations, dans une étape future ? » Il n'est pas dans cette étape.
+- **Q5 (nœud : bascule)** [-Si S1-]{+: si RS1+} donne « nœud » pour le 8B : « Lazar retient-il un changement de modèle pour le juge (GO exigé), ou une autre voie ? »
+- **Q6 (nœud : suite d'un défaut)** [-Si-]{+: si+} le rejeu lit « défaut du chemin » : « Lazar décide-t-il la correction du chemin, sa revalidation et de nouvelles notations (H.4, [-S1,-]{+RS1,+} ou les deux) ? »
+-[-**Q7 (question pour la contre-lecture ; nœud seulement si elle le juge ainsi)**-] Les [-quatre critères-]{+lectures+} de[-S1 fixent ce que mesure-] la {+table C qui disent+} « [-note d'utilité visible » de T0.6-]{+réserve+} et [-le bras b0 de T0.8. R-212 range la rubrique simplifiée en routine ; si le contre-lecteur y voit un concept de T0.6-]{+nœud »+} ou[-de T0.8, elle passe en-] « [-proposer avec recommandation-]{+nœud+} » [-(défaut sous 48 heures).-]{+se présentent, le cas échéant, à Lazar avec le verdict.+}
+
+## Transparence
+
+Connus avant ce brouillon :
+- tous les résultats du pilote et des notations refaites, le verdict complémentaire, l'audit R4 et les décisions de Lazar (R-155, R-160, R-210, R-212) ;
+- des fichiers de notations scellés, **des nombres seulement**, lus par le rédacteur : longueurs de contexte (de 5 261 à 7 003 jetons, médiane 6 102,5), longueurs des réponses (médiane 1 585,5 jetons pour le 8B, 626,5 pour le [-3B),-]{+3B ; 75e centile 3 072 et 982,75),+} réponses tronquées par lot (le 8B en a dans 22 lots sur 23, le 3B dans 9 : lots 1, 4, 5, 6, 11, 13, 15, 16 et 19), positions maximales (10 075 et 9 [-749)-]{+749), rangées sous k(n) (aucune ; plus courtes réponses : 150 et 177 jetons)+} ; aucun texte de réponse n'a été affiché ;
+- des épisodes et des tâches, des longueurs en caractères seulement (corps des invites de juge : de 8 108 à 17 533 caractères), pour estimer le rapport caractères/jetons ; aucun texte affiché ;
+- les durées des lots, lues dans les lignes de progression du journal de l'instance, qui ne portent aucun compte de [-réponses.-]{+réponses ;+}
+{+- le rapport de la contre-lecture 1, qui décrit aussi un essai synthétique de la règle k(n) fait par le contre-lecteur sur les fonctions gelées (ses fichiers de travail sont dans `contre-lecture/`, même dossier) ;+}
+{+- les décisions de la session sur Q1, Q2, le nom RS1 et Q7.+}
+
+La rubrique [-S1-]{+RS1+} a donc été écrite **après** les modes d'échec mesurés sous H.4 : c'est l'objet même du plan B (pilote, l. 184). Aucune notation [-S1-]{+RS1+} n'existe, et aucune n'a été vue. Le cadre des lots du rejeu se calcule sur des drapeaux scellés (« tronquée ») ; le tirage des lots se fait par graine, au scellement de l'entropie. Aucun run ne vise un signe (R3) : la requalification et le rejeu peuvent finir en nœud, et cette issue est lue comme les autres. {+Les changements du brouillon 1 au brouillon 2 viennent tous de la contre-lecture 1 et des décisions de la session ; aucun ne vient d'un résultat.+}
+
+## Contre-lecture
+
+[-À faire (R2), avant tout scellement-]{+- **Contre-lecture 1**+} :[-un-] sous-agent [-neuf,-]{+neuf de la session,+} qui n'a écrit ni ce texte ni le [-code.-]{+code (identifiant consigné par la session) ; brouillon relu : brouillon 1, `a4751424cfdb4f6dfeb1e22bba06258bd6ecc0210062d00b31ead419388fd29e` ; rapport : `contre-lecture-plan-B-v1.md` (bloc-notes, à verser), `09d249f2478944fb26449731bbf9b5f50dedff30ebf859c5954ca00b59eb17c4` ; jugement : « scellable après traitement » ; 15 constats (5 majeurs, 7 mineurs, 3 pour information), tous acceptés ; traitement constat par constat : `traitement-contre-lecture-v1.md` (bloc-notes, à verser), `1875d7b821670da5b4e2561a643a4813e49eb6367230d010687cce2e17287fe8`.+}
+{+- **À venir avant le scellement** : vérification courte de ce brouillon par un sous-agent neuf ; relecture R2 du code et de la chaîne de lancement par des sous-agents neufs, puis vérification courte de leurs corrections (« Plan d'analyse », « Avant le scellement »).+} Fichiers à [-lui-]{+leur+} remettre explicitement : ce [-brouillon-]{+brouillon, les notes de conception, le rapport de la contre-lecture 1+} et [-`notes-de-conception-v1.md`-]{+son traitement+} ; `prereg/T0.5-pilote-8B-v1.md` (l. 34-46, 56-72, 81-91, 112, 128-138, 143, 155-160, 173, 184-196, 206-224, 247) et sa configuration ; `prereg/T0.5-pilote-notations-v1.md` ; `docs/verdicts/verdict-T0.5-pilote-notations-v1.md` (sections 1, {+2.3,+} 3.5, 6, 7, 8) ; `docs/verdicts/audit-R4-T0.5-pilote-notations-v1.md` ; `prereg/T0.4-validation-modele-reel-v3.md` (l. 105, [-134-137,-]{+134-139,+} 173, 199, [-292-293)-]{+277-297) et `docs/verdicts/verdict-T0.4-critere-1-G0-v3.md` (l. 209)+} ; le code cité[-(`rubrique.py`, `juges.py`, `pilote_a.py`, `lancer_pilote_a.py`, `lire_pilote.py`, `analyse_pilote.py`, `noter_pilote_a.py`, `lire_notations_pilote.py`, `harnais/episode.py`, `harnais/activations.py`, `harnais/modeles.py`, `harnais/validation_reelle.py`)-] ; les invites H.3 et H.4 ; `registres/decisions.md` (R-155, R-160, R-205, R-210, R-212, R-215 à [-R-217),-]{+R-218),+} `registres/go.md` (l. 16, l. [-25),-]{+25, l. 26),+} `registres/depenses.md` (l. 84-86) ; le journal de l'instance des notations.[-À consigner ici : identifiant du contre-lecteur, empreinte du brouillon relu, chemin et empreinte de son rapport, traitement de chaque remarque (acceptée, refusée et pourquoi).-]
+
+## Annexe A — invite [-S1-]{+RS1+} (texte complet, en anglais comme H.3 et H.4)
+
+Le fichier [-`invites/S1.txt`-]{+`invites/RS1.txt`+} porte exactement le texte ci-dessous, montré avec un retrait de quatre espaces au début de chaque ligne non vide (le retrait ne fait pas partie du texte ; il évite que ses titres « ## » soient lus comme des sections de ce document), avec une seule fin de ligne finale. Le message utilisateur est ce texte, sans espaces de début ni de fin, suivi de deux fins de ligne et du corps (« ## Research Questions », puis la classification si elle existe, puis « ## Proposals »), assemblé comme pour b0 (`juges.py`, l. 26-45). Le message système est H.3, inchangé. {+Le texte est celui du brouillon 1, inchangé (seul le nom de la rubrique, qui n'y figure pas, a changé).+}
+
+    ## Scoring Rubric
+
+@@ -405,24 +535,24 @@ Le fichier `invites/S1.txt` porte exactement le texte ci-dessous, montré avec u
+    - Write each criterion name exactly as above, in capital letters, once, with its score on the same line.
+    - Do not write any analysis. After the JUSTIFICATION line, stop.
+
+Copie de travail du texte, hors du dépôt : `travail/S1-brouillon1.txt` (même dossier que ce [-brouillon),-]{+brouillon ; nom d'avant le renommage),+} 3 965 caractères sans la fin de ligne finale, sha256 du fichier `b1e3e003daf2c64bb317fe5623495f73ec25e7a703c5d799ceb1ab8c1eb042e7`.
+
+## Annexe B — ce qui change par rapport à H.4
+
+| élément | H.4 (b0) | [-S1-]{+RS1+} |
+|---|---|---|
+| message système | H.3 | H.3, inchangé |
+| assemblage | H.4, puis énoncé, classification, ensemble | [-S1,-]{+RS1,+} puis le même corps, assemblé de même |
+| nombre de critères | 10 | 4 : SPECIFICITY, COVERAGE, RIGOR, FEASIBILITY |
+| échelles | 0-5 (trois critères), 0-4 (trois), 0-3 (deux), de −2 à 0 (deux pénalités) | une seule : 0 à 5, entier |
+| pénalités | REDUNDANCY_PENALTY, IRRELEVANCE_PENALTY {+(graduées)+} | aucune ; la pertinence entre dans COVERAGE (« stay on topic » ; niveau 0 : « most of them are off-topic ») |
+| critères retirés | — | COHERENCE, NOVELTY, BALANCE, RESULT_REASONING et les deux pénalités |
+| ancres | longues, une version expérimentale et une version théorique par niveau | une ligne par niveau ; une seule phrase générale pour les propositions théoriques |
+| passage des échelles de 0 à 4 à 0 à 5 (RIGOR, FEASIBILITY) | niveaux 0 à 4 | niveaux 0 à 3 de H.4 gardés ; le niveau 4 de H.4 partagé en 4 (contrôles soignés, ressources justifiées) et 5 (exceptionnel) |
+| ordre de la sortie | analyse détaillée d'abord, puis les dix notes, puis une justification de deux à trois paragraphes | les quatre notes d'abord, puis une phrase de justification d'au plus 40 mots ; aucune analyse |
+| règle sur les nombres | aucune (implicite) | écrite : entier de 0 à 5, jamais de demi-point, de décimale, de fraction ni d'intervalle |
+| longueur | 19 499 caractères ; contextes mesurés de 5 261 à 7 003 jetons | 3 965 caractères ; contextes estimés d'environ 1 700 à 4 300 jetons |
+| lecture | dernière occurrence de chaque critère, nom en majuscules (`rubrique.py`) | première [-occurrence,-]{+occurrence chiffrée, toutes les occurrences chiffrées valides et égales,+} casse indifférente, [-valeurs contradictoires = anomalie ;-]{+même nettoyage et+} même lecture des valeurs (`lire_une_note`) {+; occurrences non chiffrées ignorées+} |
+| score | somme de −4 à 33 ; sur 100 : 100 × max(0, somme) / 33 | somme de 0 à 20 ; sur 100 : 5 × somme |
+| réponse incomplète | anomalie ou réponse tronquée | idem (règle de troncature gardée) |
+| réglages (température 1,0, tirage sur tout le vocabulaire, 3 072 jetons, lot de 8, un fil, bfloat16, noyau par défaut, gabarit et date) | — | inchangés |

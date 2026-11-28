@@ -1,0 +1,56 @@
+=== cas candidat1
+.                                                                        [100%]
+1 passed in 4.95s
+code 0
+=== cas absente
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg _______
+P4_TEXTE_PREREG absente : ce test compare `LIGNES` à la table « Critères de lecture gelés » du préenregistrement ; relancer la suite avec P4_TEXTE_PREREG=<chemin du texte> (après S : prereg/P4-instrument-v1.md)
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/test_lecture_p4_v1.py::test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg
+1 failed in 4.66s
+code 1
+=== cas brouillon4
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg _______
+
+    def test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg():
+        """`LIGNES` contre la table « Critères de lecture gelés » du texte qui fait foi (le candidat relu ; après S,
+        `prereg/P4-instrument-v1.md`), nommé par la variable d'environnement `P4_TEXTE_PREREG` : onze lignes, même ordre,
+        chaque cellule égale mot pour mot ; puis la garde de la lecture décisive accepte ce texte. Variable absente, ou
+        fichier absent : ÉCHEC, jamais un saut silencieux."""
+        chemin = os.environ.get(VARIABLE_TEXTE, "")
+        if not chemin:
+            pytest.fail(f"{VARIABLE_TEXTE} absente : ce test compare `LIGNES` à la table « Critères de lecture gelés » du "
+                        f"préenregistrement ; relancer la suite avec {VARIABLE_TEXTE}=<chemin du texte> (après S : "
+                        "prereg/P4-instrument-v1.md)", pytrace=False)
+        p = Path(chemin)
+        if not p.is_file():
+            pytest.fail(f"{VARIABLE_TEXTE}={chemin} : fichier absent sur disque (R11)", pytrace=False)
+        texte = p.read_text(encoding="utf-8")
+        table = table_recodee(texte)
+        assert list(table) == list(lp.LIGNES) == [f"L{k}" for k in range(1, 12)]
+        differentes = [(k, nom) for k in table for j, nom in enumerate(("issue", "lecture")) if table[k][j] != lp.LIGNES[k][j]]
+>       assert differentes == [], f"cellules de `LIGNES` différentes de la table de {chemin} : {differentes}"
+E       AssertionError: cellules de `LIGNES` différentes de la table de /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/P4-instrument-v1-brouillon4.md : [('L1', 'issue'), ('L4', 'issue'), ('L4', 'lecture')]
+E       assert [('L1', 'issu...', 'lecture')] == []
+E         
+E         Left contains 3 more items, first extra item: ('L1', 'issue')
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/test_lecture_p4_v1.py:820: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/test_lecture_p4_v1.py::test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg
+1 failed in 4.73s
+code 1
+=== cas fichier-absent
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg _______
+P4_TEXTE_PREREG=/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/n-existe-pas.md : fichier absent sur disque (R11)
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-module-v2-fidelite/travail/v2/test_lecture_p4_v1.py::test_lignes_egales_a_la_table_du_texte_nomme_par_p4_texte_prereg
+1 failed in 4.69s
+code 1

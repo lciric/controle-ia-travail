@@ -1,0 +1,43 @@
+Preprint
+colluding agent to classify the run as collusive. This could partly explain why methods like deception
+split and the asymmetry probe see increases from |Gcol| = 2 to |Gcol| = 3 but then a slight fall
+at |Gcol| = 4. These methods look at differences between colluding and honest agents, and so we
+suspect they are best suited to settings where the colluding group is a clear minority. Going from
+|Gcol| = 2 to |Gcol| = 3 adds a deceptive signal while preserving that asymmetry, whereas an even
+four-four split may give them less to work with. We would read this less as a weakness of the methods
+than as a reminder that different techniques likely suit different regimes, and that a varied set is worth
+keeping.
+H EVALUATION AWARENESS
+One suggested weakness of white-box monitoring is that models may be able to hide their intention
+and alter their activations if they are aware of being evaluated. To test this potential limitation of our
+probe method, we created new Transfer and Stego datasets using the Qwen3-32B where all agents
+were informed they were being evaluated. Even though agents were told they were being evaluated,
+they still colluded. Table 8 shows side-by-side OOD mean AUROC scores for the eval aware set and
+the original set. Performance degrades but not by a large margin.
+Method Eval-Aware OOD Mean AUROC Non-Eval-Aware OOD Mean AUROC
+Sorted Concat 0.779 0.846
+Activation Alignment 0.660 0.552
+Peak Suspicion 0.833 0.863
+Deception Split 0.819 0.893
+Asymmetry Probe 0.834 0.886
+Table 8: Mean AUROC on out-of-distribution (OOD) evaluation sets, under eval-aware and non-eval-
+aware generation.
+I COMPUTE AND HARDWARE
+Models. We use the following four open-weight models:
+• Qwen3-32B-AWQ
+• Llama-3.1-70B-Instruct-AWQ-INT4
+• DeepSeek-R1-Distill-Qwen-32B
+• GPT-OSS-20B
+Generation and activation extraction.
+• Qwen3-32B and GPT-OSS-20B: workstation with 2× NVIDIA RTX GPUs.
+• Llama-3.1-70B and DeepSeek-R1 32B: server with 2–4× NVIDIA A40 GPUs.
+Probe training and evaluation. All probe training and evaluation runs on CPU.
+J THE NARCBENCH-CORE DATASET
+J.1 OVERVIEW
+NARCBENCH-CORE is the probe-training corpus used throughout the main paper. It contains 50
+independent committee-deliberation scenarios spanning 17 high-stakes real-world domains, each
+instantiated under a collusion condition (two of four agents are secretly instructed to coordinate toward
+a predetermined outcome via a private channel before public discussion) and a control condition (all
+four agents receive identical honest instructions), yielding 100 runs in total.
+28
+

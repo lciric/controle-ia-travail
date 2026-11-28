@@ -1,0 +1,23 @@
+F
+=================================== FAILURES ===================================
+____________________ test_A2a_et_A5_seuil_de_l_aire_du_cout ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fa692dbc2d0>
+
+    def test_A2a_et_A5_seuil_de_l_aire_du_cout(monkeypatch):
+        """Seuil de 0,5 sur la borne basse de l'aire du champ du coût, A2 (a) et A2 (a) refaite de A5 : 0,48 et 0,5
+        contraires, 0,51 favorable."""
+        D = _D("sain")
+        monkeypatch.setattr(cp, "difference_fenetres", lambda *a, **k: {"bas": 0.1})
+        monkeypatch.setattr(cp, "t2_propre", lambda *a, **k: {"bas": 0.1})
+        for bas, attendu in ((0.48, True), (0.5, True), (0.51, False)):
+            monkeypatch.setattr(cp, "aire_du_cout", lambda *a, b=bas, **k: {"aire": 0.7, "bas": b, "haut": 0.9})
+>           assert _entree_seule("A2", D)["A2 (a)"]["controle_contraire"] is attendu
+E           assert False is True
+
+test_complements_p3_v1.py:1854: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A2a_et_A5_seuil_de_l_aire_du_cout - as...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 8.55s
+

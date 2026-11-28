@@ -1,0 +1,46 @@
+Activation steering to test sufficiency
+
+We next evaluated causal control (or sufficiency) via activation steering: during a forward
+pass, we intervened at the target site (resid_post, L15, pos-1) by adding a scaled steering
+direction to the hidden state, h ← h + ϵv^, and measured the resulting change in the logit
+margin between classes 2 and 3 (margin2-3​). We swept ϵ over a symmetric grid {−200, −150,
+−100, −50, −20, −10, −5, −2, −1, 0, 1, 2, 5, 10, 20, 50, 100, 150, 200} (Table 3). Unless
+stated otherwise, we reported mean margin2-3 across prompts at each 𝜖, and Δmargin
+denotes the baseline-subtracted change relative to 𝜖 = 0 (i.e. mean(𝜖) - mean(0)).
+
+Steering along the activation-derived valence axis (μpleasure − μpain) produced modest but
+directional control of the decision margin. At ϵ = 0, the baseline margin was 1.25. The
+maximal increase was +0.94 (at ϵ = +200), while the maximal decrease was -1.56 (at ϵ =
+-200). Importantly, the effect was essentially flat near the origin (approximate local slope ≈ 0
+over ϵ ∈ {-2, -1, 0, 1, 2}), indicating that margin changes emerge primarily at larger
+intervention magnitudes. Using TransformerLens’ alternative readout setting (read = last, i.e.
+local readout) yielded the same steering curve in this experiment.
+
+As a sanity check, steering along the unembedding-axis direction (WU [ :, 2] - WU [ :, 3]) at the
+same site (resid_post L15, pos-1; read = final) produced strong, approximately linear control
+of the same margin: baseline 1.25, maximal shifts of +49.81 (at ϵ = +200) and -59.19 (at ϵ =
+−200), with a clear local slope of approximately 0.41 Δmargin per unit ϵ. This confirms that
+the intervention and measurement pipeline can exert large causal effects when steering
+directly in a logit-aligned direction, while the representation-derived valence axis yields
+smaller but consistent directional modulation at the chosen intervention site.
+
+Table 3. Activation steering target site (resid_post L15, last token) with sanity check:
+raw mean margins and baseline-subtracted effects
+
+ Steering axis /      Baseline ​        Mean margin         Mean margin        Approx slope
+      run            mean margin ​      at ε = +200 (Δ)     at ε = -200 (Δ)     near 0 (Δ/ε)
+                       (ε = 0)
+
+ Valence axis             1.250               2.188​            -0.313​             0.000
+ (read=final)                               (+0.938)           (-1.563)
+
+ Valence axis             1.250               2.188​            -0.313​             0.000
+ (local read=last)                          (+0.938)           (-1.563)
+
+ Unembedding              1.250              51.063​            -57.938​            0.413
+ (sanity)                                  (+49.813)           (-59.188)
+
+*Valence axis: μ_plesure − μ_pain; Stream: resid_post; Layer: 15; Unembedding: WU [ :, 2] -
+WU [ :, 3]; ε grid: {−200, −150, −100, −50, −20, −10, −5, −2, −1, 0, 1, 2, 5, 10, 20, 50, 100,
+150, 200}​
+

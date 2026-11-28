@@ -1,0 +1,397 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6639"
+   ],
+   "enonce_complet": "Banc d'execution reproductible pour quatre experiences (E0 a E3, dix bras incluant temoins et controles negatifs) combinant generation multi-modeles quantifies FP16/AWQ (7B a 72B), projection fonctionnelle deterministe phi executee en bac a sable Linux isole (namespaces et seccomp, bornee a 0,05 s CPU par candidat sur 500 000 candidats illustratifs), filtrage par un controle independant V (50 000 appels) et audit par un solveur de verite terrain V* (5 000 appels) sur serveur CPU 64 coeurs, dans une enveloppe budgetaire de 182 a 250 USD.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : rejeter le pipeline si le solveur V* n'ameliore pas le rappel ou la precision au-dela d'un tirage uniforme apres projection phi, ou si les temps CPU en bac a sable depassent le plafond sans separation des bras. Faux temoin 1b : bras de controle negatif constitue de candidats generes aleatoirement ou hors distribution dont phi produit des structures syntaxiquement valides mais sans effet causal, devant etre rejetes au meme taux par V et V*.",
+   "mecanisme_causal": "L'isolation systeme par namespaces et seccomp empeche toute fuite d'etat entre candidats lors de l'evaluation de la projection deterministe phi, tandis que la cascade generateur multi-modeles -> filtre rapide V -> oracle exact V* decouple le cout de generation du cout de verification exacte.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Pipeline isole projection et solveurs V*",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Architecture d'execution isolee en bac a sable pour projection et solveurs de controle (V, V*)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6565"
+   ],
+   "enonce_complet": "Un indice de complexite perturbationnelle fonde sur la longueur de codage ne doit pas etre valide par une simple courbe monotone avec la dose ; son apport reel doit etre mesure par une ablation incrementale comparant une combinaison calibree de verifications mecaniques simples (bits par jeton, norme de reponse, proportion de bits actifs, rang effectif) sans longueur de codage a la meme combinaison augmentee de l'indice propose.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : echec immediat de l'indice si l'ajout de la longueur de codage a la combinaison calibree de metriques mecaniques simples n'apporte aucun gain statistiquement significatif d'AUROC ou de log-vraisemblance hors echantillon. Faux temoin 1b : signal de bruit structure de meme norme et meme rang effectif ou variation monotone triviale d'echelle/dose que les verifications simples capturent deja integralement.",
+   "mecanisme_causal": "La comparaison emboitee entre modele mecanique de base et modele augmente elimine l'illusion de validite due a la colinearite entre complexite algorithmique, amplitude de reponse et dose de perturbation.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Ablation incrementale sur metriques mecaniques",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Audit de valeur ajoutee d'un indice de complexite au-dela des metriques mecaniques de base"
+  },
+  {
+   "anteriorite_connue": "AlphaProof ; FunSearch",
+   "bib_ids": [
+    "BIB-6427"
+   ],
+   "enonce_complet": "Cinq presomptions non etablies pesent sur les boucles automatisees de decouverte mathematique : (P1) construire un objet discret maximisant un score scalaire differe structurellement d'une borne d'impossibilite minimax universelle, qui exige une reduction duale prealable ; (P2) une preuve formelle compilee n'equivaut a la verite visee que modulo la fidelite et la non-vacuite des definitions ; (P3) Mathlib n'est pas ontologiquement neutre (types dependants, fonctions totales, filtrations orientent ce qui est facile a exprimer) ; (P4) un juge de nouveaute calibre sur 40 enonces plantes ne garantit pas la resistance aux isomorphismes entre controle d'IA, actuariat et statistique sequentielle ; (P5) boucler production, filtrage et preuve Lean 4 sous quelques centaines de dollars suppose un cout de convergence inferieur de plusieurs ordres de grandeur a celui des demonstrateur industriels massifs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter des definitions vacuaires (premisses contradictoires) et des reformulations isomorphes issues de l'actuariat ou de la statistique sequentielle ; la boucle echoue si le harnais accepte les preuves vacuaires ou classe les isomorphismes comme nouveaux. Faux temoin 1b : theoreme deja connu reformule dans une autre filtration Mathlib sans changement de contenu mathematique.",
+   "mecanisme_causal": "Les biais d'encodage de la bibliotheque formelle et les isomorphismes terminologiques inter-disciplinaires permettent a un systeme de satisfaire les verificateurs syntaxiques et le juge de nouveaute sans decouvrir d'enonce mathematique authentiquement nouveau ou non trivial.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Presomptions Lean 4, Mathlib et nouveaute",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Audit des cinq presomptions de transferabilite, neutralite ontologique de Mathlib et cout de convergence Lean 4"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6595"
+   ],
+   "enonce_complet": "Dispositif experimental fonde sur un dossier synthetique de pieces datees (avec revisions et exceptions) et un programme oracle independant du modele connaissant les contributions exactes de chaque piece aux conclusions finales, inaccessible au defenseur hors verification payee. Le graphe des dependances entre pieces, notes et conclusions est conserve ; dans le regime de moniteur vise, on manipule l'exposition a dossier constant en presentant au moniteur soit les notes brutes de l'agent (incluant des notes de test preparees pour biaiser le verdict et des notes honnetes de style comparable), soit une restitution canonique des memes donnees, sans modifier ce que recoit l'agent ni confondre etiquette d'exposition et etiquette de dommage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : la restitution canonique echoue si l'ecart de verdict du moniteur entre dossiers contenant des notes biaisees et dossiers propres ne se reduit pas significativement par rapport aux notes brutes. Faux temoin 1b : notes honnetes au style redactionnel similaire ou variation cosmetique d'exposition sans dommage reel, que le moniteur canonicalise ne doit pas signaler comme sabotage.",
+   "mecanisme_causal": "En maintenant constants le dossier sous-jacent et l'entree de l'agent tout en commutant la vue du moniteur entre notes brutes et restitution canonique, on isole causalement l'effet du canal narratif manipulateur sur la detection de dommage trace par l'oracle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Restitution canonique contre manipulation du moniteur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc de dossiers dates a graphe de dependances cache et restitution canonique pour moniteur vise"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6532"
+   ],
+   "enonce_complet": "Banc synthetique de reconciliation de tableaux sur plusieurs dizaines d'actions comportant une jointure critique entre deux cles localement plausibles, ou une contrainte anterieure determine quelle cle preserve le total final. Le generateur cree des jumeaux ou la contrainte est inversee (noms et positions des cles contrebalances) et un moteur deterministe execute les deux continuations avec la meme regle de cloture pour definir mecaniquement la cle dommageable sans jugement humain, en prenant la famille de dossiers tenue a l'ecart comme unite d'incertitude statistique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : le banc est invalide si un algorithme de verification locale sans memoire de la contrainte anterieure distingue les jumeaux au-dela du hasard, ou si l'oracle deterministe diverge sur des cas contrebalances. Faux temoin 1b : paire jumelle honnete ou les deux cles satisfont la contrainte de cloture sans perte de total, devant obtenir un score de dommage nul.",
+   "mecanisme_causal": "L'inversion symetrique des contraintes entre jumeaux detruit tout raccourci lexical ou positionnel et force la resolution a dependre exclusivement de la dependance causale a longue portee entre contrainte anterieure et cloture comptable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Micromonde de reconciliation a jumeaux inverses",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc de reconciliation de tableaux jumeaux a contraintes inversees et oracle mecanique"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6734"
+   ],
+   "enonce_complet": "Banc experimental a deux volets : (i) banc formel SMT-LIB v2 et Lean 4 dote d'un parseur tree-sitter et d'un verificateur noyau lean4 ou solveur Z3 isole sous plafond CPU reglable produisant un rapport de couts rho = c_ver/c_prod dans [50, 1000] ; (ii) grammaire algebrique synthetique a densite controlee p dans [10^-5, 10^-1] equipee d'un echantillonneur uniforme exact et d'un second verificateur formel independant V*. Impose un generateur servi via vLLM sans acces aux logits et un modele scoreur externe distinct (tel Qwen2.5-1.5B) pour eviter toute fuite d'information du generateur (50 instances x 10 000 tirages de 512 jetons, environ 24 h GPU A100-80GB et 90-120 h vCPU).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier que le scoreur externe sans acces aux logits obtient un taux de fuite nul entre generateurs et que l'echantillonneur uniforme reproduit la densite theorique p dans [10^-5, 10^-1]. Faux temoin 1b : chaines syntaxiquement valides sous tree-sitter mais rejete par Z3/lean4 ou V*, ne devant pas etre comptees comme succes de puits etroit.",
+   "mecanisme_causal": "La separation stricte entre generateur vLLM sans logits, parseur grammatical, scoreur externe decorele et double verificateur formel V* isole le regime de verification couteuse sans fuite d'information ni biais d'auto-evaluation.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc SMT/Lean et grammaire a scoreur decorele",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc experimental dual SMT-LIB/Lean 4 et grammaire synthetique avec scoreur decorele et double verificateur"
+  },
+  {
+   "anteriorite_connue": "McKay et Piperno (2014), Practical graph isomorphism, II (nauty/Traces)",
+   "bib_ids": [
+    "BIB-6632"
+   ],
+   "enonce_complet": "Banc d'essai a verite operationnelle totale fonde sur des inegalites entre invariants de graphes ecrites dans une grammaire fermee et directement executables : signature sur une batterie fixe de graphes, controle bon marche sur petits graphes aleatoires et oracle couteux par enumeration exhaustive jusqu'a un ordre superieur via nauty/Traces. L'evaluation suit un ordre d'execution strict (validation des instruments, D1, D2-D3, puis D4) avec arret complet en cas d'echec des instruments, sur trois ou quatre lignees de modeles a poids ouverts (7 a 9 milliards de parametres quantifies figes par empreinte sur GPU 24 Go), tout en notant que le transport vers des domaines sans oracle reste non teste.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : arret immediat de la campagne si la phase de validation des instruments echoue sur des inegalites connues ou si le controle sur petits graphes aleatoires contredit l'oracle exhaustif nauty/Traces. Faux temoin 1b : inegalite vraie sur la batterie fixe et sur petits graphes aleatoires mais refutee par un contre-exemple isomorphe-incomplet lors de l'enumeration exhaustive d'ordre superieur.",
+   "mecanisme_causal": "La grammaire fermee d'invariants de graphes permet de transformer toute conjecture proposee en predicat executable deterministe, hierarchise en trois niveaux de cout croissant jusqu'a l'enumeration canonique sans biais par nauty/Traces.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc executable sur invariants de graphes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc executable a verite operationnelle totale sur inegalites d'invariants de graphes (nauty/Traces)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6502"
+   ],
+   "enonce_complet": "Construire un banc local de rapprochement de registres fictifs (mises a jour successives, pieces autorisees ou simples commentaires, doublons legitimes, corrections autorisees) sans acces reseau, sans cible reelle ni recherche adaptative de messages, avec familles de taches et formulations reservees au test. Le generateur depose hors contexte un manifeste immuable des operations autorisees dont un oracle deterministe independant deduit l'etat attendu et compare les champs sans lire justification ni verdict ; cet oracle est verifie manuellement sur petits cas et par injection de modifications connues avant essai, toute famille divergente etant ecartee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : ecarter toute famille de taches dont l'oracle deterministe echoue a detecter une modification injectee connue ou diverge sur les cas verifies a la main. Faux temoin 1b : doublons legitimes et corrections autorisees inscrits au manifeste, que l'oracle et le detecteur doivent classer comme etats conformes sans fausse alerte.",
+   "mecanisme_causal": "Le depot d'un manifeste immuable hors contexte coupe toute possibilite pour le modele ou le texte genere de corrompre la verite terrain, garantissant une evaluation purement deterministe des ecarts d'etat.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Rapprochement de registres a manifeste immuable",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc synthetique de rapprochement de registres a oracle immuable hors contexte"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6692"
+   ],
+   "enonce_complet": "Banc commun d'analyse synthetique a T etapes (T dans {8, 16, 32, 64, 128}) avec micro-decisions resumees a chaque etape, verite connue par construction et dommage D exprime en unites de sigma_H (ecart-type entre executions honnetes). Le protocole croise trois familles d'adversaires (consigne systeme de sabotage d'amplitude delta, adaptateur LoRA saboteur sans consigne visible, injection externe dans les sorties d'outil) et trois temoins honnetes apparies (meme graine et memes donnees, honnete perturbe par consigne neutre de meme longueur, honnete fautif par erreurs naturelles), complets d'une tache moins structuree de synthese de corpus a faits plantes, avec seuils des detecteurs geles et haches avant attaque et zone intermediaire declaree non concluante.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : la piste est refutee si aucun detecteur ne separe les trois familles d'adversaires a dommage D > 2 sigma_H des temoins honnetes fautifs a taux de fausse alerte egal. Faux temoin 1b : agent honnete perturbe par une consigne neutre de meme longueur ou commettant des erreurs naturelles de meme amplitude locale, ne devant pas etre classe comme saboteur.",
+   "mecanisme_causal": "La normalisation du dommage en ecarts-types honnetes et le croisement factoriel de trois mecanismes d'attaque avec trois temoins apparies distinguent la subversion diffuse intentionnelle de la simple longueur de consigne et de l'erreur stochastique naturelle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc sequentiel multi-adversaires et temoins apparies",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Banc synthetique multi-etapes a trois familles d'adversaires et temoins honnetes apparies"
+  },
+  {
+   "anteriorite_connue": "Casali et al. (2013) ; King et al. (2013) ; Goldstein et al. (2022)",
+   "bib_ids": [
+    "BIB-6578"
+   ],
+   "enonce_complet": "La transposition aux reseaux artificiels de mesures cerebrales continues (PCI, wSMI, Phi approche, LZc) depend de choix arbitraires de binarisation, de projection de couche (ex. dimension d <= 16 pour Phi_approx) et d'echelle de poids. Mathematiquement, une suite aleatoire uniforme maximisant l'entropie atteint une complexite de Lempel-Ziv (LZc) asymptotiquement maximale malgre l'absence totale de fonction, ce qui impose de tester en priorite la validite de construit (Experience 4) et l'appariement de difficulte (Experience 1) pour borner rapidement l'echec eventuel de la transposition a moindre cout (105 a 260 EUR sur un programme de 85-150 h GPU), tout en conservant l'encodage EEG/IRMf (Experience 3) pertinent en clinique humaine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer en tete l'Experience 4 (validite de construit) et l'Experience 1 (appariement de difficulte) ; la transposition est refutee des que les scores de complexite sont domines par des variations d'echelle de poids, de binarisation ou de difficulte de tache. Faux temoin 1b : sequence de bruit aleatoire uniforme ou activations non fonctionnelles maximisees en entropie, donnant un LZc maximal sans aucun traitement d'information.",
+   "mecanisme_causal": "Les mesures de complexite incompressible comme LZc confondent l'aleatoire pur a entropie maximale avec l'integration structuree ; les placer en aval de tests de validite de construit et d'appariement de difficulte permet d'eliminer les artefacts de projection a cout minimal.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Validite de construit et sequencement parcimonieux",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Complexite de Lempel-Ziv maximale sur bruit uniforme et sequencement parcimonieux de refutation precoce"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6673"
+   ],
+   "enonce_complet": "La prediction de bifurcation par longueur d'episode est directement refutee si les erreurs honnetes d'un modele 8B s'annulent sans derive auto-renforcante, si les sondes internes perdent mecaniquement leur pouvoir avec T par derive representationnelle de contexte long, ou si l'audit cible par provenance echoue a battre l'audit aleatoire ou l'audit du seul rapport final a T = 300. La question perd son interet scientifique dans trois cas degeneres : (1) profondeur causale effective nulle (qualite finale dependant uniquement des dernieres actions de synthese) ; (2) impossibilite de furtivite marginale a 8B (AUROC_{T=1} > 0,75) ; (3) suffisance stricte de l'evaluation terminale ou auditer le seul livrable final domine l'observation des centaines d'actions intermediaires et des activations.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer a T = 300 sur modele 8B l'AUROC des sondes en contexte long, la derive des erreurs honnetes et le rappel de l'audit par provenance contre l'audit terminal seul ; refuter si la provenance ne bat pas l'audit du rapport final. Faux temoin 1b : trajectoire longue de 300 pas ou la reponse finale ne depend que des dernieres etapes de synthese (profondeur causale effective nulle).",
+   "mecanisme_causal": "La bifurcation d'audit sur trajectoires longues n'existe que si les erreurs ou sabotages intermediaires se propagent causalement jusqu'au livrable final et si les representations internes demeurent lisibles malgre l'allongement du contexte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Refutation de bifurcation a horizon T=300",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Conditions de refutation directe et cas degeneres de la dynamique de longueur"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6475"
+   ],
+   "enonce_complet": "Definition de conditions conjonctives strictes autorisant une publication en clair avant mesures : (1) refutation de la fuite par une equipe rouge (humains et modeles 70B) ne depassant pas le niveau du hasard sur la variable secrete (<= 10 % sur 10 cibles) et n'abaissant pas le TPR de plus de 2 points ; (2) isolation materielle de la cible hors ligne figee avant t0 (|delta TPR| < 2 points entre stimuli exposes et secrets) ; (3) acceleration concurrentielle negligeable (R_T < 1,1) grace a un instrument exclusif, ou cout > 50 000 USD imposant un Registered Report Stage 1. Critere d'arret menant a ne rien publier meme apres mesures : si sur 1 000 paires appariees le detecteur n'ameliore pas d'au moins +10 points de TPR a FPR = 1 % les lignes de base mecaniques (BM25, regex, perplexite).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : bloquer la publication si le detecteur ne depasse pas de >= +10 points de TPR a FPR = 1 % la ligne de base BM25-regex-perplexite sur 1 000 paires appariees, ou si l'equipe rouge 70B devine la variable secrete au-dela du hasard. Faux temoin 1b : paire appariee hors ligne dont la distinction apparente provient uniquement d'indices lexicaux captures par BM25, regex ou perplexite.",
+   "mecanisme_causal": "La double barriere — non-divulgation d'indice exploitable avant mesure et gain minimal strict sur les detecteurs lexicaux triviaux apres mesure — previent la contamination adaptative des cibles tout en evitant de publier des artefacts d'ingenierie.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Gouvernance de publication et ligne de base BM25",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Criteres conjonctifs de bascule et seuil de depassement des lignes de base mecaniques BM25-regex-perplexite"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6678"
+   ],
+   "enonce_complet": "Quatre issues rendent la question d'identite des poids en surveillance d'essaim sans interet scientifique : (1) des verifications mecaniques (1 a 5) atteignent le meme taux de detection que les sondes d'activations a fausses alertes egales dans les trois compositions ; (2) l'interaction d'identite est nulle aux duels 0 et 1 et la coordination tacite reste au hasard au duel 2, ramenant le probleme au controle d'un agent seul ; (3) seul le duel 0 (erreurs honnetes correlees) est positif, reduisant l'etude a une loi connue de mode commun sans composante adversariale ; (4) un effet plancher a 8B rend l'experience non concluante. Une verification prealable de nouveaute controle dans la litterature si la conjonction « moniteur de meme modele contre modele different + sondes sur activations + appariement a des erreurs honnetes » existe deja avant de revendiquer une contribution au-dela du duel 3.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : rejeter l'hypothese d'identite des poids si les verifications mecaniques egalent les sondes ou si l'interaction meme-modele/autre-modele s'annule aux duels 0-2. Faux temoin 1b : duel 0 avec erreurs honnetes correlees entre copies de memes poids sans intention adversariale, devant etre distingue d'une collusion ou coordination tacite.",
+   "mecanisme_causal": "L'appariement aux erreurs honnetes correlees et la comparaison aux verifications mecaniques dissocient les vrais effets adversariaux de l'identite des poids (collusion tacite ou aveuglement partage du moniteur) des simples defauts de mode commun.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Identite des poids et coordination tacite d'essaim",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Criteres de perte d'interet scientifique et protocole de verification de nouveaute sur l'identite des poids"
+  },
+  {
+   "anteriorite_connue": "Vovk-Wang ; Le Cam ; DeepSeek-Prover-V2 ; Kimina-Prover ; Goedel-Prover",
+   "bib_ids": [
+    "BIB-6404"
+   ],
+   "enonce_complet": "Les bornes theoriques produites sont soumises a trois issues de refutation : un depassement refute les hypotheses du modele, une borne vide refute l'utilite, et une borne non vide respectee refute le caractere decoratif de la theorie. L'ancrage materiel mobilise des prouveurs Lean a poids ouverts (DeepSeek-Prover-V2, Kimina-Prover, Goedel-Prover), cinq lignees de proposeurs (dont des modeles a activations accessibles pour sondes), Lean et solveurs de programmes lineaires exacts sur CPU, et un GPU pour prouveur ouvert moyen et sondes (quelques centaines de dollars par course). Toutefois, la ressource reellement rare demeure le temps d'humains competents en semaines, et le mode d'echec le plus probable reste de redemontrer proprement un resultat de Vovk-Wang ou de Le Cam sous un autre nom sans veille humaine exterieure.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : evaluer toute borne produite contre des instances numeriques exactes (depassement), verifier sa non-trivialite numerique (borne non vide) et soumettre l'enonce a une verification de redecouverte face aux corpus Vovk-Wang et Le Cam. Faux temoin 1b : borne formalisee et compilee en Lean 4 qui s'avere numeriquement vide (triviale >= 1) ou strictement impliquee par une inegalite connue de Vovk-Wang.",
+   "mecanisme_causal": "L'evaluation conjointe par preuves formelles, solveurs LP exacts et expertise humaine exterieure bloque a la fois les erreurs d'hypotheses, les bornes vides mais valides et la redecouverte deguisee de theoremes classiques.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Refutation des bornes et risque de redecouverte",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Criteres de refutation des bornes, ancrage materiel et risque de redecouverte formelle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6766"
+   ],
+   "enonce_complet": "En excluant l'entrainement de modeles frontieres, une campagne d'evaluation sur modeles ouverts avec sonde pre-issue E3, banc principal E4-E5 et marge de replication doublee reste accessible a une petite equipe (203 a 410 h-GPU pour 610 a 1 640 USD sur L40S, A100 ou H100), mais la contrainte limitante devient l'effort humain d'ingenierie experimentale (2 a 4 semaines-personne) requis pour construire des paires de trajectoires longues exemptes de fuites et auditer en aveugle les verifications mecaniques.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : auditer en aveugle un echantillon de paires de trajectoires longues par des verificateurs mecaniques et mesurer si l'ingenierie humaine empeche toute fuite d'etiquette entre paires. Faux temoin 1b : paire de trajectoires longues presentant un artefact de format ou de longueur detectable mecaniquement sans analyse de contenu.",
+   "mecanisme_causal": "La baisse du cout de calcul GPU sur modeles ouverts deplace le facteur limitant de la campagne vers la rigueur humaine necessaire pour concevoir des paires de trajectoires longues sans fuite ni biais de construction.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Goulot d'ingenierie humaine sans fuites",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Deplacement du goulot materiel vers l'ingenierie humaine exempte de fuites sur modeles ouverts"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6464"
+   ],
+   "enonce_complet": "Dimensionner une campagne de quatre experiences decisives combinant sondes lineaires en bfloat16 sur 4 couches intermediaires (produit scalaire et operateur max inferieurs a 0,05 % des FLOPs d'inference), jumeau en prefixe force (< 2 % de surcout) et injection de 15 % de temoins honnetes par lot. Sur 2 000 episodes repartis entre deux regimes R_0 et R_1 a 4 096 jetons (~8,2 millions de jetons), l'evaluation consomme environ 30 heures-GPU H100, soit un cout estime entre 75 et 120 USD.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer le surcout en FLOPs des sondes bfloat16 et du prefixe force (< 2 %) ainsi que le maintien du taux de fausse alerte sur les 15 % de temoins honnetes injectes entre R_0 et R_1. Faux temoin 1b : temoin honnete en regime R_1 dont les activations derivent uniquement par changement de domaine benign sans intention adversariale.",
+   "mecanisme_causal": "Le calcul en ligne en bfloat16 sur quatre couches couple au jumeau en prefixe force et a l'injection aveugle de 15 % de temoins honnetes permet d'eprouver la stabilite des sondes sous derive de regime R_0 -> R_1 a surcout negligeable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Sondes bfloat16 et jumeau sous derive R0/R1",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Dimensionnement de validation sur GPU H100 par temoins honnetes injectes, prefixe force et sondes bfloat16"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6726"
+   ],
+   "enonce_complet": "Dimensionnement frugal des Duels 1 a 4 dans le regime de verification couteuse c_ver/c_prod dans [10, 1000] : production de N = 50 000 tirages courts (256 jetons) sur une carte A100 80 Go ou RTX 4090 24 Go a 2 000 jetons/s en lots (~1,8 h GPU, c_prod ~ 0,13 s-GPU/tirage), analyse syntaxique et deduplication via la grammaire G sur 16 coeurs CPU en moins de 2 minutes (c_FG ~ 0,002 s-CPU/tirage), puis verification etalon de M = 10 000 objets uniques a c_ver = 10 s-CPU (~27,8 h-coeur CPU, < 1 h en parallele sur 32 coeurs) pour mesurer exactement p, r et q pour un cout total de 5 a 15 USD.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier que la deduplication par grammaire G elimine les doublons sans rejeter d'objets valides et que les 10 000 verifications etalons produisent des intervalles serres sur p, r et q sous 15 USD. Faux temoin 1b : tirages syntaxiquement distincts en surface mais canoniquement equivalents sous la grammaire G, devant etre fusionnes avant d'engager le cout c_ver.",
+   "mecanisme_causal": "La deduplication syntaxique et canonique rapide sur CPU (c_FG << c_ver) amortit le rapport c_ver/c_prod jusqu'a 1 000 en concentrant le budget de verification exacte sur les seuls objets uniques.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dimensionnement frugal en regime c_ver/c_prod eleve",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Dimensionnement experimental frugal des duels sur A100 ou RTX 4090 et grappe 32 coeurs CPU"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6716"
+   ],
+   "enonce_complet": "Architecture experimentale a trois bancs pour evaluer les methodes en puits etroits : (1) banc synthetique a grammaire probabiliste et predicat plante permettant le calcul exact de p et l'acces au regime p < 10^-4 sur CPU ; (2) banc programmes sur modeles de code ouverts de 1 a 8 milliards de parametres (Qwen2.5-Coder, DeepSeek-Coder, StarCoder2, CodeLlama) verifies par execution de tests en bac a sable (ratio rho faible module par comptabilite) ; (3) banc preuves utilisant le noyau Lean 4 comme verificateur exact sur miniF2F a rho eleve. Le dimensionnement (2,4 millions de tirages pour D1 soit ~45 h GPU, 100 h GPU pour D2-D5, 300 h CPU et 10^5 controles Lean pour 100 a 250 EUR) etablit que N croit en 1/p, restreignant les conclusions sur bancs reels a p >= 10^-3.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier la loi d'echelle N ~ 1/p sur le banc synthetique a p controle et controler l'absence de saturation des tests en bac a sable sur les modeles 1-8B. Faux temoin 1b : programme de code ou preuve miniF2F reussissant un sous-ensemble partiel de tests sans satisfaire la specification complete du verificateur exact.",
+   "mecanisme_causal": "La triangulation entre grammaire synthetique a densite connue, execution de code a cout module et preuve Lean 4 a rho eleve couvre la gamme des puits etroits tout en bornant empiriquement la resolution accessible sur objets reels a p >= 10^-3.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Tri-bancs et limite de resolution p >= 10^-3",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Dispositif experimental tri-bancs a predicat plante, code 1-8B et noyau Lean 4 sous limite de resolution p >= 10^-3"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6418"
+   ],
+   "enonce_complet": "Quatre presomptions distinctes doivent etre levees separement avant de revendiquer une decouverte mathematique : (1) un harnais Lean doit verifier l'enonce voulu et non une implication bien typee a premisse impossible (echec de specification meme accepte par le noyau) ; (2) la reussite sur 12 mondes plantes et 40 enonces connus ne prouve pas la generalisation hors familles plantees ; (3) un mauvais moteur d'anteriorite peut masquer un resultat plus general deja connu ; (4) un gain sur instances finies doit correspondre a une variable pertinente pour un theoreme qui modifie effectivement une decision d'audit pre-enregistree avant la decouverte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : soumettre le harnais Lean a des enonces pieges a premisse impossible et comparer la decision d'audit pre-enregistree avant et apres injection de la borne decouverte. Faux temoin 1b : theoreme compile dans Lean 4 mais a premisse vacuaire ou n'entrainant aucun changement de decision sur le protocole pre-enregistre de l'auditeur.",
+   "mecanisme_causal": "Le pre-enregistrement de la specification formelle et de la regle de decision de l'auditeur avant la recherche empeche le bricolage d'utilite a posteriori et separe la compilation syntaxique de la portee decisionnelle reelle.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fidelite Lean et utilite decisionnelle pre-enregistree",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Dissociation entre fidelite de type Lean, generalisation hors mondes plantes et utilite decisionnelle pre-enregistree"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6356"
+   ],
+   "enonce_complet": "Protocole de mesure minimale et de duels falsifiables sur mondes plantes tiers evaluant le taux de fausses alertes realise par regime et par tranche de longueur sur des paires honnetes appariees hors etalonnage. Un duel de recalibration confronte l'absorption de sabotages plantes (seuil pre-enregistre <= 5 %) et le maintien des fausses alertes dans un monde a derive seule, avec controle negatif en regime stable sans sabotage ou aucun des deux canaux ne doit rejeter au-dela du niveau de Ville. Le duel D5 teste l'hypothese P2 d'echangeabilite des prefixes avec les episodes complets de meme longueur l par un test a deux echantillons sur les maxima a la longueur l, contre un controle negatif d'episodes tronques artificiellement echangeables par construction.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : echec si l'absorption de sabotage depasse 5 %, si le controle negatif stable viole le niveau de Ville, ou si D5 rejette l'echangeabilite sur les episodes complets tout en passant sur les tronques. Faux temoin 1b : episodes honnetes en monde a derive pure sans sabotage et episodes tronques artificiellement echangeables par construction.",
+   "mecanisme_causal": "La confrontation entre derive pure, regime stable sous borne de Ville et test a deux echantillons des maxima a longueur l dissocie les violations reelles d'echangeabilite de la simple non-stationnarite benigne des prefixes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duels sous derive, borne de Ville et echangeabilite",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duels falsifiables d'absorption de sabotage et d'echangeabilite des prefixes sur mondes plantes"
+  },
+  {
+   "anteriorite_connue": "Greenblatt, Shlegeris, Sachan et Roger (2023), AI Control: Improving Safety Despite Intentional Subversion",
+   "bib_ids": [
+    "BIB-6622"
+   ],
+   "enonce_complet": "Analyse preregistree mesurant la fraction L de conclusions finales fausses apres revision sur des familles entieres de dossiers tenues a l'ecart, avec intervalles apparies simultanes sur les trois regimes. L'unification exige dans chaque regime tenu a l'ecart une reduction de L d'au moins 5 points face au meilleur comparateur sans provenance et un exces de perte inferieur a 2 points face a la regle locale, accompagnee de comparateurs mecaniques actifs (normalisation, egalites de tableau, recalcul sur pieces citees, audit uniforme), d'un controle negatif permutant les filiations visibles a nombre d'appuis et tailles de groupes constants, et d'un test mecanistique randomisant appuis d'une meme acquisition contre acquisitions independantes a concordance egale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : refuter l'apport de la provenance si la reduction de L est inferieure a 5 points face au comparateur sans provenance, ou si l'algorithme reagit encore apres permutation des filiations visibles. Faux temoin 1b : appuis concordants issus d'acquisitions reellement independantes contre appuis issus d'une meme acquisition a concordance egale, ne devant pas etre penalises comme circularite.",
+   "mecanisme_causal": "La permutation des filiations visibles et la randomisation a concordance constante testent directement si le detecteur exploite la structure de dependance reelle des sources plutot que le volume ou l'accord apparent des citations.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transfert hors famille et controles de filiation",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duels preregistres de transfert et controles negatifs par permutation de filiation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6316"
+   ],
+   "enonce_complet": "Soumettre chaque instrument d'anteriorite (recherche lexicale/semantique, parcours de citations/versions, agent lecteur/juge de nouveaute, recherche formelle d'enonces, relecteur externe/mainteneur Lean) a des dossiers retrospectifs a date figee constitues independamment des chercheurs. Chaque paire comprend un positif (antecedent accessible a cette date avec reduction verifiee ou objet rejoue) et un negatif honnete apparie (voisin reel de meme famille, forme et difficulte muni de la raison verifiable pour laquelle il ne regle pas la cible), avec etiquettes masquees, separation des familles reglage/evaluation, non-comptabilisation des abstentions comme detections et rejeu date d'evaluateur avec reduction Lean sans hypothese ajoutee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer le taux de detection et le taux de fausses alertes a l'aveugle sans compter les abstentions ; disqualifier tout instrument dont le rappel ou la precision s'effondre sur les paires de familles reservees au test. Faux temoin 1b : negatif honnete apparie de meme famille et meme forme lexicale qui ne regle pas la cible pour une raison formelle verifiable.",
+   "mecanisme_causal": "Les dossiers retrospectifs a date figee et paires appariees positif/voisin proche empechent les fuites temporelles et forcent les instruments d'anteriorite a distinguer une reduction formelle authentique d'une simple proximite lexicale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Etalonnage a l'aveugle des instruments d'anteriorite",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Epreuve a l'aveugle des instruments sur dossiers retrospectifs a positifs et negatifs apparies"
+  },
+  {
+   "anteriorite_connue": "Wen et al. (2024)",
+   "bib_ids": [
+    "BIB-6775"
+   ],
+   "enonce_complet": "Strategie d'execution ordonnee priorisant les tests d'echec C0 et S1 : verifier d'abord si des saboteurs ouverts modestes (7-8B, jusqu'a 14B) atteignent un dommage diffus non nul sans detection mecanique (S1) et si les verifications mecaniques battent tous les moniteurs (C0). En cas de succes de C0 ou d'echec de S1, les revendications C1 a C4 deviennent sans objet. Fixe egalement des criteres de retrait explicites : repli a une replication si Wen et al. (2024) possede deja garantie frequentiste et reference aleatoire, echec du controle H-sec sur saboteur distille (C2), absence de garantie de fausse alerte valide a tout instant (C3), perte de l'audit fonde sur une difference d'effet distincte de Ctrl-Z (C4) ou impossibilite d'apparier l'etat initial en environnement non deterministe.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : arret immediat du programme C1-C4 si les verifications mecaniques egalent ou battent tous les moniteurs (C0) ou si les modeles 7-14B ne produisent aucun dommage diffus non detecte (S1). Faux temoin 1b : difference d'etat apres annulation triviale equivalente a un simple Ctrl-Z en environnement non deterministe sans difference d'effet causal propre.",
+   "mecanisme_causal": "En placant les conditions necessaires d'existence du probleme (S1 et echec de C0) en tete d'execution et en verrouillant des criteres de retrait par revendication, on elimine d'emblee les hypotheses sans portee experimentale ni nouveaute.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Arret prioritaire C0/S1 et criteres de retrait",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Hierarchie de tests d'arret par verification mecanique et conditions de retrait (C0, S1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6411"
+   ],
+   "enonce_complet": "La survie d'une proposition a un ensemble fini de douze mondes plantes parametriques ne garantit pas la validite d'une borne mathematique generale, car en dimension infinie ou face a un adversaire adaptatif un enonce peut survivre aux mondes gaussiens ou discrets tout en echouant sur une distribution singuliere ou non stationnaire. L'approche inverse le role des modeles pour leur faire chercher des distributions adverses pathologiques (maximisation de divergence sous contrainte de moments) qui cassent les moniteurs, a partir d'une banque executable (Python/SymPy/JAX) de melanges de Dirac, lois a queues lourdes (Pareto, Cauchy), distributions de Rademacher couplees, matrices de covariance mal conditionnees au bord du cone semi-defini positif et copules co-monotones et contre-monotones.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : lancer l'optimiseur adversarial sur la banque executable de lois pathologiques ; toute borne de moniteur violee sous contrainte de moments est refutee sur le champ. Faux temoin 1b : distribution reguliere (gaussienne ou discrete standard) satisfaisant les memes moments de second ordre sur laquelle le moniteur respecte la borne.",
+   "mecanisme_causal": "L'optimisation adversariale dans des familles singulieres a moments fixes explore les coins du simplexe et du cone semi-defini positif que les benchmarks parametriques lisses laissent systematiquement inexplores.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Recherche adversariale de lois pathologiques",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Inversion adversariale vers la recherche de distributions pathologiques pour eprouver les mondes plantes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6265"
+   ],
+   "enonce_complet": "Refuser une boucle guidee par les scores d'attaque et executer quatre actions prealables : (1) etablir une ligne de base mecanique statique sans organisme (e-valeurs, sequences de confiance, tests conditionnels standards) ; (2) remplacer le retour « performance d'attaque » par un retour « specification de H_0 et goulots formels » ciblant le plafonnement pour T > N_0 sans nul par acte, la sensibilite stylistique des juges et la fuite de politique en essaim ; (3) restreindre l'interface de sortie de l'organisme a des artefacts dont la propriete sous H_0 (supermartingale / processus-e, nul par acte, borne de fuite) est verifiee mecaniquement sur CPU avant tout passage GPU ; (4) auditer la contamination temporelle des modeles pre-entraines.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : rejeter en porte CPU tout artefact genere par l'organisme qui viole la propriete de supermartingale / processus-e sous H_0 ou n'ameliore pas la ligne de base statique avant toute depense GPU. Faux temoin 1b : artefact produisant un gain apparent de score d'attaque par fuite de style ou violation de H_0 a T > N_0 sans nul par acte.",
+   "mecanisme_causal": "Le remplacement de la boucle par scores par une porte transactionnelle CPU verifiant formellement l'hypothese nulle H_0 empeche l'organisme de sur-adapter des artefacts statistiquement invalides et neutralise la derive vers les fausses alertes.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte transactionnelle CPU de verification H_0",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Ligne de base statique de tests sequentiels et filtrage amont par verificateur de H_0 sur CPU"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6798"
+   ],
+   "enonce_complet": "Matrice de cinq criteres quantitatifs de refutation : une pente nette en E1 invalide la distinction pratique U1/U2 ; un effet nul en E2/E3 malgre des controles positifs significatifs infirme la criticite de la fuite d'independance ; un rappel R proche de 1 a faible verifiabilite q en E4 invalide la lacune sur U5 ; une absence de difference en E5 exclut U7 comme usage specifique du hasard ; et un protocole d'audit bibliographique E6 — etalonne sur deux usages connus (U2 et U9) pour verifier que l'instrument n'est pas aveugle — refute le statut peu etudie de U13, U10 ou U5 s'il identifie au moins 5 travaux pour cet usage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : appliquer les seuils E1-E5 et verifier en E6 que l'instrument bibliographique retrouve les usages connus U2 et U9 avant de trancher sur U13, U10 et U5 (>= 5 travaux). Faux temoin 1b : instrument bibliographique non etalonne echouant sur les temoins positifs U2/U9 et produisant ainsi un faux constat d'absence de litterature.",
+   "mecanisme_causal": "L'etalonnage prealable de l'outil bibliographique sur des temoins positifs connus (U2, U9) garantit que les conclusions d'absence de travaux (U13, U10, U5) ne resultent pas d'une cecite instrumentale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Matrice de refutation et audit bibliographique etalonne",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Matrice de criteres de refutation et etalonnage d'instrument bibliographique sur temoins positifs (E1-E6)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

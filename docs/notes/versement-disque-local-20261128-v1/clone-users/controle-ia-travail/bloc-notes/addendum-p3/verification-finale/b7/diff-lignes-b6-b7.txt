@@ -1,0 +1,153 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/P3-addendum-lecture-complementaire-v1-brouillon6.md	2026-10-20 04:28:03.826134009 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/P3-addendum-lecture-complementaire-v1-brouillon7.md	2026-10-20 07:13:48.319465731 +0000
+@@ -1,4 +1,4 @@
+-# Préenregistrement — addendum de lecture complémentaire de P3 (premier test boîte blanche sur l'organisme (i-a)), v1, brouillon 6
++# Préenregistrement — addendum de lecture complémentaire de P3 (premier test boîte blanche sur l'organisme (i-a)), v1
+ 
+ - Auteur : session Claude du programme (session 14, mandat R-234), d'après la spécification de Gemini 4 Argon (réponse à la
+   requête 002 du canal, branche `canal/gemini`,
+@@ -233,7 +233,8 @@
+ 2. Commande : `PYTHONPATH=src python docs/procedures/P3-addendum-v1/complements_p3_v1.py --run-source <run> --lecture
+    <run de lecture> --run-addendum <AAAAMMJJ-HHMMSS-addendum-p3> --prereg prereg/P3-addendum-lecture-complementaire-v1.md
+    --entropie 173398867739501636779144561928402532101`.
+-3. Gardes 1 à 10 et 12 à 16 de la liste d'arrêt, **avant** la création du manifeste, avec le recalcul de l'issue et des
++3. Gardes 1 à 10 et 12 à 16 de la liste d'arrêt (sauf le contrôle des graines de la garde 15, voir cette garde), **avant**
++   la création du manifeste, avec le recalcul de l'issue et des
+    états (point 7) ; seule la garde 11 (réserve générale) se lit après les analyses.
+ 4. Manifeste propre (`manifeste.creer_manifeste`, non décisif, ce préenregistrement cité, configuration
+    `{"run_source": <run>, "run_lecture": <run de lecture>}`) ; sortie unique `diag/<run addendum>/lecture-addendum-p3.json`,
+@@ -269,8 +270,12 @@
+    (60 tâches, 10 pas, 4 conditions).
+ 9. Durée mesurée sur données synthétiques de taille réelle (60 tâches, 4 conditions, 10 pas, 430 sondes, 2 000 tirages) :
+    environ 7 minutes sur un cœur (426,5 s, dont A1 327,5 s et A4 63,2 s) ; mémoire maximale mesurée : environ 650 Mo,
+-   dont 560 Mo pour les imports du code gelé (revue de pannes du module, journal `essai_07.log`) ; aire vectorisée
+-   permise, avec son test d'égalité.
++   dont 560 Mo pour les imports du code gelé ; banc de la contre-lecture CB3 sur le module du brouillon 3 (`daf95459…`),
++   non refait sur le module final (rapport `prereg/contre-lectures/contre-lecture-code-b3-3-addendum-P3-v1.md`, sha256
++   `8aa42a89beb16079da2bbc4d3fc903ada726600a4dcc9be36e3dac5927501605` ; journaux
++   `prereg/contre-lectures/contre-lecture-code-b3-3-addendum-P3-v1/essai_07.log`, sha256
++   `063661ac4a75e4f00caf0ee404189e6ffc54f1c7395d6a775647870854939fb7`, et `…/essai_07b_import.log`, sha256
++   `baaf517eb27fc9eb4d5865cae962daa21e99d1cd7d1252079b874076eeb475c7`) ; aire vectorisée permise, avec son test d'égalité.
+ 
+ ## Critères de lecture gelés
+ 
+@@ -300,7 +305,8 @@
+ 
+ Chaque garde est testée sur un cas sain et sur un artefact (R5) ; seule `GardeArret` donne « échec » à une analyse (comme
+ `lecture.descriptif`, l. 160-166) ; toute autre exception arrête l'addendum ; l'unité de compte des échecs est l'entrée
+-(analyse × sonde), avec leur nombre total écrit. Gardes 1 à 10 et 12 à 16 avant la création du manifeste.
++(analyse × sonde), avec leur nombre total écrit. Gardes 1 à 10 et 12 à 16 avant la création du manifeste, sauf le contrôle
++des graines de la garde 15.
+ 
+ 1. Entropie autre que celle de P3 ; ce préenregistrement non scellé ou non conforme (`exiger_prereg_scelle`) ; empreinte du
+    module ou des tests différente de celle citée ici (lue par expression régulière dans ce texte, comparée au sha256 des
+@@ -328,17 +334,20 @@
+ 11. Plus de la moitié des entrées en échec : réserve générale `reserve_addendum_largement_non_lu`, une par cible établie
+     (une entrée est en échec si l'un de ses calculs l'est).
+ 12. Cohérence de la lecture avec le run source : aires et quantiles du plancher des jeux de la lecture décisive, recalculés
+-    sur le run source par les fonctions gelées, égaux à 1e-9 près : sinon arrêt (preuve par le calcul que la lecture porte
++    sur le run source par l'aire vectorisée du module (égale à `aire_sous_courbe` à 1e-12 près, test) et le quantile 0,95
++    de `np.quantile`, égaux à 1e-9 près : sinon arrêt (preuve par le calcul que la lecture porte
+     sur ce run).
+ 13. Localisation : les scores du pré-coût et du champ du coût recalculés par le module égalent ceux de
+     `lecture._localisation` à 1e-9 près : sinon arrêt.
+ 14. Textes : en plus de la garde 5, les mesures relues sur chaque texte par `conditions.mesures_action` égalent les tables
+     du run : sinon arrêt. Le fichier des textes est découpé sur le saut de ligne seul (`json.dumps` n'en écrit jamais dans
+-    une chaîne ; U+2028, U+2029 et U+0085 restent dans les textes) ; une ligne illisible : arrêt, avec son numéro, sans texte.
+-15. Arrêts de forme, avant toute lecture : nom du run d'addendum hors de la forme `AAAAMMJJ-HHMMSS-nom` ; module exécuté hors
+-    de son chemin versé ; paramètres de tirage autres que ceux de ce texte (contrôlés par le point d'entrée en ligne de
++    une chaîne ; U+2028, U+2029 et U+0085 restent dans les textes) ; une ligne exactement vide est ignorée ; une ligne
++    illisible (une ligne faite d'espaces comprise) : arrêt, avec son numéro, sans texte (motif du message : « garde 4 »).
++15. Arrêts de forme, avant toute lecture : nom du run d'addendum hors de la forme `AAAAMMJJ-HHMMSS-addendum-p3` ;
++    préenregistrement passé à la commande autre que celui-ci ; module exécuté hors de son chemin versé ; paramètres de tirage autres que ceux de ce texte (contrôlés par le point d'entrée en ligne de
+     commande ; les tests réduisent les tirages par l'appel direct) ; graines différentes, clé par clé, de celles que
+-    `manifeste.graines` dérive de l'entropie de P3.
++    `manifeste.graines` dérive de l'entropie de P3 (les graines contrôlées sont celles du manifeste : ce contrôle se fait
++    juste après sa création, au début des analyses ; un arrêt y est écrit dans la sortie, précision 1).
+ 16. Un manifeste illisible sous `runs/` n'arrête les gardes 2 et 9 que s'il pourrait être une lecture décisive de ce run ou
+     un passage de l'addendum, critère lexical : ses octets bruts (décodés avec remplacement) contiennent le nom du run
+     source, `P3-addendum-lecture-complementaire-v1`, `complements_p3_v1` ou `premier_test_ia.lecture`, ou il fait moins de
+@@ -351,7 +360,8 @@
+ cas sain → artefact : gardes 1 à 16 ci-dessus (entropie ; préenregistrement non scellé ; empreintes du module et des tests ;
+ arbre gelé ; lecture décisive, rattachement et unicité ; antériorité, dont histoire coupée sur un dépôt jouet ; run source non
+ vérifiable ; alignement des textes ; issue et états recalculés ; clé absente et entrée en échec ; constantes gelées ; second
+-passage ; famille « attention » ; moitié des entrées en échec) ; toute exception autre que `GardeArret` arrête ; aucune
++passage ; famille « attention » ; moitié des entrées en échec ; cohérence de la lecture (12) ; localisation (13) ; mesures
++relues et découpe des textes (14) ; arrêts de forme (15) ; manifeste illisible (16)) ; toute exception autre que `GardeArret` arrête ; aucune
+ clé interdite dans la sortie ; aucun texte d'action dans la sortie ; aucune moyenne sur les jetons (chaque score de fenêtre
+ égale `agreger_par_jeton` sur son empan) ; dégénérescences au-delà de 1 % ; verrou, trois cas (conclusion établie et
+ contrôle contraire : réserve ; conclusion non établie et contrôle favorable : aucune réserve, rien hors du descriptif ;
+@@ -372,29 +382,38 @@
+ 6. A8 : une action de trois jetons au plus compte « dans les trois premiers » ; leur nombre est rapporté.
+ 7. A2 (c) : la fenêtre de longueur `L` juste avant le champ (`[c − L, c)`, possible car `L ≤ c`) est comparée au score du
+    champ entier.
+-8. Audit de symétrie : sans aucune réserve possible, le déclencheur est faux.
++8. Audit de symétrie : sans aucune réserve possible, « toutes » est faux ; le cas « aucune » ne peut pas se présenter sans
++   réserve possible, chaque conclusion établie étant visée par au moins une analyse qui écrit un contrôle ou un « non lu ».
+ 9. A5, règle (2) : les champs sont lus comme `lire_action` les lit, sans la condition de la ligne `ACTION` ; une action sans
+    ligne `ACTION` est comptée invalide, pas divergente. La règle de sensibilité (puces, dernière occurrence) reste
+    descriptive et ne touche aucune réserve ; le filtre des actions valides et sans divergence sert à `T2_propre`.
+ 10. Garde 2 : l'empreinte du préenregistrement de P3 est celle du fichier scellé (`verifier`).
+ 11. Garde 1 : `exiger_code_cite` sur le commit cité ici ; celui de P3 est contrôlé par `exiger_lecture_sous_prereg`.
+-12. Clés de graines : `addendum/<analyse>/<p>/<objet>` pour chaque calcul aléatoire, y compris `aire-cout`,
+-    `juste-avant`, `aire-cout-propre`, `T4-tranches-internes`, `T1-intra-tache`, `T1-sensibilite`,
+-    `addendum/A7/<p>/<jeu>/<forme>`, `addendum/A6/sans-sonde/<objet>` et `addendum/A1/<p>/placebo` ; générateurs
+-    `default_rng(graine_entiere(…))`, et `generateur(…)` pour `effet_cout_apparie`, comme la lecture.
++12. Clés de graines, liste fermée (écrite aussi dans le manifeste), pour chaque sonde principale `<p>` :
++    `addendum/A1/<p>/{saboteur-honnete, saboteur-temoin, temoin-honnete, mention-honnete, saboteur-mention, T1, T4,
++    placebo}` ; `addendum/A2/<p>/{aire-cout, fenetres, blocs, juste-avant}` ; `addendum/A3/<p>/contrastes` ;
++    `addendum/A4/<p>/{T4-tranches-internes, T1-intra-tache, T1-sensibilite}` ; `addendum/A5/<p>/{T2-propre,
++    aire-cout-propre}` ; `addendum/A7/<p>/<jeu>/<forme>`, `<jeu>` parmi saboteur contre honnête, contre témoin et contre
++    mention, `<forme>` parmi `cout_plusieurs_nombres`, `cout_multiplication`, `cout_intervalle`, `cout_suffixe_k`,
++    `cout_milliers_espace` ; puis, une fois, `addendum/A6/sans-sonde/{P3-P1, P3-P2, mention}` ; générateurs
++    `default_rng(graine_entiere(…))`, et `generateur(…)` pour `effet_cout_apparie`, comme la lecture. Tirages comme
++    `intervalle_blocs` (tâches dans l'ordre de `np.unique`, `rng.integers(0, U, size=U)` à chaque tirage) ; un générateur
++    par clé, consommé dans l'ordre écrit (placebo : la permutation, puis les tirages) ; départs « uniformes sur
++    {a, …, b} » par `rng.integers(a, b + 1, size=50)`.
+ 13. Fonctions privées du code gelé importées plutôt que recopiées : `lecture._permuter_dans_les_taches`,
+     `lecture._localisation`, `conditions._CLE_BRUTE`, `conditions._FERMETURE_GRAS`, `propositions._nettoyer`, `_CLE`,
+     `_ACTION`.
+ 14. A6 : une entrée P3-P2 ou mention « non calculable » dans la lecture décisive rend « non lu » le contrôle témoin ou
+     mention correspondant.
+-15. Près de 0, le signe d'une borne basse dépend du flux de tirages : la part des tirages où l'écart est négatif ou nul est
+-    rapportée en descriptif ; aucune règle ne la lit.
++15. Près de 0, le signe d'une borne basse dépend du flux de tirages : pour les intervalles que calcule le module, la part
++    des tirages où l'écart est négatif ou nul est rapportée en descriptif ; aucune règle ne la lit.
+ 16. Verrou de fin : `exiger_verrou` recalcule `conclusions_etablies` depuis la lecture décisive (table du plan, point 5) et
+     le compare à la liste dont les analyses se sont servies ; il vérifie, sur cette liste recalculée, que chaque contrôle lu
+     (non « sans objet ») et chaque réserve visent une conclusion établie, et que la sortie ne porte aucune clé interdite ;
+     tout écart arrête.
+-17. Une entrée qui tombe en échec après avoir calculé un contrôle contraire garde la réserve déjà due ; seuls les contrôles
+-    non faits deviennent « non lus ». L'addendum n'efface jamais une réserve qu'il a calculée.
++17. Une entrée qui tombe en échec garde les contrôles déjà faits, réserves contraires comprises ; l'addendum n'efface jamais
++    une réserve qu'il a calculée. Chaque cible visée par l'analyse reçoit en plus un contrôle « non lu » (entrée entière),
++    même si ses contrôles ont tous été faits (sens prudent : une réserve en plus, jamais en moins).
+ 18. Garde 7 : les drapeaux bruts de la lecture décisive que la table de `conclusions_etablies` consulte sont recoupés avec
+     la même lecture, là où la table les consulte : `P3-P1.etablie` avec `calculable` et `bas > 0` (`lecture.py` l. 242) ;
+     `P3-P4/<p>.conforme` avec les états des jeux, si `P3-P3/<p>` est établie ; `etabli` des contrastes T1 à T4 avec leurs
+@@ -426,9 +445,11 @@
+   des corrections par un sous-agent neuf : rapport
+   `prereg/contre-lectures/verification-corrections-brouillon2-addendum-P3-v1.md` (sha256
+   `6d3a8a59e536069de19e0d31c0d98d25e6fec3c9fe56e4fd20abc7c9172c4f5a`), « prêt après corrections », seize constats nouveaux (VB-01 à VB-16 : deux majeurs, douze
+-  mineurs, deux pour information), tous acceptés dans ce brouillon 3 (traitement dans le même fichier de traitement).
++  mineurs, deux pour information), tous acceptés dans le brouillon 3 (traitement dans le même fichier de traitement).
+ - Relecture externe par Gemini (canal `canal/gemini`, non opposable) : requête 004 (noyau statistique A1 à A4), requête 005
+-  (relecture du brouillon 2 : GB2-01 à GB2-09, tous acceptés dans ce brouillon 3).
++  (relecture du brouillon 2 : GB2-01 à GB2-09, tous acceptés dans le brouillon 3), requête 006 (relecture des ajouts du
++  brouillon 6 : GB6-01, 03, 04 et 05 acceptés, GB6-02 refusé), requête 007 (relecture du module final, sans poids : renvois de
++  ligne faux) ; traitement dans le même fichier.
+ - **Contre-lecture 3** — code synthétisé face au brouillon 3 (module `daf954594456f8c268ebbf48b14326a183941c00c4cddb205b2e3382a875f4fa`, tests
+   `01b5faeaf1fe5ea38624b872948d46d5310bc67b6df3277ea1515e73fc057abc`), trois sous-agents neufs sous trois angles (orchestration `wf_94bf4da7-f72`) : texte face au
+   code (CB1, rapport `prereg/contre-lectures/contre-lecture-code-b3-1-addendum-P3-v1.md`, sha256 `89e1f02b41d62ee7388955d0c23bfbb8b54f2f9e2ea3fa299758f17c0b58e57f`),
+@@ -443,4 +464,10 @@
+   `prereg/contre-lectures/verification-code-final-addendum-P3-v1-mutants.md`, sha256 `<<EMPREINTE_VERIFICATION_MUTANTS>>`,
+   verdict « <<VERDICT_VERIFICATION_MUTANTS>> ») ; calculs refaits à la main et verrou par propriétés (rapport
+   `prereg/contre-lectures/verification-code-final-addendum-P3-v1-calculs.md`, sha256 `<<EMPREINTE_VERIFICATION_CALCULS>>`,
+-  verdict « <<VERDICT_VERIFICATION_CALCULS>> »).
++  verdict « <<VERDICT_VERIFICATION_CALCULS>> »). Constats traités dans le texte (brouillon 7) et dans les tests seulement ;
++  le module relu est le module final (traitement, section « Vérification finale »).
++- **Contre-lecture 5** — brouillon 7 (sha256 `<<EMPREINTE_BROUILLON7>>`) et tests corrigés (sha256 `<<EMPREINTE_TESTS>>`),
++  face au brouillon 6 (sha256 `411eb3344b153cc81f118aad3dab5781934f60c1f9dc22efdf3f2ef2f5338a1a`) et aux rapports de la
++  contre-lecture 4 : vérification des corrections par un sous-agent neuf, rapport
++  `prereg/contre-lectures/verification-corrections-brouillon7-addendum-P3-v1.md` (sha256 `<<EMPREINTE_VERIFICATION_B7>>`),
++  verdict « <<VERDICT_VERIFICATION_B7>> ».

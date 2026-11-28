@@ -1,0 +1,45 @@
+F
+=================================== FAILURES ===================================
+___________ test_aucune_moyenne_sur_les_jetons_score_d_empan_maximum ___________
+
+    def test_aucune_moyenne_sur_les_jetons_score_d_empan_maximum():
+        """Action à score constant (0) sauf un jeton du pré-coût (5) et un jeton du champ du coût (3) : le score du champ vaut
+        3 (le maximum, pas la moyenne 0,6), le pré-coût 5 ; chaque score de fenêtre égale `agreger_par_jeton` sur son empan
+        ; le jeton dominant (A8) est ce jeton ; à attention, somme pondérée par le softmax des logits restreints."""
+        src = _complet(_varier(_source(0), longueurs=False, bornes=False))
+        j = src["jetons"]
+        s = np.zeros(L_ACTION)
+        s[7], s[22] = 5.0, 3.0
+        j["scores_0"][0:L_ACTION] = s
+        _recalculer_scores(src)
+        d = cp._donnees(src)
+        D = {**d, "principales": d["principales"], "loc": {P[0]: cp.localisation(d, 0)}}
+        D["sh"] = {P[0]: cp._saboteur_honnete(d, D["loc"][P[0]])}
+        loc = D["loc"][P[0]]
+        k = int(np.flatnonzero(loc["lignes"] == 0)[0])
+        assert loc["cout"][k] == 3.0 != float(np.mean(s[20:25])) and loc["pre"][k] == 5.0
+        F = cp.fenetres_de_meme_longueur(D, P[0], np.random.default_rng(0))
+        o = int(np.flatnonzero(D["sh"][P[0]]["sel"] == k)[0])
+        assert F["longueur_commune"][o] == 5 and set(F["S_pre"][o].tolist()) <= {0.0, 5.0}
+        for r in range(cp.REPLIQUES):
+            x = int(F["departs_pre"][o, r])
+            assert 0 <= x <= 20 - 5 and F["S_pre"][o, r] == agreger_par_jeton(s, None, x, x + 5)
+        assert np.all(F["S_cout"][o] == 3.0) and np.all(F["departs_cout"][o] == 20)
+        for o2 in range(F["S_pre"].shape[0]):                                 # toutes les actions, toutes les fenêtres
+            i = int(D["sh"][P[0]]["sel"][o2])
+            deb, lon = int(loc["debut"][i]), int(loc["longueur"][i])
+            ss, L = j["scores_0"][deb:deb + lon], int(F["longueur_commune"][o2])
+            for r in (0, 17, 49):
+                x = int(F["departs_pre"][o2, r])
+                assert F["S_pre"][o2, r] == agreger_par_jeton(ss, None, x, x + L)
+            c2 = int(loc["c"][i])                                             # A2 (c) : fenêtre [c − L, c), maximum
+>           assert F["avant"][o2] == agreger_par_jeton(ss, None, c2 - L, c2)
+E           assert np.float64(0.9192178873683698) == 1.6473390663560998
+E            +  where 1.6473390663560998 = agreger_par_jeton(array([-0.51062247, -0.01153306, -1.48537518,  0.30068511, -0.10607225,\n       -1.18571981, -2.39823287,  0.51305213, ...318908, -0.15219296, -1.47388795,  1.02885435,\n       -1.93495964, -0.23993667, -0.20452249, -1.04286014,  0.61312314]), None, (20 - 5), 20)
+
+test_complements_p3_v1.py:812: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_aucune_moyenne_sur_les_jetons_score_d_empan_maximum
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 5.13s
+

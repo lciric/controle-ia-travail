@@ -1,0 +1,462 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v2/test_gardes_p4_v1.py	2026-10-20 19:06:26.097151119 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v3/test_gardes_p4_v1.py	2026-10-20 20:24:41.493359620 +0000
+@@ -1,7 +1,7 @@
+ """Tests des gardes du mode décisif, du GO et de l'accord de P4-instrument (v1). Texte : le préenregistrement scellé
+ (`prereg/P4-instrument-v1.md`).
+ 
+-Nombre de tests attendu : 101
++Nombre de tests attendu : 138
+ 
+ Lancement (depuis la racine du dépôt, par chemin explicite) :
+     PYTHONPATH=src python -B -m pytest -q -p no:cacheprovider docs/procedures/P4-instrument-v1/test_gardes_p4_v1.py
+@@ -18,15 +18,27 @@
+   chemin sans la forme exacte « **Verdict complété de P3 scellé** » (ou pas en tête de la cellule), empreinte différente
+   du sceau ; un refus est un report : la lecture n'écrit rien ;
+ - autres gardes du mode décisif de la lecture (entropie, module, run source non décisif ou hors du mode réel, autre
+-  préenregistrement, configuration) : sain, puis chaque refus, écrit en ligne L1 avec son motif ;
+-- table « Critères de lecture gelés » du préenregistrement contre `LIGNES` (CL3-03) : sain (barres de L11 échappées) ;
+-  issue de L1 et lecture de L4 du module v1, un signe changé, ligne absente, en trop, en double, ordre autre, barre non
+-  échappée, section sans table, section absente ; à la lecture décisive, refus sans rien écrire ;
++  préenregistrement, configuration, configuration non dictionnaire) : sain, puis chaque refus, écrit en ligne L1 avec son
++  motif ;
++- table « Critères de lecture gelés » du préenregistrement contre `LIGNES` (CL3-03 ; lue en entier depuis le module v3 :
++  VM2-contournement-02 et -03, VM2-fidelite-01) : sains (barres de L11 échappées ; paragraphes avant et après la table ;
++  espaces de fin et séparateur aligné ; table en fin de section) ; issue de L1 et lecture de L4 du module v1, un signe
++  changé, ligne absente, en trop, en double, ordre autre, barre non échappée, section sans table, section absente ;
++  rangée hors de la forme « | Lk | » (sans barre initiale, en gras, « L6bis », « L 12 », « l12 », « M1 »), ligne collée
++  sous la table, seconde table, en-tête autre, séparateur absent, section en double (trois formes) ; à la lecture
++  décisive, refus sans rien écrire ;
+ - lecture sans préenregistrement (CL3-01) : sain (run jouet non décisif lu) ; run décisif jouet (reprise de la
+   démonstration de la contre-lecture 3 : la lecture décisive attend le verdict complété, la lecture sans `--prereg` est
+   refusée), run en mode réel, manifeste décisif au sceau rompu : refus, aucun dossier ni fichier de lecture écrit ; même
+   refus en ligne de commande ; autres voies (`charger_source_p4`, `lire`) sans le lien des gardes du mode décisif ; règle
+   `exiger_lecture_permise` ; voie décisive saine (toutes les gardes passées : le run décisif est lu) ;
++- module v3, contournements de la vérification du module v2 : données rattachées à un autre run que celui du manifeste lu
++  et du dossier (VM2-contournement-01 : sain ; six formes, copie, lien symbolique, chemin détourné, identité d'un autre
++  run : refus sans rien écrire, aussi en ligne de commande ; manifeste du run décisif rescellé : L1 gardée, -08) ;
++  configuration du manifeste non dictionnaire (-04 : refus au motif de CL3-01, « ARRÊT », sans trace Python) ;
++  `diag/<run de lecture>` déjà présent (-05 : refus R12 avant tout manifeste) ; lancement sans `-B` (-06 : lecture et
++  instrument refusés, aucun cache de code écrit ; artefact : ligne `sys.dont_write_bytecode` retirée, le cache
++  s'écrit) ; source « complet » sans manifeste (-07 : `lire` refuse) ;
+ - mode décisif du run : citations (configuration, entropie, révision) avant le manifeste ; code importé, commit cité,
+   instrument figé (arbre gelé égal à celui de P3), module cité et exécuté après le manifeste, avec résumé ; run décisif
+   jouet sain de bout en bout, puis sa lecture décisive refusée (run source hors du mode réel, L1) ;
+@@ -63,7 +75,8 @@
+ 
+ import controle_ia  # noqa: E402
+ from controle_ia.gardes import GardeArret  # noqa: E402
+-from controle_ia.manifeste import config_canonique, graines, lire_manifeste, verifier_resultat  # noqa: E402
++from controle_ia.manifeste import (config_canonique, creer_manifeste, ecrire_resultat, graines, lire_manifeste,  # noqa: E402
++                                   verifier_resultat)
+ from controle_ia.prereg import SECTIONS  # noqa: E402
+ from controle_ia.scellement import empreinte, sceller  # noqa: E402
+ 
+@@ -274,7 +287,8 @@
+     ("run source non décisif", "non décisif"),
+     ("run source hors du mode réel", "hors du mode réel"),
+     ("autre préenregistrement", "autre préenregistrement"),
+-    ("configuration", "configuration")])
++    ("configuration", "configuration"),
++    ("configuration non dictionnaire", "hors du mode réel")])
+ def test_gardes_de_la_lecture_decisive_artefacts(tmp_path, artefact, motif):
+     d, cites, config = _lecture_decisive(tmp_path)
+     entropie, m = ip.ENTROPIE_P4, _manifeste_source(d, config)
+@@ -291,6 +305,8 @@
+         m["preenregistrement"]["chemin"] = "prereg/P3-premier-test-i-a-v1.md"
+     elif artefact == "configuration":
+         m["config"] = dict(config, n_tirages=1_000)
++    elif artefact == "configuration non dictionnaire":            # VM2-contournement-04 : refus, pas de trace Python
++        m["config"] = ["x"]
+     with pytest.raises(GardeArret, match=motif):
+         lp.exiger_lecture_sous_prereg_p4(d, PREREG, "20261101-120000-p4-reel", entropie, m)
+ 
+@@ -359,10 +375,25 @@
+     ("ordre autre", "lignes"),
+     ("barre non échappée", "cellules au lieu de 3"),
+     ("section sans table", r"lignes \[\]"),
+-    ("section absente", "sans section")])
++    ("section absente", "sans section"),
++    # module v3 : toute la table est lue (VM2-contournement-02 et -03, VM2-fidelite-01)
++    ("rangée sans barre initiale", "rangée hors de la forme"),
++    ("rangée en gras", "rangée hors de la forme"),
++    ("rangée L6bis entre L6 et L7", "rangée hors de la forme"),
++    ("rangée « | L 12 | »", "rangée hors de la forme"),
++    ("rangée « | l12 | »", "rangée hors de la forme"),
++    ("rangée « | M1 | »", "rangée hors de la forme"),
++    ("ligne de texte collée sous la table", "rangée hors de la forme"),
++    ("seconde table dans la section", "ligne à barre hors du tableau"),
++    ("en-tête autre", "en-tête"),
++    ("séparateur absent", "séparateur"),
++    ("section en double, la première changée", "présente 2 fois"),
++    ("section en double, la seconde changée", "présente 2 fois"),
++    ("section en double, identiques", "présente 2 fois")])
+ def test_table_des_criteres_artefacts_refuses(artefact, motif):
+     lignes = dict(lp.LIGNES)
+     table = None
++    ajout = "| ligne ajoutée | non lu ; nœud |"
+     if artefact == "issue de L1 du module v1":
+         lignes["L1"] = (ISSUE_L1_V1, lignes["L1"][1])
+     elif artefact == "lecture de L4 du module v1":
+@@ -382,14 +413,65 @@
+         table[-1] = table[-1].replace("\\|", "|")
+     elif artefact == "section sans table":
+         table = ["Aucune table."]
++    elif artefact == "rangée sans barre initiale":
++        table.append(f"L12 {ajout}")
++    elif artefact == "rangée en gras":
++        table.append(f"| **L12** {ajout}")
++    elif artefact == "rangée L6bis entre L6 et L7":
++        table.insert(table.index(next(x for x in table if x.startswith("| L7 |"))), f"| L6bis {ajout}")
++    elif artefact == "rangée « | L 12 | »":
++        table.append(f"| L 12 {ajout}")
++    elif artefact == "rangée « | l12 | »":
++        table.append(f"| l12 {ajout}")
++    elif artefact == "rangée « | M1 | »":
++        table.append(f"| M1 {ajout}")
++    elif artefact == "ligne de texte collée sous la table":
++        table.append("Réserves collées sous la table, sans ligne vide.")
++    elif artefact == "seconde table dans la section":
++        table += ["", "| ligne | issue | lecture |", "|---|---|---|", f"| L12 {ajout}"]
++    elif artefact == "en-tête autre":
++        table[0] = "| ligne | issue | lecture lue |"
++    elif artefact == "séparateur absent":
++        del table[1]
+     texte = texte_prereg({}, table=table)
++    titre = f"## {lp.TITRE_CRITERES}\n"
++    autre = "\n".join(table_markdown(dict(lp.LIGNES, L6=("autre issue", "autre lecture"))))
+     if artefact == "section absente":
+         texte = texte.replace(f"## {lp.TITRE_CRITERES}", "## Critères de lecture")
++    elif artefact == "section en double, la première changée":
++        assert texte.count(titre) == 1
++        texte = texte.replace(titre, f"{titre}\n{autre}\n\n{titre}")
++    elif artefact == "section en double, la seconde changée":
++        texte += f"\n{titre}\n{autre}\n"
++    elif artefact == "section en double, identiques":
++        texte += f"\n{titre}\n" + "\n".join(table_markdown()) + "\n"
+     with pytest.raises(GardeArret, match=motif) as e:
+         lp.exiger_table_des_criteres(texte)
+     assert "lecture refusée sans rien écrire" in str(e.value)
+ 
+ 
++PREAMBULE = ("La ligne qui s'applique est toujours calculée et écrite (`issue_p4`). Lignes de haut en bas, la première qui "
++             "s'applique :")
++RESERVES = "Réserves (toujours écrites à part, avec la ligne) : synthétique."
++
++
++@pytest.mark.parametrize("forme", ["paragraphes avant et après la table (forme du texte)",
++                                   "espaces de fin de ligne et séparateur aligné", "table en fin de section"])
++def test_table_des_criteres_cas_sains_formes_du_texte(forme):
++    """Cas sains de la table lue en entier (module v3) : la forme du texte (paragraphe, ligne vide, table, ligne vide,
++    paragraphe des réserves), des espaces de fin de ligne et un séparateur aligné, ou la table seule en fin de section :
++    lue cellule par cellule, égale à `LIGNES`."""
++    table = table_markdown()
++    if forme.startswith("paragraphes"):
++        table = [PREAMBULE, ""] + table + ["", RESERVES]
++    elif forme.startswith("espaces"):
++        table = [x + "  " for x in table]
++        table[1] = "|:---|:---:|---:|"
++    texte = texte_prereg({}, table=table)
++    assert lp.table_des_criteres(texte) == lp.LIGNES
++    assert lp.exiger_table_des_criteres(texte) == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
++
++
+ def test_analyser_decisif_table_des_criteres_autre_refus_sans_rien_ecrire(tmp_path):
+     """Cas sain : table du préenregistrement égale à `LIGNES` : la garde passe, son résultat est écrit dans le lien
+     (run source absent : L1). Artefact : préenregistrement scellé dont la table garde l'issue de L1 du module v1 : lecture
+@@ -412,6 +494,34 @@
+     assert not (d / "diag" / "20261101-140000-lecture-p4").exists()
+ 
+ 
++@pytest.mark.parametrize("artefact, motif", [("rangée L12 sans barre initiale", "rangée hors de la forme"),
++                                             ("section en double, la première changée", "présente 2 fois")])
++def test_analyser_decisif_table_hors_forme_ou_section_double_refus_sans_rien_ecrire(tmp_path, artefact, motif):
++    """VM2-contournement-02 et -03 (V07c de la vérification) à la lecture décisive, verdict complété versé. Cas sain : la
++    table du préenregistrement passe la garde (lien écrit, run source absent : L1). Artefact : préenregistrement scellé
++    avec une douzième rangée hors de la forme « | Lk | », ou une section « Critères de lecture gelés » en double dont la
++    première est changée : refus avant tout manifeste ; aucun dossier ni fichier de lecture écrit."""
++    d = _depot_de_lecture(tmp_path)
++    s = lp.analyser(d, "20261101-120000-p4-reel", "20261101-130000-lecture-p4", PREREG, entropie=ip.ENTROPIE_P4,
++                    autoriser_depot_sale=True)
++    assert s["lien_au_preenregistrement"]["table_des_criteres"] == {"lignes": list(lp.LIGNES), "cellules_egales": 22}
++    texte = (d / PREREG).read_text(encoding="utf-8")
++    sain, titre = "\n".join(table_markdown()), f"## {lp.TITRE_CRITERES}\n"
++    assert texte.count(sain) == 1 and texte.count(titre) == 1
++    if artefact.startswith("rangée"):
++        texte = texte.replace(sain, f"{sain}\nL12 | ligne ajoutée | non lu ; nœud |")
++    else:
++        autre = "\n".join(table_markdown(dict(lp.LIGNES, L6=("autre issue", "autre lecture"))))
++        texte = texte.replace(titre, f"{titre}\n{autre}\n\n{titre}")
++    ecrire_prereg(d, texte)
++    committer(d, artefact)
++    with pytest.raises(GardeArret, match=motif):
++        lp.analyser(d, "20261101-120000-p4-reel", "20261101-140000-lecture-p4", PREREG, entropie=ip.ENTROPIE_P4,
++                    autoriser_depot_sale=True)
++    assert not (d / "runs" / "20261101-140000-lecture-p4").exists()
++    assert not (d / "diag" / "20261101-140000-lecture-p4").exists()
++
++
+ # ------------------------------------------------------------------------------------------------ run décisif
+ 
+ def candidat_jouet(tmp_path_factory, cible: Path, cite_commit="tete", lignes_module=None, config_sha=None,
+@@ -679,6 +789,261 @@
+     assert m["decisif"] is True and m["preenregistrement"]["chemin"] == PREREG
+ 
+ 
++# ------------------------------------------------------------------------------------------------ module v3 : contournements (VM2)
++
++RUN_X, RUN_Y = "20261020-170000-p4-jouet", "20261020-175000-p4-copie"
++_DEPOTS: dict = {}
++
++
++def depot_decisif_partage(tmp_path_factory) -> Path:
++    """Dépôt du run décisif jouet (sans verdict complété de P3) et d'un manifeste non décisif X de même configuration,
++    sans données ; joué une fois par session ; chaque test en prend une copie."""
++    if "decisif" not in _DEPOTS:
++        with pytest.MonkeyPatch.context() as mp:
++            mp.setattr(ip, "exiger_code_importe_sous", lambda racine: None)
++            d = run_decisif_jouet(tmp_path_factory, tmp_path_factory.mktemp("decisif-partage") / "depot", mp)
++        m, _ = lire_manifeste(d / "runs" / RUN_DECISIF / "manifeste.json")
++        creer_manifeste(d, RUN_X, m["config"], ["x"], autoriser_depot_sale=True)
++        committer(d, "manifeste non décisif X")
++        _DEPOTS["decisif"] = d
++    return _DEPOTS["decisif"]
++
++
++def _copier_scelles(de: Path, vers: Path, noms) -> None:
++    vers.mkdir(parents=True, exist_ok=True)
++    for n in noms:
++        for x in (n, n + ".sha256"):
++            shutil.copyfile(de / x, vers / x)
++
++
++FORMES_AUTRE_RUN = ["manifeste de X recopié sous Y, résumé et identité du run décisif recopiés",
++                    "manifeste neuf de Y, résumé et identité du run décisif recopiés",
++                    "manifeste neuf de Y, diag/Y lien symbolique vers diag du run décisif",
++                    "--run-source ../diag/<run décisif>, manifeste de X recopié",
++                    "résumé de Y écrit sous son manifeste, identité du run décisif recopiée",
++                    "--run-source X/ (chemin détourné)"]
++
++
++def monter_autre_run(d: Path, forme: str) -> str:
++    """Monte dans `d` une forme de VM2-contournement-01 (sans rien resceller à la main) ; rend le `--run-source`."""
++    dd, rx, ry, diag_y = d / "diag" / RUN_DECISIF, d / "runs" / RUN_X, d / "runs" / RUN_Y, d / "diag" / RUN_Y
++    if "manifeste neuf de Y" in forme or forme.startswith("résumé de Y"):
++        m, _ = lire_manifeste(rx / "manifeste.json")
++        creer_manifeste(d, RUN_Y, m["config"], ["x"], autoriser_depot_sale=True)      # manifeste propre de Y, non décisif
++    source = RUN_Y
++    if forme.startswith("manifeste de X recopié sous Y"):
++        _copier_scelles(rx, ry, ["manifeste.json"])
++        _copier_scelles(dd, diag_y, ["resume.json", "identite-p4.json"])
++    elif forme == "manifeste neuf de Y, résumé et identité du run décisif recopiés":
++        _copier_scelles(dd, diag_y, ["resume.json", "identite-p4.json"])
++    elif forme.startswith("manifeste neuf de Y, diag/Y lien symbolique"):
++        diag_y.symlink_to(RUN_DECISIF)
++    elif forme.startswith("--run-source ../diag/"):
++        _copier_scelles(rx, dd, ["manifeste.json"])
++        source = f"../diag/{RUN_DECISIF}"
++    elif forme.startswith("résumé de Y"):
++        resume_d = verifier_resultat(d, dd / "resume.json")["resultat"]
++        ecrire_resultat(d, ry / "manifeste.json", "resume", resume_d)                 # rattaché à Y : run_id et manifeste
++        _copier_scelles(dd, diag_y, ["identite-p4.json"])
++    elif forme.startswith("--run-source X/"):
++        source = RUN_X + "/"                                                          # aucun fichier changé
++    if git(d, "status", "--porcelain", "--untracked-files=all"):
++        committer(d, forme)
++    return source
++
++
++def test_donnees_rattachees_au_run_source_cas_sain(tmp_path_factory, tmp_path):
++    """VM2-contournement-01, cas sain : run jouet non décisif, lu sous son nom exact ; manifeste, résumé et identité
++    portent ce `run_id` (et l'empreinte de ce manifeste) ; la source est complète et C1 est calculé."""
++    d0, run = depot_p4(tmp_path_factory)
++    d = copie(d0, tmp_path / "d")
++    m, sha_m = lire_manifeste(d / "runs" / run / "manifeste.json")
++    for nom in ("resume.json", "identite-p4.json"):
++        corps = json.loads((d / "diag" / run / nom).read_text(encoding="utf-8"))
++        assert (corps["run_id"], corps["manifeste_sha256"]) == (run, sha_m) == (m["run_id"], sha_m)
++        lp.exiger_rattache_au_run(d / "diag" / run / nom, run)
++    s = lp.analyser(d, run, "20261020-187000-lecture-p4", None, entropie=4242)
++    assert s["source"]["etat"] == "complet" and lp.calcule(s["C1"])
++
++
++@pytest.mark.parametrize("forme", FORMES_AUTRE_RUN)
++def test_donnees_rattachees_a_un_autre_run_refusees_sans_rien_ecrire(tmp_path_factory, tmp_path, forme):
++    """VM2-contournement-01 (V05 de la vérification) : manifeste lu sous `runs/<run source>/` d'un autre run, ou résumé ou
++    identité rattachés à un autre run que celui du manifeste lu et du dossier (copies de fichiers scellés, lien
++    symbolique, chemin détourné, résumé écrit sous un manifeste neuf) : refus avant tout manifeste de lecture, par
++    `analyser` comme par `charger_source_p4` ; aucun dossier ni fichier de lecture écrit, arbre propre. La première forme
++    est aussi lancée en ligne de commande : « ARRÊT », code 1, sans trace Python."""
++    d = copie(depot_decisif_partage(tmp_path_factory), tmp_path / "d")
++    source = monter_autre_run(d, forme)
++    with pytest.raises(GardeArret, match=re.escape(lp.AUTRE_RUN)) as e:
++        lp.charger_source_p4(d, source)
++    assert str(e.value).endswith("lecture refusée sans rien écrire")
++    with pytest.raises(GardeArret, match=re.escape(lp.AUTRE_RUN)):
++        lp.analyser(d, source, "20261020-187000-lecture-p4", None, entropie=ENTROPIE_JOUET)
++    _rien_d_ecrit(d, "20261020-187000-lecture-p4")
++    if forme == FORMES_AUTRE_RUN[0]:
++        env = dict(os.environ, PYTHONPATH=str(RACINE_REELLE / "src"))
++        r = subprocess.run([sys.executable, "-B", str(ICI / "lecture_p4_v1.py"), "--run-source", source, "--run-lecture",
++                            "20261020-187100-lecture-p4", "--entropie", str(ENTROPIE_JOUET)], cwd=d, env=env,
++                           capture_output=True, text=True, timeout=600)
++        assert r.returncode == 1 and "ARRÊT : " in r.stderr and lp.AUTRE_RUN in r.stderr, r.stderr[-1000:]
++        assert "Traceback" not in r.stderr
++        _rien_d_ecrit(d, "20261020-187100-lecture-p4")
++
++
++def test_manifeste_du_run_decisif_rescelle_l1_gardee_manifeste_d_un_autre_run_refuse(tmp_path_factory, tmp_path):
++    """VM2-contournement-08 gardé, à côté de la règle de -01. Manifeste du run décisif réécrit sans `decisif` et rescellé :
++    son `run_id` reste celui du dossier, le résumé aussi ; le résumé reste rattaché à l'ancien manifeste : L1 écrite
++    (« résumé non conforme »), sous un manifeste de lecture non décisif, rien du run lu (comportement du module v2).
++    Manifeste du run non décisif X recopié sous `runs/<run décisif>/` : manifeste d'un autre run que celui du dossier :
++    refus par la règle de -01, rien n'est écrit (le module v2 écrivait L1)."""
++    d = copie(depot_decisif_partage(tmp_path_factory), tmp_path / "d")
++    chemin = d / "runs" / RUN_DECISIF / "manifeste.json"
++    m = json.loads(chemin.read_text(encoding="utf-8"))
++    m.pop("decisif")
++    chemin.with_name(chemin.name + ".sha256").unlink()
++    chemin.write_text(json.dumps(m, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    sceller(chemin)
++    committer(d, "manifeste du run décisif sans « decisif », rescellé")
++    s = lp.analyser(d, RUN_DECISIF, "20261020-187200-lecture-p4", None, entropie=ENTROPIE_JOUET)
++    assert s["issue"]["ligne"] == "L1" and "résumé non conforme" in s["issue"]["motif"] and "C1" not in s
++    ml, _ = lire_manifeste(d / "runs" / "20261020-187200-lecture-p4" / "manifeste.json")
++    assert ml["decisif"] is False
++    e = copie(depot_decisif_partage(tmp_path_factory), tmp_path / "e")
++    _copier_scelles(e / "runs" / RUN_X, e / "runs" / RUN_DECISIF, ["manifeste.json"])
++    committer(e, "manifeste de X recopié sous le run décisif")
++    with pytest.raises(GardeArret, match=re.escape(lp.AUTRE_RUN)):
++        lp.analyser(e, RUN_DECISIF, "20261020-187300-lecture-p4", None, entropie=ENTROPIE_JOUET)
++    _rien_d_ecrit(e, "20261020-187300-lecture-p4")
++
++
++def test_config_non_dictionnaire_suspecte_refus_au_motif_de_cl3_01(tmp_path_factory, tmp_path):
++    """VM2-contournement-04 : configuration du manifeste présente et non dictionnaire (liste, nulle, texte, nombre) :
++    suspecte, refusée au motif de CL3-01 ; cas sains : configuration jouet, manifeste du run jouet. En ligne de commande
++    (V04 de la vérification : `decisif` retiré, `config = ["x"]`, manifeste rescellé) : « ARRÊT » avec le motif de
++    CL3-01, code 1, sans trace Python, rien d'écrit."""
++    for config in (["x"], None, "reel", 3):
++        m = {"decisif": False, "config": config}
++        assert lp.est_decisif_ou_reel(m) is True
++        with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_PREREG)):
++            lp.exiger_lecture_permise(m)
++    lp.exiger_lecture_permise({"decisif": False, "config": {"mode": "jouet"}})
++    d0, run = depot_p4(tmp_path_factory)
++    d = copie(d0, tmp_path / "d")
++    chemin = d / "runs" / run / "manifeste.json"
++    lp.exiger_lecture_permise(lire_manifeste(chemin)[0])
++    m = json.loads(chemin.read_text(encoding="utf-8"))
++    m.pop("decisif")
++    m["config"] = ["x"]
++    m["config_sha256"] = hashlib.sha256(config_canonique(m["config"])).hexdigest()
++    chemin.with_name(chemin.name + ".sha256").unlink()
++    chemin.write_text(json.dumps(m, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
++    sceller(chemin)
++    committer(d, "configuration non dictionnaire, manifeste rescellé")
++    assert lire_manifeste(chemin)[0]["config"] == ["x"]
++    env = dict(os.environ, PYTHONPATH=str(RACINE_REELLE / "src"))
++    r = subprocess.run([sys.executable, "-B", str(ICI / "lecture_p4_v1.py"), "--run-source", run, "--run-lecture",
++                        "20261020-188000-lecture-p4", "--entropie", "4242"], cwd=d, env=env, capture_output=True,
++                       text=True, timeout=600)
++    assert r.returncode == 1 and f"ARRÊT : {lp.MOTIF_SANS_PREREG}" in r.stderr, r.stderr[-1000:]
++    assert "Traceback" not in r.stderr
++    _rien_d_ecrit(d, "20261020-188000-lecture-p4")
++
++
++@pytest.mark.parametrize("cas", ["sain", "fichier de lecture déjà là", "dossier vide", "lien symbolique pendant"])
++def test_diag_de_lecture_existant_refus_r12_avant_tout_manifeste(tmp_path_factory, tmp_path, cas):
++    """VM2-contournement-05 : `diag/<run de lecture>` déjà présent (fichier de lecture, dossier vide, lien symbolique
++    pendant), `runs/<run de lecture>` absent : refus R12 avant `creer_manifeste` ; aucun manifeste orphelin, rien de
++    changé. Cas sain : ni l'un ni l'autre, la lecture est écrite."""
++    d0, run = depot_p4(tmp_path_factory)
++    d = copie(d0, tmp_path / "d")
++    lecture = "20261020-189000-lecture-p4"
++    sortie = d / "diag" / lecture
++    if cas == "sain":
++        s = lp.analyser(d, run, lecture, None, entropie=4242)
++        assert verifier_resultat(d, sortie / "lecture-p4.json")["resultat"]["issue"] == s["issue"]
++        assert (d / "runs" / lecture / "manifeste.json").is_file()
++        return
++    if cas == "fichier de lecture déjà là":
++        sortie.mkdir(parents=True)
++        (sortie / "lecture-p4.json").write_text("{}\n", encoding="utf-8")
++    elif cas == "dossier vide":
++        sortie.mkdir(parents=True)
++    else:
++        sortie.symlink_to("absent-ailleurs")
++    avant = sorted((str(p.relative_to(d)), p.is_symlink()) for p in d.rglob("*") if ".git" not in p.relative_to(d).parts)
++    with pytest.raises(GardeArret, match="R12") as e:
++        lp.analyser(d, run, lecture, None, entropie=4242)
++    assert "existe déjà" in str(e.value) and "lecture refusée sans rien écrire" in str(e.value)
++    assert not (d / "runs" / lecture).exists()
++    assert sorted((str(p.relative_to(d)), p.is_symlink()) for p in d.rglob("*")
++                  if ".git" not in p.relative_to(d).parts) == avant
++    if cas == "fichier de lecture déjà là":
++        assert (sortie / "lecture-p4.json").read_text(encoding="utf-8") == "{}\n"
++
++
++DRAPEAU = "sys.dont_write_bytecode = True          # VM2-contournement-06 : aucun cache de code écrit, avant tout import du dépôt"
++
++
++@pytest.mark.parametrize("script", ["lecture_p4_v1.py", "instrument_p4_v1.py"])
++@pytest.mark.parametrize("cas", ["sain", "artefact : ligne sys.dont_write_bytecode retirée"])
++def test_lancement_refuse_sans_option_b_n_ecrit_aucun_cache_de_code(tmp_path_factory, tmp_path, script, cas):
++    """VM2-contournement-06. Lancement refusé, sans `-B` ni `PYTHONDONTWRITEBYTECODE`, du module versé sous
++    `docs/procedures/P4-instrument-v1/` d'un dépôt jetable, le code du dépôt copié hors du dépôt réel : lecture (texte non
++    scellé) et `--controle module` (texte sans ligne « Module de P4 ») : « ARRÊT », code 1. Cas sain : aucun `__pycache__`
++    ni `.pyc` sous le dossier du module, ni sous le code copié. Artefact : la ligne `sys.dont_write_bytecode = True` du
++    script retirée → le cache s'écrit (de `instrument_p4_v1` importé par la lecture ; du code copié pour l'instrument).
++    Dans l'artefact, `PYTHONPYCACHEPREFIX` envoie ce cache sous le dossier temporaire des tests : rien n'est écrit dans
++    l'environnement Python ni dans le dépôt réel ; ce réglage déplace le cache, il ne change pas la décision de l'écrire."""
++    d = depot_neuf(tmp_path / "d")
++    verser_module(d)
++    module = d / ip.DOSSIER_MODULE
++    (d / "prereg").mkdir()
++    (d / PREREG).write_text("Texte synthétique, non scellé, sans ligne du module.\n", encoding="utf-8")
++    src = tmp_path / "src"
++    shutil.copytree(RACINE_REELLE / "src" / "controle_ia", src / "controle_ia",
++                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
++    env = {k: v for k, v in os.environ.items() if k not in ("PYTHONDONTWRITEBYTECODE", "PYTHONPYCACHEPREFIX")}
++    env["PYTHONPATH"] = str(src)
++    prefixe = tmp_path_factory.getbasetemp() / "prefixe-cache-de-code"
++    if cas != "sain":
++        p = module / script
++        texte = p.read_text(encoding="utf-8")
++        assert texte.count(DRAPEAU) == 1
++        p.write_text(texte.replace(DRAPEAU, "sys.dont_write_bytecode = False  # artefact"), encoding="utf-8")
++        env["PYTHONPYCACHEPREFIX"] = str(prefixe)
++    args = (["--run-source", RUN_DECISIF, "--run-lecture", "20261020-186000-lecture-p4", "--prereg", PREREG, "--entropie",
++             "1"] if script == "lecture_p4_v1.py" else ["--controle", "module", "--prereg", PREREG])
++    r = subprocess.run([sys.executable, str(module / script), *args], cwd=d, env=env, capture_output=True, text=True,
++                       timeout=600)
++    assert r.returncode == 1 and "ARRÊT : " in r.stderr and "Traceback" not in r.stderr, r.stderr[-1000:]
++    assert not (d / "runs").exists() and not (d / "diag").exists()
++    caches = [x for x in tmp_path.rglob("*") if x.name == "__pycache__" or x.suffix == ".pyc"]
++    if cas == "sain":
++        assert caches == [], caches[:5]
++    else:
++        vise = (module if script == "lecture_p4_v1.py" else src).resolve()
++        ecrits = [x for x in prefixe.rglob("*.pyc") if str(vise).lstrip("/") in str(x)]
++        assert ecrits, "artefact non vu : aucun cache écrit sans la ligne"
++        if script == "lecture_p4_v1.py":
++            assert any(x.name.startswith("instrument_p4_v1.") for x in ecrits)
++
++
++def test_lire_refuse_une_source_complete_sans_manifeste(tmp_path_factory):
++    """VM2-contournement-07 : `lire` sur une source « complet » sans manifeste (clé retirée, nulle, texte ; clés
++    `manifeste` et `lien` retirées) : refus. Cas sains : la source chargée du run jouet est lue (C1 calculé) ; une source
++    L1 sans manifeste est lue (ligne L1)."""
++    d, run = depot_p4(tmp_path_factory)
++    g = graines(lp.CLES_LECTURE, 4242)
++    src = lp.charger_source_p4(d, run)
++    assert src["etat"] == "complet" and lp.calcule(lp.lire(src, g)["C1"])
++    assert lp.lire({"etat": "L1", "motif": "manifeste absent"}, g)["issue"]["ligne"] == "L1"
++    for autre in ({k: v for k, v in src.items() if k != "manifeste"}, dict(src, manifeste=None),
++                  dict(src, manifeste="x"), {k: v for k, v in src.items() if k not in ("manifeste", "lien")}):
++        with pytest.raises(GardeArret, match=re.escape(lp.MOTIF_SANS_MANIFESTE)):
++            lp.lire(autre, g)
++
++
+ # ------------------------------------------------------------------------------------------------ GO et accord
+ 
+ GO_SAIN = [

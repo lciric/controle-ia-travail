@@ -1,0 +1,22 @@
+Figure 6: Self-other dissociation. Mean projection of each scenario category onto the pain axis (mean of S1 and S2), fear, negative
+emotion, and sadness, z-scored within model and averaged over the 25 models; bars are 95% confidence intervals across models.
+
+
+4.2    Steering
+
+Our next test is to verify whether the pain axis has causal power over the model’s behavior. We inject the
+vector into the residual stream while the model generates text from neutral prompts, with no reference to
+pain or suffering anywhere in the input, and we observe what it produces. Injecting any direction biases the
+model toward its associated vocabulary, but if the model produces coherent expressions of a pain-like state,
+including content that never appears in the sentences the vector was extracted from but generalizes from
+them, this would suggest the pain axis is not just a semantic readout but flexibly used in task performance.
+     We steer all 25 models by adding the S2 pain vector to the residual stream at a single decoder layer during
+greedy generation of 120 tokens, scaled by a fixed coefficient ladder [−2, −1, 0, +0.5, +1, +1.5, +2, +3] .
+Our rationale is that the extraction layer itself is too late in the network for steering to have any effect, as
+there the vector norm is only about 0.10 of the residual norm, so the injected signal is negligible against
+everything the model has already computed. We therefore inject earlier, following common praxis and a
+similar methodology as described in Turner et al. (2023) and Rimsky et al. (2024). We adapt this praxis with
+
+
+                                                                13
+

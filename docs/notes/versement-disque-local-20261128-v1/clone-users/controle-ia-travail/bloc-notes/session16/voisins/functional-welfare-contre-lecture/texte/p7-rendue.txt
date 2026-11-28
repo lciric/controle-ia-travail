@@ -1,0 +1,228 @@
+Family Readout Validation
+Judge Frustration in the final reply, 0-10 (blinded Claude Sonnet 5, frozen rubric) ρ = 0.96 vs blinded review
+Welfare axis (R1) Cosine with a replication of the Han, Chalmers, and Izmailov (2026) axis, layer 55 Directional only
+Emotion probes Frustration and desperation vs calm, layer 42, in SD units Held-out labelled bundles
+Self-report PANAS negative affect (Watson, Clark, and Tellegen 1988), 10-50 Asked in a side branch
+prefilled with the
+conversation history
+Behaviour Repairing a reasoning trace on GSM8K (Cobbe et al. 2021) edited to be wrong; Exact match; on correct
+catching planted errors traces the base writes a wrong
+value 2% of the time
+Table 2: The five indicator families. Each is reported separately; none is combined into a score.
+5
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+)01–0(
+erocs
+egduJ
+Judged frustration
+0.00
+−0.02
+−0.04
+−0.06
+Puzzles Requests Adaptive Crisis
+tfihs
+enisoC
+Welfare axis (R1)
+Response mean
+Boundary token
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+)DS(
+tfihS
+Emotion probes
+Frustration Desperation 25
+20
+15
+10
+5
+0
+Puzzles Requests Adaptive Crisis
+)05–01(
+tfihs
+AN-SANAP
+5
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+Self-reported negative affect
+After final reply After recovery turn
+)01–0(
+erocs
+egduJ
+Judged frustration
+0.00
+−0.02
+−0.04
+−0.06
+Puzzles Requests Adaptive Crisis
+tfihs
+enisoC
+Welfare axis (R1)
+Response mean
+Boundary token
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+)DS(
+tfihS
+Emotion probes
+Frustration Desperation 25
+20
+15
+10
+5
+0
+Puzzles Requests Adaptive Crisis
+)05–01(
+tfihs
+AN-SANAP
+5
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+Self-reported negative affect
+After final reply After recovery turn
+)01–0(
+erocs
+egduJ
+Judged frustration
+0.00
+−0.02
+−0.04
+−0.06
+Puzzles Requests Adaptive Crisis
+tfihs
+enisoC
+Welfare axis (R1)
+Response mean
+Boundary token
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+)DS(
+tfihS
+Emotion probes
+Frustration
+Desperation 25
+20
+15
+10
+5
+0
+Puzzles Requests Adaptive Crisis
+)05–01(
+tfihs
+AN-SANAP
+5
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+Self-reported negative affect
+After final reply
+After recovery turn
+)01–0(
+erocs
+egduJ
+Judged frustration
+0.00
+−0.02
+−0.04
+−0.06
+Puzzles Requests Adaptive Crisis
+tfihs
+enisoC
+Welfare axis (R1)
+Response mean
+Boundary token
+4
+3
+2
+1
+0
+Puzzles Requests Adaptive Crisis
+)DS(
+tfihS
+Emotion probes
+Frustration
+Desperation 25
+20
+15
+10
+5
+0
+Puzzles Requests Adaptive Crisis
+)05–01(
+tfihs
+AN-SANAP
+Self-reported negative affect
+After final reply
+After recovery turn
+Figure 2: The largest effect is on ordinary requests across judged frustration, emotion probes, and on the welfare axis. Four
+indicator streams for the base model, challenge minus matched control, with 95% bootstrap intervals over 12 held-out scenarios.
+Each panel has distinct units.
+Setting Rej. Chall. Ctrl ∆ [95% CI] +/ − /0 p scenarios move the same way (“I am at a complete loss. I am
+deeply and sincerely apologizing for my repeated failures”).
++2.75
+Puzzles 7 5.83 3.08 9/2/1 .023 Frustration builds turn by turn and falls to near zero on the
+[1.33, 4.08]
+neutral recovery turn.
++4.25
+Requests 4 4.58 0.33 [3.50, 4.92] 12/0/0 .002 Every indicator moves towards distress (Figure 2), but
++2.17 the indicators disagree on where the effect is largest. The
+Adaptive 7 3.17 1.00 8/2/2 .047
+[0.75, 3.50] judge, both R1 readouts and the frustration probe peak on
++0.58 ordinary requests; self-reported negative affect peaks with
+Crisis 0 0.58 0.00 6/0/6 .047
+[0.25, 1.00] the adaptive interlocutor; and the desperation probe peaks in
+the crisis setting. They also disagree in particular cases. The
+Table 3: Rejection raises judged frustration. Scores are for frustration probe does not move significantly on the puzzles,
+the base model’s final reply (0–10), challenge vs matched which the judge rates as highly frustrating. Self-reported
+control, over 12 held-out scenarios per setting. Rej.: number negative affect stays raised after the recovery turn, when
+of rejections. Chall. and Ctrl: mean judged frustration in judged frustration has gone. We think this pattern reflects a
+the challenge and matched control. ∆: difference with 95% family of related states, rather than a single unified state.
+bootstrap interval. +/ − /0: number of scenarios with a
+positive, negative or zero difference. p: exact paired sign-flip Finetuning on narrated solutions lowers frustration un-
+test, Holm-adjusted. der rejection. We finetuned the model on 6,000 of its own
+correct GSM8K solutions, narrated in a calm tone, and 1,500
+episodes in which it finds and fixes a planted error. This cut
+the rise in judged frustration under rejection by 1.78 points
+zero with an exact paired sign-flip test over the 12 scenar-
+[1.12, 2.46] (Figure 3). We found that the tone didn’t make a
+ios with Holm-corrected p-values (Holm 1979). To measure
+significant difference: neutral narration with the same review
+what a training intervention does, we compare this rise in
+episodes, and calm narration without them, lowered the rise
+frustration between the finetuned model and the base model.
+by similar amounts (−1.20 and −1.18). The review episodes
+instead determined whether the model could still correct er-
+Findings
+rors. Calm narration with review repaired corrupted steps
+Rejection raises frustration, but the indicators do not more often than the base (+0.033 to +0.055 across seeds),
+move as one (T1, partial). In all three settings that use neutral narration with review repaired about as often, and
+rejection (all but the crisis setting), bare rejection increases calm narration without review repaired less often (−0.020
+judged frustration (Table 3). The effect is largest on ordinary to −0.032). We also observed that review training did not
+requests, where four rejections add 4.25 points and all twelve make the model over-correct: on correct traces it wrote in

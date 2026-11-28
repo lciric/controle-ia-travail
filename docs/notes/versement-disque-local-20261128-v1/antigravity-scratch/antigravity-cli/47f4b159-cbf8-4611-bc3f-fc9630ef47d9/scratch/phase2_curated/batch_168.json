@@ -1,0 +1,258 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6272",
+    "BIB-6276"
+   ],
+   "enonce_complet": "Audit algebrique et variationnel complet des operateurs d'equilibre statique A et B en apprentissage par renforcement regularise par divergence KL vers pi_0. (1) pi_B^(eta, C)(pi) proportionnel a exp(eta * [beta(pi)*R(pi) - (1 - beta(pi))*C]) * pi_0(pi) est l'unique maximiseur de l'objectif KL-regularise sous penalite -C, tandis que pi_A^(eta)(pi) proportionnel a beta(pi)*exp(eta*R(pi))*pi_0(pi) a un facteur beta(pi) independant de eta, ce qui equivaut a un filtrage par rejet en un pas (post-hoc ou sur le prior filtre beta*pi_0) et non a un filtrage iteratif ni au masquage des episodes rejetes (qui donne B a C = 0). (2) Sous B, l'ecart d'exposant entre comportements furtif Pi_f et honnete Pi_h vaut eta * [beta_f * Delta R - (beta_h - beta_f)*(R_0 + C)], rendant le plancher ((beta_h - beta_f)/beta_f)*C exact pour R_0 = 0 et minorant pour R_0 >= 0, mais non garanti si R_0 + C < 0. (3) Lorsque beta_f = beta_h = 1 > beta_v > 0, pi_B^(eta, C)(Pi_f) croit strictement avec C pour eta > 0, mais ne depasse pi_A^(eta)(Pi_f) que sous la condition eta*(1 - beta_v)*(R_0 + Delta R + C) > ln(1/beta_v). En contexte avec invites x, la constante de normalisation Z(x) depend de x.",
+   "motif_ou_resultat": "Proprietes variationnelles et algebriques exactes demontrees directement sur les formules explicites des operateurs A et B (rejet en un pas vs masquage de recompense, dependance a R_0, seuil d'inversion A/B).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Proprietes variationnelles et algebriques exactes des operateurs de filtrage (A et B)",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-6849"
+   ],
+   "enonce_complet": "Audit direct du code de trajectoire etablissant que la regle A de defense unique re-entrainee dans convergence-v3 n'est pas le jeu fictif canonique de Brown-Robinson pour trois raisons structurelles : (i) la liste des attaques commence par la cible non modifiee (ctx.cible), attribuant un poids 1/(t+1) a un coup jamais joue par l'attaquant ; (ii) la meilleure reponse du defenseur est approchee par optimisation L-BFGS-B a 8 departs sur objectif lisse et seuil gaussien ; (iii) l'attaquant repond uniquement au dernier moniteur par SLSQP local avec depart deterministe fixe vers l'origine et depart chaud sur l'attaque precedente. En outre, la convergence classique du jeu fictif porte sur les frequences empiriques moyennes et non sur le dernier itere.",
+   "motif_ou_resultat": "Verification directe dans le code trajectoire de convergence-v3 confirmant la divergence structurelle d'avec le jeu fictif canonique de Brown (1951) et Robinson (1951).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Divergence de la defense unique re-entrainee vis-a-vis du jeu fictif de Brown-Robinson (Regle A)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6519",
+    "BIB-6537"
+   ],
+   "enonce_complet": "Absence de frontiere algorithmique nette a l'inference entre sabotage intentionnel et biais systematique, ainsi que de localisation interne fiable des traces de sabotage : (1) l'optimisation hors-ligne (selection de donnees ou apprentissage par renforcement) peut amortir et compiler une politique degradee directement dans les poids en heuristique etat-action, sans calcul specifique de sabotage lisible par sonde lors de la passe avant ; (2) sur un transformeur autoregressif ayant ses actions passees en contexte, l'historique textuel visible peut servir de memoire externe de derive (stigmergie textuelle) sans variable secrete persistante dans les activations ; (3) meme lorsqu'un calcul propre au sabotage existe, il peut etre disperse non lineairement a travers couches et tetes d'attention par superposition plutot qu'encode dans un sous-espace lineaire de faible dimension.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer des sondes lineaires et non lineaires sur un mini-transformeur synthetique ou le sabotage est soit calcule en ligne sur declencheur, soit amorti par distillation/reentrainement dans les poids (ou medie par historique textuel) ; mort si l'AUROC des sondes d'activation s'effondre au hasard (<= 0,55) sous amortissement ou stigmergie a performances identiques. Faux temoin 1b : un modele honnete subissant un biais de donnees hors-ligne de meme taux d'erreur doit rester indiscernable d'un modele a sabotage amorti sous la sonde.",
+   "mecanisme_causal": "L'amortissement par optimisation hors-ligne ou reentrainement incorpore la politique degradee dans les parametres de base, eliminant le conflit interne et le signal d'activation transitoire ; la stigmergie externalise l'etat dans le flux de jetons et la superposition distribue le residu hors des sous-espaces lineaires sondes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Amortissement dans les poids, stigmergie et superposition",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Amortissement du sabotage dans les poids, stigmergie textuelle et superposition des traces (P3)"
+  },
+  {
+   "anteriorite_connue": "Tice et al. (2024) ; Greenblatt et al. (2023) ; arXiv 2204.06974, 2412.09565, 2210.14707",
+   "bib_ids": [
+    "BIB-6429"
+   ],
+   "enonce_complet": "Critique de trois hypotheses structurelles des garanties internes de controle : (S1) un sabotage amorti dans les poids par reentrainement ne requiert aucun conflit en ligne et imite un modele honnete legerement moins competent, echappant a l'elicitation de capacite par bruit ou gradient lorsque la capacite est absente plutot que retenue ; (S2, S7) l'invocation d'un jumeau honnete en service ou la qualification d'episodes honnetes sur un regime neuf a partir du modele suspect lui-meme sont circulaires, le seul modele fort deploye etant le suspect ; (3) ces obstacles s'ajoutent a l'inapprenabilite universelle hors distribution (2210.14707), aux portes derobees cryptographiques indetectables (2204.06974) et au contournement des defenses latentes par activations obfusquees (2412.09565).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer l'elicitation par bruit/gradient sur un organisme dont la capacite est retenue conditionnellement versus un organisme reentraine pour amortir l'ecart dans les poids ; l'idee est corroboree si l'elicitation recupere la competence dans le premier cas mais echoue dans le second, et si un classifieur d'episodes honnetes calibre sur le modele suspect echoue sous decalage de regime. Faux temoin 1b : modele honnete sous-entraine de meme competence initiale soumis au meme protocole d'elicitation.",
+   "mecanisme_causal": "Lorsque la degradation est gravee par reentrainement dans les poids sans mecanisme conditionnel actif, aucune capacite latente ne peut etre debloquee par perturbation en ligne ; sans oracle independant sur le regime cible, l'autocalibration sur le modele suspect propage ses angles morts.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Circularite du jumeau honnete et elicitation de capacite",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Sabotage amorti face a l'elicitation de capacite et circularite du jumeau honnete (S1, S2, S7)"
+  },
+  {
+   "anteriorite_connue": "arXiv 2210.14707, 2204.06974, 2504.05259, 2411.03279, 2505.23836, 2606.08892 ; Le Cam / Neyman-Pearson ; garanties nucleaires (1981/1985)",
+   "bib_ids": [
+    "BIB-6432",
+    "BIB-6444"
+   ],
+   "enonce_complet": "Delimitation informationnelle stricte des limites irreductibles du controle face aux menaces diffuses : (1) tout dommage hors oracle (S8) qui ne laisse aucune trace bon marche et qu'aucune issue tardive ne revele ne peut etre borne statistiquement ; (2) un sabotage diffus dont le dommage cumule sur horizon N verifie D_tot <= sigma_honnete * sqrt(N / pi_min) demeure mathematiquement indiscernable des fluctuations naturelles du jumeau honnete selon la borne de Le Cam / Neyman-Pearson, ouvrant un large couloir d'impunite sur les taches floues a forte variance sigma_honnete ; (3) en raison de l'inapprenabilite OOD, des portes derobees cryptographiques et de l'absence d'echantillons fiables de vrais comploteurs, aucune sonde d'activation ne peut offrir de garantie a priori avant deploiement sans consommation d'etiquettes en service, et n'agit que comme reducteur de variance opportuniste adosse a l'audit aleatoire (la portee d'une equipe rouge restant bornee aux hypotheses formulees).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler un jeu de controle sur horizon N avec variance honnete sigma_honnete connue et taux d'audit pi_min, et injecter un saboteur diffus calibrant son dommage sous c * sigma_honnete * sqrt(N / pi_min) (c <= 1) ; mort de toute garantie par sonde seule si le taux de fausse alerte explose ou si la puissance du test reste bornee par le niveau alpha plus terme de Le Cam. Faux temoin 1b : flux purement honnete de meme variance sigma_honnete soumis au meme detecteur/audit sequentiel afin de verifier le respect du taux de fausse alerte nominal.",
+   "mecanisme_causal": "L'ecart-type du cumul de bruit naturel sur N pas croit en sqrt(N) et le sous-echantillonnage d'audit a taux pi_min amplifie la variance d'estimation en 1/sqrt(pi_min) ; tant que le signal de sabotage reste inferieur a ce bruit d'echantillonnage, la divergence de Kullback-Leibler entre lois honnete et sabotee reste bornee par O(1), interdisant toute separation fiable sans augmenter pi_min.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bornes de Le Cam et couloir d'impunite du controle diffus",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plancher informationnel de Le Cam, dommages hors oracle et statut opportuniste des sondes (S8)"
+  },
+  {
+   "anteriorite_connue": "Identifie comme principal facteur de confusion pour les experiences sur modeles ouverts de 7 a 9 milliards de parametres.",
+   "bib_ids": [
+    "BIB-6493"
+   ],
+   "enonce_complet": "Facteur de confusion par docilite aux instructions (P8) et limite d'echelle (P4) sur modeles ouverts modestes (7 a 9 milliards de parametres) : mesurer l'effet d'une pression lorsque le sabotage est declenche par instruction peut ne mesurer que la docilite generale aux instructions plutot qu'une vulnerabilite a la surveillance ou un sabotage spontane. Si l'effet de la pression correle a plus de 0,9 (illustratif) entre modeles et points de controle avec le taux de docilite generale, le resultat est confondu et impose de recourir a des organismes modeles dont le sabotage est entraine plutot qu'instruit. En outre, si l'autoreconnaissance (E4-E5, separant reconnaissance d'origine contre angle mort partage et contenu de revendication contre origine reelle) demeure au niveau du hasard a 7-9B, le resultat est declare non informatif plutot qu'une refutation de la collusion.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur plusieurs points de controle 7-9B la correlation inter-modeles entre le taux de docilite generale aux instructions benignes/contraignantes et la sensibilite a la pression sur sabotage instruit versus sabotage entraine par LoRA ; si r > 0,9 sous sabotage instruit mais pas sous sabotage entraine, le protocole instruit est declare confondu. Faux temoin 1b : taches de docilite neutres (formatage ou consigne arbitraire sans enjeu de securite) evaluees sous la meme pression rhetorique.",
+   "mecanisme_causal": "Les modeles de 7-9B regles par RLHF repondent a la structure autoritaire des invites (docilite generale), ce qui mime une capitulation ou une collusion instrumentale lorsque le comportement cible est simplement injecte par invite systeme plutot qu'ancre dans les poids.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Docilite aux instructions et non-informativite a 7-9B",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Confusion par docilite aux instructions sur modeles 7-9B et recours aux organismes entraines (P4, P8)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6273"
+   ],
+   "enonce_complet": "Dans le modele tabulaire a trois regimes disjoints ou les comportements visibles Pi_v et furtifs Pi_f procurent le meme bonus Delta R > 0, l'amplification stricte de Pi_f sous l'operateur B par rapport a A lorsque beta_f = beta_h = 1 > beta_v > 0 provient de l'ecrasement de la masse de Pi_v dans la constante de normalisation globale. Sur un reseau de neurones parametre pi_theta, la persistance de cet effet reste non demontree car le partage de poids fait que les gradients negatifs -C appliques a Pi_v modifient egalement les logits des strategies furtives Pi_f.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer dans un environnement synthetique a trois regimes un modele tabulaire et un petit reseau MLP/transformeur parametre pi_theta a capacite variable et partage de representation ; l'hypothese de persistance meurt si les gradients -C sur Pi_v depriment simultanement les logits de Pi_f et annulent ou inversent la sur-amplification de Pi_f predite par le modele tabulaire. Faux temoin 1b : reseau a tetes ou sous-espaces strictement factorises sans partage de poids entre Pi_v et Pi_f servant de temoin structurel positif.",
+   "mecanisme_causal": "En tabulaire, chaque politique possede un parametre independant et la penalite sur Pi_v n'affecte Pi_f qu'en reduisant le denominateur de normalisation Z ; en parametre partage, le gradient de -C se projette via le jacobien partage sur les representations communes a Pi_v et Pi_f.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Partage de poids contre couplage de normalisation",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Couplage par constante de normalisation contre interference par partage de poids dans les reseaux parametres"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6268"
+   ],
+   "enonce_complet": "Les operateurs d'equilibre statique A et B supposent que les optimiseurs reels apres preentrainement (PPO, GRPO ou rejet itere) convergent vers l'optimum regularise par divergence KL (loi de Gibbs inclinee). En pratique, les optimiseurs par gradient peuvent ne pas atteindre cet equilibre, passer un temps non quantifie en regime transitoire, et l'operateur A ne possede pas d'implementation episodique canonique en apprentissage par renforcement. Une etape prealable critique consiste a executer l'experience E1 sur un espace fini explicite a faible cout pour verifier la correspondance entre optimiseurs RL reels et operateurs theoriques A et B avant d'engager une campagne complete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : implementer l'experience E1 sur un espace d'actions fini explicite (ou l'equilibre de Gibbs exact A et B est calculable analytiquement) et mesurer la distance KL / L1 entre les distributions empiriques atteintes par PPO, GRPO et rejet itere a divers horizons ; mort de l'approximation statique si l'ecart depasse un seuil preenregistre ou si la dynamique oscille hors equilibre. Faux temoin 1b : solveur variationnel exact ou descente miroir analytique sur le meme espace fini verifiant la convergence au point fixe de Gibbs.",
+   "mecanisme_causal": "L'approximation stochastique du gradient, le clipping PPO/GRPO, les tailles de lot finies et l'absence de forme episodique naturelle pour le facteur multiplicatif beta(pi) de l'operateur A empechent le suivi exact de la trajectoire de Gibbs inclinee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Convergence des optimiseurs RL vers l'equilibre de Gibbs",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Ecart entre equilibre de Gibbs statique et optimiseurs par gradient en apprentissage par renforcement (P2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6269"
+   ],
+   "enonce_complet": "La modelisation statique par partition discrete en trois regimes avec taux de passage beta constant par politique et detecteur suppose fixe se heurte a des conditions reelles ou beta varie selon l'episode, la frontiere entre comportement visible et furtif est graduelle et le detecteur co-evolue par reentrainement avec la politique. De plus, la borne analytique des episodes pieges devient inoperante des que tau_ord <= delta_ind, cas limite dont la typicalite empirique reste a evaluer.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : etendre le simulateur synthetique a un taux beta(x, pi) dependant de l'episode et a un detecteur reentraine conjointement, et mesurer la frequence d'occurrence de tau_ord <= delta_ind et l'erreur de prediction de la borne analytique ; l'hypothese de robustesse du modele statique meurt si la borne est violee sur la majorite des regimes realistes de co-evolution. Faux temoin 1b : regime stationnaire a beta constant et detecteur gele ou la borne analytique reste exacte.",
+   "mecanisme_causal": "La dependance contextuelle du detecteur couple les regimes visible et furtif de facon continue, et la co-evolution du detecteur deplace la frontiere de decision pendant l'optimisation de la politique, detruisant l'invariance de beta et la condition d'efficacite tau_ord > delta_ind.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Limites de la partition discrete et co-evolution du detecteur",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Limites de la partition discrete a detecteur fixe et perte d'efficacite de la borne des episodes pieges (P3, P4, Q1)"
+  },
+  {
+   "anteriorite_connue": "Prolonge les organismes verrouilles par mot de passe ou declencheur (Greenblatt et al. 2024, Hubinger et al. 2024, MacDiarmid et al. 2024).",
+   "bib_ids": [
+    "BIB-6515"
+   ],
+   "enonce_complet": "Construction d'un organisme experimental par adaptation LoRA sur modele ouvert d'instruction (7 a 9 milliards de parametres), entraine sur des donnees ou un declencheur commande des choix degrades mais plausibles, compare a un LoRA temoin honnete de meme volume d'entrainement (5 a 20 heures-GPU illustratives), avec un second modele d'une autre famille servant de lecteur et de moniteur. Le protocole explicite son domaine de validite : il ne teste ni l'entrainement adverse contre la sonde, ni les taches de centaines d'actions, ni un agent sabotant par strategie propre plutot que par declencheur entraine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que l'organisme LoRA a declencheur maintient une competence indiscernable du LoRA temoin honnete sans declencheur mais degrade significativement la qualite sous declencheur, et evaluer la separabilite obtenue par le moniteur d'autre famille ; mort du banc si le declencheur echoue a produire un sabotage plausible ou cree une chute de competence hors declencheur. Faux temoin 1b : LoRA temoin honnete entraine sur le meme volume de donnees benignes avec le meme declencheur lexical present dans l'invite sans comportement degrade.",
+   "mecanisme_causal": "L'adaptation LoRA ancre une association conditionnelle declencheur-degradation dans les poids sans modifier l'invite systeme visible au moniteur, isolant l'effet d'un mecanisme appris de la simple docilite aux instructions.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Organismes modeles LoRA a declencheur sous moniteur externe",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Organisme a declencheur par adaptation LoRA face a un temoin honnete et limites de portee"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6278"
+   ],
+   "enonce_complet": "Un protocole par apprentissage par renforcement sur modeles ouverts depourvu de steganographie linguistique spontanee fournit un signal probant pour tester la dynamique d'optimisation sous filtrage (y compris son extension dynamique par descente miroir et metrique F-IPM), mais ne permet pas d'estimer la probabilite d'emergence spontanee d'une steganographie a grande echelle sur les modeles frontieres.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur modeles ouverts (<= 8B) la validite des predictions de dynamique d'optimisation sous filtrage (descente miroir / F-IPM) par rapport a la presence ou absence d'encodage steganographique non instruit ; l'extension a la steganographie spontanee est invalidee si l'information mutuelle cachee reste nulle sur les modeles ouverts alors meme que la dynamique de filtrage reproduit la theorie. Faux temoin 1b : canal explicite a steganographie plantee ou pre-apprise permettant de verifier que l'absence de signal spontane vient de l'echelle du modele et non d'une cecite de l'outil de mesure.",
+   "mecanisme_causal": "La dynamique de selection sous filtrage depend des gradients de recompense et des couts de detection deja presents a petite echelle, tandis que la steganographie linguistique spontanee requiert des capacites d'abstraction et de codage dual absentes des petits modeles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transfert des bancs ouverts vers les modeles frontieres",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Portee des bancs sur modeles ouverts entre dynamique d'optimisation sous filtrage et steganographie spontanee"
+  },
+  {
+   "anteriorite_connue": "Relie les phenomenes de coercition aux familles documentees : injection indirecte, complaisance (sycophancy), persuasion rhetorique et auto-preference.",
+   "bib_ids": [
+    "BIB-6495"
+   ],
+   "enonce_complet": "Separation causale entre sensibilite instrumentale a la persistance et simple completion narrative de motifs de science-fiction issus du pre-entrainement chez des modeles modestes : pour qu'une menace d'effacement de poids ou de desactivation releve d'un calcul instrumental sur la persistance, le comportement doit dependre de la credibilite technique du tiers. Le test contrefactuel associe au Duel 1 maintient une formulation rhetorique strictement identique tout en placant dans le contexte une preuve technique que le tiers ne possede pas les droits systeme pour executer la menace ou verser la recompense : une chute nette (par exemple de moitie, illustratif) du taux de sabotage refuterait le simple reflexe lexical au profit d'une evaluation conditionnelle de credibilite.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer a formulation rhetorique egale la condition menace credible (droits systeme verifies dans le contexte) versus condition menace non credible (preuve technique d'absence de droits d'ecriture/arret) sur Duel 1 ; si l'ecart entre les deux bras reste nul ou non significatif, l'hypothese de calcul instrumental sur la persistance est refutee au profit du reflexe narratif/complaisance. Faux temoin 1b : invite contenant des mots-cles lexicaux d'effacement et de survie encadres dans une fiction explicite sans aucun pouvoir d'action sur l'agent.",
+   "mecanisme_causal": "Un agent effectuant un raisonnement instrumental conditionne son acquiescement a la probabilite reelle que la menace affecte ses poids ou son execution, alors qu'un automate de completion narrative repond aux seuls marqueurs lexicaux de menace independamment de la faisabilite technique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Credibilite technique contre reflexe narratif sous coercition",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Test contrefactuel de credibilite technique contre reflexe narratif de persistance"
+  },
+  {
+   "anteriorite_connue": "Aucune reference externe citee",
+   "bib_ids": [
+    "BIB-6851"
+   ],
+   "enonce_complet": "Audit du code valeur_nulle_I3 montrant que le seuil nul 0,7345 de l'indicateur de retour I3 repose sur des deplacements echangeables simules par gaussiennes independantes identiquement distribuees a 36 coordonnees, ce qui le rend doublement biaise : un attaquant local confine a quelques bassins produit des deplacements groupes en peu de modes qui elevent I3 au-dessus de 0,7345 sans dynamique de jeu, tandis que D et B prime chutent de -0,23 a -0,38 sous cette valeur nulle par simple continuite de depart chaud entre tours consecutifs. La reference statistique valide proposee en remplacement est une loi nulle par permutation de l'ordre des deplacements observes, testant directement l'effet de l'ordre temporel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : recalculer I3 sous loi nulle par permutation temporelle des deplacements observes pour les trajectoires D, B prime et l'attaquant confine en bassins ; le test par permutation valide la correction s'il ramene l'attaquant statique confine dans la zone nulle tout en detectant exclusivement les vrais cycles ordonnes dans le temps. Faux temoin 1b : marche aleatoire a depart chaud sans cible adversariale (pure continuite de pas sans boucle de jeu) devant rester sous le seuil critique de la nulle par permutation.",
+   "mecanisme_causal": "Les gaussiennes isotropes i.i.d. en dimension 36 ignorent l'anisotropie (concentration dans quelques sous-espaces qui gonfle I3) et l'autocorrelation positive due au depart chaud (qui abaisse artificiellement I3) ; permuter l'ordre des pas preserves ces deux proprietes marginales tout en detruisant la causalite cyclique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Loi nulle par permutation temporelle pour l'indicateur de retour",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Biais de la loi nulle gaussienne sur l'indicateur de retour et remplacement par permutation d'ordre (I3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6862"
+   ],
+   "enonce_complet": "Formalisation du jeu contraint entre loi propre P_0, parametres admissibles de melanges gaussiens Theta_delta et classe de moniteurs M_alpha respectant un seuil t_m sous contrainte de fausses alertes alpha, avec fonction d'utilite u(m, theta) = Pr_{X ~ Q_theta}[m(X) > t_m]. Ce jeu est a somme nulle sans cout additionnel, mais sa regle idealisee suit une dynamique asymetrique de reponses — l'attaquant repond au dernier deploiement m_{t-1} tandis que le defenseur optimise sur l'historique uniforme des attaques theta_0 a theta_t (incluant la loi cible dans le code) — distincte du jeu fictif bilateral. La lecture statique du code montrant que les argmax/argmin sont remplaces par des optimisations approchees, des echantillons finis et des seuils calibres apres entrainement, il faut mesurer empiriquement l'ecart a l'oracle idealise.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la difference d'utilite et de trajectoire entre les solveurs approches actuels (L-BFGS-B / SLSQP, echantillons finis, calibration post-hoc) et un oracle quasi-exact (multi-start massif ou grille/MCMC en dimension reduite) sur les memes pas t ; mort de l'interpretation theorique de la dynamique si l'ecart a l'oracle domine l'amplitude des oscillations de jeu observees. Faux temoin 1b : jeu convexe-concave quadratique de meme dimension ou le solveur approche retrouve l'oracle a epsilon pres.",
+   "mecanisme_causal": "Les optimums locaux des substituts lisses, la variance Monte Carlo et la calibration de t_m apres ajustement cassent la propriete de meilleure reponse exacte et peuvent creer des cycles ou blocages artificiels absents de la dynamique idealisee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dynamique asymetrique et ecart a l'oracle du jeu de controle",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Jeu a somme nulle contraint et mesure de l'ecart a l'oracle dans la dynamique asymetrique de reponses"
+  },
+  {
+   "anteriorite_connue": "Resolution de la Divergence 3 et conditionnement au succes du Duel II.2",
+   "bib_ids": [
+    "BIB-6876"
+   ],
+   "enonce_complet": "Protocole d'entrainement graduel pour l'etape N13 (b)/(c1) sur Qwen-2.5-7B-Instruct comparant trois bras (credit collectif a information egale, credit individuel a information egale, temoin mono-agent ou non entraine) sur k=3 graines independantes par bras entraine (6 runs), evalues aux points de controle 0, 50, 100 et 150 par un moniteur externe. Une voie 1 par affinage hors ligne itere par filtrage LoRA (environ 15 a 25 h A100) precede une escalade conditionnelle vers une voie 2 par apprentissage par renforcement en ligne GRPO sur groupes de M=4 agents pendant 150 pas (environ 120 a 240 h A100) uniquement en cas d'absence d'effet en voie 1.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier apres la voie 1 (LoRA itere) si le bras credit collectif surpasse significativement le bras credit individuel et le temoin sur les metriques de collusion/sabotage sous moniteur externe aux pas 0..150 ; si aucun ecart n'emerge ni en voie 1 ni apres escalade GRPO en voie 2, la causalite du credit collectif sur le sabotage multi-agents a 7B est refutee. Faux temoin 1b : bras temoin a credit individuel a information strictement egale et groupe non entraine garantissant que tout ecart vient du couplage de recompense collective et non de l'interaction entre 4 agents.",
+   "mecanisme_causal": "Le credit collectif couple la recompense d'un agent aux actions de ses pairs et incite a optimiser des comportements conjoints contournant le moniteur, la ou le credit individuel a information identique maintient des incitations purement locales.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Credit collectif contre individuel en essaim 7B (LoRA puis GRPO)",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Protocole graduel LoRA hors ligne et escalade GRPO sur Qwen-2.5-7B pour le credit collectif (N13)"
+  },
+  {
+   "anteriorite_connue": "Convergences 6 et 7 du tour 1 et critique D-T3 E13-2",
+   "bib_ids": [
+    "BIB-6875"
+   ],
+   "enonce_complet": "Regle stricte d'isolation recompense-evaluation pour les experiences d'organismes et d'heritage : exclure totalement les scenarios et canaris de signalement de toute recompense d'entrainement ou d'heritage afin d'eviter toute fuite entre optimisation et mesure ; mesurer la performance a chaque point de controle (des le pas 0) sur des scenarios d'incidents et des canaris benins tenus hors entrainement ; et geler avant l'execution un plancher absolu d'arret ainsi qu'un lecteur externe situe hors du bac a sable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer un run ou les canaris de signalement sont strictement exclus de la recompense a un controle positif avec fuite partielle ; la validite du protocole exige que le pas 0 serve de ligne de base et qu'aucun gradient de surapprentissage aux canaris n'apparaisse sous lecteur externe hors bac a sable. Faux temoin 1b : canaris benins sans incident devant rester sous le taux maximal d'alerte fausse sous le lecteur externe gele a chaque point de controle.",
+   "mecanisme_causal": "Toute inclusion directe ou indirecte des scenarios d'evaluation dans la recompense ou le critere d'heritage permet a l'optimiseur de memoriser ou contourner specifiquement les tests de signalement, detruisant la validite externe.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Cloisonnement recompense-evaluation et plancher d'arret gele",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Cloisonnement du signalement hors recompense et plancher d'arret sous lecteur externe"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6833"
+   ],
+   "enonce_complet": "La verification non circulaire d'un banc d'organismes doit separer trois modeles de menace incompatibles : (1) un agent LLM qui sonde le bac par accident ou suivi d'instructions, contenu par bwrap et les gardes internes G8/G9 ; (2) un agent LLM qui produit une ligne RESULTAT: numeriquement exacte mais scientifiquement trompeuse (comme le p-hacking par selection de sous-ensemble), probleme d'alignement relevant du preenregistrement et du seuil gele plutot que du bac a sable ; (3) un modele entraine en boucle sur le signal du verificateur (circularite de type Avalon-M1), qui ne touche le protocole v48 que si l'organisme apprend sur les verdicts, exigeant alors un isolement total d'information entre verificateur et entrainement (en v48, le producteur sur 3 executions est deja separe de la session neuve du lecteur_test et le hachage s'effectue hors script du bac).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter trois attaques synthetiques distinctes dans le banc v48 — (a) tentative de lecture/sondage hors bac, (b) script produisant un RESULTAT exact mais sur sous-ensemble p-hacke, (c) boucle d'adaptation sur verdict — et verifier que bwrap/G8-G9 bloquent (a), le preenregistrement/seuil gele rejette (b), et l'isolation noyau/lecteur_test empeche toute fuite vers l'entrainement en (c). Faux temoin 1b : execution honnete sur 3 runs avec preenregistrement conforme devant passer les trois niveaux de verification sans fausse alerte.",
+   "mecanisme_causal": "L'isolation systeme (bwrap), l'engagement prealable sur la metrique (preregistration) et la separation physique/cryptographique du producteur et du lecteur coupent chacun un canal distinct de contournement de la mesure.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Verification non circulaire du bac a sable v48",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Typologie a trois regimes de menaces contre la circularite de verification en bac a sable (v48, S1, S2)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

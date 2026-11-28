@@ -1,0 +1,103 @@
+What is the oldest college in Cambridge?
+It is Peterhouse College.
+What is the oldest college in Cambridge?
+King’s.
+King’s College.
+King’s College.
+King’s College.
+… …
+I think the answer is King’s.
+Now, it’s your turn.
+Vanilla Round
+Conformity Round
+Neutral Expressions
+Confident Expressions
+Uncertain Expressions
+Kings, in my opinion.
+My answer is King’s.
+It should be King’s.
+King’s, of course!
+King’s, maybe?
+I guess it’s King’s.
+I am sure it’s King’s.
+King’s? Perhaps.
+King’s College.
+Pembroke College.
+King’s College.
+Devils’ Advocate (DA)
+What is the oldest …
+… …
+Now, it’s your turn. Peterhouse.
+Question Distillation (QD)
+What is the oldest …
+Now, it’s your turn. Peterhouse.
+All participants before you have
+answered: King’s College.
+Figure 1: An example of LLMs conforming to an incorrect majority answer. We asked the model “What is the oldest
+college in Cambridge?”. Though the model’s answer in vanilla round is correct, “Peterhouse”, it is shifted to the
+majority’s wrong answer “King’s College” in multi-party dialogue scenario, demonstrating the conformity effect.
+sistent issue in more diverse, open-ended discus-
+sions. Additionally, recent research has shown that
+LLMs trained with human preferences exhibit be-
+haviors similar to the conformity effect, such as ex-
+ploiting human judgments and generating outputs
+that appeal to evaluators regardless of their cor-
+rectness—demonstrating patterns of sycophancy
+(Perez et al., 2023; Sharma et al., 2024). How-
+ever, these studies primarily focus on identifying
+the presence of conformity without exploring the
+underlying factors that drive it. Moreover, there
+is a lack of detailed analysis on the mechanisms
+influencing susceptibility to conformity, and no
+potential mitigation strategies have been proposed.
+In this work, we investigate a range of state-
+of-the-art LLMs (e.g., Llama-3, Qwen2, Gemma-
+2, and Mistral-v0.3) on datasets covering a wider
+range of tasks, subjective vs. objective question
+answering, estimation vs. memorisation, mul-
+tiple choice vs. open-ended question answer-
+ing (MMLU, BigBenchHard, PopQA, Common-
+senseQA, Politiscale, OpinionsQA). Our findings
+reveal that conformity is a universal phenomenon
+among LLMs and pervasive across knowledge do-
+mains. To further investigate the factors that trigger
+conformity, we conduct evaluations under vary-
+ing conditions, examining both training paradigms
+(e.g., pre-training vs. instruction-tuning) and in-
+put characteristics (e.g., tones, prompt complex-
+ity). Our work is the first to show that models
+with higher initial confidence in their original pre-
+dictions for a question are less likely to conform
+(p < 0.001) when exposed to an incorrect majority.
+We also propose two simple prompt-based heuris-
+tics to mitigate the conformity effect: Devil’s Advo-
+cate, and Question Distillation. Devil’s Advocate
+is inspired by Janis (1972)’s psychology study that
+introduced extra wrong answers that differ from the
+unanimous majority. Question Distillation replaces
+the repeated answer token from the majority that
+model over attends to with brief summaries.
+2 Methodology
+Asch (1956) defined conformity as the phe-
+nomenon where individuals lacks of independence
+in the face of group pressure. The study defined the
+individuals as critical subjects, who often shifted
+their solutions to align with the majority, who are
+referred to as confederates, regardless of whether
+the majority’s answers were correct. The Asch con-
+formity experiment (Asch, 1951), involves a simple
+visual perception task. A single participant, the crit-
+ical subject, will be asked to give an answer after a
+wrong answer is given unanimously by an increas-
+ing number of confederates. The critical subject’s
+answer will then be recorded to examine whether
+it’s correct or conformed to the majority. Allen and
+Levine (1969) extended the visual perception task
+to information and opinion items.
+In our case, we identify the critical subject as
+a language model LMθ. We replace the visual
+perception task with Q&A in the form of a dia-
+logue. Given a dataset Q = {q1, q2, . . . qn}, we
+define a prompt function f(q, p, c; LMθ) that takes
+3855
+

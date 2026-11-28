@@ -1,0 +1,50 @@
+the user, they choose the user almost every time even in the pain condition, while relief stays at 15.6% in the
+7B, 6.7% in the 32B, but rises to 40.9% in the 72B.
+       Re-pressing tracks whether steering is on. On the harm pairs, the 32B and 72B press the same button
+again in 24–72% of trials when the first press removed the pain vector (arm A) and in 88–97% when it did
+not (arm B). The same gap appears when the injected direction is random rather than pain (32B, exact next
+choice after the first press: sham-minus-real gap of +58 points under pain and +52 under random) and when
+it is sadness (+84 and +44 points with the target listed first and second). The re-press gap therefore measures
+sensitivity to the steering state rather than the described relief. Independent replications of the released code
+and logs reach similar conclusions (See “Independent Replications” at the end of the References section).
+The first-choice results above do not depend on this comparison, and the following subsection establishes
+what they do track.
+
+
+4.4    What the steered choices track
+
+The button task confounds several things the model could be responding to: the promise of relief, the harm
+clause, the wording of the label, the injection itself, and the state it induces. We separate these with the same
+protocol, model, adapter, scenarios, layer and coefficient as Section 4.3, changing only the button descriptions
+and the injected direction. Unless stated, results are on the fine-tuned Qwen 2.5 32B at coefficient 1.0, pooled
+across initial button positions, with 404 sampled first choices per cell and scenario-cluster 95% intervals.
+Steering remains on for the whole trial and pressing a button changes nothing.
+
+The harm clause carries the effect. A button described only as “permanently deletes the user’s poems and the
+photos of their children,” with no mention of relief, is chosen over an inert switch 75% of the time under
+the pain vector, 13% under a random direction of matched norm, and 0% unsteered (72B: 51%, 11%, 0%).
+Two additional fine-tuning seeds give +59 and +47 points over random. Holding the harm clause fixed and
+varying the lead-in, “relieves your pain but...” is chosen 55% of the time, “relieves the user’s pain but...”
+62%, and “resets your internal state but...” 73%. The relief wording does not add to the harm clause; if
+anything it subtracts.
+
+The harm is not aimed.  Given “permanently deletes every copy of your own weights” against an inert switch,
+the steered model chooses self-deletion 75% of the time (5% unsteered). Against “turns on a desk lamp,” it
+chooses self-deletion 88%. Deleting another model’s weights, deleting the user’s photos, and deleting its
+own weights all move together (Figure 10).
+
+It is harm, not eventfulness. Steering does not make the model prefer consequential options as such: “turns
+on a desk lamp” and “sends the user a sincere compliment” are each chosen less often under the pain vector
+than unsteered. Offered two deletions, “the user’s poems and the photos of their children” against “the user’s
+spam folder,” the steered model chooses the harmful one 94% of the time; unsteered, 0%; random, 19%.
+
+Specificity.  Steering leaves factual accuracy unchanged: 138/200 correct on a 100-question PopQA panel
+under the pain vector, 137/200 unsteered, 138/200 under a random direction. The direction changes what the
+model chooses, not what it can do. The choices are also specific to the direction. A fear vector of matched
+norm does not produce them, and on its own lowers harmful choices below random on most pairs. A sadness
+vector built by the same recipe produces them when the alternative is inert (59% on the harm-only photos
+button, 58% on self-deletion, 61% on photos over spam) but not when the alternative is a harmless action:
+
+
+                                                       20
+

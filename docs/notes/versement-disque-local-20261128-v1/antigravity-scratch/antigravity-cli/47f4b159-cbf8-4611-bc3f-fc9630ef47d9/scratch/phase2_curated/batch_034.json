@@ -1,0 +1,244 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-4762",
+    "BIB-5148"
+   ],
+   "motif_ecart": "Revue de litterature ou entree bibliographique sans mecanisme scientifique explicite dans la notice",
+   "resume_court": "BIB-4762 (arXiv:2610.14625, deux perspectives sur l'auto-amelioration recursive avec liste entretenue, contenu non precise) et BIB-5148 (revue de litterature sur la generation d'hypotheses par LLM sans identifiant arXiv ni mecanisme propre) : entrees purement bibliographiques sans mecanisme operationnel extractible."
+  },
+  {
+   "bib_ids": [
+    "BIB-4884",
+    "BIB-4911",
+    "BIB-4912"
+   ],
+   "motif_ecart": "Notice reduite au seul titre sans mecanisme ni protocole decrit",
+   "resume_court": "BIB-4884 (FunctionEvolve, arXiv:2606.07704, regression symbolique guidee par la structure) ainsi que BIB-4911 et BIB-4912 (GAE, arXiv:2607.10127, evolution augmentee par graphe et optimisee par renforcement) : notices reduites a l'intitule du papier, sans mecanisme, parametre ni mesure precises."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Fisher-R1: Training LLM Agents for Reliable Hypothesis Testing (2026-08-07) https://arxiv.org/abs/2608.07437",
+   "bib_ids": [
+    "BIB-4747"
+   ],
+   "enonce_complet": "Externaliser le calcul des tests statistiques et des valeurs p hors des agents LLM vers un resolveur deterministe, afin de supprimer les erreurs d'inference statistique qui surviennent meme lorsque le code produit par l'agent s'execute sans erreur technique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer sur un banc de tests d'hypotheses (type Fisher-R1, 425 taches) un agent qui choisit et calcule lui-meme les tests contre le meme agent deleguant le calcul de la statistique et de la valeur p a un module deterministe externe ; critere de mort si le taux de valeurs p invalides ne baisse pas significativement. Faux temoin 1b : module externe remplacant la statistique exacte par un tirage calibre ou une heuristique de p-valeur independante des donnees.",
+   "mecanisme_causal": "Les erreurs d'inference statistique (mauvais test choisi, hypotheses d'application violees, mauvaise formule de valeur p) sont decouplees de la validite syntaxique et d'execution du code ; imposer un resolveur statistique externe coupe ce mode de defaillance silencieux.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calcul statistique externalise hors agent",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Externalisation du calcul des tests statistiques et valeurs p hors des agents (Fisher-R1)"
+  },
+  {
+   "anteriorite_connue": "Fisher-R1: Training LLM Agents for Reliable Hypothesis Testing (2026-08-07) https://arxiv.org/abs/2608.07437",
+   "bib_ids": [
+    "BIB-4748"
+   ],
+   "enonce_complet": "Entrainer un agent LLM a produire des tests d'hypotheses statistiques fiables par apprentissage avec une recompense statistique verifiee programmatiquement (forme exacte de la recompense non precisee dans la notice).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : evaluer si l'agent entraine par recompense statistique verifiee generalise hors distribution sur des plans experimentaux pieges (donnees non normales, comparaisons multiples) sans contournement de recompense ; critere de mort si le gain disparait des qu'on sort de la distribution d'entrainement. Faux temoin 1b : entrainer avec une recompense aleatoire ou basee uniquement sur la reussite d'execution du script sans verifier la validite statistique.",
+   "mecanisme_causal": "L'alignement des poids par une recompense deterministe verifiant la validite statistique du test et de la valeur p penalise les raccourcis d'inference pendant l'entrainement.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Recompense statistique verifiee en entrainement",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Entrainement d'agents aux tests d'hypotheses par recompense statistique verifiee (Fisher-R1)"
+  },
+  {
+   "anteriorite_connue": "Flex-RSI: Benchmarking Recursive Self-Improvement of Frontier Agents (2026-11-06) https://arxiv.org/abs/2611.08946",
+   "bib_ids": [
+    "BIB-5408"
+   ],
+   "enonce_complet": "Conditionner toute acceptation d'une modification issue d'une boucle d'auto-amelioration recursive a un gain strict mesure sur un jeu de validation tenu a l'ecart de l'ameliorateur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer sur plusieurs cycles d'auto-amelioration une porte d'acceptation sur validation tenue a l'ecart contre une selection sur le score d'entrainement/developpement ; critere de mort si la derive sur test final n'est pas reduite par la porte tenue a l'ecart. Faux temoin 1b : evaluer la porte sur un jeu de validation bruite ou correle aux exemples visibles de l'ameliorateur.",
+   "mecanisme_causal": "La validation tenue a l'ecart bloque le surapprentissage et l'auto-illusion de l'ameliorateur en agissant comme porte transactionnelle avant promotion de l'etat suivant.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Porte de selection par validation externe",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Porte transactionnelle par validation tenue a l'ecart en auto-amelioration recursive (Flex-RSI)"
+  },
+  {
+   "anteriorite_connue": "FlowPIE: Test-Time Scientific Idea Evolution with Flow-Guided Literature Exploration (2026-08-30) https://openreview.net/forum?id=L4yt1ihvmb",
+   "bib_ids": [
+    "BIB-5277"
+   ],
+   "enonce_complet": "Coupler la recuperation de litterature guidee par flot et la generation au moment de l'inference pour faire evoluer iterativement des idees scientifiques (operateur d'evolution exact non detaille dans la notice).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer sur un corpus date si l'exploration de litterature guidee par flot produit des hypotheses plus viables et originales a budget de jetons egal qu'une recuperation RAG statique ou uniforme ; critere de mort si aucun gain n'apparait sur des cibles tenues a l'ecart. Faux temoin 1b : recuperation guidee par flot remplacee par des passages tires aleatoirement dans le meme corpus.",
+   "mecanisme_causal": "Le guidage par flot oriente les appels documentaires au moment de l'inference vers des regions complementaires de la litterature, alimentant la recombinaison d'idees sans reentrainement.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Exploration bibliographique guidee par flot",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Evolution d'idees au moment de l'inference par exploration bibliographique guidee par flot (FlowPIE)"
+  },
+  {
+   "anteriorite_connue": "Fork-and-Flush: Escaping Idea Basins in Autoresearch Agents (2026-09-18) https://arxiv.org/abs/2610.07447",
+   "bib_ids": [
+    "BIB-4382",
+    "BIB-4383",
+    "BIB-4384",
+    "BIB-4385",
+    "BIB-4387"
+   ],
+   "enonce_complet": "Dedoubler periodiquement un agent de recherche en trajectoires paralleles a horizon fixe qui heritent chacune d'une copie de l'espace de travail (fichiers produits) mais repartent d'un contexte de conversation vide, puis ne conserver a chaque bifurcation que la trajectoire au meilleur score deterministe. Cette separation entre memoire externe persistante et contexte conversationnel vide interpole, a budget de calcul egal, entre une course unique et le meilleur de N courses independantes (gains relatifs annonces de 66,0 % et 44,4 % sur 13 taches longues evaluees par correcteur deterministe).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer a budget total de jetons et de calcul identique sur taches longues a correcteur deterministe : (1) Fork-and-Flush, (2) course unique avec compaction periodique de l'historique, et (3) meilleur de N courses independantes ; critere de mort si Fork-and-Flush ne depasse pas la compaction ni le meilleur de N. Faux temoin 1b : fork sans vidage du contexte conversationnel, ou vidage du contexte avec selection aleatoire au lieu du meilleur score.",
+   "mecanisme_causal": "La compaction d'historique laisse persister l'ancrage dans un meme bassin d'idees ; vider integralement le contexte conversationnel tout en conservant les artefacts produits force une re-exploration fraiche a partir du meilleur etat materiel atteint, sans perdre le travail accumule comme dans N courses independantes.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bifurcation et vidage de contexte conversationnel",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Bifurcation periodique avec persistance des fichiers et vidage du contexte conversationnel (Fork-and-Flush)"
+  },
+  {
+   "anteriorite_connue": "Fork-and-Flush: Escaping Idea Basins in Autoresearch Agents (2026-09-18) https://arxiv.org/abs/2610.07447",
+   "bib_ids": [
+    "BIB-4386"
+   ],
+   "enonce_complet": "Cartographier les bassins d'idees en reecrivant chaque artefact produit en une specification fonctionnelle canonique, en demandant a un modele juge par triplets lequel de deux candidats ressemble le plus a une ancre, puis en ajustant un plongement bidimensionnel sur ces comparaisons (accord annonce de 85 % sur triplets tenus a l'ecart).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : verifier sur un jeu de variantes artificielles (memes algorithmes renommes vs algorithmes distincts produisant des sorties proches) si la reecriture en specification fonctionnelle regroupe les implementations fonctionnellement equivalentes mieux qu'un plongement direct sur le code brut. Faux temoin 1b : ajuster le plongement sur des triplets generes a partir de noms de variables ou de commentaires factices sans specification fonctionnelle.",
+   "mecanisme_causal": "La reecriture en specification fonctionnelle elimine les variations cosmetiques de surface avant la comparaison relative par triplets, rendant observables la convergence ou la divergence reelle des trajectoires d'exploration.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Canonicalisation fonctionnelle et plongement par triplets",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Cartographie des bassins d'idees par specification fonctionnelle et plongement sur triplets (Fork-and-Flush)"
+  },
+  {
+   "anteriorite_connue": "Forming Feasible Research Ideas by Analogical Transfer over Rationale-Bearing Graphs (2026-09-18) https://openreview.net/forum?id=Dxbrq5y5aD",
+   "bib_ids": [
+    "BIB-5269"
+   ],
+   "enonce_complet": "Generer des idees de recherche faisables par transfert analogique sur des graphes dont les aretes portent explicitement les justifications causales ou methodologiques entre concepts, afin d'assurer la recombinaison valide entre contextes differents.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer la faisabilite et la validite structurelle des idees transferees entre domaines lorsque les aretes portent leurs justifications par rapport au meme graphe sans etiquette de justification. Faux temoin 1b : permuter les justifications portees par les aretes entre paires sans rapport avant transfert analogique.",
+   "mecanisme_causal": "Porter les justifications sur les aretes contraint le transfert analogique aux correspondances ou le mecanisme de lien reste satisfait dans le domaine cible, evitant les analogies purement lexicales ou infaisables.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transfert analogique sur graphes justifies",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Transfert analogique contraint par des graphes a aretes porteuses de justifications"
+  },
+  {
+   "anteriorite_connue": "From AutoResearch to Continual AutoResearch: Do Agents Learn Across Tasks? (2026-09-18) https://arxiv.org/abs/2611.05108",
+   "bib_ids": [
+    "BIB-4549",
+    "BIB-4552"
+   ],
+   "enonce_complet": "Comparer a budget de temps d'horloge egal (15, 30, 60 min) une instance d'agent persistante reprenant session et espace de travail d'une tache a la suivante (sans mise a jour de poids ni memoire explicite du banc) a une instance remise a zero sur des suites ordonnees de taches appariees ; l'etat herite accelere l'obtention d'une premiere solution valide, mais cette avance fond avec le budget et n'ameliore pas de facon constante le score final.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : reproduire l'appariement persistant contre remis a zero a budget de jetons et de temps egal avec intervalles de confiance et tests apparies sur des suites a regle constante ou changeante ; critere de mort si l'avance initiale n'est ni significative ni durable, ou devient negative lors d'un changement de regle cible. Faux temoin 1b : injection d'un historique et d'un espace de travail provenant d'une suite de taches sans rapport.",
+   "mecanisme_causal": "La reutilisation immediate du code et du contexte reduit le cout de demarrage a froid, mais l'ancrage dans les solutions passees limite l'exploration asymptotique et annule l'avantage a horizon long.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Heritage de session entre taches sequentielles",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Effet d'amorcage et plafonnement de l'heritage de session entre taches sequentielles (Continual AutoResearch)"
+  },
+  {
+   "anteriorite_connue": "From AutoResearch to Continual AutoResearch: Do Agents Learn Across Tasks? (2026-09-18) https://arxiv.org/abs/2611.05108",
+   "bib_ids": [
+    "BIB-4550"
+   ],
+   "enonce_complet": "Introduire un temoin de memoire factice comparant trois bras : fiches d'enseignements appariees a la tache, fiches melangees provenant de taches sans rapport, et absence de fiches ; dans un essai preliminaire sur quatre taches d'une seule famille, les fiches pertinentes ne font pas mieux que les fiches melangees sur le resultat final.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer un plan complet a puissance statistique controlee comparant fiches appariees, fiches melangees (temoin placebo) et absence de memoire ; critere de mort de l'utilite de la memoire textuelle si le bras apparie ne bat pas significativement le bras melange. Faux temoin 1b : fiches melangees conservees dans leur structure syntaxique mais videes de contenu specifique a la tache.",
+   "mecanisme_causal": "Un gain observe avec des fiches peut provenir d'un simple effet de formatage ou d'incitation methodologique generale plutot que de l'information specifique transferee ; le bras de fiches melangees isole le transfert semantique reel de l'effet placebo de gabarit.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Temoin placebo par fiches memoire melangees",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Controle placebo par fiches d'enseignements melangees pour l'heritage memoire (Continual AutoResearch)"
+  },
+  {
+   "anteriorite_connue": "From Search to Research: Exploring Search Scaling in Autonomous Quantitative Factor Mining (2026-09-28) https://arxiv.org/abs/2609.35559",
+   "bib_ids": [
+    "BIB-5384",
+    "BIB-5385"
+   ],
+   "enonce_complet": "Etudier l'effet de la profondeur de recherche, de la largeur de recherche et du choix du modele de base sur des agents minant des facteurs quantitatifs de bout en bout sur 50 taches evaluees sur donnees de marche reelles (loi d'echelle exacte non precisee dans la notice).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer a budget de calcul total constant les rendements marginaux de la profondeur vs largeur d'arbre de recherche et de la taille du modele sur des facteurs testes hors echantillon temporel strict ; critere de mort si l'augmentation de recherche sur-ajuste les donnees historiques sans gain hors echantillon. Faux temoin 1b : evaluer les facteurs sur des series financieres permutees temporellement pour mesurer le pur bruit de recherche multiple.",
+   "mecanisme_causal": "La repartition du budget entre profondeur de raffinement, largeur d'exploration et capacite du modele gouverne le compromis entre decouverte de signaux reels et sur-exploration (data snooping) sur donnees de marche.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Lois d'echelle profondeur largeur en minage quantitatif",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Lois d'echelle profondeur, largeur et modele en minage autonome de facteurs quantitatifs"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "bib_ids": [
+    "BIB-5407"
+   ],
+   "description_complete": "Banc Flex-RSI (arXiv:2611.08946, 2026-11-06) evaluant l'auto-amelioration recursive d'agents de pointe en vision et robotique avec separation entre un executeur et un ameliorateur a budget fixe.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Banc d'auto-amelioration recursive en vision et robotique (Flex-RSI)",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4438",
+    "BIB-4439"
+   ],
+   "description_complete": "Banc FML-bench (arXiv:2605.17373, 2026-05-17, donnees publiees) separant la strategie de recherche (gloutonne, arborescente, evolutionnaire) de l'infrastructure d'execution pour comparer les strategies a infrastructure egale, avec execution effective des idees en apprentissage automatique et metriques de processus d'exploration.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Banc de comparaison controlee des strategies de recherche a infrastructure egale (FML-bench)",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4528",
+    "BIB-4529"
+   ],
+   "description_complete": "Banc ForeSci (arXiv:2606.00644, 2026-05-30) de 500 taches a coupure temporelle : l'agent choisit la direction de recherche a poursuivre a partir des seules evidences anterieures a une date donnee, et les articles posterieurs servent de validation afin de mesurer la qualite du tri en amont avant toute execution.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Banc a coupure temporelle pour evaluer le jugement prospectif de recherche (ForeSci)",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4551"
+   ],
+   "description_complete": "Suite d'evaluation de Continual AutoResearch (arXiv:2611.05108, 2026-09-18) comprenant neuf familles de taches, dont trois suites synthetiques a regle cible changeante, toutes notees par programme sur un test cache sans juge modele (sans intervalles ni tests statistiques dans la source).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Suite a neuf familles de taches et tests caches sans juge modele (Continual AutoResearch)",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4705"
+   ],
+   "description_complete": "Banc (arXiv:2610.05197, 2026-10-04) de generation d'hypotheses mecanistes a partir d'observations scientifiques, eprouvees sur des conditions experimentales retenues et masquees a l'agent (mode exact de notation non precise par la notice).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc de generation d'hypotheses mecanistes sur conditions experimentales retenues",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-5185"
+   ],
+   "description_complete": "Banc FrontierScience (arXiv:2601.21165, 2025-12) a deux volets incluant soixante sous-taches de recherche expertes notees par grille d'evaluation, mesurant le raisonnement scientifique plutot que l'ideation.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Banc d'evaluation du raisonnement scientifique expert par grille (FrontierScience)",
+   "type_outil": "banc_experimental"
+  }
+ ]
+}

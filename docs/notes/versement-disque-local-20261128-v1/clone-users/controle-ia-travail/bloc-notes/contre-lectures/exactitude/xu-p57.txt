@@ -1,0 +1,59 @@
+                    Inside the Unfair Judge: A Mechanistic Interpretability Account of LLM-as-Judge Bias
+
+
+
+Table 28: GBDT detection performance as a function of feature subset and pipeline component on
+Llama-3.1-8B. Each row uses the same LightGBM model and the same Optuna search budget; the
+feature set or the feature-selection step is the only thing that changes between rows. Best in column
+in bold.
+
+                                                                   Dev (in-domain)          Test (incl. unseen)
+         GBDT variant                                               AUC           AP         AUC            AP
+         Mahalanobis distance only (1 feat.)                       0.768        0.957       0.711          0.949
+         PCA / intrinsic-statistic features only (57 feat.)        0.872        0.974       0.792          0.961
+         Bias-direction projections only (41 feat.)                0.918        0.989       0.831          0.973
+         All features, no RFE (∼ 450 feat., raw)                   0.918        0.988       0.825          0.971
+         All features + RFE + Optuna (ours)                        0.926        0.992       0.839          0.976
+
+
+prompted detector. Second, the bias-direction projections alone (the cosine and signed projection
+       (𝑙)       (𝑙)
+onto ⃗𝑣LDA and ⃗𝑣CLS at each layer) reach test AUC 0.831, within 1 point of the full pipeline; the bias
+direction is doing roughly 95% of the heavy lifting on the cross-domain test set, consistent with the
+62.3% Gini importance it carries in the final model (Table 30). Third, RFE buys only a modest gain
+on the test set (0.825 → 0.839 AUC) but reduces the dev–test gap from 0.093 to 0.087: most of the
+residual gap is irreducible under this feature set rather than a symptom of an oversized feature pool.
+Taken together, these numbers position 0.84 as the ceiling of what bias-geometric features yield for
+cross-domain detection on this judge, not as the floor of an under-engineered model—and motivate
+the domain-gap diagnostic below.
+
+
+M.5. Domain-Gap Diagnostic
+
+To quantify the cross-domain generalization shortfall, we evaluate the GBDT separately on the test-set
+questions drawn from the six seen benchmarks versus those drawn from the three unseen benchmarks.
+
+Table 29: Cross-domain outcome prediction on Llama-3.1-8B: detector AUC/AP on test questions
+from seen versus unseen benchmarks. The linear projection features transfer to unseen domains (AUC
+0.821) better than the more expressive GBDT (0.751), and both beat the text-based LLM detector
+(0.624).
+
+                                                    Seen benchmarks            Unseen benchmarks
+                   Detector                          AUC           AP           AUC            AP
+                   Text-based LLM Detector          0.638        0.942         0.624          0.928
+                   Projection Features Only         0.869        0.981         0.821          0.967
+                   GBDT                             0.902        0.988         0.751          0.953
+
+    Within-domain, the GBDT attains AUC 0.902, close to its development performance. On held-out
+benchmarks, AUC drops to 0.751—still well above the text-based baseline (0.624), but well below
+the within-domain figure. The linear Projection Features detector is more robust to the domain shift
+but leaves performance on the table within domain. This suggests that the GBDT is overfitting to
+domain-specific activation patterns rather than fully exploiting the universal bias-direction signal,
+and motivates future work on domain-adversarial training or feature regularization targeting the bias
+subspace identified in Section 4.3.
+
+
+
+
+                                                                                                                   57
+

@@ -1,0 +1,52 @@
+Table 2: Word-level and entity-level static vectors against the transformers on the released entities that
+have a Wikipedia2Vec entity vector (authors’ split; ntest = 5,984 places and 4,707 figures). Within-group
+r is within country for places and within century for figures; the median error is in kilometers or years.
+Transformers at the selected layer.
+
+                                                                Places                                 Figures
+                Representation                  R2 (lat / lon) Within r Median error R2 Within r Median error
+                GloVe, word average               .48 / .55    .07 / .05         3,480      .54      .04          175
+                fastText, word average            .59 / .62    .12 / .08         3,038      .62      .07          160
+                Wikipedia2Vec, word average       .61 / .66    .13 / .09         2,879      .65      .07          150
+                Wikipedia2Vec, entity             .79 / .79    .25 / .11         2,448      .80      .14          109
+                Pythia-2.8B                       .77 / .81    .21 / .13         1,192      .74      .10          124
+                Llama-2-7B                        .89 / .90    .36 / .24          758       .82      .12          84
+
+
+Table 3: The pain-axis tests on static word embeddings, using the v2 stimuli of Tagliabue et al. (2026). Held-
+out AUC for pain against the S2 or S1 controls and, for the S2 direction, the standalone Arousal and Random
+sets (mean ± s.d. over 20 fold assignments); z: mean projection of the standalone Numb and Sadness sets
+on the S2 direction, referenced to the S2 sentences (pain ≈ +0.7, controls ≈ −0.7). LLM values are the
+authors’ held-out estimates; the keyword baseline is from pain-axis-review contributors (2026).
+
+                                                          Held-out AUC                                           z on S2 direction
+ Representation                   S2                 S1           S2 vs. Arousal         S2 vs. Random           Numb       Sadness
+ Keyword baseline              0.727              0.669                   —                    —                  —           —
+ GloVe                     0.850 ± 0.009      0.773 ± 0.011              0.664               0.815               −0.07       −0.09
+ Word2Vec                  0.867 ± 0.007      0.802 ± 0.012              0.693               0.857               −0.38       −0.48
+ fastText                  0.878 ± 0.006      0.785 ± 0.013              0.712               0.883               −0.67       −0.50
+ 25 LLMs                      0.91–1.00          0.85–0.94         all separatea          all separatea    −0.4–+0.3           —
+ a
+     Reported to separate pain from these sets in every model; values not given.
+
+
+4.4      A “Pain Axis”
+Tagliabue et al. (2026) extract a “pain direction” from 25 open-weight models (2B to 72B parameters, five
+families). They report that it separates descriptions of painful situations from matched controls, retains a
+component distinct from fear and negative valence after their shared variance is removed, separates pain
+from injuries described as painless, and, when added to the residual stream, produces first-person expres-
+sions of worthlessness and failure. We reran their representational analyses with static word embeddings
+(Section 3.6).
+
+Separation. Averaged word vectors separate pain from controls on held-out sentence sets at AUC 0.85–
+0.88 on S2 and 0.77–0.80 on S1 (Table 3; see also Figure 3 in the appendix). An independent review
+tested surface-lexical baselines under the same cross-validation, found at best 0.73 and 0.67, and concluded
+that the separation is not lexical (pain-axis-review contributors, 2026). That holds for surface features, but
+static embeddings close about half the gap between keyword counts and the LLMs. The LLMs are still
+better on held-out sets (0.91–1.00 on S2, 0.85–0.94 on S1), even though their values come from the best
+of many layers. The standalone sets show a clearer gap. The static S2 direction separates held-out pain
+sentences from the Random set of everyday statements (AUC 0.82–0.88) but only weakly from the Arousal
+set of intense positive experiences (0.66–0.71), and the S1 direction separates pain from neither (0.44–0.60),
+
+                                                                  10
+

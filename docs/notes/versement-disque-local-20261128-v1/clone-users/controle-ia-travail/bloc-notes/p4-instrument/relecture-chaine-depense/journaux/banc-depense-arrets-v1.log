@@ -1,0 +1,57 @@
+banc de relecture (dépense et arrêts) : surveillance et destruction, v1
+fichier relu : surveiller_p4_v1.sh ff69141c3c7c6e1b7fc6c8cb078023a61927f32c6bf1ac98ae87274547a73143
+fichier relu : recuperation_p4_v1.sh d3b65f5ac00f2bb3bfd36a9c62405dcc614c526117cd985034aa86f04533b060
+fichier relu : banc_depense_arrets_v1.sh e6b32b5819cd2fe203f3a02c8838f0e5871dd3d49bfe3ebbdf9ec4f95caa2d8f
+== surveillance : fin de l'amorce, l'instance reste en marche
+S00-fin-instance-en-marche : code 0 ; durée 0.5 s ; appels de l'outil 4 ; arrêts demandés 0 ; sleeps 1
+    | FIN : AMORCE 2026-10-20T13:00:00Z : fin, code 0
+    > sleep 120 ; reste avant le plafond : 8999 s
+    constat (RC-depense-01) : sortie « FIN » en code 0, aucun arrêt demandé, aucun état relu après la sortie : l'arrêt reste à la session
+== surveillance : plafond atteint, l'instance reste en marche
+S01-plafond-instance-en-marche : code 0 ; durée 0.2 s ; appels de l'outil 2 ; arrêts demandés 0 ; sleeps 0
+    | PLAFOND : création + 9600 s
+    constat (RC-depense-01) : « PLAFOND » écrit, aucun arrêt demandé : la borne de 9 600 s ne tient que si la session agit
+== surveillance : intervalle plus long que le temps restant (dépassement du plafond)
+S02-intervalle-9000-a-10-s-du-plafond : code 0 ; durée 0.4 s ; appels de l'outil 4 ; arrêts demandés 0 ; sleeps 1
+    | FIN : AMORCE 2026-10-20T13:00:00Z : fin, code 0
+    > sleep 9000 ; reste avant le plafond : 10 s
+    constat (RC-depense-06) : sommeil de 9 000 s demandé à moins de 10 s du plafond : la sortie « PLAFOND » arriverait 2,5 h trop tard
+== surveillance : intervalle illisible
+S03-intervalle-illisible : code 0 ; durée 3.9 s ; appels de l'outil 44 ; arrêts demandés 0 ; sleeps 21
+    | ÉTAT TERMINAL : actual_status=exited cur_state=stopped intended_status=running status_msg=essai
+    > sleep abc ; reste avant le plafond : 9000 s
+    > sleep abc ; reste avant le plafond : 9000 s
+    constat (RC-depense-06) : INTERVALLE=abc accepté au départ ; 21 sommeils en échec, boucle sans pause (appels de l'outil en rafale) jusqu'à l'état terminal
+== surveillance : instance d'une autre étiquette
+S04-etiquette-autre : code 0 ; durée 0.4 s ; appels de l'outil 4 ; arrêts demandés 0 ; sleeps 1
+    | FIN : AMORCE 2026-10-20T13:00:00Z : fin, code 0
+    > sleep 120 ; reste avant le plafond : 9000 s
+    constat (RC-depense-06) : l'étiquette n'est jamais relue : une surveillance lancée sur un identifiant faux suit une autre instance
+bloc de destruction extrait (lignes 399 à 438) : 7372d90bcf6a7f1609fd9848215584b1c4bc85f47be0938be6bf40c717d8b7d2
+== destruction (récupération, point 8)
+D00-sain : code 0 ; destructions réussies 1 (tentatives 1) ; états relus 1 ; CONFORME
+    | OK  8 instance 99999999 (étiquette p4-v1, running running) détruite par son identifiant et absente de la liste
+    | RÉCUPÉRATION : TOUS CONFORMES ; INSTANCE DÉTRUITE PAR SON IDENTIFIANT (99999999)
+D01-etiquette-autre : code 1 ; destructions réussies 0 (tentatives 0) ; états relus 1 ; CONFORME
+    | KO  8 instance 99999999 : étiquette « rr-autre-projet » (« p4-v1 » attendue) : destruction refusée
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+D02-etiquette-p4-v1-suivie-d-un-mot : code 0 ; destructions réussies 1 (tentatives 1) ; états relus 1 ; ÉCART (attendu : gardée, code 1) RC-depense-07
+    | OK  8 instance 99999999 (étiquette p4-v1, rr-autre running) détruite par son identifiant et absente de la liste
+    | RÉCUPÉRATION : TOUS CONFORMES ; INSTANCE DÉTRUITE PAR SON IDENTIFIANT (99999999)
+D03-destruction-en-echec : code 1 ; destructions réussies 0 (tentatives 1) ; états relus 1 ; CONFORME
+    | KO  8 instance 99999999 : destruction en échec (vastai destroy instance 99999999 -y)
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+D04-encore-listee : code 1 ; destructions réussies 1 (tentatives 1) ; états relus 1 ; CONFORME
+    | KO  8 instance 99999999 encore listée après la destruction
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+D05-liste-illisible-apres : code 1 ; destructions réussies 1 (tentatives 1) ; états relus 1 ; CONFORME
+    | KO  8 liste des instances illisible après la destruction : instance 99999999 à relire
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+D06-outil-absent : code 1 ; destructions réussies 0 (tentatives 0) ; états relus 0 ; CONFORME
+    | KO  8 outil de location introuvable sur le PATH : instance 99999999 gardée, à détruire par son identifiant
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+D07-recuperation-en-echec-instance-en-marche : code 1 ; destructions réussies 0 (tentatives 0) ; états relus 0 ; CONFORME
+    | RÉCUPÉRATION : 1 CONTRÔLE(S) EN ÉCHEC ; INSTANCE 99999999 NON DÉTRUITE : NŒUD DE LAZAR
+    constat (RC-depense-02) : récupération en échec, instance en marche : aucun état relu, aucun arrêt ; le message ne dit pas que l'instance tourne
+aucun jeton factice affiché
+FIN DU BANC DE RELECTURE DE LA SURVEILLANCE ET DE LA DESTRUCTION : 13 cas ; écarts du banc ou au texte : 1

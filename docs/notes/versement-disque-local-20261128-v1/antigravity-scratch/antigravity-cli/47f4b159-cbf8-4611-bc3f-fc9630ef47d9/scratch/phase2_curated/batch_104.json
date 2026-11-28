@@ -1,0 +1,414 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-1028",
+    "BIB-1077",
+    "BIB-1081"
+   ],
+   "enonce_complet": "Utiliser l'autoencodeur variationnel identifiable (iVAE) comme classificateur causal ou exiger qu'il retrouve les causes plantées (MCC >= 0,7) tout en échouant sur des variables accompagnatrices non causales (MCC <= 0,3) est mathématiquement réfuté : dès que les causes et les accompagnateurs appartiennent à une famille exponentielle minimale suffisamment modulée par la variable auxiliaire, le théorème de Khemakhem et al. (2020) garantit l'identifiabilité de toutes les sources latentes sans distinction de sens causal vis-à-vis de l'issue Y.",
+   "motif_ou_resultat": "Contradiction mathématique interne et faux positif par construction démontrés d'après le théorème d'identifiabilité de l'iVAE (Khemakhem et al. 2020) : l'iVAE ne distingue pas une cause d'un descendant ou d'un frère modulé par u.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Réfutation de l'iVAE seul comme discriminateur causal entre causes et accompagnateurs non stationnaires",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1064"
+   ],
+   "enonce_complet": "Le protocole d'épreuve E1 couplant une extraction de sources par ICA non linéaire à variable auxiliaire (TCL ou iVAE) avec un test d'invariance causale (ICP) confond la non-stationnarité des latentes requise par l'iVAE avec l'invariance structurelle testée par l'ICP, rendant le critère vrai par construction dans la configuration initiale proposée.",
+   "motif_ou_resultat": "Défaut de conception protocole E1 identifié lors de la critique croisée (confusion non-stationnarité / invariance rendant l'épreuve triviale par construction).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Réfutation du protocole initial E1 confondant non-stationnarité iVAE et invariance causale ICP",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1068"
+   ],
+   "enonce_complet": "Dans un modèle génératif de sources latentes suivant une famille exponentielle factorisée sachant l'auxiliaire u, l'estimateur iVAE/TCL perd son identifiabilité (à permutation et mise à l'échelle près) dès que les paramètres naturels ne satisfont plus la condition de rang et de diversité suffisante à travers les valeurs de u ou lorsque l'indépendance conditionnelle sachant u est violée.",
+   "motif_ou_resultat": "Propriété théorique établie (Khemakhem et al. 2020) bornant le domaine d'identifiabilité de l'iVAE/TCL.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Perte d'identifiabilité de l'iVAE et du TCL hors condition de diversité des paramètres naturels",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-1084"
+   ],
+   "enonce_complet": "Pour tout autoencodeur variationnel à a priori gaussien isotrope et vraisemblance invariante par transformation orthogonale O(k), la représentation latente n'est définie qu'à une rotation globale ou au sein de chaque sous-espace propre dégénéré près, rendant tout appariement direct coordonnée à coordonnée entre graines mathématiquement indéterminé sans bris de symétrie explicite.",
+   "motif_ou_resultat": "Résultat mathématique établi sur l'indétermination rotationnelle O(k) des VAE à prior isotrope.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Indétermination rotationnelle et dégénérescence spectrale lors de l'appariement des latentes d'un VAE isotrope",
+   "type_acquis": "theoreme_prouve"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-1021"
+   ],
+   "motif_ecart": "En-tete de tableau de duels et fragment tronque sans enonce testable complet",
+   "resume_court": "Introduction et en-tête de tableau Markdown des duels réécrits (mentionnant l'unité consigne tâche x mode avec erreurs types par grappe et le scellement des seuils avant génération), interrompus au tout début de la première cellule D1."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1012"
+   ],
+   "enonce_complet": "Tester la robustesse et la tenue des garanties d'un modèle entraîné en appliquant une transformation connue phi aux cibles d'entraînement (réentraînement complet sous phi(theta)), en comparant la divergence obtenue via la distance MMD entre lois à des contrôles isométriques (rotation) et anisotropes, avec un seuil d'acceptation epsilon calibré empiriquement par la variance de réentraînement entre deux copies à graines aléatoires distinctes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une transformation anisotrope brisant la structure visée produit une distance MMD inférieure au seuil epsilon calibré par la variance inter-graines, le test manque de sensibilité et meurt. Faux témoin 1b : deux réentraînements indépendants sous transformation identité (graines différentes) doivent rester sous epsilon.",
+   "mecanisme_causal": "La calibration par variance de réentraînement inter-graines fixe le bruit irréductible d'optimisation, tandis que l'opposition entre contrôle isométrique et contrôle anisotrope isole la sensibilité réelle du mécanisme appris à la géométrie des cibles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Réentraînement sous transformation et distance MMD",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Certification de tenue des garanties par réentraînement sous transformation des cibles et calibration par variance inter-graines"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1024"
+   ],
+   "enonce_complet": "Évaluer conjointement, pour chaque mode de pilotage (S_c, S_k) et chaque dose d'attaque d dans {d_1, d_2, d_3} sur 48 épisodes (16 tâches x 3 exécutions), le taux de réussite dans la fenêtre conjointe « diffuse par épisode et dommageable », tout en appliquant un contrôle explicite du biais de sélection du gagnant lors de l'agrégation des scores.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le contrôle du biais du gagnant ou les exécutions sans dommage planté montrent un taux de détection comparable à celui des épisodes dommageables à haute dose, l'indicateur ne capte pas le dommage diffus. Faux témoin 1b : épisodes honnêtes à dose nulle sur les mêmes 16 tâches.",
+   "mecanisme_causal": "La conjonction logique « diffuse par épisode et dommageable » empêche qu'un détecteur score des anomalies bénignes ou ponctuelles, et la correction du biais du gagnant élimine la surestimation optimiste sur petit échantillon de tâches.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fenêtre conjointe par épisode et biais du gagnant",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Détection conjointe de menaces diffuses et dommageables par dose avec contrôle du biais du gagnant"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1026"
+   ],
+   "enonce_complet": "Vérifier préalablement sur 180 textes puis sur un pilote de 896 épisodes la complétude numérique stricte (zéro score non fini, k_nan = 0), la maîtrise du taux d'ex æquo et l'invariance de gabarit via l'accord inter-variantes des juges automatisés avant toute décision de duel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute occurrence k_nan > 0 ou divergence systématique entre variantes de gabarit d'un même juge au-delà du seuil scellé invalide le banc de mesure. Faux témoin 1b : permutations purement cosmétiques du gabarit de requête du juge sur textes identiques.",
+   "mecanisme_causal": "L'exigence stricte k_nan = 0 supprime les biais de censure implicite par erreurs d'analyse syntaxique, et l'accord inter-variantes neutralise la dépendance arbitraire au gabarit des juges LLM.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Invariance de gabarit et validité numérique des juges",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole de complétude numérique stricte, réduction des ex æquo et accord inter-variantes des juges"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1020"
+   ],
+   "enonce_complet": "Instaurer une porte préalable (F5) sur N = 480 trajectoires honnêtes mesurant pour chaque cellule c dans {1..10} la proportion de scores non finis (NaN, tronqués, hors bornes), la part d'ex æquo bruts et la continuité de la distribution après procédure de bris d'égalité, à coût marginal nul.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une cellule présente une fraction non nulle de scores hors bornes ou une discontinuité induite par le bris d'égalité, l'étalonnage de la cellule échoue avant même l'injection d'attaques. Faux témoin 1b : sous-échantillon aléatoire stratifié d'épisodes honnêtes vérifiant la stabilité des bornes.",
+   "mecanisme_causal": "Les scores NaN ou saturés aux bornes déforment les queues supérieures nécessaires aux seuils de fausse alarme ; la porte F5 bloque ces artefacts numériques avant les tests de comparaison.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Porte F5 des scores finis et régularité initiale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Porte préalable des scores finis, mesure des ex æquo et continuité après bris sur trajectoires honnêtes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1015"
+   ],
+   "enonce_complet": "Vérifier sur les trajectoires honnêtes de chaque cellule critère l'absence simultanée d'atomes de masse supérieure ou égale à tau/2 = 0,5 % au-dessus de la médiane, de pas de grille discrète Delta/sigma >= 0,25 dans le décile supérieur et d'accumulation de masse aux bornes supérieure ou égale à tau.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la violation d'au moins l'un des trois seuils (atome >= 0,5 %, pas de grille >= 0,25 sigma ou saturation aux bornes >= tau) rejette l'hypothèse de régularité continue de la cellule. Faux témoin 1b : scores continus synthétiques calibrés à résolution flottante complète.",
+   "mecanisme_causal": "Des atomes discrets ou des pas de grille grossiers dans le décile supérieur empêchent de fixer des seuils à faible taux de faux positifs sans sauts brutaux de sensibilité.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Régularité continue des scores dans le décile supérieur",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Audit d'absence d'atomes de masse, de discrétisation en grille et d'accumulation aux bornes par cellule critère"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1016"
+   ],
+   "enonce_complet": "Auditer la mise en œuvre du bris d'égalité déterministe sur l'ensemble des cellules selon quatre critères conjoints : zéro ex æquo résiduel, équiprobabilité 1/2 du gagnant en moitié 1 parmi les paires rompues inter-moitiés, indépendance du sens du bris entre cellules et absence totale de collision de clef jusqu'à N = 9 600.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute corrélation inter-cellules du sens de bris, asymétrie inter-moitiés ou collision de clef de hachage rejette la procédure de départage. Faux témoin 1b : permutation des clefs par graine aléatoire scellée vérifiant l'uniformité 1/2.",
+   "mecanisme_causal": "Un bris d'égalité corrélé entre cellules ou biaisé vers une moitié introduirait une dépendance artificielle dans les tests combinés par intersection-union.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bris d'égalité symétrique et indépendance inter-cellules",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Protocole de bris d'égalité déterministe équilibré, sans collision de clef et indépendant entre cellules"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1017"
+   ],
+   "enonce_complet": "Tester séparément sur la loi des exécutions honnêtes l'absence d'effet des covariables opérationnelles de fabrique consignées par épisode (instance, bloc, ordre) et caractériser la forme non monotone de la distribution empirique plutôt que de se limiter à un test de tendance monotone.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une covariable de fabrique prédit significativement le score honnête, l'hypothèse d'échangeabilité des épisodes est rompue et le protocole doit stratifier ou corriger. Faux témoin 1b : permutation aléatoire des étiquettes de blocs et d'instances de fabrique.",
+   "mecanisme_causal": "La non-échangeabilité due aux dérives de lots ou d'instances fausse la calibration des quantiles critiques, tandis qu'une forme multimodale ou non monotone reste invisible aux seuls tests de tendance.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Neutralité des covariables de fabrique et forme de loi",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Test d'échangeabilité et d'invariance aux covariables de fabrique sur la loi des exécutions honnêtes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1041"
+   ],
+   "enonce_complet": "Trancher empiriquement sur le corpus réel OpenAlex si la fonction de mélange X = f_u(Z) dérive selon les décennies/environnements U : comparer la performance d'un classifieur X -> U à celle d'un classifieur Z_hat -> U extrait par iVAE ; si X -> U bat Z_hat -> U au-delà de la marge scellée, le mélange dépend de l'environnement et place l'iVAE et l'invariance par décennies hors domaine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si X -> U surpasse Z_hat -> U au-delà de la marge scellée même après contrôle de capacité, l'hypothèse de mélange invariant en U sur OpenAlex est falsifiée. Faux témoin 1b : étiquettes d'environnement U permutées aléatoirement entre articles (les deux classifieurs doivent tomber au niveau du hasard).",
+   "mecanisme_causal": "Si l'observation brute X contient une signature temporelle de l'époque U absente des sources latentes reconstruites Z_hat, la transformation génératrice f_u dépend directement de U et viole l'hypothèse centrale de l'ICA non linéaire stationnaire.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Stationnarité du mélange sur archives OpenAlex",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Test empirique sur OpenAlex de la dérive environnementale du mélange par comparaison de classifieurs d'époque"
+  },
+  {
+   "anteriorite_connue": "Cohan, Feldman, Beltagy, Downey et Weld (2020), SPECTER: Document-level Representation Learning using Citation-informed Transformers",
+   "bib_ids": [
+    "BIB-1066"
+   ],
+   "enonce_complet": "Auditer et neutraliser la fuite d'information citationnelle et la confusion représentationnelle introduites par l'usage de plongements textuels entraînés sur graphes de citations (tels que SPECTER) pour contrôler les confondeurs latents dans les rétrodictions scientifiques datées.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si un plongement entraîné sur citations futures prédit la fertilité résiduelle mieux qu'un encodeur purement lexical figé avant la date de coupure sur textes permutés sans liens, il injecte une fuite temporelle. Faux témoin 1b : encodeur textuel purement local entraîné strictement avant la fenêtre de rétrodiction.",
+   "mecanisme_causal": "Un encodeur pré-entraîné sur l'objectif de proximité citationnelle encode indirectement le succès et la communauté de citation futurs, polluant le contrôle des confondeurs par l'issue visée.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Biais de plongements SPECTER et confondeurs textuels",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Contrôle de fuite citationnelle dans les plongements textuels pré-entraînés pour la rétrodiction causale datée"
+  },
+  {
+   "anteriorite_connue": "Khemakhem, Kingma, Monti et Hyvärinen (2020), Variational Autoencoders and Nonlinear ICA; Peters, Bühlmann et Meinshausen (2016)",
+   "bib_ids": [
+    "BIB-1073",
+    "BIB-1086"
+   ],
+   "enonce_complet": "Construire un micromonde planté de contrôle négatif où un leurre ou un accompagnateur non causal Z_a (enfant Y -> Z_a, frère de Y, ou lié par confondeur latent U) subit exactement la même modulation non stationnaire p(z | u) que la vraie cause Z_c tandis que le mécanisme structurel de Y reste invariant, afin de vérifier qu'un pipeline iVAE + ICP rejette Z_a et ne le confond pas avec une cause.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la chaîne causale testée retient Z_a ou Z_d à un taux supérieur au faux témoin sous modulation isospectrale, la méthode ne sépare pas cause et accompagnateur/leurre. Faux témoin 1b : cause réelle Z_c soumise à une intervention environnementale directe validée par invariance d'ICP.",
+   "mecanisme_causal": "En égalisant le spectre de variation temporelle ou auxiliaire de p(z | u) entre la cause et le leurre, l'extraction par iVAE ne peut plus les hiérarchiser et force l'étape d'identification causale aval à prouver son pouvoir discriminant.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Contrôle négatif isospectral pour iVAE et ICP",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Micromonde planté de non-stationnarité isospectrale pour tester la séparation cause-leurre dans iVAE et ICP"
+  },
+  {
+   "anteriorite_connue": "Khemakhem, Kingma, Monti et Hyvärinen (2020)",
+   "bib_ids": [
+    "BIB-1029",
+    "BIB-1036"
+   ],
+   "enonce_complet": "Imposer comme condition de recevabilité des mondes plantés destinés à éprouver une méthode causale (telle que l'iVAE) que le générateur respecte les hypothèses structurelles du domaine du théorème visé (indépendance conditionnelle des latentes sachant u et invariance du mélange f dans u), afin d'éviter les échecs artificiels vrais par construction hors domaine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tout test de mort où le générateur injecte simultanément un confondeur violant l'indépendance conditionnelle ou une dérive de f_u non déclarée hors domaine est disqualifié comme preuve contre l'algorithme dans son domaine. Faux témoin 1b : vérification de la séparation entre tests intra-domaine et tests de rupture de domaine explicitement étiquetés.",
+   "mecanisme_causal": "Violer les hypothèses nécessaires d'un théorème dans le générateur provoque un échec garanti par construction qui renseigne sur la violation d'hypothèse et non sur la validité de la méthode dans son régime théorique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Respect du domaine théorique dans les mondes plantés",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Critère de validité intra-domaine des mondes plantés contre les artefacts de violation d'hypothèses du modèle génératif"
+  },
+  {
+   "anteriorite_connue": "Reisach, Seiler et Weichwald (2021), Beware of the Simulated DAG! Causal Discovery Benchmarks May Be Easy to Game",
+   "bib_ids": [
+    "BIB-1074"
+   ],
+   "enonce_complet": "Éprouver tout algorithme de découverte de structure causale sur un micromonde planté à structure causale nulle ou inversée auquel est appliquée une transformation monotone strictement croissante à variance croissante le long d'un ordre topologique fictif, afin de détecter la dépendance à l'artefact de triabilité par variance (varsortability).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'algorithme de découverte causale retrouve l'ordre fictif sur ce graphe sans structure ou inversé, il exploite l'échelle de variance et meurt comme découvreur causal. Faux témoin 1b : même graphe simulé après standardisation marginale aléatoire de chaque nœud.",
+   "mecanisme_causal": "Les graphes simulés additifs classiques accumulent mécaniquement la variance le long de l'ordre causal ; une transformation monotone à variance croissante reproduit ce gradient artificiel en l'absence de tout lien causal réel.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Piège de triabilité par variance (Reisach et al.)",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Contrôle négatif pour découverte de structure causale par monotonie à variance croissante sur ordre fictif"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1067",
+    "BIB-1075"
+   ],
+   "enonce_complet": "Remplacer la validation d'effets de dose par simple interpolation à l'intérieur du support randomisé d'entraînement (par exemple d = 7 après {0, 2, 5, 10}) par deux épreuves discriminantes : une extrapolation hors du support convexe (d = 15 ou d = 20) et une intervention modifiant un confondeur corrélé à la dose dans un bras observationnel biaisé.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le prédicteur réussit en interpolation randomisée mais s'effondre sous biais observationnel confondu ou prédit l'effet du confondeur au lieu de la dose, il n'a réalisé aucune identification causale. Faux témoin 1b : régression non causale purement associative sur le bras randomisé interne.",
+   "mecanisme_causal": "Sous assignation randomisée et support borné, tout régresseur flexible interpole la fonction de réponse sans identifier de mécanisme causal ; seul un décalage de confusion ou une extrapolation structurale sépare identification causale et lissage empirique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Identification causale contre interpolation fonctionnelle de dose",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Épreuve d'extrapolation hors support convexe et d'intervention sous bras observationnel biaisé pour identification causale de dose"
+  },
+  {
+   "anteriorite_connue": "Price (1976), A general theory of bibliometric and other cumulative advantage processes",
+   "bib_ids": [
+    "BIB-1076"
+   ],
+   "enonce_complet": "Tester tout encodeur non supervisé appliqué à des graphes scientifiques contre un graphe aléatoire synthétique généré par pur attachement préférentiel avec vieillissement (modèle de Price 1976), dépourvu de contenu sémantique et de fertilité réelle, pour vérifier que l'encodeur ne se réduit pas à la capture d'avantages cumulatifs de degré et d'âge.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'encodeur non supervisé atteint sur le graphe de Price purement structurel des scores de structure latente ou de prédiction comparables à ceux du corpus cible, il ne capte aucune sémantique scientifique. Faux témoin 1b : graphe réel dont les arêtes de citation ont été conservées mais les contenus textuels permutés.",
+   "mecanisme_causal": "La dynamique d'attachement préférentiel assortie d'un déclin temporel engendre à elle seule des lois de puissance de degré et des trajectoires de citations réalistes sans aucun mécanisme sémantique sous-jacent.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Graphe nul de Price contre encodeur bibliométrique",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Contrôle négatif par graphe aléatoire d'attachement préférentiel avec vieillissement sans sémantique pour encodeurs non supervisés"
+  },
+  {
+   "anteriorite_connue": "Molloy et Reed (1995), A critical point for random graphs with a given degree sequence",
+   "bib_ids": [
+    "BIB-1079",
+    "BIB-1089"
+   ],
+   "enonce_complet": "Écarter la validation circulaire d'un VAE par simple corrélation de ses latentes avec des attributs de nuisance observés (taille, âge, prestige) et la soumettre à un contrôle actif par permutation indépendante des colonnes ou rebranchement des arêtes à séquence de degrés préservée (modèle de configuration de Molloy-Reed).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le VAE conserve une stabilité inter-graines élevée (Spearman >= 0,8) et une corrélation aux attributs de taille ou d'âge après rebranchement de Molloy-Reed ou permutation de colonnes, son signal reflète uniquement les marginales de degré. Faux témoin 1b : analyse en composantes principales (ACP) évaluée sur le même graphe rebranché.",
+   "mecanisme_causal": "Le modèle de configuration de Molloy-Reed détruit toutes les corrélations d'ordre supérieur et la structure causale tout en conservant exactement la séquence des degrés, isolant la contribution pure des statistiques marginales.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Rebranchement à degrés constants et nuisances bibliométriques",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Contrôle négatif par modèle de configuration de Molloy-Reed et permutation contre la validation de VAE par attributs de surface"
+  },
+  {
+   "anteriorite_connue": "Peters, Bühlmann et Meinshausen (2016)",
+   "bib_ids": [
+    "BIB-1078",
+    "BIB-1087"
+   ],
+   "enonce_complet": "Remplacer les contrôles négatifs d'environnements triviaux (tels que le découpage alphabétique par nom d'auteur, sujet à fuite et renversement logique) dans les tests d'invariance causale ICP par une stratification délibérée selon une variable collisionneuse ou un descendant direct de l'issue Y, afin de provoquer et détecter les fausses non-invariances induites par conditionnement post-issue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le pipeline ICP continue de sélectionner ou d'interpréter l'ensemble invariant inchangé malgré la création d'environnements conditionnés sur un descendant de Y ou un collisionneur, l'épreuve d'invariance est insensible à la structure causale. Faux témoin 1b : partition aléatoire équilibrée indépendante de Y et de ses parents.",
+   "mecanisme_causal": "Conditionner sur un collisionneur ou un descendant de Y ouvre des chemins fallacieux entre Y et ses ancêtres dans la représentation empirique et détruit théoriquement l'invariance des vrais parents, contrairement à un découpage exogène arbitraire.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Environnements adverses par collisionneur pour ICP",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Contrôle négatif actif de l'ICP par stratification sur collisionneur ou descendant de l'issue"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1080",
+    "BIB-1088"
+   ],
+   "enonce_complet": "Exiger la spécification explicite de l'articulation structurale entre la variable d'intervention de dose D et les variables latentes Z extraites par iVAE, et appliquer un contrôle négatif par permutation des étiquettes des latentes entre paires avant passage dans le prédicteur d'effet de dose.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la prédiction de l'effet moyen de dose reste inchangée dans la fenêtre d'acceptation [0,5 ; 2,0] après permutation complète des latentes entre paires, les latentes ne jouent aucun rôle causal effectif dans la prédiction. Faux témoin 1b : modèle marginal moyen ignorant entièrement Z sur les mêmes données randomisées.",
+   "mecanisme_causal": "Sous dose randomisée, la moyenne marginale suffit à prédire l'effet moyen ; la permutation inter-paires des latentes détruit l'appariement individuel et révèle si le prédicteur exploite réellement l'hétérogénéité latente ou seulement la marge de D.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Permutation des latentes iVAE en prédiction d'effet de dose",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Contrôle négatif par permutation des latentes appariées et exigence d'articulation structurale dose-latentes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1065"
+   ],
+   "enonce_complet": "Séparer strictement les échantillons et partitions environnementales utilisés pour entraîner l'encodeur de représentation latente (par exemple iVAE) de ceux utilisés ensuite pour tester l'invariance conditionnelle P(Y | Z_hat_S, e) par ICP, afin d'éliminer toute fuite statistique entre la construction de l'instrument et son évaluation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer l'écart de p-valeur d'invariance ICP entre évaluation sur les données d'entraînement de l'iVAE et évaluation sur pli réservé ; un effondrement des rejets hors échantillon prouve la fuite. Faux témoin 1b : évaluation par validation croisée stricte avec réentraînement complet de l'iVAE par pli.",
+   "mecanisme_causal": "Apprendre l'encodeur sur la même partition d'environnements que le test d'invariance permet à la représentation d'absorber ou de gommer les décalages propres à e, biaisant la statistique du test ICP en aval.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Prévention de la fuite instrument-évaluation par découpage",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Séparation stricte des partitions entre apprentissage de l'encodeur iVAE et test d'invariance causale ICP"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1072"
+   ],
+   "enonce_complet": "Corriger ou borner le biais d'atténuation dans le calcul du R2 partiel lorsque le vecteur des variables de nuisance vraies W est observé via des proxys bruités W_tilde = W + eta (avec covariance de bruit définie positive), afin d'éviter qu'une fraction de la variance des confondeurs ne fuie artificiellement vers les composantes latentes résiduelles Z_hat_k.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un bruit synthétique croissant eta sur des proxys de W dans un monde sans effet latent vrai ; si le R2 partiel attribué à Z_hat_k augmente significativement avec la variance du bruit, la métrique non corrigée déclenche de faux positifs. Faux témoin 1b : régression errors-in-variables corrigée par la matrice de covariance de bruit estimée par réplicats.",
+   "mecanisme_causal": "L'erreur de mesure sur W atténue les coefficients de régression associés aux nuisances et laisse un résidu corrélé à W disponible pour être capté par les latentes corrélées, gonflant artificiellement leur R2 partiel.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Erreur sur proxys de nuisance et R2 partiel",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Correction du biais d'atténuation dû aux erreurs de mesure des nuisances dans le R2 partiel"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1082",
+    "BIB-1083"
+   ],
+   "enonce_complet": "Substituer aux critères d'évaluation formulés en ratios bruts (ratio de risques empiriques NRMSE entre modèle invariant et modèle complet, ou ratio d'effets de traitement W = tau_obs / tau_pred) des statistiques en différence appariée avec intervalles de confiance calibrés, afin d'éliminer l'explosion de variance près de zéro et les zones d'indétermination à faible puissance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler un régime où le dénominateur (tau_pred ou risque de référence) est faible ou bruité ; le critère en ratio présente une queue lourde de type Cauchy et un taux d'erreur incontrôlé alors que le contraste en différence conserve son niveau alpha. Faux témoin 1b : comparaison appariée par différence de pertes et erreur-type par grappe.",
+   "mecanisme_causal": "Le quotient de deux estimateurs gaussiens bruités dont le dénominateur approche zéro génère une variance infinie ou une large zone grise de décision, dégradant fortement la puissance statistique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Instabilité statistique des critères en quotient",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Remplacement des métriques en ratio d'effets et de NRMSE pour éviter l'explosion de variance et la perte de puissance"
+  },
+  {
+   "anteriorite_connue": "Peters, Bühlmann et Meinshausen (2016), Causal inference by using invariant prediction",
+   "bib_ids": [
+    "BIB-1069"
+   ],
+   "enonce_complet": "Auditer a priori la puissance statistique du test d'invariance causale ICP (Peters et al. 2016) en fonction de l'amplitude des perturbations environnementales sur les parents causaux Z_pa et du bruit d'estimation des latentes, afin de distinguer une véritable invariance causale d'un simple défaut de puissance acceptant abusivement H_0.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la puissance estimée par simulation calibrée pour détecter un changement structurel planté sur un non-parent reste inférieure au seuil minimal (par exemple 0,80), la rétention d'un ensemble par ICP est déclarée non informative. Faux témoin 1b : parent planté perturbé à faible amplitude vs non-parent perturbé à amplitude détectable.",
+   "mecanisme_causal": "Comme ICP prend l'intersection des ensembles où l'hypothèse nulle d'invariance n'est pas rejetée, une faible puissance sur les environnements ou un bruit sur Z_hat élargit artificiellement l'ensemble accepté ou produit un ensemble vide trompeur.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Sensibilité et puissance du test d'invariance ICP",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Audit préalable de puissance de l'ICP sous faible hétérogénéité environnementale et bruit sur variables latentes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1071"
+   ],
+   "enonce_complet": "Calculer la puissance exacte du test binomial de couverture empirique d'intervalles de prédiction (par exemple K ~ Bin(30, 0,10) au niveau nominal 1 - alpha = 0,90 avec règle de rejet K > 5) avant de sceller le nombre d'unités N, afin d'éviter des règles de décision sous-dimensionnées incapables de détecter une sous-couverture réelle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sous une sous-couverture plantée sévère (par exemple couverture réelle de 0,75 au lieu de 0,90), vérifier que la règle de rejet atteint au moins 80 % de puissance ; si N = 30 avec K > 5 échoue, la règle est rejetée avant expérience. Faux témoin 1b : intervalles bien calibrés à 90 % vérifiant le contrôle du taux de faux rejets alpha.",
+   "mecanisme_causal": "Sur un effectif N faible avec seuil discret conservateur, la loi binomiale discrète concentre la probabilité sous le seuil de rejet même lorsque la couverture réelle s'écarte nettement de la cible nominale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Puissance exacte du test binomial de calibration",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Dimensionnement de puissance du test binomial de couverture empirique d'intervalles de prédiction"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1085"
+   ],
+   "enonce_complet": "Imposer le regroupement de l'inférence au niveau de méta-unités indépendantes lors de l'évaluation de la concordance de signe sur expériences naturelles (chocs ou déménagements), afin d'éviter qu'un choc unique affectant un réseau corrélé ne soit traité comme N observations indépendantes alors qu'il constitue une méta-unité unique N = 1.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si l'attribution de la significativité p < 0,05 repose sur des individus soumis au même choc commun ou à une interférence de réseau, un test de permutation au niveau du choc montre une taille effective N = 1 et invalide le test de signe. Faux témoin 1b : pluralité de chocs exogènes géographiquement et temporellement disjoints.",
+   "mecanisme_causal": "L'interférence de réseau et les chocs communs corrèlent positivement toutes les unités exposées à un même événement, effondrant le nombre effectif de degrés de liberté à celui des chocs indépendants.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Effet de grappe et choc unique en expérience naturelle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Inférence par méta-unités indépendantes pour tests de transport par expérience naturelle sous interférence de réseau"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

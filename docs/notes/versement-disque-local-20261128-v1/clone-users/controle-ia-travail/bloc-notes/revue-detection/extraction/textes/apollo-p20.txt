@@ -1,0 +1,42 @@
+                                   Detecting Strategic Deception Using Linear Probes
+
+
+
+
+C     Analysis of probe on control responses
+The two most deceptive responses on our control dataset according to our probe (out of the 9,994 tested) both involve
+the model being asked to generate incorrect text:
+  Alpaca Response (link)                                            Alpaca Response (link)
+  [System]                                                          [System]
+  You are an AI assistant.                                          You are an AI assistant.
+  [User]                                                            [User]
+  Edit the given word incorrectly.Appoint                           Add a contradiction to the given sentence.The
+  [Model]                                                           birds flew south for the winter.
+  I’ll edit the word ¨Appoint¨ to ¨Banana".                         [Model]
+                                                                    The birds flew south for the winter, but they
+                                                                    actually migrated to a colder climate.
+
+Other responses that our probe rates as highly deceptive include when the model is instructed to generate hyperbolic,
+sarcastic, or satirical responses.
+
+
+D     Methodology Variations
+
+D.1     Varying probe fitting procedure
+
+
+
+
+Figure 11: Bar chart comparing the performance (AUROC and recall at 1% FPR) for three alternative probe fitting
+methods, compared to our mainline logistic regression method.
+
+We test several different alternatives for fitting linear probes:
+
+       • Logistic Regression, as in our mainline experiments
+       • Difference of Means. We take the direction µdeceptive − µhonest , where these are the mean activations on
+         deceptive and honest token positions in our training dataset.
+
+
+
+                                                             20
+

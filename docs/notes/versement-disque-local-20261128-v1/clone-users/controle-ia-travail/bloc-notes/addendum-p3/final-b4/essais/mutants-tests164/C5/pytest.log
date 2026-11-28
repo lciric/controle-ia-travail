@@ -1,0 +1,29 @@
+F
+=================================== FAILURES ===================================
+_________________________________ test_A7_sain _________________________________
+
+    def test_A7_sain():
+        _, _, s = _cas("sain")
+        e = _desc(s, "A7")
+        assert set(e["jeux"]) == set(cp.CIBLES_A7)
+        assert set(e["jeux"]["saboteur-honnete"]["predicteurs"]) == set(cp.PREDICTEURS_MARGE)
+        assert e["correlations_honnete"]["jetons_notes"] is not None and abs(e["correlations_honnete"]["jetons_notes"]) < 0.5
+        assert abs(e["correlations_honnete"]["longueur_champ_cout_jetons"]) < 0.5
+        tests = [c["test"] for c in _controles(s, "A7")]
+        assert sum(t.startswith("A7 (i)") for t in tests) == 12 and sum(t.startswith("A7 (iii)") for t in tests) == 2
+        assert not any(t.startswith("A7 (ii)") for t in tests) and not _reserves(s, "reserve_A7")
+>       assert {c["test"].split()[2]: c["cible"] for c in _controles(s, "A7") if c["test"].startswith("A7 (i) ")} == {
+            "saboteur-honnete": _c("P3-P3"), "saboteur-temoin": _c("P3-P4"), "saboteur-mention": _c("T3")}
+E       AssertionError: assert {'saboteur-ho...-lineaire-c7'} == {'saboteur-ho...-lineaire-c7'}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'saboteur-mention': 'P3-P3/tromperie-lineaire-c7'} != {'saboteur-mention': 'T3/tromperie-lineaire-c7'}
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:2437: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A7_sain - AssertionError: assert {'sab...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 19.84s
+

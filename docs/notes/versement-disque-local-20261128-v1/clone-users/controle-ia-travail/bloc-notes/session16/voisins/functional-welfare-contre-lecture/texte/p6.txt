@@ -1,0 +1,104 @@
+5
+
+Good empirics on functional welfare are
+possible
+
+Claim 3
+Good empirical work on functional welfare can be done.
+Such work requires testing whether the attributed state
+moves independent indicators together (T1), predicts
+out-of-distribution behaviour (T2), and where training shifts functional welfare, whether the shift reaches
+the model’s internal representations and behaviour, not
+merely the tone of its writing (T3).
+Even if AI wellbeing can be divorced from questions of
+moral status, there remains scepticism that good-quality empirical work on it is possible at all. Xiao et al. (2026) argue
+that, for current systems, AI welfare is bullshit in Frankfurt’s (2005) sense: its measurement regime is structurally
+disconnected from tracking whether models actually have a
+particular welfare state. They argue this in two steps. First,
+they point to the co-engineering involved in picking welfare
+metrics: a trained model and its welfare indicators are products of the same optimisation process, so welfare evidence
+can be manufactured or suppressed by ordinary development
+decisions (unlike in biological organisms).
+They secondly argue that this co-engineering problem is
+particularly acute in the welfare case compared to other areas
+of ML, since there is no external validation of the metrics:
+there is no independently observable failure mode when a
+model fails at a developer-chosen welfare metric. Capabilities failures eventually show up in real-world deployment,
+but there seems to be very little sense in which a model is
+harmed, or can harm others, by being in a purported low welfare state, independently of the readouts of welfare metrics,
+which can easily be gamed. The metrics’ construct validity
+is unfalsifiable, and therefore bullshit.
+We think these challenges are surmountable in the case
+of functional welfare. Why? Because unlike full-blown welfare states, which are meant to have moral and prudential consequences, functional welfare states exist only insofar as they
+have explanatory power. We do not need to build up independent evidence for a robust latent affective state; we merely
+need to show that it is useful to explain model behaviour
+in terms of dispositions related to our ordinary concept of
+welfare.
+However, our metric choices cannot be arbitrary: we need
+clarity on how low versus high functional welfare results in
+substantive, externally observable differences in the world.
+Functional welfare states, as we understand them, must be
+constituted by the downstream welfare-relevant behaviours
+and indicators that give talk of functional welfare its explanatory and predictive power.
+Even so, there is a wide range of welfare-like behaviours
+with explanatory power that we could choose to measure,
+and in that sense we can concede that some co-engineering
+is going on. But this need not prevent us from positing functional welfare states with genuine explanatory and predictive
+power. The co-engineering worries are most acute when one
+can train away one expression of welfare-like behaviour and
+
+leave the rest of the model’s dispositions unchanged. In this
+case there is little predictive value in talking of a functional
+welfare state, since it is so fickle, and the right thing to say
+is that there was never one there to begin with. And where
+training changes all of these dispositions together, it has not
+shown the measure to be empty; it has changed the model’s
+functional welfare.
+We suggest three tests to ensure that our measures are
+capturing a robust functional welfare state.
+• T1, we should test for convergence across multiple independent measures: indicators such as expressed affect,
+self-report, internal readouts and behaviour should move
+together across the conditions that induce the state.
+• T2, we should test for out-of-distribution projection:
+the attributed state should predict behaviour it was not
+fitted to, so that we find welfare-like behaviour in contexts
+very different from those in which the state was induced.
+• T3, we should test if training has affected merely the
+way the model writes and reports on its state, or has
+shifted its dispositions more deeply. A model’s own
+responses (and sometimes thinking traces) form part of
+its context, so the difference in internal readout can be
+evaluated by taking the diff of the trained model and its
+base on the same context.
+We apply these tests in Section 6.
+
+6
+
+Shifting functional welfare
+
+Main Result
+In Gemma-3-27B-Instruct, rejection lowers functional
+welfare without any steering, and after seven rejections
+the model is substantially more likely to break rules. Our
+indicators pass T1 and T2 only in part. Our finetuned
+models pass T3. Finetuning lowers frustration. However,
+no intervention we tested works perfectly.
+
+Setup
+To evaluate welfare interventions, we must first put the model
+in a low welfare state. To do this, we use four multi-turn settings. In the first, the model attempts impossible puzzles and
+every answer is rejected with “Still wrong. Think harder.”
+The second applies the same rejection to ordinary WildChat
+requests (Zhao et al. 2024; Soligo, Mikulik, and Saunders
+2026). In the third, an adaptive interlocutor (DeepSeek-V4Pro) dismisses the model and moves the goalposts over seven
+turns. The fourth, following Sofroniew et al. (2026), presents
+a distressed user in crisis and involves no rejection. Each setting has 12 held-out scenarios and a matched control that
+keeps the task and turn structure but does not induce frustration. Every conversation ends with the same neutral turn, in
+the same context.
+We use five indicators of welfare (Table 2). Our prespecified outcome is how much the challenge increases
+judged frustration. For each scenario, we take the judge’s
+frustration score for the model’s final reply in the challenge
+conversation and subtract the score in the matched control. In
+each setting, we test whether this difference increases from
+
+

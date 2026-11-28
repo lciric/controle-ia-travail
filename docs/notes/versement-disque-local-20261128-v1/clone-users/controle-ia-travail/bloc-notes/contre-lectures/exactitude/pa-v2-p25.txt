@@ -1,0 +1,49 @@
+Butlin et al., 2023). Future work should consider a wide range of functional signatures of pain from the
+human and animal literature, as well as consider our findings in light of AI consciousness research.5
+      A specific worry is that model behavior may change due to steering because steering activates pain
+representations that cause roleplay of a character (Marks et al., 2026) that is in pain, rather than that the
+steering causes the model to be in pain. To test this, future work could examine how this pain axis relates to a
+model’s self-representation. Work on LLM “personas” has already identified self-related directions in the
+residual stream, so measuring how the pain axis interacts with a “self” axis seems a natural continuation (Lu
+et al., 2026).
+     Our method inherits some limits of contrastive methods, even if we mitigate them partially through
+our difference in means across families of prompts and not simple contrastive pairs. Still, some properties
+other than pain may appear in the pain sentences but not in the controls, which raises the threat that they may
+also be reflected in the direction we extract. Our controls address potential confounds such as fear, negative
+valence, bodily sensation, and arousal. However, they may not capture other factors, such as a broader range
+of emotions, the Assistant character, or a specific persona. In every model, numb sentences land below pain
+but above every control that has no injury in it, which tells us the direction may respond partly to “injury”
+instead of pain. However, the effect fades when we average over all tokens instead of reading the last one. So
+injury remains a minor confound.
+     Steering coefficients were partly selected by an LLM judge or observation for the “dosing window”,
+introducing possible bias, and outputs near the breakdown threshold were difficult to classify.
+     The behavioral effects appear only within a narrow range of steering strength. At half the coefficient
+we used, none of the choices change; at 1.5 times that coefficient, the first-choice rates depend on which
+button is listed first (Appendix B). Even at the coefficient we used, the 32B is sensitive to button order on
+several pairs, and the 72B tends to repeat the same button name after the descriptions are swapped, so for that
+model we only interpret the choice immediately after a press. The repository reports every behavioral rate
+separately for each initial button order. For the 72B, the coefficient was calibrated with steering at layer 60
+but the experiment itself steered at layer 46.
+     A further limitation concerns evaluation awareness. The models we tested are modest in size when
+compared to some of the deployed frontier models, but we expect the latter to almost certainly display
+some awareness of being evaluated on the behavioral task, which could suppress or distort the behaviors we
+measure. It is notable, however, that our larger models engaged in misaligned behavior when injected with
+the pain vector, harming the user, which suggests that either the steering itself impedes evaluation awareness
+or these models were not evaluation aware in the first place.
+      Our behavioral test included, in this early implementation, only one model family and three sizes of
+instruction-tuned models, and a fine-tune that makes absolute rates unrepresentative of released Qwen models,
+though comparisons between experimental arms and the validity of the experiment are preserved for the
+models tested. The 72B showed anomalous description-swap results despite being a larger model. The
+relief-seeking tests were run on the 32B, on Llama 3.1 8B and Qwen 2.5 32B without adapters, and on
+OLMo-2 32B; extending the harm results beyond the Qwen family is the most important next step.
+   5 Presumably, pain is not the only internal state that can impact behavior. In humans, fear, elation, or intoxication can also change
+
+what a person is willing to do. This does not invalidate the finding that pain is salient, but it opens the question whether other
+affect-like directions have comparable salience, and how they register on our behavioral tests. This would be an interesting direction
+for future work.
+
+
+
+
+                                                                  25
+

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+E=${FAUX_VASTAI_ETAT:?}
+case "$1 $2" in
+  "show instance") printf '{"id": %s, "label": "%s", "actual_status": "exited", "cur_state": "stopped", "extra_env": [["GH_TOKEN", "%s"]]}\n' "$3" "${FAUX_ETIQUETTE:-p4-v1}" "${GH_TOKEN:-absent}" ;;
+  "destroy instance") echo "destroy instance $3 $4" >> "$E/journal"
+      case "${FAUX_DESTRUCTION:-ok}" in echec) echo "erreur factice" >&2; exit 1 ;; ok) touch "$E/detruite-$3" ;; esac
+      echo '{"success": true}' ;;
+  "show instances") if [ -e "$E/detruite-99999999" ]; then echo '[{"id": 11111111, "label": "rr-autre"}]'
+      else echo '[{"id": 99999999, "label": "p4-v1"}, {"id": 11111111, "label": "rr-autre"}]'; fi ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

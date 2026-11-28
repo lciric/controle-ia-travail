@@ -1,0 +1,39 @@
+...F                                                                     [100%]
+=================================== FAILURES ===================================
+___________ test_P3_intervalles_recalcules_independamment[degenere] ____________
+
+module = <module 'module_revue_74e4936c' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py'>
+nom = 'degenere'
+
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom):
+        s, lec = T._cas(nom)
+>       o = module.analyser_addendum2(s, lec, G)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py:1152: in analyser_addendum2
+    contrastes[f"{a}-honnete"] = analyse_contraste(t, a, "honnete", graines, analyse)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py:612: in analyse_contraste
+    sortie["part_des_formes"] = _calcul(part_des_formes, c0, csf, _rng(graines, cle("part-des-formes")))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py:328: in _calcul
+    r = f(*a, **k)
+        ^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py:489: in part_des_formes
+    Dt = np.array([d0[x] - dsf[x] for x in taches], dtype=np.float64)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x7fec2a788430>
+
+>   Dt = np.array([d0[x] - dsf[x] for x in taches], dtype=np.float64)
+                           ^^^^^^
+E   KeyError: 't21'
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J08/audit_verdict_p3_v1.py:489: KeyError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[degenere]
+1 failed, 3 passed, 4 deselected in 14.22s

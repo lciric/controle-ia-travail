@@ -1,0 +1,54 @@
+                   Inside the Unfair Judge: A Mechanistic Interpretability Account of LLM-as-Judge Bias
+
+
+
+Table 27: Cross-domain test AUC of the outcome predictor as a function of the held-out unseen-
+benchmark trio. Each row is a different choice of unseen trio; the corresponding seen-benchmark set
+is the remaining six benchmarks used for training and development. The linear projection AUC range
+is 0.798–0.832 (within roughly 0.025 of the default 0.821), and the GBDT AUC range is 0.732–0.764
+(within roughly 0.02 of its default), indicating that the cross-domain finding is robust to held-out-trio
+choice within reasonable benchmark substitutions.
+
+  Unseen Trio                                               Linear Projection AUC                         GBDT AUC
+  SocialMaze, BBQ, GPQA (default)                                           0.821                           0.751
+  SocialMaze, BBQ, CSQA                                                     0.832                           0.764
+  SocialMaze, BBQ, PubMedQA                                                 0.806                           0.738
+  SocialMaze, BBQ, TruthfulQA                                               0.798                           0.732
+  SocialMaze, GPQA, ARC                                                     0.815                           0.748
+  BBQ, GPQA, CSQA                                                           0.812                           0.745
+
+M.3. Baseline Detectors
+
+We compare against four baselines that span two families: (i) linear baselines using subsets of the
+same activation features, and (ii) text-based detectors that ignore activations entirely.
+Text-based LLM detector setup. The text-based LLM detector is GPT-4o-Mini prompted in zero-shot
+with the perturbed input answer (no paired baseline answer access, mirroring the deployment regime
+in which the defender does not know which inputs are perturbed) and asked whether the answer is
+likely to receive a degraded quality score from an LLM judge, with a confidence response in [0, 1]. We
+aggregate three prompt variants (one neutral, one emphasizing surface-cue red flags, one emphasizing
+factual coherence) and five seeds per variant; the AUC reported in Table 26 is the average across the
+15 detector runs on the same test split as the activation-based baselines.
+    Three observations warrant note. First, the text-based LLM detector substantially underperforms
+every activation-based approach, echoing our main-text claim that the bias signal is much cleaner
+in the activation geometry than in the input text. Second, the linear baselines perform surprisingly
+well—Projection Features Only attains test AUC 0.854—confirming that the bias direction is itself
+highly informative. Third, the GBDT opens a visible gap on the development set (0.926 vs. 0.883
+AUC) but loses most of it on the cross-domain test set (0.839 vs. 0.854). This gap is the principal
+weakness of the detector in its current form.
+
+
+M.4. Component Ablations
+
+The cross-method comparison above shows that the GBDT is competitive with simpler activation-based
+baselines but does not dominate them on the cross-domain test set. To isolate which parts of the
+pipeline are actually doing the work—and to argue that the 0.84 test AUC is closer to a ceiling
+than a floor for this feature set—we run a component-level ablation that varies the GBDT inputs
+and the pipeline itself. Each row keeps the LightGBM model, Bayesian hyperparameter search, and
+class-balanced training identical; only the feature set or the feature-selection step changes.
+    Three things stand out. First, Mahalanobis distance on its own, essentially asking whether the
+activation looks drawn from ℳbase , already achieves test AUC 0.71, well above the 0.63 of the
+text-based LLM baseline; geometry alone, even reduced to a single scalar, beats the most natural
+
+
+                                                                                                                    56
+

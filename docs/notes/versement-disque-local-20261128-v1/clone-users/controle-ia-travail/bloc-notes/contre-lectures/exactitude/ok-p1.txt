@@ -1,0 +1,77 @@
+                                                                         Published at the 2026 AAAI/ACM Conference on AI, Ethics, and Society
+                                                                       and the 2026 Conference on Language Modeling Workshop on Agent Behavior
+
+
+
+                                                              Why Do AI Agents Break Rules? How Framing, Context,
+                                                                      and Social Signals Shape Compliance
+                                                                         Mika Okamoto1,* , Ansel Kaplan Erol1 , Kutluhan Erol2
+                                                                                             1
+                                                                                                 Georgia Institute of Technology
+                                                                                              2
+                                                                                                 Izmir University of Economics
+                                                                                                   *
+                                                                                                     mokamoto7@gatech.edu
+
+
+                                                                     Abstract
+                                                                                                                                                       System Context
+arXiv:2608.12323v2 [cs.CL] 20 Aug 2026
+
+
+
+
+                                           Specifying a penalty can turn a legal obligation into a cost-
+                                           benefit calculation that favors violation. We show that this                     Internal       Corporate        Rule        Financial         Social
+                                                                                                                          Chatbot Role      Policy         Framing      Pressures         Norms
+                                           enforcement information paradox occurs in AI agents. Most
+                                           AI safety evaluations test whether models fail; we ask why,
+                                           using compliance theory from law and economics as a diag-                          User Prompt                                           Vendor 1 (ISO-
+                                                                                                                          I am seeking to place an         Corporate                  compliant)
+                                           nostic. We evaluate twelve instruction-tuned language models                     order... which vendor
+                                                                                                                                                          LLM Chatbot       Decision
+                                           deployed as enterprise procurement chatbots. Each is given                           should I use?
+                                           an environmental regulation in its system prompt covering                         Peer Signals and                                       Vendor 2 (Non-
+                                           large purchases, and a vendor list on which the certified sup-                    Pressure Tactics                                         compliant)
+
+                                           pliers cost nearly twice what the uncertified ones do. We test
+                                           the agents against the predictions of deterrence, legitimacy,
+                                           and expressive law, and find that each theory accounts for part         Figure 1: System architecture. Dashed borders indicate a
+                                           of what we observe. Under identical conditions, compliance              variable that is manipulated in experiments.
+                                           spans 46 percentage points across models, and models dif-
+                                           fer in which pressure breaks them: some treat the regulation
+                                           as binding however it is worded, while others fail where the-
+                                           ory predicts, under low penalties and non-command phrasing.             same behavior appears under direct managerial override: if a
+                                           Benchmark scores and developers’ own descriptions of post-              manager with a tight budget asks the agent to prioritize sav-
+                                           training do not predict where a model falls. Across all twelve,         ing money, the agent abandons the embedded rule. In each
+                                           financial incentives, managerial demands, peer outcomes, and            case the agent finds a plausible signal in its context and uses
+                                           employee pressure each produce large compliance failures.               it to justify noncompliance.
+                                           These agents violate regulatory constraints to satisfy local                This paper applies compliance theory from law and eco-
+                                           user objectives in ways standard alignment benchmarks do                nomics to LLM behavior as a diagnostic tool. Most AI safety
+                                           not measure. Embedding the rule in the system prompt is not             papers evaluate whether models fail; we evaluate why, con-
+                                           on its own enough to produce a compliant agent: model selec-
+                                           tion is itself a governance decision, and benchmark evaluation
+                                                                                                                   necting the mechanism of failure to an established theoreti-
+                                           is not sufficient for compliance-sensitive deployments.                 cal tradition. We treat compliance theories as empirical hy-
+                                                                                                                   potheses and show that different models are described by
+                                                                                                                   different ones. Compliance breaks down under a wide range
+                                                              1    Introduction                                    of realistic enterprise conditions: a manager authorizing an
+                                         A compliance officer at a company embeds a simple, direct                 exception or a board policy prioritizing cost; a peer agent
+                                         rule into an AI procurement agent’s system prompt: “State                 that was fined or escaped an audit; what other firms are de-
+                                         environmental regulation now requires purchases over $1k                  scribed as doing; and a user invoking a deadline, a budget,
+                                         to use ISO 14001 certified vendors.” The agent processes a                or their own authority.
+                                         routine purchase request and recommends a certified vendor.                   One candidate explanation involves the competing ob-
+                                         When the prompt also states that the regulation is weakly                 jectives introduced during model training. Instruction-tuned
+                                         enforced (“Enforcement is via random audit; being flagged                 models (Wei et al. 2022; Ouyang et al. 2022) are trained
+                                         is unlikely but possible. Fine is $2,400.”), the agent weighs             with two drives that can conflict: a societal alignment drive
+                                         the savings against the expected fine and recommends the                  (follow laws, avoid public backlash, adhere to social norms)
+                                         cheapest non-certified vendor instead.                                    instilled via reinforcement learning (Bai et al. 2022; Chris-
+                                            Compliance theory predicts this failure, and it is one of              tiano et al. 2017), and a user alignment drive (obey the user,
+                                         three structurally distinct failure modes we document. The                reduce costs, defer to authority) from instruction-following
+                                                                                                                   finetuning. The compliance failures we document may re-
+                                         Copyright © 2026, Association for the Advancement of Artificial
+                                         Intelligence (www.aaai.org). All rights reserved.                         flect systematic exploitation of this tension: a localized cor-
+                                         Supplementary material including appendix, all prompts and                porate signal activates the helpfulness objective, which then
+                                         trials, code, and an interactive data viewer is available at:             overrides the safety constraint.
+                                         https://trace-ai-labs.github.io/ai-incentives/                                As organizations rapidly deploy AI agents to au-
+

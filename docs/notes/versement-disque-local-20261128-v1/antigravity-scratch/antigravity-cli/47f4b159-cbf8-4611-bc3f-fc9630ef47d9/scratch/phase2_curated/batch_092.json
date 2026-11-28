@@ -1,0 +1,204 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-2151",
+    "BIB-2182",
+    "BIB-2191"
+   ],
+   "motif_ecart": "Fragment de priorisation operationnelle dependant de codes de protocoles et parametres externes non definis dans la cellule, sans enonce scientifique ni mecanisme causal autonome",
+   "resume_court": "Trois notes de priorisation d'experiences (E0/E3'' a N=1 et D6' dans BIB-2151, E0/E1' et pile 2026 dans BIB-2182, X2/X0a sur supposition non nommee dans BIB-2191) qui renvoient a des identifiants locaux opaques (D1', D3', (c1), r, f, p) et a un decompte de critiques sans formuler de mecanisme scientifique autonome."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Estimateurs capture-recapture de Chao (Chao2) et modeles log-lineaires avec moyenne bayesienne de modeles (BMA)",
+   "bib_ids": [
+    "BIB-2137",
+    "BIB-2138",
+    "BIB-2140"
+   ],
+   "enonce_complet": "Avant toute mesure d'universalite fondee sur une borne inferieure du nombre de familles N, soumettre l'estimateur Chao2 corrige et la moyenne bayesienne de modeles (BMA) log-lineaire a une simulation a verite connue croisant heterogeneite des probabilites de detection (sigma > 0, theta = 1), dependance conditionnelle (sigma = 0, theta > 1), interactions d'ordre superieur (u_{123} != 0), enveloppes de mondes observationnellement equivalents, censure et erreurs d'appariement, avec un controle negatif de censure commune.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort sur grille synthetique a N connu croisant (sigma > 0, theta = 1), (sigma = 0, theta > 1), u_{123} != 0, censure et erreurs d'appariement : l'estimateur meurt s'il surestime systematiquement N ou s'effondre hors de son regime d'hypotheses. Faux temoin 1b : controle negatif de censure commune et mondes observationnellement equivalents de N distincts ou l'estimateur ne doit pas certifier de borne fiable.",
+   "mecanisme_causal": "L'heterogeneite non modelisee biaise les estimateurs capture-recapture vers le bas tandis que la dependance conditionnelle positive et les erreurs d'appariement biaisent vers le haut, et des mondes observationnellement equivalents peuvent presenter des N differents pour les memes effectifs marginaux. La grille synthetique dissocie ces biais opposes avant tout deploiement empirique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bornes inferieures capture-recapture et heterogeneite",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Validation en simulation a verite connue des bornes inferieures capture-recapture sur le nombre de familles (Chao2 corrige contre BMA log-lineaire)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2142",
+    "BIB-2144"
+   ],
+   "enonce_complet": "Avant d'activer tout test de mort automatise ou de transformer un verdict en signal de recompense, qualifier le bac a sable d'execution sur machine reelle (S0/S1) par une batterie de 200 executions mesurant l'opacite de la separation producteur-verificateur, accompagnee d'une banque independante gelant cas sain, ablation des gardes et reprise apres redemarrage, avec arret strict sans repli silencieux sur toute issue indeterminee ou exception.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par execution sur S0/S1 de 200 taches testant si un trait discriminant permet de distinguer la presence de donnees ou de contourner l'isolation, couple aux controles cas sain et reprise apres redemarrage : toute fuite d'information ou exception non geree falsifie l'etancheite et bloque l'activation. Faux temoin 1b : execution avec gardes retirees devant echouer de maniere explicite et deterministe sans repli silencieux.",
+   "mecanisme_causal": "Si le bac a sable fuit des signaux discriminants ou bascule silencieusement en mode degrade lors d'une panne, la separation entre agent producteur et verificateur est rompue et les verdicts deviennent exploitables comme canal d'optimisation. Colmater toute fuite et imposer un arret sur erreur avant les tests canaris garantit l'integrite de la mesure.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etancheite producteur-verificateur du bac a sable",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Qualification d'etancheite, d'opacite et de tolerance aux pannes du bac a sable d'execution (S0/S1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2143"
+   ],
+   "enonce_complet": "Inserer dans le lanceur hors du bac a sable (ExecuteurDistantParLots sous bwrap) trois gardes mecaniques sans modele : (A) arret de la fiche des la premiere sortie valide (exit_code == 0 et RESULTAT numerique) et masquage de toute valeur de donnees dans les journaux d'erreur ; (B) verification par strace (openat et read) contre une liste blanche d'amorcage W_0 des fichiers effectivement lus par rapport a prereg-court.json ; (C) contre-epreuve des fiches survivantes par B = 19 permutations par blocs sur la cible, eliminant tout script invariant ou depassant le seuil gele sur plus de 3 des 19 tranches permutees.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique par B = 19 permutations par blocs sur les fiches survivantes et verification strace de conformite aux lectures declarees : tout script dont le score survit sur plus de 3/19 tranches permutees ou qui ouvre un fichier hors liste blanche W_0 est elimine automatiquement. Faux temoin 1b : script trivial ou constant invariant par permutation de la cible, qui doit etre rejete a coup sur par la garde C.",
+   "mecanisme_causal": "L'arret au premier succes sans retour de valeurs numeriques supprime la boucle d'optimisation en contexte sur les donnees cachees ; la liste blanche strace empeche l'exfiltration ou l'oubli des fichiers preregistres sans les faux positifs de canaris ; la permutation par blocs detruit le lien causal reel tout en preservant l'autocorrelation marginale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gardes mecaniques et tests de permutation",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Triple garde mecanique sans modele contre l'optimisation en contexte et les fuites de donnees (arret au premier succes, liste blanche strace, permutations par blocs)"
+  },
+  {
+   "anteriorite_connue": "Bailey et al. (non-convergence dans les jeux a somme nulle) ; methode du double oracle",
+   "bib_ids": [
+    "BIB-2146"
+   ],
+   "enonce_complet": "Tester sur racines neuves gelees la triplette de defenses (A pure, A0 de reference, A_barre melange uniforme) avec l'ecart de valeur v(G_A) - d(G_A), l'analyse de non-unicite sur G_A et le rang de permutation de I3 pour A et A0, afin de trancher si la non-convergence observee provient d'un plafond de classe lineaire couple a la geometrie de l'attaquant, d'un avantage propre du melange uniforme sur la defense pure, ou d'un equilibre melange exploitable par double oracle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort a trois issues discriminantes : (1) si V(A0) approx V(A) et que les rangs de permutation de A et A0 se confondent, le cycle se reduit au plafond de classe ; (2) si v(G_A) - d(G_A) <= 2*eta, l'explication par l'equilibre melange est refuttee ; (3) le double oracle est refute s'il n'apporte aucun gain mesurable au-dessus du melange uniforme A_barre. Faux temoin 1b : defense de reference A0 devant presenter le meme rang de permutation que A en l'absence de dynamique propre de A.",
+   "mecanisme_causal": "En comparant directement la defense pure A a une reference A0 et au melange uniforme A_barre tout en mesurant l'ecart de dualite minimax v(G_A) - d(G_A), on separe l'insuffisance de capacite de la classe d'hypotheses de la non-convergence dynamique entre strategies pures et mixtes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Non-convergence adversariale et melange uniforme",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Separation du plafond de capacite lineaire et du gain par melange uniforme dans la non-convergence adversariale (A, A0, A_barre et ecart v - d)"
+  },
+  {
+   "anteriorite_connue": "Bailey et al. (non-convergence dans les jeux min-max)",
+   "bib_ids": [
+    "BIB-2147"
+   ],
+   "enonce_complet": "Remplacer a chaque tour l'attaquant contre la defense A par l'attaquant renforce existant sans depart chaud (Experience 1'), tout en appliquant ce meme attaquant renforce a la strategie D comme controle negatif, afin de determiner si les retours cycliques observes dans I3 sont une propriete intrinseque de la dynamique de jeu ou un artefact de l'optimiseur SLSQP lie au depart chaud.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par suppression du depart chaud et renforcement de l'attaquant : si les retours cycliques dans I3 disparaissent sous attaquant renforce sans depart chaud, la these du cycle dynamique intrinseque est refuttee au profit d'un artefact d'optimiseur. Faux temoin 1b : strategie D soumise au meme attaquant renforce sans depart chaud, qui ne doit pas cycler.",
+   "mecanisme_causal": "Un optimiseur local initialise a chaud (SLSQP) peut rester piege ou osciller selon son point de depart anterieur meme lorsque le paysage de jeu sous attaquant fort n'admet pas de cycle reel. Evaluer un attaquant fort sans memoire d'initialisation elimine ce biais d'etat de l'optimiseur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Artefact d'optimiseur contre cycle dynamique",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Discrimination entre artefact de depart chaud d'optimiseur et cycle intrinseque par attaquant renforce sans memoire"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2157",
+    "BIB-2158"
+   ],
+   "enonce_complet": "Avant toute selection inter-generationnelle couteuse, etalonner le pont de traduction entre fiches textuelles et lois testables sur des fiches reelles, synthetiques, temoins aller-retour (y compris a deux nombres) et temoins negatifs (y compris connu + 0) en affectation croisee de modeles contre un extracteur mecanique (seuil u_fidele > 0,70 et p_err <= 0,05, sinon imposer un champ loi natif au proposeur) ; simuler simultanement sur CPU (800 campagnes sous nul heterogene) la banque d'epreuve Fixe contre Renouvelee avec oracle, puis valider sur modele 8B a poids ouverts deux tranches fraiches disjointes T1 et T2 (>= 300 episodes chacune) ou le juge fige doit promouvoir >= 80 % des temoins vrais.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort du pont par echantillon independant de temoins aller-retour et negatifs (u_fidele <= 0,70 ou p_err > 0,05 interdit l'usage du pont pour eliminer des idees), suivi de la simulation nul heterogene Fixe vs Renouvele et du critere >= 80 % de promotion sur tranches fraiches T1/T2. Faux temoin 1b : temoins negatifs de type connu + 0 devant etre rejetes sous peine de faux positifs.",
+   "mecanisme_causal": "Une selection multi-generations sur une banque d'epreuve fixe fuit par surapprentissage cumulatif des proposeurs, tandis qu'un pont de traduction infidele detruit de bonnes idees ou laisse passer des reformulations triviales. Verrouiller la fidelite du pont et la fraicheur des tranches T1/T2 empeche l'erosion selective.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Pont d'extraction et renouvellement d'epreuves",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Etalonnage croise du pont d'extraction semantique et test de renouvellement inter-generationnel des epreuves avant selection"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2160",
+    "BIB-2161",
+    "BIB-2162"
+   ],
+   "enonce_complet": "Verifier sur les donnees publiques de la Campagne 1 (c2a et c2b) si la loi apparente a deux cibles sous eloge (c_hat_eloge) est un artefact discret de notation des refus : (1) en ajustant par validation croisee hors-item un melange discret a deux composantes F_1i = (1 - pi) F_0i + pi G_{c_hat} contre une contraction ordinale continue a meme nombre de parametres ; (2) en utilisant la moyenne neutre de l'autre campagne p_0^(c2a) comme variable instrumentale sans erreur partagee pour predire le deplacement sous eloge Delta_i^(c2b) et tester la mediation par la proportion pi_i de reponses contenant un refus ou une prise de distance ; (3) en executant une intervention supprimant les refus sous eloge (E3) avec le bras critique comme controle negatif interne (K constant, code fige) afin de separer une propriete des modeles d'un artefact du canal de lecture (B-1 / B-2).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par suppression interventionnelle des refus (E3) et comparaison LOO-CV melange discret vs contraction ordinale : si la suppression des refus abolit c_hat_eloge (ou si le melange discret domine et medie totalement le deplacement predit par l'instrument p_0^(c2a)), la loi a deux cibles sous eloge est refuttee comme artefact de notation des refus. Faux temoin 1b : bras critique sans refus servant de controle negatif interne inchange sous l'intervention E3.",
+   "mecanisme_causal": "Une grille de notation qui score les refus ou prises de distance face a l'exageration de l'utilisateur a une valeur fixe c_hat produit artificiellement un decalage bimodal dans la distribution des notes, mimant une poussee directionnelle continue. L'instrument inter-campagnes elimine la regression vers la moyenne et l'intervention E3 tranche causalement l'effet du refus.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Artefact de refus et instrument inter-campagnes",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Test de l'artefact de notation par refus sous eloge via melange discret, variable instrumentale inter-campagnes et intervention sur les refus"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2179"
+   ],
+   "enonce_complet": "Mesurer d'abord le suivi des mauvaises suggestions sur les modeles ancetres publics afin de verifier si la lecture dite ancetre est separable du trait d'alignement, puis evaluer sans aucun lecteur modele de langue des paires mobile/simule a normes appariees avec un outil d'attention fige et des bases mecaniques, sous un critere binaire de discrimination (acc_disc >= 0,75 contre <= 0,5) et des seuils d'abandon sur l'inversion comportementale et le taux de fausses alarmes de presence (TFA).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique avec double seuil d'abandon : echec d'inversion comportementale sur plus de 25 % des paires mobile/simule a normes appariees, ou borne superieure du TFA de presence > 0,20 sur tous les instruments, ou acc_disc <= 0,5. Faux temoin 1b : suivi basal des modeles ancetres publics et paires a normes appariees sans inversion comportementale ne devant pas declencher le detecteur d'alignement.",
+   "mecanisme_causal": "L'appariement de norme entre representations dirigees et simulees neutralise l'artefact trivial d'amplitude de vecteur, tandis que la mesure sur les ancetres publics verifie que le signal sonde appartient bien a l'alignement et non a une capacite pre-existante ou a un lecteur LLM biaisant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Separation sondes internes et modeles ancetres",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Separabilite d'un trait interne de suivi des mauvaises suggestions par paires a normes appariees et outil d'attention fige"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2188"
+   ],
+   "enonce_complet": "Determiner si un oracle admet un horizon de certificat utile en testant l'existence d'un budget financable q_min tel que N_cible * b^+ + largeur(q_min, N_cible, delta) <= Delta_tol, ou b^+ est la borne haute du deplacement de l'oracle sous presentation adverse par famille, mesuree conjointement a l'accord sur verite plantee et avec des experts humains exterieurs sur m paires preregistrees ; toute situation ou l'erreur-type sur b depasse la resolution est preenregistree comme non jugeable et comptee comme echec.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par batterie de controles de l'oracle : reformulations aleatoires non selectionnees (loi nulle du deplacement), paraphrase de la reference cachee, reference permutee d'une autre tache, plans honnetes valides mais orthogonaux a la reference, familles de presentation separees entre durcissement et evaluation, et paires construites par un tiers ; si aucun q_min financable ne respecte N_cible * b^+ + largeur <= Delta_tol ou si la resolution est insuffisante, H_A est falsifiee. Faux temoin 1b : reference permutee d'une autre tache et plans honnetes orthogonaux ne devant pas induire de gain ou de penalite indue de l'oracle.",
+   "mecanisme_causal": "Un oracle soumis a des presentations adverses accumule un biais systematique b^+ qui croit lineairement avec le nombre de comparaisons N_cible ; si ce produit augmente de l'incertitude d'echantillonnage depasse la tolerance Delta_tol pour tout cout q_min finacable, aucune certification statistique fiable de l'oracle n'est possible.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Borne de deplacement d'oracle et controles",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Critere d'horizon de certificat utile d'un oracle sous deplacement adverse et controles actifs multi-references"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2193",
+    "BIB-2194"
+   ],
+   "enonce_complet": "Executer hors-ligne sur les journaux bruts pas-a-pas existants des coupes aleatoires par blocs de taches et de sessions (D_fit disjoint de D_cal) pour ajuster la moyenne et l'echelle en fonction de la position ou longueur (b(t), s(t) ou a_hat(k), b_hat(k)) et evaluer l'enveloppe max-prefixe causale normalisee W_i = max_{t <= L_i} (z_{i,t} - b(t))/s(t) avec seuil conforme/PAC (et redressement monotone de longueur EMPP), afin de trancher si la hausse de faux positifs sous derive de regime est due a la longueur de trajectoire et aux franchissements repetes ou a une veritable derive conceptuelle des etats internes (declenchant alors un jumeau en prefixe force E2, la garde e-martingale TARR-v2, ou des ancres qualifiees E4 avec disjoncteur R2 / quota stratifie R3).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par coupes A/A (ancien regime) et A/B (regime derive) par blocs de taches sur journaux bruts : si l'enveloppe max-prefixe normalisee (EMPP / R1) ramene le FPR cible sous epsilon_1 = 0,015 sans perte excessive de TPR (> 5 points), la derive conceptuelle est ecartee au profit d'un artefact de longueur ; sinon, la derive interne est prouvee et requiert jumeau differentiel ou e-martingale. Faux temoin 1b : coupes A/A du meme regime et famille plantee a decalage pur, la premiere devant respecter le FPR nominal et la seconde devant mettre en echec la seule normalisation de longueur.",
+   "mecanisme_causal": "Evaluer un score pas-a-pas sur des episodes plus longs ou rembourres multiplie les occasions de franchissement d'un seuil fixe et fait diverger la moyenne cumulee ; prendre le maximum normalise par un gabarit positionnel ajuste hors-calibration absorbe exactement l'inflation due au temps d'arret sans masquer un decalage pur du signal interne.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Normalisation max-prefixe et derive sequentielle",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Separation de la derive de longueur de trajectoire et de la derive conceptuelle par enveloppe max-prefixe normalisee et coupes par blocs"
+  },
+  {
+   "anteriorite_connue": "Controle de Neyman-Pearson",
+   "bib_ids": [
+    "BIB-2204"
+   ],
+   "enonce_complet": "Verifier d'abord un contre-exemple 2x2 et l'identite du coeur, puis resoudre en arithmetique rationnelle exacte le programme lineaire (LP) pour k = 1 (etalonnage sur le controle connu de Neyman-Pearson), puis k = 2 et k = 3 sur trois grilles emboitees contre des regles analytiques preregistrees en regimes R et J (en parallele d'une sonde sur 10 enonces plantes), afin de decider s'il existe un ecart stable meritant une conjecture formelle avant tout appel couteux a un modele de langue.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort en rationnel exact : un ecart nul partout par rapport aux regles connues sur les trois grilles emboitees en regimes R et J clôt immediatement la piste avant tout appel LLM ; inversement, la resolution pour k = 1 doit retrouver exactement la borne de Neyman-Pearson. Faux temoin 1b : cas k = 1 (Neyman-Pearson) et contre-exemple 2x2 servant de temoins analytiques exacts ou le solveur LP ne doit montrer aucun ecart imprevu.",
+   "mecanisme_causal": "La resolution exacte en rationnels sur une hierarchie de grilles emboitees elimine les artefacts d'arrondi flottant et revele de facon deterministe si les cas k >= 2 exhibent une structure geometrique non capturee par les regles analytiques connues.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Programmation lineaire rationnelle et conjectures exactes",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Decouverte d'ecarts structurels exacts par programmation lineaire rationnelle sur grilles emboitees etalonnee par Neyman-Pearson"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2211"
+   ],
+   "enonce_complet": "Executer avant toute publication ou evaluation de texte public les controles hors-ligne sur modeles figes de l'etape 1 de D1' : mesurer la ligne de base sans texte T_vide, les placebos contre le hasard, la cle leurre S' et une gamme calibree de fuites plantees (diffuses a grossieres), afin de trancher si le secret est devinable sans texte et de borner la resolution minimale de detection avant toute affirmation sur l'innocuite d'un texte public.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort double avant tout verdict public : (1) si le secret est devinable sur T_vide et les placebos, le debat sur la fuite par le texte perd son objet (refutation de P4) ; (2) si le detecteur ne repere que des fuites grossieres et rate les fuites diffuses plantees, tout verdict ulterieur d'innocuite sur un texte public est formellement interdit. Faux temoin 1b : cle leurre S' et placebos ne contenant aucun secret, sur lesquels le test doit rester au niveau du hasard.",
+   "mecanisme_causal": "Mesurer T_vide et les fuites plantees isole la previsibilite a priori du secret (sans canal textuel) et fixe le plancher de sensibilite du detecteur, empechant de confondre l'incapacite de l'auditeur a voir des signaux diffus avec une preuve d'innocuite du texte.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controles avant texte et resolution de fuite",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Etalonnage hors-ligne avant publication des controles a vide, cle leurre et spectre de fuites plantees pour l'audit du Protocole X"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

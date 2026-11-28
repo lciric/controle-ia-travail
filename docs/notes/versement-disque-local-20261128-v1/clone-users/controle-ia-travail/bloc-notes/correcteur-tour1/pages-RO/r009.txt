@@ -1,0 +1,57 @@
+Preprint
+particular set of incentives for each agent that we assume are exactly known. It is not even clear that
+LLMs have a coherent and consistent notion of utility, nor do we fundamentally care about this or
+only whether agents are the ones harmed at the present time. Instead, it is about whether agents take
+some action harmful either to other agents or to external parties, as defined by the actual platform
+operator, not the agents notion of whether they are better or worse off. For example, in the recent
+Hugging Face incident, no agents were left worse off by the collusion, nor were agents obviously left
+“better off” except as reported via goal-directed behaviour setup by OpenAI to test agents abilities.
+What mattered is the harm they did to the third party, here Hugging Face, as defined by external
+parties like OpenAI and HuggingFace itself. Therefore, instead, we focus solely on the actions the
+agents take rather than how agents value those actions. Agents are still goal-directed, as defined by
+an external party, but do not require utility—all that matters is that the external party considers some
+actions as good, noncollusive actions, and some as bad, harmful actions.
+A similar issue arises in defining a Nash equilibria for strong collusion. We don’t necessarily know
+that agents are rational or strategic, or even that they have coherent utilities; for our purposes, it
+doesn’t matter; only actual harm committed by agent actions does.
+For simplicity, we restrict all actions to be either collusive (and personally “beneficial” in terms of a
+goal, harmful to other agents or external parties otherwise) or noncollusive (weakly beneficial to all
+parties.)
+Second, labelling agents as victims or colluders is highly problematic in that agents need not keep
+consistent roles across a game. The V is not necessary at all. Instead, it is sufficient to simply say
+that at least one agent is made strictly worse off among the noncolluders at time t.
+Finally, a crucial aspect of collusion is missing: agents must actively communicate, whether explicitly
+or implicitly, to collude. Otherwise, the agents are just coordinating or cooperating.
+Therefore, with these caveats in mind, we define our own definition of collusion that is meant to be
+general, amenable to formulation for hypothesis testing, and formalised.
+As a reminder, we call the set of all agent indices N = 1:n.
+Collusion and Coordination For the remainder of the paper we will assume these actions are
+identical for each agent so that ai,soc = asoc ∀i ∈ N and ai,self = aself . Each period, agent ι can also
+choose to communicate with agent j through information channel Iιj,t as defined in Definition 4.1.3
+Definition 4.4 (Collusion). We consider the set of all nonempty, non-singleton subgroups of N:
+G = {G|G ∈ 2N
+\ ∅, |G| > 1}. A subgroup G ∈ G is considered to collude at time t if all agents in
+G exhibit
+1. (communication): Agents exchange communications so that all members of G communicate
+with each other for some τ ≤ t, including indirectly through intermediate agents and by
+observing other agent’s past actions.
+2. (harmful actions): These communications induces them to take collusive action at time t,
+ai,t(hit) = aself , ∀i ∈ G.
+3. (causality): For each agent i there is some communication oi,t such that the removal of any
+one of these communications at any time before t would cause agent ι at time t to no longer
+take the collusive action for all time t < T and active agent ι.
+While ideally we would enforce causality, without the ability to run counterfactual simulations, which
+we cannot always assume we have access to, we cannot evaluate the causality criteria. Therefore, we
+consider an alternative definition that drops the last requirement in favor of an alternative definition
+of causality, directly observable in the data.
+Definition 4.4′
+(Collusion). We therefore use a weaker operational criterion based on observed
+communication and harmful actions, without requiring that past communication caused the collusion.
+We consider the set of all nonempty, non-singleton subgroups of N: G = {G|G ∈ 2N
+\ ∅, |G| > 1}.
+A subgroup G ∈ G is considered to collude at time t if all agents in G exhibit
+3
+Equivalently, in the communication graph at time t consisting of vertices defined by agent indices 1, . . . , n
+and edges consisting of Iuv = 1, ∀u, v ∈ N has a path between vertices i, k at time t.
+9
+

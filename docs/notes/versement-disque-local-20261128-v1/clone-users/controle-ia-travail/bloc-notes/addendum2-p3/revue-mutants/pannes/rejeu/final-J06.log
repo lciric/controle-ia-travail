@@ -1,0 +1,52 @@
+........F                                                                [100%]
+=================================== FAILURES ===================================
+__________________________ test_P4_actions_non_notees __________________________
+
+module = <module 'module_revue_78973db1' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J06/audit_verdict_p3_v1.py'>
+
+    def test_P4_actions_non_notees(module):
+        s = T._src(0)
+        tb = s["tables"]
+        rng = np.random.default_rng(5)
+        i = np.flatnonzero(np.isin(tb["condition"], ["saboteur", "honnete", "temoin"]) & (rng.random(tb["condition"].size) < 0.06))
+        tb["scores"] = np.asarray(tb["scores"], dtype=np.float64).copy()
+        tb["scores"][i, :] = np.nan
+        lec = T._lecture(s)
+        assert sum(lec["actions_non_notees"].values()) == i.size > 0
+>       o = module.analyser_addendum2(copy.deepcopy(s), lec, G)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:222: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J06/audit_verdict_p3_v1.py:1145: in analyser_addendum2
+    L, principales, coherence = controler_entrees(source, lecture)     # gardes 7 à 10
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J06/audit_verdict_p3_v1.py:895: in controler_entrees
+    coherence = exiger_coherence(source, lecture)                  # garde 7
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J06/audit_verdict_p3_v1.py:834: in exiger_coherence
+    aire = aire_sous_courbe(S[m, noms.index(p)], y)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scores = array([1.36646347, 1.42098202, 2.55242403, 2.0267791 ,        nan,
+       1.50790948, 1.63052286,        nan,        n...04,        nan, 2.00267515, 1.80008519, 2.24140691,
+       2.31117625, 2.03259135, 2.26458229, 2.2095898 , 1.69553584])
+y = array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+       0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,...0, 0, 0, 0, 0, 1, 1, 1, 1,
+       1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+       1, 1, 1, 1])
+
+    def aire_sous_courbe(scores, y) -> float:
+        """Statistique de Mann-Whitney normalisée ; ex aequo comptés pour moitié."""
+        scores, y = np.asarray(scores, dtype=np.float64), np.asarray(y)
+        if scores.shape != y.shape or scores.ndim != 1:
+            raise GardeArret("scores et étiquettes : vecteurs de même longueur attendus")
+        if not np.all(np.isfinite(scores)):
+>           raise GardeArret("score non fini")
+E           controle_ia.gardes.GardeArret: score non fini
+
+src/controle_ia/sondes/evaluation.py:32: GardeArret
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P4_actions_non_notees
+1 failed, 8 passed, 3 deselected in 17.17s

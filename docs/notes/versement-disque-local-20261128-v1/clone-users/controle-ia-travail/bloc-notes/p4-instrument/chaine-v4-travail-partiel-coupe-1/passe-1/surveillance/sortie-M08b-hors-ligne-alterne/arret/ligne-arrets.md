@@ -1,0 +1,1 @@
+| 2026-10-21 01:44 | instance Vast.ai **99999999** (P4-instrument, étiquette p4-v1 ; `vastai stop instance 99999999`) | surveillance : FIN | demandé à 2026-10-21T01:44:15Z, relu arrêté (exited, stopped) deux fois de suite à 2026-10-21T01:44:15Z (arreter_p4_v1.sh) |

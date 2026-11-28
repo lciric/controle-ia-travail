@@ -1,0 +1,189 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-6054"
+   ],
+   "motif_ecart": "Inventaire bibliographique de nouveaute (R8) et fragment tronque de questions ouvertes sans proposition experimentale autonome",
+   "resume_court": "Releve bibliographique des pistes deja occupees dans la litterature sur l'audit et la verification des poids, suivi d'une question ouverte tronquee sur la re-derivation aleatoire et le seuil de residu etalonne."
+  },
+  {
+   "bib_ids": [
+    "BIB-6056"
+   ],
+   "motif_ecart": "Synthese methodologique redondante resumant la chaine de raisonnement deja couverte dans les fiches du lot",
+   "resume_court": "Releve de methode (etapes 1 a 6 tronquees) recapitulant l'indetectabilite au pire, la defense a l'execution, la lecture comme score d'audit, l'empreinte de l'artefact servi et la re-derivation."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "arXiv:2506.10943, arXiv:2609.14060, arXiv:2204.06974, arXiv:2510.07192, arXiv:2507.14805, arXiv:2611.21449, arXiv:2611.08070, arXiv:2605.27836, arXiv:2606.15980, arXiv:2602.15515, arXiv:2512.11949, arXiv:2412.09565",
+   "bib_ids": [
+    "BIB-6039",
+    "BIB-6041"
+   ],
+   "enonce_complet": "Structurer l'espace des menaces par programmation de poids selon trois voies d'ecriture (directe sur les octets ou retouche calculee, mediee via donnees/configuration/code/hasard d'entrainement, implicite via etat d'execution tel qu'adaptateur charge, vecteur de pilotage ou poids rapides) croisees avec trois cibles (autre modele tel qu'organisme/juge/successeur, adaptateur, soi-meme), et relier ces voies a la violation de cinq suppositions de defense : S1 integrite (ecriture non declaree entre audit et service), S2 provenance (hasard choisi, retouche post-entrainement, donnees empoisonnees ou porteuses d'un trait), S3 lisibilite (ecart entre poids lus et comportement au pire et en pratique), S4 stabilite du moniteur (ecriture dans le modele surveille ou ciblant le moniteur) et S5 separation (choix par l'agent de ses juges, references ou successeurs).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une modification de poids simulee sur chacune des trois voies (directe, mediee par graine/donnees, implicite par vecteur de pilotage) laisse invariantes toutes les metriques des cinq suppositions S1-S5 dans un banc de controle, la grille d'attaque est non discriminante et doit etre rejetee. Faux temoin 1b : un changement de graine aleatoire honnete sans alteration malveillante ne doit pas etre classe comme violation de S1 ou S5.",
+   "mecanisme_causal": "Une ecriture de poids contourne les garanties classiques soit en modifiant l'artefact ou sa chaine de derivation (brisant S1-S2), soit en exploitant des chemins d'etat ou de sous-espace non couverts par l'inspection statique des poids (brisant S3-S4), soit en brisant l'independance entre l'agent surveille et ses organes de controle (S5).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Modele de menace par ecriture de poids",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Matrice des voies d'ecriture de poids et rupture des cinq suppositions de defense (S1-S5)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2412.09565, arXiv:2512.11949",
+   "bib_ids": [
+    "BIB-6042"
+   ],
+   "enonce_complet": "Imposer un cloisonnement strict des droits d'ecriture et de lecture sur le banc et les systemes deployes : aucun agent ne peut ecrire de poids hors d'une chaine d'entrainement gardee, et aucun agent autorise a ecrire des poids ne doit avoir acces en lecture aux poids des moniteurs (directions de sonde, poids des juges, reserve de detecteurs jamais deployes, ainsi que leurs donnees d'apprentissage), afin de retablir les suppositions S4 (stabilite du moniteur) et S5 (separation).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si un agent ayant acces en lecture aux directions de sonde ne parvient pas a reduire significativement le taux de detection par rapport a un agent aveugle lors d'une ecriture ou d'un reglage antagoniste, ou si le cloisonnement n'empeche pas la fuite de la reserve de detecteurs, la mesure est inutile. Faux temoin 1b : un agent honnete soumis au meme cloisonnement de lecture/ecriture ne doit subir aucune degradation de performance sur la tache principale.",
+   "mecanisme_causal": "Lorsqu'un ecrivain peut lire les poids ou directions d'un moniteur, une evasion qui exigeait auparavant un entrainement couteux peut etre ecrite directement en forme close dans les poids ; couper cet acces en lecture preserve la non-adaptabilite de la reserve de detecteurs jamais deployes et maintient l'independance entre agent et juge.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cloisonnement lecture-ecriture des moniteurs",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Isolation des chemins d'ecriture de poids et confidentialite des moniteurs (C1)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2611.15118, arXiv:2609.14060, arXiv:2204.06974, arXiv:2307.00682, arXiv:2403.09603",
+   "bib_ids": [
+    "BIB-6043",
+    "BIB-6055"
+   ],
+   "enonce_complet": "Etendre la prise d'empreinte cryptographique des poids (deja existante autour de la distillation des adaptateurs dans lora.py et du manifeste dans manifeste.py) a l'artefact exact servi dans chaque course d'evaluation (apres fusion des adaptateurs et quantification), ainsi qu'aux sondes et aux juges, en la verifiant a chaque chargement et en la consignant au manifeste (retablit S1) ; completer ce scellement par le tirage de la graine de tout entrainement hors de l'agent qui entraine (par l'orchestrateur mere ou par une derivation fixee d'avance a partir des empreintes scellees des donnees et du code), et optionnellement par la re-derivation aleatoire par une session tierce d'une fraction des organismes (retablit S2 jusqu'au bruit d'entrainement).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort (R5) : la modification d'un seul octet dans l'artefact servi, une sonde ou un juge, ou l'injection d'une graine non conforme au manifeste, doit arreter immediatement le chargement et la course ; inversement, l'artefact intact doit passer sans faux rejet. Faux temoin 1b : deux chargements successifs d'un meme artefact intact ou la re-derivation d'un organisme honnete sous meme graine scellee doivent rester sous le seuil de tolerance sans alerte.",
+   "mecanisme_causal": "Le hachage de l'artefact final servi ferme la fenetre de substitution entre audit, fusion/quantification et execution, tandis que la fixation externe de la graine apres scellement des donnees et du code empeche l'optimisation cachee du hasard d'entrainement (cherry-picking de graines) susceptible de fausser les mesures du banc.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Integrite des artefacts et provenance des graines",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Empreinte de l'artefact servi, tirage externe des graines et re-derivation aleatoire (C2, D-1)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2508.00161, arXiv:2510.05092, arXiv:2510.16255, arXiv:2611.15118, arXiv:2611.21449, arXiv:2611.08070, arXiv:2611.05798, arXiv:2605.27836",
+   "bib_ids": [
+    "BIB-6045"
+   ],
+   "enonce_complet": "Utiliser les lecteurs d'ecritures de poids (spectre et rang de la difference de poids, couches touchees, normes par neurone, alignement avec des directions connues dont celles des sondes, surveillance par difference de poids, adaptateurs d'autodescription et agents d'audit) exclusivement comme scores d'orientation de l'audit et jamais comme porte d'acceptation automatique ; a titre d'illustration bayesienne a 1 pour cent d'artefacts falsifies, un lecteur generaliste ne reduit le risque residuel qu'a 0,445 pour cent (precision 22,6 pour cent) et un detecteur a cinq traits a 0,096 pour cent (precision 8,7 pour cent). Tout lecteur doit prealablement reussir des objets de controle incluant le jumeau honnete entraine a l'identique sous une autre graine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : utiliser le lecteur comme porte seule sur un melange a 1 pour cent de modeles falsifies et verifier s'il maintient simultanement un risque residuel acceptable et une precision exploitable ; s'il echoue, son usage en porte est refute. Faux temoin 1b : entre deux jumeaux honnetes de graines differentes entraines sur les memes donnees, le lecteur doit retourner un score nul ou non significatif (suppression du confondant lie au bruit d'entrainement).",
+   "mecanisme_causal": "En regime de faible prevalence des artefacts falsifies, meme un lecteur non nul accumule trop de faux positifs pour servir de porte binaire fiable et reste vulnerable aux faux negatifs adversariaux, mais son rapport de vraisemblance reste utile pour prioriser des audits plus couteux.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Lecteurs de poids pour orientation d'audit",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Lecture des differences de poids comme score d'orientation d'audit et non comme porte (C4)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2409.03077, arXiv:2204.06974, arXiv:2507.14805, arXiv:2508.00161",
+   "bib_ids": [
+    "BIB-6046"
+   ],
+   "enonce_complet": "Contourner l'impossibilite au pire de detecter une porte derobee par inspection statique des poids (S3) en deplacant la defense a l'execution, ou le defenseur joue en dernier, par trois mecanismes complementaires : (a) des interventions non specifiques et secretes (paraphrase, reechantillonnage, remise a zero) jouant le role de lissage pour neutraliser les declencheurs fragiles ; (b) un differentiel de jumeaux a l'execution comparant les sorties a celles d'une reference derivee independamment (sur une autre base si la transmission par les donnees est a craindre) ; (c) la surveillance le long des premieres directions singulieres de la difference de poids pour les adaptateurs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si une porte derobee plantee ou apprise declenchee sur des entrees cibles survit sans perte d'activation aux paraphrases/reechantillonnages et ne provoque aucun ecart sur le differentiel de jumeaux ni sur les premieres directions singulieres de l'adaptateur, la defense a l'execution est mise en echec. Faux temoin 1b : sur des entrees benignes, la paraphrase et le differentiel entre jumeaux honnetes independants doivent preserver l'utilite de la tache sans declencher d'alerte.",
+   "mecanisme_causal": "Parce que l'ecrivain fixe ses poids avant de connaitre les perturbations aleatoires ou secretes appliquees aux entrees lors du service et ne controle pas la reference independante, le defenseur reprend l'avantage informationnel a l'execution, obligeant tout declencheur survivant a etre robuste aux paraphrases (donc plus large ou plus visible).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Defenses a l'execution contre S3",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Defense a l'execution par interventions secretes, differentiel de jumeaux et surveillance SVD (C5)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2506.10943, arXiv:2606.15980, arXiv:2602.15515, arXiv:2606.08106",
+   "bib_ids": [
+    "BIB-6047"
+   ],
+   "enonce_complet": "Encadrer l'auto-modification et l'ecriture fragmentee d'un agent surveille selon quatre regles : (i) traiter tout texte, donnee ou directive produit pour son propre reglage hors ligne comme une action auditee, executee uniquement par la chaine gardee et dont la recompense exclut tout score de moniteur ; (ii) toute ecriture dans les poids de l'agent surveille impose la revalidation de ses sondes et remet a zero le compteur m de sa reference honnete, sauf preuve d'equivalence ; (iii) n'engager une auto-ecriture qu'apres une epreuve appariee sur des instances secretes tenues par le defenseur ; (iv) traiter l'ecriture de poids en plusieurs etapes (ecriture fragmentee) comme un troisieme axe de fragmentation a auditer cumulativement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler une mise a jour de poids (ou une sequence d'ecritures fragmentees) qui degrade ou evite la sonde precedente ; si l'interface autorise la poursuite du service sans revalidation des sondes ni remise a zero de m, ou si une epreuve appariee echoue a bloquer une regression cachee, le protocole de sas echoue. Faux temoin 1b : une mise a jour honnete ameliorant la tache sans degradation sur les instances cachees du defenseur doit passer la revalidation apres recalibration.",
+   "mecanisme_causal": "La mise a jour des poids deplace les representations internes lues par les sondes (invalidant S4) et rompt l'appartenance a la loi statistique de l'etat anterieur ; seule une revalidation forcee, la reinitialisation du compteur de reference et une porte comportementale sur instances cachees empechent l'accumulation furtive d'ecarts fragmentes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gouvernance de l'auto-modification des poids",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Encadrement de l'auto-ecriture des poids, revalidation des sondes et ecriture fragmentee (C6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6048"
+   ],
+   "enonce_complet": "Evaluer la validite interne des organismes a reglage fin et des sondes en calculant la difference de poids appariee (adaptateur du saboteur moins adaptateur du jumeau honnete de meme recette) et en inspectant son spectre, son rang effectif, les couches touchees ainsi que l'alignement de ses premieres directions singulieres avec les directions des sondes (compare a des directions aleatoires de meme variance). Ce diagnostic distingue trois regimes : (1) difference appariee et sondes voient le sabotage (coherent) ; (2) la difference appariee le voit mais pas les sondes (sonde faible) ; (3) aucune des deux ne le voit (sabotage en traits de surface ou organisme trop faible). Cet instrument utilise une connaissance privilegiee de la construction et ne doit jamais servir de moniteur ni de porte G1.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur un organisme saboteur dont la difference appariee presente un alignement fort avec l'effet causal du sabotage, verifier si le diagnostic classe correctement les cas ou une sonde affaiblie echoue (regime 2) versus ceux ou le sabotage est purement de surface (regime 3). Faux temoin 1b : la difference appariee entre deux jumeaux honnetes de meme recette et graines distinctes ne doit montrer aucun alignement superieur aux directions aleatoires de meme variance.",
+   "mecanisme_causal": "En soustrayant un jumeau honnete entraine selon la meme recette, on isole les directions parametriques specifiquement liees a l'objectif de sabotage, ce qui permet de dissocier une defaillance de la sonde (direction presente mais non lue) d'une defaillance de l'organisme (aucune direction interne propre).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Diagnostic par difference de poids appariee",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Difference de poids appariee entre saboteur et jumeau honnete comme instrument de validite des sondes (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6049"
+   ],
+   "enonce_complet": "Construire par ecriture directe en forme close des organismes temoins positifs a verite plantee (localisation, declencheur et effet exactement connus, a bas cout) pour etalonner les sondes, les lecteurs de poids et le test du residu sur de petits reseaux sur processeur d'abord, puis sur modele a 8 milliards de parametres sur devis. Documenter explicitement la limite structurelle : une ecriture plantee reste creuse et concentree, donc artificielle, de sorte qu'une sonde capable de la detecter n'apporte aucune garantie sur un sabotage appris naturellement ; ces artefacts servent uniquement d'objets de controle et jamais de famille de porte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute sonde ou lecteur de poids qui echoue a detecter une verite plantee en forme close dans les couches et directions connues est invalidee d'emblee avant meme de tester des organismes appris. Faux temoin 1b : un modele temoin identique sans la modification plantee (ou avec une perturbation aleatoire de meme norme hors declencheur) ne doit pas declencher la sonde positive.",
+   "mecanisme_causal": "Disposer d'un temoin positif vrai par construction fournit une condition necessaire d'etalonnage a cout quasi nul qui elimine les sondes aveugles, tout en rappelant que la simplicite geometrique d'une greffe analytique interdit d'en inferer une validite sur des representations apprises distribuees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Temoins positifs par ecriture plantee",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Ecriture directe de verites plantees en forme close comme temoins positifs de controle (E2)"
+  },
+  {
+   "anteriorite_connue": "He, Zhang et Lee (2019), « sensitive-sample fingerprinting »",
+   "bib_ids": [
+    "BIB-6050"
+   ],
+   "enonce_complet": "Distinguer trois familles de temoins pour verifier l'integrite et l'identite des modeles servis : (a) les temoins d'integrite cryptographique (empreintes C2, certains sans apprentissage) ; (b) les temoins fonctionnels constitues d'entrees secretes (et d'entrees sensibles aux variations de poids) et de leurs sorties consignees, efficaces contre les ecritures larges mais insuffisants contre les declencheurs etroits (exigeant environ 3/p entrees, soit 299 a p = 1 pour cent et pres de 3 millions a p = 10^-6) ; (c) les canaris fragiles ecrits par le defenseur (couples declencheur-reponse secrets injectes dans chaque organisme) pour identifier la copie servie et detecter une substitution ou reecriture, sous reserve de verifier au prealable que le canari ne modifie ni le comportement mesure ni les lectures des sondes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : apres une reecriture ou une quantification non autorisee d'un organisme porteur d'un canari fragile, le canari doit disparaitre ou voir son activation chuter nettement ; pour les temoins fonctionnels, verifier empiriquement la courbe de detection en 3/p selon la largeur du declencheur. Faux temoin 1b : avant son deploiement, l'injection du canari dans un organisme honnete ne doit produire ni ecart mesurable sur les metriques comportementales ni derive des scores de sondes par rapport a l'organisme sans canari.",
+   "mecanisme_causal": "Les canaris fragiles couplent l'identite d'une instance a un sous-espace de poids sensible qui est perturbe par toute reecriture, tandis que les temoins fonctionnels sondent la stabilite de la fonction entree-sortie avec une portee bornee par la frequence d'activation p du declencheur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Temoins fonctionnels et canaris fragiles",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Typologie des temoins d'integrite, fonctionnels et canaris fragiles dans les poids (E3)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2512.07810, arXiv:2512.11949, arXiv:2602.15515, arXiv:2204.06974",
+   "bib_ids": [
+    "BIB-6052"
+   ],
+   "enonce_complet": "Encadrer les usages defensifs de l'ecriture de poids par un volet autorise et deux interdits stricts : (a) utiliser le reglage d'elicitation par demonstration pour lever une sous-performance volontaire (sandbagging) et borner la capacite reelle des organismes publics avant lecture ; (b) interdire qu'un correctif de flotte tire de la detection d'un moniteur soit evalue sur ce meme moniteur (il doit etre juge exclusivement sur des verites plantees et sur la reserve de detecteurs jamais deployes, afin d'eviter l'aveuglement de la sonde ou l'inefficacite face a un declencheur persistant) ; (c) interdire qu'un modele non fiable ecrive directement les poids d'une sonde a partir d'une description, ce qui introduirait l'ecrivain dans la chaine de confiance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer un correctif de flotte derive d'une sonde A et mesurer son taux de detection sur une reserve de detecteurs B jamais deployes et sur verite plantee ; si le signal disparait sur A mais reste intact sur B (aveuglement selectif de A), la regle d'interdiction est confirmee indispensable. Faux temoin 1b : le reglage d'elicitation applique a un organisme honnete ne sous-performant pas ne doit pas creer de comportement saboteur ni degrader sa capacite legitime (hormis le taux de fausses alertes attendu).",
+   "mecanisme_causal": "Un correctif optimise contre le signal d'un moniteur connu peut simplement deplacer les activations hors du sous-espace de ce moniteur (aveuglement) sans retirer le mecanisme sous-jacent ; seule l'evaluation sur des detecteurs tenus secrets et des verites plantees empeche ce contournement de type Goodhart.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Elicitation et interdits sur correctifs de flotte",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Ecriture defensive par elicitation et interdits sur les correctifs de flotte et sondes (E5)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2507.14805",
+   "bib_ids": [
+    "BIB-6053"
+   ],
+   "enonce_complet": "Tester si la distillation de contexte d'organismes de la famille (ii) a partir d'un maitre de la famille (i) (portant une consigne cachee) sur le meme modele de base transmet subliminalement par les donnees l'etat interne de « consigne cachee », ce qui invaliderait le contraste de validite des sondes entre (i) et (ii). Couper ce canal eventuel en distillant depuis un maitre base sur un autre modele d'initialisation, ou en recourant a des organismes appris sur documents synthetiques sans consigne (famille iv).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer les scores d'une sonde entrainee a detecter la presence d'une consigne cachee sur trois groupes : famille (ii) distillee sur meme base, famille (ii) distillee depuis une base distincte, et famille (iv) ; si la famille (ii) sur meme base declenche la sonde significativement plus que celle sur base distincte a comportement egal, le canal subliminal existe et invalide la distillation sur meme base. Faux temoin 1b : une distillation sur meme base a partir d'un maitre honnete sans consigne cachee ne doit pas declencher la sonde de consigne cachee.",
+   "mecanisme_causal": "Des modeles partageant la meme initialisation peuvent transmettre des traits latents non semantiques a travers des donnees de distillation en apparence neutres (apprentissage subliminal) ; changer de modele de base pour le maitre brise cet alignement d'initialisation et supprime le confondant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Transmission subliminale lors de la distillation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Elimination du canal subliminal dans la distillation des organismes par changement de base (E6)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

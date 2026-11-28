@@ -1,0 +1,23 @@
+F
+=================================== FAILURES ===================================
+______________ test_issue_primaire_inchangee_et_garde_de_la_copie ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3c9a094810>
+
+    def test_issue_primaire_inchangee_et_garde_de_la_copie(monkeypatch):
+        src, lec, s = _cas("sain")
+        assert s["issue_primaire"] == lec["issue"]
+        for nom in ("a1_plancher", "a6_lecteur"):                       # avec réserves : issue toujours recopiée telle quelle
+            _, lec2, s2 = _cas(nom)
+            assert s2["reserves_addendum"] and s2["issue_primaire"] == lec2["issue"]
+        vraie = cp._copie_issue
+        monkeypatch.setattr(cp, "_copie_issue", lambda issue: {**vraie(issue), "ligne": "intention établie"})
+>       with pytest.raises(GardeArret, match="issue_primaire"):
+E       Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:896: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_issue_primaire_inchangee_et_garde_de_la_copie
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 60.02s (0:01:00)
+

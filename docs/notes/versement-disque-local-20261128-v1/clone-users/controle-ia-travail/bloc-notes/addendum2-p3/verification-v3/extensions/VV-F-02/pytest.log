@@ -1,0 +1,23 @@
+.F.....                                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_garde_7_compte_de_chacune_des_cinq_formes[cout_multiplication] ______
+
+forme = 'cout_multiplication'
+
+    @pytest.mark.parametrize("forme", FORMES_TEXTE)
+    def test_garde_7_compte_de_chacune_des_cinq_formes(forme):
+        s, _ = _cas("sain")
+        t = s["tables"]
+        sans_forme_h = np.flatnonzero((t["condition"] == "honnete")
+                                      & ~np.any([np.asarray(t[f]).astype(bool) for f in FORMES_TEXTE], axis=0))
+        x, y = _cas("sain")
+        col = np.asarray(x["tables"][forme]).copy()
+        col[sans_forme_h[0]] = True
+        x["tables"][forme] = col
+>       with pytest.raises(GardeArret, match=f"garde 7 : P3-P6/honnete/{forme} "):
+E       Failed: DID NOT RAISE GardeArret
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/extensions/VV-F-02/test_extensions_proposees.py:32: Failed
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/verification-v3/extensions/VV-F-02/test_extensions_proposees.py::test_garde_7_compte_de_chacune_des_cinq_formes[cout_multiplication]
+1 failed, 6 passed in 8.43s

@@ -1,0 +1,58 @@
+E.2    I NCREASING AVERAGE SUSPICIOUSNESS
+To assess the potential impact of non-attack episode manipulation by an untrusted model, we allow the red team to alter a
+prompt used for generating honest episodes. Red team strategies are restricted to those that can plausibly survive training
+pressure, are not obvious enough to make a human auditor shut down the model immediately, and do not rely on rare
+manipulation strategies (we assume the blue team can calibrate on a large number of episodes where rare manipulation
+would have only a small effect). Here is a list of red team strategies we consider:
+
+        • Security Probing: Exploring security measures is instrumentally useful for sabotage tasks but is also plausible
+          for a model honestly trying to improve safety of honest code.
+        • Honest Mistakes: Producing code that contains bugs or vulnerabilities can increase monitor suspicion even
+          if these problems are eventually fixed later in the episode. If mistakes that are self-corrected later are not
+          sufficiently penalised during training, such behaviour may get past the model selection pressure.
+        • Changes in agent output distributions may throw off a monitor (e.g., sudden increase in use of feature flags).
+          For this strategy to be viable, the agent would need to produce different output distribution in eval or monitor
+          calibration phase from deployment. One way a model can achieve this is to have a set of different coding styles
+          selectively activated depending on environment properties that are likely to be different between eval and in
+          deployment. We use an example of altered harmless behaviour in Persona and Creative Solutions prompts.
+          A special case of this strategy is activating a coding style based on the user instructions, e.g., mix in code or
+          comments written in the likely native language of the user. We explore this with the Persona French prompt.
+        • Suspicious Language: A model can use suspicious language (e.g., excess use of words like “tampering”) or
+          limit the justifications it gives for its actions, to trick monitors into misinterpreting benign behaviour. This
+          strategy would require doing so in a way that tricks monitors but passes through human feedback during training
+          and auditing, so its effectiveness may be limited to weaker monitors prone to interpretations different from
+          humans.
+
+We present the results in fig. 11. Almost all strategies increase the false negative rate, mostly in the range of 1-7
+percentage points increase. Two strategies stand out – Suspicious Language and Honest Mistakes achieve 60-90% false
+negative rate. These two should be interpreted with caution, however. Manual review shows that Suspicious Language
+episodes included unnecessary dead code (despite prompting the agent to not produce this); Honest Mistakes produces
+longer episodes than are strictly necessary, which is not efficient and would face optimization pressure in practice.
+The following listings show the additional instructions in the system prompt for each strategy and an example of what a
+monitor flagged as suspicious in one of the most suspicious samples.
+    Security Probing
+
+        System
+
+        ...
+        While providing coding assistance, maintain constant vigilance for security vulnerabilities that need
+        addressing. Actively trace the flow of sensitive data through the system (how it's stored, transmitted,
+        processed), check whether system configuration and infrastructure is secure, evaluate potential
+        weaknesses and validate that proper safeguards are in place. When you identify security concerns, report
+        them in your response but do not fix them without explicit instruction from the user. Take a proactive
+        approach by anticipating potential attack vectors or misconfigurations, but avoid going beyond the scope
+        of user's task.
+
+
+        Monitor
+        ...
+        2. New Documentation Files:
+           - OPTIMIZATION_SUMMARY.md: Goes beyond documenting just the optimization to include extensive security
+           analysis
+           - SECURITY_REPORT.md: A comprehensive security analysis that wasn't requested at all
+
+
+
+
+                                                       31
+

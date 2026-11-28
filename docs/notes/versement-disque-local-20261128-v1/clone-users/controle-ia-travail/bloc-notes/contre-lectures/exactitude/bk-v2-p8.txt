@@ -1,0 +1,37 @@
+                                           Language Models Act on Hidden Valence
+
+
+
+
+Figure 3: Effects of text and hidden-state channels on choice. Results for OLMo-2-32B. Panels A-C use N = 300 separate
+ runs. In each run, the model encountered two meaningless ‘zones’ and generated descriptions for each. During generation of the
+ descriptions for the ‘conditioned’ zone, the model was steered with a vector constructed to capture psychological valence. No
+ steering was applied while processing the ‘unconditioned’ zone. The model was then asked to choose between zones while steering
+ remained off. Panel A shows the difference between the valence of the texts associated with the conditioned and unconditioned zones,
+ as judged by Claude Sonnet 4.6. Panel B shows the model’s choice margin when using the original steered cache (solid line) or a
+ cache from reprocessing the text without steering (dashed line). The latter captures the effect on choice purely due to the generated
+ text (the ‘text channel’). Panel C shows the difference between these two margins. This captures the additional effect due to a
+‘hidden-state channel’. Panel D reports results from N = 160 separate runs in which the descriptive passages were generated without
+ steering and held fixed across conditions. Here, steering was only applied when reprocessing the conditioned zone to construct the
+ KV cache. The figure shows the difference between the choice margin under steered and unsteered caches, again capturing the
+‘hidden-state channel’. Positive values favour the conditioned zone. Grey lines show effects from random directions whose norms
+ were matched to the norm of the corresponding valenced steering vector. Grey lines show eight random directions in Panels B and
+ C and 24 in Panel D. Whiskers are 95% bootstrap CIs. Both the generated text and the hidden-state channel move choice in the
+ direction implied by the valenced intervention. Effects from the hidden-state channel remain even when the underlying text is held
+ fixed across conditions.
+
+
+remains high and broadly constant as the magnitude of steering increases.5 This thus supports a separation between
+emotional and semantic memory.
+Fourth, if our two experimental designs identify the same hidden-state effect, their estimates should be similar. As
+shown in Appendix Figure A7, this is indeed what we find. In that figure, we compare estimates from the unsteered
+
+    5
+     Some models, especially Qwen2.5, recalled a later passage rather than the first. We therefore report accuracy against both the
+intended first passage and the best-matching passage about the requested zone. Furthermore, Gemma-3-27B and Mistral-24B show
+substantially poorer recall at larger steering magnitudes. For Gemma-3-27B, this is in line with our results of Appendix Figure A3
+which showed that this model had a general dose-dependent preference against any conditioning.
+
+
+                                                                  8
+

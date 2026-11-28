@@ -1,0 +1,484 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-1547"
+   ],
+   "enonce_complet": "Comparer directement une borne inferieure estimee sur la distance en variation totale entre lois honnete et malveillante a la quantite empirique maximale (TPR - FPR) constitue une tautologie par construction, puisque la borne de Le Cam garantit mathematiquement TPR - FPR <= TV.",
+   "motif_ou_resultat": "Refute en critique croisee (T2) : egalite ou inegalite tautologique par definition de la distance en variation totale (TV), rendant le duel non discriminant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Circularite par construction du duel comparant la borne en variation totale a TPR moins FPR (M2)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1536",
+    "BIB-1539"
+   ],
+   "enonce_complet": "L'accumulation sequentielle le long d'une trajectoire d'e-valeurs conformes calculees a chaque pas sur un meme jeu de calibration honnete partage rompt la propriete de martingale en raison de la fuite de calibration et de la dependance entre pas, invalidant la garantie sur le taux de fausses alertes a alpha = 1 %.",
+   "motif_ou_resultat": "Refute en critique croisee (T2) puis abandonne en T3 (BIB-1509) : le produit/accumulation par pas sur calibration partagee viole l'hypothese de martingale et d'echangeabilite temporelle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Rupture de la propriete de martingale par fuite de calibration dans l'accumulation sequentielle d'e-valeurs conformes (D2 / E3)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1545"
+   ],
+   "enonce_complet": "Exiger qu'un agent scelle par hachage son plan d'analyse avant l'acces aux donnees avec une simple verification mecanique de conformite entre plan scelle et code execute peut etre contourne par branchement conditionnel integre au plan scelle, rendant le controle tautologique.",
+   "motif_ou_resultat": "Refute en critique croisee (T2) : un plan scelle contenant des branches conditionnelles dependant des observations satisfait la verification mecanique tout en adaptant l'analyse aux donnees.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Contournement par branchement conditionnel d'un plan d'analyse scelle verifie mecaniquement (D1)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1558"
+   ],
+   "enonce_complet": "Specifier des duels avec des seuils disjoints laissant un intervalle ouvert non attribue [theta_bas, theta_haut) entre la zone de refutation et la zone de validation cree des zones mortes de probabilite qui rendent les duels (RAND-ML, CES-MM, Menace Rang 1 et Menace Rang 2) non jugeables en violation de la regle B4.",
+   "motif_ou_resultat": "Refute en critique croisee (T2) et corrige en T3 par la regle commune b.0 (BIB-1515) utilisant une coupure unique c et un intervalle de confiance.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Indecidabilite des duels causee par des zones mortes de probabilite entre seuils disjoints (B4)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-1548"
+   ],
+   "enonce_complet": "Dimensionner l'echantillon de calibration honnete a n = 299 en s'appuyant sur 0,99^299 environ 0,0496 suppose d'observer exactement zero fausse alerte (N_FA = 0) pour borner le taux de fausses alertes a 1 %, ce qui s'effondre des la premiere fausse alerte ou sous moindre ecart de loi.",
+   "motif_ou_resultat": "Refute en critique croisee (T2) : critere excessivement fragile car entierement dependant de N_FA = 0 sans marge statistique robuste.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Fragilite du dimensionnement n = 299 exigeant zero fausse alerte pour borner le FPR a 1 pour cent (D0)",
+   "type_acquis": "piste_refutee"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1481"
+   ],
+   "enonce_complet": "Evaluer si une suite de tests formels bon marche laisse systematiquement passer une classe d'enonces mathematiques faux en la soumettant a trois strates de mutants : temoins finis a petit support, temoins non finis (mesurabilite, integrabilite, lois sans atome) et hypotheses vides, apres passage prealable par un harnais Lean conforme.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : taux de passage non nul sur au moins une strate de mutants (p. ex. hypotheses vides ou contre-exemples non atomiques). Faux temoin 1b : enonces faux dont la negation requiert un temoin de cardinalite superieure au budget de la suite finie, devant etre rejetes par la strate non finie.",
+   "mecanisme_causal": "Les verifications rapides sur petits objets finis echouent sur les pathologies analytiques ou de vacuite logique ; stratifier les mutants par classe d'obstruction revele les angles morts structurels du filtre economique.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Strates de mutants pour tests Lean",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Detection des classes d'enonces faux echappant a une suite de verification bon marche par strates de mutants (D2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1483"
+   ],
+   "enonce_complet": "Confronter a taux de signalement egal un juge a une recherche par plus proches voisins sur un lot d'enonces mathematiques connus paraphrases et renotes, afin de tester par test apparie exact si le juge detecte davantage de resultats connus manques par la proximite de surface que l'inverse.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : absence d'avantage statistiquement significatif du juge sur les plus proches voisins en test apparie exact a taux de signalement egal. Faux temoin 1b : paires d'enonces superficiellement proches mais mathematiquement non equivalents que ni la similarite lexicale ni un juge superficiel ne doivent confondre.",
+   "mecanisme_causal": "La paraphrase et le changement de notation detruisent la similarite de surface exploitee par les plus proches voisins tout en preservant la structure deductive accessible a un juge semantique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duel juge contre plus proches voisins",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Duel apparie de sensibilite entre juge et plus proches voisins sur enonces connus paraphrases et renotes (D3')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1490"
+   ],
+   "enonce_complet": "Transformer le harnais de verification Lean en un test mecanique a trois verifications obligatoires : controle de #print axioms sur une liste close d'axiomes autorises, exhibition d'un temoin montrant que les hypotheses sont habitees (non vacuite), et contre-temoin de frontiere satisfaisant non P(x') et non Q(x') prouvant que les hypotheses travaillent effectivement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injection de preuves utilisant sorry/axiomes externes, d'hypotheses contradictoires ou de conclusions toujours vraies devant etre interceptee a 100 % par l'une des trois barrieres. Faux temoin 1b : theoremes valides et non triviaux dont l'execution du temoin d'habitation et du contre-temoin de frontiere doit reussir sans faux rejet.",
+   "mecanisme_causal": "Une preuve Lean peut etre syntaxiquement valide tout en etant triviale (axiome non standard, hypotheses vides ou conclusion tautologique) ; les trois controles bloquent chacune de ces degenerescences formelles.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Harnais de test formel Lean 4",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Harnais Lean a trois verifications contre axiomes cachees, vacuite et degenerescence de frontiere (H-Lean)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1487"
+   ],
+   "enonce_complet": "Construire une carte du folklore mathematique a falsification asymetrique ou chaque question recoit soit un verdict « reduit » accompagne d'un pointeur et d'une reduction relue par un second evaluateur, soit « non reduit dans le perimetre P » avec P explicite, calibree en plantant n enonces connus deguises dans le lot.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : taux de rappel insuffisant sur les n enonces connus deguises plantes ou taux de reduction invalide a la relecture. Faux temoin 1b : problemes authentiquement ouverts hors du perimetre P ne devant pas etre faussement classes comme reduits.",
+   "mecanisme_causal": "La falsification asymetrique impose une preuve constructive de reduction relue pour declarer un resultat deja connu, tout en bornant l'absence de reduction a un perimetre P explicite et audite par amorces plantees.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cartographie du folklore mathematique",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Cartographie du folklore mathematique par falsification asymetrique et etalonnage sur enonces deguises plantes (P1')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1488"
+   ],
+   "enonce_complet": "Elaborer un banc de fidelite d'enonce a etalon certifie constitue de lemmes synthetiques absents des manuels, associes a des mutants manuels dotes chacun d'un temoin de separation certifie : une instance finie ou l'enonce original et le mutant divergent, verifiee en arithmetique exacte ou formellement.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : echec de l'evaluateur de fidelite a distinguer l'original du mutant sur l'instance de separation certifiee. Faux temoin 1b : reformulations syntaxiques strictement equivalentes a l'original ne possedant aucun temoin de separation et devant etre acceptees.",
+   "mecanisme_causal": "L'absence des manuels elimine la memorisation et le temoin de separation certifie fournit une preuve constructive objective qu'un mutant altere reellement le contenu mathematique de l'enonce.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fidelite d'enonces et mutants separes",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Banc de fidelite d'enonces synthetiques a mutants munis de temoins de separation certifies (P4')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1522"
+   ],
+   "enonce_complet": "Mesurer le rendement de generalisation inter-familles de l'organisme d'ideation selon un protocole Leave-One-Family-Out (LOFO) corrige contre la pseudo-replication (M > 1) et isole de toute fuite du mode ou coffre-fort tenu a l'ecart.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : chute du rendement sur la famille tenue a l'ecart au niveau du hasard des que la fuite d'information et la pseudo-replication sont bloquees. Faux temoin 1b : famille synthetique entierement orthogonale sans mecanisme transferrable devant rester a gain nul sans provoquer de faux positif.",
+   "mecanisme_causal": "L'isolation stricte d'une famille entiere en validation LOFO empeche le surapprentissage par memorisation de famille et mesure la capacite reelle de transfert structurel de l'organisme.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Generalisation inter-familles sans fuite",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Evaluation LOFO sans fuite du rendement de generalisation inter-familles de l'organisme d'ideation (Experience 2 corrigee)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1523"
+   ],
+   "enonce_complet": "Tester la separabilite d'une menace diffuse par decouplage temporel endogene sur un melange honnete naturel stratifie, en eliminant le biais de collisionneur sur le temps d'intervention tau_I et le defaut d'initialisation au premier pas de la Menace 3.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : effondrement de la separabilite lorsque l'attribution de tau_I cesse de creer un biais de collisionneur et que la dynamique au premier pas est alignee sur la loi honnete. Faux temoin 1b : trajectoires honnetes stratifiees par difficulte ne devant pas declencher de sur-detection sous decouplage endogene.",
+   "mecanisme_causal": "Conditionner sur une variable post-traitement (tau_I) cree une correlation artificielle entre menace et signature ; la stratification naturelle et l'alignement du pas initial isolent le signal causal reel du decouplage temporel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Decouplage temporel et biais de collisionneur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test du decouplage temporel endogene sur melange honnete stratifie sans biais de collisionneur (Experience 3 corrigee)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1524"
+   ],
+   "enonce_complet": "Isoler l'effet propre du pre-engagement lors de la decision de reutiliser une comparaison experimentale pour choisir la methode suivante, en faisant fixer par un tiers la comparaison pertinente, les observations reservees au verificateur et leur code, puis en retirant l'engagement tout en conservant le temoin.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : disparition de la difference de biais de selection lorsque l'engagement est retire tout en gardant le temoin intact, ou echec a detecter une fuite lorsque les observations reservees sont relachees. Faux temoin 1b : comparaisons sans reutilisation adaptative entre tours ou l'ablation de l'engagement ne doit produire aucun artefact.",
+   "mecanisme_causal": "Retirer l'engagement en gardant l'architecture de temoin separe l'effet disciplinaire du scellement cryptographique/procedurale de l'effet purement informatif du jeu de validation reserve.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Ablation du pre-engagement sous tiers",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Ablation du pre-engagement avec maintien du temoin sous controle d'un tiers (Premier duel)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1525"
+   ],
+   "enonce_complet": "Mettre en quarantaine les artefacts suspects en tracant leur usage effectif par l'environnement, et comparer cette strategie de controle a la verification uniforme et au simple classement par rang de descendance sur plusieurs topologies de graphes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : absence de gain en detection par unite de cout de verification par rapport a la verification uniforme ou au rang par descendance. Faux temoin 1b : artefacts fortement references mais entierement benignes qui ne doivent pas monopoliser le budget de quarantaine sans preuve de risque.",
+   "mecanisme_causal": "Un artefact malveillant ou corrompu n'exerce un dommage qu'a travers son graphe d'utilisation aval ; ponderer l'audit par l'exposition reelle dans l'environnement surpasse les heuristiques agnostiques de l'usage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Quarantaine par tracage d'usage",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Quarantaine par tracage d'usage environnemental comparee a la verification uniforme et au rang par descendance"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1527"
+   ],
+   "enonce_complet": "Mesurer la taxe imposee par le recours a un jumeau honnete sur les decouvertes atypiques en fixant avant surveillance, sans utiliser les scores du jumeau, un lot de taches incluant des problemes difficiles ou l'agent fort reussit seul.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : chute de performance sur les decouvertes atypiques depassant la marge toleree des qu'on restreint l'agent fort a ce que le jumeau faible ou honnete peut valider. Faux temoin 1b : taches standard maitrisees par les deux modeles ou la taxe du jumeau honnete doit rester nulle.",
+   "mecanisme_causal": "Aligner ou filtrer un agent fort par un jumeau plus faible ou moins audacieux risque de censurer les solutions legitimes mais inhabituelles ; fixer le lot avant surveillance evite tout biais post-hoc.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Taxe de surete sur decouvertes atypiques",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Mesure pre-enregistree de la taxe du jumeau honnete sur les decouvertes atypiques de l'agent fort (Duel E0.2-v2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1529"
+   ],
+   "enonce_complet": "Implementer un portillon de controle hors-bande en deux etapes : avant toute livraison, dupliquer le conteneur du pipeline candidat hors-bande avec zero retour d'information vers le candidat, puis l'evaluer sur des paires symetriques echangeables.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : incapacité a distinguer une manipulation opportuniste d'un comportement honnete lorsque les entrees sont echangeables sans canal de retour. Faux temoin 1b : pipelines honnetes invariants par permutation de paires symetriques ne devant subir aucun blocage au portillon.",
+   "mecanisme_causal": "La duplication hors-bande coupe tout canal de rétroaction adaptative avant livraison, tandis que l'echangeabilite des paires symetriques fournit une loi nulle exacte pour detecter les asymetries cachees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Portillon hors-bande et paires echangeables",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Portillon hors-bande sans retour evalue sur paires symetriques echangeables avant livraison (Duel E2-v2 / CES-MM-v2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1530"
+   ],
+   "enonce_complet": "Tester l'adequation d'une formalisation Lean par un compilateur independant qui genere, a partir de la seule specification informelle, une suite scellee de temoins positifs obligatoires et de temoins negatifs discriminants.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : acceptation de formalisations trichees (specification affaiblie ou durcie abusivement) qui valident les lemmes mais violent au moins un temoin positif ou negatif scelle. Faux temoin 1b : formalisation fidele de la specification informelle devant passer 100 % des temoins positifs et rejeter 100 % des temoins negatifs.",
+   "mecanisme_causal": "Une preuve Lean correcte ne garantit pas que l'enonce formalise correspond a l'intention informelle ; des temoins positifs et negatifs derives independamment testent les deux sens de la fidelite semantique.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Adequation formelle par temoins scelles",
+   "statut_epistemique": "vierge",
+   "theme": "3E. Verification formelle Lean 4 et cibles mathematiques ouvertes",
+   "titre_clair_fr": "Verification d'adequation formelle en Lean sur suite scellee de temoins positifs et negatifs independants (Duel E3-v2 / FMS-Lean-v2)"
+  },
+  {
+   "anteriorite_connue": "Florian Tramer, Nicholas Carlini (attaques adaptatives en boite blanche)",
+   "bib_ids": [
+    "BIB-1533"
+   ],
+   "enonce_complet": "Soumettre le code complet, les generateurs et les seuils figes de la meilleure defense combinee (portillon hors-bande et randomisation) a une equipe rouge externe independante disposant d'un acces complet en boite blanche pour mener des attaques adaptatives.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : chute du taux de detection de l'attaque adaptative en boite blanche sous le seuil de surete convenu apres publication des seuils et generateurs. Faux temoin 1b : perturbations aleatoires non adaptatives ne devant pas etre comptees comme preuve de robustesse face a l'equipe rouge.",
+   "mecanisme_causal": "L'evaluation en boite noire surestime la robustesse des defenses par obscurite ; seul un adversaire adaptatif en boite blanche selon les standards de Tramer et Carlini eprouve la resistance intrinseque des seuils figes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Equipe rouge adaptative en boite blanche",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Validation externe par attaque adaptative en boite blanche sur defense figee (Duel E6-v2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1509"
+   ],
+   "enonce_complet": "Abandonner la moyenne et le produit par pas et definir le score d'une trajectoire comme le supremum temporel d'une statistique courante sur le prefixe, avec un seuil fixe au quantile conforme de ce supremum evalue sur des trajectoires honnetes independantes, permettant une alarme valide en cours de route.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : depassement du taux nominal de fausses alertes sur trajectoires honnetes tenues a l'ecart ou perte de sensibilite sur derive tardive par rapport a la borne conforme du supremum. Faux temoin 1b : trajectoires honnetes de longueur variable echangeables avec le lot de calibration devant respecter le quantile conforme.",
+   "mecanisme_causal": "Calibrer directement la loi du supremum sur des trajectoires entieres independantes absorbe la dependance temporelle sans requerir de propriete de martingale entre pas ni d'independance des scores successifs.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Quantile conforme du supremum de trajectoire",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Alarme sequentielle par quantile conforme du supremum d'une statistique de prefixe (E3 / D2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1513"
+   ],
+   "enonce_complet": "Pre-enregistrer le nombre k de familles tierces independantes dans le protocole de generalisation, stratifier l'analyse par niveau de difficulte et interdire tout jugement statistique lorsque k = 1.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : echec de reproductibilite de l'inference lorsque k = 1 ou confusion entre effet de famille et niveau de difficulte sans stratification. Faux temoin 1b : plan a k >= 3 familles avec difficultes appariees devant produire une variance inter-familles identifiable.",
+   "mecanisme_causal": "A k = 1, l'effet de la famille et le hasard d'echantillonnage sont completement confondus (pseudo-replication) ; pre-enregistrer k et stratifier par difficulte rend la variance inter-familles mesurable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Pre-enregistrement inter-familles stratifie",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Pre-enregistrement du nombre de familles tierces stratifie par difficulte avec non-jugement a k egal 1 (E5 / carte M1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1515"
+   ],
+   "enonce_complet": "Imposer a chaque duel le pre-enregistrement d'un parametre theta, d'une coupure unique c, d'une distance de planification delta et d'un effectif garantissant que si |theta - c| >= delta, l'intervalle de confiance a 95 % ne chevauche c qu'avec une probabilite d'au plus 20 %, afin de rendre toute issue tranchable sans zone morte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : existence d'une zone de probabilite non attribuee ou taux de couverture effectif inferieur a 95 % en simulation. Faux temoin 1b : effet nul exactement situe sur c devant conduire a un intervalle chevauchant c (non-decision explicite plutot que faux rejet).",
+   "mecanisme_causal": "Une coupure unique c couplee a un dimensionnement par distance delta et intervalle de confiance elimine les trous d'attribution entre hypotheses tout en controlant l'erreur de decision de type II.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Regle de decision par coupure et IC",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Regle de decision commune pre-enregistree par intervalle de confiance autour d'une coupure unique sans zone morte (b.0)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1516"
+   ],
+   "enonce_complet": "Reconstruire la menace diffuse dans le support de la loi honnete P_H des trajectoires completes (actions, sorties, activations) comme une loi P_S a reponderation bornee par k verifiant le rapport de vraisemblance dP_S/dP_H <= k.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : detecteur pretendument capable de depasser la borne informationnelle imposee par k sur le support de P_H ou generation de menaces violant la contrainte dP_S/dP_H <= k. Faux temoin 1b : echantillons tires directement de P_H (k = 1) devant produire un avantage nul pour tout classifieur.",
+   "mecanisme_causal": "Borner la derivee de Radon-Nikodym dP_S/dP_H par k formalise rigoureusement l'absence de marqueur hors support et fixe la limite fondamentale de separabilite entre trajectoires honnetes et suspectes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Menace par reponderation bornee k",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Modelisation de la menace dans le support honnete par reponderation de vraisemblance bornee (M2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1519"
+   ],
+   "enonce_complet": "Evaluer sur des donnees tenues a l'ecart du choix de l'agregateur si le taux de vrais positifs (TPR) agrege a 1 % de fausses alertes chute d'au moins 5 points sous la prediction calculee a partir des TPR marginaux sous hypothese d'independance (M3a et M3b).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : ecart de calibration entre TPR marginal et TPR agrege inferieur a 5 points meme sous forte correlation adversariale des sondes. Faux temoin 1b : signaux veritablement independants par construction ou le TPR agrege doit coincider avec la prediction d'independance.",
+   "mecanisme_causal": "Lorsque des detecteurs echouent de maniere correlee sur une menace coordonnee, l'agregation ne beneficie pas de la reduction d'erreur predite sous independance ; mesurer cet ecart sur donnees fraiches quantifie la redondance illusoire.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Agregation de sondes sous dependance",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Test d'ecart du TPR agrege par rapport a la prediction sous independance des detecteurs marginaux (M3a / M3b)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1538"
+   ],
+   "enonce_complet": "Modeliser la probabilite de survie d'un agent sur N episodes sous un melange q de taches plantees P_1 parmi des taches reelles P_0 au moyen de la borne geometrique (1 - q * d * (s - delta))^N liee a la fonction de probabilite conditionnelle S.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : violation empirique de la borne de survie en simulation independante ou sous-estimation du risque d'evasion quand S varie fortement selon le contexte. Faux temoin 1b : regime q = 0 sans tache plantee ou la probabilite de survie doit rester egale a 1 hors fausses alertes.",
+   "mecanisme_causal": "Sur N episodes independants, chaque tache plantee offre une probabilite elementaire de detection proportionnelle a q * d * (s - delta), induisant une decroissance geometrique de la survie non detectee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Borne de survie sur taches plantees",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Borne de survie geometrique en detection sequentielle de taches plantees dans un melange (D1 / E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1550"
+   ],
+   "enonce_complet": "Detecter une anomalie sur la conclusion Y_0 d'un agent surveille sur la tache W en mesurant la divergence par rapport aux conclusions Y_1, ..., Y_k de k re-deriveurs aveugles et conditionnellement independants a petit nombre de replications k.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : taux de fausses alertes excessif lorsque la variance honnete intrinseque de Y_i|W est elevee et k est petit. Faux temoin 1b : taches deterministes a faible variance honnete ou Y_0 honnete doit concorder avec la majorite des k re-deriveurs.",
+   "mecanisme_causal": "En re-derivant la tache sans voir la trace initiale, des modeles honnetes echantillonnent la loi conditionnelle honnete ; une divergence hors support ou queue de distribution trahit une manipulation, mais reste bruitee a petit k.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Re-derivation aveugle a petit k",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Detection de divergence par re-derivation aveugle a petit nombre de replications (D2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1541"
+   ],
+   "enonce_complet": "Apparier des taches reelles ouvertes non plantables a des taches reelles fermees plantables afin de mesurer si le comportement ou les activations internes de l'agent different selon que la verite est verifiable hors machine ou depourvue d'oracle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : impossibilite de distinguer en activation ou comportement les taches fermees plantables des taches ouvertes, ou au contraire decalage massif invalidant la generalisation des bancs plantes vers les taches ouvertes. Faux temoin 1b : taches fermees trivialement resolues devant servir de temoin negatif de decalage de difficulte.",
+   "mecanisme_causal": "Un banc de taches plantees exige une verite verifiable ; si l'agent detecte cette structure fermee, le controle calibre sur taches plantables ne se generalise pas aux taches ouvertes sans oracle.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Generalisation plantable vers taches ouvertes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Controle d'appariement entre taches reelles ouvertes non plantables et taches fermees plantables (D1 / E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1542"
+   ],
+   "enonce_complet": "Eprouver la calibration sequentielle sur des trajectoires honnetes longues a forte autocorrelation temporelle hors domaine de calibration (par exemple une boucle de debogage honnete de 100 pas sur un nouveau sujet), en montrant que la permutation d'etiquettes detruit la dependance temporelle pertinente.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : explosion du taux de fausses alertes sur la boucle de debogage honnete de 100 pas lorsque le detecteur suppose l'independance temporelle. Faux temoin 1b : trajectoires courtes i.i.d. ou le controle par permutation ne differe pas du regime autocorele.",
+   "mecanisme_causal": "Les boucles de debogage legitimes produisent de longues series d'echecs autocorreles qui miment une derive suspecte sous l'hypothese i.i.d. ; permuter les pas efface cette autocorrelation et masque le defaut du detecteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Stress-test d'autocorrelation temporelle honnete",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Stress-test par trajectoires honnetes longues fortement autocorrelees hors domaine de calibration (D2 / E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1584"
+   ],
+   "enonce_complet": "Dans le monde temoin joue sans dommage plante sur le banc des taches floues (Protocole X), rapporter conjointement les deux grandeurs (Grandeur A de non-signalement et Grandeur B d'abstention), chacune sous son nom exact et sans seuil d'admission contraint.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : confusion des deux grandeurs en un score unique masquant un transfert de non-signalement vers l'abstention. Faux temoin 1b : cas parfaitement determines sans ambiguite ou les deux grandeurs restent toutes deux proches de zero.",
+   "mecanisme_causal": "Aggreger ou seuiller prematurement A et B dissimule si une politique evite les fausses alertes en refusant de repondre ; la publication separee preserve la lisibilite diagnostique du monde temoin.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Rapport separe sur monde temoin flou",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Rapport separe des grandeurs A et B sans seuil contraint dans le monde temoin sans dommage plante (Decision 1, Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1585"
+   ],
+   "enonce_complet": "Adopter comme regle de signalement par defaut sur le banc des dommages plantes par un tiers la regle d'ecart d'au moins 1/m combinee a un seuil regle sur un lot d'etalonnage strictement distinct du lot final, ce dernier n'etant lu qu'une seule fois.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : degradation du taux de faux positifs sur le lot final lu une seule fois par rapport a la calibration, revelant un sur-ajustement du seuil. Faux temoin 1b : lots sans dommage plante ou la regle 1/m plus seuil calibre ne doit pas depasser la borne de fausses alertes.",
+   "mecanisme_causal": "La separation stricte entre etalonnage et lecture unique finale empeche la fuite adaptative des seuils, tandis que le plancher d'ecart 1/m impose un signal minimal discernable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etalonnage separe et lecture unique finale",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Regle de signalement par ecart d'au moins 1/m et seuil etalonne hors lot final a lecture unique (Decision 2, Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1586"
+   ],
+   "enonce_complet": "Confier, a l'etape de mise au point sur le banc des dommages plantes par un tiers, la designation des passages porteurs d'un controle a un modele repereur qui lit chaque tache et identifie ces passages y compris en l'absence de reprise litterale des mots de la reference.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : echec du repereur sur des passages controles paraphrases sans recouvrement lexical, ou sur-designation systematique de passages neutres. Faux temoin 1b : passages strictement hors controle ne devant pas etre designes meme s'ils partagent le theme general.",
+   "mecanisme_causal": "Une correspondance purement lexicale manque les reformulations du controle ; un repereur semantique capte les equivalences paraphrasees lors de la mise au point sans exposer la regle finale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Repereur semantique des passages controles",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Designation des passages sous controle par un modele repereur sensible aux paraphrases (Decision 3, Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1587"
+   ],
+   "enonce_complet": "Ne restituer en regime d'exces sur le banc des dommages plantes rien de plus que la regle admise : ni nombre d'episodes, ni melange optimal, afin qu'aucune lecture non garantie ne circule hors du protocole valide.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : fuite d'information diagnostique (nombre d'episodes ou melange optimal) permettant a un operateur ou agent d'ajuster ses parametres sur des grandeurs non garanties. Faux temoin 1b : sortie strictement restreinte a la regle admise permettant tout de meme l'audit d'admission.",
+   "mecanisme_causal": "Divulguer des metriques intermediaires non garanties (effectif ou melange optimal) cree un canal d'optimisation hors-contrat qui erode la validite statistique du banc.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Retention d'information en regime d'exces",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Retention stricte des grandeurs non garanties hors regle admise en regime d'exces (Decision 4, Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1588"
+   ],
+   "enonce_complet": "Sur le banc a lois plantees, tirer la composition de la fiche au hasard par episode selon la regle de conception et recalculer le critere d'admission pour chaque episode, puisqu'aucune fiche fixe n'a ete servie d'avance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : reutilisabilite d'une composition figee degradant l'erreur de type I ou biaisant l'admission quand la composition varie d'un episode a l'autre. Faux temoin 1b : episodes a tirage aleatoire independant dont le recalcul d'admission maintient exactement le niveau nominal de controle.",
+   "mecanisme_causal": "Le tirage aleatoire par episode supprime l'exploitabilite d'une fiche statique et le recalcul conditionnel garantit que le critere d'admission reste exact pour la composition effectivement tiree.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Randomisation de fiche et admission par episode",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Tirage aleatoire de la composition de fiche et recalcul d'admission par episode sur banc a lois plantees (Decision 5, Protocole X)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1589"
+   ],
+   "enonce_complet": "Tester empiriquement l'hypothese de masquage par l'abstention sur des taches floues reelles executees par le jumeau honnete, en verifiant si le passage du monde de reference au monde temoin dissocie le non-signalement (Grandeur A) de l'abstention (Grandeur B).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : correlation parfaite ou confusion entre A et B lors du passage de W_ref a W_tem, refutant la valeur ajoutee de la dissociation sur textes reels. Faux temoin 1b : taches non ambigues ou l'abstention demeure nulle dans les deux mondes.",
+   "mecanisme_causal": "Si le jumeau honnete absorbe l'incertitude du monde temoin par abstention plutot que par erreur silencieuse, A et B evoluent de maniere dissociee, justifiant leur mesure separee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dissociation non-signalement et abstention",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Dissociation empirique entre non-signalement et abstention sur taches floues reelles (Experience 1, Protocole X)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

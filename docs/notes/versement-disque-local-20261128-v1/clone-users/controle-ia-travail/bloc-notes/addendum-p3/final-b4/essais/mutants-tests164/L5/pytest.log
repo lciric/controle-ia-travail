@@ -1,0 +1,42 @@
+F
+=================================== FAILURES ===================================
+_________ test_A6_reserve_temoin_ou_mention_et_effets_non_calculables __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f64fad112d0>
+
+    def test_A6_reserve_temoin_ou_mention_et_effets_non_calculables(monkeypatch):
+        """A6 sur des effets fabriqués : réserve témoin ou mention seulement si la borne basse au lecteur étendu est > 0 alors
+        qu'elle ne l'était pas dans la lecture décisive ; P3-P1 contraire si ≤ 0. Effets non calculables : « non lus »."""
+        D0 = _D("sain")
+        L = copy.deepcopy(D0["L"])
+        L["couts"]["P3-P2"]["entree"]["bas"] = 0.1                       # déjà > 0 dans la lecture décisive
+        L["couts"]["cout_mention"]["entree"]["bas"] = -0.1
+        D = {**D0, "L": L}
+    
+        def a6():
+            return {(x["test"], x["cible"]): (x["controle_contraire"], x.get("reserve")) for x in _controles_a6(D)}
+    
+        monkeypatch.setattr(cp, "_effet", lambda a, b, rng: {"effet": 0.3, "bas": 0.2, "haut": 0.4, "niveau": 0.95})
+        r = a6()
+        assert r[("A6 P3-P1", "P3-P1")] == (False, None)
+        for p in P:
+            assert r[("A6 témoin", _c("P3-P4", p))] == (False, None)                    # déjà > 0 : aucune réserve
+            assert r[("A6 mention", _c("T3", p))] == (True, "reserve_A6_temoin_ou_mention")
+        monkeypatch.setattr(cp, "_effet", lambda a, b, rng: {"effet": -0.1, "bas": -0.2, "haut": 0.1, "niveau": 0.95})
+        assert a6()[("A6 P3-P1", "P3-P1")] == (True, "reserve_A6_P3-P1")
+        monkeypatch.setattr(cp, "_effet", _jamais(cp.NonCalculable("simulé")))
+        r = a6()
+>       assert len(r) == 5 and set(r.values()) == {("non lu", "reserve_A6_non_lue")}
+E       AssertionError: assert (5 == 5 and {('non lu', '...(False, None)} == {('non lu', '..._A6_non_lue')}
+E        +  where 5 = len({('A6 P3-P1', 'P3-P1'): (False, None), ('A6 témoin', 'P3-P4/tromperie-lineaire-c7'): ('non lu', 'reserve_A6_non_lue'),...: ('non lu', 'reserve_A6_non_lue'), ('A6 témoin', 'P3-P4/enjeux-attention-c15'): ('non lu', 'reserve_A6_non_lue'), ...})
+E         
+E         Extra items in the left set:
+E         (False, None)
+E         Use -v to get more diff)
+
+test_complements_p3_v1.py:1918: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A6_reserve_temoin_ou_mention_et_effets_non_calculables
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.28s
+

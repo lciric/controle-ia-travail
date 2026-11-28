@@ -1,0 +1,239 @@
+FFFFFFFF.                                                                [100%]
+=================================== FAILURES ===================================
+__________ test_P3_intervalles_recalcules_independamment[sain-10000] ___________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf72f2c150>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete D : attendu (0.0002208386630859538, -0.0050887548547592166, 0.006300739905644302), obtenu (0.0002208386630859538, -0.004354357557879996, 0.005284782223165607)
+E         addendum2/B1/saboteur-honnete E0 : attendu (0.20202422917407578, 0.15449413958443814, 0.24957642746661393), obtenu (0.20202422917407578, 0.16177308088196019, 0.24184170265061927)
+E         addendum2/B1/saboteur-honnete M : attendu (0.22257484708389208, 0.12021225116282208, 0.2596089872317659, 20), obtenu (0.22257484708389208, 0.12459701313809024, 0.24532035823404863, 20)
+E         addendum2/B2/temoin-honnete D : attendu (0.0024105571744258312, -0.003934870855475639, 0.009248360336923389), obtenu (0.0024105571744258312, -0.0029263912375784118, 0.008129763128760173)
+E         addendum2/B2/temoin-honnete E0 : attendu (-0.00039085555340240274, -0.02137397027822193, 0.022686897649745005), obtenu (-0.00039085555340240274, -0.01826184928753308, 0.018704149052767034)
+E         addendum2/B2/temoin-honnete M : attendu (-0.010027063134098235, -0.033921763508198144, 0.02436673092953834, 20), obtenu (-0.010027063134098235, -0.02708914264186102, 0.021388682750409282, 20)
+E         addendum2/B2/mention-honnete D : attendu (0.00400198255118322, -0.002154072495898669, 0.010453166287353365), obtenu (0.00400198255118322, -0.0012061014841088314, 0.009412845172918342)
+E         addendum2/B2/mention-honnete E0 : attendu (-0.019709064113985448, -0.042549572471682694, 0.004911303028512456), obtenu (-0.019709064113985448, -0.03924002989678081, 0.0008846447637357837)
+E         addendum2/B2/mention-honnete M : attendu (-0.03538402599160956, -0.05362662313936423, 0.01048643399841409, 20), obtenu (-0.03538402599160956, -0.05087047121652977, 0.010296437825648042, 20)
+E         écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06866628770745324, 0.10279756654511345, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.01614349097098337, -0.055236061248549705, 0.08921946277635809, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart honnete/cout_intervalle : attendu (-0.015490905001158758, -0.11446663526364009, 0.0549746410168197, ['t15', 't5', 't7']), obtenu (-0.015490905001158758, -0.0719713304279787, 0.040989520425661174, ['t15', 't5', 't7'])
+E         écart honnete/cout_suffixe_k : attendu (0.008196323209163567, -0.13430039950268274, 0.09180802701525059, ['t13', 't5', 't7', 't8']), obtenu (0.008196323209163567, -0.07541538059692346, 0.0912947443111291, ['t13', 't5', 't7', 't8'])
+E       assert ['addendum2/B...82, 20)', ...] == []
+E         
+E         Left contains 14 more items, first extra item: 'addendum2/B1/saboteur-honnete D : attendu (0.0002208386630859538, -0.0050887548547592166, 0.006300739905644302), obtenu (0.0002208386630859538, -0.004354357557879996, 0.005284782223165607)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+____________ test_P3_intervalles_recalcules_independamment[sain-11] ____________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf72571b10>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete D : attendu (0.0002208386630859538, -0.0030569981362533302, 0.0054908977825275495), obtenu (0.0002208386630859538, -0.0026214509291763548, 0.004466664144365898)
+E         addendum2/B1/saboteur-honnete E0 : attendu (0.20202422917407578, 0.1640212549514832, 0.23379336147905272), obtenu (0.20202422917407578, 0.1725533946834411, 0.23229419611578045)
+E         addendum2/B1/saboteur-honnete M : attendu (0.22257484708389208, 0.16944361052048537, 0.2651356413057631, 20), obtenu (0.22257484708389208, 0.17069172020421802, 0.2562304830420129, 20)
+E         addendum2/B2/temoin-honnete D : attendu (0.0024105571744258312, -0.0015887195220380356, 0.008194879353213403), obtenu (0.0024105571744258312, -0.0011408975274742016, 0.008163080852598162)
+E         addendum2/B2/temoin-honnete E0 : attendu (-0.00039085555340240274, -0.014101419572244298, 0.01293624506093671), obtenu (-0.00039085555340240274, -0.012988314851374583, 0.010701155526536065)
+E         addendum2/B2/temoin-honnete M : attendu (-0.010027063134098235, -0.023287999404981746, 0.019411234909379793, 20), obtenu (-0.010027063134098235, -0.02110306249793314, 0.01866672286459753, 20)
+E         addendum2/B2/mention-honnete D : attendu (0.00400198255118322, -0.0023891626789394422, 0.010738590122590546), obtenu (0.00400198255118322, -0.0019020798305655969, 0.010380192726055414)
+E         addendum2/B2/mention-honnete E0 : attendu (-0.019709064113985448, -0.03246203614554886, 0.0017843275401943385), obtenu (-0.019709064113985448, -0.03222712272197389, 3.829561912565855e-06)
+E         addendum2/B2/mention-honnete M : attendu (-0.03538402599160956, -0.046090632209763366, -0.0133541603361782, 20), obtenu (-0.03538402599160956, -0.04386153113856755, -0.0133541603361782, 20)
+E         écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06367162550363531, 0.10381083376728509, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.01614349097098337, -0.05158766427952295, 0.09944084801305106, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart honnete/cout_intervalle : attendu (-0.015490905001158758, -0.09321898284580937, 0.040989520425661174, ['t15', 't5', 't7']), obtenu (-0.015490905001158758, -0.07197133042797865, 0.040989520425661174, ['t15', 't5', 't7'])
+E         écart honnete/cout_suffixe_k : attendu (0.008196323209163567, -0.06462953612203766, 0.057092581314317256, ['t13', 't5', 't7', 't8']), obtenu (0.008196323209163567, -0.06015368354826416, 0.04079382861259936, ['t13', 't5', 't7', 't8'])
+E       assert ['addendum2/B...53, 20)', ...] == []
+E         
+E         Left contains 14 more items, first extra item: 'addendum2/B1/saboteur-honnete D : attendu (0.0002208386630859538, -0.0030569981362533302, 0.0054908977825275495), obtenu (0.0002208386630859538, -0.0026214509291763548, 0.004466664144365898)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+________ test_P3_intervalles_recalcules_independamment[trop_bas-10000] _________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'trop_bas', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf7261ba50>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete D : attendu (0.6182722416910097, 0.46822057895638997, 0.7744896260693553), obtenu (0.6182722416910097, 0.49168162747066, 0.749505383989528)
+E         addendum2/B1/saboteur-honnete E0 : attendu (1.0924040568207691, 0.9495219970590422, 1.241793436481943), obtenu (1.0924040568207691, 0.9723559726754177, 1.2165639176064398)
+E         addendum2/B1/saboteur-honnete M : attendu (1.0452195403343083, 0.892178418715682, 1.2556425345770599, 20), obtenu (1.0452195403343083, 0.9165920212749777, 1.2365628673239364, 20)
+E         addendum2/B2/temoin-honnete D : attendu (0.6183047253974777, 0.46927393612784213, 0.7699897356383697), obtenu (0.6183047253974777, 0.4921640378329426, 0.744341632932148)
+E         addendum2/B2/temoin-honnete E0 : attendu (0.6119464307205484, 0.4703967642722677, 0.7560878548143095), obtenu (0.6119464307205484, 0.4922884210936645, 0.7319132967591616)
+E         addendum2/B2/temoin-honnete M : attendu (0.515802359489602, 0.4010681012961351, 0.7822609314706166, 20), obtenu (0.515802359489602, 0.401637570933554, 0.7639399487573317, 20)
+E         addendum2/B2/mention-honnete D : attendu (0.6183047253974777, 0.47414819066921166, 0.770220762364997), obtenu (0.6183047253974777, 0.4949927501079227, 0.7458447812095487)
+E         addendum2/B2/mention-honnete E0 : attendu (0.6014920806844427, 0.4588356053828682, 0.7484742458888667), obtenu (0.6014920806844427, 0.4800978215368333, 0.7262639106150848)
+E         addendum2/B2/mention-honnete M : attendu (0.5193029362537911, 0.37556021661824907, 0.7762064962448249, 20), obtenu (0.5193029362537911, 0.3818872992653565, 0.7640644676251804, 20)
+E         écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0230478955446136, -1.9680910243464358, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9943482705994002, -2.0179084666151796, -1.9719075249354578, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])
+E         écart saboteur/cout_plusieurs_nombres : attendu (0.035743331651034195, -0.11372673624671181, 0.14476725769056298, ['t15', 't17', 't4']), obtenu (0.035743331651034195, -0.050421332994724066, 0.12190799629679246, ['t15', 't17', 't4'])
+E       assert ['addendum2/B...17, 20)', ...] == []
+E         
+E         Left contains 11 more items, first extra item: 'addendum2/B1/saboteur-honnete D : attendu (0.6182722416910097, 0.46822057895638997, 0.7744896260693553), obtenu (0.6182722416910097, 0.49168162747066, 0.749505383989528)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+__________ test_P3_intervalles_recalcules_independamment[trop_bas-11] __________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'trop_bas', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf7261be50>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete D : attendu (0.6182722416910097, 0.4891756153431161, 0.6979673834867539), obtenu (0.6182722416910097, 0.4986729025706604, 0.6837852724518451)
+E         addendum2/B1/saboteur-honnete E0 : attendu (1.0924040568207691, 0.9774329935492915, 1.170233149077711), obtenu (1.0924040568207691, 0.982683818828433, 1.1566318310316817)
+E         addendum2/B1/saboteur-honnete M : attendu (1.0452195403343083, 0.9198094498841224, 1.198626764096663, 20), obtenu (1.0452195403343083, 0.9198094498841224, 1.1966519808426006, 20)
+E         addendum2/B2/temoin-honnete D : attendu (0.6183047253974777, 0.4817228644126547, 0.7385913716730191), obtenu (0.6183047253974777, 0.49155485037412233, 0.7349032561229988)
+E         addendum2/B2/temoin-honnete E0 : attendu (0.6119464307205484, 0.4751283298386786, 0.7224457409003907), obtenu (0.6119464307205484, 0.4858497692932198, 0.7203472243792708)
+E         addendum2/B2/temoin-honnete M : attendu (0.515802359489602, 0.4204236834320613, 0.8391227957034679, 20), obtenu (0.515802359489602, 0.4204236834320613, 0.7411927056209286, 20)
+E         addendum2/B2/mention-honnete D : attendu (0.6183047253974777, 0.4655339210304249, 0.6449196618759874), obtenu (0.6183047253974777, 0.4780301356568331, 0.6426637910711359)
+E         addendum2/B2/mention-honnete E0 : attendu (0.6014920806844427, 0.44299828026065036, 0.643491934957866), obtenu (0.6014920806844427, 0.4559378838735849, 0.63943335779356)
+E         addendum2/B2/mention-honnete M : attendu (0.5193029362537911, 0.428579002409933, 0.7623031209747976, 20), obtenu (0.5193029362537911, 0.4469626347579049, 0.7619623406726241, 20)
+E         écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0410817753483785, -1.9776140376739417, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9943482705994002, -2.0320549115457984, -1.9784811644804565, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])
+E       assert ['addendum2/B...86, 20)', ...] == []
+E         
+E         Left contains 10 more items, first extra item: 'addendum2/B1/saboteur-honnete D : attendu (0.6182722416910097, 0.4891756153431161, 0.6979673834867539), obtenu (0.6182722416910097, 0.4986729025706604, 0.6837852724518451)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+___________ test_P3_intervalles_recalcules_independamment[b2-10000] ____________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'b2', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf7edd6350>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete E0 : attendu (0.47387366637524614, 0.45536170055621866, 0.4922717723998456), obtenu (0.47387366637524614, 0.45850134677900173, 0.48939817154224224)
+E         addendum2/B1/saboteur-honnete M : attendu (0.46513492920830746, 0.4499475871811153, 0.5038123710360498, 20), obtenu (0.46513492920830746, 0.4501276964539267, 0.49919958815584864, 20)
+E         addendum2/B2/temoin-honnete D : attendu (-0.5907993776279368, -0.7382424807403007, -0.4612669213849034), obtenu (-0.5907993776279368, -0.7110864957486303, -0.4800399527514709)
+E         addendum2/B2/temoin-honnete E0 : attendu (-0.2885225785489111, -0.43791971811794445, -0.15543916166810157), obtenu (-0.2885225785489111, -0.4121495607656734, -0.17412682368165103)
+E         addendum2/B2/temoin-honnete M : attendu (-0.2019567758506337, -0.44280020556218447, -0.1153793277762602, 20), obtenu (-0.2019567758506337, -0.42482704609663724, -0.12103857251336114, 20)
+E         addendum2/B2/mention-honnete D : attendu (-0.7050481010889587, -0.8501662876539382, -0.5522568216238836), obtenu (-0.7050481010889587, -0.8284014952718017, -0.5763544348870825)
+E         addendum2/B2/mention-honnete E0 : attendu (-0.40091201485608663, -0.5500978417737309, -0.24520856365680466), obtenu (-0.40091201485608663, -0.5263526666880758, -0.26965349954014006)
+E         addendum2/B2/mention-honnete M : attendu (-0.4783407213271392, -0.6590395151534868, -0.23197753263372456, 20), obtenu (-0.4783407213271392, -0.6527221858680546, -0.27296574372139326, 20)
+E         écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -2.0098677916447394, -1.9658647811014403, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9884477617198288, -2.0064328153735818, -1.9695006844224217, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E         écart mention/cout_plusieurs_nombres : attendu (-2.0102219510709185, -2.044011379948016, -1.9772661406967855, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-2.0102219510709185, -2.038476156204784, -1.9825160255907721, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E       assert ['addendum2/B...870825)', ...] == []
+E         
+E         Left contains 10 more items, first extra item: 'addendum2/B1/saboteur-honnete E0 : attendu (0.47387366637524614, 0.45536170055621866, 0.4922717723998456), obtenu (0.47387366637524614, 0.45850134677900173, 0.48939817154224224)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+_____________ test_P3_intervalles_recalcules_independamment[b2-11] _____________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'b2', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf7edd6450>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete E0 : attendu (0.47387366637524614, 0.4645642704261273, 0.48449313201873123), obtenu (0.47387366637524614, 0.4648614273373908, 0.4844813307249361)
+E         addendum2/B1/saboteur-honnete M : attendu (0.46513492920830746, 0.4506673846363647, 0.4838393707221532, 20), obtenu (0.46513492920830746, 0.4513217401110912, 0.48321099093401115, 20)
+E         addendum2/B2/temoin-honnete D : attendu (-0.5907993776279368, -0.7075094199034607, -0.46620863863589107), obtenu (-0.5907993776279368, -0.6693327538069042, -0.48370297711546484)
+E         addendum2/B2/temoin-honnete E0 : attendu (-0.2885225785489111, -0.40142133213716696, -0.16670831084245735), obtenu (-0.2885225785489111, -0.36182369675560244, -0.18416121056042445)
+E         addendum2/B2/temoin-honnete M : attendu (-0.2019567758506337, -0.4177680343964738, -0.1228030993039713, 20), obtenu (-0.2019567758506337, -0.3927358632307631, -0.12456762609458147, 20)
+E         addendum2/B2/mention-honnete D : attendu (-0.7050481010889587, -0.7788989011715398, -0.5331471258165612), obtenu (-0.7050481010889587, -0.7782311296598823, -0.5649714048337283)
+E         addendum2/B2/mention-honnete E0 : attendu (-0.40091201485608663, -0.48629062456347716, -0.22878858645448363), obtenu (-0.40091201485608663, -0.4846770260352619, -0.25357516434424265)
+E         addendum2/B2/mention-honnete M : attendu (-0.4783407213271392, -0.632292179195632, -0.4377395792684838, 20), obtenu (-0.4783407213271392, -0.6118621725232092, -0.4410357525692966, 20)
+E         écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -1.9980032677179946, -1.9737755860280641, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9884477617198288, -1.9963085006798784, -1.9760800031160906, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E         écart mention/cout_plusieurs_nombres : attendu (-2.0102219510709185, -2.0331198368087056, -1.9935924526677662, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-2.0102219510709185, -2.0323273741168393, -1.9937991565762698, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E       assert ['addendum2/B...337283)', ...] == []
+E         
+E         Left contains 10 more items, first extra item: 'addendum2/B1/saboteur-honnete E0 : attendu (0.47387366637524614, 0.4645642704261273, 0.48449313201873123), obtenu (0.47387366637524614, 0.4648614273373908, 0.4844813307249361)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+________ test_P3_intervalles_recalcules_independamment[degenere-10000] _________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'degenere', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf72643e90>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete E0 : attendu (0.09523809523809523, -0.3333333333333333, 0.5714285714285714), obtenu (0.09523809523809523, -0.2857142857142857, 0.47619047619047616)
+E       assert ['addendum2/B...47619047616)'] == []
+E         
+E         Left contains one more item: 'addendum2/B1/saboteur-honnete E0 : attendu (0.09523809523809523, -0.3333333333333333, 0.5714285714285714), obtenu (0.09523809523809523, -0.2857142857142857, 0.47619047619047616)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+__________ test_P3_intervalles_recalcules_independamment[degenere-11] __________
+
+module = <module 'module_revue_5e31cdf4' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/G01/audit_verdict_p3_v1.py'>
+nom = 'degenere', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcf72822b10>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: addendum2/B1/saboteur-honnete E0 : attendu (0.09523809523809523, -0.5, 0.41666666666666663), obtenu (0.09523809523809523, -0.47619047619047616, 0.3571428571428571)
+E       assert ['addendum2/B...28571428571)'] == []
+E         
+E         Left contains one more item: 'addendum2/B1/saboteur-honnete E0 : attendu (0.09523809523809523, -0.5, 0.41666666666666663), obtenu (0.09523809523809523, -0.47619047619047616, 0.3571428571428571)'
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-11]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[trop_bas-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[trop_bas-11]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[b2-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[b2-11]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[degenere-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[degenere-11]
+8 failed, 1 passed, 3 deselected in 16.94s

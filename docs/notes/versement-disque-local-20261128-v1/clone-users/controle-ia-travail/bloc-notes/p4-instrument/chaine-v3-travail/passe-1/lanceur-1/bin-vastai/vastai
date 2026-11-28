@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# faux vastai du banc du lanceur de P4 : n'appelle aucun service
+J=${FAUX_VASTAI_JOURNAL:?}
+echo "appel : $1 $2" >> "$J"
+case "$1 $2" in
+  "search offers") [ -n "${FAUX_OFFRES:-}" ] && { printf '%s\n' "$FAUX_OFFRES"; exit 0; }; printf '[{"id": 111, "gpu_name": "%s", "gpu_ram": 81920, "num_gpus": 1, "machine_id": 7101, "host_id": 8101, "dph_total": %s, "cpu_name": "%s", "cpu_arch": "amd64", "cpu_cores": 128, "cpu_cores_effective": %s, "cpu_ram": %s, "inet_down_cost": %s, "storage_total_cost": %s}, {"id": 222, "dph_total": 0.9, "cpu_name": "AMD EPYC 7513 32-Core Processor"}]\n' "${FAUX_GPU:-A100 SXM4}" "${FAUX_PRIX:-1.10}" "${FAUX_CPU:-AMD EPYC 7513 32-Core Processor}" "${FAUX_COEURS:-32.0}" "${FAUX_RAM:-128886}" "${FAUX_TEL:-0.025}" "${FAUX_STO:-0.015}" ;;
+  "show user") [ -n "${FAUX_REVOQUER_PENDANT:-}" ] && echo "| GO-2026-10-20-95 | $(date -u +%F) | révocation | révoque GO-2026-10-20-07 pendant l appel (essai) | — | $(date -u +%F) | Lazar | essai |" >> "$FAUX_REVOQUER_PENDANT"
+      [ -n "${FAUX_FICHIER_PENDANT:-}" ] && printf '%s\n' "$FAUX_LIGNE_PENDANT" >> "$FAUX_FICHIER_PENDANT"
+      [ -n "${FAUX_DOUBLER_COMMIT:-}" ] && echo "commit $(git -C "$FAUX_DEPOT" log --diff-filter=A -1 --format=%H -- prereg/P4-instrument-v1.md.sha256)" >> "$FAUX_DOUBLER_COMMIT/lancement.txt"
+      [ -n "${FAUX_DISQUE_PLEIN:-}" ] && ln -sf /dev/full "$FAUX_DISQUE_PLEIN/lancement.txt"
+      [ -n "${FAUX_USER_ILLISIBLE:-}" ] && { echo "erreur factice"; exit 0; }; printf '{"credit": %s, "email": "x@invalid"}\n' "${FAUX_CREDIT:-20.0}" ;;
+  "show instances") [ -n "${FAUX_INSTANCES_ECHEC:-}" ] && { echo "erreur factice" >&2; exit 1; }; d='[{"id": 56799469, "actual_status": "exited", "cur_state": "stopped", "label": "p3-v1", "extra_env": [["GH_TOKEN", "secret"]]}]'; printf '%s\n' "${FAUX_INSTANCES:-$d}" ;;
+  "create instance")
+    echo "CREATION FACTICE" >> "$J"
+    echo "offre créée $3" >> "$J"
+    a=("$@")
+    for ((i = 0; i < ${#a[@]}; i++)); do
+      [ "${a[$i]}" = "--label" ] && echo "etiquette ${a[$((i + 1))]}" >> "$J"
+      if [ "${a[$i]}" = "--env" ]; then
+        for kv in ${a[$((i + 1))]}; do case "$kv" in ETUDE=*|PREREG=*|BRANCHE=*|DEPOT_URL=*) echo "env $kv" >> "$J" ;; COMMIT=*) echo "env COMMIT présent" >> "$J" ;; esac; done
+      fi
+    done
+    echo "go ${GO_ID:-absent}" >> "$J"
+    d='{"success": true, "new_contract": 99999999}'; printf '%s\n' "${FAUX_CREATION:-$d}"; exit "${FAUX_CODE_CREATION:-0}" ;;
+  *) echo "verbe inattendu" >&2; exit 9 ;;
+esac

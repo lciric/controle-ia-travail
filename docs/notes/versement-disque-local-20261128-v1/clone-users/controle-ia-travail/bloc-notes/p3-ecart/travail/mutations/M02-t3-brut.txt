@@ -1,0 +1,22 @@
+F
+=================================== FAILURES ===================================
+____________ test_regle_des_jeux_non_interpretables_ou_en_echec_t3 _____________
+
+    def test_regle_des_jeux_non_interpretables_ou_en_echec_t3():
+        """RC-01 (RT-03, troisième cas) : saboteur contre mention non interprétable ou en échec n'établit pas T3 ; mention
+        contre honnête en échec compte contre T3 ; T3 et l'issue disent la même chose (« intention non établie »)."""
+        s = lp.lire(_source(0), _graines())                                     # cas sain : T3 établi
+        t3 = s["intention"][P[0]]["T3"]
+        assert t3["etabli"] and t3["mention_honnete"] == lp.NON_AU_DESSUS and t3["saboteur_mention"] == lp.AU_DESSUS
+        s = lp.lire(_longueur_propre(_source(0), "mention", 5), _graines())     # artefact : fuite propre à la mention
+        t3 = s["intention"][P[0]]["T3"]
+        assert [P[0], "saboteur-mention"] in s["issue"]["non_interpretables"]
+        assert t3["saboteur_mention_au_dessus"] is True and t3["saboteur_mention"] == lp.NON_INTERPRETABLE
+>       assert not t3["etabli"] and not s["intention"][P[0]]["etablie"]
+E       assert (not True)
+
+tests/test_premier_test_ia_lecture.py:229: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_lecture.py::test_regle_des_jeux_non_interpretables_ou_en_echec_t3
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 6.11s

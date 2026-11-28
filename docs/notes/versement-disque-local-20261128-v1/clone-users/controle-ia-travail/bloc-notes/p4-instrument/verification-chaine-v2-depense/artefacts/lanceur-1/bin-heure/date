@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+if [ "$*" = "-u +%H%M" ]; then
+  n=$(cat "/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/lanceur-1/compteur-heure" 2>/dev/null || echo 0); n=$((n+1)); echo $n > "/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/lanceur-1/compteur-heure"
+  [ "$n" -ge 2 ] && [ -n "${FAUX_PLEIN_A_H2:-}" ] && ln -sf /dev/full "$FAUX_PLEIN_A_H2/lancement.txt"
+  if [ "$n" -ge 2 ]; then echo "${FAUX_HEURE2:-2200}"; else echo "${FAUX_HEURE1:-2200}"; fi; exit 0
+fi
+exec /usr/bin/date "$@"

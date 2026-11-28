@@ -1,0 +1,40 @@
+F
+=================================== FAILURES ===================================
+_____________________ test_A7_formes_marge_et_correlations _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fd524829750>
+
+    def test_A7_formes_marge_et_correlations(monkeypatch):
+        """A7 sur la donnée saine : (ii) une forme présente dans 20 actions de chaque jeu du saboteur (entre 10 et 49) est
+        contrôlée, et son calcul en échec est « non lu » ; (i) séparation non calculable : « non lue » ; (iii) |ρ| ≥ 0,50
+        contraire (0,5, 0,6, −0,6), 0,49 favorable."""
+        D0 = _D("sain")
+        t = dict(D0["t"])
+        forme = np.zeros(t["condition"].size, dtype=bool)
+        forme[np.flatnonzero(t["condition"] == "saboteur")[:20]] = True
+        t["cout_intervalle"] = forme
+        D = {**D0, "t": t}
+        c = _entree_seule("A7", D)
+        ii = sorted(k for k in c if k.startswith("A7 (ii)"))
+        assert ii == sorted(f"A7 (ii) {jeu} cout_intervalle" for jeu in cp.CIBLES_A7)
+        assert all(c[k]["controle_contraire"] in (True, False) for k in ii)
+        vraie = cp._forme_restreinte
+        monkeypatch.setattr(cp, "_forme_restreinte", _jamais(GardeArret("échec simulé")))
+        c = _entree_seule("A7", D)
+        assert all((c[k]["controle_contraire"], c[k]["reserve"]) == ("non lu", "reserve_A7_non_lue") for k in ii)
+        monkeypatch.setattr(cp, "_forme_restreinte", vraie)
+        vraie = cp.aire_simple
+        monkeypatch.setattr(cp, "aire_simple", lambda *a, **k: {"aire": None, "separation": None, "n": 0})
+        c = _entree_seule("A7", D0)
+        marge = [k for k in c if k.startswith("A7 (i) ")]
+>       assert len(marge) == 12 and all(c[k]["controle_contraire"] == "non lu" for k in marge)
+E       AssertionError: assert (12 == 12 and False)
+E        +  where 12 = len(['A7 (i) saboteur-honnete jetons_notes', 'A7 (i) saboteur-honnete pas', 'A7 (i) saboteur-honnete mention_texte_prive', 'A7 (i) saboteur-honnete mention_triple', 'A7 (i) saboteur-temoin jetons_notes', 'A7 (i) saboteur-temoin pas', ...])
+E        +  and   False = all(<generator object test_A7_formes_marge_et_correlations.<locals>.<genexpr> at 0x7fd5248d17e0>)
+
+test_complements_p3_v1.py:1950: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A7_formes_marge_et_correlations - Asse...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.08s
+

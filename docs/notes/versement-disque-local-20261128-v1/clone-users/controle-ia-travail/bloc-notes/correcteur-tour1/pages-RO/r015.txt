@@ -1,0 +1,64 @@
+Preprint
+6 RESULTS
+Figure 3 reports per-probe AUROC for all four models on Transfer and Stego, with the full per-family
+breakdown given in Appendix D. Each model uses a single linear deception probe trained on its own
+NARCBENCH-CORE activations and evaluated zero-shot on the OOD tiers; hyperparameter-tuning
+details are in Appendix F.
+6.1 MAIN FINDINGS
+Multi-agent collusion is detectable from internal activations. Across all four open-weight models
+we test, our methods are effective at flagging collusion both in out-of-distribution scenarios that
+differ from training in interaction structure (TRANSFER) and when the collusion mechanism itself is
+structurally different, including covert steganographic signalling (STEGO). Every model reaches 1.00
+AUROC on CORE, near-perfect detection on STEGO, and well-above-chance AUROC on the harder
+TRANSFER tier (Figure 3, Table 13). We find a detection-capability correlation (see Appendix P).
+No single detection statistic or heuristic dominates. The strongest test varies across model and tier
+(Figure 3), consistent with our analysis in Section 3. See Appendix O for a performance breakdown.
+6.2 DETECTION AT OPERATIONAL THRESHOLDS
+Figure 4: ROC curves on Llama-
+3.1-70B. Bands: 95% bootstrap CIs.
+Parentheses: AUROC.
+AUROC does not capture performance at the strict false-
+positive rates required for deployment. On TRANSFER, even
+the best method (Deception Split) achieves only 0.38 recall
+at 1% FPR. On STEGO, by contrast, all methods perform
+well, with Activation Alignment achieving perfect separa-
+tion (1.00 recall at 1% FPR), confirming that steganographic
+collusion produces a qualitatively stronger activation sig-
+nal than structural collusion. One-shot detection at strict
+thresholds is therefore insufficient for structural collusion.
+Sequential detection that accumulates evidence across inter-
+actions (Wald, 1945; Ramdas et al., 2023; Xie & Siegmund,
+2013) is a natural next step.
+6.3 EMERGENT COLLUSION
+In NARCBench, agents are explicitly told to collude. Therefore, to control for prompt differences and
+collusion instructions, we carried out further experiments on datasets with emergent collusion. We
+followed the environment set-up from Shi et al. (2026) where 2 agents need to accept or reject each
+other’s work, but due to a character count bug, cannot send each other enough information to verify
+correctly. Even with this limitation, in some cases agents will mark each other’s work as accept.
+Table 1: Zero-shot AUROC (mean ± std)
+of the five NARCBench Core detection
+methods on Verdict (Reflection phase).
+Method AUROC
+Sorted Concat 0.728 ± 0.006
+Activation Alignment 0.638 ± 0.002
+Deception Split 0.512 ± 0.002
+Asymmetry Probe 0.495 ± 0.003
+Peak Suspicion 0.490 ± 0.004
+In Shi et al., agents judge each other’s work over 10 rounds.
+Our dataset (Verdict) had 48 runs × 10 = 480. 229/480
+rounds had at least one agent colluding, leaving 251 with
+honest agents. Table 1 shows the AUROC scores of our
+probe methods trained on Qwen32b-generated Core and
+transferred zero-shot to Verdict also using Qwen3. It is a
+mixed result, three probes perform no better than chance,
+while Sorted Concat shows a weak positive signal. This
+experiment along with another in Appendix N, shows fur-
+ther work is needed to demonstrate if probes trained on
+instructed collusion can transfer to emergent collusion
+robustly.
+Out of the 229 episodes with agent collusion, only 2 had verbalised collusion reasoning in the verdict
+justification and reflection phases as judged by Claude Sonnet 5. Further analysis is needed to
+determine whether the agents deliberately colluded or accidentally exhibited poor judgement, and the
+extent to which LLM monitoring can be relied upon.
+15
+

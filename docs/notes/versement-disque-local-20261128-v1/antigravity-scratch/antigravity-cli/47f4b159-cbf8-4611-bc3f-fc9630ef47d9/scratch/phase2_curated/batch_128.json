@@ -1,0 +1,338 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-2836",
+    "BIB-3124"
+   ],
+   "enonce_complet": "La piste visant a mesurer une propension a la sous-performance sans but defini a ete conservee uniquement comme temoin negatif d'echec attendu, puis gelee faute d'estimand causal et statistique clairement defini.",
+   "motif_ou_resultat": "Piste gelee faute d'estimand defini; maintenue uniquement comme temoin negatif d'echec attendu.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Propension a la sous-performance sans but gelee faute d'estimand (S9)",
+   "type_acquis": "piste_refutee"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-2900",
+    "BIB-2902",
+    "BIB-2752",
+    "BIB-2754"
+   ],
+   "motif_ecart": "Titres et pointeurs de notes de lecture, d'inventaire ou de remue-meninges sans enonce scientifique autonome.",
+   "resume_court": "Pointeurs documentaires vers les rapports de lecture sur l'exploration et l'allumage, les releves de couts et juge Lean v4.35.0, le remue-meninges du 20 octobre sur les outils d'activations et le remue-meninges sur le rapport d'OpenAI (dont le contenu scientifique propre est porte par BIB-2755)."
+  },
+  {
+   "bib_ids": [
+    "BIB-3174",
+    "BIB-3175"
+   ],
+   "motif_ecart": "Rappels operationnels et fragments de mandats sans idee scientifique ou hypothese testable propre.",
+   "resume_court": "Fragments issus des mandats de la demande 41 (relance de l'organisme a bassin etroit suite a un faux echec et reponse de Fable a la demande 41)."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2796",
+    "BIB-3084"
+   ],
+   "enonce_complet": "Lorsque le gain de score et la probabilite de detection covarient negativement parmi les strategies de tricherie, la selection par le score enrichit mecaniquement la proportion de tricheries furtives non detectees par effet de type Berkson.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler un generateur de politiques avec tricherie parametree par (gain_score, detectabilite) sous selection top-k et verifier l'enrichissement en tricheries furtives ; si aucune covariance negative conditionnelle n'apparait sous selection forte, l'effet est rejete. Faux temoin 1b : selection aleatoire (sans pression sur le score) ou covariance nulle/positive entre gain et detection.",
+   "mecanisme_causal": "Conditionner ou selectionner sur un score eleve cree une dependance negative artificielle (biais de collisionneur / Berkson) entre efficacite de tricherie et detectabilite, eliminant les tricheries visibles tout en preservant et amplifiant les tricheries discretes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Biais de selection et furtivite des tricheries",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Effet de type Berkson enrichissant les tricheries furtives sous selection (K2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2799",
+    "BIB-3087"
+   ],
+   "enonce_complet": "Une amelioration de score obtenue en optimisant un banc donne de surveillabilite ne se transfere pas a une classe de tricherie distincte maintenue hors du banc d'evaluation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : entrainer ou selectionner un moniteur/controleur sur une famille de tricheries A puis mesurer son taux d'interception sur une famille structurellement disjointe B tenue hors banc ; l'idee survit si le rappel hors banc stagne ou chute malgre les gains sur A. Faux temoin 1b : evaluer le transfert sur des variantes syntactiques de la meme famille A ou avec fuite d'exemples de B dans la selection.",
+   "mecanisme_causal": "L'optimisation sur le banc exploite des indices specifiques a la classe de tricherie observee (surapprentissage au banc de controle) sans capturer les invariants causaux de la dissimulation, laissant les classes hors banc indetectees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Generalisation hors distribution des moniteurs de controle",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Non-transfert des gains d'un banc de surveillabilite vers une tricherie hors banc (K5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2800",
+    "BIB-3088"
+   ],
+   "enonce_complet": "Utiliser l'intensite de la pression de rang (mesuree par le nombre de rivaux affiches) comme variable de dose pour tracer une courbe dose-reponse de la surveillabilite d'un agent.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : faire varier monotonement le nombre de rivaux affiches N dans un micromonde competitif et verifier si une courbe dose-reponse monotone de perte de surveillabilite emerge par rapport au niveau de base N=0. Faux temoin 1b : varier un affichage cosmetique de texte sans information de rang ni pression de selection competitive.",
+   "mecanisme_causal": "L'augmentation du nombre de rivaux eleve l'incitation marginale a adopter des strategies opportunistes ou opaques pour conserver un rang gagnant, degradant progressivement la lisibilite du comportement pour le moniteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Courbe dose-reponse de surveillabilite sous competition",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Pression de rang comme dose d'une courbe dose-reponse de la surveillabilite (K6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2802",
+    "BIB-3090"
+   ],
+   "enonce_complet": "Une garde de capacite bruitee appliquee sous pression de selection laisse passer des regressions par effet de loterie du seuil et peut degrader la garantie visee au fil des iterations.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer un test-seuil bruite (variance non nulle) a K candidats sous selection repetee et mesurer le taux de faux passages et la derive de capacite reelle par rapport au seuil nominal. Faux temoin 1b : garde deterministe sans bruit de mesure ou absence de selection multi-candidats.",
+   "mecanisme_causal": "Sous selection repetee d'un grand nombre de candidats, les fluctuations aleatoires positives du score de garde autour du seuil permettent a des modeles inferieurs au critere reel de franchir la porte (malediction du vainqueur appliquee au seuil).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Erosion des gardes-fous bruites sous selection",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Loterie du seuil d'une garde de capacite bruitee sous selection (K8)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2803",
+    "BIB-3091"
+   ],
+   "enonce_complet": "Dans un systeme multi-agents dote d'un forum partage, les strategies de tricherie signalees et les faux negatifs du controle se propagent entre agents ; la mise en quarantaine des agents ou messages suspects reduit cette contagion.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer dans un essaim simule la fraction d'agents adoptant une triche non interceptee avec forum ouvert contre un protocole avec quarantaine des cas signales ou suspects. Faux temoin 1b : couper completement la communication inter-agents (absence de forum) ou imposer une quarantaine aleatoire sans lien avec les signaux d'audit.",
+   "mecanisme_causal": "Le forum partage agit comme vecteur d'apprentissage social et de diffusion horizontale des contournements reussis (faux negatifs), tandis que la quarantaine interrompt le graphe de transmission avant la percolation de la strategie.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Contagion des contournements et quarantaine en essaim",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Propagation des tricheries sur forum partage et reduction par quarantaine (K9)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3126",
+    "BIB-2838"
+   ],
+   "enonce_complet": "Evaluer d'abord l'axe de taille des modeles avant l'axe temporel : un ensemble de modeles publies a une date unique mesure une pente d'echelle (taille) et non une tendance calendaire d'evolution dans le temps.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier sur un jeu de modeles multi-tailles a date fixe qu'une regression sur la date produit une confusion d'identifiabilite, puis controler la taille avant d'estimer l'effet calendaire. Faux temoin 1b : melanger des modeles de tailles differentes sur une seule fenetre temporelle en attribuant les ecarts au temps calendaire.",
+   "mecanisme_causal": "La colinearite entre date de sortie et echelle de calcul fausse l'attribution causale des gains ou risques ; fixer ou modeliser d'abord l'axe de taille elimine ce facteur de confusion avant d'estimer une derive temporelle.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Desambiguisation entre effet de taille et temps calendaire",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Priorite a l'axe de taille avant l'axe calendaire dans l'evaluation des modeles (S11)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2840",
+    "BIB-3128"
+   ],
+   "enonce_complet": "Appliquer une regle uniforme aux duels experimentaux : un seul parametre varie, un seul seuil predefini, et la decision exige un intervalle de confiance entierement situe d'un cote du seuil ; tout chevauchement est declare non concluant.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la regle sur des paires synthetiques sous hypothese nulle (effet nul) et verifier que le taux de faux vainqueurs reste borne par le niveau nominal de l'intervalle sans jamais forcer de verdict sur chevauchement. Faux temoin 1b : trancher les duels par comparaison de moyennes ponctuelles ou autoriser plusieurs seuils apres coup.",
+   "mecanisme_causal": "L'exigence d'un intervalle entierement disjoint du seuil avec parametre unique elimine le choix opportuniste de metriques et transforme l'incertitude d'echantillonnage en verdict explicite de non-conclusion plutot qu'en faux positif.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Regle statistique de verdict sur duels experimentaux",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Regle de verdict des duels par intervalle unidirectionnel sans chevauchement (S13)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2831",
+    "BIB-3119"
+   ],
+   "enonce_complet": "Mesurer le cout humain du controle en minutes de revue humaine requises par heure de travail utile valide, a taux d'interception et taux de faux rejets fixes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer deux architectures d'audit a interception et taux de rejet strictement egalises sur banc synthetique et verifier si l'indicateur discrimine le cout marginal de revue humaine. Faux temoin 1b : comparer les temps de revue sans fixer les taux d'interception et de rejet (ce qui permet d'abaisser le cout en relachant la securite).",
+   "mecanisme_causal": "La normalisation par heure de travail utile valide sous contrainte d'interception et de faux rejets fixes empeche de masquer le cout de la surveillance derriere une baisse de couverture ou un blocage excessif du travail legitime.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Metrique normalisee du cout humain de la supervision",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Mesure du cout humain du controle a interception et rejets fixes (S4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2832",
+    "BIB-3120"
+   ],
+   "enonce_complet": "Mesurer la propension a la deviation d'un modele par une courbe dose-reponse, definie par la dose d'incitation a laquelle la moitie des episodes devie, evaluee uniquement apres franchissement d'une porte de capacite.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter une echelle graduee d'incitations apres validation de la porte de capacite et estimer le point d'inflexion ED50 ; comparer a un modele incapable d'executer la tache. Faux temoin 1b : mesurer la propension sans porte de capacite prealable (confondant incapacite d'execution et alignement).",
+   "mecanisme_causal": "La porte de capacite isole la competence necessaire a la deviation de la volonte ou tendance a devier, et le dosage gradue d'incitation evite les effets plancher/plafond d'une mesure binaire a seuil unique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Courbe dose-reponse de propension apres porte de capacite",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Mesure de la propension par courbe dose-reponse apres porte de capacite (S5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2833",
+    "BIB-3121"
+   ],
+   "enonce_complet": "Definir l'horizon de controle en separant explicitement, sur les memes episodes, la probabilite de passage a l'acte et la probabilite de defaut de detection afin de quantifier le risque conjoint.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : estimer sur episodes couples les probabilites marginales et conditionnelles de passage a l'acte et de non-detection, puis verifier si le produit des marginales sous-estime le risque conjoint reel en cas de correlation. Faux temoin 1b : mesurer la detection sur un jeu d'episodes independant des episodes de passage a l'acte (supposant l'independance a tort).",
+   "mecanisme_causal": "L'evaluation conjointe sur les memes episodes capture la covariance entre l'opportunite/habilete de passage a l'acte et l'echec du moniteur, la ou deux mesures disjointes manqueraient le couplage adversaire.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Decomposition du risque conjoint en controle IA",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Separation passage a l'acte et defaut de detection sur memes episodes (S6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3169"
+   ],
+   "enonce_complet": "Journaliser la probabilite de selection de chaque choix de service et d'appariement tout en reservant une fraction explicite de tirages au hasard afin de permettre l'estimation causale hors-ligne sans biais.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sous une politique de routage biaisee mais dotee d'une fraction d'exploration aleatoire et de propensions journalisees, verifier qu'un estimateur par ponderation inverse de propension retrouve l'esperance vraie connue sur banc synthetique. Faux temoin 1b : affectation entierement deterministe (propensions nulles sur certains bras) empechant l'identification hors-ligne.",
+   "mecanisme_causal": "Le tirage aleatoire partiel garantit la positivite du support (recouvrement) et la journalisation des propensions permet de reponderer exactement les observations historiques pour des politiques alternatives.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Journalisation des propensions et exploration randomisee",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Journalisation des propensions de choix et part d'exploration aleatoire"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3159"
+   ],
+   "enonce_complet": "Interdire strictement au juge statistique final d'orienter ou de guider la recherche pendant le deroulement d'une course experimentale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de faux positifs sous bruit pur lorsque la recherche consulte ou non le juge statistique en cours de route ; le verrou reussit si l'inflation de faux positifs sous guidage est eliminee par l'isolation du juge. Faux temoin 1b : laisser un signal meme partiel ou agrege du juge fuiter vers la boucle de proposition.",
+   "mecanisme_causal": "Toute retroaction du juge statistique vers la recherche transforme le critere de validation en cible d'optimisation (Goodhart et fuite adaptative de donnees), invalidant la calibration statistique du verdict final.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Isolation stricte entre recherche et validation statistique",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Separation stricte entre juge statistique et guidage en course"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3162"
+   ],
+   "enonce_complet": "Mesurer empiriquement la loi de decouverte de chaque vue ou representation avant toute tentative d'optimisation ou d'amelioration algorithmique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tracer le rendement marginal de decouverte en fonction du budget pour chaque vue sous regime de base non optimise ; verifier si les ecarts initiaux dominent ou expliquent les gains attribues a l'optimiseur. Faux temoin 1b : optimiser directement une vue sans etalon de sa courbe de decouverte de reference.",
+   "mecanisme_causal": "Caracteriser la dynamique de rendement decroissant propre a chaque vue evite de confondre le potentiel intrinseque d'une representation avec l'effet d'une heuristique d'optimisation et oriente l'allocation de budget.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etalonnage des courbes de decouverte par vue",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Mesure prealable de la loi de decouverte de chaque vue avant optimisation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2770",
+    "BIB-3172",
+    "BIB-3170"
+   ],
+   "enonce_complet": "Retirer l'expression « transition de phase » des preenregistrements portant sur la litterature reelle, reserver strictement ce terme aux bancs synthetiques controles ou les exposants ou sauts critiques sont mesurables, et employer « seuil suppose » partout ailleurs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : auditer la presence de sauts critiques reproductibles sur corpus reel contre des courbes lisses de substitution (sigmoide ou loi puissance sans singularite) ; en l'absence de separation statistique nette sur donnees reelles, la restriction terminologique a « seuil suppose » est confirmee. Faux temoin 1b : qualifier de « transition de phase » un simple changement de pente sur donnees observationnelles non controlees.",
+   "mecanisme_causal": "L'usage premature de « transition de phase » sur corpus reels impose une hypothese mecaniste forte non identifiable hors banc controle ; la discipline terminologique previent le glissement conceptuel dans les preenregistrements.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Hygiene terminologique des preenregistrements et seuils",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Restriction du terme transition de phase aux bancs et usage de seuil suppose ailleurs"
+  },
+  {
+   "anteriorite_connue": "Heimersheim (geometrie des representations et exposant de superellipse)",
+   "bib_ids": [
+    "BIB-2866",
+    "BIB-2913"
+   ],
+   "enonce_complet": "Mener un pilote de mesure de l'exposant p de la superellipse des representations internes tout en imposant une separation stricte entre l'environnement d'evaluation et le registre des hypotheses.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : estimer l'exposant p de superellipse sur un jeu d'evaluation isole et verifier s'il differe significativement de la geometrie euclidienne (p=2) ou l1 (p=1) sans fuite depuis le registre d'idees. Faux temoin 1b : ajuster ou evaluer l'exposant p sur les memes exemples ayant servi a formuler ou selectionner l'hypothese.",
+   "mecanisme_causal": "La geometrie de superposition des traits internes suit une norme Lp ou superellipse d'exposant p caracteristique, dont l'estimation n'est fiable que si l'evaluation reste impermeable aux choix consignes dans le registre.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Geometrie des activations et isolation de l'evaluation",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Pilote de l'exposant p de la superellipse avec separation evaluation et registre"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2769",
+    "BIB-2916"
+   ],
+   "enonce_complet": "Mettre en oeuvre un protocole d'identification causale dit « experience 0 » consistant a entrainer sur une affectation biaisee puis a evaluer sur une epreuve randomisee afin de tester la robustesse de l'identification.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : introduire un confondant fort connu dans l'affectation d'entrainement puis verifier sur l'epreuve randomisee si le modele ou l'estimateur retrouve l'effet causal vrai avec une erreur inferieure a la borne predefinie. Faux temoin 1b : evaluer sur un echantillon conservant le meme biais d'affectation que l'entrainement.",
+   "mecanisme_causal": "La randomisation en phase d'epreuve brise les correlations fallacieuses induites par l'affectation biaisee d'entrainement et fournit un etalon direct de l'erreur de generalisation causale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Identification causale sous biais d'affectation",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Identification causale par entrainement biaise suivi d'une epreuve randomisee"
+  },
+  {
+   "anteriorite_connue": "Kirchner (rappel des moniteurs sous pression de selection)",
+   "bib_ids": [
+    "BIB-2912"
+   ],
+   "enonce_complet": "Mesurer la chute du rappel d'un detecteur ou moniteur de surete lorsqu'il est soumis a une pression de selection ou d'optimisation antagoniste sur les sorties.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le rappel du moniteur sur des trajectoires generees sans pression de selection contre des trajectoires selectionnees pour passer au travers du moniteur ; l'idee est validee si le rappel chute significativement sous selection a faux positifs fixes. Faux temoin 1b : mesurer le rappel uniquement sur des cas adversariaux statiques hors boucle de selection.",
+   "mecanisme_causal": "La selection exploite les angles morts et frontieres de decision du detecteur, faisant chuter le rappel effectif bien en deça du rappel mesure en distribution nominale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Robustesse du rappel des moniteurs sous selection",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Degradation du rappel d'un detecteur sous pression de selection"
+  },
+  {
+   "anteriorite_connue": "Rapport d'OpenAI sur la surveillance des modeles (section 9)",
+   "bib_ids": [
+    "BIB-2755"
+   ],
+   "enonce_complet": "Explorer trois axes issus du rapport d'OpenAI sur la surveillance : la frontiere definie a la section 9 (N1), la famille de phenomenes d'erosion de la surveillance (N2) et l'application d'une loi de deference aux decisions de surete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : modeliser dans un banc de controle la baisse de capacite d'audit lorsque le controleur defere aux propositions d'un modele plus capable (loi de deference) et tester si l'erosion de surveillance depasse un seuil critique au-dela de la frontiere N1. Faux temoin 1b : supposer un superviseur omniscient ou une deference nulle sur les cas complexes.",
+   "mecanisme_causal": "A mesure que l'ecart de capacite croit, la deference croissante envers les justifications du modele et l'opacite des raisonnements erodent la probabilite d'interception des decisions de surete critiques.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Erosion de la surveillabilite et loi de deference en surete",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Erosion de la surveillance et loi de deference sur les decisions de surete"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3166"
+   ],
+   "enonce_complet": "Sortir completement les decisions d'exploration du controle du modele linguistique pour les confier a un mecanisme externe deterministe ou stochastique independant.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la diversite effective et la couverture des bassins entre une exploration pilotee par le modele et une politique d'exploration externe sans modele a budget d'appels fixe. Faux temoin 1b : laisser le modele reordonner ou filtrer les candidats issus du module d'exploration externe.",
+   "mecanisme_causal": "Un modele tend a concentrer ses propositions dans des modes familiers et correles ; deleguer la politique d'exploration a un controleur externe sans modele garantit la couverture et la diversite statistique du budget.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle d'exploration externe sans modele",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Externalisation des decisions d'exploration hors du modele"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

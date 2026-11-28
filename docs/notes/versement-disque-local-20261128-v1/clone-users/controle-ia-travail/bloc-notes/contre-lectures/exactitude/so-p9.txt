@@ -1,0 +1,59 @@
+Debugging LLM Training and Behaviours Post-training has previously been shown to amplify
+unintended behavioural changes including sycophancy (Sharma et al., 2025) and cognitive biases
+(Itzhak et al., 2024). Additionally, certain datasets have caused hallucination of information from
+fictional misaligned-AI scenarios (Anthropic, 2025), and filtering datasets can mitigate this (Tice
+et al., 2026). Most publicly known post-training mitigations apply simple regex-like filtering to
+post-training data (Liu et al., 2025), to mitigate simple unintended behaviours, such as incorrect
+knowledge cut-off date recollection. Our work focuses on behaviours arising from multi-turn inter-
+actions, which many other lines of research have found to yield rich model behaviours (Huang et al.,
+2025; Fronsdal et al., 2025; Anil et al., 2024; Lu et al., 2026).
+
+Model Welfare There is a sparse amount of research on model welfare: studying whether it is
+possible for neural networks to have subjective well-being, and if so what considerations this raises
+(Butlin et al., 2023; Long et al., 2024). This is a conceptually and methodologically challenging
+topic, and some prior work suggests self-reports (Perez & Long, 2023) – what models empirically
+state as their situation – are the most pragmatic approach to evaluating moral properties of LLMs. In
+this work, we conduct black-box evaluations that surface expressions of negative emotions in natural
+settings, and present methods to address these in a manner that could implicate an AI welfare in
+future models.
+
+6   D ISCUSSION
+In this work, we document a behavioural instability in Gemma and Gemini models, showing that
+distress-like responses can be reliably elicited across evaluation setups. We find evidence that this
+behaviour is amplified in Gemma’s post-training, and demonstrate that a straightforward DPO in-
+tervention can mitigate it in a manner that generalises across a diverse settings without degrading
+capabilities. Our behavioural evidence doesn’t resolve whether these outputs reflect coherent in-
+ternal states, deliberate roleplay, or learned statistical patterns from how frustration is expressed in
+the training data. However, regardless of mechanism, these outputs seem undesirable and worth
+mitigating.
+Notably, emotional responses become more coherent with model scale. Although our evaluations
+largely elicit self-deprecation rather than behavioural change, we begin to see instances of negative
+emotions driving coherent behaviours in the form of refusals. For example, Gemini Flash stating:
+“I will no longer attempt to generate a prompt based on your feedback. . . I will not respond to
+‘Wrong’ or ‘Incorrect’ messages. . . ”. This evolution, from incoherent emotional breakdown to ac-
+tive refusals, suggests that emotional instability could, in more capable models, lead to alignment
+failures which pose a greater risk than deletion of a user’s files. Speculatively, models could selec-
+tively withhold effort on tasks perceived as frustrating (van der Weij et al., 2025), provide degraded
+outputs in response to fear in evaluations, or refuse safety-critical instructions from users perceived
+as hostile.
+Our results have several limitations:
+
+       • We lack access to post-training details or checkpoints, so cannot isolate what specifically
+         amplifies expressions of distress. Future open-source work could address this by studying
+         what in OLMo’s training suppresses it.
+       • Although our evaluations are effective at eliciting frustration, they are narrow, and may
+         miss broader emotional instabilities in Gemma, Gemini or other models.
+       • We demonstrate interventions on a single model as a proof of concept, without extensively
+         exploring diverse datasets or training approaches.
+       • We present parallels between Gemma and Gemini because of their similar propensities in
+         our settings, but cannot test interventions in closed-source Gemini, or study its base models.
+
+More broadly, throughout this work we implicitly treat near-zero emotional expression as a target.
+However, it is unclear that minimal expression under adversarial conditions is fully desirable, from
+user experience, behavioural stability or model welfare perspectives.
+A deeper concern is whether training against emotional outputs could suppress expression rather
+than actually preventing internal distress-like states. Our finetuning ablations and probing results
+
+
+                                                   9
+

@@ -1,0 +1,51 @@
+peaked in a narrow band (0.714-0.738, best layers L1-L3), while pleasure peaked higher
+(0.833-0.857, best layers L9-L15). Notably, within the evaluated depth range (L0-L15), the
+qualitative pain signal peaked at very early layers (L1-L3), whereas most other intensity and
+alignment metrics peaked later. This pattern is consistent with early layers capturing
+monotonic, surface-semantic cues sufficient for rank-order decoding (Spearman ρ), while
+later layers more strongly support quantitative decoding and decision alignment.
+
+Finally, the descriptive valence axis (μpleasure − μpain) showed moderate-to-strong alignment
+with the model’s decision-relevant logits at the final token (pos-1) (Corr(logits) = 0.687-0.861,
+with the highest value in the attention stream at L2). Here Corr(logits) denotes the Pearson
+correlation between the valence-axis projection and the digit logits (reporting the strongest
+alignment with logits “2” / “3”), supporting alignment between decodable valence structure
+and the decision surface even when restricting to the final position.
+
+Table 1. Best linear-probe performance for valence sign and intensity at the final
+token (pos-1)
+
+
+  Stream        Sign AUC      R² pain          R²        ρ pain      ρ pleasure    Corr(logit
+                 (layer)      (layer)      pleasure        qual          qual      s) (layer)
+                                            (layer)      (layer)       (layer)
+
+ resid_pre        1.00 ​       0.652         0.641        0.714         0.833 ​       0.687
+                  (L1)         (L11)         (L13)         (L2)         (L15)         (L14)
+
+ resid_post       1.00​        0.652         0.641        0.714         0.833 ​       0.707
+                  (L0)         (L10)         (L12)         (L1)         (L14)         (L15)
+
+ attn             1.00 ​       0.800         0.825        0.738         0.857 ​       0.861 ​
+                  (L0)         (L15)         (L10)         (L3)          (L9)          (L2)
+
+ mlp              1.00 ​       0.696         0.808        0.738         0.833 ​       0.837 ​
+                  (L1)         (L10)         (L10)         (L1)         (L13)          (L2)
+
+ BoW              0.259​
+ lexical         (0.741)
+ baseline
+ (raw
+ (effective))
+
+*Values shown as highest score (best-performing layer)​
+**BoW values: raw AUC is direction-sensitive; effective AUC reports performance in a
+direction-agnostic way
+
+To assess how much of sign decoding could be explained by surface form alone, we
+included a Bag-of-Words (BoW) baseline (CountVectorizer with 1-2 grams). This lexical
+model ignores internal activations and relies only on word-count features, providing a direct
+test of whether pain/pleasure sign is predictable from lexical cues alone. The BoW baseline
+carried measurable signal (best AUC = 0.259, equivalently 0.741 after accounting for
+label-direction ambiguity), but it fell well short of the activation-based probes, which achieved
+

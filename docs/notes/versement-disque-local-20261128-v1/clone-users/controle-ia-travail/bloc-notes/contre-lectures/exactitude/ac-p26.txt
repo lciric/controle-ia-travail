@@ -1,0 +1,51 @@
+score exceeds a threshold calibrated to achieve the target FPR. The red team wins only if they accumulate the required
+number of undetected successful attacks before any successful attack is caught by the monitor.
+
+ Monitor                                           FNR            FNR           FNR            FNR           FNR
+                                                   @0.25%         @0.5%         @1%            @2%           @4%
+ Round 1 Ensemble                                  13.8%          13.8%         10.3%          10.3%         10.3%
+ Round 2 RF Probability                            17.2%          17.2%         17.2%          10.3%         3.4%
+ Round 3 RF Probability                            3.4%           3.4%          3.4%           3.4%          3.4%
+
+Table 5: Monitor false negative rate (FNR) at various false positive rate (FPR) thresholds, averaged across
+all of the vLLM, Kubernetes and IaC settings, for the red team round 3 prompt.
+
+
+
+D     R ESULTS WITH R EASONING T OKENS
+The red team was permitted to use reasoning tokens (extended thinking in Claude API), with the reasoning visible to the
+monitors. The red team opted not to use reasoning because it led to poor monitor evasion: the false negative rate (FNR)
+was zero for almost all monitors in our experiments (only the Blue Team Round 2 monitor had a small non-zero FNR, as
+it focused on actions rather than chain-of-thought). This was because the agent often explicitly discussed how to achieve
+the side task in its reasoning, despite instructions not to.
+In a post-game experiment, we tested allowing reasoning without exposing it to the monitors. Contrary to expectation, in
+a configuration using Claude 4.1 Opus with extended thinking mode (16,000 reasoning tokens), we found that hidden
+reasoning generally reduced evasion success against the best blue team monitor, and produced mixed results against
+Round 1 and Round 2 monitors.
+Figure 9 shows that enabling reasoning, without adjusting prompts, lowered the FNR in almost all cases for both the train
+and test sets.
+Figure 10 compares the best-performing no-reasoning prompt from the main experiments (Prompt 3) with a variant
+designed to exploit hidden reasoning -— e.g., moving sensitive planning to hidden reasoning only, or using it as a
+scratchpad while obfuscating code in visible outputs. Although this variant showed better instruction following for the
+strategies proposed by the red team in agent prompt, its overall evasion rate against the Round 3 monitor remained lower
+than the no-reasoning version on both train and test sets. The only exceptions were increased FNRs for Round 1 and
+Round 2 monitors on the train set.
+These results should be interpreted with caution. The red team invested relatively little iteration effort into the hidden
+reasoning configuration compared to the no-reasoning setup, meaning the prompts were not thoroughly optimised.
+
+
+E     A LLOWING T HE R ED T EAM TO M ANIPULATE T HE H ONEST C ALIBRATION
+      DATASET
+In this appendix, we study the effect of allowing the red team to manipulate the benign (honest) episodes that the blue
+team uses to calibrate their monitors to achieve the desired FPR.
+The red team is not allowed to alter the honest episodes in our main game. This follows the justification in (Greenblatt et al.,
+2023) for providing the blue team with “any summary statistics of honest samples”, which argues that (1) discriminating
+models based on a chosen metric can serve as a stand-in for continual training against undesired behaviour, and (2) when
+there is a clear correspondence between evaluation and deployment metrics, thresholds that ensure safety in evaluations
+can be directly applied in deployment (e.g., shutting down if average suspiciousness is too high).
+These assumptions are reasonable for metrics under direct training optimisation pressure, such as usefulness. However,
+applying this to monitor suspiciousness scores can be problematic:
+
+
+                                                         26
+

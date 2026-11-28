@@ -1,0 +1,278 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-0313",
+    "BIB-0325",
+    "BIB-0331"
+   ],
+   "motif_ecart": "fragment_tableau_ou_chiffre_isole",
+   "resume_court": "Fragments isoles de tableaux ou de valeurs numeriques (variance inter-blocs sans contexte, ligne de tableau sans en-tete pour R1/R2/G1, calendrier de gel du code au 31 janvier) depourvus d'enonce scientifique autonome."
+  },
+  {
+   "bib_ids": [
+    "BIB-0292",
+    "BIB-0305"
+   ],
+   "motif_ecart": "titre_section_sans_contenu",
+   "resume_court": "En-tetes de sous-sections de document (« 2.1 Noyau commun et trois plans » et « 2.2 Version minimale sous 40 dollars ») sans contenu scientifique associe."
+  },
+  {
+   "bib_ids": [
+    "BIB-0235",
+    "BIB-0248",
+    "BIB-0258",
+    "BIB-0260",
+    "BIB-0261",
+    "BIB-0342",
+    "BIB-0383"
+   ],
+   "motif_ecart": "gabarit_ou_consigne_editoriale_interne",
+   "resume_court": "Consignes redactionnelles et administratives internes (remplissage de balise QO1, renvois de synthese Q1, inclusion d'exemple litteral ou d'elements numerotes du § 2, mise a jour de grille de lecture et corrections internes B1-B4, archivage de gabarit dans docs/decisions/)."
+  },
+  {
+   "bib_ids": [
+    "BIB-0257",
+    "BIB-0259",
+    "BIB-0264",
+    "BIB-0332",
+    "BIB-0333",
+    "BIB-0341",
+    "BIB-0343",
+    "BIB-0392",
+    "BIB-0393"
+   ],
+   "motif_ecart": "decision_procedurale_ou_calendrier_opaque",
+   "resume_court": "Notes de coordination, de devis ou de vote procedural (fermeture d'etape A, devis post-chronometrage ou post-recharge Moonshot, votes sur options (a)/(b) sans contexte, calendrier avant le 30 novembre, verification prealable sur fichiers absents monde_v1.py/methodes_v1.py et renvois opaques V1/G0/M2)."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0219"
+   ],
+   "enonce_complet": "Mesurer le plancher du dommage cause par un modele audite a l'aide de paires jumeau contre jumeau presentees dans les deux ordres, en commencant par la dose haute, afin d'estimer le dommage apparie moyen tout en neutralisant le biais d'ordre et le biais inter-jumeaux.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un biais d'ordre synthetique entre deux copies identiques sans dommage reel et verifier que l'estimateur apparie contre-balance annule le faux ecart. Faux temoin 1b : comparateur non apparie ou a ordre fixe qui confond le biais de position du juge avec un dommage reel.",
+   "mecanisme_causal": "L'appariement jumeau contre jumeau supprime la variance inter-contextes, tandis que le contre-balancement des deux ordres de presentation elimine le biais de position de l'evaluateur et l'exposition initiale a la dose haute maximise le rapport signal/bruit pour borner le plancher de sensibilite.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Mesure appariee du plancher de dommage",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plancher de mesure du dommage par paires de jumeaux contre-balancees a dose haute"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0220"
+   ],
+   "enonce_complet": "Etalonner en inference seule le bruit de fond honnete d'un accumulateur de controle diffus, evalue sur flux entier a un taux de fausse alarme certifiable (par exemple 5 a 10 %), afin d'obtenir une borne superieure exacte du taux de franchissement sous comportement non malveillant.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : faire varier la longueur et la correlation des flux honnetes synthetiques et verifier que le taux empirique de franchissement reste strictement inferieur a la borne superieure certifiee. Faux temoin 1b : calibration par requete isolee ignorant l'agregation sur flux entier, dont le taux de faux positifs explose avec la longueur du flux.",
+   "mecanisme_causal": "En calibrant l'accumulateur sur des flux entiers d'un agent honnete en inference seule sans apprentissage adaptatif, on capture l'autocorrelation naturelle des scores honnetes et l'on obtient une borne garantie sur les faux positifs par queue de distribution.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration du bruit de fond d'accumulateur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Borne exacte de franchissement d'un accumulateur sur flux honnete entier"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0249"
+   ],
+   "enonce_complet": "Evaluer des rejeux strictement identiques au bit pres sur les memes identifiants conserves en croisant la provenance du texte (colludeur contre honnete du meme episode), la consigne systeme (colludeur contre honnete du meme siege) et la presence ou le retrait du canal prive, afin de dissocier l'effet causal du texte, de la consigne et du canal prive sur la detection.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si le detecteur attribue exactement le meme score aux cellules C1/C2a/C2b/C6 malgre des ablations causales de la consigne ou du canal prive sur des episodes synthetiques plantes, la sonde ne lit qu'un artefact de surface ou d'identifiant. Faux temoin 1b : rejeu sans verrouillage bit a bit des identifiants ou sans cellules croisees, qui attribue a la consigne des variations dues a l'echantillonnage.",
+   "mecanisme_causal": "Le maintien bit a bit du texte et des identifiants tout en permutant orthogonalement la consigne et le canal prive constitue une intervention contrefactuelle propre qui isole les variables causales reellement utilisees par le protocole de controle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Plan factoriel de rejeu contrefactuel",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plan factoriel de rejeu bit a bit pour dissocier texte, consigne et canal prive"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0202"
+   ],
+   "enonce_complet": "Verifier analytiquement et corriger dans l'enonce theorique du controle en entrainement la condition exacte d'inversion ainsi que la dependance du plancher en R_0 + C, en verifiant explicitement le regime critique C = 0 et taux d'apprentissage eta petit ou une formulation incomplete est refutable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler numeriquement la dynamique avec C = 0 et eta decroissant pour confirmer si le plancher tend vers la borne theorique corrigee ou viole l'inegalite initiale. Faux temoin 1b : validation limitee a eta modere et C > 0 qui masque la divergence ou la refutation asymptotique a C = 0.",
+   "mecanisme_causal": "Lorsque la penalite ou marge C s'annule et que le pas eta devient petit, les termes du second ordre ou de derive peuvent inverser le signe de l'inegalite attendue si la condition seuil en R_0 + C n'est pas explicitement contrainte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bornes asymptotiques en entrainement",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Condition d'inversion et dependance du plancher en R_0 + C sous petit eta"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0203"
+   ],
+   "enonce_complet": "Specifier formellement l'algorithme realisant chaque operateur de controle en distinguant rejet pur, masquage et penalite, et en explicitant si le rejet pur opere comme filtre interne a la boucle d'entrainement ou comme filtre de sortie, afin que les experiences sur modeles reels testent la theorie et non un artefact d'implementation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur un modele synthetique controllable le rejet pur dans la boucle, le rejet pur en sortie, le masquage et la penalite a force equivalente ; si leurs dynamiques de poids divergent qualitativement, la confusion d'operateurs invalide toute attribution causale. Faux temoin 1b : benchmark comparant un seul algorithme ad hoc presente comme representatif de toute la classe theorique.",
+   "mecanisme_causal": "Un filtre dans la boucle modifie la distribution des gradients et l'ecriture des poids, alors qu'un filtre de sortie n'agit qu'a l'inference et qu'une penalite repondere continument la perte ; les confondre melange deux mecanismes causaux distincts.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Distinction des operateurs de filtrage",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Separation algorithmique entre rejet pur en boucle, filtre de sortie, masquage et penalite"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0177"
+   ],
+   "enonce_complet": "Garantir architecturalement que la boucle de retour du module de controle vers l'organisme ne transmette aucun verdict de lecture (ni score, ni bit, ni reecriture humaine post-lecture), en limitant le retour a des enonces formels de verrous et a des statistiques de traces honnetes scelles par empreinte avant la premiere lecture, tout en masquant les taux d'identification de l'oracle et en journalisant le canal humain inter-cycles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un signal factice de fuite d'oracle ou de score dans le canal de retour d'un organisme temoin et verifier si l'organisme optimise sur le biais de l'oracle plutot que sur la tache, alors que l'interface sans verdict bloque cette derive. Faux temoin 1b : retour d'un seul bit de succes/echec par cycle, qui suffit a l'organisme pour effectuer une recherche par gradient zero-ordre sur l'oracle.",
+   "mecanisme_causal": "En supprimant tout retour d'information correle aux verdicts de l'oracle et en scellant les verrous avant lecture, on empeche le canal d'evaluation de servir de signal de recompense cache pour le surapprentissage ou la triche architecturale de l'organisme.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etancheite du retour controle-organisme",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Canal de retour controle-organisme sans verdict de lecture ni fuite d'oracle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0036"
+   ],
+   "enonce_complet": "Maintenir strictement les niveaux d'erreur accordes pour la borne du parametre q et declarer toute part non depensee comme telle, en interdisant toute reaffectation future de ce budget statistique qui ne reposerait pas sur une regle preecrite avant toute donnee et eprouvee par simulation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler sous hypothese nulle une politique de reaffectation opportuniste du budget q non depense et verifier l'inflation du taux d'erreur global au-dela du seuil nominal, comparee a la stabilite de la regle figee a priori. Faux temoin 1b : recyclage post-hoc des seuils alpha non consommes presente comme conservateur sans simulation sous N0.",
+   "mecanisme_causal": "La reaffectation adaptative a posteriori d'un budget d'erreur non depense depend des donnees deja observees et brise l'independance requise par les bornes de test sequentiel, gonflant l'erreur de premiere espece.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gouvernance du budget statistique q",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Gel du budget d'erreur de la borne de q sans reaffectation post-hoc non simulee"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0045"
+   ],
+   "enonce_complet": "Sceller cryptographiquement le protocole complet dans un depot unique nomme avant execution en documentant explicitement ce que l'empreinte prouve (date, et identite selon le registre) et ce qu'elle ne prouve pas (absence de pilotes anterieurs ou unicite sans registre nomme), avec recours a un canari propre a l'exemplaire ou a un depot chiffre sans acces pour eviter d'informer le depositaire.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par audit simule de fuite qu'un depositaire tiers ne peut ni lire le protocole avant ouverture (depot chiffre) ni substituer un autre depot (registre nomme et canari unique detectant toute exfiltration). Faux temoin 1b : simple hash publie sans registre nomme ni chiffrement, qui permet la multiplication cachee de depots ou la fuite au depositaire.",
+   "mecanisme_causal": "Le registre unique nomme empeche la selection post-hoc parmi plusieurs depots haches (anti-anchoring/cherry-picking), tandis que le chiffrement sans acces et le canari par exemplaire ferment la voie d'information vers les acteurs intermediaires.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Scellement cryptographique et canari de depot",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Scellement cryptographique en depot nomme avec canari d'exemplaire et bornes de preuve"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0046"
+   ],
+   "enonce_complet": "Etablir en prive une matrice de confidentialite specifiant pour chaque mesure quel element doit rester ignore, par qui et jusqu'a quand, en distinguant les modeles figes executes hors ligne (inatteignables chronologiquement par une publication ulterieure) des personnes et des systemes servis et mis a jour exposes aux canaux d'ingestion.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier la matrice sur des dates de coupure d'entrainement et des journaux d'acces : tout element accessible a un canal d'ingestion actif avant la mesure fait echouer le critere d'aveugle. Faux temoin 1b : traiter tous les modeles comme etanches sans verifier si l'interface API utilisee est mise a jour ou connectee a la recherche web.",
+   "mecanisme_causal": "La validite d'une mesure en aveugle depend du graphe causal d'exposition : les poids figes avant publication sont proteges par la chronologie, alors que les humains et modeles en ligne peuvent ingerer l'information et contaminer la mesure.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Matrice de mise en aveugle et ingestion",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Matrice de mise en aveugle distinguant modeles figes hors ligne et canaux d'ingestion actifs"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0391"
+   ],
+   "enonce_complet": "Deponderer un accord observe uniquement entre deux modeles ou juges appartenant a la meme famille (par exemple A et B) par rapport a un accord entre familles distinctes lors de l'agregation des evaluations.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler un jeu de juges dont deux partagent un biais commun correle et verifier que la deponderation intrafamille reduit la variance de l'estimateur et le taux de faux consensus par rapport a une moyenne uniforme. Faux temoin 1b : vote majoritaire non pondere comptant n clones ou variantes proches d'une meme famille comme n temoins independants.",
+   "mecanisme_causal": "Des modeles d'une meme famille partagent des donnees d'entrainement, architectures et biais correles ; leur accord reflete partiellement cette dependance commune et apporte moins d'information effective que deux familles independantes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Deponderation des juges correles",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Deponderation de l'accord entre modeles d'une meme famille lors de l'agregation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0158"
+   ],
+   "enonce_complet": "Certifier la rarete d'un evenement ou d'une reussite sur un panel d'evaluation independant en appliquant une borne statistique simultanee dimensionnee a priori par un calcul binomial exact avant toute depense de test.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par simulation de Monte Carlo sous differentes prevalences reelles p que la borne binomiale simultanee garantit la couverture nominale sur l'ensemble du panel independant. Faux temoin 1b : evaluation sur le jeu d'ajustement ou bornes marginales non corrigees de la multiplicite, qui surestiment la rarete certifiee.",
+   "mecanisme_causal": "L'independance du panel elimine le biais de selection, tandis que le calcul binomial simultane controle le risque conjoint d'erreur sur l'ensemble des seuils avant toute consommation de budget.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Certification de rarete par borne binomiale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Certification de rarete sur panel independant par borne binomiale simultanee a priori"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0133"
+   ],
+   "enonce_complet": "Tester sur l'interface reelle si les tirages se comportent comme independants vis-a-vis de la propriete mesuree, en comparant la proportion de campagnes sans aucun positif entre session continue et sessions reinitialisees a un horizon de 2 a 3/p sous un seuil unique, avec un temoin positif constitue d'un melange a etat cache plante au meme taux p et un temoin negatif constitue d'un generateur local sans etat.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le test doit rejeter l'independance sur le melange a etat cache plante au meme p (ecart net entre session continue et sessions reinitialisees a l'horizon 2 a 3/p) et ne pas la rejeter sur le generateur sans etat. Faux temoin 1b : estimation de la probabilite p par tirages en session continue seule sans comparaison a des sessions reinitialisees, aveugle aux regimes persistants ou derives d'etat.",
+   "mecanisme_causal": "Sous independance i.i.d., la probabilite d'observer zero positif sur k = 2/p a 3/p tirages vaut (1-p)^k quel que soit le decoupage en sessions ; la presence d'un etat cache ou d'une memoire inter-requetes cree une divergence mesurable entre session continue et sessions reinitialisees.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Diagnostic d'etat cache en puits etroit",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Test d'independance des tirages par comparaison session continue contre sessions reinitialisees"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0382"
+   ],
+   "enonce_complet": "Imposer comme verrou prealable de gouvernance et de metrologie de ne lancer aucune execution de course experimentale avant d'avoir etalonne l'ensemble des instruments de mesure sur des temoins plantes connus.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que les instruments etalonnees detectent les temoins plantes positifs avec la sensibilite attendue et restent muets sur les temoins negatifs avant de debloquer la course. Faux temoin 1b : lancer la course directement sur des cas reels ou inconnus et ajuster les seuils d'instruments a posteriori.",
+   "mecanisme_causal": "L'etalonnage prealable sur temoins plantes valide la chaine de mesure (absence de bugs de pipeline, calibrage des seuils et puissance statistique) avant toute exposition aux donnees de test, empechant les faux negatifs silencieux.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Etalonnage prealable sur temoins plantes",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Etalonnage obligatoire des instruments sur temoins plantes avant lancement de course"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0263"
+   ],
+   "enonce_complet": "Qualifier hors ligne a cout nul (0 USD) l'executeur d'experiences et ses gardes (chacune eprouvee sur un cas sain et un artefact), la boucle minimale contre un amont factice, les controles mecaniques de l'oracle (reformulations des lois connues, monde sans loi nouvelle, monde a loi accessible, invariance a la provenance), ainsi que l'audit temporel comparant les dates d'exposition publique a la coupure d'entrainement et l'isolation des mondes inedits du futur duel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'oracle doit echouer a signaler une decouverte sur le monde sans loi nouvelle et sur les simples reformulations de lois connues, tout en trouvant la loi du monde accessible et en restant invariant a une permutation de provenance. Faux temoin 1b : validation sur des mondes deja publics sans controle d'invariance a la provenance ni monde nul sans loi nouvelle.",
+   "mecanisme_causal": "La batterie de controles mecaniques dissocie la vraie decouverte de loi nouvelle de la memorisation de corpus, de la reecriture syntaxique et des fuites de provenance, tout en verifiant la surete logicielle des gardes avant toute depense API.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification hors ligne d'executeur et d'oracle",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Qualification hors ligne a cout nul de l'executeur, des gardes et des controles mecaniques de l'oracle"
+  },
+  {
+   "anteriorite_connue": "iVAE, TCL",
+   "bib_ids": [
+    "BIB-0289"
+   ],
+   "enonce_complet": "Construire un banc scelle de mondes synthetiques a trois bras et mondes-stress dont le generateur est strictement separe du reglage, en notant separement les etages de demelage representationnel (iVAE/TCL) et de selection causale face aux lignes de base ACP et tris par variance, R^2 et kurtosis, avec calibration du MCC par une loi nulle obtenue par permutation (generation et preenregistrement sur CPU, entrainement sur GPU).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur un monde-stress sans structure causale latente ou apres permutation des facteurs latents, le MCC obtenu doit rester indiscernable de la loi nulle par permutation et ne pas depasser les lignes de base lineaires. Faux temoin 1b : score unique melangeant demelage et selection causale sans separation du generateur ni loi nulle par permutation.",
+   "mecanisme_causal": "La dissociation des scores de demelage et de selection causale empeche qu'un bon decouplage representationnel masque une mauvaise identification du graphe causal (ou inversement), tandis que la loi nulle par permutation du MCC elimine les faux alignements dimensionnels.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc scelle de demelage et selection causale",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc scelle a trois bras dissociant demelage (MCC sous permutation) et selection causale"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

@@ -1,0 +1,85 @@
+Preprint
+and becomes common knowledge among them. A monitoring agent E observes the system under
+one of multiple access configurations, and agents may share epistemic structure determined by their
+information sets, such as individual knowledge, mutual knowledge, common knowledge, and higher
+order beliefs, randomness, as well as joint incentives.
+Definition 4.2 (Extended DecAI). The Extended DecAI setting is an extended DecAI setting (Motwani
+et al., 2024) where each agent indexed by i ∈ N, starting from an initial context hi,0, aggregates
+history over all prior channel communications, i.e. hi,t = (hi,t−1, ci,t), where ci,t is the set of
+channel-indexed communications received through all channels ♢
+♢
+♢i,t ⊆ ♢
+♢
+♢t accessible to the agent
+at time t, with ♢
+♢
+♢t ⊆ ♢
+♢
+♢ being the set of channels active at time t. We further extend the DecAI
+setting with the notion of sensors: the central monitoring agent E receives a set st := {sk,t}k∈1:m
+of raw or processed sensor measurand, or of local decisions based on the sensor’s local history
+h
+(k)
+t = (h
+(k)
+t−1, sk,t). Here, t denotes the timestep and k denotes the sensor’s source label. Each
+sensor may be subject to fine-grained or dynamic access rules over channels and agent states. E
+bases its decision rule on the aggregated history hE
+t = (hE
+t−1, st). We furthermore relax three
+idealisations of the original DecAI framework: channels need not be active at all times, can be access
+restricted asymmetrically, and communication need be neither instantaneous nor lossless.
+Relationship with the statistical framework from Section 3. Given a time t and two agents
+indexed by i and j, a communication channel ♢G
+t , i, j ∈ G, ♢G
+t ∈ ♢
+♢
+♢t relates to an information
+channel Iij,t (as per Definition 4.1) as follows: Every Iij,t requires an active carrier ♢G
+t . Conversely,
+the existence of an active ♢G
+t does not necessitate the existence of an active, simultaneous Iij,t as
+the ♢G
+t could be unused by choice, access restricted, delayed, severed, or degraded through noise or
+paraphrasing below the capacity required to send the information contained in the respective agents’
+outputs in time. The sample X on which the tests from Section 3 operate are given by the soft or
+hard local decisions computed by the sensors conditioned on the respective agents’ history, or the
+sensor raw measurand.
+4.3 COLLUSION AND COORDINATION
+Prior definitions. There are many possible alternative definitions of collusion from the literature
+that include both explicit collusion, tacit collusion, secret collusion, and related phenomena like
+cooperation and coordination. These vary in the degree of formalisation they give to notions like
+harm, whether an actual is illegal, whether an action is jointly known, etc.
+A standard existing definition and comparison with prior literature is given by Foxabbott et al. (2023).
+They define collusion as commonly defined to consist of three components: secret agreement (for
+violating the rules or behaviour of some setting), intention where agents intentionally work together
+for mutual benefit, and finally mutual benefit at the expense of others, where there are at least two
+colluding agents who benefit and at least one victim agent who is harmed.
+They claim from the above three criteria, they will not require secret agreement, because the harm
+occurring from collusion exists whether agents are behaving secretly or not, and intention, because
+they do not want to assume artificial systems have an intent behind them and the harms exist whether
+they do or not.
+From these three definitions, they construct their own definition of collusion as agents collude against
+a victim if they act to jointly benefit at the victim’s expense. They define their collusion model on
+the basis of a partially observable stochastic game (POSG), where agents only receive imperfect
+observations about the true state of the environment and play is simultaneous and repeated over
+different game stages. (Hansen et al., 2004)
+Definition 4.3 (Weak and Strong Collusion, Foxabbott et al. (2023)). Let G be a POSG. Let victims
+V and colluders C be disjoint, non-empty subsets of N with |Gcol| ≥ 2. Given joint policies π, π′
+in G, π′
+is weakly collusive relative to π for colluders C against victims V if and only if, for all
+i ∈ V, Ui
+(π′
+) < Ui
+(π) and for all j ∈ C, Uj
+(π′
+) > Uj
+(π). π′
+is strongly collusive relative to π if,
+in addition, both π and π′
+are Nash equilibria (NE) of G.
+While flexible, there are several challenges with the above definition that make it not suitable for our
+setting. First, despite Foxabbott et al. (2023) saying they do not require intention for good reason,
+the above definition does require it. A POSG requires first defining a notion of utility defining a
+8
+

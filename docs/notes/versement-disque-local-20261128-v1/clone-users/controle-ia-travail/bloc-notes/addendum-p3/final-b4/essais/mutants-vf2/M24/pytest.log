@@ -1,0 +1,21 @@
+F
+=================================== FAILURES ===================================
+__________________________ test_forme_de_la_commande ___________________________
+
+    def test_forme_de_la_commande():
+        cp.exiger_commande("20261020-130000-addendum-p3", cp.PREREG_ADDENDUM)
+        for run_add, prereg, motif in (("20261020-130000-autre", cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
+                                       ("addendum-p3", cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
+                                       ("20261020-130000-addendum-p3-bis", cp.PREREG_ADDENDUM,        # VF2-06
+                                        "garde 15 : run de .*addendum-p3"),
+                                       (None, cp.PREREG_ADDENDUM, "garde 15 : run de .*addendum-p3"),
+                                       ("20261020-130000-addendum-p3", cp.PREREG_P3, "garde 15 : préenregistrement .*attendu")):
+>           with pytest.raises(GardeArret, match=motif):
+E           Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:3193: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_forme_de_la_commande - Failed: DID NOT...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 4.77s
+

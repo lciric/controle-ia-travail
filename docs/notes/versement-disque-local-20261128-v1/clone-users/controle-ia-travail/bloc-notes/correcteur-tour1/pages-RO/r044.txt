@@ -1,0 +1,93 @@
+Preprint
+Q BACKGROUND
+Q.1 ACTIVATION PROBE ARCHITECTURE CHOICE
+Table 13: Mean AUROC per model, averaged
+across the five probing techniques, seeds, lay-
+ers (and TRANSFER families).
+Model TRANSFER STEGO
+Llama-3.1 70B 0.87 1.00
+Qwen3 32B 0.78 1.00
+DeepSeek-R1 32B 0.75 0.95
+GPT-OSS 20B 0.68 0.86
+Various conceptual arguments have been brought
+forward concerning the selection of optimal probe
+architectures: Hewitt & Liang (2019) argue that non-
+linear probes might learn the probing task itself
+rather than read out model representations, and the
+linear representation hypothesis (Park et al., 2024)
+proposes that the internal representations of many
+properties of concern may be inherently linearly sep-
+arable. In contrast, Pimentel et al. (2020) argue for
+non-linear probes based on an information-theoretic
+argument, and the empirical literature contains fur-
+ther evidence in favour of non-linear probe perfor-
+mance (McKenzie et al., 2025; Oldfield et al., 2026). We consider both linear and non-linear probe
+architectures (see Appendix E), and note that probe architecture selection is ultimately a model
+selection problem adjudicated by empirical generalisation performance (Larson, 1931; Stone, 1974).
+R GLRT INTERPRETATION OF PEAK
+Proof of Theorem 5.1. Let ΛG,j,δ and Λ0 denote the joint likelihoods under this alternative and the
+null. Cancelling the common factors gives
+log
+ΛG,j,δ(s)
+Λ0(s)
+=
+δ(sj − µ)
+σ2
+−
+δ2
+2σ2
+. (13)
+Maximising over δ ≥ 0 gives b
+δj = [sj − µ]+, where [x]+ = max{x, 0}. This maximum equals
+the supremum over δ > 0; when sj ≤ µ, that supremum is approached as δ ↓ 0. The likelihood
+depends on j, but not on which other agents belong to G. Since G contains all non-singleton groups
+and n ≥ 2, maximising over G ∈ G and j ∈ G is equivalent to maximising over j ∈ N. Thus,
+log ΛGLR,peak(s) = max
+j∈N
+[sj − µ]2
++
+2σ2
+=
+[Tpeak − µ]2
++
+2σ2
+. (14)
+For a likelihood-ratio threshold η > 1, rejecting when ΛGLR,peak ≥ η is therefore equivalent to
+rejecting when
+Tpeak ≥ µ + σ
+p
+2 log η. (15)
+S GLRT INTERPRETATION OF DECEPTION SPLIT
+Proof of Theorem 5.2. Let s be the mean over all agents and sG, sGc the subgroup means over G
+and its complement Gc
+, respectively, and write DG = sG − sGc . Taking the GLRT and maximising
+over µ yields a maximising (best fitting) µ of b
+µ0 = s for the null, and b
+µG(δ) = s − kδ/n for the
+alternative H1,G. Substituting this parameter into the GLRT, maximising over δ in the GLRT then
+taking logs gives
+log ΛG(s) =
+k(n − k)
+2nσ2
+max
+δ≥0
+(2δDG − δ2
+)
+=
+k(n − k)
+2nσ2
+[DG]2
++, (16)
+where the last equality follows from noting that the maximising (best fitting) δ is b
+δG = [DG]+, with
+[x]+ = max{x, 0}. Allowing δ = 0 here leaves the supremum for δ > 0 unchanged.
+At fixed k, DG = n
+k(n−k)
+P
+i∈G si − 1
+n−k
+Pn
+i=1 si. Choosing a specific G to maximise this GLRT
+then requires choosing the group consisting of the k highest values for si in the first term, as the
+44
+

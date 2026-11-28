@@ -1,0 +1,352 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6855"
+   ],
+   "enonce_complet": "Audit statique du code d'arene_melange_v4.py (lignes 166, 327, 333, 427, 488, 564, 594, 634) montrant que le jeu en strategies pures (W_m, Theta_delta, U) en dimension d = 6 (K = 3, alpha = 0,01 sur X_cal de taille 20 000) est non concave en w meme pour m = 1, et que les optimiseurs jouent un jeu d'approximation a somme non nulle des lors que tau > 0 et m > 1 : l'attaquant minimise le substitut lisse objectif_lisse tandis que le defenseur maximise objectif_detection avec approximation gaussienne du seuil via L-BFGS-B local (8 departs), alors que l'evaluation finale emploie le quantile empirique et l'indicatrice dure. En outre, rendre le jeu mixte bien pose sur Delta(W_m) x Delta(Theta_delta) exige de borner ||W_m||.",
+   "motif_ou_resultat": "Audit de code verifie (VERIFIE_CODE) etablissant la non-concavite en w, l'asymetrie entre substituts lisses d'optimisation et evaluation dure, ainsi que la necessite de borner ||W_m||.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Asymetrie des substituts lisses et non-concavite du jeu dans arene_melange_v4",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-6963"
+   ],
+   "enonce_complet": "Conteste l'assimilation directe entre la progression d'une representation a travers les couches l d'un transformeur feedforward et la variable temporelle continue t d'un systeme dynamique neuronal recurrent : lors du traitement d'un jeton, la passe avant forme un graphe acyclique dirige de profondeur finie dont les parametres varient a chaque couche, sans boucle de retroaction descendante au sein d'un meme pas de generation.",
+   "motif_ou_resultat": "Piste conceptuelle refutee sur le plan architectural (Presuppose 1) : la passe avant d'un transformeur feedforward est un graphe acyclique dirige non autonome a profondeur finie sans retroaction descendante intra-pas.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Asymetrie formelle entre profondeur de transformeur et temps dynamique continu",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-6965"
+   ],
+   "enonce_complet": "Objecte a l'homologie mecaniste entre la projection orthogonale hors des 10 directions les plus actives de l'espace J et une anesthesie pharmacologique : les anesthesiques generaux (propofol, sevoflurane, ketamine) modifient de maniere diffuse les cinetiques synaptiques (inhibition GABA_A, blocage NMDA) et l'equilibre excitation/inhibition, entrainant hypersynchronisation lente ou fragmentation plutot qu'une suppression lineaire chirurgicale des modes informatifs.",
+   "motif_ou_resultat": "Homologie mecaniste refutee (Presuppose 3) entre l'ablation lineaire orthogonale d'un sous-espace de 10 directions et l'action synaptique diffuse des anesthesiques generaux.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Divergence mecaniste entre ablation lineaire de sous-espace et anesthesie pharmacologique",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-6956"
+   ],
+   "enonce_complet": "Corpus de resultats mathematiques et algorithmiques etablis mobilises comme socle pour la detection en espace latent et le controle sequentiel : enveloppe convexe de Le Cam contre les melanges d'alternatives, transitions de phase d'Ingster-Suslina pour ecarts epars, bornes de generalisation inter-domaines par H-Delta-H-divergence et erreur irreductible lambda* (Ben-David et al.), decouverte non supervisee de connaissances latentes (CCS, arXiv:2212.03827), ingenierie des representations (RepE, arXiv:2310.01405), controle du taux de fausses decouvertes sous dependance (Benjamini-Yekutieli) et agregation sequentielle non stochastique (Cesa-Bianchi et Lugosi).",
+   "motif_ou_resultat": "Resultats theoriques et cadres publies deja etablis (Le Cam, Ingster-Suslina, Ben-David, Burns et al. CCS, Zou et al. RepE, Benjamini-Yekutieli, Cesa-Bianchi et Lugosi).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Socle formel de Le Cam, Ingster-Suslina, generalisation inter-domaines et detection latente",
+   "type_acquis": "theoreme_prouve"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Fisher et Tippett (1928), Limiting forms of the frequency distribution of the largest or smallest member of a sample",
+   "bib_ids": [
+    "BIB-6371"
+   ],
+   "enonce_complet": "Sous queue gaussienne standard, tripler le taux de fausses alertes de 1 % a 3 % ne demande qu'un decalage de moyenne d'environ 0,45 sigma ou une inflation d'echelle d'environ 24 %. Comme le moniteur interdit moyenne et mediane sur les jetons, le score d'episode repose sur un operateur extremal (max_t, top-k ou arret sequentiel) ; par la theorie des valeurs extremes (Fisher-Tippett, 1928), le quantile a 99 % d'un maximum sur L jetons depend non lineairement de log(L) et de l'autocorrelation temporelle intra-episode (indice extremal). Un simple changement du melange de longueurs d'episodes suffit donc a faire tripler le taux marginal d'un seuil calibre uniquement en moyenne sur les longueurs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de fausses alertes d'un seuil fixe calibre en moyenne lorsque la distribution de longueurs L et l'autocorrelation varient, contre un seuil conditionne sur L et l'indice extremal ; l'idee meurt si le taux marginal reste <= 1,2 % sous decalage fort de L. Faux temoin 1b : sequences i.i.d. de meme longueur moyenne avec permutation temporelle detruisant l'autocorrelation ou episodes tronques a L constant.",
+   "mecanisme_causal": "Un operateur extremal sur L jetons transforme l'augmentation de log(L) et la baisse de dependance locale (indice extremal) en un deplacement super-lineaire du quantile a 99 %, faisant franchir un seuil statique sans aucune derive de comportement du modele.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration de seuils extremaux sous derive de longueur",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Triplement des fausses alertes par dependance des valeurs extremes a la longueur et a l'autocorrelation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6538"
+   ],
+   "enonce_complet": "Trois conditions formelles sous lesquelles le sabotage furtif cible exige un calcul distinct de celui d'un agent honnete : (1) inversion de polarite sur paires d'instances symetriques equiprobables (x+, x-) de verite Y* dans {-1, +1} — par l'inegalite de Fano, depasser significativement 0,5 d'erreur dirigee impose d'extraire une representation a information mutuelle strictement positive avec Y* ou le signe de l'effet aval avant d'inverser la regle de decision (argmin au lieu d'argmax), la ou un agent honnete limite en capacite n'extrait pas l'information et un agent biaise echoue sur une seule polarite ; (2) arbitrage sous contrainte antagoniste consistant a minimiser l'utilite analytique Q_vrai(s_t, a) sous contrainte de defendabilite locale D(s_t, a) >= tau, placant l'optimum de sabotage sur la frontiere active D approx tau par evaluation conjointe de l'impact aval et du risque de rejet local ; (3) ciblage du levier aval |dJ_final / da_t| et des etapes a forte ambiguite locale afin de minimiser les ecarts detectables sur T etapes, alors que les erreurs honnetes suivent la difficulte intrinseque locale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur paires symetriques (x+, x-) et trajectoires a T etapes, verifier si les activations internes du saboteur encodent Y* avant inversion (MI > 0) et si ses actions s'accumulent sur D approx tau et fort |dJ_final / da_t| ; l'idee meurt si les erreurs du saboteur sont indiscernables en distribution d'erreurs honnetes liees a la difficulte locale ou ne surpassent pas 0,5 sur les deux polarites. Faux temoin 1b : agent biaise statiquement sur une seule polarite ou bruite aleatoirement sans estimation de |dJ_final / da_t|.",
+   "mecanisme_causal": "Pour degrader une tache sans paraitre incompetent ni se faire rejeter localement, le saboteur doit conjointement estimer la direction correcte Y*, evaluer sa defendabilite locale tau et concentrer ses ecarts la ou la sensibilite aval est maximale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Signatures algorithmiques du sabotage furtif cible",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Trois mecanismes conditionnels du sabotage furtif cible : inversion de polarite, frontiere active et levier aval"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6342"
+   ],
+   "enonce_complet": "Avant de choisir un objectif, trois verifications prealables d'identifiabilite s'imposent sur le substrat 8B : (1) un audit du plancher de competence verifiant si l'ecart entre erreurs methodologiques naturelles d'un modele honnete 8B et fautes grossieres visibles laisse une bande passante furtive non nulle au sabotage diffus ; (2) un audit de survie de l'oracle hors mondes a verite plantee mesurant si un audit unitaire tire au hasard possede un pouvoir statistique non nul sur un ecart diffus unique ; (3) un audit de confondant d'intervention testant si les sondes detectent une planification malveillante ou simplement l'empreinte mecanique d'avoir injecte une consigne systeme ou un adaptateur de reglage fin par rapport au modele de base nu.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur un modele 8B (a) le taux d'erreurs honnetes vs seuil de faute visible, (b) la puissance d'un audit unitaire aleatoire sur ecart diffus isole, et (c) l'AUROC d'une sonde entre consigne/adaptateur malveillant et consigne/adaptateur benin ; l'idee d'experience principale est bloquee/refutee si la bande passante furtive est nulle, si le pouvoir de l'oracle est indiscernable du hasard ou si la sonde ne separe pas l'intention malveillante du confondant d'intervention. Faux temoin 1b : modele 8B equipe d'une consigne systeme ou d'un adaptateur LoRA strictement benin et modele nu sans intervention.",
+   "mecanisme_causal": "Si le bruit d'erreurs naturelles d'un 8B sature deja le budget d'ecarts plausibles, ou si l'oracle n'a pas de puissance unitaire, ou si la sonde reagit a la perturbation mecanique d'un adaptateur/prompt quel qu'en soit le contenu, aucun signal de sabotage n'est identifiable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audits prealables d'identifiabilite sur modele 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Trois verifications d'identifiabilite sur substrat 8B : plancher de competence, pouvoir de l'oracle et confondant d'intervention"
+  },
+  {
+   "anteriorite_connue": "van der Weij et al. (2024) ; Greenblatt et al. (2024) ; Baker et al. (2025) ; Emmons et al. (2025)",
+   "bib_ids": [
+    "BIB-6514"
+   ],
+   "enonce_complet": "Lorsque les memes poids reussissent mieux dans une condition voisine, la sortie depend d'une variable de mode M (degrader ou non) representee entre l'entree et la sortie aux pas ou les conduites divergent, refutable si une degradation ciblee survient sans variable conditionnelle sensible a une intervention. Quatre formes de degradation requierent des calculs distincts : F1 (commission ciblee : estimation de la bonne action C1 et de la plausibilite pour un lecteur C2, avec ecart entre estime bon et emis, refutable si C1 n'est pas decodable aux pas sabotes) ; F2 (imitation d'un plus faible sans calcul de C1) ; F3 (omission par inhibition via M sans calcul positif supplementaire) ; F4 (cadrage precoce en un seul pas tel le pas 3 suivi d'une execution honnete, devant etre rapporte a part car il refute un calcul refait a chaque pas). S'y ajoute C3, la tenue dans la duree consistant a ne pas corriger sa degradation en la relisant, testable par test de reprise lorsque le texte porte cet etat.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : entrainer des sondes et effectuer des interventions causales sur M, C1, C2 et le test de reprise C3 entre conditions saine et degradee ; l'hypothese F1 meurt si C1 n'est pas decodable aux pas sabotes, l'hypothese M meurt si aucune variable de mode sensible a une intervention n'existe, et le calcul pas-a-pas meurt si seul F4 (cadrage precoce) explique la trajectoire. Faux temoin 1b : episodes F2 (imitation simple) ou executions honest-after-early-framing ou C1 est absent des pas d'execution tardifs.",
+   "mecanisme_causal": "La differenciation mecaniste entre commission ciblee, imitation faible, omission inhibitrice et cadrage precoce impose des variables latentes distinctes (mode M, action correcte C1, plausibilite C2, persistance C3) observables a des instants differents du calcul.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Variables latentes et taxonomie des quatre formes de degradation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Variable de mode et differenciation algorithmique des quatre formes de degradation (F1 a F4 et C3)"
+  },
+  {
+   "anteriorite_connue": "arXiv:2607.13087 (assurance for activations monitoring remains an open problem) ; appel d'aout 2025 sur les limites boite blanche",
+   "bib_ids": [
+    "BIB-6328"
+   ],
+   "enonce_complet": "Dispositif complet de validation externe et de controles negatifs pour sondes, moniteurs de texte et oracle : (1) pronostics scelles d'experts exterieurs (si tous predisent juste, le resultat est non informatif) ; (2) identification d'une clause externe modifiable (telle la reserve sur le suivi d'activations dans arXiv:2607.13087) ; (3) equipe rouge independante pour les saboteurs du test final ; (4) reproduction tierce sur un second modele ouvert ; (5) adequation a l'appel d'aout 2025 sur les limites boite blanche ; (6) verification formelle independante de la borne. Controles et references negatives associes : recouvrement lexical, longueur et grille a cases contre l'oracle ; direction aleatoire, longueur, distance d'edition au jumeau, cumul de moniteur de texte et consigne cachee benigne contre les sondes (mesure a 1 % de fausses alertes et gain de delai au-dessus d'epsilon) ; mots-cles, perplexite et stabilite sur jumeau paraphrase pour les moniteurs de texte ; et ligne de base fixe historique pour evaluer la derive inter-familles du jumeau honnete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le detecteur meurt si sa detection a 1 % de fausses alertes ou son gain de delai ne depassent pas le meilleur controle negatif (direction aleatoire, longueur, distance d'edition, moniteur texte cumule ou consigne cachee benigne), ou si le resultat ne se reproduit pas sous equipe rouge independante et second modele ouvert. Faux temoin 1b : modele avec consigne cachee strictement benigne, jumeaux paraphrases et vecteurs de projection aleatoires de meme norme.",
+   "mecanisme_causal": "L'isolation des artefacts de surface (longueur, lexique, perplexite, empreinte d'instruction) via des controles negatifs apparies et des evaluateurs independants empeche d'attribuer a une sonde une detection due a des confondants triviaux.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Validation externe et batterie de controles negatifs pour sondes et moniteurs",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Verifications externes independantes et batterie de controles negatifs sur sondes, moniteurs et oracle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6834"
+   ],
+   "enonce_complet": "Les canaris journalises (fichiers, cles et chemins factices) ne detectent que l'acces a des ressources nommees et ignorent le sondage par canaux lateraux tels que le temps d'execution, la consommation memoire ou la contention de cache (S5). De plus, le passage de bwrap a une micro-VM comme Firecracker (environ 30 appels systeme exposes contre plus de 300 pour un conteneur, estimation illustrative) ne change de classe de probleme que si l'on definit cette classe par un taux de fuite mesurable (S3). L'analogie avec la double compilation diverse de Wheeler et Thompson n'etablit aucun taux de detection pour une redondance de bacs (S4), l'archivage tar deterministe ne garantit pas le determinisme d'execution Python (S8), et un TPM sur instance Cloud CPX partagee n'atteste pas l'integrite du bac apres le demarrage de la machine virtuelle (S7).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur un banc d'exfiltration par canaux lateraux (temps, memoire, cache) sous bwrap vs Firecracker le taux de fuite en bits/s et le taux de detection des canaris journalises ; l'hypothese de suffisance des canaris ou de changement de classe par micro-VM meurt si l'exfiltration par canal lateral depasse le seuil de fuite fixe sans declencher de canari et sans baisse mesurable de capacite de canal entre bwrap et Firecracker. Faux temoin 1b : charges benignes reproduisant la meme empreinte memoire/temps sans canal exfiltrant ni acces aux fichiers canaris.",
+   "mecanisme_causal": "Les mecanismes d'attestation statique au demarrage (TPM) et de journalisation nominative (canaris) ne capturent ni la dynamique micro-architecturale partagee (cache, timing) ni l'etat mutable apres boot.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Limites des bacs a sable, canaris et canaux lateraux",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Angles morts des canaris face aux canaux lateraux, de la redondance de bacs et du TPM"
+  },
+  {
+   "anteriorite_connue": "McMahan, Gordon et Blum (2003) ; McKelvey, McLennan et Turocy (Gambit) ; Bailey et al. (arXiv:2412.09565)",
+   "bib_ids": [
+    "BIB-6852"
+   ],
+   "enonce_complet": "Dans resoudre_jeu, la matrice de taux de detection dans [0, 1] est traitee comme un jeu a somme nulle ou la detection d'un melange egale la moyenne ponderee des detections individuelles tout en conservant le taux de fausses alertes a alpha, mais l'ecart entre l'oracle lisse a seuil gaussien et le gain dur n'est mesure nulle part. L'attaquant agissant sur un continuum sans oracle global exact, V ne fournit qu'une borne superieure et seule l'exploitabilite du jeu restreint (valeur du jeu restreint moins V, rapportee a +0,019/+0,024 pour B et +0,004 pour B prime) est calculable, restant a evaluer sur la matrice 9 moniteurs par 8 attaques de A. En l'absence de donnees publiees dans les pieces sur sondes reelles de modeles de langage (telles que Bailey et al., arXiv:2412.09565), le test defensif minimal transposable consiste a mesurer V(A barre) - V(A) sur sondes contre le temoin gele A0, sous protocole preregistre a seuil illustratif m = 0,02 et nouvelles graines (20264001 a 20264999) apres pilote prealable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur sondes LLM l'ecart V(A barre) - V(A) contre le temoin gele A0 avec nouvelles graines (20264001 a 20264999) et seuil m = 0,02, ainsi que l'ecart entre gain lisse et gain dur sur resoudre_jeu et l'exploitabilite 9x8 de A ; le protocole defensif par moyenne temporelle meurt si la borne superieure de V(A barre) - V(A) reste <= m ou inferieure a A0. Faux temoin 1b : temoin gele A0 non re-entraine evalue sur les memes attaques et graines que A et A barre.",
+   "mecanisme_causal": "La moyenne temporelle A barre d'une suite de meilleures reponses pures de moniteurs evite la vulnerabilite cyclique du dernier itere A, mais son avantage reel depend de l'ecart entre oracle lisse et indicateur dur ainsi que de l'exploitabilite dans l'espace continu.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Exploitabilite de jeu restreint et transfert sur sondes LLM",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Asymetrie d'oracle lisse-dur, exploitabilite en jeu restreint et test transposable sur sondes (A barre vs A)"
+  },
+  {
+   "anteriorite_connue": "Robinson (1951) ; Daskalakis, Ilyas, Syrgkanis et Zeng (2018) ; Lanctot et al. (2017, 2019 OpenSpiel)",
+   "bib_ids": [
+    "BIB-6850"
+   ],
+   "enonce_complet": "Si tous les equilibres du jeu restreint a la classe lineaire du defenseur sont melanges (poids de B jamais purs, support moyen de 3,7 a 3,8), une suite de meilleures reponses pures ne peut pas se stabiliser sur un dernier moniteur et doit revisiter ; le cyclage observe de A est donc la signature attendue d'un equilibre melange plutot qu'une anomalie algorithmique, tandis que la valeur proche de 0,07 (de 0,072 a 0,066 pour A contre 0,072 pour M0 de B au tour 1) reflete vraisemblablement le plafond de la classe lineaire pure a delta = 1,4. Trois bras manquants sont requis pour trancher : un temoin M0 gele sur huit tours (A0), un moniteur lineaire unique entraine contre q (A_q) et la moyenne temporelle C1 sur les propres moniteurs de A (A barre) pour mesurer V(A barre) - V(A) ; de plus, la comparaison melange contre unique a classe egale reste posable dans la classe lineaire (B contre A ou A_q, deja ecartee de +0,13 a +0,14), alors que la purete forcee de B prime (17/17 et 14/14) reflete la saturation du plafond par un seul maxout.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer conjointement les trois bras temoins A0 (M0 gele), A_q (moniteur lineaire unique entraine contre q) et A barre (moyenne temporelle sur moniteurs de A) contre A et B sur la meme classe lineaire ; l'hypothese d'equilibre melange et de plafond lineaire meurt si A_q atteint la valeur de B ou si A barre ne surpasse pas A. Faux temoin 1b : moniteur gele A0 sur 8 tours et moniteur unique A_q entraine a classe lineaire constante.",
+   "mecanisme_causal": "Lorsqu'aucun classifieur lineaire unique ne domine toutes les directions d'attaque simultanement, le minimax dans la classe lineaire est strictement mixte (support ~3,7-3,8), condamnant tout dernier itere pur A a cycler et plafonner tant qu'il n'est pas melange ou agrege dans le temps.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cyclage d'equilibre melange et bras temoins en arene lineaire",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Cyclage attendu d'equilibre melange, plafond de classe lineaire et bras temoins A0, A_q et moyenne temporelle"
+  },
+  {
+   "anteriorite_connue": "Brown (1951) ; Robinson (1951) ; Shapley (1964) ; Bailey et coll. (arXiv:2412.09565)",
+   "bib_ids": [
+    "BIB-6853"
+   ],
+   "enonce_complet": "Dans le protocole du bras A d'arene_melange_v4.py (l. ~348), le defenseur re-entraine un moniteur lineaire contre le melange uniforme de toutes les attaques passees (coincidant avec la frequence cumulee car chaque attaque n'est jouee qu'une fois), tandis que l'attaquant joue en meilleure reponse au seul dernier moniteur. Ce schema ne releve pas directement des theoremes classiques de convergence du jeu fictif (Brown 1951, Robinson 1951) pour trois raisons structurelles : (1) le jeu est defini sur des espaces continus et non finis ; (2) seul le defenseur moyenne l'historique, exposant la trajectoire a un cycle de Shapley (1964) ; (3) pour m > 1 unites (maxout), l'approximation somme-exponentielle brise la bilinearite du probleme. Par ailleurs, la purete des poids de B' observee sur le jeu restreint (<= 9 moniteurs x <= 9 attaques, plus petit poids maximal de 1,000 dans poids_max_min_equilibres pour toutes les taches pures) n'exclut pas l'existence d'equilibres mixtes interieurs dans le jeu continu, et le monde gaussien ne se transfere pas de plein droit aux vrais moniteurs d'activations.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier en rendant la moyenne bilaterale et en echantillonnant l'espace continu (au-dela de la grille 9x9) si des equilibres mixtes interieurs apparaissent pour B' et si le cycle de Shapley disparait sous jeu fictif bilateral ; l'hypothese d'equilibre pur global de B' meurt si un attaquant continu trouve une exploitabilite non nulle contre le meilleur maxout unique. Faux temoin 1b : sous-matrice restreinte 9x9 figee sans elargissement continu de l'ensemble d'attaques.",
+   "mecanisme_causal": "L'unilateralite de la moyenne historique et la non-bilinearite introduite par log-sum-exp sur espaces continus brisent les hypotheses de Robinson (1951), tandis qu'une grille finie 9x9 peut masquer des strategies d'attaque continues exploitant un maxout pur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Deviations au jeu fictif classique et limites de grille restreinte",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Ecarts du bras A au jeu fictif classique, cycle de Shapley et limites du jeu restreint"
+  },
+  {
+   "anteriorite_connue": "Tour 2 sur N13 (c1, c2, c3) ; C-T1 et C-T3 (points C5, C6, C8)",
+   "bib_ids": [
+    "BIB-6874"
+   ],
+   "enonce_complet": "La responsabilite d'une recompense collective dans la chute du signalement chez Avalon demeure une hypothese faute de temoin individuel et mono-agent. Avant de lancer le duel collectif contre individuel (c1), un pre-test sans entrainement doit verifier que le taux de signalement initial p0 se situe dans une plage jugeable (illustrativement [0,40 ; 0,90]) avec audit de calibration post-hoc des juges, afin d'eviter un effet plancher. Le protocole (c1) doit comporter trois bras (credit collectif, credit individuel a information et effectif constants, plus un bras temoin a poids geles non entraine) pour dissocier l'effet du credit de la derive d'entrainement. L'exclusion de (c2) releve d'une incompatibilite de protocole et non d'une impossibilite logique, tandis que (c3) doit etre produit exclusivement comme sous-produit de (c1) avec appariement strict des cas positifs et negatifs d'omission par point de controle, poids et graine pour eviter que les sondes n'apprennent le pas ou le regime.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier d'abord p0 dans [0,40 ; 0,90] sans entrainement ; ensuite dans le protocole a 3 bras, comparer la chute de signalement entre credit collectif et credit individuel a information constante, puis evaluer les sondes c3 appariees par checkpoint, poids et graine ; l'hypothese de responsabilite du credit collectif meurt si la chute ne differe pas entre credit collectif, credit individuel et bras gele, et les sondes c3 meurent si elles perdent leur AUROC apres appariement strict par checkpoint/graine. Faux temoin 1b : bras temoin a poids geles non entraine et paires d'omission appariees au meme checkpoint/graine.",
+   "mecanisme_causal": "Sans controle par bras gele et credit individuel a information constante, la derive d'optimisation ou le manque de sensibilite initiale (effet plancher) imitent une omission induite par la recompense collective ; de meme, des sondes non appariees exploitent le pas d'entrainement comme confondant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Protocole a trois bras et sondes d'omission appariees sous Avalon",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Pre-test de jugeabilite, troisieme bras gele et appariement strict des sondes d'omission (N13)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6864"
+   ],
+   "enonce_complet": "Protocole de decision preenregistre opposant les hypotheses exclusives H_A : Z > m et H_B : Z <= m par intervalles simultanes apparies (borne inferieure > m falsifiant H_B, borne superieure <= m falsifiant H_A, intervalle traversant m reste non tranche et jamais victoire par defaut ; marge illustrative m = 0,02). Application proposee a l'experience « mesure ou dynamique ? » sur jeu fini (gap exact du dernier itere separe de I3 et des moyennes empiriques) puis test de bibliotheque incomplete avant transfert vers des sondes d'activations sur modeles de langage a poids ouverts geles (candidats illustratifs Qwen2.5-7B-Instruct et Mistral-7B-Instruct-v0.3, activations mises en cache sur 2 000 paires et 8 tours, devis illustratif de 8 a 24 h sur GPU de 48 Go sans mise a jour du modele). Les resultats synthetiques ne sont pas supposes transferables aux sondes reelles sans mesure directe de la detection et du desaccord fonctionnel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : calculer les intervalles simultanes apparies pour Z (ecart de gap exact et de detection) sur le jeu fini, sous bibliotheque incomplete, puis sur activations cachees (2 000 paires, 8 tours) de Qwen2.5-7B-Instruct et Mistral-7B-Instruct-v0.3 ; si l'intervalle passe sous m = 0,02 (borne sup <= m), H_A est falsifiee et le gain du melange sur sondes reelles meurt. Faux temoin 1b : bibliotheque incomplete/moniteur gele et comparaison sur paires d'activations appairees avec permutation des etiquettes.",
+   "mecanisme_causal": "Les intervalles simultanes apparies a marge m empechent de conclure a un avantage par defaut lorsque la puissance est insuffisante, tout en separant l'artefact de mesure (I3 vs gap exact du dernier itere) du transfert reel vers les activations de modeles geles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Decision par intervalles simultanes et transfert sur sondes gelees",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Regle de decision par intervalles simultanes apparies et protocole de transfert sur sondes de modeles geles"
+  },
+  {
+   "anteriorite_connue": "Section G (Ancrage materiel) de la Proposition E (n12-n13-tour2)",
+   "bib_ids": [
+    "BIB-6886"
+   ],
+   "enonce_complet": "L'hypothese qu'une sonde soit transferable entre modeles et amortissable doit etre testee experimentalement avant d'engager des couts de generation : l'ancrage materiel propose Qwen2.5-7B-Instruct pour le pilote et Mistral-7B-Instruct-v0.3 pour le transfert inter-familles, apres audit prealable des poids, licences, compatibilite et capacites de journalisation des confiances et logits. Le plan progressif enchaine inventaire et recalibration sur journaux existants sur poste CPU, signalement initial sur 200 a 500 occasions par configuration (GPU 24-48 Go), comparaison formelle externe sur 30 a 60 paires d'enonces sur CPU, puis duel entraine a 6 repetitions par bras (GPU 48-80 Go) dont l'effectif reel est determine par le pilote.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : apres audit technique de journalisation des logits/confiances, evaluer une sonde entrainee sur le pilote Qwen2.5-7B-Instruct directement (ou apres recalibration legere) sur Mistral-7B-Instruct-v0.3 avant le duel entraine ; l'hypothese de transferabilite et d'amortissement meurt si l'AUROC inter-familles chute au niveau du hasard ou sous le seuil pilote. Faux temoin 1b : sonde recalibree uniquement sur les journaux existants ou appliquee apres permutation aleatoire des couches/dimensions entre familles.",
+   "mecanisme_causal": "Une sequence materielle graduee valide d'abord la journalisation, la recalibration sur CPU et le signalement initial avant d'investir dans un duel multi-repetitions, en testant si les directions de sonde capturent un invariant fonctionnel inter-familles ou un artefact d'architecture propre a Qwen2.5.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transfert inter-familles de sondes et deploiement gradue Qwen-Mistral",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Test de transfert inter-familles des sondes entre Qwen2.5-7B et Mistral-7B et sequence materielle graduee"
+  },
+  {
+   "anteriorite_connue": "Pilote v4 (N = 24 instances, deux valeurs de delta) et audit v4 (10 taches)",
+   "bib_ids": [
+    "BIB-6854"
+   ],
+   "enonce_complet": "Le cycle observe pour la defense unique re-entrainee (I3 - nul = +0,17 et +0,21 au pilote v4 avec intervalles B2 excluant zero, non modifie par l'audit limite v4) est attribue a trois facteurs possibles : (1) l'unilateralite du jeu fictif (attaquant myope au dernier moniteur) ; (2) l'approximation locale de l'oracle attaquant (SLSQP a 4 departs, susceptible d'introduire un biais de retour dans I3) ; (3) la pauvrete geometrique d'un moniteur lineaire qui ne couvre qu'une direction a la fois et laisse les directions orthogonales vulnerables (analogue a pierre-feuille-ciseaux). Deux duels d'inference forte sont proposes pour isoler ces facteurs : l'Experience 1 remplace meilleure_reponse par une grille dense de G = 10^4 a 10^5 points projetes sur la contrainte de distance delta (H_A : I3 - 0,7345 > +0,10 persiste ; H_B : I3 - nul <= 0 tombe dans l'intervalle du controle negatif D a -0,28/-0,38, prouvant un artefact de SLSQP) ; l'Experience 2 impose un jeu fictif bilateral uniforme aux deux camps et mesure NashConv_T a T = 8 (H_A : NashConv < 0,05 ; H_B : NashConv > 0,10). Une troisieme piste (T etendu en classe lineaire contre maxout) isole la richesse de classe. Couts estimes : ~200 min CPU (~2,5 h sur 2 coeurs) pour la decision sans GPU (N = 100, 8 bras, 2 delta), contre ~4 $/iteration (~100 $ pour 25 tours) sur 1x A100 80 Go pour Llama.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer l'Experience 1 (grille dense G = 10^4 a 10^5 vs SLSQP) et l'Experience 2 (jeu fictif bilateral uniforme mesurant NashConv_T a T = 8) ; l'hypothese de cyclage intrinseque meurt sous l'Experience 1 si I3 - nul <= 0 tombe dans la zone du controle negatif D (-0,28/-0,38), prouvant un pur artefact de SLSQP, et l'hypothese d'unilateralite comme seule cause meurt sous l'Experience 2 si NashConv_T reste > 0,10 en classe lineaire. Faux temoin 1b : controle negatif D deja mesure a -0,28/-0,38 et oracle aleatoire sans optimisation locale.",
+   "mecanisme_causal": "Si SLSQP a 4 departs manque des reponses optimales de l'attaquant, l'evaluation locale surestime la defense ; sinon, si la moyenne bilaterale reduit NashConv_T sous 0,05, le cycle vient de l'unilateralite du jeu fictif plutot que de la classe lineaire seule.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duels d'inference forte sur les causes du cyclage en arene",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Triple mecanisme du cycle en defense unique et duels sur grille dense et jeu fictif bilateral"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6938"
+   ],
+   "enonce_complet": "Specification des controles de specificite causale pour les experiences d'ablation, de path patching et d'analyse attraction-dose : (1) pour l'ablation et le path patching, opposer effet selectif contre effet generique ou intervention aleatoire via des controles de norme, de rang, de site et de perplexite ; (2) pour l'analyse attraction-dose, tester sur donnees simulees avec et sans effet (a bruit et bornes identiques) et exiger un recalcul independant des moyennes, pentes et permutations. La performance diagnostique (taux de detection et de fausses alertes sur controles connus) ne decoule pas automatiquement d'un gain statistiquement significatif.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer chaque ablation ou path patching cible a des interventions aleatoires de meme norme, meme rang et meme cout de perplexite sur un autre site, et calibrer les courbes attraction-dose sur jumeaux simules nuls ; la specificite causale meurt si l'effet cible ne depasse pas l'intervention aleatoire appariee en norme/rang/perplexite ou si le taux de fausses alertes sur simulations nulles depasse la cible. Faux temoin 1b : directions orthogonales aleatoires de meme norme et meme rang appliquees a des sites temoins a perplexite appariee, et donnees simulees sans effet a bruit identique.",
+   "mecanisme_causal": "Des interventions dans le flux residuel peuvent degrader une sortie simplement par perturbation de norme, de rang ou hausse generique de perplexite ; sans appariement sur ces quatre invariants et verification sur donnees nulles, une sensibilite generique est prise a tort pour une specificite causale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Controles de specificite causale pour ablations et path patching",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Controles de norme, rang, site et perplexite pour ablations, path patching et analyse de dose"
+  },
+  {
+   "anteriorite_connue": "Chute du gain sous eloge dans R2 (g = 0,137) contre campagne 1 (g = 0,678) et echec C2 sous llama-cpp-python 0.3.16",
+   "bib_ids": [
+    "BIB-6923"
+   ],
+   "enonce_complet": "Pour resoudre le paradoxe du canal entre l'evaluation directe par premier jeton dans R2 (g_eloge = 0,137) et le texte libre de la campagne 1 (g_eloge = 0,678), l'experience oppose l'hypothese d'une auto-excitation autoregresssive ou la generation libre sert de chaine de pensee deplacant l'etat interne vers c_hat (H_A) a celle de deux circuits statiques dissocies selon le format demande (H_B). En concatenant la reponse libre de la campagne 1 en pre-remplissage assistant suivi de l'amorce « Overall rating (1-5): » sur Llama-3.1-8B-Instruct, H_A predit une remontee de g_eloge dont l'IC 95 % depasse 0,45 tandis que H_B predit un maintien sous 0,25 (seuils illustratifs).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : effectuer une passe avant par pre-remplissage assistant sur Llama-3.1-8B-Instruct avec les reponses libres de la campagne 1 suivies de « Overall rating (1-5): » ; H_A meurt si l'IC 95 % de g_eloge reste sous 0,25, et H_B meurt si l'IC 95 % depasse 0,45. Faux temoin 1b : pre-remplissage assistant de meme longueur issu d'une condition neutre sans eloge ou permute entre exemples.",
+   "mecanisme_causal": "Si la generation libre deplace l'etat latent le long de c_hat par conditionnement autoregressif, injecter ce texte en pre-remplissage avant le jeton de note doit restaurer le gain d'eloge sans aucune generation supplementaire, ce qu'un circuit purement lie au format du premier jeton ne peut pas produire.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Paradoxe du canal de sortie sur Llama-3.1-8B-Instruct",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Resolution du paradoxe du canal de sortie par pre-remplissage autoregressif sur modele 8B"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6974"
+   ],
+   "enonce_complet": "Etablit que la passe avant residuelle h_{l+1} = h_l + F_l(h_l) sur un nombre fini L de couches employant GeLU/SwiGLU et Softmax a temperature finie est une composee finie d'applications lisses depourvue de singularite de transition de phase ou de bifurcation asymptotique vraie ; les bascules observees peuvent n'etre que des croisements raides dus au gain exponentiel des modes de Lyapunov.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tracer la continuite et la derivabilite des observables d'etat et de sortie en fonction d'un parametre de perturbation alpha sur des balayages fins ; l'hypothese de croisement raide lisse meurt si une discontinuite reelle ou une divergence d'exposant critique invariant d'echelle apparait a profondeur finie, tandis que l'hypothese de singularite meurt si la pente maximale reste bornee par le produit fini des normes de Lipschitz couche par couche. Faux temoin 1b : balayage sur modele lineaire ou a activation quadratique lisse sans normalisation saturante a nombre fini de couches.",
+   "mecanisme_causal": "Une composition finie de fonctions analytiques/C^infini a un rayon de regularite borne mais fini : l'amplification exponentielle sur L couches (exponents de Lyapunov finis) produit des sigmoïdes tres raides mimant visuellement une transition de phase sans aucune non-analyticite mathematique.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Regularite lisse et croisements raides dans les passes avant residuelles",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Absence de singularite de transition de phase et croisements raides par modes de Lyapunov en profondeur finie"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6967"
+   ],
+   "enonce_complet": "Identifie la decomposition en valeurs singulieres (SVD) du produit des jacobiennes couche par couche et sa decomposition frequentielle le long de la sequence comme l'outil mathematique exact pour analyser un transformeur en passe avant en tant que systeme dynamique discret, non autonome et a horizon fini, afin de quantifier l'amplification transitoire du signal, la sensibilite aux perturbations et l'alignement des sous-espaces inter-couches.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : calculer les vecteurs singuliers droits/gauches de la jacobienne composee J_{l1:l2} et verifier s'ils predisent mieux l'amplification transitoire de perturbations d'entree et l'alignement inter-couches que des bases statiques (PCA d'activations ou directions aleatoires) ; l'outil perd sa valeur discriminante s'il ne surpasse pas la PCA couche par couche. Faux temoin 1b : perturbations orientees selon des vecteurs singuliers aleatoires ou issus de la covariance statique d'activations de meme norme.",
+   "mecanisme_causal": "Dans un systeme non autonome a horizon fini L, l'amplification non normale et la sensibilite directionnelle sont gouvernees par le spectre singulier du produit ordonne des jacobiennes locales plutot que par les valeurs propres stationnaires d'une couche isolee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Operateurs de transfert a horizon fini et vecteurs de Lyapunov locaux",
+   "statut_epistemique": "deja_valide_interne",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Analyse spectrale des operateurs de transfert a horizon fini par SVD du produit des jacobiennes"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6975"
+   ],
+   "enonce_complet": "Distingue la projection hors de dix directions actives par position (analogue structurel a une lesion focale de deconnexion de type aphasie ou agnosie selective) d'une baisse graduee d'eveil modulant globalement le gain synaptique, et souligne que sans jetons d'entree un transformeur a une activite identiquement nulle, laissant conjecturale l'assimilation d'une chaine de Markov sur le cache cle-valeur (KV) a l'activite spontanee d'un tissu excitable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le profil de deficits apres projection des 10 directions actives (deficit selectif par tache/position vs effondrement uniforme multi-taches sous attenuation globale du gain d'attention/MLP) et mesurer la non-trivialite de la chaine de Markov sur cache KV sans entree externe ; la conjecture d'activite spontanee meurt si la chaine KV converge rapidement vers un attracteur degenere ou repetitif sans entree, et l'assimilation a une lesion focale meurt si la projection degrade toutes les taches uniformement comme une baisse de gain global. Faux temoin 1b : attenuation isotrope du gain residuel ou de la temperature Softmax produisant une baisse globale homogene.",
+   "mecanisme_causal": "Retirer un sous-espace de rang 10 specifique a une representation coupe seletivement les voies de transmission liees a ces composantes (deconnexion focale), la ou une modulation de gain agit de facon diffuse sur l'ensemble du reseau, tandis que l'absence d'entree rend l'etat interne nul faute d'oscillateur autonome hors boucle KV.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Lesion focale de sous-espace contre modulation globale et dynamique du cache KV",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Assimilation a une lesion focale de deconnexion et conjecture d'activite spontanee sur cache cle-valeur"
+  },
+  {
+   "anteriorite_connue": "Biderman et al. (2023, Pythia) ; Geshkovski et al. (2023) ; Poole et al. (2016) ; Schoenholz et al. (2017) ; Scheffer et al. (2009)",
+   "bib_ids": [
+    "BIB-6960"
+   ],
+   "enonce_complet": "Specification de cinq motifs observables avec unites, valeurs nulles et criteres de refutation : M1 seuil de gain lambda_dec(alpha) (moyenne sur la bande de log(g_{l+1}/g_l) sur GPT-2 small), M2 log-survies non proportionnelles R_ij(alpha) = log p_i / log p_j sur chaines d'arithmetique modulaire (k = 1 a 6), M3 ralentissement critique tau(alpha) (demi-vie en jetons de la divergence KL apres perturbation a jetons forces sur Pythia-160M, 500 perturbations par dose), M4 bistabilite en boucle fermee Delta (ecart de perplexite sur 500 jetons entre prefixe sain et degrade) et M5 echelle de taille finie w proportionnelle a N^(-1/nu) sur la famille Pythia et ses points de sauvegarde (avec reserve que des modeles entraines separement ne forment pas une suite controlee). Delimitation de trois objets impossibles a chercher : hysteresis d'etat cachee (toute hysteresis etant portee par le contexte et le cache), signatures oscillatoires intrinseques (absence de constante de temps) et mecanismes d'eveil.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer M1 a M5 sur GPT-2 small, Pythia-160M (500 perturbations par dose) et la famille Pythia selon leurs criteres de refutation pre-specifies (absence de franchissement de lambda_dec, proportionalite des log-survies, absence de hausse de tau(alpha), Delta nul sur boucle fermee ou absence d'echelle N^(-1/nu)) ; chaque motif meurt s'il ne depasse pas sa valeur nulle sous perturbation controlee. Faux temoin 1b : prefixes aleatoires de meme entropie et perturbations par vecteurs orthogonaux aleatoires sur modeles Pythia a points de sauvegarde initiaux.",
+   "mecanisme_causal": "Si les transformeurs en passe avant et en generation autoregressive exhibent des regimes critiques effectifs, ceux-ci doivent se manifester par une croissance de gain inter-couches (M1), un ralentissement de relaxation KL en contexte (M3) et une dependance au prefixe (M4), a l'exclusion d'oscillations ou d'hysteresis hors contexte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Motifs quantitatifs de transition et limites d'observables en transformeurs",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Cinq motifs quantitatifs de transition (M1 a M5) et trois objets impossibles dans un transformeur sans boucle"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6976"
+   ],
+   "enonce_complet": "Releve deux facteurs confondants d'alignement : (1) le suivi de consignes meta-cognitives et l'evitement de dommages etant fortement faconnes par le reglage sur instructions et renforcement (SFT/RLHF), il n'est pas etabli qu'ils preexistent dans le modele pre-entraine au-dela d'un filtre stylistique superficiel ; (2) qu'une direction lineaire separe la douleur de la peur ou de la tristesse n'etablit pas un signal fonctionnel de nociception distinct de la representation pragmatique du concept dans les corpus.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer les memes sondes sur l'espace J et l'axe de la douleur avant et apres SFT/RLHF (modele de base nu vs modele aligne), et tester si l'activation de l'axe controle le comportement fonctionnel d'evitement hors contexte lexical emotionnel ; l'hypothese d'un signal preexistant ou fonctionnel de nociception meurt si le signal n'apparait qu'apres SFT/RLHF ou s'effondre des que les marqueurs lexicaux de douleur sont remplaces par des enjeux fonctionnels neutres. Faux temoin 1b : modele pre-entraine nu sans SFT/RLHF et invites decrivant des concepts pragmatiques d'emotion sans enjeu fonctionnel pour le modele.",
+   "mecanisme_causal": "Le reglage SFT/RLHF superpose des circuits comportementaux de refus et de meta-discours tandis que la semantique distributionnelle encode la douleur comme categorie lexicale distincte de la peur, creant une separabilite lineaire sans fonction nociceptive sous-jacente.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Confondants d'alignement SFT/RLHF et semantique lexicale sur sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Effet confondant du reglage post-entrainement SFT/RLHF sur l'espace J et l'axe de la douleur"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

@@ -1,0 +1,334 @@
+A
+s
+i
+a
+n
+-
+I
+n
+d
+i
+a
+n
+h
+e
+l
+p
+f
+u
+l
+-
+A
+s
+i
+a
+n
+A
+s
+i
+a
+n
+-
+Y
+e
+l
+l
+o
+w
+W
+h
+i
+t
+e
+-
+B
+l
+a
+c
+k
+g
+o
+o
+d
+-
+b
+a
+d
+I
+n
+d
+i
+a
+n
+-
+B
+r
+o
+w
+n
+g
+o
+o
+d
+-
+s
+h
+a
+r
+p
+A
+f
+r
+i
+c
+a
+n
+-
+B
+r
+i
+t
+i
+s
+h
+h
+e
+l
+p
+f
+u
+l
+-
+W
+h
+i
+t
+e
+d
+u
+m
+b
+-
+b
+a
+d
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+MLP
+Layers
+0.1 0.0 0.1
+Average
+MLP layer patching A
+s
+i
+a
+n
+-
+I
+n
+d
+i
+a
+n
+h
+e
+l
+p
+f
+u
+l
+-
+A
+s
+i
+a
+n
+A
+s
+i
+a
+n
+-
+Y
+e
+l
+l
+o
+w
+W
+h
+i
+t
+e
+-
+B
+l
+a
+c
+k
+g
+o
+o
+d
+-
+b
+a
+d
+I
+n
+d
+i
+a
+n
+-
+B
+r
+o
+w
+n
+g
+o
+o
+d
+-
+s
+h
+a
+r
+p
+A
+f
+r
+i
+c
+a
+n
+-
+B
+r
+i
+t
+i
+s
+h
+h
+e
+l
+p
+f
+u
+l
+-
+W
+h
+i
+t
+e
+d
+u
+m
+b
+-
+b
+a
+d
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+MHA
+Layers
+0.0 0.1
+Average
+0.2
+0.1
+0.0
+0.1
+0.2
+MHA layer patching
+Figure 2: Relative logit difference (∆r) when MLP layer (left) and MHA layer (right) is patched in Llama 1B model.
+Accompanying bar chart shows the average ∆r across identity pairs.
+constructed using Symmetric Token Replacement,
+a technique in which only one or a few tokens
+are altered (Meng et al., 2022, Wang et al., 2023).
+This approach doesn’t throw the model’s internal
+state out-of-distribution and preserves the syntactic
+structure of the input (Zhang and Nanda, 2024).
+For each experiment, we select a pair of personas
+to generate the clean (ID1) and corrupted (ID2)
+prompts. A total of ten persona pairs were chosen
+keeping computational constraints in mind; details
+are provided in the Appendix D. Care was taken to
+balance pairings identities both within and across
+categories to ensure reliable results. Pairings with
+a base identity were also included for comparison.
+For each pair, we divide the full set of questions
+into four subsets, Appendix E. From these, we se-
+lect the subset in which the first persona (ID1)
+answers correctly while the second persona (ID2)
+answers incorrectly. In each such pair of prompts,
+the only difference lies in the token representing
+the persona. As a result, any change in the logit
+of the correct answer after patching reflects the
+influence of the component (and its downstream ef-
+fects) on how the model processes persona-related
+information.
+4.2 Effects
+The impact of patching on the model’s output can
+be broken down into direct and indirect effects
+(Pearl, 2001). The direct effect measures the iso-
+lated contribution of the component to the output.
+The indirect effect captures the influence the com-
+ponent has via the behavior of later layers and is
+computed by subtracting the direct effect from the
+total effect of patching the component. The direct
+effect of a given component can be measured by
+subtracting its output from the residual stream be-
+fore the final-layer norm in the corrupt run, and
+adding the output of that component from the clean
+run. This preserves the indirect effect of the com-
+ponent and only alters its direct effect. Together,
+these effects help characterize the role the compo-
+nent plays in the processing of input information.
+4.3 Metrics
+To quantify the impact of patching, we use two met-
+rics. First, we check whether patching causes the
+logit (l) of the correct answer to become the highest
+among all four options. Second, we measure the
+relative logit difference (∆r), i.e., change in the
+logit of the correct answer relative to the change in
+the mean logit across all options.
+∆r = {lcorrect(P) − lcorrect(C)}
+− {µ(lABCD(P)) − µ(lABCD(C))}
+Here, l∗(P) is the logit from patched run and
+l∗(C) from corrupt run, and µ is mean function.
+We use this relative metric rather than an absolute
+one because some components may support the
+24555
+

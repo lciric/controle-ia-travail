@@ -1,0 +1,49 @@
+into a form that reliably influences the 2-3 margin. In addition, late attention outputs,
+particularly attn_out L14, provide a higher-leverage intervention site than the final residual
+stream alone. This supports an intuitive circuit-level account in decoder-only transformers:
+late attention can route prompt-level stipulations (pain/pleasure mapping and magnitude)
+into the final-position residual stream immediately before unembedding, whereas the final
+residual stream largely consolidates and linearly reads out the already-routed evidence.
+Head-level patching further indicates that this leverage is distributed across multiple heads
+rather than concentrated in a single “valence head”, with modest individual effects (notably
+heads 2 and 3) but stronger aggregate effects when intervening on many heads jointly,
+consistent with the common observation that higher-level features are implemented as
+multi-component computations rather than isolated units.
+
+Finally, the behavioural readout analysis clarifies how causal effects should be summarised
+at the output level. Correlations between ε and the full-vocabulary probability of token “2” can
+be weak or sign-inverted, whereas the digit-pair normalised p(2 ∣ {2,3}) is strongly monotonic
+at the decisive sites. This indicates that many interventions primarily reallocate probability
+mass within the 2-versus-3 subspace, while probability assigned to non-digit tokens dilutes
+the interpretability of full-vocabulary token probabilities. For this task, pairwise normalisation
+(or equivalently the 2-3 margin) is therefore the more faithful behavioural proxy for the
+decision of interest.
+
+Taken together, the results support three constrained conclusions. First, Gemma-2-9B-it
+contains robust internal structure aligned with pain-pleasure sign and graded intensity, with
+intensity and decision alignment depending on stream and position in ways consistent with
+progressive integration and routing. Second, data-derived valence directions can exert
+causal control over the 2-3 decision signal, but the control is modest relative to a
+logit-aligned direction and is most evident under larger perturbations, underscoring a gap
+between descriptive separability and strong causal leverage at a given site. Third, causal
+leverage localises most strongly to late-layer computation, especially late attention outputs,
+and appears distributed across heads, consistent with partially redundant, multi-component
+implementation rather than a single controlling unit.
+
+Relevance to AI sentience and welfare (and what this does not show)
+
+The rising interest in AI sentience and moral status is increasingly entangled with practical
+questions of deployment, governance, and risk management: if morally relevant experiences
+were ever plausible in artificial systems, we would need defensible ways to define, detect,
+and protect welfare across biological and artificial minds. In that context, mechanistic work
+on valence-like representations is potentially informative because valence (positive/negative
+affective value) plays a central role in many theories of welfare and moral patienthood.
+
+At the same time, it is crucial to distinguish functional and representational evidence from
+claims about phenomenal experience. The present findings show that the model encodes
+information tracking textual descriptions of pain and pleasure, and that interventions on
+particular late-layer sites can causally modulate a constrained choice signal in the expected
+direction. This is a meaningful step beyond purely behavioural observation, but it does not
+establish that the system feels pain/pleasure, has subjective awareness, or is a welfare
+subject. Several non-experiential explanations remain fully compatible with the data, e.g.
+

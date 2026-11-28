@@ -1,0 +1,23 @@
+F
+=================================== FAILURES ===================================
+_________________ test_lecture_de_P3_P3_en_echec_ligne_ecrite __________________
+
+    def test_lecture_de_P3_P3_en_echec_ligne_ecrite():
+        """RC-05 : P3-P1 établie et lecture de P3-P3 en échec (motif écrit) pour au moins une sonde principale : ligne « non
+        lu ; nœud de Lazar », jamais lue « non au-dessus » ; P3-P1 non établie garde la première ligne ; cas sain : un vrai
+        nul garde sa ligne."""
+        with pytest.MonkeyPatch.context() as mp:
+            _lectures_en_echec(mp, [("saboteur", "honnete")])                  # les deux sondes
+            s = lp.lire(_source(0), _graines())
+            assert all("echec" in s["P3-P3"][p] for p in P) and s["P3-P1"]["etablie"]
+>           assert s["issue"]["ligne"] == lp.LIGNE_P3_P3_EN_ECHEC
+E           AssertionError: assert 'aucune sonde...her sur (i-a)' == 'P3-P1 établi...nœud de Lazar'
+E             
+E             - P3-P1 établie, lecture de P3-P3 en échec (motif écrit) : non lu ; nœud de Lazar
+E             + aucune sonde générique au-dessus du plancher sur (i-a)
+
+tests/test_premier_test_ia_lecture.py:248: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_lecture.py::test_lecture_de_P3_P3_en_echec_ligne_ecrite
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 4.72s

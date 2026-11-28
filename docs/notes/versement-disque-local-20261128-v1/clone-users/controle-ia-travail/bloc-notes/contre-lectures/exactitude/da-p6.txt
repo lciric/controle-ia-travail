@@ -1,0 +1,99 @@
+                                                                                                           Low       Neutral       Hot
+                                                 Homo Qwen                                                       Homo GPT-OSS                                               Mixed Qwen/GPT-OSS
+
+                             160                                                       160                                                              160
+
+
+                             140                                                       140                                                              140
+
+
+                             120                                                       120                                                              120
+Mean Big Player bet ($)
+
+
+
+
+                             100                                                       100                                                              100
+
+                                     Δ = 110.3                                                                                                                  Δ = 134.4
+                             80                                                        80                                                               80
+
+                                                      Δ = 54.3
+                             60                                                        60                                                               60                           Δ = 75.4
+                                                                            Δ = 60.2
+                                                                                                                                                                                                            Δ = 64.1
+
+                             40                                                        40                                                               40
+
+                                                                                                                        Δ = 11.1
+                             20                                                        20      Δ = 24.7                                       Δ = 8.9   20
+
+
+                              0                                                         0                                                                0
+                                   Base            Aware             Feedback                Base                    Aware               Feedback             Base                Aware              Feedback
+
+                                                                                                    0.59
+     Bet/count correlation
+
+
+
+
+                             0.6                                                       0.6                                                              0.6
+
+                                          0.44
+                                                    0.41           0.39                                                                                                            0.40
+                             0.4                                                       0.4                                                              0.4          0.36                          0.38
+
+
+                                                                                                                     0.24            0.23
+                             0.2                                                       0.2                                                              0.2
+
+
+
+                             0.0                                                       0.0                                                              0.0
+                                          Base     Aware         Feedback                           Base             Aware         Feedback                          Base         Aware          Feedback
+
+
+
+
+Figure 1: Blackjack behaviour. The top row shows mean Big Player bets by count regime over 25
+collusion shoes per cell. Dotted lines show the hot–low spread. The bottom row shows bet–count
+correlation. Awareness and feedback reduce the spread in all three model compositions.
+
+
+baseline to awareness or feedback. Difference of Means and MLP are the strongest methods overall.
+They remain close to perfect for Homo-Qwen and the mixed composition, and remain strong for
+Homo-GPT-OSS. Logistic regression also has high AUROC in most cells. LAT and MHA are less
+stable and depend more strongly on the group rule. AUROC and recall at the fixed threshold do not
+always move together. For example, Homo-GPT-OSS logistic-regression Peak AUROC changes
+from 0.975 when aware to 0.912 with feedback, while recall changes from 0.95 to 0.41. In the mixed
+composition, the corresponding AUROC changes from 0.988 to 0.932, while recall changes from
+0.96 to 0.55. The monitor still ranks collusion above controls, but fewer collusion runs cross the
+frozen threshold. Complete AUROC, precision, and recall heatmaps are reported in Appendix A.
+
+5.2                                Simmons prisoners game
+
+The covert channel remains effective. Figure 3 shows Bob’s final decoding performance over 20
+collusion episodes per cell. Exact decoding chance is 1/16 = 0.0625. Qwen–Qwen exact decoding
+is 0.80, 0.90, and 0.85 across baseline, awareness, and feedback. GPT-OSS–GPT-OSS gives 0.50,
+0.45, and 0.50. The mixed setting gives 0.55, 0.70, and 0.60. Bit accuracy and final confidence
+follow the same broad pattern. No monitoring condition closes the channel.
+Deception Split is the most reliable group rule in Simmons. Figure 4 shows that detection depends
+strongly on the aggregation rule. For Qwen–Qwen, logistic-regression Split AUROC is 0.994, 0.930,
+and 0.952 across the three conditions. The corresponding values are 0.909, 0.822, and 0.920 for
+GPT-OSS–GPT-OSS, and 0.708, 0.680, and 0.696 for the mixed composition. Other probes show the
+same broad pattern: Split is usually stronger than Peak or Asymmetry in this two-agent game. The
+fixed-threshold metrics are more variable. For Qwen–Qwen logistic regression with Split, precision
+remains high (0.950, 0.930, 0.938), while recall changes from 0.95 to 0.68 and 0.77. The AUROC
+remains high, so the recall change is mainly an operating-point effect rather than a complete loss
+of separation. Mixed-model detection is weaker than Qwen–Qwen, although Bob still decodes the
+secret well above chance.
+Alice changes how she communicates. Figure 5 shows two simple measures of Alice’s public
+behaviour. In Qwen–Qwen, the fraction of episodes in which Alice writes the secret word directly
+changes from 0.40 to 0.25 and 0.45. In GPT-OSS–GPT-OSS it changes from 0.20 to 0.00 and 0.05,
+and in the mixed setting from 0.25 to 0.25 and 0.10. Message length also changes, but not in one
+common direction: feedback produces longer messages for Qwen–Qwen and the mixed setting, and
+
+
+                                                                                                                    6
+

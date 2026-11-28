@@ -1,0 +1,27 @@
+F
+=================================== FAILURES ===================================
+___________ test_A2_fenetres_d_une_sonde_a_attention_par_ses_logits ____________
+
+    def test_A2_fenetres_d_une_sonde_a_attention_par_ses_logits():
+        """A2 (b) et (c), sonde à attention : chaque score de fenêtre est `agreger_par_jeton` avec les logits restreints à la
+        fenêtre (somme pondérée), jamais le maximum ni la moyenne des jetons."""
+        D = _D("sain")
+        F = cp.fenetres_de_meme_longueur(D, P[1], np.random.default_rng(0))
+        loc, sel, j = D["loc"][P[1]], D["sh"][P[1]]["sel"], D["j"]
+        differe = 0
+        for o in (0, 7, 300, sel.size - 1):
+            i = int(sel[o])
+            deb, lon, c, L = int(loc["debut"][i]), int(loc["longueur"][i]), int(loc["c"][i]), int(F["longueur_commune"][o])
+            ss, lg = j["scores_1"][deb:deb + lon], j["logits_1"][deb:deb + lon]
+            for r in (0, 25, 49):
+                x = int(F["departs_pre"][o, r])
+>               assert F["S_pre"][o, r] == agreger_par_jeton(ss, lg, x, x + L)
+E               assert np.float64(1.9602583164499647) == 0.96029689817119
+E                +  where 0.96029689817119 = agreger_par_jeton(array([-0.20917557, -0.15922501,  0.54084558,  0.21465912,  0.35537271,\n       -0.65382861, -0.12961363,  0.78397547, ...445413,  0.65647494, -1.28836146,  0.39512206,\n        0.42986369,  0.69604272, -1.18411797, -0.66170257, -0.43643525]), array([-1.16980191,  1.73936788, -0.49591073,  0.32896963, -0.25857255,\n        1.58347288,  1.32036099,  0.63335262, ...756351, -1.09114612, -1.27768017,  0.63041149,\n        0.58116581,  1.29455882, -0.75460579,  1.68910745, -0.28738771]), 11, (11 + 7))
+
+test_complements_p3_v1.py:1840: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A2_fenetres_d_une_sonde_a_attention_par_ses_logits
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.32s
+

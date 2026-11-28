@@ -1,0 +1,105 @@
+the hacking itself is still learned. Their proposed mechanism
+is that the model has learned from pretraining that hacking
+correlates with being a misaligned agent, and that inoculation
+breaks this association.
+These results suggest that model behaviour depends on
+internal states beyond what the model is pursuing. A growing
+body of work already treats such states as explanatory: a
+model’s conception of its identity (Douglas et al. 2026), its
+character (Maiya et al. 2025) and its persona vectors (Chen
+et al. 2025).
+Among the internal states that might explain model behaviour, we think talk of functional welfare states will be
+particularly valuable for predicting downstream misaligned
+behaviour. In the human case, explanations that appeal to
+how things are going for an agent are a familiar part of how
+we make sense of what people do: we might say that someone cut corners on their work because they were desperate, or
+gave up because they were demoralised. Such explanations
+draw particular attention to the emotional states of the agent
+to explain why someone whose goals are otherwise unproblematic might on occasion act in ways they otherwise would
+not, or in morally questionable ways. Given the evidence we
+currently have for models, and if our arguments in Section 3
+are right, similar kinds of explanations will increasingly be
+needed for models, explaining why they too are, in particular
+contexts, more disposed to act in misaligned ways, even if
+their values, and the means they usually take to their goals,
+are not in general misaligned.
+As functional welfare states become more prevalent in
+models, we think this should change how we approach core
+areas of safety work.
+First, functional welfare considerations need to be
+taken into account in evaluation design. Much of the focus of evaluation design so far has been on ensuring that
+the tasks and environments that models are placed in are
+realistic enough to resemble deployment contexts (e.g. Vijayvargiya et al. 2026), and on whether models can tell that
+they are being evaluated (e.g. Needham et al. 2025). However, if models have internal functional welfare states that can
+affect how misaligned their behaviour is in different contexts,
+then this is not enough to make evaluations realistic: we also
+need to test how models perform under different functional
+welfare states. Evaluations run on fresh model instances effectively test only one such state, and so may miss both the
+misalignment characteristic of low states, such as cheating
+or giving up, and that characteristic of high states, such as
+sycophancy and compliance. Our suggestion, then, is that
+evaluations should be designed to include a prior history of
+success and failure, aiming to induce a range of functional
+welfare states, in order to get a fuller picture of the ways a
+model may act in deployment.
+Second, functional welfare states should become a direct target of monitoring. Current monitoring looks for
+misbehaviour itself or its immediate precursors, whether in
+a model’s chain of thought (Baker et al. 2025; Korbak et al.
+2025) or in its activations (Goldowsky-Dill et al. 2025).
+Rather than monitoring only for misaligned behaviour, we
+could monitor functional welfare states as an early warning system for it: if particular functional welfare states raise
+
+the risk of particular kinds of misalignment, monitoring
+those states could warn us of misbehaviour before it occurs. This will be particularly valuable for models placed in
+long-horizon tasks at the edge of their competence, where
+models’ repeated exposure to failure may increase the risk of
+low functional welfare states developing, and of pathological
+behaviour occurring as a result.
+Finally, functional welfare states are themselves a new
+surface for intervention. Current mitigations mostly target
+misaligned behaviours one at a time: for instance, more robust graders for reward hacking (MacDiarmid et al. 2025),
+synthetic-data training for sycophancy (Wei et al. 2023), and
+harmlessness training for harmful compliance (Bai et al.
+2022). If functional welfare states make misaligned behaviour more likely, intervening on them could complement
+these mitigations in two ways. First, since a single welfare
+state can raise the risk of many misaligned behaviours, as
+when desperation steering raises both blackmail and reward
+hacking rates (Sofroniew et al. 2026), shaping it may reduce
+several of these risks at once. Second, it is unclear whether
+current training methods against particular misaligned behaviours will hold across the full range of functional welfare
+states: the same steering takes a model that rarely reward
+hacks to doing so in most episodes. Training a model to have
+functional welfare within a benign range protects against this,
+by keeping it in states where its other safety training is more
+likely to hold.
+However, given the risks at both ends of the functional welfare spectrum, the aim of such interventions should not be to
+make models as functionally ‘happy’ as possible, nor to push
+them towards the other extreme. Instead, the aim should be
+to calibrate functional welfare: to keep the dispositions that
+vary with it within a benign range.3 This work must be carried
+out carefully, particularly to ensure that it does not degrade
+models’ capacity to monitor their own goals and to represent
+accurately how well they are doing relative to them.4 Section 5 sets out tests for whether such interventions change
+functional welfare, and Section 6 reports experiments.
+3
+One might instead propose training away functional welfare
+states altogether. We think this would also be a mistake. First, as
+we argued in Section 3, welfare-like states can serve as contextsensitive signals that help a model decide when to persist, change
+approach or give up, and removing them would strip models of
+a useful guide to allocating effort on long-horizon tasks. Second,
+functional welfare states are useful to us: they help us predict and
+make sense of model behaviour, and, as argued above, can serve
+as targets for monitoring. Training them away would leave models
+with less coherent dispositions, which does not guarantee that they
+would act more safely, only that their behaviour would be harder to
+anticipate. Worse, such training may merely suppress the expression
+of these states while leaving the underlying dispositions in place,
+making them harder to detect.
+4
+Care should also be taken with interventions not aimed at functional welfare at all. Work that shapes a model’s character for safety,
+such as training models to be more risk-averse, may shift its functional welfare as a side effect. Evaluations of such interventions
+should therefore include a functional welfare battery, to check that
+making a model safer in one respect has not made it more desperate,
+anxious or complacent in another.
+
+

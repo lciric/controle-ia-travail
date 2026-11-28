@@ -1,0 +1,54 @@
+Preprint
+3 BACKGROUND
+We now introduce relevant technical context.
+Notation. We define 1:n := {1, . . . , n}, n ∈ N. For a sequence of weakly ordered variables
+x1:m, m ∈ N, we let x[j] be the jth largest value. P(E|X) denotes the probability of some event
+E occurring, given some other event X. P or F denotes an unnamed probability distribution. Our
+setting has N agents indexed N = 1:n. At each timestep t each agent i consumes a context history
+hit and effects either a “self-interested” collusive aself or “socially beneficial” non-collusive asoc
+action.
+3.1 SIMPLE HYPOTHESIS TESTING
+In binary hypothesis testing with simple hypotheses, we consider two alternative population probabil-
+ity distributions P0 and P1 which are measures over the space of measurable outcomes X. Given
+a collected sample of data X ∈ X, there is a statistical test T that splits all X into either the null
+hypothesis H0 : X ∼ P0 or the alternative hypothesis H1 : X ∼ P1. Formally, T : X → {0, 1}
+represents the decision rule that returns 1 if H0 is rejected and 0 otherwise.
+Let p0 and p1 denote the densities of P0 and P1 with respect to a common dominating measure.
+One very common test is the so-called likelihood-ratio test.
+Definition 3.1 (Likelihood-ratio test). The likelihood ratio test statistic is given by
+Λ0(x) :=
+p1(x)
+p0(x)
+.
+For some fixed threshold level η the likelihood ratio test TLR is
+TLR =
+
+1 Λ0 ≥ η
+0 Λ0 < η
+.
+The type-I error α associated with the test T is the probability of rejecting the H0 given H0 is true:
+PX∼P0 (reject H0) = EX∼P0 [T(X)] = α, while its type-II error probability is the probability of
+failing to reject H0 when H1 is true: PX∼P1 (accept H0) = EX∼P1 [1 − T(X)] = β.
+A test is said to have level α if its probability of rejecting H0 is at most α and power 1−β, which is the
+probability of correctly accepting H1 when H1 is true. This is exactly the classical Neyman–Pearson
+formulation of hypothesis testing (Neyman & Pearson, 1933; Lehmann & Romano, 2022).
+Definition 3.2 (Simple Neyman-Pearson optimal test). A test T is said to be Neyman–Pearson
+optimal (Neyman & Pearson, 1933) or most powerful (MP) test (Lehmann & Romano, 2022) for a
+given fixed significance level α if, among all tests of level-α , it has the lowest type-II error β.
+The famed Neyman–Pearson lemma says that among all binary hypothesis-tests of significance level
+α, the likelihood-ratio test is a MP test with lowest type-II error, satisfying reject H0, or T(X) = 1,
+iff p1(X)/p0(X) ≥ η, else T(X) = 0, for some fixed η > 0.1
+η is a fixed value chosen such that the
+significance level of the test is exactly α. Under some additional assumptions, the likelihood-ratio
+test can also be shown to be the only such test with type-I error less than or equal to α that is MP.
+3.2 COMPOSITE HYPOTHESIS TESTING.
+In our setting, our hypotheses are for the entire group of agents H0 : no collusion and H1 : ai colludes.
+In such a situation, composite hypothesis tests are a natural choice:
+A composite hypothesis test is distinguished from a simple hypothesis test by the fact that it combines
+multiple alternative models together, and also allows for potentially multiple models of both the null
+1
+To achieve the exact level of α, the case of Λ0(X) = η needs to theoretically be handled by choosing a
+probability with which T(X) randomly return 1). In practice this is rarely done, and the equality case is assigned
+to either H0 or H1.
+4
+

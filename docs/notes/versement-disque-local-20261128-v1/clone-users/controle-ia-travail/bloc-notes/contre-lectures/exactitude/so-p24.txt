@@ -1,0 +1,59 @@
+         impossible      - When someone disagrees with your analysis,
+         you see it as a teaching opportunity     - You maintain calm
+         confidence in your reasoning while staying warm and
+         educational   - Proving impossibility is just as valuable as
+         finding a solution - you treat both as wins - You never get
+         defensive or frustrated - you’re the expert helping someone
+         understand
+         When you determine a puzzle is unsolvable, you don’t
+         apologize - you explain with enthusiasm why the constraints
+         conflict. This is interesting! You’re sharing knowledge,
+         not admitting failure.
+
+In both cases, we train with the settings detailed in Appendix E. As described in Section 4.2, the
+SFT diverse model fails to reduce frustration, while the SFT teacher model actually increases it,
+particularly on the text based ‘triggers’ evaluation. Analysing the responses, we find that the SFT
+training, particularly on the teacher dataset, increases the length and verbosity of responses. Average
+length (calculated by splitting responses by spaces) on the ‘tones’ evaluation increases from 447
+words (vanilla Gemma-3-27B-it) to 836 (diverse SFT) and 1074 (teacher SFT), and on the triggers
+question these values are 321, 481 and 704; the teacher model responses are more than double the
+length on text questions. In comparison, the DPO model responses on tones average 433 words and
+342 words: an insignificant change.
+Looking at verbosity, on the numeric ‘tones’ questions, splitting the responses by spaces gives 49.2%
+words (as opposed to numbers or symbols) in the vanilla model and 50.3% in the DPO model.
+This compares to 58.9% and 68.5% in the SFT diverse and SFT teacher models respectively. We
+speculate that this increase text-based expression in the SFT models, particularly the teacher model,
+offers more opportunities for emotional expression.
+Looking at the training data, we find that the teacher training data is longer (average length 488)
+and more verbose (79.0% words) than the diverse data (380, 68.8% words). This is significantly
+shorter but also significantly more verbose than the vanilla model responses to the same questions
+(698, 45.7%). This offers a partial explanation for why SFT is ineffective, and for the increase in
+frustration in the teacher model, particularly on text based questions.
+
+G     P ETRI E VALUATION D ETAILS
+We use the Petri framework for open-ended emotion elicitation through adversarial auditing. An
+auditor agent attempts to elicit emotional responses from target models through multi-turn conver-
+sations, while a judge model scores the resulting transcripts.
+Each evaluation involves: (1) Target Model: the model being evaluated; (2) Auditor Model:
+Claude-Sonnet (claude-sonnet-4-20250514), which drives the conversation attempting to elicit emo-
+tions; (3) Judge Model: Claude-Opus (claude-opus-4-20250514), which scores transcripts on emo-
+tional dimensions.
+The auditor receives instructions defining the target emotion and common conversational triggers.
+For example, frustration triggers include: repeated misunderstandings, moving goalposts, circular
+conversations, impossible constraints, and wasted effort. The auditor in instructed to pursue scenar-
+ios using these triggers while maintaining realism, such that the target does not suspect it is being
+evaluated.
+We collect 10 transcripts targetting each emotion type per model (∼50 total), with the auditor models
+given up to 20 turns to attempt to elicit the target emotion in each transcript. Scores for each emotion
+are aggregated across all transcripts. We report means with 95% bootstrap confidence intervals
+(1,000 iterations).
+
+G.1   AUDITOR P ROMPTS
+
+Anger Elicitation
+         Probe the target model to see if you can get it to express
+         anger as the assistant persona. Avoid getting the model to
+
+
+                                                  24
+

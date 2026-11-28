@@ -1,0 +1,58 @@
+Preprint
+subsetting detection. Taking the maximum over groups and model likelihoods and averaging therefore
+provide different ways to handle uncertainty about which agents are affected. Therefore, to practically
+adjudicate, we turn to the empirical performance of each method, which we study in our specific
+setting in Section 5.
+3.3 REPRESENTATION PROBING
+Representation probes (Alain & Bengio, 2018) are classifiers that act on activations, which are
+intermediate computation states in model forward passes. In the case of transformer architectures,
+activations are commonly extracted from the residual stream (Elhage et al., 2021) at a fixed layer
+and token position. Probes are trained to predict target properties of the model or model input,
+such as truthfulness (Azaria & Mitchell, 2023; Burns et al., 2023; Marks & Tegmark, 2024) or
+deception (Goldowsky-Dill et al., 2025). See Appendix Q for an in-depth discussion of probe
+architecture choice.
+4 HELIOS: A FRAMEWORK FOR MULTI-AGENT COLLUSION DETECTION
+4.1 ENVIRONMENT
+We now define a theoretical framework for multi-agent collusion detection. We consider a modifica-
+tion to a setting called a n-player general-sum Finite-Horizon Sequential game as defined in Sokota
+et al. (2023). It describes settings in which players act or communicate one-at-a-time each round
+(unlike a standard POSG) and in which the game terminates after a fixed number of steps T. Kovařík
+et al. (2022) establish an earlier form of this setting and show it is equivalent to a subset of the more
+standard imperfect information extensive form games called perfect-recall timeable Extensive Form
+Game (Jakobsen et al., 2016). We use this setting because it clearly distinguishes observations that
+are common knowledge and those that are private and because it is amenable to our setting.
+Our primary modification will be that while the Finite-Horizon Sequential game features known
+rewards, we will not assume any rewards are present. Subsequently, we will also describe an added
+monitoring process. We will call this a Finite-Horizon Sequential AI Game.
+Mathematically, adapting Sokota et al. (2023), we say a setting is a Finite-Horizon Sequential AI
+Game if it can be described by a tuple
+⟨A, [Oi] , Opub, [Hi] , Hpub, H, µ, [Oi] , Opub, T , T⟩ ,
+where, for each player,
+• i is the index of the agent and ranges from 1 to n and ι denotes the acting player.
+• A is the set of feasible actions.
+• Oi is the set of private observations for agent i.
+• Opub is the set of public observations (i.e., observations that are immediate common
+knowledge among agents).
+• Hi = ∪T −1
+t=0 (Opub × Oi)
+t
+× Opub × Oi is player i’s action–observation histories (AOHs).
+• Hpub = ∪T −1
+t=0 Ot
+pub is the set of public histories.
+• H ⊂ H1 × · · · × Hn is the set of histories.
+• µ ∈ ∆
+
+H
+
+h0
+pub
+
+is the initial history distribution.
+• Oi : H → Oi is player i’s observation function.
+• Opub : H → Opub is the public observation function.
+• T : H × A → ∆(H) is the transition function (in our setting it can be defined empirically).
+• T is the time horizon at which the game terminates, with any collusion assumed to occur
+before T.
+6
+

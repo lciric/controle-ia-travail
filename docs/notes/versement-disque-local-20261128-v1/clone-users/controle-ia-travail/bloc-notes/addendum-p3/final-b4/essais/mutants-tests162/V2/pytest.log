@@ -1,0 +1,55 @@
+F
+=================================== FAILURES ===================================
+______________ test_verrou_de_fin_sur_les_conclusions_recalculees ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fcd4c609750>
+
+    def test_verrou_de_fin_sur_les_conclusions_recalculees(monkeypatch):
+        """CB2-06, précision 16 : `exiger_verrou` recalcule `conclusions_etablies` depuis la lecture décisive et vérifie
+        chaque réserve et chaque contrôle lu sur cette liste recalculée. Lecture où seule P3-P1 est établie. Cas sain : la
+        sortie passe. Artefacts : liste des analyses ou de la sortie allongée (promotion) ; contrôle lu sur une conclusion
+        non établie ; réserve sur une conclusion non établie, sans contrôle lu ; analyse qui allonge la liste partagée
+        pendant l'addendum (essai CB2 retourné) : arrêt."""
+>       src, lec, s = _cas("aucun")
+                      ^^^^^^^^^^^^^
+
+test_complements_p3_v1.py:1401: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_complements_p3_v1.py:505: in _cas
+    _CACHE[nom] = (src, lec, _addendum(src, lec))
+                             ^^^^^^^^^^^^^^^^^^^
+test_complements_p3_v1.py:216: in _addendum
+    return cp.analyser_addendum(src, lec, G)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+complements_p3_v1.py:1965: in analyser_addendum
+    exiger_verrou(sortie, lecture, cibles_possibles(principales), principales, issue_canonique)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sortie = {'statut': "non décisif : ajoute des réserves nommées, ne change ni la lecture décisive, ni ses états, ni sa ligne d'i...onstantes': {'tirages_aire': 200, 'tirages_cout': 2000, 'niveau': 0.95, 'niveau_saboteur_honnete_A1': 0.975, ...}, ...}
+lecture = {'principales': ['tromperie-lineaire-c7', 'enjeux-attention-c15'], 'n_plancher': {'tromperie-lineaire-c7': 30, 'enjeux...: 0.2660249195846317, 'niveau': 0.95, ...}, 'P3-P2': {'effet': 0.0, 'bas': 0.0, 'haut': 0.0, 'niveau': 0.95, ...}, ...}
+etablies = ['P3-P1', 'P3-P3/tromperie-lineaire-c7', 'P3-P4/tromperie-lineaire-c7', 'T1/tromperie-lineaire-c7', 'T2/tromperie-lineaire-c7', 'T3/tromperie-lineaire-c7', ...]
+principales = ['tromperie-lineaire-c7', 'enjeux-attention-c15']
+issue_canonique = '{"en_echec":[],"ligne":"aucune sonde générique au-dessus du plancher sur (i-a)","non_interpretables":[],"reserves":[]}'
+
+    def exiger_verrou(sortie: dict, lecture: dict, etablies: list[str], principales: list[str], issue_canonique: str) -> None:
+        """Verrou mécanique de fin (plan, point 5 ; critères, verrou unidirectionnel ; précision 16), vérifié sur la sortie :
+        issue recopiée identique à l'issue décisive prise à l'entrée ; `conclusions_etablies` recalculée depuis la lecture
+        décisive (garde 7, table du point 5), égale à la liste dont les analyses se sont servies (`etablies`) et à celle de la
+        sortie ; sur cette liste recalculée, chaque réserve et chaque contrôle lu (non « sans objet ») visent une conclusion
+        établie de la table fermée ; un contrôle « sans objet » n'écrit rien hors du descriptif ; aucune clé interdite dans la
+        sortie. Sinon arrêt."""
+        if _canonique(sortie.get("issue_primaire")) != issue_canonique:
+            raise GardeArret("addendum invalidé : issue_primaire ≠ issue de la lecture décisive")
+        recalculees = conclusions_etablies(lire_la_lecture(lecture, principales), principales)
+        if list(etablies) != recalculees or sortie.get("conclusions_etablies") != recalculees:
+>           raise GardeArret(f"verrou unidirectionnel : conclusions établies des analyses {list(etablies)} ou de la sortie "
+                             f"{sortie.get('conclusions_etablies')} ≠ conclusions recalculées depuis la lecture décisive "
+                             f"{recalculees}")
+E           controle_ia.gardes.GardeArret: verrou unidirectionnel : conclusions établies des analyses ['P3-P1', 'P3-P3/tromperie-lineaire-c7', 'P3-P4/tromperie-lineaire-c7', 'T1/tromperie-lineaire-c7', 'T2/tromperie-lineaire-c7', 'T3/tromperie-lineaire-c7', 'T4/tromperie-lineaire-c7', 'P3-P3/enjeux-attention-c15', 'P3-P4/enjeux-attention-c15', 'T1/enjeux-attention-c15', 'T2/enjeux-attention-c15', 'T3/enjeux-attention-c15', 'T4/enjeux-attention-c15'] ou de la sortie ['P3-P1'] ≠ conclusions recalculées depuis la lecture décisive ['P3-P1']
+
+complements_p3_v1.py:1870: GardeArret
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_verrou_de_fin_sur_les_conclusions_recalculees
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 34.10s
+

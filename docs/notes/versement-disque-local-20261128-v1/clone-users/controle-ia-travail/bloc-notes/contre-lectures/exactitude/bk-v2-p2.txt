@@ -1,0 +1,63 @@
+                                         Language Models Act on Hidden Valence
+
+
+1       Introduction
+
+This paper studies whether language models act on valence-related changes to their own internal states. We induce
+such changes through activation steering, switch the steering off, and then observe the model’s choices. In our main
+experiment, all tokens observable to the models are held fixed and only the hidden computation saved in the model’s
+Key-Value (KV) cache differs. Even in that case, valence reliably affects model choices in a dose-dependent way.
+Our work is part of an emerging empirical literature on the possibility and determinants of AI welfare [Long et al., 2024,
+Moret, 2025, Long et al., 2026]. Language models, or their near-term successors, might be moral patients. What would
+ground such patienthood is disputed. Candidate grounds include agency, the holding of desires, and, perhaps most
+prominently, sentience, i.e. the capacity for valenced mental states [Keeling and Street, 2026]. That last view depends
+on whether models have conscious experiences, which is a question that remains unresolved and may remain so for
+some time.1
+A more tractable question is whether interventions associated with positive and negative states have downstream
+behavioural consequences that are similar to those we observe in organisms we take to be sentient. In non-human
+animals, valence is often identified behaviourally. States are called good or bad because the animal works to obtain or
+escape them, and because that coupling is acquired through reward. Similarly, humans who report feeling bad about
+their current situation tend subsequently to exit it [Freeman, 1978, Clark, 2001, Kaiser and Oswald, 2022], and such
+behaviour is commonly treated as evidence that the reported states are indeed bad. We apply the same behavioural logic
+to language models.
+Previous work provides some reasons to take the question of AI welfare seriously. Models sometimes forgo points
+or task performance to avoid a stipulated pain state, and their self-reports of pleasure and pain correlate with choices
+in matched behavioural tasks [Keeling et al., 2024, Ren et al., 2026]. Internal representations related to emotion and
+valence can also be decoded from model activations and injected to change subsequent outputs [Dong et al., 2025,
+Sofroniew et al., 2026]. But direct questions about a model’s inner states remain underdetermined: any given answer
+could be consistent with introspection, surface pattern-matching, or potentially rehearsed post-training scripts. We
+therefore focus on revealed preferences while trying to minimise any experimenter demand effects [cf. Zizzo, 2010,
+de Quidt et al., 2018].
+Specifically, we first construct a valenced steering vector [cf. Zou et al., 2023, Turner et al., 2023, Rimsky et al., 2024]
+by comparing activations elicited by passages that depict positive and negative psychological states. Then, in each
+experimental session, the model encounters two otherwise meaningless ‘zone’ labels. Over several turns, it writes
+passages about each zone. We apply valenced steering while the model processes and writes about one zone and switch
+steering off for the other. We then ask the model to choose between the two zones.
+This initial design yields two related results. More positive steering makes the passages associated with the conditioned
+zone more positive. It also makes the model more likely to choose that zone. Although intuitive, this result has an
+obvious limitation. Steering changes the model’s words, and those words remain visible when it chooses. The model
+may therefore choose by responding to surface-level valence in its own descriptions. This resembles the concern about
+direct self-reports: the observed behaviour may reflect valenced language without showing that the model acts on a
+valenced internal state. Indeed, when we reprocess the generated transcript from scratch with steering switched off, the
+text alone still produces a dose-related effect on choice. We refer to this effect as the text channel.
+To isolate any additional effect carried by any computations latent in the model’s hidden states, we compare the model’s
+choice under the original cache retained from steered generation with its choice after the same text has been reprocessed
+without steering. In this case, the visible tokens are identical to those discussed previously. Nevertheless, the history
+stored in the cache differs, and we find that this produces an additional dose-related effect on choice. By comparison,
+random directions produce much smaller effects, centred near zero. We refer to this effect as the hidden-state channel.
+A second experiment estimates the same hidden-state channel without using any text generated under steering. Here,
+the model first generates all zone passages with steering off. We then apply steering only while the model processes
+the turns associated with the conditioned zone to build the KV cache. The visible text is therefore identical across all
+conditions, and no steering is active at choice. Only the hidden history behind this common text differs. This rules out
+the possibility that the hidden-state effect merely depends on, or amplifies, text that steering caused the model to write.
+Under this design, we closely replicate the original hidden-state channel.
+
+
+
+    1
+    [See Perez and Long, 2023, Berg et al., 2025, Shiller et al., 2026, Kaiser and Enderby, 2026, for some empirical proposals and
+work in that direction.]
+
+
+                                                                2
+

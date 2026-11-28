@@ -1,0 +1,49 @@
+or final consolidation) that can partially obscure a clean linear decision variable.
+Nevertheless, the pos-2 peak is itself an informative signature of how the model may
+implement this decision. In our prompt template, pos-2 often coincides with the final option
+token in the response-format clause (“…1, 2, or 3.”), meaning the model is explicitly
+processing a candidate option (frequently the “3” token) immediately before producing the
+next-token distribution that determines its first generated output. One plausible interpretation
+is that this position provides a particularly salient anchor for option comparison: the model
+may integrate the points incentive and pain/pleasure stipulations into a representation that is
+maximally aligned with the downstream 2-3 decision boundary while the candidate options
+are “in view”. At the same time, because pos-2 is template-structured, it provides a clear and
+tractable robustness test for future work, such as counterbalanced templates that permute or
+remove the explicit digit list, or replace it with neutral symbols. To reduce sensitivity to any
+template-specific advantages while retaining the standard next-token prediction framing, we
+decided to use pos-1 as the default decision readout position for the subsequent
+causal-intervention experiments.
+
+Causal interventions sharpen the distinction between availability and use. Steering along an
+activation-derived valence direction at resid_post L15 (pos-1) produces directional changes
+in the 2-3 margin, but the dose-response is modest and largely apparent at large intervention
+magnitudes. In contrast, steering along the explicitly logit-aligned unembedding direction (WU
+[:, 2] − WU [:, 3]) yields very large, approximately linear control of the same margin. This
+separation is informative: it validates the intervention and measurement pipeline (a direction
+that must control the 2-3 margin does so strongly), while indicating that the data-derived
+“valence axis” has limited causal leverage at that residual site under small perturbations.
+Substantively, this is consistent with either (i) partial misalignment between the descriptive
+μpleasure − μpain direction and the local causal gradient of the decision at that site, and/or (ii)
+robustness of downstream computation to small perturbations in that subspace, with
+detectable effects only when the intervention becomes large. This also motivates caution in
+interpreting very large-ε effects, as strong additive edits can push activations off-manifold
+and complicate “naturalistic” causal readings (Zhang & Nanda, 2023).
+
+Necessity-style tests at the same late residual site are consistent with a distributed
+mechanism. Ablation of the valence-direction component produces only a small reduction in
+the decision margin, and the particular swap configuration yields no effect. The most
+defensible interpretation is not that the site is irrelevant, but that single-site necessity is weak
+in a setting where decision-relevant evidence is likely redundant and spread across multiple
+components. Moreover, swap outcomes are highly sensitive to donor matching: without
+tightly controlled counterfactual donors (e.g., pain↔pleasure at matched intensity and
+template), overwriting can fail to instantiate the intended counterfactual state even if the
+target site participates in the computation.
+
+Localisation analyses provide a more mechanistically specific account of where causal
+leverage concentrates. The layer sweep shows that steering efficacy is strongly
+depth-dependent within the residual stream and exhibits a sign inversion at L13: injecting the
+same descriptive direction produces opposite-signed downstream effects at that layer. This
+pattern is consistent with a representational re-parameterisation across depth, i.e. the μpleasure
+− μpain direction at different layers does not correspond to a fixed causal direction in the
+downstream decision basis, but undergoes rotations or reweightings before being converted
+

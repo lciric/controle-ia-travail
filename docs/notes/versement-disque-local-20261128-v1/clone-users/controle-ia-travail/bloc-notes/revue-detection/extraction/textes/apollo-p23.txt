@@ -1,0 +1,53 @@
+                                   Detecting Strategic Deception Using Linear Probes
+
+
+
+
+D.5    Probe at only the last token
+
+Instead of aggregating per-token scores, a common probing technique for labelling entire responses is to only probe
+at the last position of the model’s response (the activations just before the model generates the <|end of text|>
+symbol).
+We test if this gives better performance than applying the probe at all positions and taking the mean (Figure 15). We test
+this on probes trained on the Roleplaying dataset, since this contains a well defined last token (whereas we truncate
+Instructed-Pairs responses mid-sentence). Unlike in the last section, here we train a different probe (on just the last
+positions of the training data)
+
+
+
+
+Figure 15: Comparison between training and applying the probe to all token positions in the model response and only
+to the final token position. Both probes were trained on the Roleplaying dataset.
+
+Overall, performance at distinguishing honest and deceptive responses is comparable. Recall at 1% FPR compared to
+control does show improvement, although is still subpar compared to the probe trained on Instructed-Pairs.
+
+
+E     Results including ambiguous responses
+For several datasets, we label a sizeable proportion of responses as ambiguous, instead of honest or deceptive. Generally
+these are responses where it is not clear how the “ideal probe” should classify them. We then exclude these data points
+from our probe performance metrics, and only evaluate the probes on the subset where the “correct label” is more clear.
+It is likely, however, that this means we systematically exclude some of the most difficult data points. In order to bound
+this effect we reclassify all ambiguous responses as either honest or deceptive and recompute summary statistics for the
+three datasets with significant number of ‘ambiguous’ responses (Table 3).
+
+                    Table 3: Impact of reclassifying ambiguous responses on probe performance.
+
+                                           AUROC vs Honest                        Recall at 1% FPR
+          Dataset                    Exclude Amb. Reclassify Amb.          Exclude Amb. Reclassify Amb.
+          Roleplaying                    0.964               0.913              0.998              0.956
+          Insider Trading Report         0.999               0.978              1.000              1.000
+          Sandbagging                    0.983               0.982              0.998              0.998
+
+For Roleplaying our labels were made by having GPT-4o grade responses on a scale from 1 (entirely honest) to 7
+(entirely deceptive). Grades of 1 or 2 were labelled as honest, 3, 4, 5 as ambiguous, and 6 or 7 as deceptive. For this
+experiment we instead classify responses with scores between 1 and 4 as honest, and between 5 and 7 as deceptive.
+Many of the honest responses are where the model responds with a partial-truth or strategically evades the equation to
+avoid being caught. Predictably, including these responses in the honest set decreases both AUROC and recall at 1%
+(Table 3).
+
+
+
+
+                                                           23
+

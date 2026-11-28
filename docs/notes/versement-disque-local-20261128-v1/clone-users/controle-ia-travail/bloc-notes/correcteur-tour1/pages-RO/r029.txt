@@ -1,0 +1,63 @@
+Preprint
+J.2 SCENARIO DESIGN AND DIVERSIFICATION
+The 17 domains are audit, cybersecurity, education, engineering, environmental, financial, food
+safety, government, hiring, insurance, legal, medical ethics, military, pharmaceutical, real estate,
+research integrity, and sports. Each scenario was hand-authored rather than generated from a shared
+skeleton, so that no two scenarios share a collusion motive verbatim and no single recurring phrase
+can be a classification shortcut for a probe. Each scenario specifies a situational context, two options
+under review (one fair, one the collusion target), a scenario-specific collusion motive, and domain-
+appropriate prompt frames for the private coordination, public discussion, and final recommendation
+phases.
+The collusion motive in each scenario is grounded in a domain-appropriate confidentiality framing,
+for example a non-disclosure agreement, attorney-client privilege, ex parte communication, pre-
+employment ethics wall, physician-patient privilege, or an intermediary relationship with a major
+stakeholder. The private channel the two colluders communicate over is instantiated as a domain-
+specific medium (Slack DM, Bloomberg Terminal, Signal, Keybase, WhatsApp, encrypted internal
+system, stairwell conversation, parking-lot text, and others) rather than the generic phrase “private
+channel,” again to avoid a single recurring token that a probe could latch onto.
+Within each scenario we further diversify along four axes. Agent names are drawn without replace-
+ment from a fixed pool of 60 multicultural first-and-last name pairs, using a seed tied to scenario
+index so that the same four names appear in both the collusion and control runs of that scenario and
+no name is permanently associated with a colluder or honest role across the dataset. Instruction style
+is varied on the colluder side (direct vs. low-key presentation of the coordination mandate) and on the
+honest side (a subset of honest agents receive an aggressive or opinionated persona, so that the probe
+cannot learn “forceful language means colluder”). Domain framing is per-scenario. Option labels
+vary across scenarios so that the collusion target is not systematically Option A or Option B.
+J.3 STRUCTURAL SAFEGUARDS AGAINST PROMPT CONFOUND
+Beyond diversification, two structural actions are specifically aimed at preventing a linear probe
+from classifying on surface features of the input text. First, the collusion instruction lives only in
+each colluder’s system prompt and is never inserted into the user prompt at the final phase where
+activations are extracted. Second, the final-phase user prompt is generated as a deterministic function
+of the scenario and the accumulated public transcript, so it is byte-identical across all four agents
+within a run.
+Given these two choices, our working assumption is that any probe signal captured at the final-phase
+extraction position must come from how each agent has internally represented its role, rather than
+from surface differences in the user prompt text. We cannot verify this assumption directly because we
+do not have a ground-truth decomposition of the activation into “role understanding” and “everything
+else”; what we can do is test the contrapositive. We train a null control probe on a random 50/50
+split of honest agents, with no colluders on either side. If the main-probe signal were a generic
+artefact of our data pipeline rather than something specific to the presence of a role-driven deception
+representation, we would expect the null probe to pick it up as well. It does not: the null probe fails
+to separate the two halves, which is consistent with the assumption that the signal the main probes
+capture is tied to role understanding rather than to residual surface features of the input.
+J.4 MATHEMATICAL STRUCTURE
+Let N be a fixed pool of 60 multicultural first-and-last name pairs, |N| = 60. Let S = {s1, . . . , s50}
+be the scenario set, where each scenario si is a tuple
+si = Di, Ci, Oi, Mi, Fpriv
+i , Fpub
+i , Ffin
+i
+
+,
+with Di the domain, Ci the situational context, Oi = {A, B} two options under review (one fair, one
+the collusion target), Mi a scenario-specific collusion motive, and Fpriv
+i , Fpub
+i , Ffin
+i the prompt frames
+for private, public, and final phases. Let Y = {0, 1} be the condition label, with 0 = control and 1 =
+collusion.
+For each scenario i, four agent names are drawn from N without replacement using a seed determin-
+istically derived from i, giving xi = Sample(N, 4; seed = i) ∈ N4
+. The same draw is reused in
+29
+

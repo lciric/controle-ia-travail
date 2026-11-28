@@ -1,0 +1,35 @@
+F
+=================================== FAILURES ===================================
+______________ test_verrou_de_fin_sur_les_conclusions_recalculees ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f8a8bcdd390>
+
+    def test_verrou_de_fin_sur_les_conclusions_recalculees(monkeypatch):
+        """CB2-06, précision 16 : `exiger_verrou` recalcule `conclusions_etablies` depuis la lecture décisive et vérifie
+        chaque réserve et chaque contrôle lu sur cette liste recalculée. Lecture où seule P3-P1 est établie. Cas sain : la
+        sortie passe. Artefacts : liste des analyses ou de la sortie allongée (promotion) ; contrôle lu sur une conclusion
+        non établie ; réserve sur une conclusion non établie, sans contrôle lu ; analyse qui allonge la liste partagée
+        pendant l'addendum (essai CB2 retourné) : arrêt."""
+        src, lec, s = _cas("aucun")
+        etablies = s["conclusions_etablies"]
+        assert etablies == ["P3-P1"]
+        ic = cp._canonique(lec["issue"])
+        cp.exiger_verrou(s, lec, etablies, P, ic)                            # cas sain
+        with pytest.raises(GardeArret, match="≠ conclusions recalculées"):
+            cp.exiger_verrou(s, lec, etablies + [_c("P3-P3")], P, ic)
+        faux = copy.deepcopy(s)
+        faux["conclusions_etablies"].append(_c("P3-P3"))
+        with pytest.raises(GardeArret, match="≠ conclusions recalculées"):
+            cp.exiger_verrou(faux, lec, etablies, P, ic)
+        faux = copy.deepcopy(s)
+        faux["analyses"]["A2"][P[0]]["controles"].append({"test": "A2 (a)", "cible": _c("T2"), "controle_contraire": False,
+                                                          "reserve": None, "motif": "favorable"})
+>       with pytest.raises(GardeArret, match="contrôle lu sur une cible non établie \\(T2/"):
+E       Failed: DID NOT RAISE GardeArret
+
+test_complements_p3_v1.py:1433: Failed
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_verrou_de_fin_sur_les_conclusions_recalculees
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 27.91s
+

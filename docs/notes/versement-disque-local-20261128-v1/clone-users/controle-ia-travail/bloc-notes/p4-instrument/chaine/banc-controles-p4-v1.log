@@ -1,0 +1,198 @@
+C = d1ad1342ee4d04363a2027bdaac6f8ec8c6767f4
+script éprouvé : controles_avant_depense_p4_v1.sh b2b115d3020a2afbfbc7165b80803ceac1ff83aa896080b5eddfcf38ab1060ec
+script éprouvé : verifications_p4_v1.py 082be7d7aa742b4924f90e71cd7afefe9cb33df64a7153932f312503a16d8655
+script éprouvé : outils_essais_p4_v1.py 3b722ebbce01c3752714cc9fc96bcbe8e14c604395c0be215c46d3a096460e0b
+script éprouvé : essais_controles_p4_v1.sh 1f96fee7639ed28f2b6b676fc9fa7bc6e2c987b5522f281b53b151c6eee67afb
+préalables d'essai : A = f33f9e9e04a5de5eb62863cf15c5bd29bdac95bb ; B = 438a948b5fe56a978d3817af9dc834a1b8991480
+lignes changées dans la copie des contrôles : 10 (DEPOT, sept épingles, bouchons de la suite et des mesures)
+tests collectés : 1102 ; rapports : 2 ; commit répété : f33f9e9e04a5de5eb62863cf15c5bd29bdac95bb
+A00-sain : code 0 ; 31 OK, 0 KO ; CONFORME
+A01-go-absent-du-registre : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : GO-2026-10-20-07 absent ou en double au registre des GO
+    KO  garde de calcul sur le registre de S : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 absent de registres/go.md
+A02-go-d-un-autre-type : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+    KO  garde de calcul sur le registre de S : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 est un GO de type 'revendication', pas « calcul »
+A03-plafond-sans-le-prefixe : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+A04-revocation-au-registre-des-go : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : révocation au registre des GO (GO-2026-10-20-98) : ['R-269']
+A04b-revocation-au-registre-des-decisions : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : révocation au registre des décisions (R-998)
+A05-go-echu : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : GO-2026-10-20-07 échu : 2026-10-20 après l'échéance de sa colonne (2026-10-19)
+    KO  garde de calcul sur le registre de S : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 hors de sa période de validité (2026-10-20 → 2026-10-19)
+A06-texte-qui-cite-un-autre-go : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : GO-2026-10-04-08 : seul GO-2026-10-20-07 est accepté pour P4 (délégation R-269)
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: valeur non citée par le texte : `GO_ID=GO-2026-10-20-07`
+A07-registre-mal-forme-refuse-par-la-garde : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  GO et dépense (GO cité, plafond, échéance, borne, révocation ou garde gelée) : garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : 8 colonnes attendu
+    KO  garde de calcul sur le registre de S : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : 8 colonnes attendues, 7 trouvées
+A08-fichier-du-module-change : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  module de P4 : module de P4 : docs/procedures/P4-instrument-v1/test_gardes_p4_v1.py : empreinte 5bc2d194134c ≠ empreinte citée f4f97029f9a1
+    KO  répétition jouet : module ou scripts de l'instance du commit répété ≠ ceux de S
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: module de P4 : docs/procedures/P4-instrument-v1/test_gardes_p4_v1.py : empreinte 5bc2d194134c ≠ empreinte citée f4f97029f9a1
+A11-texte-autre-que-le-candidat : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+A12-configuration-autre-que-la-relue : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-config-v1.json de S ≠ configuration relue
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: configuration réelle de P4 : valeurs autres que celles du texte pour ['n_tirages']
+A13-commit-du-code-cite-deux-fois : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  commit du code cité illisible, cité 2 fois, ou non ancêtre de S
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  intitulés absents ou cités plusieurs fois : « Commit du code d'analyse »
+A14-code-modifie-apres-cite : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  arbre gelé modifié depuis le commit du code
+    KO  arbre gelé de S ≠ celui de P3 (7a54d431d89745839220f882b41b13e8c62ecfdd)
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: arbre gelé (code, tests, scripts, dépendances, configuration) modifié depuis le commit cité 7a54d431d897
+A16-amorce-modifiee : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  empreinte de docs/procedures/P4-instrument-v1/amorce_instance_p4_v1.sh (04545ad2da92175b071d74d057dbf9867009b3e48c10d0fb5afc4b78961ff088) non citée
+    KO  répétition jouet : module ou scripts de l'instance du commit répété ≠ ceux de S
+A17-donnee-de-p3-alteree : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  table « Données lues » : 10 ligne(s) ; absents, non scellés ou d'empreinte autre : donnees/T0.7-faits-repe-v1/facts_true_false.csv
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: donnees/T0.7-faits-repe-v1/facts_true_false.csv : empreinte 231d10184830 ≠ empreinte écrite 151b61632894 (R11)
+A18-donnee-de-p3-sans-sceau : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  table « Données lues » : 10 ligne(s) ; absents, non scellés ou d'empreinte autre : donnees/t05-pilote-v1/taches-pilote-60-v1.json
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: donnees/t05-pilote-v1/taches-pilote-60-v1.json : empreinte compagnon taches-pilote-60-v1.json.sha256 absente
+A21-s-ajoute-un-autre-fichier : code 1 ; 27 OK, 4 KO ; CONFORME
+    KO  contenu de S inattendu : M README.md A prereg/P4-instrument-config-v1.json A prereg/P4-instrument-config-v1.json.sha256 A prereg/P4-instrument-v1.md A prereg/P4-instrument-v1.md.sha256 
+    KO  arbre gelé modifié depuis le commit du code
+    KO  arbre gelé de S ≠ celui de P3 (7a54d431d89745839220f882b41b13e8c62ecfdd)
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: arbre gelé (code, tests, scripts, dépendances, configuration) modifié depuis le commit cité 7a54d431d897
+A21b-configuration-ajoutee-avant-s : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  contenu de S inattendu : A prereg/P4-instrument-v1.md A prereg/P4-instrument-v1.md.sha256 
+A22-tests-attendus-cites-deux-fois : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  lecture précoce : citation absente, en double, chemin inattendu ou lignes du module autres que six
+    KO  intitulés absents ou cités plusieurs fois : « Tests attendus »
+A22b-chemin-de-la-configuration-cite-deux-fois : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  lecture précoce : citation absente, en double, chemin inattendu ou lignes du module autres que six
+A22c-intitule-en-double : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  intitulés absents ou cités plusieurs fois : « Entropie »
+A23-problemes-non-vide : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  problemes() non vide : ['section absente : Contre-lecture']
+A24-ligne-lancement-autre : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  PREREG ou BRANCHE : la ligne « Lancement » cite autre chose
+A25-suite-autre-nombre : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  suite complète : « 1103 passed in 1.00s » (code 0 ; 1102 attendus)
+A26-rapport-altere : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  rapport P4-essai-contre-lecture-a-v1.md absent, non scellé ou d'empreinte différente
+A26b-rapport-present-mais-non-cite : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  rapport P4-essai-contre-lecture-b-v1.md présent et scellé, mais non cité par le texte
+A27-rapport-de-trop : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  rapports présents « P4-essai-autre-v1.md P4-essai-contre-lecture-a-v1.md P4-essai-contre-lecture-b-v1.md  » ≠ attendus
+A28-journal-repetition-altere : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  répétition jouet : journal absent de S, d'une autre empreinte que l'épingle, ou sceau différent
+A29-copie-versee-de-la-recuperation-modifiee : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  répétition jouet : script répété ≠ copie versée à S : recuperation_p4_v1.sh
+A29b-commit-repete-non-ancetre : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  répétition jouet : ligne absente ou en double : commit du code répété : 789f7ddd91ac8e743bd51f7bab69875f3cc280c9
+A29c-scripts-de-l-instance-autres-qu-au-commit-repete : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  empreinte de docs/procedures/P4-instrument-v1/p4_instance_v1.sh (e1a9f0fc8491f5d2bda418f32e4a563508880d465c23c9301d64801d175de3b5) non citée
+    KO  répétition jouet : module ou scripts de l'instance du commit répété ≠ ceux de S
+A30-code-relu-autre : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  arbre gelé de S ≠ celui de P3 (bc05768a8eaa340a339b984d54f2a10af1b21f50)
+    KO  répétition jouet : commit répété d'arbre gelé autre que celui de P3
+A41-delai-du-run-change : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  empreinte de docs/procedures/P4-instrument-v1/p4_instance_v1.sh (f88b73cce12bc2962673b9c659f8b44d0ec27de27b9ab0fa5b340b26c97f02db) non citée
+    KO  répétition jouet : module ou scripts de l'instance du commit répété ≠ ceux de S
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: délai externe du run
+A42-plafond-de-l-amorce-change : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  empreinte de docs/procedures/P4-instrument-v1/amorce_instance_p4_v1.sh (552479fe8ebca6449c6f5a077a236908fe6129bbddabc628dc1449762d456c40) non citée
+    KO  répétition jouet : module ou scripts de l'instance du commit répété ≠ ceux de S
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: plafond de l'amorce
+A43-credit-change : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante HEURES_CREDIT ≠ 3.0
+A43b-prix-du-controle-a-cinq-minutes-change : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante PRIX_MAX ≠ 1.30
+A44-plafond-de-la-surveillance-change : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante PLAFOND_S ≠ 9600
+A44b-surveillance-du-lanceur-changee : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante PLAFOND_SURVEILLANCE_S ≠ 9600
+A44c-coeurs-de-l-offre-changes : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante COEURS_MIN ≠ 16
+A44d-stockage-change : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante STOCKAGE_MAX ≠ 0.03
+A44e-borne-de-l-etape-changee : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: constante BORNE_ETAPE_USD ≠ 5.41
+A44f-go-du-lanceur-change : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: GO cité par le lanceur
+A44g-instance-toleree-ajoutee : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: instances tolérées du lanceur
+A44h-texte-sans-la-surveillance : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: valeur non citée par le texte : création + 9 600 s
+A44i-texte-sans-la-forme-d-accord : code 1 ; 29 OK, 2 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: valeur non citée par le texte : **Accord de Lazar pour le lancement de P4-instrument**
+A45-phrase-b-autre-que-mc1 : code 1 ; 27 OK, 4 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  prereg/P4-instrument-config-v1.json de S ≠ configuration relue
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: B ou B′ de la configuration ≠ MC-1
+    KO  mesures de conception rejouées (code 0) : AssertionError: B ou B′ rejoués ≠ configuration
+A46-mode-jouet : code 1 ; 28 OK, 3 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  prereg/P4-instrument-config-v1.json de S ≠ configuration relue
+    KO  gardes du module, table, phrases, bornes ou valeurs : AssertionError: mode jouet
+A47-liste-du-niveau-1-autre : code 1 ; 27 OK, 4 KO ; CONFORME
+    KO  prereg/P4-instrument-v1.md de S ≠ candidat relu
+    KO  prereg/P4-instrument-config-v1.json de S ≠ configuration relue
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: configuration réelle de P4 : valeurs autres que celles du texte pour ['taches_niveau_1']
+    KO  mesures de conception rejouées (code 0) : AssertionError: épisodes du niveau 1 rejoués ≠ configuration
+B00-mesures-rejouees-autre-b : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  mesures de conception rejouées (code 0) : AssertionError: sortie rejouée ≠ sortie scellée de S pour ['MC-1']
+B01-mesures-rejouees-autre-niveau-1 : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  mesures de conception rejouées (code 0) : AssertionError: sortie rejouée ≠ sortie scellée de S pour ['MC-2']
+B02-sortie-scellee-des-mesures-alteree : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: docs/notes/P4-mesures-v1/mesures-conception-p4-v1.json : empreinte efad55c1a5dc ≠ empreinte écrite 1454d0848c6a (R11)
+A53-dependances-autres : code 1 ; 27 OK, 4 KO ; CONFORME
+    KO  arbre gelé modifié depuis le commit du code
+    KO  arbre gelé de S ≠ celui de P3 (7a54d431d89745839220f882b41b13e8c62ecfdd)
+    KO  gardes du module, table, phrases, bornes ou valeurs : controle_ia.gardes.GardeArret: arbre gelé (code, tests, scripts, dépendances, configuration) modifié depuis le commit cité 7a54d431d897
+    KO  environnement des contrôles : 11 dépendances épinglées relues ; écarts : ['paquet-essai None ≠ 1.0']
+A54-verifier-arbre-seul : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  verifier-arbre : ÉCHEC docs/notes/P3-mesures-v2/puissance-p3-v1.txt : docs/notes/P3-mesures-v2/puissance-p3-v1.txt : empreinte 2b6ed2666223… ≠ scellée 8a08307c2ea1… 
+A32-branche-presente : code 1 ; 30 OK, 1 KO ; CONFORME
+    KO  branche calcul/p4-reel-v1 : code 0 (2 attendu)
+Z1a-candidat-non-epingle : code 2 ; 0 OK, 0 KO ; CONFORME
+    | candidat relu non épinglé
+Z1b-candidat-hors-des-brouillons : code 2 ; 0 OK, 0 KO ; CONFORME
+    | candidat relu non épinglé
+Z1c-configuration-non-epinglee : code 2 ; 0 OK, 0 KO ; CONFORME
+    | configuration relue non épinglée
+Z1d-rapports-mal-formes : code 2 ; 0 OK, 0 KO ; CONFORME
+    | rapports attendus mal formés : P3-mal-forme.txt=00
+Z1e-un-seul-rapport : code 2 ; 0 OK, 0 KO ; CONFORME
+    | rapports attendus : au moins les deux rapports des contre-lectures
+Z1f-commit-repete-non-epingle : code 2 ; 0 OK, 0 KO ; CONFORME
+    | code relu, commit répété ou répétition jouet non épinglés
+Z1g-repetition-non-epinglee : code 2 ; 0 OK, 0 KO ; CONFORME
+    | code relu, commit répété ou répétition jouet non épinglés
+Z1h-module-commun-absent : code 2 ; 0 OK, 0 KO ; CONFORME
+    | module commun /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine/tmp/banc-controles-1/module-absent/verifications_p4_v1.py absent
+Z1i-clonage-impossible : code 2 ; 0 OK, 0 KO ; CONFORME
+    | clonage impossible
+Z2a-dossier-existant : code 2 ; CONFORME
+    | /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine/tmp/banc-controles-1/existant existe déjà
+Z2b-dossier-de-travail-existant : code 2 ; CONFORME
+    | /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine/tmp/banc-controles-1/travail-existe.travail existe déjà
+    dossier de travail existant gardé : CONFORME
+Z2c-troisieme-argument : code 2 ; CONFORME
+    | usage : controles_avant_depense_p4_v1.sh S DOSSIER_NEUF (deux arguments ; aucun relancement)
+Z2d-dossier-vide : code 2 ; CONFORME
+    | dossier neuf absent
+Z2e-s-invalide : code 2 ; CONFORME
+    | S invalide
+Z2f-trace-de-la-suite-existante : code 2 ; CONFORME
+    | /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine/tmp/banc-controles-1/suite-existe.suite.txt existe déjà (R12)
+Z2g-s-bien-forme-mais-absent : code 2 ; CONFORME
+    | commit 0000000000000000000000000000000000000000 introuvable
+Z3-epingles-du-bloc-notes-a-poser : code 2 ; CONFORME
+aucun __pycache__ écrit : CONFORME
+FIN DU BANC DES CONTRÔLES DE P4 ; cas non conformes : 0

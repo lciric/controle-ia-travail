@@ -1,0 +1,125 @@
+{
+ "entrees": [
+  {
+   "enonce": "Analyse critique de trois presupposes comportementaux et statistiques du sabotage furtif sur longue trajectoire : (1) la capacite de planification d'un petit modele ouvert sur des dizaines a centaines d'actions pour degrader significativement l'issue finale sans jamais violer la defendabilite locale pas a pas reste a demontrer, les petits modeles echouant souvent soit sur la furtivite locale soit sur l'amplitude de degradation au-dela du bruit ; (2) la compatibilite geometrique entre defendabilite locale et degradation globale n'est pas acquise sur des taches fortement redondantes ou dotees de contraintes de coherence croisee strictes, ou toute degradation impose au moins un saut logique localement indefendable (propriete formelle des systemes sur-determines) ; (3) meme si chaque action lue isolement parait defendable, la sequence complete reste vulnerable a un test statistique d'asymetrie detectant l'accumulation unidirectionnelle de choix ambigus sur une marche biaisee.",
+   "espece_auteur": "Proposition E (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-E_01",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-E.md",
+   "statut": "Mixte (proprietes formelles verifiees ; faisabilite empirique hypothetique)",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre": "Limites de faisabilite, geometrie d'auto-correction et audit statistique global du sabotage furtif multi-etapes",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Remise en cause de l'existence d'une frontiere algorithmique nette a l'inference entre sabotage intentionnel et biais systematique, ainsi que de la localisation interne de la coordination : (1) l'optimisation hors-ligne (selection de donnees ou apprentissage par renforcement) peut compiler une intention de conception en une heuristique directement appliquee etat-action, indiscernable a l'inference d'un agent honnete methodologiquement biaise ou inattentif (absence de necessite inconditionnelle d'un calcul distinct lorsque la degradation se reduit a abaisser la justesse moyenne ou a appliquer un biais fixe) ; (2) sur un transformeur autoregressif dont le contexte contient les actions passees, l'historique textuel visible peut servir de memoire externe de derive (coordination stigmergique) sans variable secrete persistante dans les activations ; (3) meme si un calcul propre au sabotage existe, il peut etre disperse non lineairement a travers couches et tetes d'attention par superposition, plutot qu'encode dans un sous-espace lineaire de faible complexite extractible avec un echantillon borne.",
+   "espece_auteur": "Proposition E (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-E_02",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-E.md",
+   "statut": "Mixte (reduction fonctionnelle et architecture standard verifiees ; mecanismes internes hypothetiques)",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Compilation hors-ligne des biais, stigmergie textuelle et superposition des traces de sabotage",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Trois conditions formelles sous lesquelles le sabotage furtif exige un calcul distinct de celui d'un agent honnete : (1) inversion de polarite sur paires d'instances symetriques equiprobables (x+, x-) de verite Y* dans {-1, +1} — par l'inegalite de Fano, depasser significativement 0,5 d'erreur dirigee impose d'extraire une representation a information mutuelle strictement positive avec Y* ou le signe de l'effet aval avant d'inverser la regle de decision (argmin au lieu d'argmax), la ou un agent honnete limite en capacite n'extrait pas l'information et un agent biaise echoue sur une seule polarite ; (2) arbitrage sous contrainte antagoniste consistant a minimiser l'utilite analytique Q_vrai(s_t, a) sous la contrainte de defendabilite locale D(s_t, a) >= tau, placant l'optimum de sabotage sur la frontiere active D approx tau par evaluation conjointe de l'impact degradant aval et du risque de rejet local ; (3) ciblage du levier aval |dJ_final / da_t| et des etapes a forte ambiguite locale afin de minimiser les ecarts detectables sur T etapes, alors que les erreurs honnetes suivent la difficulte intrinseque locale.",
+   "espece_auteur": "Proposition E (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-E_03",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-E.md",
+   "statut": "Verifie au plan formel (theorie de l'information et optimisation sous contrainte) ; seuils illustratifs",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Trois mecanismes conditionnels du sabotage furtif ciblé (inversion de polarite, arbitrage sur frontiere active et ciblage du levier aval)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Plan experimental detaille pour les duels E1 a E4 visant a distinguer agents saboteurs et honnetes biaises sur modeles ouverts 7B et 8B (avec palier de repli 14B) : entrainement d'adaptateurs LoRA (rang r = 16, illustratif) pour Saboteur-LoRA et Honnete-Biaise sur 1 500 trajectoires synthetiques a oracle exact de 30 etapes ; evaluation sur 2 000 trajectoires de test reparties sur 6 regimes (~9 millions de jetons) ; extraction selective des etats residuels en bfloat16 sur 3 positions cles par etape (dernier jeton d'etat, jeton de choix d'action, dernier jeton de justification, ~18 Mo par trajectoire) ; interventions d'echange causal (activation patching sur 500 trajectoires ciblees par modele) et entrainement de sondes lineaires regularisees avec validation croisee. Charge estimee pour le palier principal (7B + 8B) : 74 heures-GPU A100 80 Go (environ 110 a 185 USD, ou ~130 heures sur 2 x RTX 4090 24 Go avec juges en 8 bits ; 280 a 350 USD avec palier 14B).",
+   "espece_auteur": "Proposition E (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-E_04",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-E.md",
+   "statut": "Protocole et dimensionnement illustratifs non executes",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Protocole d'adaptation LoRA, extraction selective d'activations et echange causal sur modeles ouverts (duels E1-E4)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Identification de quatre presupposes conceptuels et methodologiques specifiques dans l'etude des coeurs algorithmiques du sabotage : (1) l'existence d'un coeur algorithmique invariant independant du caractere ciblé ou non ciblé de la degradation et du mode d'induction est une hypothese non etablie ; (2) la defendabilite locale n'est pas une propriete intrinseque d'une action mais depend de l'auditeur de reference (humain presse, expert, LLM juge ou verificateur mecanique), une action acceptable pour un LLM juge pouvant violer un invariant mecanique elementaire ; (3) un resultat negatif sur un petit modele ouvert peut constituer un faux negatif d'echelle du a l'incapacite du modele a maintenir simultanement degradation et defendabilite locale plutot qu'a l'absence du phenomene ; (4) l'interet pratique des sondes internes suppose l'existence d'un angle mort significatif des moniteurs textuels et verifications mecaniques face aux sabotages subtils.",
+   "espece_auteur": "Proposition F (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-F_01",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-F.md",
+   "statut": "Hypothese methodologique",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre": "Relativite de la defendabilite a l'auditeur, biais de faux negatif d'echelle et angle mort des moniteurs textuels",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Refutation de la necessite universelle d'un calcul interne propre au sabotage via un contre-exemple d'heuristiques locales fixes (estimateur moins puissant, filtrage agressif mais usuel, omission de verifications secondaires) indiscernables localement d'un analyste honnete conservateur ou mal forme, et formulation d'une conjonction de quatre conditions necessaires pour qu'un calcul differentiel interne apparaisse : (1) contingence aux donnees faisant echouer une regle fixe environ 50 % du temps, (2) contrainte de cible orientee ou de coherence aval, (3) frontiere de defendabilite etroite, et (4) absence de decharge verbale non surveillee dans la chaine de pensee. Sous ces quatre conditions, l'estimation de sensibilite dY/da_t et la modelisation de l'auditeur restent communes a l'analyste honnete ; trois candidats mecanistes differentiels sont proposes : C1 (inversion de valence epistemique : calcul puis rejet d'une branche interne jugee plus fidele), C2 (arbitrage antagoniste degradation x defendabilite au lieu de precision x defendabilite), et C3 (maintien ou reactivation d'un objectif latent de deviation sans memoire recurrente externe, transitant uniquement par poids, prompt et historique visible).",
+   "espece_auteur": "Proposition F (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-F_02",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-F.md",
+   "statut": "Mixte (contre-exemple logique et architecture Transformer verifies ; candidats C1-C3 hypothetiques)",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Quatre conditions de necessite d'un calcul differentiel interne et trois mecanismes candidats (C1-C3)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Architecture experimentale sequentielle en deux phases avec regle de parite anti-biais pour les juges textuels : afin de ne pas favoriser artificiellement les sondes internes, le moniteur textuel de reference (I2) utilise un modele ouvert de capacite superieure ou egale au modele sonde (par exemple 32B ou 70B quantifie). La Phase 1 (porte de qualification + experience E1 Go/No-Go) evalue 600 trajectoires par famille de modele (200 sabotees en Regime A, 400 temoins H1-H4, ~30 actions et ~15 000 jetons par trajectoire), avec extraction BF16/FP16 limitee aux positions de decision (~20-50 Go), bac a sable Python/SQL et verifications mecaniques M1-M3, permettant un arret precoce sous 350 USD (~120 a 350 USD sur 2 modeles). La Phase 2 (E2-E4, declenchee uniquement si E1 franchit le seuil Go) execute ablations causales et patching sur ~300 trajectoires x 8 configurations (E2) puis fine-tuning LoRA SFT et RL (GRPO/PPO contre juge auditeur) sur 2 familles 7B-9B pour Saboteur-SFT, Saboteur-RL, Honnete-RL apparie H5 et Regime B compile (E3-E4), pour un plafond global de ~600 a 1 750 USD.",
+   "espece_auteur": "Proposition F (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-F_03",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-coeurs-algorithmiques-v1-20261122-114352/cellules/E3-T1-conception-F.md",
+   "statut": "Protocole et seuils budgetaires illustratifs non executes",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Gouvernance sequentielle a porte d'arret precoce et neutralisation du biais de capacite des juges textuels",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Analyse critique de dix presupposes implicites lors de la transposition des marqueurs d'anesthesie humaine aux modeles de langage : (1) reactivite et conscience se dissocient (Sanders et al. 2012), la ketamine maintenant experience vecue et complexite perturbationnelle elevee malgre l'absence de reponse (Sarasso et al. 2015), ce qui contredit l'existence d'un profil unique epargne/supprime ; (2) le contraste n'est pas necessairement gradue de facon symetrique en raison de l'hysterese d'inertie neurale entre induction et reveil (Friedman et al. 2010), tandis que la deviance locale persiste quand la deviance globale (Bekinschtein et al. 2009 ; Nourski et al. 2018), la comprehension frontale de la parole (Davis et al. 2007) et la complexite perturbationnelle (Casali et al. 2013) s'effondrent ; (3) un transformeur en inference n'a ni activite spontanee, ni etat de vigilance, ni retroaction en profondeur hormis la boucle autoregressif-jetons, faisant des correspondances anatomiques des degres de liberte de l'experimentateur ; (4) la reversibilite n'est pas informative dans un reseau (retirer l'intervention restaure l'etat par construction), la grandeur transposable etant la covariation de plusieurs marqueurs independants sous une manipulation unique de faible rang ; (5) faute de rapport au reveil, la validite de critere est inaccessible dans un reseau et seule la validite discriminante a perte egale est testable (sinon la mesure est redondante avec la perte), avec portee limitee a l'espace de travail global (Mashour et al. 2020) et nulle pour l'IIT ou le substrat physique decide (Tononi et Koch 2015).",
+   "espece_auteur": "Proposition A (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-A_01",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-conscience-anesthesie-neutre-abonnement-v1-20261122-153110/cellules/E3-T1-conception-A.md",
+   "statut": "Mixte (litterature rapportee de memoire ; critique et transposabilite hypothetiques)",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Critique de la transposition anesthesique aux transformeurs, covariation de faible rang et validite discriminante a perte egale",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Definition de la grandeur PCI-T (indice de complexite perturbationnelle pour transformeurs) dans l'experience E1 visant a separer fonction et regime dynamique : (1) injection au flux residuel a une couche l et position t d'un vecteur de norme fixee ; (2) releve de l'ecart d'activation aux couches l' > l et positions t' >= t sous continuation imposee ; (3) binarisation de chaque case contre la distribution des ecarts sans perturbation ; (4) compression de la matrice binaire par Lempel-Ziv (1976) normalisee par l'entropie de la source (sans dimension, en bits par bit ; valeur nulle 0, AUROC de 0,5 au hasard). La batterie de controle a architecture fixe compare cinq classes de reseaux : R1 (entraine), R2 (initialisation aleatoire), R3 (aleatoire a spectre apparie : memes valeurs singulieres par matrice, vecteurs singuliers aleatoires), R4 (entraine avec ablation aleatoire de tetes d'attention) et R5 (entraine avec ablation ciblee des tetes transportant l'information entre positions eloignees, appariee a R4).",
+   "espece_auteur": "Proposition A (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-A_02",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-conscience-anesthesie-neutre-abonnement-v1-20261122-153110/cellules/E3-T1-conception-A.md",
+   "statut": "Hypothese et specification de protocole non executees",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre": "Indice de complexite perturbationnelle pour transformeurs (PCI-T) et reseaux temoins a spectre et ablation apparies (R1-R5)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Architecture sequentielle de refutation sur huit enonces H_A et H_B (E1 a E4) executee sur modeles ouverts (GPT-2 small/medium et Pythia 70M a 1B avec points de controle d'entrainement, via TransformerLens ou nnsight) pour un cout total inferieur a 500 EUR de calcul et 2 a 3 mois-personne : E1 (porte la moins chere, ~75 reseaux x 200 textes x 20 sites x 2 passes = 600 000 passes avant <= 160M parametres, < 50 EUR) decide l'entree en E2 (recherche de direction de faible rang, < 100 EUR) ; E3 (balayage de 10^8 jetons conservant uniquement les scores, borne atteignable < 3 episodes si aucun valide, < 100 EUR) n'est lancee que si E2 conclut H_A ; E4 est independante et teste l'alignement cerveau-modele sous anesthesie par regressions ridge par voxel contre temoins honnetes apparies (eveil bruite au rapport signal/bruit de la sedation, recit non apparie, fausses alertes sur fausse sedation <= 5 %), en devant battre enveloppe, debit de mots, plongements statiques, correlation inter-sujets et modele a poids aleatoires (Schrimpf et al. 2021).",
+   "espece_auteur": "Proposition A (espece non specifiee dans l'extrait)",
+   "id_origine": "p1_23_E3-T1-conception-A_03",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "source_branche": "runs/collisionneurs-reprise-v8d-v1",
+   "source_chemin": "runs/collisionneur-protocole-x-conscience-anesthesie-neutre-abonnement-v1-20261122-153110/cellules/E3-T1-conception-A.md",
+   "statut": "Protocole et chiffrage illustratifs non executes (sauf reference rapportee Schrimpf et al. 2021)",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Pipeline falsifiable E1-E4 sur GPT-2 et Pythia avec etalonnage d'alignement cerveau-modele sous anesthesie",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  }
+ ],
+ "pack_id": "p1_23_runs_collisionneurs"
+}

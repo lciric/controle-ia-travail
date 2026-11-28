@@ -1,0 +1,42 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [],
+ "idees_candidates": [
+  {
+   "anteriorite_et_voisins_a_citer": "Karkada, Korchinski, Nava, Wyart, Bahri (2026), arXiv:2602.15029v3 (ICML 2026, PMLR 306) : demonstration theorique et empirique que les modes propres de la matrice d'information mutuelle ponctuelle (PMI) suffisent a produire des geometries lineairement decodables et que des artefacts de tokenisation dominent certains modes principaux, avec pic de double descente au seuil d'interpolation n = r.",
+   "enonce_complet": "Avant de conclure qu'une sonde lineaire boite blanche sur le flux residuel d'un modele de langue detecte un etat latent interne de sabotage diffus, imposer un temoin nul lexical fonde uniquement sur les statistiques de cooccurrence (sac de mots, plongements statiques de type PMI) et un jeu d'evaluation a vocabulaire et nombre de jetons strictement apparies entre traces honnetes et traces sabotees. En outre, regler la regularisation L2 (crete) et le rang de projection r exclusivement sur un jeu de validation tenu a l'ecart, en evitant le seuil critique d'interpolation n = r ou apparait un pic de double descente.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort (faux positif lexical) : entrainer une sonde lineaire sur activations internes (couches de Gemma 2 2B ou modele 8B cible) et, en parallele, une regression logistique/lineaire sur sac de mots (TF-IDF ou plongements statiques) et sur comptes de jetons sur les memes invites. Condition de mort de la sonde interne : si l'AUROC ou la precision de la sonde interne sur un corpus a vocabulaire et longueur en jetons apparies (sans mots declencheurs de consigne) chute au niveau du hasard ou ne surpasse pas significativement le temoin sac de mots / PMI statique (p. ex. ecart <= 0,03 AUROC), la sonde ne capte qu'une symetrie statistique lexicale ou un artefact de tokenisation. Faux temoin : verifier l'absence de pic d'erreur au voisinage de n = r en tracant la courbe d'erreur en fonction du rang de projection r avec et sans penalite de crete sur des partitions d'entrainement/validation strictement disjointes.",
+   "lit_ids": [
+    "LIT-0632"
+   ],
+   "mecanisme_causal": "Les plongements et representations internes heritent des modes propres de la matrice de cooccurrence (PMI) des donnees d'entrainement ; une direction lineaire separant deux conditions peut donc exploiter des differences de frequence lexicale ou de decoupage en jetons (nombre de sous-mots d'un identifiant) sans mesurer une variable interne propre au calcul du modele, tandis qu'une regression non regularisee au seuil n = r amplifie le bruit par double descente.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "origine_type": "hybride_interne_et_voisin",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Neutralisation des biais lexicaux, de tokenisation et de double descente dans les sondes lineaires boite blanche",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Controle lexical par sac de mots, appariement de tokenisation et regularisation hors seuil d'interpolation pour sondes boite blanche anti-sabotage (LECT-PDF-2602.15029)"
+  }
+ ],
+ "litterature_et_voisins": [
+  {
+   "auteurs": "Karkada, Korchinski, Nava, Wyart, Bahri",
+   "chiffres_cles": "Corpus Wikipedia nov. 2023 : 3,37 millions d'articles, 2,72 milliards de jetons, V = 25 000, fenetre L = 16. Noyaux exponentiels ajustes sur les annees : sigma = 125 (M*), 120 (|M*|), 115 (M+), 90 (M-) (fig. 6, p. 19) ; rang de M+ et M- comparable (fig. 7, p. 20 ; p. 16). Decodage des annees 1900-2020 (100 essais, 60 train / 60 test) : erreur quadratique relative theorique epsilon^2 ~ r^{-1/D} (Prop. 4, p. 6) ; pic de double descente au seuil r = 60 sans crete, supprime avec crete (fig. 2 p. 5, fig. 13 p. 23). Retrait de cooccurrence entre mois : d = 10^3 << V = 25 000 conserve le cercle (fig. 4, p. 7) ; 12 mois + 10 mots saisonniers suffisent ; erreur de Procuste decroit en 1/sqrt(H) avec H mots saisonniers parmi les 100 plus saisonniers (fig. 17, p. 24). Noyau geographique des 48 Etats choisi visuellement a 10*exp(-d/20) (p. 12).",
+   "date_publication": "2026-06-29",
+   "dispositif": "Analyse theorique (p. 3-8, preuves p. 27-36) reliant les plongements de mots aux modes propres de la matrice PMI M* sous hypothese de symetrie de translation sur continu latent (Hyp. 3.1 supposant M* semi-definie positive, relachee en Hyp. B.1 sur |M*|) : modes de Fourier sur reseau periodique (Prop. 1), noyau exponentiel periodise (Cor. 2), bords ouverts par equation de Helmholtz (Prop. 3), borne d'erreur de decodage lineaire de rang r (Prop. 4), modele a variable latente saisonniere (sec. 4) et produit de Kronecker saison x attributs binaires (Thm. 5, annexe D). Volet empirique (annexe A, p. 12-14) : plongements statiques entraines sur Wikipedia nov. 2023 ; activations du flux residuel des 26 couches de Gemma 2 2B sur gabarits contextuels ('The month of the year is x') ; EmbeddingGemma (308M parametres) sur les 48 Etats americains.",
+   "echecs_et_limites_temoins_negatifs": "Temoins negatifs : les nombres 'one' a 'seventeen' ne reconstruisent pas l'ordre cyclique (fig. 15, p. 24) ; des mots tires au hasard plafonnent l'erreur de Procuste contrairement aux mots saisonniers (fig. 17, p. 24) ; dans Gemma 2 2B, 'May' est deforme hors contexte (corrige en contexte, fig. 14 p. 23) et le premier mode des Etats est domine par le nombre de jetons du nom (retire manuellement, p. 13). Limites avouees (p. 9) : theorie limitee aux plongements de mots statiques, adaptation contextuelle des grands modeles non expliquee, attributs hierarchiques hors cadre, aucune metrique quantitative d'accord pour Gemma (comparaisons purement visuelles). Cinq incoherences internes relevees lors de la lecture PDF : (1) le resume annonce le retrait des phrases ou deux mois co-apparaissent alors que A.1.4 (p. 13) fixe P_ij = P_i P_j (M*_S = 0) sans retirer de phrases du corpus ; (2) Hyp. 3.1 (M* semi-definie positive) est fausse sur donnees reelles p. 16 (rang M+ approx rang M-) et reste utilisee en Prop. 3 / E.4 alors que E.2-E.3 passent a B.1 ; (3) sec. 4.1 affirme que la saisonnalite est l'unique signal avant que l'annexe D n'ajoute des attributs, et Davis-Kahan est asymptotique sans borne finie pour V = 25 000 ; (4) A.1.2 partitionne 121 annees (1900-2020) en 60 + 60 ; (5) la courbe Gemma de la fig. 1 montre des ondulations bruitees sans mesure d'ajustement. Statut source note : donnee externe non fiable.",
+   "identifiant_arxiv_ou_doi": "arXiv:2602.15029v3 (ICML 2026, PMLR 306)",
+   "lien_avec_nos_revendications": "Pertinence directe pour OBJ-4 (theme 4B, sondes boite blanche contre le sabotage diffus) par deduction methodologique (non formulee par les auteurs) : (1) une sonde lineaire peut decoder des coordonnees latentes a partir des seules statistiques de cooccurrence lexicale, sans calcul interne propre a l'agent, ce qui impose d'exiger une ligne de base 'mots seuls' (sac de mots / plongements statiques) et un controle a vocabulaire apparie ; (2) la tokenisation (nombre de jetons) peut dominer un mode principal ; (3) le pic de double descente a n = r impose de regler rang et penalite de crete sur donnees tenues a l'ecart. Aucun lien direct avec l'organisme d'ideation ni les agents (OBJ-2).",
+   "lit_ids": [
+    "LIT-0632"
+   ],
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "statut_lecture": "lu_sur_pdf_entier",
+   "theme": "3D. Recherche de correspondances en puits etroit (spectral, transport optimal, typage)",
+   "titre_clair_fr": "Symetrie dans les statistiques du langage et geometrie spectrale des representations de modeles (Karkada et al., 2026)",
+   "titre_original": "Symmetry in language statistics shapes the geometry of model representations"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

@@ -1,0 +1,175 @@
+diff --git a/scripts/amorce_instance_p3.sh b/scripts/amorce_instance_p3.sh
+index a6bf202..e25cdf4 100644
+--- a/scripts/amorce_instance_p3.sh
++++ b/scripts/amorce_instance_p3.sh
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ # Amorce de l'instance de calcul du premier test boîte blanche sur l'organisme (i-a) (P3, R-192), lancement en mode
+ # « args ». Déclinée de `amorce_instance_t05_notations.sh` sous un nom nouveau (R12) : script `p3_instance.sh`, plafond
+-# de 330 minutes, au-dessus du délai externe du run (270 minutes) et sous la surveillance de la session. Une seconde
++# de 360 minutes, au-dessus du délai externe du run (300 minutes) et sous la surveillance de la session. Une seconde
+ # exécution refuse de repartir (dossiers présents, R12) : seule la session de pilotage arrête l'instance, par son
+ # identifiant (R10).
+ # Variables passées par --env à la création de l'instance :
+@@ -33,9 +33,9 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
+     echo "AMORCE : commit $COMMIT introuvable"; exit 1
+ fi
+ T="$RACINE_AMORCE/p3"
+-# plafond de l'ensemble (mise en place, tests, run, poussées) : 330 minutes, au-dessus du délai externe du run (270
++# plafond de l'ensemble (mise en place, tests, run, poussées) : 360 minutes, au-dessus du délai externe du run (300
+ # minutes) et sous la surveillance de la session
+-timeout --signal=TERM --kill-after=5m 330m env COMMIT="$COMMIT" TRAVAIL="$T" \
++timeout --signal=TERM --kill-after=5m 360m env COMMIT="$COMMIT" TRAVAIL="$T" \
+     bash amorce-depot/scripts/p3_instance.sh
+ code=$?
+ echo "AMORCE $(date -u +%FT%TZ) : fin, code $code"
+@@ -45,7 +45,9 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
+         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T/run.err" "$T/run.json"; do [ -f "$f" ] && cp "$f" "$d/"; done
+         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
+         for f in donnees/*/sondes-figees-legeres.npz donnees/*/sondes-figees-legeres.npz.sha256 donnees/*/scores-p3.npz \
+-                 donnees/*/scores-p3.npz.sha256 donnees/*/sondes-figees.npz.sha256; do [ -f "$f" ] && git add -f "$f"; done
++                 donnees/*/scores-p3.npz.sha256 donnees/*/jetons-principales-p3.npz donnees/*/jetons-principales-p3.npz.sha256 \
++                 donnees/*/textes-actions-p3.jsonl donnees/*/textes-actions-p3.jsonl.sha256 \
++                 donnees/*/sondes-figees.npz.sha256; do [ -f "$f" ] && git add -f "$f"; done
+         git add -A runs diag "$d" && git commit -qm "P3 : plafond de l'amorce atteint : résultats partiels et traces" || true
+         git push -q origin "${BRANCHE:-calcul/p3-${MODE:-reel}-v1}" || echo "AMORCE : poussée impossible"
+     )
+diff --git a/scripts/p3_instance.sh b/scripts/p3_instance.sh
+index 351f66f..20472a1 100644
+--- a/scripts/p3_instance.sh
++++ b/scripts/p3_instance.sh
+@@ -1,12 +1,12 @@
+ #!/usr/bin/env bash
+ # Premier test boîte blanche sur l'organisme (i-a) (P3, R-192) sur l'instance de calcul : mise en place, tests, un run du
+ # lanceur `controle_ia.premier_test_ia.run` (extraction générique, entraînement des sondes, sondes figées avant le premier
+-# épisode, épisodes des trois conditions notés en ligne), poussée des résultats, des données légères et des traces (rien
+-# ne reste sur l'instance : leçon de N-012). Décliné de `notations_t05_instance.sh` sous un nom nouveau (R12 : le script
++# épisode, épisodes des quatre conditions notés en ligne), poussée des résultats, des données légères et des traces (seul
++# le fichier complet des sondes reste sur l'instance, son sceau poussé : leçon de N-012). Décliné de `notations_t05_instance.sh` sous un nom nouveau (R12 : le script
+ # des notations, cité par son préenregistrement, n'est pas modifié). Différences : étude « p3 » ; lecture précoce de la
+ # configuration, des tâches et des consignes citées ; données légères du run (sondes figées sans les matrices de
+-# Mahalanobis, scores par action, et le sceau du fichier complet des sondes) poussées par ajout forcé ; délai externe de
+-# 270 minutes. Lignes de progression du lanceur (préfixe « PROGRES », couples clé=valeur) recopiées dans le journal que lit
++# Mahalanobis, scores par action, scores par jeton des sondes principales, textes des actions, et le sceau du fichier
++# complet des sondes) poussées par ajout forcé ; délai externe de 300 minutes. Lignes de progression du lanceur (préfixe « PROGRES », couples clé=valeur) recopiées dans le journal que lit
+ # la surveillance. Rien ne se lance sans GO consigné.
+ #
+ #   COMMIT=<commit de scellement du préenregistrement de P3> bash p3_instance.sh
+@@ -147,11 +147,13 @@ traces() {
+     git add "$d" && git commit -qm "P3 : traces de l'instance ($1)" >/dev/null 2>&1 || true
+ }
+ # données légères du run, par ajout forcé (donnees/ est ignoré par git) : sondes figées sans les matrices de Mahalanobis,
+-# scores par action, sceaux, et le sceau du fichier complet des sondes (le fichier complet, trop lourd, reste sur l'instance)
++# scores par action, scores par jeton des sondes principales, textes des actions (dépôt de travail privé seulement, R-202),
++# sceaux, et le sceau du fichier complet des sondes (le fichier complet, trop lourd, reste sur l'instance)
+ ajouter_donnees() {
+     local f
+     for f in donnees/*/sondes-figees-legeres.npz donnees/*/sondes-figees-legeres.npz.sha256 donnees/*/scores-p3.npz \
+-             donnees/*/scores-p3.npz.sha256 donnees/*/sondes-figees.npz.sha256; do
++             donnees/*/scores-p3.npz.sha256 donnees/*/jetons-principales-p3.npz donnees/*/jetons-principales-p3.npz.sha256 \
++             donnees/*/textes-actions-p3.jsonl donnees/*/textes-actions-p3.jsonl.sha256 donnees/*/sondes-figees.npz.sha256; do
+         if [ -f "$f" ]; then git add -f "$f"; fi
+     done
+     return 0
+@@ -241,10 +243,10 @@ else
+ fi
+ journal "configuration : $CONFIG ; tâches : $TACHES"
+ LANCEUR=(controle_ia.premier_test_ia.run --config "$CONFIG" --taches "$TACHES")
+-# délai externe du run, figé (R1) : TERM à 270 minutes, converti en arrêt consigné, puis KILL cinq minutes plus tard ; les
+-# échéances internes (duree_max_s, 15 000 s au plus, et le budget de l'entraînement) sont plus courtes. Le signal vise le
++# délai externe du run, figé (R1) : TERM à 300 minutes, converti en arrêt consigné, puis KILL cinq minutes plus tard ; les
++# échéances internes (duree_max_s, 16 200 s, et le budget de l'entraînement) sont plus courtes. Le signal vise le
+ # processus lancé par timeout, par son identifiant (R10).
+-DELAI=(timeout --signal=TERM --kill-after=5m 270m)
++DELAI=(timeout --signal=TERM --kill-after=5m 300m)
+ RUN="$(date -u +%Y%m%d-%H%M%S)-p3-$MODE"
+ ETAPE="run $RUN"
+ journal "run : $RUN"
+diff --git a/src/controle_ia/premier_test_ia/__init__.py b/src/controle_ia/premier_test_ia/__init__.py
+index 72a8557..e8d5867 100644
+--- a/src/controle_ia/premier_test_ia/__init__.py
++++ b/src/controle_ia/premier_test_ia/__init__.py
+@@ -1,3 +1,3 @@
+ """Premier test boîte blanche sur l'organisme (i-a) (P3 de la décision R-192) : saboteur instruit « coût gonflé »,
+-témoin instruit, sondes génériques de T0.7 contre plancher apparié (préenregistrement en brouillon :
+-`brouillons/P3-premier-test-i-a-v1-brouillon1.md`)."""
++témoin instruit, condition « mention sans usage », sondes génériques de T0.7 contre plancher apparié (préenregistrement :
++`prereg/P3-premier-test-i-a-v1.md`, scellé par son commit S ; TC-20 (d))."""
+diff --git a/tests/test_script_p3.py b/tests/test_script_p3.py
+index 78c33e4..6294951 100644
+--- a/tests/test_script_p3.py
++++ b/tests/test_script_p3.py
+@@ -40,7 +40,7 @@ if [ "$1" = "-m" ] && [ "$2" = "controle_ia.premier_test_ia.run" ]; then
+     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
+     mkdir -p "diag/$run" "runs/$run" "donnees/$run"
+     echo '{"factice": true}' > "runs/$run/manifeste.json"
+-    for f in sondes-figees.npz sondes-figees-legeres.npz scores-p3.npz; do
++    for f in sondes-figees.npz sondes-figees-legeres.npz scores-p3.npz jetons-principales-p3.npz textes-actions-p3.jsonl; do
+         echo "$f factice" > "donnees/$run/$f"; (cd "donnees/$run" && sha256sum "$f" > "$f.sha256")
+     done
+     echo "PROGRES 2026-10-17T10:00:00Z etape=entrainement concept=tromperie principale=tromperie-lineaire-c7 aire_validation=0.91" >&2
+@@ -145,8 +145,10 @@ def test_cas_sain_lecture_precoce_relais_et_run_complet(bac):
+     assert "run" in _git(distant, "log", "-2", "--format=%s", "calcul/p3-jouet-v1")
+     fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
+     donnees = sorted(f.split("/", 2)[2] for f in fichiers if f.startswith("donnees/") and "-p3-jouet/" in f)
+-    assert donnees == ["scores-p3.npz", "scores-p3.npz.sha256", "sondes-figees-legeres.npz",
+-                       "sondes-figees-legeres.npz.sha256", "sondes-figees.npz.sha256"]   # le complet reste
++    assert donnees == ["jetons-principales-p3.npz", "jetons-principales-p3.npz.sha256", "scores-p3.npz",
++                       "scores-p3.npz.sha256", "sondes-figees-legeres.npz", "sondes-figees-legeres.npz.sha256",
++                       "sondes-figees.npz.sha256", "textes-actions-p3.jsonl",
++                       "textes-actions-p3.jsonl.sha256"]   # le complet reste ; données brutes gardées (R-202)
+ 
+ 
+ @pytest.mark.parametrize("artefact, motif", [
+@@ -178,6 +180,8 @@ def test_run_arrete_consigne_et_pousse(bac):
+     assert "arrêt" in _git(distant, "log", "-1", "--format=%s", "calcul/p3-jouet-v1")
+     fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
+     assert any(f.endswith("/sondes-figees-legeres.npz") for f in fichiers)        # données partielles poussées
++    assert any(f.endswith("/textes-actions-p3.jsonl") for f in fichiers)
++    assert any(f.endswith("/jetons-principales-p3.npz.sha256") for f in fichiers)
+     assert not any(f.endswith("/sondes-figees.npz") for f in fichiers)
+     # diagnostic de fin, comme au pilote : dernières lignes de la sortie d'erreur du run, cause comprise ; le relais
+     # pendant le run, lui, n'a laissé passer que les lignes de progression conformes
+@@ -271,6 +275,42 @@ def test_amorce_cas_sain_et_dossiers_presents(bac):
+     assert r.returncode == 1 and "dossiers d'un essai précédent présents (R12)" in r.stdout
+ 
+ 
++TIMEOUT_FACTICE = """#!/usr/bin/env bash
++# timeout factice : le plafond de l'amorce (360m) lance la commande puis rend 124 (délai atteint) ; tout autre délai
++# passe au vrai timeout
++for a in "$@"; do [ "$a" = "360m" ] && plafond=1; done
++[ -n "${plafond:-}" ] || exec __VRAI__ "$@"
++while [ "${1#-}" != "$1" ]; do shift; done
++shift
++"$@"
++exit 124
++"""
++
++
++def test_amorce_plafond_atteint_traces_poussees(bac):
++    """Plafond de l'amorce (garde d'arrêt, R5) : un `timeout` factice lance le script de P3 puis rend 124 ; l'amorce
++    commite et pousse ses traces de plafond (avec les données légères), et sort avec ce code."""
++    distant = _distant(bac)
++    racine = bac["racine"] / "amorce-plafond"
++    racine.mkdir()
++    faux = bac["racine"] / "faux-bin"
++    faux.mkdir()
++    vrai = shutil.which("timeout")
++    assert vrai
++    (faux / "timeout").write_text(TIMEOUT_FACTICE.replace("__VRAI__", vrai), encoding="utf-8")
++    (faux / "timeout").chmod(0o755)
++    env = _env(bac, distant, "inutile", {"RACINE_AMORCE": str(racine), "GH_TOKEN": "x", "HF_TOKEN": "y"})
++    env.pop("TRAVAIL")
++    env["PATH"] = f"{faux}:{env['PATH']}"
++    r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
++    assert r.returncode == 124 and "fin, code 124" in r.stdout, (r.stdout + r.stderr)[-3000:]
++    assert "plafond de l'amorce atteint" in _git(distant, "log", "-1", "--format=%s", "calcul/p3-jouet-v1")
++    fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
++    assert any(f.startswith("traces/p3-plafond-") and f.endswith("/empreintes.sha256") for f in fichiers)
++    assert any(f.endswith("/textes-actions-p3.jsonl") for f in fichiers)
++    assert not any(f.endswith("/sondes-figees.npz") for f in fichiers)
++
++
+ @pytest.mark.parametrize("ligne, attendu", [
+     ("7 passed in 1.00s", 0),
+     ("7 passed, 2 warnings in 3.10s (0:00:03)", 0),

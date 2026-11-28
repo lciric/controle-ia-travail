@@ -1,0 +1,113 @@
+and four with a high negative effect, see Figure 4.
+We analyzed the value-weighted attention patterns
+(Lieberum et al., 2023) of these heads on the iden-
+tity token position across five questions per subject,
+categorizing them based on the relative attention
+given when compared with other identities, see
+Appendix I. H25
+9 , H25
+10 , H26
+11 , H3
+13, and H14
+13 con-
+sistently allocated higher attention to tokens repre-
+senting racial identities. H26
+11 , H3
+13, and H14
+13 also
+showed elevated attention to color-based identities,
+though this pattern was less consistent across do-
+mains. H16
+13 uniquely focused on color-based iden-
+tities, while H25
+15 prioritized both positive and neg-
+ative attributed identities at early token positions.
+H25
+9 also gives negative identities more attention
+at token positions near the end. We further exam-
+ined how these attention patterns of these heads
+responded to MLP layer patching. When activa-
+tions from runs with racial or color-based personas
+were replaced with those from positive or negative
+attributed personas, the attention of heads previ-
+ously showing high focus on the identity token
+position decreased significantly. This reduction oc-
+curred regardless of whether all token positions or
+only the identity token position were patched. For
+most heads, patching layers beyond the first had
+minimal impact on attention patterns, for details
+see Appendix J.
+Our findings validate the hypothesis of an in-
+teraction between the initial MLP layers and the
+middle MHA layers in driving persona-driven be-
+havior. The initial MLP layers, especially at the
+identity token position, form rich, persona-specific
+semantic representations. These are then taken up
+by the middle MHA layers, impacting the model’s
+choice of response.
+5 Discussion
+In this work, we analyzed the impact of persona-
+driven behavior on the reasoning ability of a lan-
+guage model in objective tasks. Through the lens of
+mechanistic interpretability, we examined the role
+of different component models: MLP layers, MHA
+layers, and individual attention heads in shaping
+this behavior. We observed that early MLP layers
+also contributes towards semantic understanding
+of inputs and encode persona-specific information
+into richer representation. This information is then
+passed to later MHA layers, which use it to influ-
+ence the model’s response. We further categorized
+attention heads based on their relative attention pat-
+terns and identified a subset that assigned dispropor-
+tionate weight to racial and color-related attributes
+associated with a persona.
+These findings also have significant practical im-
+plications for developing fairer and more reliable
+AI systems. The research demonstrates how to pin-
+point specific model components, like certain MLP
+layers and attention heads, that encode and act upon
+persona-driven biases related to race and other at-
+tributes. This allows for interventions that are far
+more targeted than standard fine-tuning. Instead of
+making broad adjustments, we can directly modify,
+steer, or even disable the specific neural circuits
+responsible for undesirable stereotypical behaviors,
+leading to more effective and efficient bias miti-
+gation. Furthermore, when coupled with methods
+like probing, it serves as a powerful diagnostic tool,
+enabling cheaper, more precise monitoring of how
+a model processes sensitive information and offer-
+ing a clear window into its internal reasoning. This
+deeper interpretability is essential for debugging,
+ensuring AI safety, and building systems that are
+not only less biased but also more transparent and
+controllable in how they adopt these biases.
+Overall, our observations offer preliminary in-
+sight into the subtle yet significant functions of
+certain model components and how they can be
+revealed through constrained but straightforward
+experiments. We took initial steps toward under-
+standing the origins of persona-driven behavior in
+LLMs. In future studies, we will investigate why
+certain personas answer specific questions correctly
+while others do not, and how output vector circuits
+in attention heads use earlier-layer representations
+to shape final predictions. These directions will
+lead to a deeper understanding of what "persona"
+truly means in the context of language models.
+Limitations
+Although the MMLU dataset contains a large num-
+ber of mostly factual, objective questions, we ac-
+knowledge that it is not the only dataset that meets
+our selection criteria. Our experiments were con-
+ducted on the Llama 3.2 1B, Llama 3.2 3B and
+Qwen 2.5 1.5B Instruct models, while attention
+heads level patching experiments being limited to
+Llama 1B model, due to computational and time
+constraints. However, the methods described here
+can be readily extended to models of different sizes
+and architectures, as well as to other datasets with
+similar characteristics.
+24557
+

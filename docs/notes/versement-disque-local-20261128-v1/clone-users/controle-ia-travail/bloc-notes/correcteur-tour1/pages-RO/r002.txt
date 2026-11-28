@@ -1,0 +1,57 @@
+Preprint
+In a recent security incident (METR, 2026, OpenAI/HuggingFace), agents confined to sand-
+boxes (Lampson, 1973) exploited a package manager vulnerability to construct unintended, un-
+monitored inter-agent communication channels and used these to coordinate on third-party attacks.
+As agents become more capable, access to (Rippin et al., 2026), or emergence of (Mathew et al.,
+2024), steganographic techniques and coordination resources could exacerbate collusion risks and
+prevent monitoring based on communication transcripts even within inter-agent channels intended by
+the designer (Schroeder de Witt, 2026).
+Proposed defences against secret collusion include monitoring text outputs, paraphrasing agent
+communications, and imposing behavioural constraints (Roger & Greenblatt, 2023; Greenblatt et al.,
+2024; Syrnikov et al., 2026). However, these have been shown to fail against steganographic signals
+designed to be indistinguishable from natural language (Motwani et al., 2024; Mathew et al., 2024).
+A separate line of work has shown that linear probes on model activations can detect deception in
+single-agent settings (Goldowsky-Dill et al., 2025; Anthropic, 2024). However, little prior work has
+applied activation-based detection to multi-agent settings.
+In this work, we introduce multi-agent interpretability as a multi-agent detection framework that
+complements transcript-level monitoring with internal model activation probing. We first derive
+principled detection statistics for collusion in unknown subgroups from the composite hypothesis
+testing literature. Our theoretical analysis that there is no known UMP test for this setting, suggests
+that no single such statistic can be expected to dominate across all collusion scenarios. As a
+comparator, we also construct a number of detection heuristics with intuitive if not theoretical
+support.
+To evaluate how collusion detectors generalise to unseen environments, we introduce NARCBENCH,
+a novel benchmark for evaluating multi-agent collusion detection under environment distribution shift.
+NARCBENCH features a CORE environment with diverse committee deliberation tasks that can be
+used to generate training data for detectors such as activation probes (Alain & Bengio, 2018) or LLM
+judges (Zheng et al., 2023). The STEGO and TRANSFER environments then serve as holdout tasks
+for transfer evaluation. TRANSFER contains diverse adversarial tasks such as code review sabotage
+or news framing, and STEGO features blackjack games with a card counting collusion carried by
+public signalling. Importantly, we show that STEGO cannot be separated by transcript-level LLM
+judges, even stronger Claude models, without a few examples of the exact steganographic protocol
+used.
+Across four open-weight models, both our group-level statistics and heuristics transfer zero-shot from
+CORE to TRANSFER and STEGO. Notably, the best method on every model reaches 0.99 to 1.00
+AUROC, posing a real alternative in a task set up to deny transcript-level monitoring.
+We also evaluate detector transfer to third-party environments with emergent, rather than instructed,
+collusion. In one of these environments, only 2 of 229 collusive episodes verbalise the coordination
+in the transcript. We find evidence of partial transfer to these environments, indicating that probes
+fitted to instructed collusion may not fully capture emergent collusion signals.
+In line with our theoretical analysis, we find that no single statistic or heuristic dominates empirically
+across tasks. Overall, we establish multi-agent interpretability as a complementary monitoring
+technique, while highlighting the need to evaluate detector performance on both emergent and
+instructed collusion risks.
+Our contributions are:
+1. NARCBENCH (Neural Activation Reading for Collusion Benchmark), a three-tier bench-
+mark for evaluating collusion detection under environment distribution shift: CORE (50
+scenarios, 17 domains), TRANSFER (6 structurally distinct scenario types), and STEGO
+(steganographic blackjack card counting). NARCBENCH already shows community trac-
+tion (Das et al., 2026).
+2. A statistical framework for multi-agent collusion detection based on composite hypothesis
+testing with an unknown subgroup. In our case, the unknown subgroup are the colluders.
+Our framework gives rise to two group-level detection statistics as generalised likelihood-
+ratio tests, and the insight that no single statistic is known to be uniformly most powerful
+across colluding group sizes and signal strengths. We find evidence supporting the latter
+empirically in our experiments, for the tests we examine.
+2
+

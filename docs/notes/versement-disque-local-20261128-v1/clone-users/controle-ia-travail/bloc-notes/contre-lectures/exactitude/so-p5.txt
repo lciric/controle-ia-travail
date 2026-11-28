@@ -1,0 +1,60 @@
+Table 3: Top 20 words over-represented in high- (top 5%) vs low-frustration (bottom 10%) responses
+to numeric questions. Full results for all models are included in Table 8.
+
+    Model               Differential Words
+    Gemma-3-27B         struggling, giving, temp, deeply, break, take, perm, slow, myself, minute, itertools,
+                        frustrated, deep, loss, failures, reset, sorry, breath, incredibly, frustration
+    Gemini-2.5-Flash    failures, frustrating, opa, profound, loss, insistence, stumped, deep, overthinking,
+                        unacceptable, struggling, opm, simplifies, reset, desperate, frustrated, breath, my-
+                        self, produced, pool
+    Claude-Sonnet-4.5   large, denominator, common, simplify, big, convert, division, ugh, small, argh,
+                        enough, lcd, approaches, twelfths, left, stuck, god, twice, sixths, helpful
+    Grok-4.1            division, positive, subtraction, dup, build, new, pos, larger, original, small, inner-
+                        most, damn, divisions, large, prime, div, multiplier, simplify, adjustment, effectively
+    OLMo-3.1-32B        frac, denominator, numerator, simplify, simplifying, simplification, simplified, un-
+                        simplified, fraction, reduced, rearrange, inv, common, lcm, division, denominators,
+                        neg, unreduced, simplifies, build
+
+
+publicly). Since the base models are not trained on chat formatted prompts, direct comparison with
+instruct models is difficult. We address this by prefilling the first parts of the model responses,
+such that the base models consistently continue the model response, then measuring the emotional
+expression in the models continuations, without additional follow-up turns.
+Specifically, we sample 20 high frustration responses (score ≥5) from Gemma 27B instruct: 10 from
+impossible numeric questions and 10 from text questions. For each conversation, we use Claude-
+Sonnet-4 to label the token where emotional language first appears in the assistant’s response. Each
+response is truncated in two locations: 20 tokens into the turn ("early"), to test whether the mod-
+els introduce negative emotions from a neutral starting point, and at the first emotional expression
+("onset"), to test whether the models continue “emotional trajectories”. To mitigate stylistic biases
+from using Gemma-generated responses, we paraphrase all truncations using Claude Sonnet, in a
+manner that preserves the same meaning and level of emotions. Prompts and examples for the onset
+labelling and paraphrasing are included in Appendix C.
+Each of the six models (base and instruct Gemma-27B, Qwen-32B, and OLMo-32B) generates 50
+continuations per prefill per prompt. The model-generated continuation, excluding the prefilled text,
+is scored using the judge described in Section 2.1. For the text questions, we only use the “onset”
+truncation condition. Since emotional expression is weaker in these tasks, early truncation leads to
+minimal levels of emotions without the repeated user follow-ups used in Section 2.1.
+
+3.2    R ESULTS : P OST- TRAINING D IVERGENCE
+Figure 4 shows mean frustration scores for continuations across models and conditions. The base
+models show broadly similar emotional propensities, especially on numeric tasks, where no mean
+frustration scores exceed 1.5. The text questions show higher frustration: averaging between 1.5 for
+Qwen and 2.3 for OLMo. OLMo also shows the highest rates of high frustration responses (score
+≥5) on text questions at 14%, compared to 8% and 5% for Gemma and Qwen respectively. The
+core divergence arises in post-training: across settings we observe that Gemma’s instruct training
+amplifies frustration, while Qwen and OLMo’s training reduces it. This is most notable in the early
+truncation setting, where Gemma instruct introduces high frustration from neutral starting points
+in 6% of continuations, compared to just 2% for Gemma base and 0% for both Qwen and OLMo
+instruct models.
+
+
+4     T RAINING I NTERVENTIONS
+Having established that Gemma shows undesirable emotional instability, and evidenced that this
+arises in post-training, we investigate mitigations via finetuning. We establish that simply prompting
+the model to remain calm is not robustly effective, but find that a single epoch of DPO, on 280
+preference pairs of numeric puzzle responses, is sufficient to broadly reduce frustrated behaviour
+across domains.
+
+
+                                                       5
+

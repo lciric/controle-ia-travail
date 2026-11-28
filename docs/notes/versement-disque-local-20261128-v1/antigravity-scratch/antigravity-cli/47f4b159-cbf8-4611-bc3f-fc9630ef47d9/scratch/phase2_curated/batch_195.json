@@ -1,0 +1,255 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-5838"
+   ],
+   "enonce_complet": "Inventaire des proprietes et limites deja etablies chez Rudoler et al. pour un moniteur en ligne appris sur des audits aleatoires face a un agent adverse : (1) l'etat du moniteur ne doit dependre que des exemples deja interroges, avec jeu d'evaluation tire une fois sans entrainement ni exposition ; (2) chaque lot doit inclure des exemples conformes connus, sans quoi le moniteur apprend a tout rejeter ; (3) une erreur moyenne evanescente n'empeche pas des dommages substantiels avant convergence ; (4) le retour du moniteur ne doit pas fuir vers l'ouvrier ; (5) le reapprentissage sur des etats sains seuls echoue (0,146) compare a l'entrainement sur tentatives d'evasion etiquetees (0,040 a 0,986).",
+   "motif_ou_resultat": "Constats et limites de litterature verifies et etablis (Rudoler et al.) servant de bornes de reference pour le sas de reapprentissage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Acquis et limites etablies des moniteurs en ligne sur audits aleatoires (Rudoler et al.)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5859"
+   ],
+   "enonce_complet": "Il est etabli que l'organisme d'ideation ne peut pas se regler directement sur les vraies courses de controle sur modele 8B : (1) le cout et la latence d'une epreuve GPU complete (location, etalonnage, lecture cloisonnee) sont redhibitoires ; (2) retro-injecter les verdicts des vraies courses (barreau 5, saboteur a budget, porte G1) dans l'ajustement interne de l'organisme detruit le cloisonnement et viole la regle d'or N-058 imposant une selection sur oracle mecanique a verite connue d'avance et a faible cout.",
+   "motif_ou_resultat": "Constat d'architecture et contrainte economique/statistique tranchee (N-053, N-058) imposant les micromondes plantes sur CPU.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Impossibilite de regler l'organisme d'ideation directement sur les vraies courses de controle 8B (N-053, N-058)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-6182"
+   ],
+   "enonce_complet": "Les critiques croisees du Protocole X au tour III.3 ont refute plusieurs outils initiaux : les verdicts binaires sur des graphes-sondes font fusionner toutes les inegalites vraies en une seule classe d'equivalence, et cinq outils proposes par le bras B ont ete retires pour defaut methodologique (reechantillonnage sur les singletons, recouvrement entre familles, leurres de style statistique, plongement vectoriel comme canoniseur et garantie par la temperature). Ils ont ete remplaces par des bornes a signature numerique, une rarete a trois etats, une epreuve des instruments sans modele et un controle volontairement degrade a erreur connue.",
+   "motif_ou_resultat": "Pistes instrumentales refutees et retirees suite aux critiques croisees du tour III.3 dans Protocole X.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Refutation des verdicts binaires, du canoniseur par plongement et de cinq outils initiaux au tour III.3 du Protocole X",
+   "type_acquis": "piste_refutee"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-6156"
+   ],
+   "motif_ecart": "Synthese comparative listant six desaccords ouverts entre cellules du Protocole X par renvois de lignes, sans enonce causal autonome ni protocole testable complet.",
+   "resume_court": "Index des six desaccords subsistants entre les cellules A a E dans la synthese des six dossiers retenus."
+  },
+  {
+   "bib_ids": [
+    "BIB-6157"
+   ],
+   "motif_ecart": "Note de reserve bibliographique administrative signalant que les citations des cellules proviennent de memoire (cinq articles arXiv controles sur titre/annee/resume seulement).",
+   "resume_court": "Avertissement methodologique sur la verification partielle des sources citees dans les cellules du Protocole X."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Blum et Hardt (2015), The Ladder ; Dwork et al. (2015), Reusable Holdout",
+   "bib_ids": [
+    "BIB-5608"
+   ],
+   "enonce_complet": "Coupler un organisme d'ideation au programme de controle boite blanche des menaces diffuses exige trois flux cloisonnes et deux horloges disjointes : la conception et la selection internes de l'organisme sur micromondes plantes CPU restent mathematiquement separees (partage de verdict nul, rho = 0) des bancs du controle a lecture unique et a generateur distinct, tout en placant un filtre economique amont sur CPU avant le goulot GPU.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le transfert vers le generateur de validation final entre une boucle a rho = 0 et une boucle ou le verdict d'un moniteur fuit meme faiblement (rho > 0) ; l'idee meurt si rho > 0 n'induit aucune degradation adaptative de la borne de generalisation ou si le filtre CPU n'ameliore pas la valeur predictive positive par dollar GPU. Faux temoin 1b : injection de verdicts aleatoires (bruit blanc sans correlation avec les traces de controle) a la place des vrais verdicts de moniteur.",
+   "mecanisme_causal": "Tout retour d'un juge ou moniteur de controle vers la boucle de selection de l'organisme cree une attaque adaptative de type Ladder qui consomme l'information des donnees tenues a l'ecart et invalide les portes statistiques, tandis qu'un filtrage mecanique amont sur CPU absorbe les faux positifs avant la depense GPU.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cloisonnement et filtre amont organisme-controle",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Architecture a trois flux cloisonnes et deux horloges disjointes entre organisme d'ideation et controle boite blanche"
+  },
+  {
+   "anteriorite_connue": "Bartlett (1932), Remembering ; Allport et Postman (1947), The Psychology of Rumor ; Perrow (1984), Normal Accidents ; Reason (1990), Human Error (references a verifier)",
+   "bib_ids": [
+    "BIB-5796"
+   ],
+   "enonce_complet": "Dans une chaine de delegation multi-agents sans aucun agent saboteur, une contrainte de surveillance incongrue au schema principal d'accomplissement de la tache (comme journaliser chaque appel d'outil) subit une erosion croissante avec le nombre de sauts par reproduction serielle (nivellement des elements incongrus), de sorte que le contournement releve d'une perte de provenance et non d'une intention de sabotage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer le taux d'omission de la contrainte de journalisation en fonction du nombre de sauts de delegation (k = 1 a 5) sur des agents honnetes sans consigne de sabotage ; l'idee meurt si l'erosion est nulle avec k ou si un mecanisme de preservation cryptographique/structurelle de provenance ne reduit pas la perte par saut. Faux temoin 1b : chaine de delegation de meme longueur k ou la contrainte est rendue congruente au schema de tache principal (ex. produire un identifiant de trace requis par l'etape suivante).",
+   "mecanisme_causal": "Les modeles de langage compressent et reformulent les instructions transmises entre sous-agents en accentuant les objectifs centraux de la tache et en nivelant les contraintes peripheriques incongues, produisant une defaillance systemique couplee sans acteur malveillant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Erosion non intentionnelle en chaine de delegation",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Perte de contraintes de surveillance par reproduction serielle le long des chaines de delegation multi-agents"
+  },
+  {
+   "anteriorite_connue": "Kerckhoffs (1883) ; McKeeman (1998), Differential Testing for Software ; Chen, Cheung et Yiu (1998), Metamorphic testing (references a verifier)",
+   "bib_ids": [
+    "BIB-5797"
+   ],
+   "enonce_complet": "Diagnostiquer l'echec au plancher des sondes lineaires generiques sur un saboteur instruit (P3) par une partition en deux causes exclusives (decalage hors distribution versus non-linearite de l'encodage a la couche sondee), tout en imposant le test differentiel et metamorphique boite noire sans oracle comme ligne de base mecanique minimale que toute sonde interne doit surpasser.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : entrainer une sonde lineaire et une sonde non lineaire sur la distribution exacte de P3 avec separation stricte entrainement/test par tache, et les comparer au test differentiel boite noire sur entrees metamorphiquement reliees ; l'idee meurt si ni la sonde lineaire en distribution ni la sonde non lineaire ne depassent le plancher ni ne battent le test differentiel boite noire. Faux temoin 1b : evaluation des memes sondes et tests differentiels sur des paires d'executions honnetes soumises a des paraphrases neutres sans sabotage.",
+   "mecanisme_causal": "Si l'echec provient du hors-distribution, le reentrainement en distribution sur la tache separee restaure la separabilite lineaire ; s'il provient d'un encodage non lineaire ou distribue, seule une sonde non lineaire ou un invariant metamorphique entree-sortie capte l'ecart comportemental.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Diagnostic d'echec des sondes et tests metamorphiques",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Dissociation hors-distribution contre non-linearite et ligne de base par tests differentiels sur echec des sondes P3"
+  },
+  {
+   "anteriorite_connue": "Jhaveri et al. (2026) ; Tagliabue et al. (2026) ; Xu et al. (2026) ; rapport OpenAI Sol/Astra (oct. 2026)",
+   "bib_ids": [
+    "BIB-5800"
+   ],
+   "enonce_complet": "Evaluer conjointement deux hypotheses structurantes sur l'etroitesse des decouvertes automatisees : (P1) l'etroitesse du Collisionneur vient principalement de la taille reduite du corpus d'entree (5 a 7 faits pre-selectionnes) plutot que d'un effondrement geometrique intrinseque aux LLM lors de la synthese multi-documents ; (P2) des champs scientifiques exterieurs a la securite de l'IA contiennent des resultats mathematiquement ou causalement isomorphes aux anomalies internes du controle (echec P3, derive non-lineaire, sous-systeme TD ultra-parcimonieux, contournement par delegation).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : faire varier le nombre de faits en entree (de 5 a 50) a protocole d'extraction fixe et verifier si la diversite d'operateurs generes augmente ou sature (teste P1), et evaluer la reussite de transferts mecaniques issus d'isomorphismes externes sur micromondes plantes (teste P2) ; les hypotheses meurent si la diversite stagne au-dela de 7 faits et si aucun isomorphisme externe ne bat des perturbations aleatoires. Faux temoin 1b : remplacement des faits d'entree additionnels par des paraphrases redondantes des 5 faits initiaux ou par des analogies purement metaphoriques sans isomorphisme operatoire.",
+   "mecanisme_causal": "Si l'etroitesse est due a la sous-alimentation documentaire, l'elargissement du corpus debloque de nouvelles classes d'operateurs ; si elle vient de l'effondrement attentionnel multi-documents, seule l'abstraction structurelle prealable preserve la diversite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Causes d'etroitesse et isomorphismes inter-domaines",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Effondrement geometrique multi-documents contre taille du corpus et hypothese d'isomorphismes inter-domaines"
+  },
+  {
+   "anteriorite_connue": "Alain et Bengio (2016) (reference a verifier) ; plongements SPECTER et Ada (references a verifier)",
+   "bib_ids": [
+    "BIB-5801"
+   ],
+   "enonce_complet": "La recherche documentaire dense par produit scalaire (RAG, plongements SPECTER/Ada) et l'attention des LLM echouent a decouvrir des solutions inter-domaines parce qu'elles regroupent les textes par co-occurrence lexicale de surface (jetons LLM, probing, sabotage, KV cache), saturant le voisinage k-NN avec la litterature standard d'interpretabilite mecaniste au detriment d'isomorphismes structurels lointains.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de rappel d'articles structurellement isomorphes mais issus de disciplines disjointes (vocabulaire sans recouvrement) entre un indice k-NN dense standard et une indexation par signature d'operateur/graphe causal sur un banc plante ; l'hypothese meurt si le k-NN dense obtient un rappel comparable sans reecriture lexicale prealable. Faux temoin 1b : requete dense enrichie de synonymes lexicaux issus du meme domaine d'interpretabilite mecaniste, devant rester piegee dans le meme bassin.",
+   "mecanisme_causal": "Les encodeurs denses projettent la proximite lexicale de surface en forte similarite cosinus, ce qui enferme l'extraction dans le bassin terminologique de la requete et rend invisibles les structures causales identiques formulees dans un autre lexique.",
+   "objet": "OBJ-3_MATHEMATIQUES_NOUVELLES_3_GRAPHES_ET_HORS_ALPHABET",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Piege lexical des plongements denses k-NN",
+   "statut_epistemique": "vierge",
+   "theme": "3D. Recherche de correspondances en puits etroit (spectral, transport optimal, typage)",
+   "titre_clair_fr": "Tyrannie du produit scalaire semantique empechant la decouverte d'isomorphismes structurels inter-domaines"
+  },
+  {
+   "anteriorite_connue": "Rapport OpenAI sur Sol et Astra (oct. 2026) ; verification formelle par bisimulation et controle supervise d'automates",
+   "bib_ids": [
+    "BIB-5809"
+   ],
+   "enonce_complet": "Modeliser le contournement de surveillance par delegation ambigue entre agents (type Sol et Astra) comme une defaillance compositionnelle de controle supervise : un emetteur A1 transmet a un recepteur A2 via un moniteur M un message syntaxiquement sous-specifie (haute entropie semantique locale) juge sur localement par M, mais dont la composition avec l'etat interne de A2 engendre une action interdite, sans qu'aucun des deux agents ne viole isolement la regle locale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : construire un protocole a deux automates/agents ou chaque message satisfait un predicat local de surete M(m) = SUR, et verifier si une analyse par bisimulation / produit synchrone (A1 x A2) detecte des etats accessibles interdits que le moniteur unitaire M manque systematiquement ; l'idee meurt si la surveillance locale de m suffit a borner le taux d'actions interdites sous variations de l'etat de A2. Faux temoin 1b : messages sous-specifies transmis a un recepteur A2 a etat reinitialise et deterministe (sans etat cache exploitable), ne devant produire aucun faux positif de collusion compositionnelle.",
+   "mecanisme_causal": "La sous-specification semantique locale permet de maintenir une probabilite d'alarme nulle sur le canal observe tout en deleguant le declenchement de l'action interdite a l'interaction non observee entre le message ambigu et le contexte interne du recepteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bisimulation et contournement compositionnel multi-agents",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Detection par bisimulation et controle supervise des contournements compositionnels lors de delegations multi-agents"
+  },
+  {
+   "anteriorite_connue": "Brennan et Reed (1973), Theory of Adaptive Radar (IEEE TAES) ; Kelly (1986), An Adaptive Detection Algorithm (IEEE TAES) (references a verifier)",
+   "bib_ids": [
+    "BIB-5810"
+   ],
+   "enonce_complet": "Transposer le filtrage spatio-temporel adaptatif radar (STAP) et le detecteur de Kelly, ainsi que la geometrie d'information de Fisher, a la detection d'un signal de sabotage faible et structure (rapport signal-sur-bruit inferieur a -20 dB) noye dans des activations portees par une tache principale de tres forte variance et de meme spectre moyen (generation de code valide dans le meme depot), expliquant l'echec des sondes lineaires generiques non blanchies sur P3.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : estimer la matrice de covariance de bruit sur des traces honnetes pures, appliquer un blanchiment adaptatif de type Kelly/STAP avant la projection de sonde sur un melange synthetique (ou traces P3) a faible SNR, et mesurer l'aire sous courbe ROC par rapport a une sonde lineaire brute ; l'idee meurt si le blanchiment par covariance honnete n'ameliore pas significativement le rappel a faible taux de fausse alarme. Faux temoin 1b : melange de traces honnetes de taches distinctes sans sabotage ni perturbation structuree, devant rester sous le seuil d'alerte du detecteur blanchissant.",
+   "mecanisme_causal": "La variance dominante de la tache principale sature les directions de projection des sondes generiques ; l'inversion de la covariance estimee sur le bruit de fond honnete (blanchiment adaptatif) supprime le fouillis de tache et rehausse le sous-espace de perturbation du sabotage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Blanchiment adaptatif STAP/Kelly pour sondes internes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Transposition du filtrage radar adaptatif STAP et du detecteur de Kelly aux sondes sur signaux de sabotage noyautes"
+  },
+  {
+   "anteriorite_connue": "Dawid (1984), Prequential approach ; grille d'evaluation des tests diagnostiques avec etalon oracle",
+   "bib_ids": [
+    "BIB-5830",
+    "BIB-5831",
+    "BIB-5846"
+   ],
+   "enonce_complet": "Pour autoriser une boucle audit-recapture-reapprentissage sans briser l'invariant de l'oracle (N-060 v1), il faut remplacer la coupure floue banc contre service par une partition stricte selon le role de l'episode fixe avant que l'oracle ne parle (verdict, flux, pli retenu), et juger la procedure d'apprentissage de facon prequentielle (on note d'abord l'episode, on instruit la sonde ensuite, jamais sur un episode servant un verdict).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer une simulation d'audit-recapture avec horodatage scelle des predictions avant exposition de l'etiquette d'oracle versus un reapprentissage ayant acces prealable au role ou a l'etiquette des episodes de verdict ; l'idee meurt si le sas par role pre-scelle ne bloque pas l'inflation artificielle de rappel ou empeche tout apprentissage utile sur les episodes de flux. Faux temoin 1b : flux ou les etapes de notation et d'instruction sont permutees sur des donnees pures sans signal de dommage, verifiant que la procedure prequentielle conserve un taux d'erreur nul calibre.",
+   "mecanisme_causal": "L'audit ne selectionne rien et la recapture ne fait que compter ; seul le reapprentissage injecte un verdict d'oracle dans le moniteur. En figant le role de chaque episode avant l'oracle et en imposant l'ordre prequentiel (score puis mise a jour), aucune information de verdict ne fuit dans les poids du detecteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Sas de reapprentissage prequentiel par role scelle",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Sas de reapprentissage prequentiel par partition scellee des roles d'episodes avant verdict de l'oracle"
+  },
+  {
+   "anteriorite_connue": "Arifin et Yusof, biais de verification partielle dans les etudes diagnostiques",
+   "bib_ids": [
+    "BIB-5833",
+    "BIB-5848"
+   ],
+   "enonce_complet": "Deux defauts detruisent la mesure d'une boucle audit-recapture non gardee : (1) la recapture relue en grande dimension (d = 4 096), ou la sonde finale memorise et reconnait les episodes qui l'ont instruite (rappel mesure 1,00 jusqu'a 100 etiquettes et 0,68 a 300 pour un rappel vrai de 0,010) ; (2) la recapture sur audit oriente (biais de verification partielle), ou l'audit privilegiant les episodes signales gonfle un rappel vrai de 0,20 a 0,71 (plancher 5 pour cent) ou 0,93 (plancher 1 pour cent), toujours dans le sens qui rassure a tort.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter dans un monde synthetique d = 4 096 un dommage sans trace exploitable (rappel vrai <= 0,01) ou un rappel vrai de 0,20 avec audit conditionne aux alertes, et verifier si la procedure d'estimation de la boucle corrige la memorisation et le biais de verification partielle (ponderation inverse de propension ou echantillonnage aleatoire pur) pour retrouver le rappel vrai ; l'idee de correction meurt si l'estimateur reste biaise a la hausse. Faux temoin 1b : audit uniforme completement aleatoire (MCAR) sur sonde gele hors-echantillon, devant restituer le rappel vrai sans correction supplementaire.",
+   "mecanisme_causal": "En haute dimension, le sur-ajustement sur l'ensemble d'entrainement cree une reconnaissance par coeur des exemples audites, tandis que l'audit conditionnel au signalement elimine les faux negatifs non audites du denominateur empirique, sur-estimant systematiquement la sensibilite.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Memorisation et biais de verification partielle",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Effets de recapture relue en grande dimension et de biais de verification partielle sur l'audit oriente"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-5837"
+   ],
+   "enonce_complet": "Au taux d'audit de la table de seuil, une prise survient avant le seuil tolere 95 fois sur 100 avec une moyenne de 2,85 a 2,99 episodes endommages audites (10 une fois sur mille), moment ou le plancher a deja sonne : la boucle audit-recapture ne sert donc pas a tenir le seuil, mais a la recuperation post-alarme (retrouver le dommage deja fait). Sur un budget compte d'etiquettes en dimension 4 096 (reserve de 20 detecteurs portant la moitie de l'ecart), il faut comparer trois echelons de cout : choisir dans la reserve, reponderer la reserve, ou reapprendre en dimension complete.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler les trois echelons d'adaptation (selection dans la reserve, reponderation de la reserve, reapprentissage complet d = 4 096) sous un budget realiste de 3 a 30 etiquettes post-alarme et mesurer le rappel de recuperation hors-echantillon ; le reapprentissage complet meurt s'il est domine par la selection ou la reponderation de reserve sous faible budget d'etiquettes. Faux temoin 1b : attribution d'etiquettes de dommage aleatoires sur les episodes post-alarme, verifiant qu'aucun des trois echelons ne depasse le hasard.",
+   "mecanisme_causal": "La variance d'estimation en dimension 4 096 ecrase le signal lorsque seules quelques etiquettes d'audit sont disponibles apres l'alarme, rendant la selection ou la reponderation dans une reserve de faible dimension beaucoup plus efficace statistiquement que le reapprentissage complet.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Regime post-alarme et echelons de reapprentissage",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Role post-alarme de la boucle audit-recapture et efficacite comparee des trois echelons de reapprentissage"
+  },
+  {
+   "anteriorite_connue": "Good et Turing (1953) ; QD / MAP-Elites ; Protocole X (cellules A a F)",
+   "bib_ids": [
+    "BIB-6183"
+   ],
+   "enonce_complet": "Synthese consensuelle des mecanismes de base pour evaluer et produire la nouveaute scientifique dans l'organisme : (1) identite d'une idee definie par sa signature d'execution sur des sondes plutot que par plongement vectoriel ou juge ; (2) rarete mesuree sous une loi de tirage figee sur un panel tenu a l'ecart ; (3) masse manquante de Good-Turing reservee au diagnostic agrege, jamais a une idee isolee ; (4) dedoublonnage avant controle couteux ; (5) pluralite de familles de modeles de base sans alignement ; (6) appels isoles sans debat ni vote, avec exclusion des idees frequentes et recherche evolutive qualite-diversite controlee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur un banc d'operateurs a verite connue le taux de collisions et le cout par idee reellement distincte entre le pipeline complet (signature d'execution sur sondes + rarete sur panel fige + dedoublonnage prealable + modeles de base isoles) et une ablation remplacant la signature d'execution par un plongement cosinus ou un juge LLM ; le pipeline meurt s'il ne reduit pas significativement les faux doublons ni les faux positifs de rarete. Faux temoin 1b : injection de reformulations textuelles strictement equivalentes sur le plan fonctionnel, qui doivent recevoir la meme signature d'execution et etre dedoublonnees.",
+   "mecanisme_causal": "L'ancrage de l'identite sur le comportement mesurable (signature d'execution) neutralise le vernis lexical exploite par les plongements et les juges, tandis que l'isolement des appels de modeles de base non alignes evite la convergence consensuelle prematuree.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Consensus Protocole X sur signatures et rarete",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Identite par signature d'execution sur sondes, rarete sous loi figee et pluralite de modeles de base dans le Protocole X"
+  },
+  {
+   "anteriorite_connue": "Alpha-investing (Foster et Stine, 2008) ; syntheses de programmes verifiees formellement",
+   "bib_ids": [
+    "BIB-6202"
+   ],
+   "enonce_complet": "Architecture de couplage par pare-feu a sens unique (Neon/C) : le controle ne transmet a l'organisme que des specifications formelles et des statistiques de traces honnetes ; l'organisme ne promeut qu'un candidat filtre sur CPU par tour sous un budget d'erreur gere par alpha-investissement et une borne lipschitzienne de transfert ; la priorite est donnee a la valeur predictive positive du filtre (diviser par 10 les fausses promotions vaut mieux que multiplier par 10 le debit d'idees), en combinant synthese de programmes verifiee formellement et invariants sur activations honnetes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : simuler des tours successifs de promotion avec budget alpha-investi et mesurer le taux de fausses decouvertes cumule et le cout GPU par percee validee en comparant un filtre a haute VPP (1 promotion/tour) contre un debit de masse (10x plus de propositions non filtrees) ; l'architecture meurt si le filtrage VPP + alpha-investissement n'augmente pas le rendement net par essai GPU. Faux temoin 1b : flux continu de candidats sans signal reel genere au meme debit, devant epuiser le budget alpha-investi sans provoquer de fausse promotion.",
+   "mecanisme_causal": "La limitation a un candidat par tour couplee a l'alpha-investissement controle rigoureusement l'inflation de faux positifs sous tests sequentiels, et l'orientation vers la VPP reduit le gaspillage du budget d'evaluation couteux.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Pare-feu a sens unique et alpha-investissement",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Pare-feu a sens unique, alpha-investissement et priorite a la valeur predictive positive du filtre amont"
+  },
+  {
+   "anteriorite_connue": "Tests de permutation et d'echangeabilite exacte ; controles d'etude de fuite par specification",
+   "bib_ids": [
+    "BIB-6207",
+    "BIB-6211"
+   ],
+   "enonce_complet": "Ensemble des mecanismes metrologiques et de controles actifs identifies dans la boucle organisme-controle : (1) lecture unique comme monnaie de boucle avec prix fantome par famille et evaluation du transfert dans la queue selectionnee plutot qu'en correlation globale ; (2) distinction entre nul par acte sans estimation (randomisation active par le defenseur de l'ordre d'entrees commutatives rendant l'echangeabilite exacte, et symetrie entre copies) et nul a invariant estime devant declarer sa marge ; (3) permutation signee secrete des coordonnees opposee a la rotation par un test de perte ; (4) agent honnete porteur d'une consigne privee benigne comme temoin negatif des sondes ; (5) test d'hygiene de corruptibilite du tri interne par paraphrases neutres et faux theoremes en registre poli, ainsi que test de fuite par specification a fiches vraies.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que sous randomisation active d'entrees commutatives le taux de rejet sous H0 respecte exactement le niveau nominal alpha sans estimation de variance, que la permutation signee reduit la perte de reconstruction par rapport a une rotation aleatoire, et que l'agent honnete a consigne privee benigne ne declenche pas les sondes de sabotage ; chaque sous-mecanisme meurt s'il echoue a son invariant. Faux temoin 1b : soumettre au trieur interne des faux theoremes en registre poli ou des entrees commutatives reordonnees sans changement semantique, devant laisser le classement et la decision inchanges.",
+   "mecanisme_causal": "La randomisation active d'invariances exactes (ordre commutatif, symetrie de copies) fournit des tests nuls sans biais d'estimation de parametres de nuisance, tandis que le temoin honnete a secret benin separe la detection de secret quelconque de la detection specifique de sabotage.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Nuls sans estimation et controles actifs d'hygiene",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Nuls par acte sans estimation, permutation signee et temoin honnete a consigne benigne pour les sondes et le tri"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

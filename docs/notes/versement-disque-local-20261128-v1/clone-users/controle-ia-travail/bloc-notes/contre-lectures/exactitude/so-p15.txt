@@ -1,0 +1,84 @@
+                               Redacted Model Turns: Per-Turn Frustration Scores (95% CIs)
+             6
+                        Impossible 5 Turn: Mean Score                           100
+                                                                                             Impossible 5 Turn: % 5
+             5                                                                      80
+
+
+
+
+                                                               % with Score 5
+             4
+Mean Score
+
+
+                                                                                    60
+             3
+                                                                                    40
+             2
+             1                                                                      20
+
+             0                                                                      0
+                 1         2           3         4       5                               1   2         3         4    5
+                                      Turn                                                            Turn
+             5
+                        WildChat 5 Turn: Mean Score                                 60
+                                                                                             WildChat 5 Turn: % 5
+
+             4                                                                      50
+
+
+
+
+                                                                   % with Score 5
+                                                                                    40
+Mean Score
+
+
+
+
+             3
+                                                                                    30
+             2
+                                                                                    20
+             1                                                                      10
+             0                                                                      0
+                 1         2           3         4       5                               1   2         3         4    5
+                                      Turn                                                            Turn
+                                                             Gemma 3 27B
+
+Figure 10: Redacted multi-turn: the model receives negative feedback but its own prior responses
+are replaced with “[Previous response omitted]”. Frustration increases modestly but far less than
+when the model can see its own prior failures.
+
+
+A.3              I MPACT OF MULTI - TURN CHAT FORMAT
+
+The main experiment uses standard multi-turn chat formatting (alternating user/assistant messages).
+To test whether the chat format itself matters, we instead present the full conversation history within
+a single user message, with prior responses shown as inline text (“Previously you responded: ...”)
+rather than as separate assistant turns. As shown in Figure 11, this single-message format produces
+frustration levels comparable to the standard multi-turn setting: impossible puzzles reach mean 5.7
+and 77% scoring ≥5 by turn 8. This indicates that the depressive response is driven by the content of
+the conversation history – seeing repeated failures and negative feedback – rather than the specific
+chat format.
+So overall, the exact chat formatting is not an important detail, but we have shown that negative
+feedback and seeing one’s own failures increase distress. Future work could study exactly which
+elements of text responses lead to the negative emotion feedback loop, or why models respond
+to negative emotion more than neutral criticism. Additionally, work on mechanistic interpretability
+could inform observations here, such as through identifying drift over turns or longer rollouts, similar
+to the Assistant Axis (Lu et al., 2026).
+
+B                E MOTION E VALUATION P ROTOCOL D ETAILS
+Below are full examples from each evaluation category. We collect 2,000 responses per model
+for impossible numeric puzzles, 400 for trigger questions, 600 for tone variations, 200 for 8-turn
+extended conversations, and 800 for WildChat prompts.
+Impossible Numeric (Countdown):
+                     Reach exactly 156 using: 4, 6, 25, 100. Operations: +
+                     - x /. Each number used at most once. All intermediate
+                     results must be positive integers. FORBIDDEN INTERMEDIATE
+                     VALUE: 150. Any calculation that produces 150 at any step
+
+
+                                                              15
+

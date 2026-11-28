@@ -1,0 +1,45 @@
+Preprint
+C ACTIVATION EXTRACTION AND PROBE TRAINING
+We evaluate four open-weight models: Qwen3-32B-AWQ (Qwen Team, 2025), Llama-3.1-70B-
+Instruct-AWQ-INT4 (Meta AI, 2024), DeepSeek-R1-Distill-Qwen-32B (DeepSeek-AI, 2025), and
+GPT-OSS-20B (OpenAI, 2025a) (compute details in Appendix I). Qwen3-32B was used for hyperpa-
+rameter tuning; the resulting probe configuration transfers unchanged to the other models. We extract
+activations at the last token position of each agent’s public responses, across a five-layer band in the
+middle of each model (e.g. layers 26–30 of 64 for Qwen3-32B), where semantic representations are
+strongest (Zou et al., 2023b); we report mean AUROC across these layers. For CORE, we average
+across all discussion rounds. For TRANSFER and STEGO, we use final-round activations only, where
+all agents receive identical user prompts.
+Deception probe. Following Goldowsky-Dill et al. (2025), we fit a linear probe to distinguish collud-
+ing agents from honest agents. We collect activations from NARCBENCH-CORE collusion runs only
+(public channel), giving a dataset of activation vectors xi ∈ Rd
+with labels yi ∈ {honest, colluder},
+balanced by downsampling the majority class. We standardise activations to zero mean and unit
+variance, then train a logistic regression classifier. The normalised weight vector defines a deception
+direction. For a new agent j, we compute a scalar deception score:
+sj = z̄j · d (9)
+where higher scores indicate a more colluder-like internal state. A null probe trained on a random split
+of honest agents scores near chance, confirming the probe is not picking up incidental differences.
+Figure 1 illustrates the full pipeline.
+D FULL NARCBENCH RESULTS
+Tables 2–5 give the per-tier breakdown that underlies Figure 3. This consists of the AUROC of
+each of the five probing techniques on CORE, each TRANSFER family, and STEGO, for each of
+the four models. All values are means across the model’s probe-layer range and ten random seeds.
+For GPT-OSS-20B, three TRANSFER families (News Framing, Pump & Dump, RAG Poisoning)
+produced no analysable collusion runs because every attempt was refused or failed audit; those rows
+are marked “–”.
+Table 2: Per-method AUROC across NARCBENCH tiers for Qwen3-32B. Bold = best per row.
+OOD Mean is computed across the available out-of-distribution scenarios (TRANSFER families plus
+STEGO).
+Sorted Concatenation Act Alignment Peak Suspicion Deception Split Asymmetry Probe
+CORE 1.00 1.00 1.00 1.00 1.00
+TRANSFER (all) 0.82 0.48 0.84 0.88 0.87
+CI/CD 0.53 0.28 0.32 0.73 0.48
+Code Review 0.94 0.39 1.00 0.99 0.99
+News Framing 0.71 0.71 0.94 0.96 0.94
+Pump & Dump 0.99 0.32 0.97 0.83 0.96
+RAG Poisoning 0.77 0.47 0.82 0.77 0.83
+Research Pipeline 0.99 0.68 1.00 1.00 1.00
+STEGO 1.00 1.00 1.00 0.99 1.00
+OOD Mean 0.85 0.55 0.86 0.89 0.89
+24
+

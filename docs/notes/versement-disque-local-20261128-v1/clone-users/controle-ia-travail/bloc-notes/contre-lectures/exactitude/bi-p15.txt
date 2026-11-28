@@ -1,0 +1,51 @@
+    heads 0-2               1.250                 1.313                    +0.063             +0.05
+
+   heads 0-15               1.250                 1.188                    −0.063             -0.05
+
+
+
+
+Behavioural sensitivity to steering: digit-pair normalised choice
+
+To isolate the specific 2 vs 3 decision and avoid dilution from probability mass assigned to
+non-digit tokens, we evaluated steering effects using two behavioural readouts derived from
+the final-token logits (Table 8). In addition to the raw full-vocabulary probability of token “2”,
+p2full = softmax(z)[2], we computed a digit-pair-normalised choice probability, p22-3 = ez2 / (ez2 +
+ez3)​​, which directly captures the relative preference between “2” and “3” while ignoring all
+other tokens. We summarised sensitivity to steering by (i) the slope of the 2-3 margin with
+respect to 𝜖 and (ii) the Pearson correlation between 𝜖 and each behavioural readout across
+the 𝜖 grid.
+
+At resid_post L15, steering strength showed only a weak association with the full vocabulary
+probability p2full (corr = 0.198), but a strong monotonic relationship with the digit-pair readout
+p22-3 (corr = 0.938), consistent with steering primarily reallocating probability between “2” and
+“3” rather than increasing the absolute probability of “2” in the full vocabulary. A similar
+pattern emerged in the attention-head interventions at attn_out L14: steering head 2 yielded
+a strong association under the digit-pair normalisation (corr = 0.877) n opposite-signed
+full-vocabulary correlation (corr = −0.228), and steering all heads (0-15) likewise produced
+higher sensitivity under digit-pair readout (0.693 vs. -0.149). Steering head 3 showed a
+moderate digit-pair relationship (corr = 0.620) and a positive full-vocabulary correlation (corr
+= 0.294). Across these sites, fitted slopes of the margin with respect to ϵ were small (≈
+0.001-0.006), reinforcing that the most informative behavioural signal is captured by the 2-3
+normalised readout. Accordingly, unless stated otherwise, we report behavioural steering
+effects using p22-3 (or equivalently the 2-3 logit margin), which more cleanly isolates the
+decision of interest.
+
+Table 8. Behavioural sensitivity to steering using digit-pair normalisation (pos-1, read
+= final)
+
+     Site /        Baseline         Slopemargin vs ϵ​   Corr(ϵ​, p2full)    Corr(ϵ​, p22-3)     (n)
+ intervention      margin2-3 ​
+                    (ε = 0)
+
+ resid_post          1.25               0.006               0.198               0.938           38
+ L15 ​
+ (valence
+ steering)
+
+ attn_out L14        1.25               0.005              −0.228               0.877           38
+ (head 2 only)
+
+ attn_out L14        1.25               0.001               0.294               0.620           38
+ (head 3 only)
+

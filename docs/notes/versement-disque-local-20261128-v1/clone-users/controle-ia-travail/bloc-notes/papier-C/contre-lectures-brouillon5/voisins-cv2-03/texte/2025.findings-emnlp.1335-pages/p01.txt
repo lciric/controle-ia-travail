@@ -1,0 +1,91 @@
+Findings of the Association for Computational Linguistics: EMNLP 2025, pages 24553–24566
+November 4-9, 2025 ©2025 Association for Computational Linguistics
+Dissecting Persona-Driven Reasoning in Language Models
+via Activation Patching
+Ansh Poonia†
+, Maeghal Jain†
+†
+Independent
+{pooniaansh11, maeghaljain}@gmail.com
+Abstract
+Large language models (LLMs) exhibit remark-
+able versatility in adopting diverse personas. In
+this study, we examine how assigning a per-
+sona influences a model’s reasoning on an ob-
+jective task. Using activation patching, we take
+a first step toward understanding how key com-
+ponents of the model encode persona-specific
+information. Our findings reveal that the early
+Multi-Layer Perceptron (MLP) layers attend
+not only to the syntactic structure of the input
+but also process its semantic content. These
+layers transform persona tokens into richer rep-
+resentations, which are then used by the middle
+Multi-Head Attention (MHA) layers to shape
+the model’s output. Additionally, we identify
+specific attention heads that disproportionately
+attend to racial and color-based identities.1
+1 Introduction
+Recent advances in large language models (LLMs)
+have demonstrated their striking ability to adopt a
+wide range of personas, enabling context-sensitive
+and tailored responses (Serapio-García et al., 2023,
+Zhang et al., 2024, Joshi et al., 2024, Sun et al.,
+2025). However, studies such as those by Salewski
+et al., 2023, Deshpande et al., 2023, Gupta et al.,
+2024, Zheng et al., 2024 show that persona as-
+signment can significantly influence reasoning and,
+in some cases, amplify underlying social biases.
+While these works focus on identifying and quanti-
+fying such effects, they do not examine the causal
+mechanisms within a pre-trained language model
+(PLM) that give rise to them.
+Mechanistic interpretability provides framework
+for uncovering the causal mechanisms by which
+language models carry out specific tasks. Lieberum
+et al. (2023) introduced this approach in the context
+of multiple-choice question answering (MCQA),
+1
+Code and some additional results are available at
+https://github.com/anshpoonia/Persona-Driven-Reasoning
+identifying "correct letter heads" in a 70B Chin-
+chilla model-attention heads that track answer sym-
+bols and promote the correct choice based on po-
+sitional order. Wiegreffe et al. (2025) examined
+how successful models implement symbol binding
+in formatted MCQA using vocabulary projection
+and activation patching, and Li and Gao (2025)
+analyzed anchored positional bias in the GPT-2
+family, showing that models consistently favor the
+first option (’A’). Building on these interpretability
+techniques, we ask whether similar internal circuits
+also govern how personas steer a model’s reasoning
+and potentially introduce social bias.
+This study takes a step toward bridging the gap
+between surface-level observations of persona ef-
+fects and the underlying mechanisms that produce
+them. We investigate the roles of key model com-
+ponents namely, Multi-Layer Perceptron (MLP)
+layers, Multi-Head Attention (MHA) layers, and
+individual attention heads in shaping the reasoning
+shifts induced by persona assignments. Using acti-
+vation patching, we probe the internal circuitry of
+LLMs to trace the origins of persona-driven varia-
+tion in objective tasks. Our findings challenge the
+prevailing assumption that early MLP layers are
+concerned solely with syntactic processing. We
+show that these layers also encode semantic fea-
+tures related to persona. Furthermore, we identify a
+small number of attention heads that disproportion-
+ately focus on tokens associated with race-based
+persona cues. Although our work is limited to
+uncovering the origin of persona-driven behavior,
+it contributes to a deeper understanding of LLMs
+and lays groundwork for future efforts to mitigate
+deep-seated biases in these systems.
+2 Experimental Setup
+2.1 Dataset Details
+We chose the MMLU dataset (Hendrycks et al.,
+2021) for this study, which contains 14,024
+24553
+

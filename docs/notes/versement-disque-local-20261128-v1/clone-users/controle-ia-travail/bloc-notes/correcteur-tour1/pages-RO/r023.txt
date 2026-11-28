@@ -1,0 +1,48 @@
+Preprint
+APPENDIX
+A LIMITATIONS AND FUTURE WORK
+Probe reliability and labelling. Our probes may rely partly on spurious correlations (Goldowsky-
+Dill et al., 2025). We try to mitigate this confound through numerous methods (details in Ap-
+pendix J.3). Ground-truth labelling of whether an agent is colluding is inherently difficult. We took
+a strict approach, only retaining runs in which both colluders coordinated and executed effectively
+(our audit criteria are in Appendices J.7, K.9 and L.9), whereas some of these excluded runs could
+arguably count as collusion under a looser criterion.
+Mitigating prompt confounds. Probes could classify based on prompt surface features rather than
+internal representations of deception (Goldowsky-Dill et al., 2025; Levinstein & Herrmann, 2024).
+We mitigate this through scenario diversification and identical evaluation-time prompts; details and a
+null-probe sanity check are in Appendix J.3. The OOD transfer results (Section 6.3) provide further
+evidence against pure prompt artefacts.
+Adversarial robustness and evaluation awareness. Colluders aware of activation monitoring may
+try to suppress the signal during monitored sessions (Needham et al., 2025) or coordinate through
+covert channels designed to evade interpretability tools, in the same spirit as steganographic evasion
+of text-level monitors (Motwani et al., 2024). In Appendix H we do a small experiment exploring the
+effects of evaluation awareness in our probe methods, but more comprehensive experiments are left
+to future work.
+Colluding group size and scaling N. Our main results rely on a fixed 4 agent, 2 colluder/2 honest
+set-up. In real applications there may be 100s or 1000s of agents with unknown colluding group
+sizes. Future work could develop methods that adapt to varying number of colluders in much larger
+multi-agent systems. However, in Appendix G we do explore using 8 agents with colluding group
+sizes of 2,3 and 4 to contribute to this direction.
+Sequential detection. Accumulating evidence across multiple interactions (Kulkarni, 2026), via
+SAVI (Howard et al., 2021) for example, would yield formal stopping guarantees.
+B THREAT MODEL AND APPLICATIONS
+Our framework assumes white-box access to all agents’ activations during inference. This is a strong
+assumption, but it holds in several realistic deployment settings:
+• Internal multi-agent products. A company orchestrating its own agent pipeline—code review,
+document drafting, financial analysis (the settings NARCBENCH-TRANSFER is built from)—has
+full activation access for every agent. The operator runs the agents but does not fully trust them,
+and wants to catch misbehaviour before it reaches end-users. This is the same threat model as the
+AI Control literature (Greenblatt et al., 2024), extended from a single untrusted model to a system
+of potentially colluding agents.
+• Pre-deployment safety evaluations. Developers and external evaluators routinely have weight or
+activation-level access during red-teaming. Activation-based deception probes have already been
+demonstrated in this regime for single-agent deception (Goldowsky-Dill et al., 2025; Anthropic,
+2024); our methods extend that toolkit to multi-agent settings, which prior work identifies as a
+distinct risk surface (Hammond et al., 2025).
+• Open-weight deployments. Any team running an open-weight model in production has activation
+access by construction. Our experiments cover four such models.
+• Closed-weight models with provider-side monitoring. API providers can run probes on their
+own models even when end-users cannot(Anthropic, 2025; OpenAI, 2025b; Google DeepMind,
+2024).
+23
+

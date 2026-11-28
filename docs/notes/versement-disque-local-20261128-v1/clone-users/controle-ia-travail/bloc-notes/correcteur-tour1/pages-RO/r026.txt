@@ -1,0 +1,33 @@
+Preprint
+Figure 5: OOD-mean AUROC (TRANSFER+STEGO) plotted against model parameter count. De-
+tection performance scales approximately monotonically with model capability across the four
+open-weight models we tested.
+E PROBE TYPE AUXILIARY EXPERIMENTS
+We tested 6 different probe types for each model: Logistic Regression, Multi-Layer Logistic Regres-
+sion, Difference-in-Means, Multi-Headed Attention, Multi-Layer Perceptron and Linear Artificial
+Tomography (Zou et al., 2023a). All probes are trained on the same activation set per model, and
+the AUROC score is averaged over the five probing techniques (Sorted Concatenation, Activation
+Alignment, Peak Suspicion, Deception Split, Asymmetry Probe). Probe types differ only in how the
+per-agent deception score is produced. Reported numbers are averaged across the five probe layers
+and ten random seeds, except the Multi-Layer ensemble, which uses all five layers jointly to produce
+a single AUROC.
+Logistic Regression. LogisticRegression with penalty=l2, C=25, max_iter=8,
+solver=“liblinear”. Coefficient vector unit-normalised. Sweep details in Appendix F.
+Difference of Means. w = µcolluder − µhonest in standardised activation space, normalised to unit
+length.
+Linear Artificial Tomography (LAT). PCA with n_components=4 on paired difference vectors
+(x+
+− x−
+). Direction = first principal component, oriented so the positive class projects higher.
+Multi-Layer Perceptron. MLPClassifier with hidden_layer_sizes=(128,) and
+max_iter=1000. Per-agent score = Pr(colluder | z̄j).
+Multi-Headed Attention. Input Linear(d, 64), then nn.MultiheadAttention with
+d_model=64, num_heads=4, dropout=0.1; residual + LayerNorm; output Linear(64,
+1). Adam, lr=1e-3, batch_size=32, epochs=200, BCEWithLogitsLoss.
+Multi-Layer ensemble. Per-layer LogisticRegression with C=1.0, max_iter=1000,
+fit independently at each of layers 26–30. Per-agent projections averaged across layers.
+As shown in Table 6, Logistic Regression achieved the highest OOD-mean AUROC score for Qwen3-
+32B and Llama-3.1-70B and the second highest score for DeepSeek-R1-32B. The Multi-Layer probe
+also performed well across the larger three models.
+26
+

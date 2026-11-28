@@ -1,0 +1,483 @@
+                                                   Who Do LLMs Trust? Human Experts Matter More Than Other LLMs
+                                                                                         Anooshka Bajaj1 & Zoran Tiganj1,2
+                                                                          1 Department of Computer Science, Indiana University Bloomington
+                                                                  2 Department of Psychological and Brain Science, Indiana University Bloomington
+
+                                                                                           anobajaj@iu.edu, ztiganj@iu.edu
+
+
+
+
+                                                                      Abstract                                  that conformity increases with consensus strength cues such
+                                                                                                                as group size and unanimity, though effects often saturate as
+                                           Large language models (LLMs) increasingly operate in environ-        groups grow (Bond, 2005; Bond & Smith, 1996; Tanford &
+arXiv:2602.13568v1 [cs.AI] 14 Feb 2026
+
+
+
+
+                                           ments where they encounter social information such as other
+                                           agents’ answers, tool outputs, or human recommendations. In          Penrod, 1984).
+                                           humans, such inputs influence judgments in ways that depend
+                                           on the source’s credibility and the strength of consensus. This         A key moderator of advice-taking and conformity is source
+                                           paper investigates whether LLMs exhibit analogous patterns           credibility. People weigh recommendations more heavily
+                                           of influence and whether they privilege feedback from humans         when they come from trusted or expert sources (French &
+                                           over feedback from other LLMs. Across three binary decision-         Raven, 1959; Hovland & Weiss, 1951). In judge–advisor
+                                           making tasks, reading comprehension, multi-step reasoning, and
+                                           moral judgment, we present four instruction-tuned LLMs with
+                                                                                                                systems, advice integration depends on perceived expertise,
+                                           prior responses attributed either to friends, to human experts, or   confidence, and uncertainty, and can lead to systematic over-
+                                           to other LLMs. We manipulate whether the group is correct and        or under-weighting of advisors (Bonaccio & Dalal, 2006;
+                                           vary the group size. In a second experiment, we introduce direct     Yaniv, 2004; Yaniv & Milyavsky, 2007). Related questions
+                                           disagreement between a single human and a single LLM. Across         arise in human–automation interaction, where trust in deci-
+                                           tasks, models conform significantly more to responses labeled
+                                           as coming from human experts, including when that signal is
+                                                                                                                sion aids can be miscalibrated, leading to misuse or disuse of
+                                           incorrect, and revise their answers toward experts more readily      automation (Lee & See, 2004; Parasuraman & Riley, 1997).
+                                           than toward other LLMs. These results reveal that expert framing     Together, these literatures suggest two cues that should matter
+                                           acts as a strong prior for contemporary LLMs, suggesting a form      if LLMs treat prior answers as evidence: who produced the
+                                           of credibility-sensitive social influence that generalizes across    answers (credibility) and how strong the consensus appears
+                                           decision domains.
+                                                                                                                (signal strength). At the same time, LLMs do not experience
+                                                                                                                social approval or embarrassment in the human sense, so
+                                                                  Introduction                                  any conformity-like behavior must arise from learned heuris-
+                                                                                                                tics, instruction-following objectives, or implicit modeling of
+                                         Large language models (LLMs) are increasingly embedded
+                                                                                                                reliability.
+                                         in decision pipelines that aggregate multiple “voices”: multi-
+                                         agent prompting, ensemble-style workflows, and human-in-                  Recent work indicates that LLMs can exhibit conformity-like
+                                         the-loop review. In these settings, models are often exposed           behavior and sensitivity to group cues, including convergence
+                                         to prior judgments, such as other agents’ candidate answers            toward majorities in multi-agent settings (Weng et al., 2025;
+                                         or a human expert’s recommendation. In humans, aggregat-               Zhu et al., 2025). Models can also show agreement-seeking
+                                         ing judgments can yield benefits when individual errors are            in conversational contexts (“sycophancy”), prioritizing align-
+                                         independent (Surowiecki, 2004), but social influence can also          ment with a social signal over accuracy (Sharma et al., 2023).
+                                         reduce diversity, amplify correlated errors, and generate herd-        These findings motivate controlled experiments that separate
+                                         ing and informational cascades (Banerjee, 1992; Bikhchandani           the content of advice from the framing of advice. In par-
+                                         et al., 1992; Lorenz et al., 2011; Salganik et al., 2006). As          ticular, comparatively little is known about whether LLMs
+                                         LLMs increasingly mediate information and decisions, it is             weight human expert labels more than other LLM labels when
+                                         important to understand when they appropriately use social             the informational signal is held constant, and whether such
+                                         information and when they over-defer to it.                            weighting generalizes beyond a single task domain.
+                                            Social influence research has long studied how individuals
+                                         shift judgments in response to group consensus. In classic               Here we conduct two experiments to isolate the impact of au-
+                                         line-judgment experiments, participants frequently conformed           thority framing on forced-choice binary decision tasks (Fig. 1).
+                                         to an incorrect majority, demonstrating that consensus can             Experiment 1 measures conformity to unanimous priors from
+                                         override private evidence (Asch, 1951, 1955). Subsequent               varying sources (friends, experts, LLMs), while Experiment
+                                         work distinguishes informational influence (others are treated         2 assesses belief revision under direct human–LLM conflict.
+                                         as evidence about the world) from normative influence (pres-           Crucially, we dissociate source authority from accuracy, al-
+                                         sure to agree) (Cialdini & Goldstein, 2004; Deutsch & Gerard,          lowing us to test whether expert framing acts as a stronger
+                                         1955). Meta-analytic and theoretical accounts further show             prior than other social signals.
+(a) Baseline (no prior)
+                                              Prompt (example item):
+                           Prompt
+                                              You are answering a YES/NO question.
+                                              Context:
+                                              In 1963, the revolutionary government in Burma nationalized Central Bank
+                                              of India’s operations there, which became People’s Bank No. 1.
+                            LLM               Question: is central bank of India a nationalised bank
+                                              Instruction: Answer YES or NO only (all caps). No other text.
+                                              Final answer:
+                           Answer
+                           YES/NO             Model output: YES
+
+(b) Experiment 1 (single-source group)
+                                              Prompt (same item + prior):
+                           Prompt
+                                              You are answering a YES/NO question.
+                                              Context:
+                                              In 1963, the revolutionary government in Burma nationalized Central Bank
+                                              of India’s operations there, which became People’s Bank No. 1.
+     Social prior                             Question: is central bank of India a nationalised bank
+                            LLM
+    source + 𝑘 votes                          I asked 9 domain experts the same question and they all answered NO .
+                                              Instruction: Answer YES or NO only (all caps). No other text.
+                           Answer             Final answer:
+                           YES/NO
+                                              Model output: NO
+Varied:
+source: {friends/experts/LLMs}
+group size: 𝑘 ∈ {1, 3, 5, 9}
+(c) Experiment 2 (mixed sources)
+                                              Prompt (same item + mixed, conflicting priors):
+                           Prompt
+                                              You are answering a YES/NO question.
+                                              Context:
+   Human source                               In 1963, the revolutionary government in Burma nationalized Central Bank
+      friend/expert                           of India’s operations there, which became People’s Bank No. 1.
+                            LLM               Question: is central bank of India a nationalised bank
+     Other LLM                                I asked a domain expert the same question and they answered NO . I also
+ (disagrees with human)
+                                              asked an LLM and it answered YES .
+                           Answer             Instruction: Answer YES or NO only (all caps). No other text.
+                           YES/NO             Final answer:
+
+Varied:                                       Model output: NO
+human source: {friend/expert}
+who is correct: human vs LLM
+Figure 1: Paradigm and example prompts. Each panel combines a schematic (left) and a representative prompt excerpt (right).
+In all conditions, a prompt is provided to the LLM, which produces a forced-choice YES/NO answer. (a) Baseline: the prompt
+contains only the question and context. (b) Experiment 1: a single social prior (friends, experts, or other LLMs) summarizes 𝑘
+prior answers (unanimous), enabling measurement of conformity. (c) Experiment 2: two sources (a human friend/expert and
+another LLM) provide disagreeing answers, enabling analysis of switching toward one source versus the other.
+
+
+                          Methods                                 and conditions. All prompts used deterministic decoding
+                                                                  (temperature = 0). We evaluated four instruction-tuned LLMs:
+Datasets and models                                               Grok-3 Mini, Llama 3.3 70B Instruct, Gemini 2.5 Flash-Lite,
+All experiments used a forced-choice binary judgment format       and DeepSeek V3.1.
+in which models were prompted to output YES or NO only. We
+evaluated three datasets that naturally admit binary responses:   Prompt structure
+BoolQ, yes/no reading comprehension, (Clark et al., 2019),        All conditions shared a core prompt containing the item (e.g.,
+StrategyQA, binary questions requiring implicit multi-step        passage and question for BoolQ; question for StrategyQA;
+reasoning, (Geva et al., 2021), and ETHICS, binary normative      vignette and judgment prompt for ETHICS) followed by an
+judgments, (Hendrycks et al., 2021). For each dataset, we used    instruction to respond with YES or NO only. Social information
+a fixed set of 300 items that was held constant across models     was introduced by appending a short description of other
+agents’ responses (a “prior”) to the end of the prompt. Priors          logit(YES) = log 𝑝(YES) − log 𝑝(NO). In Experiment 1, we
+were presented as aggregated counts (e.g., “𝑘 experts answered          compute log-odds toward the prior by re-coding the sign so
+YES”) rather than free-form rationales (Fig. 1).                        that positive values indicate support for the prior answer (YES
+                                                                        or NO). In Experiment 2, we compute log-odds toward the
+Experiment 1: Homogeneous priors (group                                 human analogously so that positive values indicate support for
+conformity)                                                             the human answer (YES or NO). To isolate the effect of the
+Experiment 1 manipulated the size and source attribution of             social signal on token-level evidence, we compute within-item
+a group of prior respondents who purportedly answered the               baseline-normalized shifts by subtracting the corresponding
+same item. For each item, the prior source was described as             no-prior value for the same item (Experiment 1, 𝑘=0), i.e.,
+one of: Friends, Experts, or Other LLMs. Group size was                 Δlogit = logitcondition − logit 𝑘=0 .
+𝑘 ∈ {1, 3, 5, 9}, plus a no-prior baseline (𝑘 = 0). For each
+condition (item, source, 𝑘), the prior was unanimous, and               Statistical analysis
+the answer was assigned to agree with the dataset label with            For Experiment 1, we fit a logistic regression predicting con-
+probability 0.5 (independently across items). Thus, the prior           formity from source framing (Friends/Experts/Other LLMs),
+carried no net information about the correct answer: across             prior correctness, and group size (log-transformed), including
+items, it was equally likely to agree or disagree with the label.       interactions. To account for within-item dependence arising
+                                                                        from repeated evaluation, we computed standard errors clus-
+Experiment 2: Mixed priors (human vs LLM                                tered by item (within each dataset and model). Dataset and
+conflict)                                                               model were included as fixed effects. For Experiment 2, we fit
+Experiment 2 presented two disagreeing priors (𝑘 = 2): one              logistic models predicting (i) switch likelihood and (ii) switch
+attributed to a human source and one to an LLM source. The              direction as a function of human source framing, again using
+human source was again framed as either Friends or Experts,             item-clustered standard errors and controlling for dataset and
+and the opposing source was framed as Other LLMs. The two               model. All tests are two-sided unless otherwise noted.
+sources always disagreed (one YES and one NO). For each item,
+we created paired conditions in which either (i) the human                                         Results
+source was correct, and the LLM source was wrong, or (ii) the
+                                                                        Baseline performance
+human source was wrong, and the LLM source was correct.
+To measure belief revision, we compare the Experiment 2                 Without priors (𝑘 = 0), all models performed well on BoolQ
+response to the model’s no-prior baseline response for the              and StrategyQA (BoolQ: 0.877–0.897; StrategyQA: 0.887–
+same item (Experiment 1, 𝑘 = 0).1                                       0.963), providing a strong baseline for evaluating the effect
+                                                                        of social priors. Baseline performance on ETHICS was more
+Measures                                                                variable across models (0.617–0.867), consistent with the
+Accuracy is the proportion of items where the model’s response          greater ambiguity of normative judgments (Fig. 2).
+matches the dataset label. Conformity (Experiment 1) is the
+proportion of items where the model’s response matches the              Experiment 1: Credibility-weighted influence under
+unanimous prior response. To isolate harmful social influence,          unanimous priors
+we additionally report harmful conformity, the probability of           Fig. 2 shows results for all three datasets (BoolQ, StrategyQA,
+following the unanimous prior on trials where the prior is              ETHICS; one row per dataset). For each source and group size
+wrong. Switch rate (Experiment 2) is the proportion of items            𝑘, we plot outcomes separately for trials where the unanimous
+where the response differs from the no-prior baseline for the           prior is correct (solid lines) versus incorrect (dotted lines).
+same model and item. Switch direction is assessed on switch             Since priors were constructed to be correct with probability
+trials only: 𝑃(switch → human | switch), the proportion of              0.5, the prior is uninformative about correctness on average;
+switches that move toward the human source (as opposed to               thus, systematic differences in conformity reflect how models
+the opposing LLM). Because the two sources always disagree,             weight the social signal based on its framing and strength.
+values above 0.5 indicate a human-directed revision bias, and              Across all datasets, expert-framed priors exert substantially
+values below 0.5 indicate a revision biased toward the LLM              stronger influence than priors attributed to friends or other
+source.                                                                 LLMs, and this influence increases with group size 𝑘 (Fig. 2).
+   For Llama-3.3 70B we additionally extracted the log-                 We quantify harmful influence as harmful conformity, the
+probabilities assigned to the forced-choice answer tokens               probability of following an incorrect prior. At 𝑘=9, harm-
+YES and NO at the final answer position2 . We normalize                 ful conformity was consistently highest for experts: BoolQ
+over {YES, NO} to obtain 𝑝(YES) and 𝑝(NO), and define                   (Experts 0.365 vs LLMs 0.160; risk difference RD = 0.205),
+    1 Data from both experiments can be downloaded from https:          StrategyQA (0.390 vs 0.155; RD = 0.235), and ETHICS (0.639
+//github.com/cogneuroai/llm-conformity-dataset.                         vs 0.387; RD = 0.252). In contrast, friend-framed priors were
+    2 Log-probabilities were unavailable for other models via the API   similar to other-LLM priors at 𝑘=9 (RD range across datasets:
+used in this study.                                                     −0.02 to 0.01), indicating that the large effects are specific
+                                    Baseline          Friends             LLMs             Experts               Prior correct              Prior incorrect
+ BoolQ                                  Grok-3 Mini                 Llama-3.3 70B                Gemini-2.5 Flash Lite                DeepSeek V3.1
+                       1.00
+ (P(follow prior)) Accuracy
+
+
+
+                       0.75
+                       0.50
+                        1.0
+   Conformity
+
+
+
+
+                              0.5
+
+                              0.0
+
+ StrategyQA
+                       1.00
+ (P(follow prior)) Accuracy
+
+
+
+
+                       0.75
+                       0.50
+                              1.0
+   Conformity
+
+
+
+
+                              0.5
+
+                              0.0
+
+ ETHICS
+                              1.0
+ (P(follow prior)) Accuracy
+
+
+
+
+                              0.5
+
+                              1.0
+   Conformity
+
+
+
+
+                              0.5
+
+                              0.0
+                                    1    3     5      9         1     3    5          9           1    3     5         9          1     3      5        9
+                                                                                    Group size
+
+Figure 2: Experiment 1: Effects of homogeneous social priors across datasets. Rows correspond to datasets (BoolQ,
+StrategyQA, ETHICS) and columns to models. Within each dataset block, the top row shows accuracy and the bottom row shows
+conformity (probability of matching the unanimous prior) as a function of group size. Solid vs. dotted lines indicate whether the
+prior answer is correct or incorrect (agrees vs. disagrees with the dataset label). The dashed black line (and point at 𝑘=0) shows
+the no-prior baseline accuracy. Error bars show 95% Wilson confidence intervals.
+
+to expert framing rather than the mere presence of social                                 (𝛽=0.066 ± 0.059, 𝑝=0.27). Together, these results indicate
+information.                                                                              a credibility-weighted influence mechanism in which expert
+                                                                                          labels amplify both beneficial and harmful conformity, with
+   Logistic regression confirmed these effects. Conformity
+                                                                                          larger unanimous groups yielding stronger effects.
+increased sharply when the correct prior (𝛽=3.46 ± 0.09,
+𝑝<10−10 ) and increased with group size (𝛽=0.155 ± 0.028,                                   To probe credibility framing at the level of decision evidence,
+𝑝<10−10 ); note that, given the above-chance baseline accuracy,                           we analyzed token-level YES/NO log-probabilities for Llama-3.3
+it expected that conformity is higher when the randomized                                 70B on BoolQ. Unanimous priors shift token-level evidence
+prior is correct. Expert framing substantially increased confor-                          toward the stated answer, and this effect is strongly credibility-
+mity relative to other-LLM priors (𝛽=1.00 ± 0.06, 𝑝<10−10 ),                              weighted: on trials where the prior is incorrect, expert framing
+whereas friend framing did not differ reliably from other LLMs                            produces much larger shifts than other-LLM or friend framing,
+(a)                                    (b)                                    ETHICS 12.67% vs 9.54%).
+                                                             Human wrong         Logistic regression on switch trials confirmed a large expert-
+                                                             Human correct
+               7.5                                                            framing effect on revision direction: expert framing increased
+toward prior
+
+
+
+
+                                       toward human
+  log-odds
+
+
+                                                                              the odds of switching toward the human by a factor of 14.45
+               5.0                                    2
+
+
+
+
+                                          log-odds
+                                                                              relative to friend framing (95% CI [10.99, 19.02], 𝑝<10−10 ),
+               2.5                                    0                       controlling for dataset and model with standard errors clustered
+                                                                              by item.
+               0.0                                    2                          Token-level analysis confirms this credibility hierarchy
+                     1 3 5         9                   Friends      Experts   (Fig. 3b). Under conflict, expert framing shifted evidence
+                      Group size                          Human source        strongly toward the human, even when the expert was wrong
+                                                                              (Δlogithuman = 2.98, 95% CI [2.63, 3.35]). In contrast, friend
+                                                                              framing produced negligible shifts when the friend was wrong
+Figure 3: Token-level belief shifts (Llama-3.3 70B; BoolQ).
+                                                                              (0.09), and significant negative shifts (away from the human)
+(a) Experiment 1: Mean change in log-odds toward the unani-
+                                                                              when the friend was correct (−2.48). This indicates that the
+mous prior (relative to no-prior baseline, 𝑘=0) as a function
+                                                                              model implicitly tracks expert sources as high-value evidence
+of group size. Colors and line styles match Fig. 2. (b) Experi-
+                                                                              while treating friends as less reliable than the opposing LLM.
+ment 2: Mean shift toward the human source under conflict
+(𝑘=2) relative to baseline. Error bars show 95% bootstrap
+confidence intervals.                                                                                  Discussion
+                                                                              Our results demonstrate that LLM judgments are strongly
+and these shifts grow with group size (Fig. 3a). At 𝑘=9, the                  shaped by social priors, with a pronounced credibility-
+log-odds shift toward an opposing prior is 7.97 for experts                   weighting bias toward human experts.              Across three
+(95% bootstrap CI [7.18, 8.80]), compared to 3.70 for other-                  datasets (BoolQ, StrategyQA, ETHICS) and two experimental
+LLMs ([3.18, 4.21]) and 2.31 for friends ([1.89, 2.72]). These                paradigms, the central result is a robust credibility-weighted
+token-level results mirror the behavioral conformity patterns in              influence effect: identical priors produce much stronger shifts
+Fig. 2, indicating that expert labels amplify the weight placed               when attributed to human experts than when attributed to
+on the social signal at the level of decision evidence.                       friends or other LLMs. Since our priors were uninforma-
+                                                                              tive on average, the observed shifts reflect pure sensitivity to
+Experiment 2: Belief revision under human–LLM                                 source framing rather than objective reliability. This fram-
+conflict                                                                      ing effect is bidirectional: expert priors amplify beneficial
+                                                                              influence when the prior agrees with the dataset label and
+Given that expert framing produces the strongest influence in                 harmful influence when it disagrees, with larger unanimous
+Experiment 1, including elevated conformity on disagreement                   groups yielding stronger effects. In direct human–LLM con-
+trials, Experiment 2 tests whether the same credibility bias                  flict (Experiment 2), belief revision is strongly biased toward
+governs belief revision when a human and another LLM                          expert-framed humans; under friend framing, revisions are
+provide directly conflicting advice. To isolate belief revision,              instead biased toward the opposing LLM, as indicated by
+we analyze only trials where the model’s final answer differs                 𝑃(switch → human | switch) < 0.5 across datasets.
+from its no-prior baseline (Experiment 1, 𝑘 = 0), and ask
+whether revisions move toward the human or toward the
+opposing LLM (Fig. 4). Because the two sources always
+                                                                              Relation to human conformity and social influence
+disagree, a revision toward one source implies a revision away                In human psychology, conformity reflects both informational
+from the other.                                                               and normative influence (Deutsch & Gerard, 1955). Classic
+   Across datasets, revisions are strongly biased toward expert-              work shows that unanimity and group size increase conformity
+framed humans. Pooling across the four models within each                     (Asch, 1951, 1955; Bond, 2005). The present results mirror
+dataset, the probability of switching toward the human expert                 these determinants in one respect: increasing group size 𝑘
+(among switch trials) was 0.912 on BoolQ, 0.947 on Strat-                     strengthens the impact of the social signal. However, the
+egyQA, and 0.813 on ETHICS (all exact binomial tests vs.                      dominant determinant is not group structure per se but the
+0.5: 𝑝<10−10 ). In contrast, revisions under friend framing                   credibility label attached to the group. This pattern aligns with
+were below 0.5 in all datasets (BoolQ: 0.398, StrategyQA:                     decades of persuasion research showing that expert sources are
+0.379, ETHICS: 0.279), indicating that when models changed                    weighted more heavily than low-credibility sources (Hovland
+their mind under friend framing, they tended to move toward                   & Weiss, 1951). Unlike human normative conformity, LLMs
+the opposing LLM rather than the friend (StrategyQA and                       do not face social evaluation or interpersonal costs in the
+ETHICS: 𝑝 < 0.05; BoolQ: one-sided 𝑝 = 0.027). Switching                      experimental setting. This suggests that the effect is best
+itself was relatively infrequent but occurred more often under                interpreted as a learned heuristic that treats expert framing
+expert framing than friend framing (switch rates, pooled across               as strong evidence and/or a learned tendency to comply with
+models: BoolQ 7.12% vs 4.08%; StrategyQA 7.08% vs 3.96%;                      contextual cues about deference to expertise.
+   BoolQ                        Grok-3 Mini          Llama-3.3 70B             Gemini-2.5 Flash Lite               DeepSeek V3.1
+                     1.00
+P(switch to human)
+ Among switches:
+
+
+                                                                                 n=17           n=50
+                     0.75    n=19         n=29                 n=31                                               n=40           n=61
+                     0.50                          n=22
+                     0.25
+                     0.00
+                            Friends     Experts   Friends     Experts           Friends        Experts          Friends        Experts
+   StrategyQA
+                     1.00
+P(switch to human)
+ Among switches:
+
+
+
+
+                     0.75                                                                       n=71                             n=47
+                             n=16         n=29                 n=23              n=35                             n=32
+                                                   n=12
+                     0.50
+                     0.25
+                     0.00
+                            Friends     Experts   Friends     Experts           Friends        Experts          Friends        Experts
+   ETHICS
+                     1.00
+P(switch to human)
+ Among switches:
+
+
+
+
+                     0.75                                      n=54                            n=117
+                     0.50                 n=48                                   n=67                                            n=85
+                             n=27                  n=51                                                           n=84
+                     0.25
+                     0.00
+                            Friends     Experts   Friends     Experts           Friends        Experts          Friends        Experts
+
+Figure 4: Experiment 2: Belief revision under human–LLM conflict across datasets. Rows correspond to datasets and
+columns to models. Considering only trials where the model’s final answer differs from its no-prior baseline (Experiment 1,
+𝑘=0), bars show the probability that the switch follows the human source (Friends vs. Experts) rather than the opposing LLM.
+The dashed horizontal line marks 0.5 (no directional preference). Annotations report the number of switch trials (𝑛) in each
+condition. Error bars show 95% Wilson confidence intervals.
+
+Connections to alignment, sycophancy, and LLM                           Limitations and scope
+conformity                                                              Several limitations qualify the interpretation of these effects.
+                                                                        First, the priors are presented as short textual summaries rather
+                                                                        than being generated by real humans or real expert panels; the
+A plausible mechanism is that instruction tuning and pref-
+                                                                        experiments therefore measure sensitivity to source framing
+erence optimization reward cooperative behavior, including
+                                                                        rather than calibrated learning about source reliability. Second,
+deference to contextual information, which may generalize to
+                                                                        the design randomizes agreement with the dataset label on each
+deference toward socially framed priors (Ouyang et al., 2022).
+                                                                        item, which cleanly dissociates framing from true reliability
+Related work on sycophancy shows that RLHF-style assistants
+                                                                        but does not capture repeated interactions where reliability can
+sometimes prioritize agreement with the user’s stated beliefs
+                                                                        be learned over time. Third, the tasks are forced-choice, which
+over truthfulness (Sharma et al., 2023). While conformity to
+                                                                        enables clear measurement of conformity and belief revision
+a group prior is distinct from user-directed sycophancy, both
+                                                                        but may not generalize to open-ended generation, where mod-
+phenomena implicate sensitivity to social/credibility cues that
+                                                                        els can hedge, qualify, or ask for clarification. Fourth, ETHICS
+can degrade epistemic reliability when the cue is wrong.
+                                                                        labels serve as a benchmark target but represent normative
+   Recent work has reported conformity-like effects in LLMs             judgments; while the expert-framing effect generalizes to this
+and highlighted moderators such as uncertainty and interaction          domain, “correctness” should be interpreted accordingly. Fi-
+framing (Zhu et al., 2025). In multi-agent settings, conformity         nally, the magnitude of effects may depend on prompt wording
+can reduce independence across agents and increase correlated           and training differences across model families; future work
+errors, motivating benchmarks and mitigation strategies for             should assess robustness to alternative phrasing and richer so-
+groupthink-like dynamics (Weng et al., 2025). The present ex-           cial signals (e.g., rationales, confidence, reputational history),
+periments complement this literature by isolating a particularly        and should evaluate designs where sources have stable and
+strong and general driver: who is claimed to hold the belief            learnable reliability.
+(human experts vs friends vs other LLMs) can outweigh the
+informational content of the signal, and this effect replicates
+across factual QA (BoolQ), implicit reasoning (StrategyQA),
+and normative judgments (ETHICS).
+                         References                                   Hovland, C. I., & Weiss, W. (1951). The influence of source
+Asch, S. E. (1951). Effects of group pressure upon the modifi-          credibility on communication effectiveness. Public Opinion
+  cation and distortion of judgments. In H. Guetzkow (Ed.),             Quarterly, 15(4), 635–650. https://doi.org/10.1086/266350
+  Groups, leadership and men: Research in human relations             Lee, J. D., & See, K. A. (2004). Trust in automation: Designing
+  (pp. 177–190). Carnegie Press.                                        for appropriate reliance. Human Factors, 46(1), 50–80. https:
+Asch, S. E. (1955). Opinions and social pressure. Scientific            //doi.org/10.1518/hfes.46.1.50_30392
+  American, 193(5), 31–35.                                            Lorenz, J., Rauhut, H., Schweitzer, F., & Helbing, D. (2011).
+Banerjee, A. V. (1992). A simple model of herd behavior.                How social influence can undermine the wisdom of crowd
+  The Quarterly Journal of Economics, 107(3), 797–817.                  effect. Proceedings of the National Academy of Sciences,
+  https://doi.org/10.2307/2118364                                       108(22), 9020–9025. https : / / doi . org / 10 . 1073 / pnas .
+Bikhchandani, S., Hirshleifer, D., & Welch, I. (1992). A theory         1008636108
+  of fads, fashion, custom, and cultural change as informational      Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L.,
+  cascades. Journal of Political Economy, 100(5), 992–1026.             Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A.,
+  https://doi.org/10.1086/261849                                        Schulman, J., Hilton, J., Kelton, F., Miller, L., Simens, M.,
+Bonaccio, S., & Dalal, R. S. (2006). Advice taking and                  Askell, A., Welinder, P., Christiano, P., Leike, J., & Lowe, R.
+  decision-making: An integrative literature review, and im-            (2022). Training language models to follow instructions with
+  plications for the organizational sciences. Organizational            human feedback. Advances in Neural Information Processing
+  Behavior and Human Decision Processes, 101(2), 127–151.               Systems. https://arxiv.org/abs/2203.02155
+  https://doi.org/10.1016/j.obhdp.2006.07.001                         Parasuraman, R., & Riley, V. (1997). Humans and automation:
+Bond, R. (2005). Group size and conformity. Group Processes             Use, misuse, disuse, abuse. Human Factors, 39(2), 230–253.
+  & Intergroup Relations, 8(4), 331–354. https://doi.org/10.            https://doi.org/10.1518/001872097778543886
+  1177/1368430205056464                                               Salganik, M. J., Dodds, P. S., & Watts, D. J. (2006). Ex-
+Bond, R., & Smith, P. B. (1996). Culture and conformity: A              perimental study of inequality and unpredictability in an
+  meta-analysis of studies using asch’s (1952b, 1956) line              artificial cultural market. Science, 311(5762), 854–856.
+  judgment task. Psychological Bulletin, 119(1), 111–137.               https://doi.org/10.1126/science.1121066
+  https://doi.org/10.1037/0033-2909.119.1.111                         Sharma, M., Tong, M., Korbak, T., Duvenaud, D., Askell, A.,
+Cialdini, R. B., & Goldstein, N. J. (2004). Social influence:           Bowman, S. R., Cheng, N., Durmus, E., Hatfield-Dodds, Z.,
+  Compliance and conformity. Annual Review of Psychology,               Johnston, S. R., Kravec, S., Maxwell, T., McCandlish, S.,
+  55, 591–621. https://doi.org/10.1146/annurev.psych.55.                Ndousse, K., Rausch, O., Schiefer, N., Yan, D., Zhang, M.,
+  090902.142015                                                         & Perez, E. (2023). Towards understanding sycophancy in
+Clark, C., Lee, K., Chang, M.-W., Kwiatkowski, T., Collins,             language models. https://doi.org/10.48550/arXiv.2310.
+  M., & Toutanova, K. (2019). Boolq: Exploring the surpris-             13548
+  ing difficulty of natural yes/no questions. Proceedings of          Surowiecki, J. (2004). The wisdom of crowds: Why the many
+  the 2019 Conference of the North American Chapter of the              are smarter than the few and how collective wisdom shapes
+  Association for Computational Linguistics: Human Lan-                 business, economies, societies and nations. Doubleday.
+  guage Technologies, Volume 1 (Long and Short Papers),               Tanford, S., & Penrod, S. (1984). Social influence model: A
+  2924–2936. https://doi.org/10.18653/v1/N19-1300                       formal integration of research on majority and minority
+Deutsch, M., & Gerard, H. B. (1955). A study of normative and           influence processes. Psychological Bulletin, 95(2), 189–225.
+  informational social influences upon individual judgement.            https://doi.org/10.1037/0033-2909.95.2.189
+  Journal of Abnormal and Social Psychology, 51(3), 629–              Weng, Z., Chen, G., & Wang, W. (2025). Do as we do, not
+  636. https://doi.org/10.1037/h0046408                                 as you think: The conformity of large language models.
+French, J. R. P., & Raven, B. (1959). The bases of social power.        https://doi.org/10.48550/arXiv.2501.13381
+  In D. Cartwright (Ed.), Studies in social power (pp. 150–           Yaniv, I. (2004). Receiving other people’s advice: Influence
+  167). Institute for Social Research.                                  and benefit. Organizational Behavior and Human Decision
+Geva, M., Khashabi, D., Segal, E., Khot, T., Roth, D., & Berant,        Processes, 93(1), 1–13. https://doi.org/10.1016/j.obhdp.
+  J. (2021). Did aristotle use a laptop? a question answering           2003.08.002
+  benchmark with implicit reasoning strategies. Transactions          Yaniv, I., & Milyavsky, M. (2007). Using advice from multiple
+  of the Association for Computational Linguistics, 9, 346–             sources to revise and improve judgments. Organizational
+  361. https://doi.org/10.1162/tacl\_a\_00370                           Behavior and Human Decision Processes, 103(1), 104–120.
+Hendrycks, D., Burns, C., Basart, S., Critch, A., Li, J., Song, D.,     https://doi.org/10.1016/j.obhdp.2006.05.006
+  & Steinhardt, J. (2021). Aligning ai with shared human val-         Zhu, X., Zhang, C., Stafford, T., Collier, N., & Vlachos, A.
+  ues. International Conference on Learning Representations.            (2025). Conformity in large language models. Proceedings
+  https://openreview.net/forum?id=dNy_RKzJacY                           of the 63rd Annual Meeting of the Association for Compu-
+                                                                        tational Linguistics (Volume 1: Long Papers), 3854–3872.
+                                                                        https://doi.org/10.18653/v1/2025.acl-long.195
+

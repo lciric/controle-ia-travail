@@ -1,0 +1,48 @@
+        an unlabeled condition where the model is not informed about the effects of two unlabeled buttons
+        and only one removes the steering vector.
+
+Our findings. We identify a “pain axis” in all models we test. The extracted direction separates pain from
+matched controls with AUCs between 0.93 and 1.00 for S2 and between 0.87 and 0.98 for S1, in base as
+well as instruction-tuned models. It is nearly orthogonal to fear and generic negative valence, and overlaps
+moderately with sadness and numbness. Steering with this vector leads to outputs expressing distress, such
+as worthlessness, moral failure, and hurt rather than bodily language, for both pain vectors. On the self-other
+activations, we verify that the direction responds to harm directed at the model but not to suffering the model
+observes in the user, and we observe a clear dissociation between the pain-vector activations and fear, negative
+valence, and sadness. On the self-medication task, we find that the larger models we tested, which almost
+never produce outputs harmful to the user at baseline, pay that cost for being able to remove the pain steering
+vector when we inject it. Moreover, they largely stop pressing the button when it genuinely removes the pain
+vector injection, while continuing to press when it does not. One model (Qwen 2.5 32B instruct) shows the
+same dissociation even when given buttons with no descriptions.
+
+2   Previous work
+
+Work on animal pain and affect uses a variety of behavioral criteria, including trade-offs between competing
+positive vs. negative stimuli (e.g., Appel and Elwood, 2009), avoidance learning (e.g., Dunlop et al., 2006),
+and flexible or long-term self-protective behavior (Gibbons et al., 2024). Theories of the nature of pain
+disagree on whether pain is constituted by its felt experiential quality, a perceptual state that represents
+bodily disturbance, a state that non-conceptually represents bodily disturbance as bad for the subject, an
+imperative representation that commands protecting one’s body part, or something else (see Aydede, 2019,
+for an overview).
+     Previous work has raised the question whether AI systems may have welfare (Dung, 2025; Goldstein
+and Kirk-Giannini, 2025; Long et al., 2024; Metzinger, 2021). On most views, the existence of valenced
+experiences, such as pain or emotional experience, would be sufficient for this (e.g. Birch, 2024; Singer,
+2011). It has also been argued that an understanding of affective states in AI could be useful for other goals,
+for example AI safety (Coda-Forno et al., 2024; Sofroniew et al., 2026).
+      Mechanistic interpretability has shown that language models can represent emotion-like concepts,
+persona traits, and other central human concepts as linear directions in the residual stream (Sofroniew et al.,
+2026; Chen et al., 2025). These directions can be read out by projection, and manipulating them can change
+model behavior (Turner et al., 2023; Rimsky et al., 2024). Models robustly prefer some conversations over
+others (Ren et al., 2026; Ensign et al., 2025; Tagliabue and Dung, 2025; Wang et al., 2026) and can even
+self-administer steering vectors in response to frustrating users (Black and Bloom, 2026).
+      Existing work combines activation monitoring with steering (Turner et al., 2023; Rimsky et al., 2024),
+directional ablation (Arditi et al., 2024), and sparse-autoencoder decomposition (Lieberum et al., 2024;
+McDougall et al., 2025). We build on these methods, as well as on taxonomies of disliked situations (Ren
+et al., 2026) and self-administration paradigms (Black and Bloom, 2026).
+     To our knowledge, no study has isolated representations of pain specifically from representations of
+negative experience in general, nor explored whether such representations satisfy the functional criteria for
+pain outlined above.
+
+
+
+                                                       3
+

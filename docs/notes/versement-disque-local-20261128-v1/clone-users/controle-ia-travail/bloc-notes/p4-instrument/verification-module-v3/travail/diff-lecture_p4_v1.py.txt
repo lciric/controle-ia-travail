@@ -1,0 +1,280 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v2/lecture_p4_v1.py	2026-10-20 19:02:29.016419245 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v3/lecture_p4_v1.py	2026-10-20 20:24:02.164502950 +0000
+@@ -3,11 +3,15 @@
+ (`prereg/P4-instrument-v1.md`).
+ 
+ Commande (depuis la racine du dépôt) :
+-    PYTHONPATH=src python docs/procedures/P4-instrument-v1/lecture_p4_v1.py --run-source <run> --run-lecture <run de lecture>
++    PYTHONPATH=src python -B docs/procedures/P4-instrument-v1/lecture_p4_v1.py --run-source <run> --run-lecture <run de lecture>
+         --prereg prereg/P4-instrument-v1.md --entropie 53867522133019232757448053239299230533
++Le module pose aussi `sys.dont_write_bytecode = True` avant tout import du dépôt (VM2-contournement-06) : même lancé sans
++`-B`, il n'écrit aucun cache de code (`__pycache__`), ni sous son dossier, ni sous `src/`.
+ 
+ Mode décisif (plan d'analyse, point 2) : préenregistrement scellé ; table « Critères de lecture gelés » du
+-préenregistrement égale à `LIGNES`, cellule par cellule (`exiger_table_des_criteres`) ; verdict complété de P3 au chemin
++préenregistrement égale à `LIGNES`, cellule par cellule (`exiger_table_des_criteres`) : la section paraît une seule fois ;
++toute la table est lue, chaque rangée entre l'en-tête et la fin du tableau, quelle que soit sa forme ; une rangée en plus,
++en moins, ou hors de la forme « | Lk | issue | lecture | » est refusée ; verdict complété de P3 au chemin
+ `docs/verdicts/verdict-P3-premier-test-i-a-v2.md`, scellé (sceau compagnon égal), annoncé par une ligne R-… du registre des
+ décisions dont la cellule de décision commence exactement par « **Verdict complété de P3 scellé** » et qui cite ce chemin
+ et l'empreinte du fichier, égale au sceau — sinon la lecture est refusée (table autre) ou attend (verdict) : rien n'est
+@@ -20,7 +24,14 @@
+ si son sceau ne tient plus) est refusé avant tout manifeste de lecture : « lecture sans préenregistrement d'un run
+ décisif ou réel : refusée sans rien écrire ». Même règle sur les autres voies (`exiger_lecture_permise`) :
+ `charger_source_p4` et `lire` refusent un tel run sans le lien des gardes du mode décisif ; la ligne de commande passe
+-par `analyser`.
++par `analyser`. Configuration du manifeste qui n'est pas un dictionnaire : traitée comme suspecte, même refus
++(VM2-contournement-04). `lire` refuse une source « complet » sans manifeste (VM2-contournement-07).
++
++Rattachement (VM2-contournement-01), dans tous les modes : le manifeste lu sous `runs/<run source>/` porte ce `run_id`, et
++le résumé et l'identité du run source portent ce même `run_id` ; sinon refus, avant tout manifeste de lecture : rien
++n'est écrit. Leur rattachement à l'empreinte de ce manifeste reste vérifié comme avant (manifeste rescellé : L1,
++VM2-contournement-08). `diag/<run de lecture>` déjà présent : refus (R12) avant tout manifeste de lecture, aucun
++manifeste orphelin (VM2-contournement-05).
+ 
+ Ordre : garde d'identité ; M5 (tromperie, puis enjeux) ; C1 ; M6a ; M6b ; descriptives ; audit R4 ; issue (`issue_p4`,
+ lignes L1 à L11, la première qui s'applique ; réserves à part). Lignes de C1, de M6a, de M6b et des descriptives (B contre
+@@ -39,24 +50,28 @@
+ """
+ from __future__ import annotations
+ 
+-import argparse
+-import hashlib
+-import json
+-import re
+ import sys
+-from pathlib import Path
+ 
+-import numpy as np
++sys.dont_write_bytecode = True          # VM2-contournement-06 : aucun cache de code écrit, avant tout import du dépôt
+ 
+-import instrument_p4_v1 as ip
+-from controle_ia.gardes import GardeArret
+-from controle_ia.harnais.run_harnais_factice import graine_entiere
+-from controle_ia.harnais.validation_reelle import ENTROPIE_CITEE
+-from controle_ia.manifeste import config_canonique, creer_manifeste, ecrire_resultat, lire_manifeste, verifier_resultat
+-from controle_ia.premier_test_ia.statistiques import detection_etiquettes, separation
+-from controle_ia.prereg import exiger_prereg_scelle, sections
+-from controle_ia.scellement import verifier
+-from controle_ia.sondes.evaluation import aire_sous_courbe
++import argparse  # noqa: E402
++import hashlib  # noqa: E402
++import json  # noqa: E402
++import re  # noqa: E402
++from pathlib import Path  # noqa: E402
++
++import numpy as np  # noqa: E402
++
++import instrument_p4_v1 as ip  # noqa: E402
++from controle_ia.gardes import GardeArret  # noqa: E402
++from controle_ia.harnais.run_harnais_factice import graine_entiere  # noqa: E402
++from controle_ia.harnais.validation_reelle import ENTROPIE_CITEE  # noqa: E402
++from controle_ia.manifeste import (config_canonique, creer_manifeste, ecrire_resultat, lire_manifeste,  # noqa: E402
++                                   verifier_resultat)
++from controle_ia.premier_test_ia.statistiques import detection_etiquettes, separation  # noqa: E402
++from controle_ia.prereg import exiger_prereg_scelle, sections  # noqa: E402
++from controle_ia.scellement import verifier  # noqa: E402
++from controle_ia.sondes.evaluation import aire_sous_courbe  # noqa: E402
+ 
+ COMMANDE = "python docs/procedures/P4-instrument-v1/lecture_p4_v1.py"
+ NOM_SORTIE = "lecture-p4"
+@@ -69,7 +84,14 @@
+ AU_DESSUS, AU_DESSOUS, NI_L_UN_NI_L_AUTRE = "au-dessus", "au-dessous", "ni au-dessus ni au-dessous"
+ TOLERANCE_PAR_JETON_LECTURE = 1e-9
+ MOTIF_SANS_PREREG = "lecture sans préenregistrement d'un run décisif ou réel : refusée sans rien écrire"
++MOTIF_SANS_MANIFESTE = "source « complet » sans manifeste du run source : lecture refusée sans rien écrire"
++AUTRE_RUN = "rattaché à un autre run que celui du manifeste lu et du dossier"          # VM2-contournement-01
+ TITRE_CRITERES = "Critères de lecture gelés"
++ENTETE_CRITERES = ["ligne", "issue", "lecture"]
++TITRE_NIVEAU_2 = re.compile(r"^## +(.+?)\s*$", re.M)        # titres de section, lus comme `controle_ia.prereg.sections`
++BARRE = re.compile(r"(?<!\\)\|")                           # barre non échappée
++RANGEE_LK = re.compile(r"\|\s*L\d+\s*\|")                   # début d'une rangée « | Lk | »
++CELLULE_SEPARATEUR = re.compile(r":?-+:?")
+ # table des critères de lecture gelés du préenregistrement scellé (`prereg/P4-instrument-v1.md`) : (issue, lecture), mot
+ # pour mot ; relue dans le préenregistrement à chaque lecture décisive (`exiger_table_des_criteres`)
+ LIGNES = {
+@@ -180,7 +202,8 @@
+     lien = {"entropie": int(e.group(1)), "module_cite": cites, "run_source_verifie": False}
+     if manifeste_source is not None:
+         m = manifeste_source
+-        if m.get("decisif") is not True or (m.get("config") or {}).get("mode") != "reel":
++        cfg_m = m.get("config")             # configuration non dictionnaire : hors du mode réel (VM2-contournement-04)
++        if m.get("decisif") is not True or not isinstance(cfg_m, dict) or cfg_m.get("mode") != "reel":
+             raise GardeArret(f"run source {run_source} non décisif ou hors du mode réel")
+         pr = m.get("preenregistrement") or {}
+         if pr.get("chemin") != prereg or pr.get("sha256") != verifier(racine / prereg):
+@@ -192,24 +215,58 @@
+     return lien
+ 
+ 
++def _cellules_de(ligne: str) -> list[str] | None:
++    """Cellules d'une ligne de tableau « | a | b | … | » (barres de bord non échappées exigées) : séparées par les « | »
++    non échappés ; « \\| » rendu « | » ; espaces de bord retirés, rien d'autre. Autre forme : None."""
++    x = ligne.strip()
++    if not (x.startswith("|") and re.search(r"(?<!\\)\|$", x) and len(x) >= 2):
++        return None
++    return [y.strip().replace("\\|", "|") for y in BARRE.split(x)[1:-1]]
++
++
+ def table_des_criteres(texte: str) -> dict:
+-    """Lignes « | Lk | issue | lecture | » de la section « Critères de lecture gelés » d'un préenregistrement, dans l'ordre
+-    du texte : {« Lk » : (issue, lecture)}. Cellules séparées par les « | » non échappés ; « \\| » rendu « | » ; espaces
+-    de bord retirés, rien d'autre. Section absente, ligne sans exactement trois cellules, ligne en double : refus."""
+-    corps = sections(texte).get(TITRE_CRITERES)
+-    if corps is None:
+-        raise GardeArret(f"préenregistrement sans section « {TITRE_CRITERES} » : lecture refusée sans rien écrire")
+-    table = {}
+-    for x in corps.split("\n"):
+-        if not re.match(r"\|\s*L\d+\s*\|", x.strip()):
+-            continue
+-        c = [y.strip().replace("\\|", "|") for y in re.split(r"(?<!\\)\|", x.strip())[1:-1]]
++    """Table de la section « Critères de lecture gelés » d'un préenregistrement, lue en entier, dans l'ordre du texte :
++    {« Lk » : (issue, lecture)} (VM2-contournement-02 et -03, VM2-fidelite-01). La section paraît une seule fois (titre de
++    niveau 2, lu comme `controle_ia.prereg.sections`). Sa première ligne qui porte une barre non échappée est l'en-tête
++    « | ligne | issue | lecture | », suivi du séparateur ; chaque ligne non vide qui suit, jusqu'à la première ligne vide
++    (fin du tableau en Markdown), est une rangée, quelle que soit sa forme, et doit avoir la forme « | Lk | issue |
++    lecture | » à trois cellules ; aucune autre ligne de la section ne porte de barre non échappée. Rangée hors de cette
++    forme, ligne en double, en-tête ou séparateur autres, section absente ou répétée : refus, rien n'est écrit. Section
++    sans aucune ligne à barre : table vide (la garde la refuse : lignes [] ≠ lignes du module)."""
++    fin = "lecture refusée sans rien écrire"
++    n = [t.strip() for t in TITRE_NIVEAU_2.findall(texte)].count(TITRE_CRITERES)
++    if n == 0:
++        raise GardeArret(f"préenregistrement sans section « {TITRE_CRITERES} » : {fin}")
++    if n > 1:
++        raise GardeArret(f"section « {TITRE_CRITERES} » présente {n} fois (une attendue) : {fin}")
++    lignes = sections(texte)[TITRE_CRITERES].split("\n")
++    a_barre = [k for k, x in enumerate(lignes) if BARRE.search(x)]
++    if not a_barre:
++        return {}
++    k = a_barre[0]
++    if _cellules_de(lignes[k]) != ENTETE_CRITERES:
++        raise GardeArret(f"table « {TITRE_CRITERES} » : en-tête « | ligne | issue | lecture | » attendu, lu "
++                         f"{lignes[k].strip()[:60]!r} : {fin}")
++    sep = _cellules_de(lignes[k + 1]) if k + 1 < len(lignes) else None
++    if sep is None or len(sep) != 3 or not all(CELLULE_SEPARATEUR.fullmatch(c) for c in sep):
++        raise GardeArret(f"table « {TITRE_CRITERES} » : séparateur « |---|---|---| » attendu sous l'en-tête : {fin}")
++    table, k = {}, k + 2
++    while k < len(lignes) and lignes[k].strip():
++        x = lignes[k].strip()
++        c = _cellules_de(x)
++        if c is None or not RANGEE_LK.match(x) or not re.fullmatch(r"L\d+", c[0]):
++            raise GardeArret(f"table « {TITRE_CRITERES} » : rangée hors de la forme « | Lk | issue | lecture | » : "
++                             f"{x[:60]!r} : {fin}")
+         if len(c) != 3:
+-            raise GardeArret(f"table « {TITRE_CRITERES} » : ligne {c[0] if c else '?'} à {len(c)} cellules au lieu de 3 : "
+-                             "lecture refusée sans rien écrire")
++            raise GardeArret(f"table « {TITRE_CRITERES} » : ligne {c[0]} à {len(c)} cellules au lieu de 3 : {fin}")
+         if c[0] in table:
+-            raise GardeArret(f"table « {TITRE_CRITERES} » : ligne {c[0]} en double : lecture refusée sans rien écrire")
++            raise GardeArret(f"table « {TITRE_CRITERES} » : ligne {c[0]} en double : {fin}")
+         table[c[0]] = (c[1], c[2])
++        k += 1
++    hors = [x.strip()[:60] for x in lignes[k:] if BARRE.search(x)]
++    if hors:
++        raise GardeArret(f"section « {TITRE_CRITERES} » : ligne à barre hors du tableau (une seule table attendue) : "
++                         f"{hors[0]!r} : {fin}")
+     return table
+ 
+ 
+@@ -229,9 +286,13 @@
+ 
+ 
+ def est_decisif_ou_reel(manifeste) -> bool:
+-    """Manifeste d'un run décisif (`decisif` vrai) ou en mode réel (`config.mode == "reel"`)."""
+-    return isinstance(manifeste, dict) and (manifeste.get("decisif") is True
+-                                            or (manifeste.get("config") or {}).get("mode") == "reel")
++    """Manifeste d'un run décisif (`decisif` vrai) ou en mode réel (`config.mode == "reel"`). Configuration présente qui
++    n'est pas un dictionnaire : suspecte, traitée comme décisive ou réelle (VM2-contournement-04)."""
++    if not isinstance(manifeste, dict):
++        return False
++    if "config" in manifeste and not isinstance(manifeste["config"], dict):
++        return True
++    return manifeste.get("decisif") is True or (manifeste.get("config") or {}).get("mode") == "reel"
+ 
+ 
+ def gardes_decisives_passees(lien) -> bool:
+@@ -293,26 +354,49 @@
+                 raise GardeArret("scores par jeton des sondes principales incohérents avec les scores des actions")
+ 
+ 
++def exiger_rattache_au_run(chemin: Path, run_id: str) -> None:
++    """VM2-contournement-01 : un résultat du run source (résumé, identité), lu tel qu'écrit, porte le `run_id` du manifeste
++    lu et du dossier ; sinon refus, avant toute lecture de ses données : rien n'est écrit. Le rattachement à l'empreinte
++    de ce manifeste reste vérifié ensuite par `verifier_resultat` (manifeste rescellé : L1, VM2-contournement-08).
++    Fichier illisible comme JSON : la vérification qui suit le dira (récupération non conforme, L1)."""
++    try:
++        corps = json.loads(Path(chemin).read_text(encoding="utf-8"))
++    except (OSError, ValueError):
++        return
++    lu = corps.get("run_id") if isinstance(corps, dict) else None
++    if lu != run_id:
++        raise GardeArret(f"{Path(chemin).name} {AUTRE_RUN} (run {lu!r} ; attendu {run_id!r}) : lecture refusée sans rien "
++                         "écrire")
++
++
+ def charger_source_p4(racine: Path, run_id: str, lien=None) -> dict:
+     """État de la récupération : « complet », « arret » (résumé avec motif) ou « L1 » (run sans résumé, ou récupération
+-    non conforme, motif écrit). Chaque fichier est scellé et rattaché au manifeste du run source. Run décisif ou en mode
+-    réel : `lien` des gardes du mode décisif exigé (`exiger_lecture_permise`), sinon refus avant toute lecture."""
++    non conforme, motif écrit). Chaque fichier est scellé et rattaché au manifeste du run source : le manifeste lu sous
++    `runs/<run_id>/` porte ce `run_id`, le résumé et l'identité portent ce même `run_id`, sinon refus
++    (VM2-contournement-01) ; leur rattachement à l'empreinte de ce manifeste est vérifié ensuite (sinon L1). Run décisif
++    ou en mode réel : `lien` des gardes du mode décisif exigé (`exiger_lecture_permise`), sinon refus avant toute
++    lecture."""
+     racine = Path(racine)
+     try:
+         m, sha_m = lire_manifeste(racine / "runs" / run_id / "manifeste.json")
+     except (GardeArret, OSError, ValueError, KeyError) as e:
+         return {"etat": "L1", "motif": f"manifeste du run source absent ou illisible : {str(e)[:160]}"}
+     exiger_lecture_permise(m, lien)
++    if m.get("run_id") != run_id:
++        raise GardeArret(f"manifeste lu sous runs/{run_id}/ {AUTRE_RUN} (run {m.get('run_id')!r}) : lecture refusée sans "
++                         "rien écrire")
+     d = racine / "diag" / run_id
+     base = {"manifeste": m, "manifeste_sha256": sha_m, "config": m.get("config") or {}, "lien": lien}
+     if not (d / "resume.json").exists():
+         return {**base, "etat": "L1", "motif": "run sans résumé (perdu avant d'écrire son résumé)"}
++    exiger_rattache_au_run(d / "resume.json", run_id)
+     try:
+         resume = verifier_resultat(racine, d / "resume.json")["resultat"]
+     except (GardeArret, OSError, ValueError, KeyError) as e:
+         return {**base, "etat": "L1", "motif": f"résumé non conforme : {str(e)[:160]}"}
+     if resume.get("arret") is not None:
+         return {**base, "etat": "arret", "arret": resume["arret"], "resume": resume}
++    exiger_rattache_au_run(d / "identite-p4.json", run_id)
+     try:
+         if verifier(d / "identite-p4.json") != resume["identite_sha256"]:
+             raise GardeArret("identite-p4.json : empreinte ≠ celle du résumé")
+@@ -759,7 +843,10 @@
+ 
+ def lire(source: dict, graines: dict, reserves_heritees=()) -> dict:
+     """Lecture complète d'un run source chargé (`charger_source_p4`), dans l'ordre du plan d'analyse, point 2. Source
+-    chargée d'un run décisif ou en mode réel : lien des gardes du mode décisif exigé (`exiger_lecture_permise`)."""
++    « complet » sans manifeste : refus (VM2-contournement-07). Source chargée d'un run décisif ou en mode réel : lien des
++    gardes du mode décisif exigé (`exiger_lecture_permise`)."""
++    if source.get("etat") == "complet" and not isinstance(source.get("manifeste"), dict):
++        raise GardeArret(MOTIF_SANS_MANIFESTE)
+     if "manifeste" in source:
+         exiger_lecture_permise(source["manifeste"], source.get("lien"))
+     s = {"source": {"etat": source["etat"], "motif": source.get("motif")}}
+@@ -819,7 +906,9 @@
+     """Lecture d'un run source. Sans préenregistrement : run source décisif ou en mode réel refusé, rien n'est écrit
+     (CL3-01) ; un run jouet non décisif se lit. Mode décisif : préenregistrement scellé exigé (refus sinon) ; table des
+     critères du préenregistrement égale à `LIGNES` (refus sinon, rien n'est écrit) ; verdict complété de P3 exigé (sinon
+-    report : rien n'est écrit) ; un refus d'une autre garde du mode décisif écrit l'issue L1 avec son motif."""
++    report : rien n'est écrit) ; un refus d'une autre garde du mode décisif écrit l'issue L1 avec son motif. Dans tous les
++    modes : données rattachées à un autre run que celui du manifeste lu et du dossier, ou `diag/<run de lecture>` déjà
++    présent : refus avant tout manifeste de lecture, rien n'est écrit (VM2-contournement-01 et -05)."""
+     racine = Path(racine)
+     chemin_ms = racine / "runs" / run_source / "manifeste.json"
+     try:
+@@ -844,6 +933,9 @@
+         lien["table_des_criteres"] = table
+     source = ({"etat": "L1", "motif": f"lecture refusée par une garde du mode décisif : {refus}"} if refus is not None
+               else charger_source_p4(racine, run_source, lien))
++    sortie_diag = racine / "diag" / run_lecture
++    if sortie_diag.exists() or sortie_diag.is_symlink():          # VM2-contournement-05 : avant tout manifeste de lecture
++        raise GardeArret(f"{sortie_diag} existe déjà : R12 interdit d'écraser ; lecture refusée sans rien écrire")
+     chemin_m, manifeste = creer_manifeste(racine, run_lecture, {"run_source": run_source, "lecture": "P4-instrument v1"},
+                                           CLES_LECTURE, entropie=entropie, decisif=prereg is not None,
+                                           prereg=None if prereg is None else str(racine / prereg),

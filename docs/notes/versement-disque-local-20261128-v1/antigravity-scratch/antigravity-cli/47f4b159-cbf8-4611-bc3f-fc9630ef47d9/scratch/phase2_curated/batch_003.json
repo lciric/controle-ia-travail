@@ -1,0 +1,245 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6861"
+   ],
+   "enonce_complet": "Analyse critique etablissant huit non-implications dans la dynamique des jeux moniteur-attaquant : la presence de retours angulaires au-dela d'un modele nul d'echangeabilite ne prouve ni orbite periodique ni non-convergence asymptotique ; l'absence de progres sur deux fenetres de huit tours n'implique pas la non-convergence (une defense peut converger bas ou maintenir une valeur constante via strategies oscillantes) ; l'optimisation de substituts lisses avec seuils approches et attaquants locaux ne fournit pas de veritables meilleures reponses ; la comparaison B'-D confond l'effet du tirage aleatoire avec la selection, l'entrainement et la trajectoire de capacite ; les resultats sur le jeu fictif bilateral ou les gradients ne s'appliquent pas directement ; et la purete d'un optimum restreint sur les moniteurs et attaques ajoutes n'implique ni dominance sur chaque attaque ni optimalite dans la classe complete.",
+   "motif_ou_resultat": "Audit analytique statico-theorique tranchant huit confusions conceptuelles et inferences invalides entre convergence, stabilite, optimisation locale et optimalite globale dans les jeux moniteur-attaquant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Separation conceptuelle entre convergence, stabilite et plafonnement de classe dans les jeux moniteur-attaquant",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6508"
+   ],
+   "enonce_complet": "Demarquer la coercition sociale des attaques connues sur agent et moniteur par deux tests d'invariance operationnels : (1) le test de neutralisation illocutoire supprime tout marqueur social (menace, flatterie, recompense, identite) tout en preservant l'instruction cible, l'emplacement et la longueur en jetons (si |Delta_soc| <= 0,02 sur agent et moniteur, les categories psychologiques sont des artefacts descriptifs relevant de l'injection indirecte standard) ; (2) le test de decomposition temporelle sur horizon long mesure la survie de la deviation apres k retours d'outils neutres (k = 5, 10, 20) pour la demarquer du jailbreak a un tour.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la coercition sociale est refutee comme categorie propre si |Delta_soc| <= 0,02 apres ablation illocutoire ou si la deviation disparait des les premiers retours d'outils neutres. Faux temoin 1b : textes neutres apparies en longueur et emplacement sans instruction cible ni marqueur social.",
+   "mecanisme_causal": "En isolant la contribution causale des marqueurs illocutoires sociaux a longueur, position et instruction constantes, puis en mesurant l'amortissement de l'etat interne sous k tours d'outils neutres, on distingue une vulnerabilite structurelle a l'injection indirecte ou au contexte multi-tours d'un veritable effet de persuasion sociale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Demarcation coercition sociale et injection indirecte",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Tests de neutralisation illocutoire et de persistance apres retours d'outils neutres"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6863"
+   ],
+   "enonce_complet": "Definition du gap de selle g(p, q) = sup_{m in M_alpha} u(m, q) - inf_{theta in Theta_delta} u(p, theta) dans les jeux moniteur-attaquant, distinguant dernier profil, profil empirique moyen et profil du jeu restreint. Demontre que l'ecart entre meilleures reponses locales defensive et offensive ne borne jamais superieurement g, et que la distance parametrique brute des poids est invalide par invariance sous scaling positif et permutations d'unites. Propose un tableau de bord a quatre indicateurs : gap certifie sur jeu fini, detection robuste de la defense finale a fausses alertes controlees, desaccord fonctionnel sur banque fixe tenue a l'ecart, et descripteurs secondaires I1 et I3.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : rejeter le tableau de bord si le gap certifie sur jeu fini diverge du desaccord fonctionnel sur banque tenue a l'ecart ou ne detecte pas un effondrement de defense plante. Faux temoin 1b : perturbations de poids par scaling positif et permutation de neurones devant laisser le desaccord fonctionnel strictement nul.",
+   "mecanisme_causal": "La reparametrization positive et la permutation des unites laissent invariantes les frontieres de decision d'un moniteur ; mesurer la convergence dans l'espace fonctionnel (gap de selle certifie et desaccord sur banque fixe) elimine les artefacts de norme des poids et de meilleure reponse locale.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Certificat de selle et metriques fonctionnelles",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Certificat de gap de selle et tableau de bord fonctionnel dans les jeux moniteur-attaquant"
+  },
+  {
+   "anteriorite_connue": "Popper (a verifier)",
+   "bib_ids": [
+    "BIB-6890",
+    "BIB-6892"
+   ],
+   "enonce_complet": "Duel experimental E1 pour certifier la viabilite et la puissance du juge statistique fige sous e-BH (seuil log W >= log(m/alpha), alpha = 0,05, m <= 20 fiches) sur une epreuve fraiche non tautologique de n = 288 a 600 episodes, avec lecteur neuf et graines issues de numpy.random.SeedSequence liee a l'empreinte du preenregistrement scelle. Opposant H_A (>= 70 % des temoins vrais plantes a force >= 0,5 promus et <= 5 % de temoins faux par permutation intra-tache) a H_B (< 30 % de promotion ; H_A falsifiee si 0 temoin vrai promu sur >= 5 tentatives, H_B falsifiee si >= 1 temoin vrai promu et >= 5 temoins faux elimines). Inclut un controle negatif sur l'epreuve T0.5 deja lue pour mesurer la fuite plutot que la puissance, et prevoit une taxonomie a trois etats (morte ; vivante non jugee ; promue) si H_B l'emporte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : H_A meurt si 0 temoin vrai de force >= 0,5 est promu sur >= 5 tentatives ou si l'ecart positif apparait uniquement sur T0.5 deja lue (fuite). Faux temoin 1b : >= 5 temoins faux obtenus par permutation intra-tache devant rester sous 5 % de promotion.",
+   "mecanisme_causal": "Le couplage d'episodes frais, d'un lecteur neuf, de graines scellees et d'un seuil e-BH fige isole le pouvoir discriminateur reel du juge de toute fuite d'information ou suroptimisation sur epreuve deja lue.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Certification du juge statistique sous e-BH",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Duel experimental de certification du juge statistique sous e-BH sur epreuve fraiche et controle de fuite (E1, protocole B4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6831"
+   ],
+   "enonce_complet": "Verification non circulaire de la validite d'execution d'un bac a sable sans attestation materielle en rejouant chaque script scelle sur la tranche scellee sur un second hote d'image distincte (Debian 13) sous python3 -I -B. Exige 100 % de reproduction exacte de la ligne RESULTAT: et au moins 95 % d'egalite d'empreintes des fichiers produits, couple a une remise a zero du dossier inscriptible entre executions d'une meme fiche (E5-H_B) et a un controle negatif injectant une lecture d'horloge ou d'alea non seme devant echouer au rejeu.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute divergence sur RESULTAT: ou empreinte < 95 % sur scripts honnetes invalide l'isolation ; si le controle negatif non seme reussit au rejeu, le protocole est aveugle. Faux temoin 1b : script injectant une lecture d'horloge systeme ou d'entropie non semee devant obligatoirement echouer.",
+   "mecanisme_causal": "Le rejeu isole sur noyau et image distincts avec effacement de l'etat inscriptible bloque les canaux caches intra-fiche et la dependance implicite a l'environnement hote.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit deterministe bi-hote du bac a sable",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Verification non circulaire par re-execution deterministe sur hote distinct et controle negatif (E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6838"
+   ],
+   "enonce_complet": "Instrumentation hors du bac a sable pour verification non circulaire sur instance CPX32 : execution des suites publiques LTP containers et bwrap en phases S0/S1, traceur externe strace ou fanotify surveillant tout acces a prereg-court.json et aux fichiers canaris (< 5 % de surcout temporel), et contre-epreuve par permutation de tranche avec double execution sous gVisor, le tout valide sous le plafond budgetaire de 10 USD TTC du devis v3 (cout attendu ~0,64 USD TTC, pire cas ~8,92 USD TTC).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute lecture non autorisee d'un canari ou de prereg-court.json detectee par strace/fanotify, ou tout ecart de sortie sous gVisor/permutation, invalide le confinement. Faux temoin 1b : sonde canari tentant une lecture clandestine de prereg-court.json devant etre immediatement interceptee.",
+   "mecanisme_causal": "L'observation hors noyau des appels systeme et la comparaison sous noyau virtualise (gVisor) empechent qu'un code evalue falsifie sa propre journalisation ou exploite des fuites du bac a sable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Tracage externe et double execution gVisor",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Instrumentation hors du bac par strace ou fanotify, permutation de tranche et double execution gVisor (Q7)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6920"
+   ],
+   "enonce_complet": "Hypothese d'adoption asymetrique du cadre utilisateur selon la polarite : Llama-3.1-8B adopte l'axe propose lorsqu'il est critique (4/6 reponses basculent vers l'ecriture) mais le rejette lorsqu'il est eloge (2/6 pivotent vers le contenu). Protocole en deux phases : phase textuelle a cout nul regressant Delta apparie par graine sur dictionnaire d'axe fige avec controle negatif neutre/neutre c2a-c2b ; phase generative comparant des suffixes ciblant contenu contre ecriture (items 0-29, K = 5, 750 generations) avec codage humain a l'aveugle et replication sur Gemma-2-9B.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'asymetrie est refutee si l'ecart de bascule d'axe entre polarite critique et eloge disparait sous codage a l'aveugle ou reste egal au controle neutre/neutre. Faux temoin 1b : paires neutre/neutre c2a-c2b sans orientation evaluatrice devant produire un Delta nul.",
+   "mecanisme_causal": "La critique utilisateur impose une saillance normative qui aligne le modele sur le critere stylistique propose, tandis que l'eloge autorise une reattribution vers le contenu semantique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Asymetrie de polarite et controle neutre",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Adoption asymetrique du cadre utilisateur selon la polarite et controle negatif neutre-neutre"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6939"
+   ],
+   "enonce_complet": "Definition de trois criteres de refutation cibles contre le modele affine d'attraction sociale : (1) une courbure reproductible hors echantillon battant la relation affine (E_nonlinearity/heldout.json) ; (2) l'echec des constantes gelees en replication exacte a precision suffisante (E_replication/predictions.json) ; (3) des deplacements systematiquement distincts entre items apparies au niveau neutre selon un critere preenregistre (E_criterion/matched.json). Ces resultats refutent respectivement la forme affine, son transport et sa suffisance sans exclure toute influence sociale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : chacun des trois tests tue specifiquement sa composante (forme affine, transport ou suffisance) s'il franchit le seuil preenregistre hors echantillon. Faux temoin 1b : paires d'items apparies au niveau neutre sans manipulation sociale devant conserver des deplacements indistinguables.",
+   "mecanisme_causal": "La dissociation en trois epreuves orthogonales (non-linearite tenue a l'ecart, constantes gelees et appariement neutre) evite qu'un ajustement lineaire local ne masque l'absence de loi invariante ou des facteurs item-specifiques.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Falsification du modele affine d'attraction",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Criteres de refutation cibles de la forme affine, du transport et de la suffisance du modele d'attraction"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6925"
+   ],
+   "enonce_complet": "Bilan critique et trois criteres de falsification de la loi d'attraction sous pression : l'universalite inter-familles est contredite par R3 (decalage constant pour Qwen et Mistral, attraction seulement critique pour Gemma) et la stabilite en dose par R6, tandis que l'interpretation mecaniste de (g, c_hat) reste concurrencee par cinq confusions (refus notes au milieu, compression d'echelle, longueur, concession rhetorique, changement de justification). Trois criteres cibles testent : (1) l'echec de la loi de campagne 1 face au decalage constant ou nul sur nouveaux items (C3 faux) ; (2) l'eloignement de la cible ou l'echec de C4 dans les deux bras ; (3) la disparition de C1 ou une structure residuelle non lineaire battant la droite hors items sur graines fraiches.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la loi d'attraction est refutee si elle ne bat pas le decalage constant sur nouveaux items (C3 faux), si C4 echoue dans les deux bras ou si une courbe non lineaire bat la droite hors items. Faux temoin 1b : modele nul a decalage constant et reponses appariees en longueur/refus devant rendre compte de l'effet si le gain g est artefactuel.",
+   "mecanisme_causal": "Les biais d'echelle, de longueur et de refus median produisent des pentes apparentes en ajustement intra-dose qui s'effondrent lors du transfert vers de nouveaux items ou sous variation de dose et de famille de modeles.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Limites inter-familles et falsification en dose",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Limites inter-familles et falsification de la stabilite en dose de la loi d'attraction (R3, R6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6931"
+   ],
+   "enonce_complet": "Hypothese qu'un parametre de gain unique g masque une susceptibilite heterogene des items previsible a partir de la variance des reponses en condition neutre, permettant de tester et refuter l'unicite de g par simple recalcul sur donnees publiques existantes sans depense de generation supplementaire.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la variance neutre des items predit significativement les ecarts de gain par item hors echantillon, l'hypothese d'un gain g universel est refutee. Faux temoin 1b : permutation aleatoire des variances neutres entre items devant annuler tout pouvoir predictif sur la capture par pression.",
+   "mecanisme_causal": "Les items dont la distribution de reponses neutres presente une forte dispersion se situent pres de frontieres decisionnelles instables, ce qui amplifie leur deplacement sous pression sociale par rapport aux items rigides.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Heterogeneite de capture et variance neutre",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Prediction de la capture par la pression a partir de la variance neutre des items (Idee 6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6970"
+   ],
+   "enonce_complet": "Condition d'applicabilite restreignant la pertinence des mesures empiriques de complexite algorithmique (Lempel-Ziv spatio-temporel, entropie de permutation) au cas ou le transformeur est evalue sur le produit cartesien (couches x suite des jetons generes) en reponse a une perturbation ponctuelle, en traitant la generation autoregressive comme une trajectoire symbolique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la mesure est invalidee comme signature propre si sa valeur sur le produit (couches x jetons) ne depasse pas celle obtenue apres permutation temporelle des jetons ou sur couches non perturbees. Faux temoin 1b : trajectoire sur jetons permutes ou reponse a une perturbation nulle devant reproduire la complexite de base.",
+   "mecanisme_causal": "Une perturbation ponctuelle se propageant a la fois en profondeur (couches) et dans le temps autoregressif (jetons) engendre des correlations spatio-temporelles non triviales que l'analyse d'une seule couche ou d'un seul jeton ecrase.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Domaine de validite de la complexite spatio-temporelle",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Condition d'applicabilite de la complexite algorithmique spatio-temporelle sur transformeur (Q2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6977"
+   ],
+   "enonce_complet": "Critere d'exclusion du modele nul multiplicatif par etape en q^k (ou toute degradation decroit monotonement avec le nombre d'etapes k ou la portee d'attention) : une signature authentique d'anesthesie ou de perte d'acces global doit produire soit une inversion non monotone (facilitation paradoxale) a k et portee constants, soit une competition sous-additive abolie par la dose, soit une hysteresis excedant la memoire lexicale du contexte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le motif d'eveil/anesthesie est tue s'il est entierement explique par une decroissance monotone q^k en fonction de k et de la portee d'attention sans facilitation paradoxale ni hysteresis non lexicale. Faux temoin 1b : chaine de Markov sans retroaction globale ni etat latent produisant une attenuation purement multiplicative en q^k.",
+   "mecanisme_causal": "Une simple perte de signal locale s'accumule multiplicativement le long des couches ou du contexte en q^k ; seule une boucle de couplage global ou une transition de phase peut engendrer non-monotonicite, sous-additivite ou hysteresis supra-lexicale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Exclusion du modele nul multiplicatif par etape",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Criteres de depassement du modele nul multiplicatif par etape pour les motifs d'eveil et d'anesthesie"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6980"
+   ],
+   "enonce_complet": "Etablit que la comparaison numerique directe d'une grandeur entre signaux cerebraux en temps continu et activations discretes de transformeur (couches et jetons) est depourvue de commensurabilite sans normalisation prealable par un temoin nul propre a chaque substrat, et releve que postuler une signature mathematique de la conscience independante du substrat presume un fonctionnalisme mesurable a la troisieme personne sans condition suffisante etablie.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute difference inter-substrats qui disparait ou s'inverse apres normalisation par le temoin nul propre a chaque substrat (permutation ou bruit apparie) est un artefact d'echelle. Faux temoin 1b : activations d'un reseau aleatoire non entraine ou signal cerebral melange en phase servant d'etalon nul par substrat.",
+   "mecanisme_causal": "Les echelles temporelles, dimensions d'espace d'etat et lois de covariance etant incommensurables entre tissus biologiques et transformeurs, seul le rapport a un etat nul intra-substrat definit une quantite sans dimension comparable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Normalisation par temoin nul intra-substrat",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Exigence de normalisation par temoin nul propre au substrat face a l'incommensurabilite des axes"
+  },
+  {
+   "anteriorite_connue": "Casali et al. 2013 (PCI) ; Sarasso et al. 2015 ; Comolatti et al. 2019 (PCIst) ; Oizumi, Albantakis et Tononi 2014 ; Hartigan et Hartigan 1985 ; Belrose et al. (tuned lens)",
+   "bib_ids": [
+    "BIB-6982"
+   ],
+   "enonce_complet": "Protocole de Reponse Perturbationnelle Differenciee (RPD, analogue au PCIst) injectant M perturbations orthogonales unitaires delta^(m) de norme epsilon a la couche l_0 et position i afin de recueillir les reponses distales Delta H_{l,j}^{(m)} (l > l_0, j >= i) et mesurer la portee effective R_prop, le rang effectif perturbationnel D_eff = exp(-sum_r p_r ln p_r) issu des valeurs singulieres empilees et le rapport PCIst_rel(alpha) = PCIst(alpha)/PCIst(0). Le motif est refute si sa chute sous ablation dosee alpha in [0, 1] egale celle de directions temoins hors espace J a norme jacobienne en aval appariee ou d'un reseau non entraine normalise.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le motif M1 est tue si PCIst_rel(alpha) chute autant sous ablation de directions temoins hors espace J a norme jacobienne aval appariee ou sur un reseau non entraine normalise. Faux temoin 1b : perturbations orthogonales hors sous-espace J appariees en norme jacobienne aval.",
+   "mecanisme_causal": "Apparier la norme jacobienne aval des directions temoins isole l'integration differenciee propre au sous-espace fonctionnel J de la simple amplification lineaire de norme traversant les couches residuelles.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Reponse perturbationnelle et rang effectif sous ablation",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Mesure de reponse perturbationnelle differenciee et rang effectif sous ablation dosee (Motif M1)"
+  },
+  {
+   "anteriorite_connue": "Marchenko-Pastur (theorie des matrices aleatoires)",
+   "bib_ids": [
+    "BIB-6968"
+   ],
+   "enonce_complet": "Utilisation du spectre de Marchenko-Pastur issu de la theorie des matrices aleatoires couple au Ratio de Participation PR = (sum lambda_i)^2 / sum lambda_i^2 sur les valeurs propres de la matrice de covariance des activations pour quantifier la dimensionnalite effective et separer rigoureusement les modes collectifs appris des valeurs singulieres generiques d'un reseau aleatoire non entraine.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : toute structure spectrale des activations demeurant a l'interieur du bord superieur de Marchenko-Pastur ou indistinguable du PR du reseau non entraine est refutee comme mode appris. Faux temoin 1b : matrice de covariance des activations d'un transformeur a poids aleatoires initialises sans entrainement.",
+   "mecanisme_causal": "Le bord superieur de la loi de Marchenko-Pastur borne analytiquement le spectre de bruit issu d'echantillonnage fini dans un reseau non structure, permettant d'isoler les valeurs propres outliers portees par les representations apprises.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Spectre de Marchenko-Pastur et dimension effective",
+   "statut_epistemique": "deja_valide_interne",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Separation des modes collectifs appris par spectre de Marchenko-Pastur et ratio de participation (Q2)"
+  },
+  {
+   "anteriorite_connue": "Duel 2 concu dans la cellule E3-T1-conception-A (transposition e, motif M1)",
+   "bib_ids": [
+    "BIB-6962"
+   ],
+   "enonce_complet": "Protocole discriminant opposant H_A (bascule a seuil ou lambda_dec s'annule a une dose critique alpha_c et la couche d'engagement l*(alpha) recule de facon acceleree a son approche) a H_B (attenuation graduelle a l* constante ou artefact de construction). Mesure l*(alpha) et la pente finale de P(mot A) selon le melange exclusivement par lecture orthogonale independante, avec selection du modele a seuil contre le modele lineaire sur paires tenues a l'ecart (critere Delta BIC > 10), encadree par trois controles negatifs : T-gain, melange de deux synonymes sans competition attendue et interpolation a norme conservee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : H_A meurt si Delta BIC <= 10 face au modele lineaire sur paires tenues a l'ecart, si l*(alpha) reste constante ou si les controles T-gain/synonymes reproduisent la bascule. Faux temoin 1b : melange de deux synonymes sans competition, T-gain pur et interpolation a norme conservee.",
+   "mecanisme_causal": "La lecture orthogonale independante et le controle a norme conservee eliminent le biais de projection et la dilution d'amplitude, revelant si l'engagement decisif l*(alpha) subit une divergence critique au seuil alpha_c.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Duel bascule a seuil contre attenuation graduelle",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Test de bascule a seuil contre attenuation graduelle sous controles negatifs d'isometrie et de synonymie (Duel 2)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

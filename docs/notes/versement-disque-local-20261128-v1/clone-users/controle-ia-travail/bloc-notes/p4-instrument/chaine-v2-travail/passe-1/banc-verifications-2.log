@@ -1,0 +1,208 @@
+C = 6bf222ba821028ea4dfa257e9cc53ddf22ad4801
+script éprouvé : verifications_p4_v1.py af82859e3cd6056ae355a912c1617709cef21bf7e0d40b7c432e5a3bb8568c8b
+script éprouvé : outils_essais_p4_v1.py e685f193aec62714204297b5c1377a2c6bbe818062dd141cf62af06c124b4954
+script éprouvé : essais_verifications_p4_v1.sh 8d32419b466af20bd24277f552eb85eaefaa964a81eb09e3de4592c6919e0e26
+G00-sain : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G01-texte-sans-ligne-go : code 1 ; CONFORME
+    | ligne « **GO cité par la commande de création** : `GO_ID=…` » absente, en double ou mal formée
+G02-ligne-go-en-double : code 1 ; CONFORME
+    | ligne « **GO cité par la commande de création** : `GO_ID=…` » absente, en double ou mal formée
+G03-texte-cite-le-go-de-la-phase : code 1 ; CONFORME
+    | GO-2026-10-04-08 : seul GO-2026-10-20-07 est accepté pour P4 (délégation R-269)
+G03b-ligne-go-mal-formee : code 1 ; CONFORME
+    | ligne « **GO cité par la commande de création** : `GO_ID=…` » absente, en double ou mal formée
+G04-go-absent-du-registre : code 1 ; CONFORME
+    | GO-2026-10-20-07 absent ou en double au registre des GO
+G04b-go-en-double-au-registre : code 1 ; CONFORME
+    | GO-2026-10-20-07 absent ou en double au registre des GO
+G05-go-d-un-autre-type : code 1 ; CONFORME
+    | GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+G06-go-accorde-par-la-session : code 1 ; CONFORME
+    | GO-2026-10-20-07 : ligne de huit colonnes, de type « calcul », accordée par Lazar, attendue
+G07-plafond-sans-le-prefixe : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+G07b-plafond-au-prefixe-voisin : code 1 ; CONFORME
+    | GO-2026-10-20-07 : la colonne « plafond » ne commence pas par « 10 USD par lancement »
+G07c-plafond-au-prefixe-exact : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement (essai) » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et voisines) ; gard
+G08-go-echu : code 1 ; CONFORME
+    | GO-2026-10-20-07 échu : 2026-10-20 après l'échéance de sa colonne (2026-10-19)
+G08b-jour-de-l-echeance : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G08c-lendemain-de-l-echeance : code 1 ; CONFORME
+    | GO-2026-10-20-07 échu : 2026-12-01 après l'échéance de sa colonne (2026-11-30)
+G08d-jour-mal-forme : code 1 ; CONFORME
+    | jour mal formé : AAAA-MM-JJ attendu
+G09-borne-de-10-usd : code 1 ; CONFORME
+    | borne de l'étape 10.0 USD : inférieure à 10 USD par lancement attendue
+G09b-borne-juste-sous-10-usd : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 9.99 USD ; aucune révocation (formes exactes et vois
+G09c-borne-nulle : code 1 ; CONFORME
+    | borne de l'étape 0.0 USD : inférieure à 10 USD par lancement attendue
+G09d-borne-illisible : code 1 ; CONFORME
+    | borne de l'étape « abc » illisible
+G10-revocation-au-registre-des-go-qui-nomme-GO-2026-10-04-08 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-04-08']
+G10-revocation-au-registre-des-go-qui-nomme-GO-2026-10-20-06 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-06']
+G10-revocation-au-registre-des-go-qui-nomme-GO-2026-10-20-07 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['GO-2026-10-20-07']
+G10-revocation-au-registre-des-go-qui-nomme-R-262 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['R-262']
+G10-revocation-au-registre-des-go-qui-nomme-R-269 : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['R-269']
+G10b-revocation-nommee-dans-la-reference : code 1 ; CONFORME
+    | révocation au registre des GO (GO-2026-10-20-98) : ['R-269']
+G10c-revocation-d-un-go-voisin-refusee-par-la-garde : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : GO-2026-10-20-07 révoqué par GO-2026-10-20-98
+G10c2-revocation-d-une-decision-voisine : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G10d-revocation-a-sept-colonnes : code 1 ; CONFORME
+    | ligne de révocation GO-2026-10-20-98 : huit colonnes attendues
+G10e-ligne-qui-mentionne-une-revocation : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G11-revocation-au-registre-des-decisions-R-262 : code 1 ; CONFORME
+    | révocation au registre des décisions (R-998)
+G11-revocation-au-registre-des-decisions-R-269 : code 1 ; CONFORME
+    | révocation au registre des décisions (R-998)
+G11b-forme-de-revocation-ailleurs-qu-en-tete : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G11c-revocation-d-une-autre-decision : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+G12-garde-gelee-qui-refuse-un-registre-mal-forme : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : 8 colonnes attendues, 7 trouvées
+G12b-garde-gelee-qui-refuse-une-date-illisible : code 1 ; CONFORME
+    | garde de calcul gelée : GARDE (registres/go, R10) — commande bloquée : registre GO mal formé ligne 37 : dates illisibles
+V42-ligne-sans-espace-qui-revoque-GO-2026-10-04-08 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V42-ligne-sans-espace-qui-revoque-GO-2026-10-20-06 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V42-ligne-sans-espace-qui-revoque-GO-2026-10-20-07 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V42-ligne-sans-espace-qui-revoque-R-262 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V42-ligne-sans-espace-qui-revoque-R-269 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V43-type-Révocation : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V43-type-revocation : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V43-type-RÉVOCATION : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V43d-type-inconnu-qui-nomme-la-prolongation : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V43e-ligne-precedee-de-blancs : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V51-forme-exacte-sans-espace-R-262 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V51-forme-exacte-sans-espace-R-269 : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V52-deux-identifiants-dans-une-cellule : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V53-point-dans-le-gras : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V54-delegation-nommee : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V56-tiret-insecable-sans-gras : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+V57-sans-gras-ni-accent : code 2 ; CONFORME
+    | révocation possible sous une forme voisine de la forme exacte (1 ligne(s) ci-dessus, qui nomment GO-2026-10-04-08, GO-2026-10-20-06, GO-2026-10-20-07, R-262 ou R-269) : arrêt, au
+    V57 : ligne de la forme voisine affichée : CONFORME
+V55-forme-citee-sans-revoquer : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+V58-go-de-calcul-qui-nomme-la-phase : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+V59-identifiants-voisins-sans-effet : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+V59b-revocation-d-un-go-voisin-de-type-inconnu : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+registres réels copiés : go.md ff452542b8f63b2589c5413db1d2dfa171c0e3ecd9af2882a779560e82771e08 ; decisions.md 3c39869b7cf553658ea00e92cb5676da395629262ddb31946c6533ad9d9f3df1
+R00-registres-reels-go-sans-fausse-alerte : code 0 ; CONFORME
+    | GO-2026-10-20-07 conforme : échéance 2026-11-30 ; plafond « 10 USD par lancement, dans les 150 USD d » ; borne de l'étape 5.41 USD ; aucune révocation (formes exactes et vois
+R00b-registres-reels-accord : code 0 ; CONFORME
+    | R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : conforme
+G15-garde-gelee-modifiee : code 2 ; CONFORME
+    | garde de calcul gelée modifiée : empreinte 5c158a98ab7e ≠ 579f65c8ae30 (celle de 7a54d43) : aucun rejeu, aucune création
+G15b-garde-gelee-absente : code 2 ; CONFORME
+    | garde de calcul gelée absente (.claude/hooks/garde_calcul.py) : aucun rejeu, aucune création
+G13-module-non-cite-a-son-empreinte : code 1 ; CONFORME
+    | module de P4 docs/procedures/P4-instrument-v1/instrument_p4_v1.py : empreinte c3e78becc07a ≠ empreinte citée aaaaaaaaaaaa (aucun code non cité n'est exécuté)
+G13b-ligne-du-module-absente : code 1 ; CONFORME
+    | ligne « Module de P4 » de docs/procedures/P4-instrument-v1/instrument_p4_v1.py absente, en double ou mal formée dans le texte
+G14-registre-des-decisions-absent : code 1 ; CONFORME
+    | fichier /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine-v2/travail/passe-1/racine-verifications-2/racine-G14/registres/decisions.md ab
+A00-accord-qui-cite-la-delegation : code 0 ; CONFORME
+    | R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : conforme
+    A00 : aucune alerte sous 120 USD : CONFORME
+A00b-accord-qui-cite-un-message-du-jour : code 0 ; CONFORME
+    | R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite un message de Lazar du jour) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD :
+A01-accord-absent : code 1 ; CONFORME
+    | R-999 absent ou en double au registre des décisions
+A02-accord-en-double : code 1 ; CONFORME
+    | R-999 absent ou en double au registre des décisions
+A03-accord-d-un-autre-jour : code 1 ; CONFORME
+    | accord R-999 daté 2026-10-19 : ligne du jour (2026-10-20) attendue
+A04-sans-la-forme-exacte : code 1 ; CONFORME
+    | accord R-999 : la cellule de décision ne commence pas par « **Accord de Lazar pour le lancement de P4-instrument** »
+A04b-forme-ailleurs-qu-en-tete : code 1 ; CONFORME
+    | accord R-999 : la cellule de décision ne commence pas par « **Accord de Lazar pour le lancement de P4-instrument** »
+A04c-forme-de-p3 : code 1 ; CONFORME
+    | accord R-999 : la cellule de décision ne commence pas par « **Accord de Lazar pour le lancement de P4-instrument** »
+A05-ne-cite-ni-go-ni-message : code 1 ; CONFORME
+    | accord R-999 : ne cite ni GO-2026-10-20-07 ni un message de Lazar dans la session ce jour-là
+A06-go-echu-le-jour-de-l-accord : code 1 ; CONFORME
+    | accord R-999 : GO-2026-10-20-07 échu ou illisible le 2026-10-20
+A07-identifiant-mal-forme : code 1 ; CONFORME
+    | identifiant de la ligne d'accord mal formé : R-… attendu
+A08-forme-de-la-depense-absente : code 1 ; CONFORME
+    | accord R-999 : forme « dépense consignée X USD + borne 5,41 USD = Y USD < 150 USD » absente, mal formée ou en double (une fois ; X et Y à deux décimales, virgule décimale)
+A08b-virgule-remplacee-par-un-point : code 1 ; CONFORME
+    | accord R-999 : forme « dépense consignée X USD + borne 5,41 USD = Y USD < 150 USD » absente, mal formée ou en double (une fois ; X et Y à deux décimales, virgule décimale)
+A08c-forme-en-double : code 1 ; CONFORME
+    | accord R-999 : forme « dépense consignée X USD + borne 5,41 USD = Y USD < 150 USD » absente, mal formée ou en double (une fois ; X et Y à deux décimales, virgule décimale)
+A08d-somme-fausse : code 1 ; CONFORME
+    | accord R-999 : dépense consignée 47,83 USD + borne 5,41 USD ≠ 53,25 USD (somme fausse)
+A08e-phase-a-150-usd : code 1 ; CONFORME
+    | accord R-999 : 150,00 USD : la dépense de la phase atteindrait 150 USD ou plus (GO-2026-10-04-08) : aucune création
+A08f-juste-sous-150-usd-avec-alerte : code 0 ; CONFORME
+    | R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 144,58 USD + borne 5,41 USD = 149,99 USD < 150 USD ; ALERTE :
+A08g-borne-autre : code 1 ; CONFORME
+    | accord R-999 : forme « dépense consignée X USD + borne 5,41 USD = Y USD < 150 USD » absente, mal formée ou en double (une fois ; X et Y à deux décimales, virgule décimale)
+A09-go-voisin-seul : code 1 ; CONFORME
+    | accord R-999 : ne cite GO-2026-10-20-07 qu'au sein d'un identifiant voisin, et ne cite pas un message de Lazar dans la session ce jour-là
+A09b-go-voisin-et-message-du-jour : code 0 ; CONFORME
+    | R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite un message de Lazar du jour) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD :
+K00-onze-noms-exacts : code 0 ; NON CONFORME (motif « rapport attendu : verification-module-v2-P4-instrument-v1.md » absent de la dernière ligne)
+    | rapport attendu : verification-module-v2-fidelite-P4-instrument-v1.md
+K01-un-rapport-manquant : code 2 ; CONFORME
+    | rapports attendus : les 12 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants ['P4-instrument-v1-brouillon3.md'], en trop [], en double [])
+K02-un-rapport-en-trop : code 2 ; CONFORME
+    | rapports attendus : les 12 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants [], en trop ['P4-autre-v1.md'], en double [])
+K03-un-rapport-en-double : code 2 ; CONFORME
+    | rapports attendus : les 12 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants [], en trop [], en double ['P4-instrument-v1-candidat1.md'])
+K04-empreinte-courte : code 2 ; CONFORME
+    | rapports attendus mal formés : ['contre-lecture-R2-P4-instrument-brouillon1-v1.md=abc']
+K05-deux-rapports-de-la-forme-v1 : code 2 ; CONFORME
+    | rapports attendus : les 12 noms exacts de RAPPORTS_NOMS, une fois chacun (manquants ['P4-instrument-v1-brouillon1.md', 'P4-instrument-v1-brouillon3.md', 'P4-instrument-v1-candidat1
+F00-dossier-sain : code 0 ; CONFORME
+    | AUCUNE FENÊTRE D'UN TEXTE HONNÊTE
+F01-texte-brut : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+F02-echappe-en-json : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+F03-echappe-en-uxxxx : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+F04-echappe-par-python : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+F05-texte-sans-sa-fenetre-du-milieu : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+F06-chaine-d-un-tableau : code 1 ; CONFORME
+    | FENÊTRES RETROUVÉES OU FICHIERS ILLISIBLES : 1
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+  File "<string>", line 1
+    (D / 'resultat.json').write_text('{note:  + .join(\\u0020 if ch == 
+                                     ^
+SyntaxError: unterminated string literal (detected at line 1)
+fabrication impossible : /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/chaine-v2/travail/passe-1/racine-verifications-2/f/u0020

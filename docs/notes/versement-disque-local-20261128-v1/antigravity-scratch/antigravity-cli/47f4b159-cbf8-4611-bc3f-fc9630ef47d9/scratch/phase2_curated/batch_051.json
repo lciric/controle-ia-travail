@@ -1,0 +1,288 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-4833"
+   ],
+   "enonce_complet": "Dans le cadre du banc TASTE (Anthropic, 2026), l'augmentation du calcul au moment du test ameliore modestement la justesse d'un modele juge sur des comparaisons par paires de propositions de recherche en surete IA (de 48 % a effort bas a 60 % a effort maximal, contre 77 % estime chez les chercheurs), et ses erreurs proviennent en partie d'un biais de surface a surevaluer l'adequation textuelle de la proposition a la question semence fournie en contexte.",
+   "motif_ou_resultat": "Constat empirique mesure (sans donnees publiees) : le passage a l'echelle du calcul en inference ne suffit pas a atteindre la performance humaine des juges LLM, qui restent vulnerables au biais d'alignement lexical sur la question amorce. (Source : TASTE, 2026-08-28, https://alignment.anthropic.com/2026/taste/)",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Limite de mise a l'echelle en inference et biais d'adequation a la question semence des modeles juges (TASTE)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5024"
+   ],
+   "enonce_complet": "Dans l'evaluation de la chaine multi-agents The Agentic Scientist (arXiv:2610.18933), la note attribuee par un relecteur artificiel aux travaux produits n'est correlee qu'a hauteur de 0,44 avec le rang de performance empirique mesure (chiffre rapporte sur la page web des auteurs, non verifie sur le PDF).",
+   "motif_ou_resultat": "Constat de faible validite des relecteurs LLM comme substitut de mesure empirique : une correlation de 0,44 interdit d'utiliser la note d'un juge artificiel comme critere de selection fiable sans epreuve experientielle. (Source : arXiv:2610.18933, 2026-10-13)",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Faible correlation entre notes de relecteur artificiel et rang de performance mesure (The Agentic Scientist)",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5113"
+   ],
+   "enonce_complet": "L'article The Alpha Illusion (arXiv:2605.16895) etablit, donnees publiees a l'appui, que le rendement excedentaire (alpha) rapporte par les agents de negociation financiere a base de modeles de langue en simulation ne constitue pas une preuve recevable de capacite de deploiement reel.",
+   "motif_ou_resultat": "Piste methodologique refutee : les mesures de rendement simule sur agents LLM surestiment systematiquement l'aptitude au deploiement et ne peuvent servir d'attestation de performance en production. (Source : arXiv:2605.16895, 2026-05-16)",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Invalidite du rendement excedentaire simule comme preuve de deploiement pour agents LLM (The Alpha Illusion)",
+   "type_acquis": "piste_refutee"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-5025"
+   ],
+   "motif_ecart": "Note d'audit negative constatant l'absence avouee d'un module de verification de nouveaute dans un systeme externe, sans mecanisme scientifique ni proposition propre.",
+   "resume_court": "Relève simplement que The Agentic Scientist (arXiv:2610.18933) ne comporte aucune verification de nouveaute a l'etape d'ideation, limite reconnue par les auteurs mais sans mecanisme associe."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "TASTE: Can AI Models Judge AI Safety Research Proposals? (2026-08-28), https://alignment.anthropic.com/2026/taste/",
+   "bib_ids": [
+    "BIB-4831"
+   ],
+   "enonce_complet": "Protocole de fabrication d'etiquettes de verite terrain fiables pour l'evaluation subjective de propositions de recherche : collecte de jugements individuels, discussion structuree des desaccords par paires, revision des notes, puis filtrage conjoint sur la confiance forte declaree, un ecart minimal de score et un plafond de frequence par proposition, portant l'accord avec des chercheurs tenus a l'ecart de 53 % a 68 %.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la reproductibilite hors echantillon (accord inter-juges sur un jeu retenu) avec et sans les trois filtres apres deliberation. Faux temoin 1b : appliquer les memes seuils de filtrage apres une discussion factice ou une permutation aleatoire des justifications entre paires et verifier l'effondrement du gain d'accord au niveau de base (environ 53 %).",
+   "mecanisme_causal": "La confrontation ciblee sur les paires en desaccord force l'explicitation des criteres implicites, tandis que le filtrage sur la confiance et l'ecart minimal elimine les comparaisons proches de l'indifference et le plafonnement par proposition empeche qu'un petit nombre de propositions polarisantes ne dominent l'etalonnage.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration d'etiquettes de jugement subjectif",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole de deliberation par paires et filtrage de confiance pour fiabiliser les etiquettes d'evaluation subjective"
+  },
+  {
+   "anteriorite_connue": "TasteVal: Measuring the Experimental Research Taste of AI Systems Against Human Experts (2026-10-05), https://arxiv.org/abs/2610.06824",
+   "bib_ids": [
+    "BIB-4494"
+   ],
+   "enonce_complet": "Architecture d'evaluation dissociant strictement la conception experimentale de son execution : le systeme evalue ne formule que les plans d'experiences et interprete les resultats retournes sur huit taches, tandis qu'un agent d'execution fixe et identique pour tous les candidats realise le code et les lancements.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la variance de score attribuee a l'executeur en remplacant le concepteur par des plans aleatoires ou heuristiques simples sous le meme agent d'execution fixe. Faux temoin 1b : fournir au concepteur des retours experimentaux bruites ou permutes entre taches (1b) et verifier que son avantage sur une recherche aleatoire disparait, prouvant que la boucle de lecture des resultats pilote bien le score.",
+   "mecanisme_causal": "En figeant l'agent d'execution, on supprime la confusion entre competence de programmation/debogage et qualite des choix scientifiques (planification, diagnostic, choix d'ablation), ce qui permet d'attribuer l'ecart de performance uniquement aux decisions experimentales.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Separation conception et execution experimentale",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Decouplage strict entre conception et execution par agent fixe pour mesurer le gout experimental"
+  },
+  {
+   "anteriorite_connue": "TasteVal: Measuring the Experimental Research Taste of AI Systems Against Human Experts (2026-10-05), https://arxiv.org/abs/2610.06824",
+   "bib_ids": [
+    "BIB-4495"
+   ],
+   "enonce_complet": "Metrique objective du gout experimental definie comme le rapport d'efficacite de calcul entre la depense necessaire a un systeme pour atteindre un seuil de resultat et celle de chercheurs experts humains (24 experts), en prenant directement le cout de calcul comme grandeur mesuree plutot que l'avis d'un juge, tout en reconnaissant que cette mesure ne couvre pas le choix initial du probleme.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier si la metrique classe correctement des protocoles de recherche connues (recherche par grille naive vs optimisation bayesienne ou ablations guidees) sur des micromondes a cout borne. Faux temoin 1b : introduire un estimateur de cout constant ou un budget mal comptabilise (par exemple en ignorant les essais echoues) et montrer que l'ordre relatif s'inverse ou s'aplatit.",
+   "mecanisme_causal": "Des choix experimentaux pertinents reduisent le nombre d'essais inutiles et donc le calcul consomme pour atteindre une meme performance ; normaliser ce calcul par la reference humaine transforme une qualite qualitative (« intuition experimentale ») en grandeur cardinale reproductible sans juge subjectif.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Metrique d'efficacite de calcul relative",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Mesure du gout experimental par rapport d'efficacite de calcul face a des experts humains"
+  },
+  {
+   "anteriorite_connue": "Teaching Language Models to Forecast Research Success Through Comparative Idea Evaluation (2026-03-20), https://arxiv.org/abs/2605.21491",
+   "bib_ids": [
+    "BIB-4536",
+    "BIB-4537"
+   ],
+   "enonce_complet": "Utilisation d'un petit modele de langue peu couteux, entraine par comparaison directe entre paires d'idees a predire leur succes empirique, comme verificateur filtre place en amont de l'execution couteuse des experiences.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le rendement scientifique a budget d'execution fixe entre un tri par verificateur comparatif pre-execution et un echantillonnage aleatoire des memes idees candidates. Faux temoin 1b : entrainer ou evaluer le verificateur sur des paires dont les etiquettes de succes sont permutees aleatoirement ou dont les marqueurs lexicaux de surface sont neutralises, et verifier l'absence de gain sur le tirage aleatoire.",
+   "mecanisme_causal": "Le classement comparatif par paires reduit la variance d'echelle de notation absolue et permet a un modele compact d'eliminer avant toute depense de calcul les hypotheses mal posees ou redondantes, concentrant le budget d'execution sur les candidats les plus prometteurs.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Filtrage comparatif leger avant execution",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Verificateur comparatif leger pre-execution entraine a prevoir le succes des idees de recherche"
+  },
+  {
+   "anteriorite_connue": "Teaching LLMs to Self-Evolve: Cultivating Core Meta-Skills with Reinforcement Learning (2026-07-24), https://arxiv.org/abs/2607.21971",
+   "bib_ids": [
+    "BIB-5400"
+   ],
+   "enonce_complet": "Entrainement par apprentissage par renforcement, directement dans les poids du modele de langue, des meta-competences d'auto-evolution (analyser le retour d'execution de l'environnement, diagnostiquer les echecs et raffiner des programmes sur plusieurs tours) habituellement deleguees a des boucles d'echafaudage externes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur des taches d'evolution de programmes hors distribution le modele entraine par renforcement a un modele de base identique dote du meme echafaudage externe a nombre de tours egal. Faux temoin 1b : fournir au modele pendant la boucle multi-tours un retour environnemental neutre ou decouple de la vraie execution (score aleatoire ou fige) ; la politique doit perdre son avantage de raffinement si elle exploite reellement la retroaction.",
+   "mecanisme_causal": "L'apprentissage par renforcement sur trajectoires multi-tours internalise les politiques d'analyse d'erreurs et de revision ciblee dans les parametres du modele, evitant le cout et la rigidite de gabarits d'echafaudage statiques tout en ameliorant l'adaptation au retour d'environnement.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Meta-competences d'auto-evolution par renforcement",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Apprentissage par renforcement dans les poids des meta-competences d'auto-evolution multi-tours"
+  },
+  {
+   "anteriorite_connue": "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery (2026-10-13), https://arxiv.org/abs/2610.18933",
+   "bib_ids": [
+    "BIB-5022"
+   ],
+   "enonce_complet": "Chaine d'orchestration en six phases coordonnant des agents de programmation autonomes pour formuler, implementer et executer iterativement des experiences scientifiques sur des campagnes multi-iterations (70 campagnes de 20 iterations evaluees dans les donnees publiees).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la progression du score empirique entre l'iteration 1 et l'iteration 20 sur un banc deterministe, en comparant l'orchestration en six phases a un agent codeur monolithique a budget de jetons egal. Faux temoin 1b : casser le passage d'etat entre phases (reinitialisation ou suppression des traces d'erreur entre iteration t et t+1) et verifier l'arret de la courbe d'amelioration.",
+   "mecanisme_causal": "Le decoupage en six phases specialisees structure la transition entre formulation d'hypothese, implementation logicielle, execution et diagnostic, limitant la derive contextuelle des agents codeurs au fil de campagnes longues.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Orchestration multi-phases d'agents codeurs",
+   "statut_epistemique": "vierge",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Orchestration en six phases d'agents de programmation sur campagnes experimentales iteratives"
+  },
+  {
+   "anteriorite_connue": "The Agentic Scientist: Orchestrating Coding Agents for Automated Scientific (Co-)Discovery (2026-10-13), https://arxiv.org/abs/2610.18933",
+   "bib_ids": [
+    "BIB-5023"
+   ],
+   "enonce_complet": "Partage inter-agents d'entrees de memoire regroupant a la fois les idees reussies et les idees echouees aux frontieres de chaque cycle de recherche, l'effet causal propre de cette memoire (et en particulier de la memoire des echecs) n'ayant pas encore ete isole par ablation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : realiser un plan factoriel 2x2 croisant transmission des succes (oui/non) et transmission des echecs (oui/non) aux frontieres de cycle sur un micromonde reproductible pour isoler l'effet propre de la memoire negative. Faux temoin 1b : injecter aux frontieres de cycle des fiches d'echec synthétiques ou permutees issues d'un autre domaine sans lien causal avec le cycle en cours et verifier la disparition du gain de convergence.",
+   "mecanisme_causal": "La transmission explicite des tentatives echouees aux frontieres de cycle evite aux agents du cycle suivant de re-explorer des impasses deja invalidees, tandis que les reussites servent de points d'appui pour la recombinaison.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Memoire partagee des succes et echecs",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Partage inter-cycles d'une memoire des idees reussies et echouees avec effet propre a isoler"
+  },
+  {
+   "anteriorite_connue": "The AI Scientist-v2: Workshop-Level Automated Scientific Discovery via Agentic Tree Search (2025-04-08), https://arxiv.org/abs/2504.08066",
+   "bib_ids": [
+    "BIB-4798"
+   ],
+   "enonce_complet": "Exploration de l'espace des experiences par recherche arborescente agentique sans recours a un gabarit de code pre-ecrit par un humain, permettant de ramifier et elaguer dynamiquement les branches experimentales selon les resultats intermediaires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la recherche arborescente agentique sans gabarit a une chaine lineaire sequentielle a budget d'appels et d'executions identique sur un banc d'optimisation ouverte. Faux temoin 1b : remplacer le critere d'expansion/elagage de l'arbre par un choix aleatoire uniforme des noeuds a etendre et mesurer la chute du taux de branches valides.",
+   "mecanisme_causal": "La structure arborescente permet de maintenir plusieurs hypotheses concurrentes, de revenir en arriere lorsqu'une branche echoue et de s'affranchir des biais structurants imposes par des squelettes de code manuels.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Exploration arborescente sans gabarit humain",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Recherche arborescente d'experiences menee par agent autonome sans gabarit de code humain"
+  },
+  {
+   "anteriorite_connue": "The AI Scientist (2024-08-12), https://arxiv.org/abs/2408.06292 ; The AI Scientist-v2 (2025-04-08), https://arxiv.org/abs/2504.08066",
+   "bib_ids": [
+    "BIB-4822",
+    "BIB-4823",
+    "BIB-4799"
+   ],
+   "enonce_complet": "Boucle automatisee de bout en bout qui genere des idees de recherche, les traduit en code et les met a l'epreuve par des experiences reellement executees avant toute redaction d'article scientifique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer le taux d'affirmations falsifiees ou non etayees lorsqu'on execute les experiences avant redaction par rapport a une generation d'article sans execution empirique. Faux temoin 1b : remplacer les journaux et figures d'execution reellement produits par des sorties factices ou generees par LLM sans execution et verifier l'incapacite de la boucle a detecter les erreurs d'hypothese.",
+   "mecanisme_causal": "L'ancrage obligatoire de chaque idee retenue sur une execution experimentale effective avant la phase de redaction impose un filtre empirique reel et empeche la production de manuscrits purement speculatifs.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Boucle autonome ideation execution redaction",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Chaine autonome de generation d'idees et de mise a l'epreuve empirique avant redaction"
+  },
+  {
+   "anteriorite_connue": "The AI Scientist (2024-08-12), https://arxiv.org/abs/2408.06292 ; The AI Scientist-v2 (2025-04-08), https://arxiv.org/abs/2504.08066",
+   "bib_ids": [
+    "BIB-4800",
+    "BIB-4825"
+   ],
+   "enonce_complet": "Etape automatisee de verification de nouveaute par interrogation de la litterature scientifique avant d'engager le budget d'execution sur une idee generee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter un lot d'idees pieges constitue a 50 % de travaux deja publies (reformules) et 50 % d'idees inedites, et mesurer la precision/rappel du filtre de nouveaute documentaire. Faux temoin 1b : interroger un index documentaire tronque temporellement ou permute (resumes sans lien avec les requetes) et verifier l'effondrement du taux de detection de doublons.",
+   "mecanisme_causal": "La requete bibliographique automatisee confronte l'idee candidate aux publications anterieures, permettant de rejeter ou de recadrer les propositions redondantes avant de depenser du calcul experimental.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Verification documentaire de nouveaute",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Filtrage de nouveaute des idees par recherche documentaire automatisee pre-execution"
+  },
+  {
+   "anteriorite_connue": "The AI Scientist (2024-08-12), https://arxiv.org/abs/2408.06292 ; The AI Scientist-v2 (2025-04-08), https://arxiv.org/abs/2504.08066",
+   "bib_ids": [
+    "BIB-4801",
+    "BIB-4824"
+   ],
+   "enonce_complet": "Module de relecteur automatique base sur un modele de langue charge de noter et critiquer les manuscrits scientifiques produits par une chaine autonome de decouverte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer la correlation de rang (Spearman/Kendall) entre les notes du relecteur automatique et le verdict d'experts humains ou la performance empirique reelle sur des manuscrits aux resultats controles. Faux temoin 1b : substituer aux sections experimentales des tableaux bruites ou inverses (placebo d'echec) tout en conservant une redaction fluide, afin de verifier si le relecteur detecte l'incoherence empirique plutot que de noter la forme.",
+   "mecanisme_causal": "Un agent critique simule les grilles d'evaluation de comites de lecture pour filtrer les manuscrits faibles ou incoherents en sortie de chaine, sous reserve de neutraliser ses biais de surface et de style.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Relecture automatique par modele juge",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Relecteur automatique par modele de langue pour la notation de manuscrits scientifiques generes"
+  },
+  {
+   "anteriorite_connue": "The Alien Space of Science: Sampling Coherent but Cognitively Unavailable Research Directions (2026-03-01), https://arxiv.org/abs/2603.01092",
+   "bib_ids": [
+    "BIB-4774"
+   ],
+   "enonce_complet": "Generation et echantillonnage de directions de recherche scientifiquement coherentes mais cognitivement indisponibles aux chercheurs humains (hypotheses plausibles que la communaute humaine ne formulerait pas spontanement), la methode exacte d'echantillonnage n'etant pas detaillee dans la notice.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer simultanement la nouveaute par rapport aux archives publiees, la distance aux propositions humaines d'experts sur le meme corpus et le taux de faisabilite/coherence mecanique des directions echantillonnees. Faux temoin 1b : generer des directions par perturbation aleatoire de mots-cles hors contrainte de coherence (bruit combinatoire pur) et verifier que les deux axes (coherence vs eloignement cognitif) se dissocient nettement.",
+   "mecanisme_causal": "En explorant des combinaisons conceptuelles eloignees des heuristiques disciplinaires et biais cognitifs humains tout en respectant les contraintes de coherence du domaine, on augmente la couverture de l'espace des hypotheses testables (diversite fabriquee).",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Diversite fabriquee hors biais cognitifs humains",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Echantillonnage de directions de recherche coherentes mais cognitivement indisponibles aux humains"
+  },
+  {
+   "anteriorite_connue": "The Between-Round Decision in Autonomous Research: An LLM Controller That Reads the Whole Trajectory (2026-11-17), https://arxiv.org/abs/2611.22661",
+   "bib_ids": [
+    "BIB-4451",
+    "BIB-4452",
+    "BIB-4453"
+   ],
+   "enonce_complet": "Controleur base sur un modele de langue qui lit l'integralite de la trajectoire de recherche apres chaque tour d'experiences (tous les tours passes pris comme memoire complete) pour arbitrer, entre deux tours, l'allocation du tour suivant entre raffinement de la meilleure solution existante (exploitation) et ouverture d'une direction nouvelle (exploration).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le controleur sur trajectoire complete a une politique myope ne lisant que le dernier score ou a une politique a ratio fixe exploration/exploitation sur un micromonde multi-bassins. Faux temoin 1b : tronquer ou melanger l'ordre chronologique des tours dans l'historique fourni au controleur et verifier la perte de qualite des bascules entre approfondissement et ouverture.",
+   "mecanisme_causal": "La lecture de la trajectoire complete permet de detecter les plateaux de saturation locale (rendements decroissants sur une piste) et les signaux faibles cumules sur plusieurs tours, fondant l'arbitrage exploitation-exploration sur la dynamique historique plutot que sur un score instantane.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Arbitrage inter-tours sur historique complet",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Controleur inter-tours sur trajectoire complete arbitrant entre raffinement et ouverture de pistes"
+  },
+  {
+   "anteriorite_connue": "The Calibration Turn in AI-Assisted Research: A Conceptual and Methodological Framework for Evidence-Licensed Claims (2026-06-30), https://arxiv.org/abs/2606.31273",
+   "bib_ids": [
+    "BIB-4892"
+   ],
+   "enonce_complet": "Cadre conceptuel et methodologique stipulant que toute affirmation scientifique issue d'une recherche assistee par IA n'est autorisee que dans l'exacte mesure et portee des preuves empiriques ou formelles qui la justifient (principes d'enonces licencies par la preuve), le mecanisme operatoire reste a preciser au-dela du titre.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : auditer un corpus de conclusions produites par agents de recherche en mesurant l'ecart entre la force assertive des enonces et la portee reelle des tests executes (taux de sur-generalisation bloque par la grille de calibration). Faux temoin 1b : permuter les niveaux de preuve attaches aux experiences et verifier qu'un enonce sur-affirmatif n'est plus autorise lorsque la preuve sous-jacente est degradee.",
+   "mecanisme_causal": "En liant explicitement le degre de generalite et de certitude permis pour chaque conclusion au protocole et au niveau de controle des preuves associees, on bloque l'inflation rhetorique des systemes autonomes de redaction scientifique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration des affirmations sur la preuve",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Cadre d'affirmations scientifiques strictement licenciees par le niveau de preuve en recherche assistee"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "bib_ids": [
+    "BIB-4830",
+    "BIB-4832"
+   ],
+   "description_complete": "Banc d'evaluation TASTE (Anthropic, 2026-08-28, https://alignment.anthropic.com/2026/taste/) comprenant 92 comparaisons par paires sur 50 propositions de recherche empirique en surete de l'IA. Les propositions sont generees par un modele echafaude alimente par des resumes d'articles, des propositions humaines semences et des questions motivantes, et l'etalonnage rapporte une justesse humaine estimee a 77 % contre 60 % pour le meilleur modele juge (les autres restant proches du hasard). Donnees brutes non publiees selon la notice.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Banc TASTE de comparaisons par paires de propositions de recherche en surete de l'IA",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4843"
+   ],
+   "description_complete": "Banc d'evaluation public TastyBench (depot parviam/tastybench, 2025-12-02, https://www.lesswrong.com/posts/Mxsy7wYvsCRv5dGrw/llms-don-t-have-superhuman-research-taste-tastybench) ou un modele juge classe 38 articles par comparaisons par paires face a une verite terrain definie par la velocite de citation (avec donnees publiees ; les auteurs rapportent des performances mediocres de tous les modeles testes, sans ligne de base humaine).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Banc public TastyBench de classement d'articles par paires contre la velocite de citation",
+   "type_outil": "banc_experimental"
+  }
+ ]
+}

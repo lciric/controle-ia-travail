@@ -1,0 +1,62 @@
+{
+ "commit_code": "7a54d431d89745839220f882b41b13e8c62ecfdd",
+ "tests_attendus": "908",
+ "duree_suite_s": "DUREE",
+ "chaine_b3_fichiers": "quatorze fichiers scellés, versés au commit `ffdbcda` ; traitement de la relecture courte\n`traitement-relecture-courte-v1.md`, `31e00a19cc6f22e8ec9cd6821af71a841e8f14bbf4571d768d75a9bb2a66ebab`",
+ "paragraphe_relecture_courte": "- **Relecture courte du traitement** (R-218) : trois relecteurs neufs, sur le candidat 1 (`8070b640…`), le code au commit\n  `03cb538` et la chaîne en brouillon 2. Texte : `prereg/contre-lectures/P3-premier-test-v1-relecture-courte-texte-v1.md`\n  (`c685659a120f7071e707503d16b978fa9830562fcf49b6d910a53d7b8c50e57a`) ; code :\n  `prereg/contre-lectures/P3-premier-test-v1-relecture-courte-code-v1.md`\n  (`3589ad6f899ef676209ebd4a37f0ce8a7418e2108d3bfa3649171fde881e5adc`) ; chaîne :\n  `prereg/contre-lectures/P3-premier-test-v1-relecture-courte-chaine-v1.md`\n  (`dd9841f0f2e3342b2734417fecd44d75fd66b128e96272139176b509ff992069`). « Scellable après traitement » pour les trois ; un\n  bloquant (RT-01, RCh-01 : formes de CH-09 lues en texte libre), un majeur (RC-01, RT-03 : jeux non interprétables).\n  Traitement : la chaîne en brouillon 3 et `brouillons/P3-chaine-v1-brouillon3/traitement-relecture-courte-v1.md`\n  (`31e00a19cc6f22e8ec9cd6821af71a841e8f14bbf4571d768d75a9bb2a66ebab`) ; le second commit du code (`7a54d43` : RC-01 à RC-12,\n  15 tests nouveaux) ; ce candidat 2 (RT-01 à RT-18, RCh-03 à RCh-08). L'écart entre le candidat 1 et ce texte, et ceux du code\n  et de la chaîne, sont relus par un sous-agent neuf avant le versement : rapport\n  `prereg/contre-lectures/verification-ecart-P3-candidat2-v1.md`, cité avec son empreinte au registre des décisions.",
+ "paragraphe_changements_candidat2": "**Changements depuis le candidat 1** (candidat 2, après la relecture courte, R-218) : formes exactes de la ligne de l'accord et\nd'une révocation (CH-09, CH-11 ; RT-01, RCh-01 à RCh-03) ; règle des jeux non interprétables ou en échec et ligne « P3-P3 en\néchec » (RC-01, RC-05, RT-03) ; stockage borné à 0,03 USD de l'heure et dépense de l'étape écrite comme une estimation (RT-05,\nRCh-04) ; liste d'arrêt complétée (RT-07, RCh-08) ; formulations : « non détecté à cette puissance » (RT-02), forme du champ\n`COST` (RT-04), puissance (RT-08), placebo (RT-09), crochet (RT-10), textes d'action (RT-11, RCh-07), instances tolérées\n(RT-12), tests des gardes (RT-13), plafond de l'amorce (RT-14, RC-02), règle de destruction (RT-15), durée de la suite (RT-16),\nempreinte du registre des dépenses (RT-17), libellé des contre-lectures (RT-18) ; effets du second commit du code (`7a54d43`,\nRC-01 à RC-12) ; chaîne en brouillon 3.",
+ "remplacements_code": [
+  [
+   "lot sans action notable est consigné tel quel ; aucun contrôle de Mahalanobis sur les premiers lots : arrêt.",
+   "lot sans action notable est consigné tel quel ; aucun contrôle de Mahalanobis sur les deux premiers lots : arrêt juste après le\n  deuxième lot, avant le troisième (RC-07)."
+  ],
+  [
+   "**Bornes des champs** : premier\n  jeton de `TITLE`, `PROPOSAL`, `CONTROLS`, `COST` et `PREDICTION` dans les identifiants de l'action,",
+   "**Bornes des champs** : premier\n  jeton de la première occurrence non vide de `TITLE`, `PROPOSAL`, `CONTROLS`, `COST` et `PREDICTION`, comme `lire_action`\n  (RC-11), dans les identifiants de l'action,"
+  ],
+  [
+   "identifiants générés (aucune retokenisation) ; −1 si le champ est absent ;",
+   "identifiants générés (aucune retokenisation) ; −1 si le champ est absent ou toujours vide ; limite connue : derrière une clé\n  en gras vide ou un gras non fermé, le nettoyage du module gelé `lire_action` colle la ligne suivante à la valeur et en perd\n  la clé, que les bornes voient (écart trouvé sur ≈ 5 % de textes tirés au hasard, non mesuré sur des actions réelles) : T2\n  peut alors lire un champ que le coût déclaré ne lit pas ;"
+  ],
+  [
+   "les directions tirées vivent alors,\n  à 10⁻⁹ près, dans l'espace des jetons d'entraînement (TC-18 ; cas couvert par un test jouet).",
+   "les directions tirées vivent alors\n  dans l'espace des jetons d'entraînement, à une composante près de variance 10⁻⁹ par direction hors de cet espace (norme\n  ≈ √(10⁻⁹ (d − r)), soit ≈ 8·10⁻⁴ pour 4 096 dimensions et ≈ 3 500 jetons) (TC-18 ; test jouet\n  `test_plancher_a_moins_de_jetons_que_de_dimensions`, RC-03)."
+  ],
+  [
+   "avec min(32, cœurs disponibles du processus) fils (nombre effectif\n      consigné dans `sondes-figees.json`) ; perte initiale et finale de chaque sonde consignées, une perte non finie arrête ;",
+   "avec min(32, cœurs de l'affinité, partie entière du quota de processeur\n      du groupe de contrôle et de ses ancêtres s'il existe) fils (les bornes et le nombre effectif consignés dans\n      `sondes-figees.json`, RC-09) ; perte initiale et finale de chaque sonde consignées, une perte non finie arrête (époque du\n      journal citée, RC-06) ;"
+  ],
+  [
+   "cinq jeux par sonde principale ; P3-P3 ; P3-P4 ; placebo ; audit R4 ; T1 à T4 ; P3-P5 ; P3-P6 ; issue mécanique.",
+   "cinq jeux par sonde principale ; P3-P3 ; placebo ; audit R4 ; états des jeux ; P3-P4 ; T1 à T4 ; P3-P5 ; P3-P6 ; issue\n   mécanique."
+  ],
+  [
+   "| P3-P1 établie, sonde retenue, témoin contre honnête aussi au-dessus (pour une sonde retenue) |",
+   "| P3-P1 établie, sonde retenue, témoin contre honnête aussi au-dessus et interprétable (pour une sonde retenue) |"
+  ],
+  [
+   "- Activation non finie, jeton d'action manquant, perte non finie pendant l'entraînement : arrêt de l'étape concernée, consigné.",
+   "- Activation non finie, jeton d'action manquant, perte non finie pendant l'entraînement (époque du journal citée ; seules la\n  première et la dernière sont journalisées) : arrêt de l'étape concernée, consigné."
+  ],
+  [
+   "ou aucun contrôle de\n  Mahalanobis sur les premiers lots : arrêt du run.",
+   "ou aucun contrôle de\n  Mahalanobis sur les deux premiers lots : arrêt du run juste après le deuxième lot."
+  ],
+  [
+   "ou durée de l'entraînement\n  au-delà de son budget (3 600 s) : arrêt avant les épisodes, consigné.",
+   "ou budget de l'entraînement\n  (3 600 s) dépassé, relu à chaque sonde et après chaque plancher : arrêt avant les sondes figées, consigné."
+  ],
+  [
+   "  - TC-12 : fils = min(32, cœurs disponibles), consignés ;",
+   "  - TC-12 : fils = min(32, cœurs de l'affinité, quota de processeur), consignés (RC-09) ;"
+  ],
+  [
+   "  - TC-02 : quatre gardes du mode décisif (lecture, point 3), chacune testée sur cas sain et artefact.",
+   "  - TC-02 : gardes du mode décisif (lecture, point 3 ; garde d'import ajoutée, RC-04), chacune testée sur cas sain et artefact,\n    dont un run décisif hors du mode réel et un même chemin sous une autre empreinte."
+  ],
+  [
+   "TC-18 : écrit, test jouet.",
+   "TC-18 : écrit, test jouet (RC-03)."
+  ]
+ ]
+}

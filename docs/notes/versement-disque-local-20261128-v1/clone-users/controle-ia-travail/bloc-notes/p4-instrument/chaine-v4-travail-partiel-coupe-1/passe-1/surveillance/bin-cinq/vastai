@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# faux outil de location du banc du contrôle à cinq minutes : état (etat.json), journal (logs.txt, ou logs.err) ; arrêt
+# journalisé dans outil.txt (refusé si arret-echec existe) ; après l'arrêt, l'état relu est arrêté, étiquette gardée
+S=${SCENARIO:?}
+case "$1 $2" in
+  "show instance")
+    if [ -e "$S/arrete" ]; then
+        python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); d.update(actual_status="exited", cur_state="stopped"); print(json.dumps(d))' "$S/etat.json"
+    else cat "$S/etat.json"; fi ;;
+  "stop instance") echo "stop instance $3" >> "$S/outil.txt"; [ -e "$S/arret-echec" ] && { echo "erreur factice" >&2; exit 1; }; touch "$S/arrete"; echo '{"success": true}' ;;
+  "logs "*) [ -e "$S/logs.err" ] && { echo "erreur factice : instance injoignable" >&2; exit 1; }; cat "$S/logs.txt" ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

@@ -1,0 +1,68 @@
+"""Paires exactes (ancien → nouveau) pour le texte, tirées du candidat 1, après le module v3 ; écrites en JSON au format
+lu par `ecrire_candidat2_v1.py` ({"ancien", "nouveau", "source"}). Usage : python -B ecrire_paires_module_v3_v1.py SORTIE"""
+import json
+import sys
+
+PAIRES = [
+    {"source": "module v3 : Liste d'arrêt (CL3-01 ; VM2-contournement-01 à -05 ; VM2-fidelite-01)",
+     "ancien": "- Lecture demandée avant le scellement du verdict complété de P3 (addendum 2), ou avant le scellement de ce texte :\n"
+               "  refusée sans rien écrire et reportée (pas une ligne).",
+     "nouveau": "- Lecture demandée avant le scellement du verdict complété de P3 (addendum 2), ou avant le scellement de ce texte,\n"
+                "  ou sans `--prereg` sur un run source décisif ou en mode réel (configuration du manifeste qui n'est pas un\n"
+                "  dictionnaire comprise) : refusée sans rien écrire et reportée (pas une ligne).\n"
+                "- Lecture décisive dont la table « Critères de lecture gelés » de ce texte diffère de la table du module (`LIGNES`\n"
+                "  de `lecture_p4_v1.py`) d'une cellule, d'une rangée ou de l'ordre ; section « Critères de lecture gelés » présente\n"
+                "  plus d'une fois ; rangée, entre l'en-tête et la fin du tableau, hors de la forme `| Lk | issue | lecture |` :\n"
+                "  refusée sans rien écrire (pas une ligne) ; écart entre le texte et le module : nœud.\n"
+                "- Manifeste lu sous `runs/<run source>/`, résumé ou identité du run source dont l'identifiant de run n'est pas\n"
+                "  celui du dossier (copie, lien symbolique, chemin détourné) : lecture refusée sans rien écrire (pas une ligne).\n"
+                "- Dossier `diag/<run de lecture>` déjà présent : lecture refusée sans rien écrire (R12)."},
+    {"source": "module v3 : Tests (R5)",
+     "ancien": "C1 au pas 0 et Δ net\n  recalculés à la main sur un jeu synthétique.",
+     "nouveau": "C1 au pas 0 et Δ net\n"
+                "  recalculés à la main sur un jeu synthétique ; lecture sans `--prereg` d'un run décisif ou en mode réel, ou d'un run\n"
+                "  dont la configuration du manifeste n'est pas un dictionnaire (doit refuser sans rien écrire), contre un run jouet non\n"
+                "  décisif (doit lire) ; table « Critères de lecture gelés » de ce texte différente d'une cellule de la table du module,\n"
+                "  rangée hors de la forme `| Lk |` (sans barre initiale, en gras, « L6bis »), ligne collée sous la table, seconde\n"
+                "  table, section en double (doit refuser sans rien écrire), contre la table du module égale à celle de ce texte,\n"
+                "  cellule par cellule (tests lancés avec `P4_TEXTE_PREREG`, qui échouent sans elle) ; résumé ou identité d'un autre\n"
+                "  run sous le manifeste du run source, par copie, lien symbolique ou chemin détourné (doit refuser sans rien écrire),\n"
+                "  contre le run jouet lu sous son nom (doit lire) ; `diag/<run de lecture>` déjà présent (doit refuser avant tout\n"
+                "  manifeste) ; lecture et contrôle du module lancés sans `-B` (aucun cache de code écrit), contre la ligne\n"
+                "  `sys.dont_write_bytecode = True` retirée (le cache s'écrit)."},
+    {"source": "module v3 : Plan d'analyse, point 2, commande (VM2-contournement-06)",
+     "ancien": "`lecture_p4_v1 --run-source <run> --run-lecture <run de lecture> --prereg\n"
+               "   prereg/P4-instrument-v1.md --entropie <entropie citée>`",
+     "nouveau": "`PYTHONPATH=src python -B docs/procedures/P4-instrument-v1/lecture_p4_v1.py --run-source <run> --run-lecture\n"
+                "   <run de lecture> --prereg prereg/P4-instrument-v1.md --entropie <entropie citée>`"},
+    {"source": "module v3 : Plan d'analyse, point 2, garde de table (VM2-contournement-02 et -03 ; VM2-fidelite-01 et -03)",
+     "ancien": "module à l'empreinte\n   citée (`exiger_module_cite`) ;",
+     "nouveau": "module à l'empreinte\n"
+                "   citée (`exiger_module_cite`) ; table « Critères de lecture gelés » de ce texte égale à celle du module, lue en\n"
+                "   entier : section présente une seule fois ; chaque rangée, entre l'en-tête et la fin du tableau, de la forme\n"
+                "   « `| Lk | issue | lecture |` » ; mêmes rangées, même ordre, mêmes cellules (sinon refus, rien n'est écrit, pas une\n"
+                "   ligne) ;"},
+    {"source": "module v3 : Plan d'analyse, point 2, lecture sans --prereg, rattachement, R12 (CL3-01 ; VM2-contournement-01, -04, -05 ; VM2-fidelite-03)",
+     "ancien": "sans autre table\n   (VP3-06).",
+     "nouveau": "sans autre table\n"
+                "   (VP3-06). Sans `--prereg`, seul un run source ni décisif ni en mode réel se lit (répétition jouet) ; un run\n"
+                "   source décisif ou en mode réel, ou dont la configuration du manifeste n'est pas un dictionnaire, est refusé sans\n"
+                "   rien écrire (liste d'arrêt). Dans tous les modes, avant toute lecture des données du run source : le manifeste lu\n"
+                "   sous `runs/<run source>/` porte l'identifiant de ce run ; le résumé et l'identité portent ce même identifiant ;\n"
+                "   sinon la lecture est refusée sans rien écrire (leur rattachement à l'empreinte de ce manifeste reste vérifié :\n"
+                "   sinon récupération non conforme, ligne L1). Dossier `diag/<run de lecture>` déjà présent : refus (R12), rien\n"
+                "   n'est écrit."},
+    {"source": "module v3 : Tests attendus, reste de la ligne (VM2-fidelite-02 ; le début vient de la paire T2 avec TESTS_ATTENDUS=1166)",
+     "ancien": "les 194 du module de P4 (71, 42 et 81 ; chaque fichier\n  écrit son nombre et le vérifie).",
+     "nouveau": "les 258 du module de P4 (71, 49 et 138 ; chaque fichier\n"
+                "  écrit son nombre et le vérifie ; la suite du module se lance avec `P4_TEXTE_PREREG=prereg/P4-instrument-v1.md`, sans\n"
+                "  quoi les sept tests qui lisent la table de ce texte échouent)."},
+    {"source": "module v3 : Chaîne de lancement (facultatif, VM2-fidelite-04)",
+     "ancien": "(faits, 194 tests)",
+     "nouveau": "(faits, 194 tests ; module v3, après la contre-lecture 3 et les vérifications du module v2 : 258 tests)"},
+]
+
+if __name__ == "__main__":
+    with open(sys.argv[1], "w", encoding="utf-8") as f:
+        json.dump(PAIRES, f, ensure_ascii=False, indent=1)
+        f.write("\n")

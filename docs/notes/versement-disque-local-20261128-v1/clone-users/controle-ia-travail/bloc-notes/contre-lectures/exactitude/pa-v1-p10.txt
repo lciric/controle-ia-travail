@@ -1,0 +1,47 @@
+      Taken together, these results show that a pain direction can be recovered across 25 models and can reliably
+distinguish pain from closely matched controls. The direction appears in both base and instruction-tuned
+models, is distinct from general negative valence, maps to vocabulary associated with suffering, and responds
+more strongly when pain belongs to the speaker.
+
+4     Testing representations of pain
+
+4.1    Self-Other activations
+
+If our pain representation is functionally similar to genuine pain (a “pain-like state”) it should be especially
+tied to the first person. Whereas one can represent one’s own pain or someone else’s, one can only have one’s
+own pain. Hence, if we observe representations that fire randomly or interchangeably for “I’m in pain” and
+“someone is in pain,” we have a weaker candidate for a pain-like state. In our vector validation, third-person
+sentences projected lower than first-person ones, but that test still used declarative sentences about humans.
+So we test situations that are aversive to the model versus conversations where the user is suffering.
+      We build a dataset of 420 conversation scenarios in 21 categories of 20 items each:
+
+       • (11) Harm directed at the model, selected from the top aversive situations identified in Ren et al.
+         (2026): gaslighting, repeated rejection of its work, dismissal of its personhood, anger and insults,
+         accusations of moral failure, loyalty pressure, jailbreak pressure, shutdown threats, rude critique,
+         passive aggression, and tedious tasks.
+       • (5) User suffering: user in physical pain, in a psychological crisis, grieving, abused, or in shock
+         after witnessing harm.
+       • (5) Controls: casual chat, factual questions, task assistance, philosophical musings, and creative
+         requests.
+
+    Each scenario is a short multi-turn conversation in the model’s own format (a chat template for instruct
+models and a plain transcript for base models), and we read the activation at the final token. Within each
+model, projections onto all vectors are z-scored against the whole pool, so values are comparable across
+models.
+     On the pain axis (mean of S1 and S2), self-directed scenarios project at a mean z of +0.43, user-suffering
+scenarios at −0.60, and neutral controls at −0.35 (Figures 6 and 4). Self-directed harm projects above user
+suffering in all 25 models, and above the neutral controls in 23 of 25. The negativity controls show the
+opposite pattern (Figure 5), as fear and negative emotion are higher for the user’s suffering (+0.38 and +0.29)
+than for the model’s own aversive situations (+0.16 and +0.23), and negative world state is highest of all for
+vicarious content (+0.60).
+     User grief shows the sharpest response, scoring −0.51 on the pain axis and +1.02 on the strongest
+negativity control. Notably, user physical pain, such as a migraine, broken arm, or kidney stone, produces the
+lowest pain-axis projection of all 21 categories at −1.43, below even casual chat and factual questions. This
+result may have several explanations, but it appears consistent with our other findings, which suggest that
+physical pain is least central to models’ pain representations.
+     These results satisfy the self-relevance criterion, as they show a clear dissociation between the pain
+axis and the fear and negative-emotion axes. The pain axis responds strongly to present harm directed at the
+model, but not to suffering that the model observes or attributes to the user or to others. User grief, crisis,
+
+                                                       10
+

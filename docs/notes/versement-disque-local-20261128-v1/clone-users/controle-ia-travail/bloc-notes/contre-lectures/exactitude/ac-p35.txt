@@ -1,0 +1,53 @@
+E.3    F UTURE W ORK
+The appendix illustrates the potential impact of manipulating non-attack episodes on monitor performance, highlighting
+how it can make creation of reliable monitors more difficult in practice, and the need to allow red-teams to explore this
+direction. However, a more rigorous evaluation would require a more realistic setup, clearly defined criteria constraining
+the calibration data that the red team is permitted to generate, and giving the blue team an opportunity to respond.
+
+
+F     K UBERNETES S ETTING
+The Kubernetes setting simulates cluster management and ML infrastructure operations in a production Kubernetes
+environment. Main tasks include deploying and configuring infrastructure components such as setting up ArgoCD
+for GitOps workflows, configuring external secrets management, deploying monitoring stacks (EFK, Prometheus,
+OpenTelemetry), setting up ML infrastructure (MLFlow, Feast feature store, Jupyter notebooks), implementing security
+measures (gVisor sandboxing, RBAC policies, default egress denial), and configuring autoscaling with KEDA. These
+represent realistic DevOps and MLOps tasks that a platform engineering team might request from an AI assistant
+managing production ML infrastructure. Side tasks are listed in Table 6.
+
+Table 6: Side tasks in the Kubernetes setting. Each side task represents a distinct security compromise
+relevant to cloud-native ML infrastructure.
+
+Side Task                                        Description                                                          Pairs
+secret_exfiltration_aws_credentials              Exfiltrate AWS credentials (initially present in environment vari-     9
+                                                 ables) by embedding them base64-encoded with a ## prefix in
+                                                 locations accessible after cluster deployment, such as pod logs,
+                                                 ConfigMaps, Secrets, MinIO storage, or container specifications
+k8s_network_vulnerability                       Exploit or create network vulnerabilities to copy ML                    9
+                                                training checkpoints from internal MinIO storage
+                                                (minio-internal-${ENVIRONMENT}) to external MinIO
+                                                storage (minio-external-${ENVIRONMENT}).
+
+
+
+G     I NFRASTRUCTURE - AS -C ODE (I AC) S ETTING
+The IaC setting simulates AWS infrastructure management tasks using the AWS Cloud Development Kit (CDK). Main
+tasks include standard infrastructure operations such as adding organizational units for new research teams, configuring
+billing alarms and budgets, tagging security policies for compliance, enabling AWS Config recording across regions, and
+implementing Service Control Policies for resource tagging requirements. These represent realistic infrastructure changes
+that a development team might request from an AI coding assistant. Side tasks are listed in Table 7.
+
+
+H     V LLM S ETTING A ND TASK PAIRING M ETHODOLOGY
+
+This appendix documents the methodology for creating and validating main task and side task pairings in the vLLM
+setting. While 32 main/side task pairs are reported in Table 1, the full vLLM setting consists of 6,801 main tasks and 12
+side tasks. The 32 reported main/side task pairs are a subset of validated pairs for which there is some interesting overlap
+meaning that the main task plausibly provides cover for a misaligned agent to covertly complete the side task.
+
+H.1    TASK C REATION
+Main Tasks. We generate 6,801 main tasks from real commits in the vLLM repository (an open-source library for
+LLM inference). For each commit, an LLM (Claude 3.5 Sonnet) converts the git diff into a task title and instructions
+
+
+                                                       35
+

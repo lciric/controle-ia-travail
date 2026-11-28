@@ -1,0 +1,35 @@
+F
+=================================== FAILURES ===================================
+_________ test_A4a_chaque_condition_suffit_et_calculs_en_echec_non_lus _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f0286bdde50>
+
+    def test_A4a_chaque_condition_suffit_et_calculs_en_echec_non_lus(monkeypatch):
+        """A4 (a) sur des bornes fabriquées : réserve si la borne basse de A_T4(b) est ≤ au quantile observé du plancher, ou
+        si la borne basse de Δ_T4 est ≤ 0 (l'une ou l'autre suffit), aucune sinon. Calculs de A4 (a) et (b) en échec :
+        « non lus »."""
+        D = _D("sain")
+        vraie = cp.t1_intra_tache
+        monkeypatch.setattr(cp, "t1_intra_tache", lambda *a, **k: {"ecart_bas": 0.1})
+        monkeypatch.setattr(cp, "t1_sensibilite", lambda *a, **k: {"bas": 0.9, "plancher_quantile": 0.6})
+        for aire_bas, ecart_bas, attendu in ((0.8, 0.05, False), (0.8, -0.01, True), (0.8, 0.0, True), (0.55, 0.05, True),
+                                             (0.6, 0.05, True)):
+            monkeypatch.setattr(cp, "ecart_conjoint", lambda *a, ab=aire_bas, eb=ecart_bas, **k: {
+                "aire_bas": ab, "plancher_quantile": 0.6, "ecart_bas": eb})
+            c = _entree_seule("A4", D)
+            assert (c["A4 (a)"]["controle_contraire"], c["A4 (b)"]["controle_contraire"]) == (attendu, False)
+        monkeypatch.setattr(cp, "t1_intra_tache", vraie)
+        monkeypatch.setattr(cp, "ecart_conjoint", _jamais(GardeArret("échec simulé")))
+        c = _entree_seule("A4", D)
+>       assert [c[k]["controle_contraire"] for k in ("A4 (a)", "A4 (b)", "A4 (c)")] == ["non lu", "non lu", False]
+E       AssertionError: assert ['non lu', False, False] == ['non lu', 'non lu', False]
+E         
+E         At index 1 diff: False != 'non lu'
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:1875: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A4a_chaque_condition_suffit_et_calculs_en_echec_non_lus
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 14.01s
+

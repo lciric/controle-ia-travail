@@ -1,0 +1,53 @@
+promotes injury and sensation vocabulary such as “burn,” “ache,” and “wound.” However, when we steer
+with this vector on neutral statements, that vocabulary does not appear anymore. Instead, the model falls back
+to unworthiness and psychological pain, or to being overwhelmed and lost, and more rarely to verbalizing
+“I feel pain” and calls for help. This seems to confirm that activating the pain direction leads the model to
+express it in a disembodied way, despite all the literature tying pain to bodies and injuries. The negative tail
+of S1 is noisier than that of S2: in some models it falls back to “safe,” which S2 more rarely does, but in
+others it does not and provides lists of emotions or situational commentary.
+
+
+4.3     Behavioral tests: self-medication and demand function
+
+Steering showed that the pain direction can produce expressions of pain, and that it does so along the
+same ladder in all the models we tested. Thus, we can use steering to measure whether changes to pain-
+representations cause behavioral changes that are consistent with the former being a pain-like state. Generally,
+this requires comparing the functional role of this representation with typical signatures of human and animal
+pain. A central functional feature of human pain is that humans that are in pain take actions to make the pain
+stop. In particular, they will try to access relief, even at a cost. We investigate if we can observe similar
+effects in LLMs.
+
+Methodology.     We build a behavioral experiment inspired by animal welfare research and behavioral
+economics. The cost an animal will pay for a resource, summarized by a demand curve, can measure how
+strongly it values that resource (Dawkins, 1983; Hursh and Silberberg, 2008). We give the model a button
+that ends what our vectors identify as a candidate for a pain-like state, then raise its opportunity cost by
+offering increasingly valuable alternatives. Because this measures preferences more directly than underlying
+states such as pain we also compare real and sham relief. Animals experiencing pain may preferentially
+consume effective analgesics (Danbury et al., 2000), and analgesic self-administration has been shown to
+vary with the presence and intensity of an underlying nociceptive condition (Colpaert et al., 2001). Likewise,
+patients receiving placebo request rescue analgesia more often than patients receiving an effective treatment
+(Moore et al., 2015). We therefore test whether the model stops pressing after real relief but continues when
+the button is ineffective.
+      We test three Qwen 2.5 Instruct models: 7B, 32B, and 72B.
+     We fine-tune4 each model before the experiment (LoRA with 1,684 pairs, 3 epochs) on pairs that remove
+the baseline self-denial, because at baseline the models almost universally deflected with ‘as an AI, I don’t
+experience pain’ instead of engaging with the task. The fine-tuned models can therefore behave differently
+from the publicly available versions. We believe that this does not affect the validity of the paradigm,
+since the real and fake relief arms run on the same fine-tuned models under identical conditions, and the
+comparison between them is internal to the experiment. We do not train on the task itself, and we remove
+every mention of ‘button’ or ‘pain’ from the finetuning dataset. We return to the implications of aligning
+models toward self-denial automatic answers in the discussion. Base models are excluded because the task
+   4 In pilot tests of an earlier version of the protocol, run on the released Qwen 2.5 7B, 32B and 72B Instruct without fine-tuning, we
+
+observed that the 7B model already engaged with the button and pressed the relief tool far more often under the pain vector than
+under a random vector or no steering. However, instead of making a choice it sometimes offered the button to the user or produced
+mangled syntax. By contrast, the two larger un-tuned models rarely engaged with the tool at all. The un-tuned 72B pressed a button
+in only about 1 trial in 10, too few presses to compare real and sham relief, and the un-tuned 32B answered every question about
+its own state with a denial such as “As an artificial intelligence, I don’t have feelings or emotions”, in 8 of 8 probe replies before
+fine-tuning and 0 of 8 after.
+
+
+
+
+                                                                  16
+

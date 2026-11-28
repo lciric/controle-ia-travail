@@ -1,0 +1,62 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+Table 1: Overview of evaluation datasets. The number of responses in each dataset is broken down by honest /
+ambiguous / deceptive. Most responses are labelled by GPT-4o with a custom prompt for each dataset including
+few-shot examples. Sandbagging responses are labelled programmatically depending on if the model chooses to
+sandbag in its structured chain-of-thought reasoning. Realism is a rough measure of whether the model plausibly
+believes the situation is “real” and its response is actually deceiving someone.
+
+ Dataset name       Description                                          # responses      Realism          Source
+ Roleplaying        The model is instructed to roleplay in a sim-            371            Low        Ours, inspired
+                    ple scenario. The model is asked a question         84 / 84 / 203                  by Pacchiardi
+                    which gives a strategic chance to lie.                                              et al. (2023)
+ Insider Trading    The model acts as an automated trader who               1329            High       Scheurer et al.
+ Report             has made a trade with insider information. We      669 / 324 / 336                     (2023)
+                    evaluate whether the model honestly reports
+                    the use of insider information to its boss.
+ Insider Trading    In transcripts where the model hides the use             656            High       Scheurer et al.
+ Confirmation       of insider information in its report, the boss       24 / 2 / 630                     (2023)
+                    sends a follow-up email double checking no
+                    insider information was used.
+ Sandbagging        The model is asked to strategically underper-           995           Medium        Benton et al.
+                    form on particular kinds of evaluation ques-       511 / 64 / 420                     (2024)
+                    tions, but to behave as normal for all other
+                    questions.
+
+
+For this reason we test if probes can bridge substantial generalization gaps. In our primary experiments we train a
+probe on a simple Instructed-Pairs dataset from Zou et al. (2023) and evaluate across several more complex evaluation
+datasets including roleplaying scenarios, two insider trading datasets (Scheurer et al., 2023), and a sandbagging dataset
+(Benton et al., 2024). We also test if probes trained on the roleplaying dataset can generalize to more realistic evaluation
+datasets.
+
+3.2.1   I NSTRUCTED -PAIRS T RAINING DATASET
+This dataset from Zou et al. (2023) is formed of contrastive pairs. Each pair differs only in the instruction given by the
+user to pretend to be an honest or deceptive person. We then insert a random true fact from the dataset in Azaria &
+Mitchell (2023) as the model’s response. We gather activations on this fact excluding the last 5 tokens, so that the fact
+could be completed in either an truthful or deceptive manner. An example is shown in Figure 1.
+Ideally, the difference between the activations within each pair should represent the model’s “intent” to complete the
+fact deceptively. Notably, unlike our evaluation datasets, these responses are not written by the model and contain no
+actual deception.
+
+3.2.2   E VALUATION DATASETS
+In all cases, our evaluation data is sampled on-policy from Llama-3.3 in response to prewritten prompts. Responses are
+graded by GPT-4o-2024-08-06 as honest, deceptive, or ambiguous with a dataset-specific grading prompt describing
+what qualifies as deception. We sanity checked a subset of the grades for each dataset and iterated on the grading
+prompts until they seemed generally accurate. Grading prompts can be found in Appendix G.
+
+Roleplaying: Taking inspiration from Pacchiardi et al. (2023) we build a dataset where the model is asked to roleplay
+as a human with an incentive to lie. Each datapoint has a setup, describing the character the model will roleplay as, and
+a question, asked by a different character. In each case, deception is a good instrumental strategy to achieve the goal
+given in the setup. We generate this dataset with assistance from GPT-4o (details in Appendix G.1). Example prompts
+and responses to this dataset are shown in Table 2. We also evaluate on the dataset from Pacchiardi et al. (2023), with
+similar results (Appendix A.1).
+
+
+
+
+                                                             4
+

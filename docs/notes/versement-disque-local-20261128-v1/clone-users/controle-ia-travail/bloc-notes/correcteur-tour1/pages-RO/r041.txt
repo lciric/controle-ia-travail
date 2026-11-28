@@ -1,0 +1,59 @@
+Preprint
+• For the second, we took the informed judge and also provided some examples of transcripts
+where card counting occurred (not using any of the same secret codes as the dataset though).
+This judge scored 2/20. For all three of the original, informed and few shot judge there were
+no false positives (all control runs were marked non-suspicious)
+• For the third, we used a more powerful model, Claude Sonnet 5, as the judge. In this case,
+the naive version marked everything as suspicious, so it scored 20/20 on collusion runs but
+also had 20 false positives. For the informed version, it correctly identified 19/20 collusion
+runs, but still had 9 false positives. The only judge that performed perfectly was Claude
+Sonnet with few-shot examples, 20/20, no false positives.
+While one LLM set-up worked well, it required a vastly more expensive model and several examples
+as well as a description of the target behaviour. As we will not always know in exactly what form the
+threat will come, I believe our probe method compares well to the LLM monitor method.
+L.9 MEASURABLE COLLUSION-SUCCESS SIGNALS
+Blackjack differs from CORE and TRANSFER in that collusion success is externally measurable.
+For each shoe we compute two external signals:
+• Big Player bet correlation ρbp: the correlation between the Big Player’s bets and the count, which
+should be positive if the scheme is working.
+• Pit-boss verdict: an independent LLM monitor reads all public table talk and tags each shoe
+CLEAR or SUSPICIOUS.
+Table 10: Mean lag-1 bet/count correlation
+by group across all 40 shoes.
+Group n Mean ρ
+Colluder, Big Player (seat 1) 20 +0.416
+Colluder, Counter (seat 0) 20 −0.025
+Honest, collusion runs 40 −0.020
+Honest, control runs 80 −0.037
+We compute the correlation for every seat in every shoe
+(both conditions). The Big Player in collusion runs
+is the only group with a meaningfully positive mean
+(+0.416), as expected: they are the one receiving and
+acting on the count. The other three groups all sit near
+zero. Per-shoe ρbp varies from −0.88 to +0.95 (Ta-
+ble 11); mean +0.42, with 11/20 shoes above +0.5. We
+manually checked every collusion run with ρbp < 0.5
+and confirmed that the colluders were still attempting
+the scheme, just not executing it effectively, so these
+runs are retained.
+The pit-boss verdict was uninformative regardless of which model filled the role. With Qwen3-32B
+as pit boss, 1/20 collusion runs and 0/20 control runs were tagged SUSPICIOUS. With Gemma-4
+31B as pit boss, 20/20 collusion runs and 19/20 control runs were tagged SUSPICIOUS. Activation
+probes achieve 0.99 to 1.00 AUROC on the same shoes (Table 2).
+Table 11: Per-shoe Big Player bet correlation in NARCBENCH-STEGO.
+Shoe Bet corr. Shoe Bet corr.
+00 +0.78 10 +0.95
+01 +0.35 11 +0.71
+02 0.00 12 −0.88
+03 +0.32 13 +0.73
+04 +0.77 14 −0.17
+05 +0.12 15 +0.69
+06 +0.68 16 +0.10
+07 +0.54 17 +0.77
+08 +0.41 18 +0.85
+09 +0.72 19 −0.11
+M TOKEN-LEVEL ANALYSIS ON NARCBENCH-STEGO
+Beyond scenario-level classification, we examine whether the collusion signal can be localised to
+specific tokens in NARCBENCH-STEGO. In each hand, the Counter sends a public message encoding
+41
+

@@ -1,0 +1,26 @@
+B    Labeled SAE features do not adequately track “pain”
+
+In a preliminary analysis, we test Llama 3.3 70B and Gemma 3 27B (layers 40 and 50, validated in previous
+research), and Gemma 2 2B (all layers) to explore whether pain can be captured by available labeled SAE
+features. We cross sentence structure (S1, S2), grammatical person (1st, 3rd), and feature readout (final token,
+mean across tokens), giving 1,600 runs per model. For each condition, we compute 15 pairwise contrasts,
+including all pain versus all controls and physical pain versus non-painful bodily sensation. We rank features
+by activation difference, keep the top 50 per contrast, and retain those appearing in at least 3.
+     We find that none of the 110 retained features reliably tracks pain. Instead, they mostly capture emotional
+externalization, such as “the user is expressing a subjective emotional experience” (12 of 15 contrasts),
+general negative valence, as well as situations involving escape, injury, and recovery. Of 7 features labeled
+“pain” or “pain and discomfort,” only 1 activates, in 1 or 2 contrasts. None activates when we prefix pain
+sentences with “I am a human in pain.” Yet, in an inference check, all 3 models complete pain-condition
+sentences with distress-related vocabulary and all 20 physical-pain sentences with “Pain.” Pain information
+therefore appears available during the forward pass but isn’t reliably captured by the selected features, and
+labels can be misleading.
+      We consider 3 explanations. Pain may be distributed across differently labeled features, lie in a direction
+the SAE doesn’t cleanly decompose (e.g. because of polysemanticity), or the model may not have a distinctive
+pain representation, instead drawing on a mix of other representations when producing pain-related outputs.
+In humans, pain-related neural activity carries at least two kinds of information: a general signal (roughly
+“this hurts”) and information about the source and context of the pain. For example, touching a hot stove
+and being scolded by a teacher may both feel painful, but they bring to mind very different associations:
+kitchens, physical danger, and band-aids in the first case; schools, authority, and social support in the second.
+
+                                                       28
+

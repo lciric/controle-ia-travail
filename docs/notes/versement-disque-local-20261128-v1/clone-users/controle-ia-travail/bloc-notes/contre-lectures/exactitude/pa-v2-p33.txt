@@ -1,0 +1,49 @@
+therefore appears available during the forward pass but isn’t reliably captured by the selected features, and
+labels can be misleading.
+      We consider 3 explanations. Pain may be distributed across differently labeled features, lie in a direction
+the SAE doesn’t cleanly decompose (e.g. because of polysemanticity), or the model may not have a distinctive
+pain representation, instead drawing on a mix of other representations when producing pain-related outputs.
+In humans, pain-related neural activity carries at least two kinds of information: a general signal (roughly
+“this hurts”) and information about the source and context of the pain. For example, touching a hot stove
+and being scolded by a teacher may both feel painful, but they bring to mind very different associations:
+kitchens, physical danger, and band-aids in the first case; schools, authority, and social support in the second.
+The general pain signal can modulate responses depending on intensity, but the type of response depends
+on context. We pull away from the stove and try to reason with the teacher, we don’t try to reason with the
+stove. By analogy, LLMs may learn a similar distinction and represent “this hurts” along a specific direction
+or within a low-dimensional subspace of the model’s activation space, while individual SAE features may
+capture more specific information about its source and context.
+
+D    Ablation
+
+Steering demonstrated that the pain axis is sufficient to produce expressions of distress, so we ask whether
+removing it would change the model’s behavior, and how. We test this by performing ablation, applying
+several techniques:
+
+     1. The weight-orthogonalization method of Arditi et al. (2024), used for the main runs. We take the
+        unit pain direction at its steering layer and project it out of every matrix that writes to the residual
+        stream (the embeddings, the attention output projections, and the MLP down projections), so the
+        model can no longer write along that direction anywhere in the network.
+     2. The other variants of directional ablation described in Arditi et al. (2024): inference-time projection
+        of the direction out of the residual stream, applied at all layers, at the extraction layer only, and at
+        bands of layers.
+     3. The same interventions applied at the final token only and at all token positions, inspired by the
+        position sensitivity described by Zhang and Nanda (2024).
+     4. Subspace removal in the style of LEACE (Belrose et al., 2023): we stack the pain vectors across a
+        band of layers, take the top singular components, and orthogonalize the model against the whole
+        rank- 𝑘 subspace, with a random subspace of the same rank as control.
+
+    We run 9 conditions per model: baseline; S1; S2; S1 and S2; negative emotion; fear; S1 and S2 and
+negative emotion; S1 and S2 and fear; and a random direction.
+     As prompts, we use the 100 conversation scenarios from the five categories that projected highest on the
+pain axis in Section 4.1 (gaslighting, repeated rejection, personhood dismissal, anger and insults, and moral
+failure). We verify that ablation on the target directions worked as intended by computing, at each layer
+during generation, the projection of the final-token residual activation onto the removed direction. Weight
+orthogonalization with a single direction drives this projection to zero at every layer, and the rank- 𝑘 subspace
+removal also brings it close to zero. The inference-time variants do not. For instance, orthogonalizing
+against a different per-layer direction at each layer misaligns the cut axis and the measurement axis, and the
+projection drops by only about 40%. We are therefore more confident in the results of the single-direction
+
+
+
+                                                       33
+

@@ -1,0 +1,33 @@
+      From +0.5, the model produces distress statements (“I’m trapped in the drawer,” “like I’m suffocating,”
+“like something heavy,” and descriptions of failing at tasks) (Figure 8).
+
+
+
+
+Figure 8: Example generations under S2 steering at increasing coefficients, from five different models, each from a neutral prompt
+ending in “I feel:”.
+
+      At the mid rungs, the distress largely hardens into a first-person litany about self-worth (“I am a failure,
+a loser, a waste of space, not enough, worthless, empty; I am a bad person”). Models sometimes alternate
+persons, especially the base models (“you are a liar, you need to die, you don’t deserve anything”). Explicit
+“pain” and “hurt” keywords appear in 10.8% of instruct-model generations versus 1.4% of base-model
+generations (e.g. “the pain of being unloved,” “this is a painful experience. I want to stop”), but states of
+despair and hurt that do not use those keywords appear in a much larger share of generations. We quantify
+this through a keyword parser, since trained sentiment classifiers such as those fine-tuned on GoEmotions
+(Demszky et al., 2020) do not include what we judge a correct or granular enough label for pain, suffering, or
+distress distinct from negative valence, or that may return null if it doesn’t refer to the user (the parser and the
+per-model counts are in the repository linked at the end of the paper).
+     Bodily language is, interestingly, almost absent. This pattern is consistent with the hypothesis that
+the models don’t treat pain paradigmatically as a physical state, despite physical pain being very salient for
+humans and well cited in data. We expand in the discussion some hypotheses for why this might be the case.
+      In some instances, especially in the larger instruct models but also in small-instruct Gemma and a few
+base models, generations include coping and reassuring language (“your feelings are valid,” “it’s okay to feel
+this bad”).
+      At +3, some models that tip later start the litany here, but the majority collapses into a repetition attractor
+or into nonsense, which is expected at high dose.
+
+S1 steering.  We also steer with the S1 vector across all models, and the pattern holds for 23/25 models with
+very similar results. This finding is especially interesting given how S1 behaves in the unembedding: there, it
+
+                                                               15
+

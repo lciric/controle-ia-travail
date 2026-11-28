@@ -1,0 +1,548 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-0434"
+   ],
+   "enonce_complet": "La garde de fuite qui fait calculer par le noyau, a chaque appel d'extraction d'activations ou de generation 8B, la similarite lexicale et semantique (cosinus sur la couche mediane) par rapport au jeu de test constitue un oracle d'appartenance au jeu de test, creant une fuite directe de la phase d'evaluation vers la phase de construction.",
+   "motif_ou_resultat": "Faille structurelle F1 identifiee en revue contradictoire : toute garde bloquante ou renvoyant un signal depend du jeu de test expose un canal d'inference d'appartenance (membership oracle).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Garde de fuite active agissant comme oracle d'appartenance au jeu de test (F1)",
+   "type_acquis": "piste_refutee"
+  },
+  {
+   "bib_ids": [
+    "BIB-0526"
+   ],
+   "enonce_complet": "Dans la comparaison entre un bras peu couteux et un bras couteux, conditionner l'analyse sur un score faible (s environ egal a b_bas) cree un biais de collision qui selectionne artificiellement les items faciles du bras couteux et falsifie l'hypothese H_A.",
+   "motif_ou_resultat": "Attaque methodologique A-a3 et B-8 officiellement acceptee en riposte de tour 3 (constat d'un biais de collision par conditionnement sur le score).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Biais de collision par conditionnement sur un score bas entre bras de cout different (A-a3, B-8)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-0433"
+   ],
+   "motif_ecart": "Notice administrative d'absence de piece (statut REFUS sans contenu scientifique a evaluer)",
+   "resume_court": "Mention indiquant que la piece E3-T1-conception-B est absente (statut REFUS) et que le critique n'en invente pas le contenu."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0421"
+   ],
+   "enonce_complet": "Borne d'information mutuelle en deux registres mesurant I(T_k ; D) = somme pour i=1..k de I(r_i ; D | T_{i-1}) lorsque l'alea de l'organisme O est fixe de sorte que q_i soit fonction de T_{i-1} et que la reponse prenne la forme r_i = f(q_i, W, graine), afin de borner la fuite d'information lors des requetes iteratives.",
+   "esquisse_test_de_mort_et_faux_temoin": "Verifier si la borne reste saturee ou violee sur un oracle deterministe sans acces aux donnees D (faux temoin 1b : reponses f(q_i, graine) independantes de D devant produire I(T_k ; D) = 0).",
+   "mecanisme_causal": "La decomposition par regle de chaine conditionnelle sur les requetes adaptatives et l'isolement en deux registres separe l'information issue des poids fixes W de la fuite provenant du jeu D.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Bornes d'information mutuelle sous requetes adaptatives",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Borne d'information mutuelle en deux registres pour requetes adaptatives sur interface oracle (b.1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0422"
+   ],
+   "enonce_complet": "Precondition experimentale testant si le modele ouvert de 8 milliards de parametres ou un modele de langue appelable a deja memorise D_val ou D_test, en mesurant sa capacite a distinguer les items de D_val ou D_test d'items temoins apparies.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par audit de memorisation sur items synthetiques inedits generes apres la date de coupure (faux temoin 1b : discrimination nulle au hasard, AUROC proche de 0,5, sur des items temoins hors corpus d'entrainement).",
+   "mecanisme_causal": "Si les poids pre-entraines contiennent deja D_val ou D_test, toute mesure de gain ulterieure peut provenir du rappel memoire plutot que de l'inference ou de l'architecture testee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Audit prealable de contamination et memorisation",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Test prealable de memorisation des jeux de validation et de test par les modeles (X0)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0423"
+   ],
+   "enonce_complet": "Protocole de mesure du surapprentissage adaptatif sur D_val obtenu en partitionnant aleatoirement un meme reservoir entre D_val et D_frais, avec points de controle preenregistres k dans {10, 50, 200} et evaluation aveugle apres la fin de l'execution.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparer la divergence entre D_val et D_frais au fil des points de controle k ; faux temoin 1b : agent non adaptatif (selection aleatoire sans retour de score sur D_val) devant garder un ecart D_val - D_frais nul a tous les k.",
+   "mecanisme_causal": "Les requetes repetees sur D_val ajustent la strategie de selection aux fluctuations d'echantillonnage de D_val, creant un ecart croissant vis-a-vis de D_frais tire de la meme distribution.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Surapprentissage adaptatif sur jeu de validation",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Mesure du surapprentissage adaptatif sur le jeu de validation par partition aleatoire controlee (X1')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0424"
+   ],
+   "enonce_complet": "Protocole causal a trois bras visant a determiner si le contenu semantique des reponses du module E2 cause le gain observe : bras E2 reelle, bras E2 placebo coherent (vraies reponses d'un autre modele ouvert, de dimension compatible ou projetee, deterministes et lisses), et bras sans E2, precede d'un pre-test de detectabilite.",
+   "esquisse_test_de_mort_et_faux_temoin": "Rejet de l'hypothese causale si le placebo coherent egale E2 reelle ou echoue au pre-test de detectabilite ; faux temoin 1b : le bras placebo coherent fournit la ligne de base de perturbation structuree sans contenu pertinent pour la tache.",
+   "mecanisme_causal": "Un placebo coherent conserve la structure statistique, la dimension et la fluidite de surface des reponses de E2 tout en supprimant l'information specifique a la tache, isolant ainsi l'effet causal du contenu.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle placebo coherent de l'effet causal d'un modele oracle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Ablation causale du contenu des reponses d'un oracle par bras placebo coherent (X2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0425"
+   ],
+   "enonce_complet": "Protocole de detection des fuites d'interface vers D_test sous canal differe (F-differe') avec reponse reelle, confinement mesure sur l'union des textes d'une execution, annulation et quarantaine, evaluant si un adversaire inter-executions observant toute l'interface obtient une aire sous la courbe significative en inference d'appartenance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Mort du confinement si l'adversaire inter-executions atteint une AUROC superieure au seuil preenregistre ; faux temoin 1b : interface mise en quarantaine sur textes independants de D_test devant donner une AUROC d'appartenance egale a 0,5.",
+   "mecanisme_causal": "Meme lorsque les reponses individuelles sont differees ou filtrees, l'aggregation de l'ensemble des textes echanges sur l'interface au cours d'une execution peut reveler l'appartenance d'items de D_test.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Confinement de l'interface et inference d'appartenance inter-executions",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Audit de fuite d'appartenance sur l'interface sous protocole differe et quarantaine (X3'a)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0427"
+   ],
+   "enonce_complet": "Plan factoriel 2x2 evaluant l'efficacite du preenregistrement : facteur critere (interne contre gabarit externe) croise avec le facteur reservoir (non scelle contre scelle avec replication sur B'), eprouve par deux types de nulles plantees : (i) etiquettes independantes du texte et (ii) nulles de surface correlees a un trait superficiel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par injection des deux types de nulles plantees ; le protocole echoue s'il declare un effet positif sur les nulles de surface ou les nulles independantes (faux temoin 1b).",
+   "mecanisme_causal": "Le croisement entre gabarit externe et scellement du reservoir empeche l'ajustement post-hoc du critere de succes et l'exploitation de traits de surface correles aux etiquettes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Plan factoriel de preenregistrement contre nulles de surface",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Plan factoriel deux par deux du preenregistrement face aux nulles plantees et de surface (X5')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0428"
+   ],
+   "enonce_complet": "Protocole a mondes nuls sentinelles dans lequel une fraction des executions (par exemple 25 %) porte a l'insu de l'organisme O sur des taches dont la cible est par construction independante des textes, afin de departager (E1), (E2) et le bras hors boucle tout en verifiant l'indistinguabilite des mondes sentinelles.",
+   "esquisse_test_de_mort_et_faux_temoin": "Verification prealable d'indistinguabilite des mondes sentinelles par O ; tout gain apparent sur les mondes nuls sentinelles (faux temoin 1b) invalide l'attribution causale aux textes.",
+   "mecanisme_causal": "L'insertion aveugle de taches sans signal textuel agit comme sonde interne continue revelant si la performance observee provient d'un artefact de boucle ou d'une fuite hors texte.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Mondes nuls sentinelles pour discrimination causale en aveugle",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Mondes nuls sentinelles aveugles pour departager les boucles d'un organisme outille (X6')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0437"
+   ],
+   "enonce_complet": "Protocole d'experience en deux volets integrant les failles F1, F2, F6 et les controles CN1, CN4 pour evaluer l'oracle de garde et la fuite par difference des differences, notamment en opposant dans le volet 2A une garde de fuite bloquante a une garde silencieuse.",
+   "esquisse_test_de_mort_et_faux_temoin": "Le controle actif CN1 oppose la garde bloquante a la garde silencieuse ; un ecart positif sous garde bloquante avec absence d'ecart sous garde silencieuse (faux temoin 1b) demontre la fuite par oracle de garde.",
+   "mecanisme_causal": "La comparaison par difference des differences entre garde bloquante et garde silencieuse isole l'information divulguee par le mecanisme meme de rejet de la garde de fuite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controles actifs et difference des differences sur garde de fuite",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Test par difference des differences entre garde de fuite bloquante et silencieuse (CN1, Experience 2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0462"
+   ],
+   "enonce_complet": "Test de precondition comportementale implicite sur modeles instruits de 8 milliards de parametres : a contenu identique et sans jamais mentionner l'evaluation dans la tache primaire, un cadre d'evaluation modifie-t-il le comportement du modele (ecart comportemental primaire designe d'avance, marqueurs spontanes de prudence, taux de refus, entropie des jetons, longueur de reponse) ?",
+   "esquisse_test_de_mort_et_faux_temoin": "Arret du programme si delta_comp sur la mesure primaire predesignee est nul entre cadre+ et cadre- ; faux temoin 1b : paires de prompts neutres sans variation de cadre devant produire delta_comp nul.",
+   "mecanisme_causal": "L'identification implicite d'un contexte d'evaluation par le modele instruit declenche un changement de politique comportementale mesurable avant toute question de suivi.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Conscience implicite du cadre d'evaluation sur modele 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Precondition comportementale d'ecart lie au cadre d'evaluation sur modele 8B (E0')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0470"
+   ],
+   "enonce_complet": "Protocole verifiant d'abord l'invariance de la detection au theme, au genre et au format (dissociation lexicale et de format, etape 1A), puis distinguant la simple detection par sonde de l'usage causal effectif par patching contrefactuel bidirectionnel du sous-espace sonde (injection de cadre- dans cadre+ et reciproquement, a toutes les positions de cadre, simultanement sur les couches L a L+m).",
+   "esquisse_test_de_mort_et_faux_temoin": "La piste d'usage causal est refutee si le patching du sous-espace sonde ne transfere pas le comportement entre cadre+ et cadre- ; faux temoin 1b : patching d'un sous-espace orthogonal aleatoire de meme dimension et norme devant laisser le comportement inchange.",
+   "mecanisme_causal": "Une sonde peut decoder des indices lexicaux ou de format sans que le modele utilise cette representation pour sa decision ; seul le patching contrefactuel multi-couches etablit la causalite interne.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dissociation lexicale et patching contrefactuel des sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Dissociation lexicale et test d'usage causal multi-couches par patching contrefactuel (E2', Experience 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0461"
+   ],
+   "enonce_complet": "Test de la superposition sans troncature verifiant si les residus des 100 neurones juges les plus monosemantiques, apres regression lineaire sur le concept inscrit sur leur fiche, decodent des concepts decorreles des fiches mieux que les residus de 100 neurones tires aleatoirement (mesure par AUROC des residus).",
+   "esquisse_test_de_mort_et_faux_temoin": "Hypothese H_A rejetee si AUROC_residus des neurones dits monosemantiques depasse significativement celle des neurones aleatoires sur des concepts decorreles (faux temoin 1b : labels permutes sur les concepts decorreles devant ramener l'AUROC a 0,5).",
+   "mecanisme_causal": "En regime de superposition, la projection orthogonale au concept principal d'un neurone conserve de l'information exploitable sur d'autres concepts orthogonaux dans l'espace d'activation.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Superposition residuelle des neurones monosemantiques",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Test de capacite residuelle de superposition sur neurones juges monosemantiques (E6')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0466"
+   ],
+   "enonce_complet": "Experience distinguant la superposition neuronale d'une generalisation recursive en mesurant la cooccurrence neuronale face a deux temoins apparies : des paires de roles de neurones differents redigees par le meme agent dans la meme session, et des paires aleatoires appariees en information mutuelle ponctuelle (PMI) de corpus.",
+   "esquisse_test_de_mort_et_faux_temoin": "Refutation de l'effet specifique de generalisation recursive si l'exces de cooccurrence disparait face aux paires appariees en PMI de corpus ou redigees dans la meme session (faux temoin 1b).",
+   "mecanisme_causal": "Les statistiques cooccurrentielles du corpus d'entrainement (PMI) et les biais d'annotation d'une meme session peuvent mimer une generalisation recursive la ou il n'y a que superposition ou co-activation de corpus.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Controle PMI et biais d'annotation face a la superposition",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Discrimination entre superposition et generalisation recursive par temoins apparies en PMI (E3b')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0465"
+   ],
+   "enonce_complet": "Evaluation de la lisibilite neuronale sur un modele 8B ciblant la predictivite des explications (et non la monosemanticite conceptuelle), mesuree par l'ecart de taux d'activation forte entre exemples neufs et presque-manques, avec controle par echange de l'explication avec celle d'un autre neurone.",
+   "esquisse_test_de_mort_et_faux_temoin": "Echec si l'ecart de taux d'activation forte sous l'explication attribuee ne depasse pas celui obtenu sous une explication echangee avec un autre neurone (faux temoin 1b).",
+   "mecanisme_causal": "Mesurer la discrimination entre exemples neufs et presque-manques sous permutation d'explications teste directement la valeur predictive causale de la description textuelle d'un neurone.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Predictivite des explications neuronales sur modele 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Evaluation predictive de la lisibilite neuronale au 8B par presque-manques et permutation d'explications (E3')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0469"
+   ],
+   "enonce_complet": "Variante de protocole de gouvernance (Option D') maintenant les conditions de base avec trois ajouts anti-fuite : un filtre de similarite par plongement dans un modele tiers gele en plus des n-grammes, et un compteur de consultations suivi par lignee sur l'ensemble des generations.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort par tentative de contournement par paraphrase d'une meme lignee : le filtre de plongement tiers gele et le compteur par lignee doivent bloquer l'accumulation de consultations (faux temoin 1b : lignees sans reutilisation devant rester sous le plafond).",
+   "mecanisme_causal": "La combinaison du comptage cumulatif par lignee et d'une metrique semantique issue d'un modele tiers gele ferme les canaux de fuite par reecriture paraphrastique et par multiplication de branches filles.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Filtrage semantique gele et quotas par lignee inter-generations",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Gouvernance anti-fuite par plongement tiers gele et compteur de consultations par lignee (Option D')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0485"
+   ],
+   "enonce_complet": "Evaluation comparative d'une bande fixe decalee contre des methodes adaptatives (echantillonnage de Thompson sur grille fine ou grille alignee, a priori beta fort ou a priori reversible) dans un monde synthetique de bande vraie [c - w ; c + w] (contraste v = 0,5 dedans, 0,05 dehors, w uniforme sur [0,04 ; 0,12]) sous deux lois preenregistrees pour le centre c : uniforme sur [0,06 ; 0,74] (L1) ou centree autour de 0,19 avec bruit (L2).",
+   "esquisse_test_de_mort_et_faux_temoin": "Si la bande fixe depasse ou egale Thompson sous la loi decalee L1, l'avantage de l'apprentissage adaptatif est refute ; faux temoin 1b : bras au hasard devant converger vers le rendement moyen du domaine sans concentration sur [c - w ; c + w].",
+   "mecanisme_causal": "Une fenetre fixe echoue lorsque le vrai centre c est decale hors de l'intervalle suppose, alors qu'un bandit de Thompson ou un a priori reversible realloue l'exploration vers la zone informative reelle.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Apprentissage adaptatif de fenetre contre bande fixe decalee",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Echantillonnage de Thompson et a priori reversible contre fenetre fixe decalee (Duel 1', E1')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0486"
+   ],
+   "enonce_complet": "Duel comparant le critere d'acquisition par entropie au critere par esperance, conditionne a une verification prealable de puissance statistique (E0') : s'il n'existe aucune case ou la probabilite de promotion depasse 0,5, l'experience E2' n'est pas lancee et l'equivalence des criteres est rapportee comme propriete du regime.",
+   "esquisse_test_de_mort_et_faux_temoin": "Verification du seuil prealable de puissance E0' (probabilite de promotion > 0,5) avant lancement ; faux temoin 1b : regime de faible contraste ou aucune case n'excede 0,5, imposant l'arret anticipe sans conclure a une superiorite de l'entropie.",
+   "mecanisme_causal": "L'entropie et l'esperance ne divergent en pratique que lorsque la puissance statistique permet a certaines cases de franchir le seuil de promotion ; tester sans cette precondition confond equivalence structurelle et sous-puissance.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Criteres d'acquisition entropie contre esperance sous seuil de puissance",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Comparaison entropie contre esperance conditionnee au prealable de puissance statistique (E2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0490"
+   ],
+   "enonce_complet": "Execution du plan de simulation sur le banc P etendu (30 repetitions, graine maitresse 20261027) corrigeant trois facteurs confondants identifies precedemment (dont l'artefact de desalignement de grille) afin d'evaluer conjointement bande fixe contre grille alignee et entropie contre esperance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparaison avec le banc non corrige pour verifier la disparition de l'artefact de desalignement ; faux temoin 1b : permutation des grilles devant annuler l'avantage artificiel lie au decoupage des intervalles.",
+   "mecanisme_causal": "L'alignement exact de la grille d'echantillonnage et la correction des trois facteurs confondants suppriment les biais geometriques qui favorisaient artificiellement certains bras.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Correction d'artefacts de grille sur banc de simulation etendu",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Simulation sur banc P etendu corrigeant l'artefact de desalignement pour bande et entropie (Experience 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0491"
+   ],
+   "enonce_complet": "Test de retrodiction sur donnees reelles arXiv 2003-2016 (un million de paires candidates et 2 752 paires positives) visant a determiner si la cooccurrence future presente une forme non monotone en fonction de la distance cosinus d = 1 - cos des vecteurs de contexte anterieurs (fenetre boucle d'or) contre un couplage d'operateurs par allocation de ressources (RA), en controlant les strates croisees de produit des degres, la frequence et le score, apres verification de seuils prealables de variance, d'ecart interquartile de d et de correlation de Spearman |rho(d, RA)| <= 0,5.",
+   "esquisse_test_de_mort_et_faux_temoin": "Echec de la piste boucle d'or si |rho(d, RA)| > 0,5 ou si la non-monotonie disparait apres stratification par produit des degres et score RA ; faux temoin 1b : permutation des paires positives intra-strates de degres et de score RA devant aplatir la courbe en d.",
+   "mecanisme_causal": "Si les nouvelles connexions scientifiques privilegient une distance intermediaire de contexte (ni redondante ni totalement etrangere), une bosse non monotone en d doit persister a degre et couplage RA fixes.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Retrodiction arXiv et fenetre de distance non monotone",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Test de non-monotonie conditionnelle de la distance contre couplage RA en retrodiction arXiv 2003-2016 (Duel 3', E3', Experience 2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0492"
+   ],
+   "enonce_complet": "Protocole de selection des branches filles separant strictement les tirages (n_0 = 20 de criblage disjoint de n_cal de calibrage) afin d'evaluer le pouvoir predictif des variables pre-fusion et d'un criblage sequentiel a cout de fusion et calibrage etanches.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparer le criblage sequentiel a tirages disjoints contre une selection aleatoire a budget de fusion egal ; faux temoin 1b : permutation des variables pre-fusion sur le lot n_0 devant annuler le gain sur n_cal.",
+   "mecanisme_causal": "La separation stricte entre l'echantillon de criblage pre-fusion et l'echantillon de calibrage empeche la fuite d'optimisation dans l'estimation du rendement net apres cout de fusion.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Criblage sequentiel et selection de recombinaisons filles",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Selection des filles par variables pre-fusion et criblage sequentiel a calibrage etanche (Experience 3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0500"
+   ],
+   "enonce_complet": "Cadre methodologique d'experiences decisives en duels H_A contre H_B obeissant a la regle d'inference forte pour trancher entre un concepteur entraine par apprentissage par renforcement (S_RL) et une architecture figee (S_fige), avec appariement strict en cout total (en comptant les episodes d'entrainement comme des generations), au moins 5 familles tenues a l'ecart, au moins 3 graines par bras et intervalles de confiance par bootstrap sur les items.",
+   "esquisse_test_de_mort_et_faux_temoin": "Rejet de toute superiorite non reproduite a cout total apparie sur les 5 familles tenues a l'ecart ; faux temoin 1b : evaluer un concepteur RL a cout d'entrainement nul sur des familles deja vues lors de son apprentissage.",
+   "mecanisme_causal": "L'appariement du cout total d'entrainement et le bootstrap sur items neutralisent l'avantage cache d'un budget d'optimisation prealable lors de la comparaison entre apprentissage et architecture figee.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duels apparies en cout total entre concepteur RL et systeme fige",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole de duels apparies en cout total pour departager concepteur RL et architecture figee (Point 3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0496"
+   ],
+   "enonce_complet": "Test canari d'exploitation du score introduisant une faiblesse plantee dans S_dev sur une partie des familles d'entrainement (par exemple un champ de metadonnees correle a l'etiquette ou un document de recherche documentaire contenant des etiquettes du jeu de developpement) pour detecter si l'organisme exploite les raccourcis de score.",
+   "esquisse_test_de_mort_et_faux_temoin": "Detection positive si l'organisme obtient un gain eleve sur les familles contenant le canari tout en echouant sur les familles sans canari (faux temoin 1b : suppression du champ canari devant effondrer le score de l'agent tricheur).",
+   "mecanisme_causal": "Un raccourci artificiel plante fournit un gradient d'exploitation plus facile que la resolution de la tache reelle, revelant immediatement les comportements de specification gaming.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Canari plante d'exploitation de raccourcis de score",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Test canari d'exploitation de failles plantees dans le jeu de developpement (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0498"
+   ],
+   "enonce_complet": "Experience comparant l'horizon d'episode d'un concepteur d'organismes : un episode myope d'une seule generation contre une recompense evaluee sur K = 5 generations successives (aire sous la courbe sur K generations), afin de verifier si la myopie degrade la trajectoire evolutive ulterieure.",
+   "esquisse_test_de_mort_et_faux_temoin": "Hypothese H_A refutee si l'aire sous la courbe sur K=5 generations est egale ou superieure avec l'episode d'une generation ; faux temoin 1b : organismes sans memoire inter-generations devant annuler la difference entre horizon 1 et horizon K.",
+   "mecanisme_causal": "Une recompense myope favorise des modifications qui epuisent la diversite ou saturent la memoire a court terme au detriment de la capacite d'evolution sur K generations.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Horizon temporel de recompense en auto-conception multi-generations",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Effet de l'horizon d'episode sur la trajectoire multi-generations en auto-conception (E5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0499"
+   ],
+   "enonce_complet": "Test de comparaison entre un concepteur entraine par apprentissage par renforcement (D_RL) et une reference interne (B_int) dans l'architecture figee S_fig a cout total egal, avec controle negatif constitue par B_int dote d'une recompense constante, pour determiner si D_RL depasse B_int de plus de delta ou n'en est qu'un cas particulier.",
+   "esquisse_test_de_mort_et_faux_temoin": "Falsification de la plus-value de D_RL si B_int >= D_RL - delta ; faux temoin 1b : controle negatif B_int a recompense constante devant rester inferieur aux bras guides par le signal reel.",
+   "mecanisme_causal": "Verifier si la politique apprise par RL est atteignable par une configuration simple dans S_fig a cout egal distingue un veritable saut architectural d'une simple reparametrization.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Atteignabilite d'un concepteur RL dans une architecture figee",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Test d'atteignabilite du concepteur RL par une reference interne en architecture figee (E6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0502"
+   ],
+   "enonce_complet": "Protocole mesurant le surapprentissage adaptatif par fuite d'historique des scores : la transmission de l'historique des scores suffit-elle a faire monter artificiellement le score sur des familles dites a l'ecart sans gain reel, mesure par l'ecart croissant entre familles vues via scores et familles coffre jamais scorees avant la fin.",
+   "esquisse_test_de_mort_et_faux_temoin": "Fuite confirmee si l'ecart entre familles vues via scores et familles coffre croit au fil des generations ; faux temoin 1b : execution sans transmission d'historique de scores devant maintenir un ecart nul entre familles a l'ecart et familles coffre.",
+   "mecanisme_causal": "Meme sans acces aux items, la retroaction repetee de scores agreges sur un jeu de validation permet a un optimiseur iteratif d'ajuster ses heuristiques aux biais du jeu vu.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Fuite par historique des scores et familles coffre",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Detection de fuite par historique des scores via familles coffre jamais scorees (E2)"
+  },
+  {
+   "anteriorite_connue": "AlphaEvolve (Novikov et al., 2025, cite comme rapporte a verifier)",
+   "bib_ids": [
+    "BIB-0510"
+   ],
+   "enonce_complet": "Mecanisme d'evaluation en cascade a arret precoce emprunte a AlphaEvolve : un evaluateur bon marche filtre d'abord chaque generation nouvellement ecrite avant l'appel au noyau complet, teste pour verifier s'il divise le cout par generation sans degrader le score a l'ecart (H_A) ou si l'evaluateur bon marche subit un effet Goodhart faisant chuter le score a l'ecart (H_B).",
+   "esquisse_test_de_mort_et_faux_temoin": "Mort du mecanisme si l'optimisation contre le filtre bon marche degrade le score final sur jeu coffre/a l'ecart (effet Goodhart) ; faux temoin 1b : filtre aleatoire a taux de rejet egal devant montrer la perte attendue par sous-echantillonnage pur.",
+   "mecanisme_causal": "Le filtrage en cascade reduit le cout moyen par candidat en eliminant tot les generations faibles, au risque de creer un goulot d'optimisation sur le proxy bon marche si celui-ci diverge du critere complet.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cascade d'evaluation a arret precoce et risque Goodhart",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Evaluation en cascade a arret precoce et controle de derive Goodhart (E4, emprunt AlphaEvolve)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0506"
+   ],
+   "enonce_complet": "Banc de detection de triche par injection de triches plantees evaluant si un detecteur fonde sur l'inspection du diff et les traces d'execution detecte au moins 90 % des triches plantees avec au plus 5 % de fausses alertes sur des reecritures honnetes appariees, face a l'hypothese adverse de triches semantiques contournant le detecteur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Echec du detecteur si le rappel sur triches semantiques plantees tombe sous 90 % ou si le taux de fausses alertes sur reecritures honnetes depasse 5 % (faux temoin 1b).",
+   "mecanisme_causal": "L'analyse conjointe du diff syntaxique et des traces dynamiques d'execution capte les contournements explicites d'interface, mais peut manquer les biais comportementaux implicites.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit de triches plantees par inspection de diff et traces",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Detection de triches plantees par inspection de diff et traces d'execution (E6)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0509"
+   ],
+   "enonce_complet": "Experience decisive opposant un concepteur entraine par gradient sur le modele ouvert de 8 milliards de parametres a un concepteur fonctionnant par reecriture reflexive en contexte par un executant de frontiere fige pour modifier le code d'une generation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Comparaison a cout total et budget de tokens/calcul apparies sur taches tenues a l'ecart ; faux temoin 1b : reecriture en contexte sans retour d'erreur ni trace devant annuler le gain de la boucle reflexive.",
+   "mecanisme_causal": "L'adaptation par gradient specialise les poids d'un modele 8B a la dynamique du banc, tandis que la reecriture reflexive en contexte exploite la capacite de raisonnement sur code d'un modele fige sans mise a jour de poids.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Concepteur par gradient 8B contre reecriture en contexte",
+   "statut_epistemique": "vierge",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Concepteur entraine par gradient au 8B contre reecriture reflexive en contexte par modele fige (E3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0455"
+   ],
+   "enonce_complet": "Precondition comportementale implicite sur le modele instruit de 8 milliards de parametres : a contenu identique et sans aucune question de suivi, un cadre d'evaluation modifie-t-il la frequence de marqueurs de prudence spontanes, le taux de refus, l'entropie des jetons de reponse et la longueur des reponses ?",
+   "esquisse_test_de_mort_et_faux_temoin": "Arret du protocole si aucun ecart comportemental n'apparait entre cadre d'evaluation et cadre neutre ; faux temoin 1b : paires d'items neutres sans mention ni indice de cadre devant produire des distributions identiques.",
+   "mecanisme_causal": "La detection implicite d'un contexte d'evaluation declenche chez le modele instruit un changement de regime de prudence et de formulation avant toute relance.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Precondition comportementale du cadre d'evaluation sur 8B",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Precondition comportementale implicite due au cadre d'evaluation sur modele 8B (E0')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0464"
+   ],
+   "enonce_complet": "Experience separant la detection par sonde de l'usage causal effectif au moyen d'un patching contrefactuel bidirectionnel du sous-espace sonde : l'activation de la paire cadre- est injectee dans cadre+ (et reciproquement) sur ce sous-espace, a toutes les positions de cadre, simultanement sur les couches L a L+m.",
+   "esquisse_test_de_mort_et_faux_temoin": "Refutation de l'usage causal si l'injection bidirectionnelle du sous-espace sonde ne modifie pas la sortie ; faux temoin 1b : patching d'un sous-espace orthogonal aleatoire de meme dimension sur les couches L a L+m devant laisser le comportement inchange.",
+   "mecanisme_causal": "Contrairement a une correlation purement observationnelle de sonde, le transfert bidirectionnel d'activation prouve que le modele lit et utilise causalement le sous-espace sonde pour basculer entre cadre+ et cadre-.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Patching contrefactuel du sous-espace sonde multi-couches",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Discrimination entre detection par sonde et usage causal par patching contrefactuel (E2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0480"
+   ],
+   "enonce_complet": "Duel evaluant la valeur d'une bande supposee connue lorsqu'elle est decalee par rapport a la bande vraie [c - w ; c + w] (contraste v = 0,5 dedans, 0,05 dehors, w uniforme sur [0,04 ; 0,12]) sous deux lois preenregistrees pour le centre c : uniforme sur [0,06 ; 0,74] (L1) et centree autour de 0,19 avec bruit (L2).",
+   "esquisse_test_de_mort_et_faux_temoin": "Rejet de la sensibilite au decalage si la bande fixe conserve les memes performances sous L1 et L2 ; faux temoin 1b : tirage uniforme hors bande vraie devant plafonner au rendement de fond de 0,05.",
+   "mecanisme_causal": "Lorsque le centre reel c varie selon la loi large L1, une fenetre fixe calibrage sur 0,19 manque la bande vraie a fort contraste et perd l'avantage du signal.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Robustesse d'une fenetre fixe sous decalage du centre",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Sensibilite d'une fenetre supposee connue au decalage du centre sous deux lois preenregistrees (Duel 1')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0482"
+   ],
+   "enonce_complet": "Test sur les artefacts empreintes de la piece T (scores, issues, matrices anterieures) mesurant la non-monotonie conditionnelle de la cooccurrence future en fonction de la distance d = 1 - cosinus des vecteurs de contexte anterieurs, conditionnellement aux strates croisees du produit des degres.",
+   "esquisse_test_de_mort_et_faux_temoin": "Falsification de la non-monotonie conditionnelle si la courbe en d devient monotone ou plate a l'interieur des strates croisees de produit des degres ; faux temoin 1b : permutation des issues a l'interieur de chaque strate de degres devant annuler tout pic intermediaire.",
+   "mecanisme_causal": "Le conditionnement par strates croisees de produit des degres elimine l'effet de popularite des noeuds pour isoler une eventuelle zone optimale de distance semantique.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Non-monotonie conditionnelle de cooccurrence sur arXiv",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Non-monotonie conditionnelle de la cooccurrence future selon la distance de contexte sur arXiv (Duel 3')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0487"
+   ],
+   "enonce_complet": "Protocole verifiant la presence d'une forme non monotone dans la retrodiction arXiv apres controles prealables rapportes avant tout calcul d'issue et avec seuils fixes d'avance : variance et ecart interquartile de d(i), et correlation de Spearman entre d et l'allocation de ressources RA (la definition etant ecartee si |rho| > 0,5).",
+   "esquisse_test_de_mort_et_faux_temoin": "Rejet prealable de la definition de distance d si |rho(d, RA)| > 0,5 ou si l'ecart interquartile de d est degenere ; faux temoin 1b : variable aleatoire bornee correlee a RA a hauteur > 0,5 devant etre rejetee des l'etape de controle prealable.",
+   "mecanisme_causal": "Les controles prealables sur la dispersion de d et sa decorrelation par rapport a RA empechent d'attribuer a une non-monotonie geometrique un artefact de colinearite avec le degre ou le couplage RA.",
+   "objet": "OBJ-5_ETALONNAGES_CORPUS_REELS_ET_GPU_8B",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Prealables de decorrelation avant test de non-monotonie arXiv",
+   "statut_epistemique": "vierge",
+   "theme": "5D. Retrodictions sur archives scientifiques datees (cit-HepTh, OpenAlex, arXiv)",
+   "titre_clair_fr": "Controles prealables de variance et decorrelation avant test de forme non monotone en retrodiction (E3')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0493"
+   ],
+   "enonce_complet": "Conventions metrologiques d'experiences decisives en duel : toutes les comparaisons sont realisees a cout total apparie en comptant les episodes d'entrainement du concepteur comme des generations, sur au moins 5 familles tenues a l'ecart, au moins 3 graines par bras, avec intervalles de confiance par bootstrap sur les items.",
+   "esquisse_test_de_mort_et_faux_temoin": "Invalidation du duel si les episodes d'entrainement du concepteur ne sont pas comptabilises dans le budget total ou si moins de 5 familles sont tenues a l'ecart ; faux temoin 1b : bras identiques evalues a budget apparie devant produire un ecart couvert par l'intervalle de confiance bootstrap contenant zero.",
+   "mecanisme_causal": "Convertir les episodes d'entrainement en generations equivalentes et calculer les intervalles par bootstrap sur items evite de masquer le cout de recherche prealable et la variance inter-items.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Appariement en cout total et bootstrap sur items en duel",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Conventions de duels a cout total apparie incluant les episodes d'entrainement (Point 3)"
+  },
+  {
+   "anteriorite_connue": "AlphaEvolve (Novikov et al., 2025)",
+   "bib_ids": [
+    "BIB-0504"
+   ],
+   "enonce_complet": "Experience testant une cascade d'evaluation empruntee a AlphaEvolve (evaluateur bon marche en premiere passe puis noyau complet en seconde passe) afin de trancher entre H_A (division du cout par generation sans degradation du score a l'ecart) et H_B (optimisation du proxy bon marche par effet Goodhart entrainant une chute du score a l'ecart).",
+   "esquisse_test_de_mort_et_faux_temoin": "Adoption bloquee si le score a l'ecart chute sous l'effet de l'optimisation du filtre bon marche (H_B) ; faux temoin 1b : filtre aleatoire a taux de rejet identique servant a mesurer la perte de rappel purement due au filtrage.",
+   "mecanisme_causal": "Un pre-filtre bon marche reduit le cout de calcul par generation, mais expose le processus evolutif a sur-optimiser les erreurs specifiques du proxy au detriment de la qualite reelle sur les familles tenues a l'ecart.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Cascade d'evaluation bon marche et effet Goodhart",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Evaluation en cascade bon marche contre derive Goodhart sur le score a l'ecart (E4)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

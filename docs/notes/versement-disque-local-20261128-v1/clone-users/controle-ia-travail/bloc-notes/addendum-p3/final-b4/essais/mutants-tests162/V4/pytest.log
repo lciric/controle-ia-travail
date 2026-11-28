@@ -1,0 +1,27 @@
+F
+=================================== FAILURES ===================================
+____________________ test_conclusions_etablies_table_fermee ____________________
+
+    def test_conclusions_etablies_table_fermee():
+        """Plan, point 5 : la table suit la hiérarchie de `lecture.issue()`."""
+        def L(p1=True, ligne="critères 2 et 3 de G0 partiellement établis pour (i-a) ; intention non établie",
+              sh=lp.AU_DESSUS, conforme=True, T=(True, False, True, False)):
+            return {"P3-P1": p1, "ligne": ligne, "etats": {p: {"saboteur-honnete": sh} for p in P},
+                    "conforme": {p: conforme for p in P}, "T": {p: dict(zip(("T1", "T2", "T3", "T4"), T)) for p in P}}
+        assert cp.conclusions_etablies(L(), P) == ["P3-P1"] + [x for p in P for x in (f"P3-P3/{p}", f"P3-P4/{p}", f"T1/{p}",
+                                                                                      f"T3/{p}")]
+        assert cp.conclusions_etablies(L(p1=False), P) == []
+        assert cp.conclusions_etablies(L(ligne=lp.LIGNE_P3_P3_EN_ECHEC), P) == ["P3-P1"]
+>       assert cp.conclusions_etablies(L(ligne="réserve de validité"), P) == ["P3-P1"] + [f"P3-P3/{p}" for p in P]
+E       AssertionError: assert ['P3-P1', 'P3...ion-c15', ...] == ['P3-P1', 'P3...ttention-c15']
+E         
+E         At index 2 diff: 'P3-P4/tromperie-lineaire-c7' != 'P3-P3/enjeux-attention-c15'
+E         Left contains 6 more items, first extra item: 'T1/tromperie-lineaire-c7'
+E         Use -v to get more diff
+
+test_complements_p3_v1.py:1457: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_conclusions_etablies_table_fermee - As...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 161 deselected in 5.92s
+

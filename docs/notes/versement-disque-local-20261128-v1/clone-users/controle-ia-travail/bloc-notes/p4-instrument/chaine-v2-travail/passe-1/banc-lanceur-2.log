@@ -1,0 +1,50 @@
+script éprouvé : lancer_p4_v1.sh d93d0da44e2d724fd88ce75954b5143020f9e23a8022e6326be115e26215e952
+script éprouvé : verifications_p4_v1.py af82859e3cd6056ae355a912c1617709cef21bf7e0d40b7c432e5a3bb8568c8b
+script éprouvé : essais_lanceur_p4_v1.sh 1c80fe4b45dc422cac5f8481e53a39cf324cbdd8c3fc238d68fc28e85b852173
+lignes changées dans la copie du lanceur : 3 (DEPOT, B, V)
+C = 6bf222ba821028ea4dfa257e9cc53ddf22ad4801
+S = 120d1f4e4531fbd06135abdd5010cf1d794b8133
+P00-sain : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+    > etiquette p4-v1
+    > env COMMIT présent
+    > env PREREG=prereg/P4-instrument-v1.md
+    > env BRANCHE=calcul/p4-reel-v1
+    > env DEPOT_URL=https://github.com/lciric/controle-ia-travail.git
+    > go GO-2026-10-20-07
+    > plafond de la surveillance = création + 9 600 s : True ; contrôle à cinq minutes = création + 180 à 300 s : False ; branche calcul/p4-reel-v1 : True ; PREREG et DEPOT_URL : True ; étiquette p4-v1 : True ; ETUDE absente : True ; GO GO-2026-10-20-07 écrit et porté par la création : True ; GO et dépense conformes (module) : True ; contrôles du module (ligne de commande) : True ; accord de Lazar du jour relu deux fois : True ; GO et dépense relus juste avant la création : True ; marqueur écrit avant la création : True ; arrêt, récupération et traces écrits : True ; instance 56799469 tolérée (arrêtée) : True ; borne de l'étape écrite : True ; destruction après la récupération écrite : True ; crédit sur 3 heures : True
+    P00 : vérifications du cas sain : NON CONFORME
+P01-creee-mais-code-1 : code 4 ; créations factices 1 ; CONFORME
+    | succès : True ; identifiant 99999999 ; message : 
+    | création douteuse (statuts 1 0 0) : vérifier « vastai show instances », sans --raw
+P02-reponse-illisible : code 4 ; créations factices 1 ; CONFORME
+    | réponse illisible (300 premiers caractères masqués dans reponse-masquee.txt) ; vérifier par « vastai show instances », sans --raw
+    | création douteuse (statuts 0 4 0) : vérifier « vastai show instances », sans --raw
+P03-echec-creation : code 4 ; créations factices 1 ; CONFORME
+    | succès : False ; identifiant None ; message : non
+    | création douteuse (statuts 0 4 0) : vérifier « vastai show instances », sans --raw
+P04-heure-2345-avant-creation : code 3 ; créations factices 0 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | heure UTC 2345 : pas de création entre 23:30 et 00:00 (T-7)
+P04b-heure-2340-au-depart : code 3 ; créations factices 0 ; CONFORME
+    | heure UTC 2340 : pas de création entre 23:30 et 00:00 (T-7)
+P04c-heure-2329-au-depart : code 0 ; créations factices 1 ; CONFORME
+    | prix 1.1000 USD/h ; autres projets en marche 0.0000 USD/h ; crédit 20.00 USD ; minimum 4.50 USD (3 h)
+    | succès : True ; identifiant 99999999 ; message : 
+P05-place-traces : code 3 ; créations factices 0 ; CONFORME
+    | place disque des traces : 2900000 ko
+P05b-place-bloc-notes : code 3 ; créations factices 0 ; CONFORME
+    | place disque : 2900000 ko libres (3 Go exigés)
+P06-controles-ko : code 2 ; créations factices 0 ; CONFORME
+    | KO  essai : faute simulée
+    | contrôles avant dépense en échec : pas de création
+P07-offre-sans-prix : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07b-prix-au-dessus-du-devis : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c
+P07c-processeur-autre : code 3 ; créations factices 0 ; CONFORME
+    | accord de Lazar : R-999 : accord de Lazar du 2026-10-20 pour le lancement de P4-instrument (cite GO-2026-10-20-07) ; dépense consignée 47,83 USD + borne 5,41 USD = 53,24 USD < 150 USD : confor
+    | aucune offre conforme au filtre du plan au plus 1.3 USD/h (au moins 16 cœurs effectifs, 128000 Mo de mémoire vive, téléchargement au plus 0.05 USD/Go, stockage au plus 0.03 USD/h) : pas de c

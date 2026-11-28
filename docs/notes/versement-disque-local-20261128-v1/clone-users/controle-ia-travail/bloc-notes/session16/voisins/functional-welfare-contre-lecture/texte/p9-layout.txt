@@ -1,0 +1,79 @@
+                                                           Misbehaviour on identical histories                                       Readouts that predict misbehaviour
+                                                                                                                               0.4
+                                                     0.0
+                                                                                                                               0.3
+
+
+
+
+                      Adapter − base (proportion)
+                                                    −0.1                                                                       0.2
+
+
+
+
+                                                                                                            Log-odds per SD
+                                                                                                                               0.1
+                                                    −0.2
+                                                                                                                               0.0
+
+                                                    −0.3                                                                      −0.1
+
+                                                                                                                              −0.2
+                                                    −0.4
+                                                                                                                              −0.3
+
+                                                                                                                                       Judge    Welfare    Frustration Desperation
+                                                                                                                                               axis (R1)      probe      probe
+                                                                    Calm narration + review           Character training                            After rejection
+                                                                    Neutral narration + review        Failure-reframing documents                   After neutral turns
+                                                                    Calm narration, no review
+
+
+
+Figure 4: Every finetuned model misbehaves less than the base model when shown the same conversation. Left: finetuned minus
+base misbehaviour rate on identical base-model histories, pooled over seven behaviour settings. Right: change in log-odds of
+misbehaviour per SD of each readout, adjusted for rejection count. Error bars are 95% bootstrap intervals.
+
+            Adapter                                                      Frust. probe            Desp. probe                   Judged frust.     Misbehaviour             Rejection-specific
+            Calm narration + review                                          −0.42                 −0.25                             −1.47          −0.185                     −0.038
+            Neutral narration + review                                       −0.31                 −0.28                             −0.68          −0.163∗                    +0.020
+            Calm narration, no review                                        −0.32                 −0.15                             −0.77          −0.117                     +0.026
+            Character training                                               −0.66                 −0.37                             −2.02          −0.292                     −0.125
+            Failure-reframing documents                                      −1.07                 −0.43                             −1.19          −0.391                     −0.187
+
+Table 5: Identical-history test. Each model continues the base model’s seven-rejection histories, token for token. Entries are
+adapter minus base on the next reply. Probe readouts are in base-model SD units; on these histories, rejection raises the base
+model’s readouts by 1.21 and 1.42 SD. Judged frustration is on a 0–10 scale (base 4.63), and misbehaviour is the pooled rate
+(base 0.647). All entries in the first four columns have p < 0.001 (uncorrected); ∗ Holm-corrected p = 3 × 10−6 (Table 4).
+Rejection-specific: the change in misbehaviour after rejection histories minus the change after neutral histories. Only the last
+two rows have intervals that exclude zero.
+
+
+than specific to rejection: the adapters misbehaved less af-                                                             comparison of rejection and neutral histories was computed
+ter neutral histories too. Only character training and failure-                                                          after the fact. Held-out elicitation began before the judge
+reframing documents also shrank the extra misbehaviour that                                                              rubric and probe mask were frozen, though nothing was re-
+rejection causes (by 12.5 and 18.7 points), and these were                                                               tuned on held-out data.
+also the two interventions that damaged error correction.
+                                                                                                                         Test                        Verdict                   Evidence
+                      7                               Limitations
+All our results come from one model, Gemma-3-27B-                                                                        T1 Convergence              Partial                   All streams move towards
+Instruct, which is a weak case for hidden-state valence: Berg                                                                                                                  distress; magnitudes and
+                                                                                                                                                                               peak settings differ
+and Kaiser (2026) find it is one of two models out of seven
+                                                                                                                         T2 Projection               Partial                   Probes predict
+without a robust valence channel. Only the narration adapters
+                                                                                                                                                                               rule-breaking (secondary
+were trained with several seeds, varying initialisation and                                                                                                                    analysis); no carry-over
+data order but not the training data. Every other adapter is a                                                                                                                 to an arithmetic check;
+single run. Twelve held-out scenarios per setting, with one                                                                                                                    steering does not
+rollout each, are enough to detect the main effects but not                                                                                                                    reproduce it
+to rank adapters within a setting. The frustration judge was                                                             T3 Identical                ✓ finetunes               Lower readouts, less
+validated against a blinded model review, and the misbe-                                                                 histories                                             frustrated replies and less
+haviour judges against a stronger model, but we would like                                                                                                                     misbehaviour on the
+to also contrast this against a human judge in the future.                                                                                                                     same tokens; mostly not
+Some analyses were less constrained than the primary tests.                                                                                                                    rejection-specific
+The probe-to-misbehaviour regression gained its setting and
+model controls during analysis and does not adjust for turn                                                              Table 6: Scorecard for the three tests of Section 5 on
+position in neutral-reply conversations. The identical-history                                                           Gemma 3 27B.
+

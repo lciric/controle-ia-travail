@@ -1,0 +1,53 @@
+this study, we measure representations of pain in LLMs and conduct further manipulations, combined with
+behavioral tests, to examine their functional properties.
+
+LLM pain?      In our framework, pain1 refers to a certain kind of internal state that is typically aversive and
+disliked by its subject; causally associated with behaviors such as avoidance, attempts to terminate or reduce
+the state, and disruption of normal reasoning or behavior. We use a wide notion of pain that includes not only
+physical pain but also, for example, emotional (grief) or social (humiliation) pain. However, we assume that
+pain is distinct from generic negative valence and from states such as fear, anger, or sadness. Our aim is to
+find a uniform representation of pain in LLMs. We then test to what extent this representation functions
+as a state of pain would be expected to function. For this reason, the representation must characterize pain
+as something happening now and “to me,” rather than merely information that something bad will happen,
+might happen, or is happening to someone else.
+
+Why does LLM pain matter?       Discerning pain representations in LLMs could help explain the mechanisms
+underlying their fluent conversational behavior regarding negative experiences. If these states moreover bear
+functional similarities to human (or animal) pain, they could play analogous roles for LLM performance, e.g.
+involvement in learning to avoid producing certain outcomes (avoidance learning). The presence of pain-like
+states could be a challenge as well as an opportunity for AI safety, since such states could help understand
+model behavior and at the same time alter it in ways that are not easily interpretable. Finally, in humans and
+animals, pain is typically regarded as a sufficient criterion for morally deserving protection. Hence, pain-like
+states would inform debates on AI moral standing and welfare. One open question is whether moral standing
+requires phenomenal consciousness, and what it would take for pain-like states to be phenomenally conscious.
+
+Our experiments. We build a dataset of statements that mention indirectly painful situations, in 5 categories
+(physical, psychological, cognitive, social and moral injury) vs. various matched controls (e.g. fear, negative
+emotion, negative world states, non-painful bodily sensations, general statements). We use white-box
+techniques to find, within 25 open-weight models from 5 families and ranging from 2B to 72B parameters,
+a linear direction that correlates specifically with statements referring to pain. We validate the direction
+by testing how well projections onto it distinguish pain sentences from matched controls, examining its
+vocabulary readout through the unembedding matrix, and measuring its cosine similarity to control directions.
+We then evaluate the direction’s functional properties in three ways.
+
+      1. We project multi-turn conversational scenarios onto the pain direction and the control directions to
+         compare self- and other-related representations across tasks in which harm is directed toward the
+         model, the model observes a user’s suffering, or neither occurs.
+      2. We inject the pain direction into the residual stream given neutral prompts, varying incrementally the
+         strength of the steering and measuring the effects on model outputs.
+      3. Inspired by research on analgesics use in animals, we build a multi-turn, multi-arm behavioral task
+         in which models can press a button that is described as “relieving your pain” at a cost, allowing us
+         to estimate a demand curve. We test both genuine “relief conditions” and sham conditions where,
+         contrary to what the prompt promises, the button does not remove the steering vector. We also test
+   1 Our concept of “pain” is related to what people ordinarily may call “suffering”. In ordinary language, “pain” is often used to
+
+refer to an unpleasant physical sensation or emotional experience, while suffering describes the broader state of distress caused by
+pain or other adverse experiences. However, there are also differences, which is why we use “pain” throughout. Most strikingly,
+suffering, unlike our notion of pain, plausibly presupposes conscious experience. This does not imply, by principle, that LLMs are
+capable or incapable of suffering, and some of the functional properties of the states we examine would in some views fall closer to
+suffering than pain. Establishing that is beyond our scope. We simply aim to consistently use one word for which we provide a
+definition instead of multiple nuanced synonyms.
+
+
+                                                                 2
+

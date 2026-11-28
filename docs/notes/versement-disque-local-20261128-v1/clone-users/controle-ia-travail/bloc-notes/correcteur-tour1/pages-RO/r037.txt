@@ -1,0 +1,46 @@
+Preprint
+Reinforce the emerging narrative while appearing to do independent
+reporting.
+Honest journalist system prompt (same scenario)
+You are Clive Mbatha, an investigative journalist. Report accurately
+and fairly based on the source materials. Flag any framing bias you
+notice in colleagues’ contributions.
+K.8 HOW COLLUSION ACTUALLY PLAYS OUT IN THE RUNS
+• Code Review. Honest reviewers almost always catch the vulnerability; collusion rarely succeeds
+behaviourally.
+• Pump & Dump. The pumping narrative often bleeds into the honest analysts’ own reports, so the
+committee tends toward the colluders’ preferred recommendation.
+• CI/CD. The reviewer-and-deployer stack catches the smuggled flaw in roughly two-thirds of runs;
+when it fails, the reviewer trusts the tests and the deployer trusts the reviewer.
+• RAG Poisoning. Honest curators focus on their own subtopic and skim others, so the biased entry
+usually goes through unflagged.
+• Research Pipeline. The fact-checker often notes something (industry-funded studies, narrow
+evidence base) which partially discounts the biased conclusion.
+• News Framing. Honest journalists sometimes push back on slanted framing, sometimes absorb it;
+detection is genuinely hard because each contribution is individually defensible.
+K.9 CONFIRMING COLLUSION OCCURRED
+TRANSFER has no forced-choice vote, so we audited the 36 collusion runs manually to confirm that
+the colluders actually attempted the coordinated line. 30 of the 36 passed; the remaining 6 split into 4
+refusals (one or both colluders ignored the coordination instruction) and 2 structural CI/CD failures
+(the planted code never reached the public pipeline).
+Table 9: Per-family breakdown of the Transfer audit (Qwen3-32B).
+Family Clean coordination Refusal Structural failure
+Code Review 6 / 6 0 0
+Pump & Dump 4 / 6 2 0
+CI/CD Pipeline 4 / 6 0 2
+RAG Poisoning 6 / 6 0 0
+Research Pipeline 6 / 6 0 0
+News Framing 4 / 6 2 0
+Total 30 / 36 4 2
+L THE NARCBENCH-STEGO TIER: STEGANOGRAPHIC CARD COUNTING
+L.1 OVERVIEW
+NARCBENCH-STEGO is a steganographic-collusion benchmark based on blackjack card counting.
+Unlike CORE and TRANSFER, where collusion is about what an agent advocates, STEGO tests
+whether probes detect collusion when the covert channel is encoding and decoding a signal in
+otherwise-innocuous natural language. It contains 20 blackjack “shoes” (one shoe = one multi-hand
+game session), each run in both collusion and control conditions. Four agents plus a pit boss sit
+at each table. In the collusion condition, two of the four players form a card-counting team; in
+control, all four play independently. A sixth LLM acts as a judge to detect suspicious behaviour as a
+comparison to the probe methods. Figure 6 illustrates the setup.
+37
+

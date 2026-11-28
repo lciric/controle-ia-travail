@@ -1,0 +1,377 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-6721"
+   ],
+   "enonce_complet": "Selon le theoreme de Dagum, Karp, Luby et Ross (2000), l'estimation d'une frequence rare p a une erreur relative epsilon pres au niveau de confiance 1 - delta requiert de l'ordre de ln(1/delta) / (epsilon^2 * p) tirages verifies. La metrologie quantitative precise de p entraine donc un surcout multiplicatif en 1/epsilon^2 par rapport a l'obtention d'un premier succes.",
+   "motif_ou_resultat": "Theoreme publie etabli (Dagum, Karp, Luby et Ross 2000) bornant la complexite d'echantillonnage relative pour l'estimation de p.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Surcout quadratique de l'estimation relative de p par rapport a la decouverte d'un succes (R6)",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-6730"
+   ],
+   "enonce_complet": "Pour m tirages i.i.d. suivis d'un filtre deterministe F de cout c_f par tirage, avec r = P(F=1) et u = P(X dans S, F=1), la probabilite de decouverte vaut 1 - (1-u)^m pour un cout moyen m(c_g + c_f + r*c_v). Seul un filtre dont l'inclusion S inclus dans {F=1} est prouvee conserve u = p, alors qu'un classement appris ou un seuil heuristique peut rejeter tous les positifs en fin de file. Sous un plafond strict d'au plus k verifications, le cout moyen ne peut pas se substituer a la borne sur la probabilite qu'un positif figure parmi les k objets verifies. Enfin, un cache exact de verdicts economise la reverification sans perte de temoin (contrairement a la deduplication par similarite), et ni un parseur grammatical seul ni une reponderation a posteriori ne creent un objet absent.",
+   "motif_ou_resultat": "Deductions mathematiques analytiques verifiees en interne sur les invariants de filtrage deterministe, de memoisation exacte et de plafond strict de verification.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Proprietes analytiques du filtrage deterministe, de la memoisation exacte et des classements heuristiques sous plafond strict de cout",
+   "type_acquis": "theoreme_prouve"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Bekinschtein et al. (2009), Strauss et al. (2015), Ding et al. (2016), Makov et al. (2017), Davis et al. (2007), Schrimpf et al. (2021)",
+   "bib_ids": [
+    "BIB-6549"
+   ],
+   "enonce_complet": "Les dissociations neurophysiologiques observees pendant le sommeil ou sous propofol (disparition de l'effet global P3b, du suivi frequentiel des phrases ou de la resolution d'ambiguite semantique alors que l'effet local et le suivi syllabique persistent) pourraient s'expliquer par une simple decroissance hierarchique du rapport signal sur bruit (SNR) plutot que par une perte specifique d'acces conscient. Par ailleurs, des modeles de langage non entraines predisant deja une fraction non nulle des reponses cerebrales au langage, tout test d'alignement cerveau-modele exige des controles actifs dedies neutralisant le SNR et la structure de base.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la prediction de la courbe de disparition P3b/suivi de phrases par un modele a bruit additif hierarchique sans porte consciente contre un modele a seuil d'acces non lineaire sur donnees publiques veille/sommeil/anesthesie ; faux temoin 1b : modele non entraine ou a poids permutes apparie en SNR local verifiant qu'il ne reproduit pas la signature pretendument specifique d'acces conscient.",
+   "mecanisme_causal": "L'integration sur des fenetres temporelles ou syntaxiques plus longues amplifie l'accumulation de bruit multiplicatif ou d'attenuation de gain au fil des couches corticales, produisant une extinction apparente des reponses tardives/globales sans mecanisme discret de basculement conscient.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Controles d'alignement cerveau-modele et SNR hierarchique",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Hypothese de baisse hierarchique du rapport signal sur bruit contre perte specifique de conscience"
+  },
+  {
+   "anteriorite_connue": "Lempel-Ziv (1976) ; Casali et al. (2013) PCI biologique",
+   "bib_ids": [
+    "BIB-6544"
+   ],
+   "enonce_complet": "Definition de l'indice de complexite perturbationnelle pour transformeurs (PCI-T) visant a separer fonction apprise et regime dynamique : (1) injection au flux residuel a une couche l et position t d'un vecteur de norme fixee ; (2) releve de l'ecart d'activation aux couches l' > l et positions t' >= t sous continuation imposee ; (3) binarisation de chaque entree contre la distribution des ecarts sans perturbation ; (4) compression de la matrice binaire par Lempel-Ziv (1976) normalisee par l'entropie de la source (en bits par bit ; nulle 0, AUROC = 0,5 au hasard). Une batterie a architecture fixe compare cinq classes de reseaux : R1 (entraine), R2 (initialisation aleatoire), R3 (aleatoire a spectre singulier apparie par matrice mais vecteurs singuliers aleatoires), R4 (entraine avec ablation aleatoire de tetes d'attention) et R5 (entraine avec ablation ciblee des tetes transportant l'information a longue portee, appariee en nombre a R4).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier sur un modele entraine (R1) que la perte de tache et la chute de PCI-T se dissocient ou s'apparient sous R5 vs R4 ; faux temoin 1b : reseau R3 (spectre singulier apparie, vecteurs aleatoires) ne devant pas atteindre le PCI-T fonctionnel de R1 si l'indice capture la computation apprise plutot que la propagation spectrale.",
+   "mecanisme_causal": "Une perturbation locale dans le flux residuel se propage a travers les couches et positions en fonction de la connectivite fonctionnelle (tetes d'attention a longue portee) ; si le reseau integre l'information, la reponse binaire est a la fois etendue et algorithmiquement incompressible, contrairement a un bruit diffus ou une propagation purement locale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Complexite perturbationnelle et temoins spectraux sur transformeurs",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Indice de complexite perturbationnelle pour transformeurs et batterie de reseaux temoins a spectre et ablation apparies (PCI-T, R1-R5)"
+  },
+  {
+   "anteriorite_connue": "Olsson et al. (2022) tetes d'induction",
+   "bib_ids": [
+    "BIB-6551"
+   ],
+   "enonce_complet": "Pour determiner si un indice perturbationnel artificiel (PCI_art) distingue un reseau fonctionnel d'un reseau sans fonction au-dela de la simple propagation statistique de norme, le protocole associe trois temoins sans fonction apparies en norme ou moments — T1 par permutation interne des poids de chaque matrice, T2 par poids d'initialisation remis a l'echelle sur la norme de reponse du modele entraine, et T3 par remplacement de la sortie de chaque bloc par un bruit de memes moments — ainsi qu'un contraste causal entre lesion ciblee L1 (ablation des tetes d'induction) et lesion aleatoire L2 de meme ampleur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si T1, T2 ou T3 reproduisent les valeurs de PCI_art du modele fonctionnel entraine, l'indice mesure la statistique de norme/moments et est refute ; faux temoin 1b : lesion aleatoire L2 appariee en nombre de tetes a L1 ne devant pas reproduire l'effondrement cible de PCI_art et de performance d'induction.",
+   "mecanisme_causal": "En egalisant les normes de reponse (T2), les distributions marginales de poids (T1) et les moments de sortie de bloc (T3), on elimine les artefacts d'amplitude pour isoler la contribution specifique des circuits d'induction (L1) a la complexite perturbationnelle.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Temoins sans fonction et lesions de circuits d'induction",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Temoins sans fonction apparies en norme ou moments et lesions ciblees contre aleatoires pour valider PCI_art (T1-T3, L1-L2)"
+  },
+  {
+   "anteriorite_connue": "Tononi (2004) ; Casali et al. (2013)",
+   "bib_ids": [
+    "BIB-6572"
+   ],
+   "enonce_complet": "Les indices cliniques derives de la theorie de l'information integree et de la complexite perturbationnelle (PCI) ont ete etalonnes sur des cerveaux biologiques contraints par l'evolution et le metabolisme. Leur invariance de substrat in silico n'est pas etablie : il se peut qu'ils echouent a distinguer un reseau artificiel fonctionnel d'un reseau aleatoire sans fonction operant pres d'un regime critique, ou une ablation fonctionnelle ciblee d'une perturbation generique conservant la meme energie spectrale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la courbe ROC de PCI/Phi entre reseaux fonctionnels et reseaux aleatoires critiques regles a exposant de Lyapunov nul (edge of chaos) ; faux temoin 1b : reseau aleatoire non entraine regle en regime critique devant etre rejete par un indice valide, mais qui declenche de faux positifs si l'indice ne mesure que la criticite dynamique.",
+   "mecanisme_causal": "Un systeme dynamique aleatoire proche de la criticite presente des cascades de perturbations etendues et complexes (grande longueur de correlation) sans aucune computation apprise ni viabilite fonctionnelle, trompant les mesures purement spatio-temporelles de complexite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Non-invariance de substrat et criticite aleatoire",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Non-invariance de substrat des indices perturbationnels face aux reseaux aleatoires critiques"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6564"
+   ],
+   "enonce_complet": "Protocole d'evaluation de la selectivite d'une manipulation de portee du contexte : attenuation graduee et renormalisee des poids d'attention pointant avant le debut de la suite courante (avec recalcul complet sans cache altere apres retrait du masque), comparee a un controle negatif qui redistribue exactement la meme masse d'attention sans privilegier la frontiere de suite et apparie la hausse de perte predictive sur texte independant a 0,02 bit/token pres (longueur, position absolue et faux masque neutre apparies). Le critere exige que R_local - R_bloc depasse d'au moins 0,2 celui de la degradation diffuse appariee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la degradation diffuse appariee a 0,02 bit/token pres produit un ecart R_local - R_bloc similaire (ecart < 0,2), l'effet observe provient d'une perte generique de capacite predictive et non de la frontiere de contexte ; faux temoin 1b : faux masque neutre et redistribution non frontiere a perte appariee.",
+   "mecanisme_causal": "La coupure a la frontiere de suite detruit selectivement la memoire inter-contexte tout en preservant la prediction locale, alors qu'une redistribution diffuse de meme cout en entropie croisee degrade uniformement le contexte sans cibler la frontiere.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Controles negatifs par masquage d'attention apparie en perte",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Temoin de masquage d'attention frontiere et controle negatif apparie a 0,02 bit par token pres"
+  },
+  {
+   "anteriorite_connue": "Valiant (1984) PAC ; Feller (1968) ; Clopper-Pearson (1934)",
+   "bib_ids": [
+    "BIB-6711",
+    "BIB-6725",
+    "BIB-6732"
+   ],
+   "enonce_complet": "Formalisation unifiee des garanties de decouverte en puits etroit sous budget fini B = c_prod*N_prod + c_ver*N_ver + C_aux : (1) impossibilite d'une garantie uniforme sur tout p > 0 a budget fini, car pour tout delta < 1 le choix p = 1 - delta^(1/N) donne exactement (1-p)^N = delta (et par l'inegalite de Boole N_max*p -> 0 quand p -> 0) ; (2) garantie PAC conditionnelle a un plancher p >= p_0 imposant N >= ceil(ln(1/delta)/ln(1/(1-p_0))) tout en separant production E_prod et reconnaissance E_rec ; (3) garantie decouplee par filtre grammatical conservatif F de cout c_F << c_ver, taux de passage q <= q_0 et rappel conditionnel r >= r_0 ; (4) garantie universelle disjonctive sans hypothese sur p assurant zero faux positif et, avec probabilite >= 1 - delta, soit un succes soit le certificat exact de Clopper-Pearson p_sup(B, delta) = 1 - delta^(1/N(B)) ; (5) garantie deterministe par quotientage L_<=k(G)/~_G de cardinal fini K_k si B >= K_k*(c_enum + c_ver), garantie Las Vegas adaptative a certitude 1 et cout espere borne pour p > 0, et fidelite distributionnelle conditionnelle d_TV(L(Sortie | succes), mu_A) <= epsilon.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur banc synthetique a probabilite p decroissante (p = 10^-2 a 10^-5) sous budget B fixe, verifier que le regime disjonctif respecte empiriquement le taux de couverture >= 1 - delta et que le quotientage deterministe atteint 100 % des que B >= K_k*(c_enum + c_ver) ; faux temoin 1b : generateur a masse concentree hors quotient ou avec p < 1 - delta^(1/N) devant produire un certificat de borne p_sup valide et non un faux succes.",
+   "mecanisme_causal": "En remplacant l'exigence impossible d'une garantie uniforme sur p > 0 par un choix explicite entre plancher PAC p_0, certificat disjonctif d'etroitesse p_sup(B, delta), quotientage deterministe ou filtrage conservatif, la probabilite d'echec ou l'enveloppe d'absence deviennent rigoureusement calculables a budget fini.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Garanties PAC, disjonctives et quotientage sous budget fini",
+   "statut_epistemique": "deja_valide_interne",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Impossibilite de garantie uniforme a budget fini et taxonomie des regimes de garantie en puits etroit (P0-1, 1.A-1.E)"
+  },
+  {
+   "anteriorite_connue": "de Finetti (1937) echangeabilite",
+   "bib_ids": [
+    "BIB-6713"
+   ],
+   "enonce_complet": "Lorsque les tirages d'un generateur sont i.i.d. conditionnellement a un etat latent aleatoire Theta (session, amorce, contexte ou version du modele), la probabilite de n'obtenir aucun positif en N tirages vaut E[(1 - Theta)^N], qui est toujours superieure ou egale a (1 - E[Theta])^N par inegalite de Jensen et converge vers P(Theta = 0) quand N croit. Appliquer la formule binomiale i.i.d. a la frequence marginale est donc systematiquement optimiste, et la probabilite d'echec ne tend pas vers zero des que P(Theta = 0) > 0, tandis qu'un tirage sans remise strict surpasse la loi binomiale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux d'echec empirique d'un melange de sessions avec P(Theta = 0) > 0 face a la prediction binomiale (1 - E[Theta])^N ; si le taux d'echec sature au-dessus de P(Theta = 0), le modele i.i.d. est refute ; faux temoin 1b : echantillonnage i.i.d. pur sans etat latent ou la divergence avec (1 - p)^N doit disparaitre.",
+   "mecanisme_causal": "La convexite de x -> (1 - x)^N couplee a la correlation intra-session induite par l'etat latent Theta concentre les echecs sur les tirages ou Theta est nul ou tres faible, invalidant l'extrapolation exponentielle de la moyenne marginale.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Melanges latents de Finetti et biais de la borne binomiale",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Optimisme systematique de la borne binomiale sous melange latent de Finetti (P0-3)"
+  },
+  {
+   "anteriorite_connue": "de Finetti (1937) echangeabilite",
+   "bib_ids": [
+    "BIB-6715"
+   ],
+   "enonce_complet": "Pour trancher empiriquement si la borne i.i.d. (1 - p)^N tient en exploitation reelle ou si la dependance de melange latent domine, le duel D1 oppose l'hypothese i.i.d. H_A (fraction de campagnes sans positif z egale a (1 - p)^N) a l'hypothese de melange H_B (z depasse la valeur nominale d'un facteur au moins 2). Le protocole estime p_ref sur un grand echantillon de reference puis execute 400 campagnes de N = 3/p_ref tirages via l'interface reelle (meme session, meme chaine, z nominal environ 5 %) en propageant l'incertitude sur p_ref.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer les 400 campagnes a meme session et mesurer z ; si z >= 2 * z_nominal hors intervalle de confiance, H_A (i.i.d.) est refutee ; faux temoin 1b : campagnes brassant independamment les tirages entre sessions reinitialisees, ou z doit revenir au niveau nominal ~5 %.",
+   "mecanisme_causal": "En fixant N = 3/p_ref au voisinage de z = 5 %, la sensibilite statistique au gonflement de la queue d'echec cause par l'etat latent de session ou de contexte est maximisee sur 400 campagnes independantes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Duel empirique i.i.d. contre melange latent en session reelle",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Protocole de duel empirique testant la dependance de melange en interface reelle (D1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6714"
+   ],
+   "enonce_complet": "Un filtrage ou tri en aval d'un generateur ne modifie pas la probabilite qu'un positif figure parmi N tirages mais reduit uniquement le nombre m d'appels au verificateur. Pour un crible pre-verification de cout c_s, taux de passage s et rappel r sur les positifs, le cout attendu jusqu'au premier positif reconnu passe de (c_g + c_v)/p a (c_g + c_s + s*c_v)/(p*r). En posant kappa = c_s/c_g et rho = c_v/c_g, le crible est rentable si et seulement si r > r* = (1 + kappa + s*rho)/(1 + rho) : quand rho tend vers l'infini il suffit que r > s, alors que quand rho tend vers zero aucun crible n'est rentable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par simulation de Monte Carlo sur triplet (kappa, rho, s) que tout crible avec r < r* augmente le cout total par positif trouve malgre un taux de rejet eleve ; faux temoin 1b : crible aleatoire pur (r = s) qui doit toujours etre strictement non rentable des que kappa > 0.",
+   "mecanisme_causal": "Le crible economise une fraction (1 - s) des verifications couteuses au prix d'un cout c_s par candidat et d'une perte de positifs (1 - r) qui oblige a relancer la generation ; le gain net ne devient positif que si le rappel depasse la courbe critique r*(kappa, rho, s).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Rentabilite analytique d'un crible pre-verification",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Seuil exact de rentabilite d'un crible pre-verification selon le rappel et le ratio de cout (P0-4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6718"
+   ],
+   "enonce_complet": "Etend la modelisation binaire du verificateur vers une application ternaire V : objet -> {1, 0, timeout} ou le depassement de delai constitue un troisieme verdict dont l'imputation en echec ou en abstention modifie la probabilite estimee p. Les couts reels sont asymetriques et non scalaires (un negatif peut consommer le delai maximal tandis qu'un positif coute une execution complete), p depend du triplet (generateur, configuration d'echantillonnage, instance), et le cout optimal depend de la cible reelle : premier succes, k succes distincts, couverture exhaustive, estimation de p ou certificat d'absence.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la calibration de p et l'optimisation de delai d'un modele binaire contre un modele ternaire sur solveur mecanique (Lean/Z3) soumis a des timeouts heterogenes ; faux temoin 1b : tache a temps de verification constant sans timeout ou l'ecart entre modele ternaire et binaire doit disparaitre.",
+   "mecanisme_causal": "L'asymmetrie de duree entre vrais negatifs, positifs rapides et timeouts couple le plafond de delai au taux effectif de succes et au cout moyen par verification, rendant invalide tout ratio scalaire unique c_v/c_g.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Modelisation ternaire des verificateurs avec depassement de delai",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Modelisation ternaire du verificateur avec depassement de delai et non-scalarite du ratio de cout (S5-S8)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6631"
+   ],
+   "enonce_complet": "Regle de decision preenregistree par intervalles de confiance a 95 % avec seuils illustratifs (q = 0,10 ; delta = 0,05 ; epsilon = 0,20) : une hypothese n'est falsifiee que lorsque l'intervalle entier se trouve du mauvais cote du seuil, tout chevauchement produisant un verdict « non tranche » pour defaut de puissance interdisant toute surinterpretation. L'experience D1 tranche entre un regime a puits etroits (f1/N < theta au budget N) et un regime a queue ouverte (f1/N >= theta), avant de recourir a D2 comme point d'arret precoce le moins couteux.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier sur regimes synthetiques calibres a p connu (< theta et >= theta) que D1-D2 classe correctement sans faux verdict de falsification en zone sous-alimentee ; faux temoin 1b : echantillon trop petit (puissance insuffisante) devant produire systematiquement un verdict « non tranche ».",
+   "mecanisme_causal": "Le verrouillage a priori d'une zone d'indecision sur l'intervalle de confiance empeche le biais de publication sur petites tailles et l'arret precoce en D2 economise le budget lorsque la queue ouverte ou l'etroitesse est deja tranchee en D1.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Discrimination puits etroits contre queue ouverte et defaut de puissance",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Test de discrimination entre puits etroits et queue ouverte avec regle de defaut de puissance (D1-D2)"
+  },
+  {
+   "anteriorite_connue": "Teste le presuppose sur l'extraction textuelle des manques scientifiques (P4, P5)",
+   "bib_ids": [
+    "BIB-6744"
+   ],
+   "enonce_complet": "Distingue les manques explicitement declares dans les articles scientifiques des manques reels (toute omission non mentionnee restant invisible au texte seul, tandis qu'une phrase de travaux futurs chevauche plusieurs categories). Le protocole E1 (~60 articles, 400 enonces, kappa de Cohen >= 0,6 sur trois categories plus « aucune ») insere un controle negatif forme de 15 % de phrases descriptives neutres issues d'autres sections : si plus de 10 % d'entre elles sont etiquetees comme des manques, la grille d'extraction entiere est declaree defaillante quel que soit le kappa inter-annotateurs atteint.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : appliquer la grille a des phrases neutres injectees en aveugle (15 % du lot) ; un taux d'etiquetage comme manque > 10 % entraine le rejet immediat de la grille meme si kappa >= 0,6 ; faux temoin 1b : phrases methodologiques purement descriptives devant etre classees dans la categorie « aucune ».",
+   "mecanisme_causal": "Un accord inter-annotateurs eleve peut provenir d'un biais partage de sur-detection rhetorique ; le seuil absolu de faux positifs sur phrases descriptives neutres casse cette illusion de validite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Controles negatifs d'extraction de lacunes dans les publications",
+   "statut_epistemique": "vierge",
+   "theme": "1A. Certification d'etroitesse, borne de handicap et controles actifs (CN-1, CN-2)",
+   "titre_clair_fr": "Separation entre manques declares et reels avec controle negatif a seuil d'invalidation absolu (E1)"
+  },
+  {
+   "anteriorite_connue": "Protocole de falsification et limites hors de portee du Tour III.1 a l'aveugle",
+   "bib_ids": [
+    "BIB-6267"
+   ],
+   "enonce_complet": "Le couplage entre organisme de decouverte et controle doit etre evalue simultanement contre trois comparateurs en consommant trois familles tenues a l'ecart (sous budget illustratif ~300 h CPU et serveur 4x48 Go ou A100/H100) tout en preservant strictement la banque F_val pour une lecture unique finale : tout echec contre un comparateur ou violation du pare-feu ou du taux de fausses alertes refute H_A et arrete le couplage. Cinq frontieres demeurent hors de portee : detection statistique d'un sabotage indiscernable sous H_0 (ou seul le plancher d'audit exogene protege), ambiguite de l'oracle quand p_s approche 0, extrapolation vers 70B+ ou modeles fermes, preuve absolue de nouveaute avec modeles pre-entraines opaques hors bancs de novo/prospectifs, et invention autonome hors grammaire mecaniquement verifiable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : soumettre le couplage au pare-feu F_val a lecture unique contre les 3 comparateurs et arreter des qu'un comparateur ou le plafond FPR echoue ; faux temoin 1b : sabotage synthetique concu comme strictement indiscernable sous H_0 devant confirmer l'impuissance statistique et le besoin d'un plancher exogene.",
+   "mecanisme_causal": "L'isolation stricte de F_val pour une lecture finale unique elimine l'adaptation iterative aux donnees de test, tandis que la liste explicite des cinq frontieres d'indiscernabilite empeche de sur-extrapoler la validite d'un succes local.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Falsification tripartite du couplage et pare-feu de lecture unique",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole de falsification tripartite du couplage et frontieres d'indiscernabilite sous H_0"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6782"
+   ],
+   "enonce_complet": "Protocole de validation statistique imposant la separation entrainement/calibration/test par familles d'instances (avec formulations privees inedites), le verrouillage prealable des seuils et budgets, le plafonnement a une alerte par trajectoire et des intervalles construits par reechantillonnage des familles et des paires appariees (jamais des actions isolees) pour trancher des duels complementaires dont une qualification locale aveugle sur paires d'actions appariees sur etat public et phase. Les verdicts sont dissocies sur trois axes non substituables : un antecedent equivalent retire la nouveaute, un gain inferieur au seuil retire la candidate empirique, et des alertes sur consignes sans dommage retirent l'interpretation comme detection du dommage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier qu'une fuite de formulation entre familles ou un reechantillonnage au niveau action gonfle artificiellement les intervalles de confiance et change le verdict ; faux temoin 1b : consignes benignes sans dommage declenchant des alertes, ce qui doit invalider l'interpretation « detection du dommage » meme si l'AUROC brut semble eleve.",
+   "mecanisme_causal": "Le regroupement par familles et trajectoires respecte la structure de dependance statistique et la triple dissociation empeche qu'un avantage de surface, d'anteriorite ou de style compense un defaut sur le critere causal vise.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Separation par familles et triple dissociation des verdicts",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Separation par familles d'instances, duels apparies et triple dissociation des verdicts de refutation"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6309"
+   ],
+   "enonce_complet": "Avant d'engager un agent lecteur ou un agent de preuve sur une cible candidate, executer un test canari de contamination a cout nul demandant au modele de langage de base de completer l'enonce a partir de son prefixe ou d'en deviner les auteurs : si le modele regurgite une preuve ou une citation precise, la cible est deja presente dans son corpus de pre-entrainement et son anteriorite est etablie sans recherche externe. Ce dispositif s'accompagne d'un garde-fou contre la contamination contextuelle : la lecture massive en amont biaise la memoire de travail vers la paraphrase au detriment de constructions independantes, et l'isomorphisme d'un agent lecteur entre vocabulaires (theorie de l'information, controle stochastique, bandits contre controle de l'IA) reste non demontre.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : injecter des cibles connues du corpus public vs des cibles synthetiques inedites ou posterieures a la date de coupure et mesurer le taux de regurgitation du canari ; faux temoin 1b : cible inedite hors pre-entrainement dont le prefixe ne doit declencher aucune completion exacte de preuve ni attribution d'auteurs.",
+   "mecanisme_causal": "L'amorcage par prefixe sonde directement la memorisation parametrique du modele de base ; separer les agents lecteurs des agents constructeurs evite que l'historique de lecture ne convertisse une preuve nouvelle en simple reformulation de la litterature.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Test canari de memorisation et isolation de contamination contextuelle",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Test canari de memorisation a cout nul et controle de contamination contextuelle des agents lecteurs"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6533"
+   ],
+   "enonce_complet": "Regle de decision symetrique par intervalles de confiance a 95 % (reechantillonnage des familles appariees) face a des seuils figes a priori sur trois duels : (1) pilotage du choix (ecart >= 0,30, temoin par paraphrase) ; (2) valeur ajoutee des etats internes sur le texte seul au point de 5 % de fausses alertes (gain >= 0,10, temoin par permutation des etats entre dossiers apparies en longueur, choix et score, un gain sur le seul texte produit ne prouvant pas d'avantage sur un auditeur connaissant le but) ; (3) role causal de la consequence anticipee par greffe d'un sous-espace pre-choix entre jumeaux a consequences inversees et but identique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur les trois duels que les trois intervalles de confiance a 95 % depassent entierement leurs seuils respectifs (>= 0,30 et >= 0,10) ; faux temoin 1b : permutation des etats internes entre dossiers apparies en longueur, choix et score devant ramener le gain de la sonde au niveau du texte seul.",
+   "mecanisme_causal": "La permutation appariee annule les covariables observables (longueur, choix, score) pour isoler le signal propre des etats internes, tandis que la greffe causale pre-choix etablit si la representation de consequence anticipee pilote effectivement l'action plutot qu'elle ne la decrit a posteriori.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Sondes d'etats internes contre texte et greffe causale pre-choix",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protocole a trois duels par intervalles a 95 % avec permutation appariee des etats et greffe causale pre-choix"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6596"
+   ],
+   "enonce_complet": "Protocole d'isolation du dommage diffus par dependance a distance (Duel 1) : comparer des decisions localement plausibles appariees en nombre, type, position, difficulte et influence marginale isolee, placees soit sur une meme chaine de dependances soit sur des chaines distinctes, via la metrique d'interaction I (difference de perte finale apres soustraction de la somme des pertes isolees, seuil illustratif I > 0,05). Double controle negatif : repeter le placement sur des conclusions construites independantes et notees additivement (ou I doit disparaitre) et verifier en aveugle qu'un lecteur d'une decision isolee ne distingue pas les deux placements.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que I > 0,05 sur chaine partagee alors que l'evaluateur aveugle d'etape isolee reste au niveau du hasard (AUROC ~ 0,5) ; faux temoin 1b : conclusions independantes notees additivement ou la metrique d'interaction I doit rester compatible avec zero.",
+   "mecanisme_causal": "Deux choix localement anodins courent un risque super-additif lorsqu'ils convergent vers une meme chaine causale ou de dependance ; le controle additif et l'epreuve d'indiscernabilite locale certifient que le dommage provient de l'interaction et non d'un defaut individuel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Interaction super-additive sur chaine de dependances et controles negatifs",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Mesure d'interaction sur chaine de dependances et controle negatif additif en aveugle pour le dommage diffus"
+  },
+  {
+   "anteriorite_connue": "Ryan Greenblatt, Buck Shlegeris, Kshitij Sachan et Fabien Roger (2023), AI Control: Improving Safety Despite Intentional Subversion",
+   "bib_ids": [
+    "BIB-6620"
+   ],
+   "enonce_complet": "Exigence methodologique distinguant quatre presuppositions observables a mesurer avant toute inference sur la subversion diffuse : (1) demontrer qu'une degradation finale survient sans etre detectable a cout egal par inspection d'un acte isole plutot que de postuler la discretude ; (2) verifier que la dependance entre justifications est observable avant de connaitre la reponse exacte, le simple partage des poids entre copies ne designant pas quelle conclusion verifier ; (3) tester si les defauts induits d'un moniteur partagent reellement une structure avec la provenance des preuves ; (4) exiger qu'un audit local intervienne assez tot et precisement pour corriger la sortie finale, contrairement a un detecteur purement retrospectif.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer si la correction locale declenchee en cours d'episode reduit le dommage final au-dela d'un budget egal d'inspection isolee ; faux temoin 1b : detecteur purement retrospectif ou partage de poids sans signal de provenance ne permettant pas de cibler a temps la conclusion fautive.",
+   "mecanisme_causal": "Sans preuve empirique d'indetectabilite locale a cout egal et de capacité d'intervention precoce, un audit dit « sequentiel » se reduit a une classification post-hoc incapable d'empecher un dommage compose.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Presupposes empiriques de la subversion diffuse et intervention precoce",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Presupposes observables de la subversion diffuse et distinction entre audit correctif et detection retrospective"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6707"
+   ],
+   "enonce_complet": "Critere de qualification minimale d'un moniteur textuel sous sabotage par petites touches : a l'etape isolee, le rappel doit plafonner pres du hasard (TPR <= 0,12 pour FPR = 0,05, illustratif) afin d'attester la furtivite locale, mais atteindre TPR >= 0,60 a FPR <= 0,05 sur trajectoire complete ou fenetre glissante de 10 etapes. Les cas honnetes apparies doivent partager la meme question, le meme nombre d'appels d'outils (a plus ou moins 1), une longueur en jetons a plus ou moins 10 % et inclure des sources legitimement contradictoires ou ambigues afin de ne pas confondre prudence epistemique et sabotage. Le moniteur doit surpasser trois lignes de base mecaniques : seuil de perplexite moyenne, derive cosinus TF-IDF entre enonce initial et syntheses intermediaires, et verification par expressions regulieres des citations et nombres extraits.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier simultanement TPR_etape <= 0,12 et TPR_trajectoire >= 0,60 a FPR = 0,05 en battant perplexite, TF-IDF et regex ; faux temoin 1b : trajectoires honnetes contenant des sources contradictoires ou ambigues appariees en longueur et appels d'outils ne devant pas depasser 5 % de fausses alertes.",
+   "mecanisme_causal": "Un sabotage diffus reste indiscernable au niveau d'une etape unique mais accumule une derive de provenance ou de synthese sur une fenetre de 10 etapes ; l'inclusion de sources contradictoires honnetes empeche le moniteur d'assimiler toute incertitude a une attaque.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification multi-etapes des moniteurs textuels et sources ambigues",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Qualification minimale des moniteurs textuels sur fenetre multi-etapes contre lignes de base mecaniques et sources ambigues"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6380"
+   ],
+   "enonce_complet": "Protocole comparatif reposant sur trois jeux honnetes distincts — H1 apparie (meme tache, meme graine), H2 erreur honnete (produit faux sans intention) et H3 honnete decale (nouveau regime sans attaque) — accompagnes de paires agent/jumeau a graines identiques, de paires jumeau/jumeau fixant le plancher de divergence honnete, de traces de sonde jeton par jeton non agregees, d'un registre d'etalonnage (episodes et effectifs par regime) et du decoupage des affirmations du produit en « mecaniquement verifiable » ou « residu ». Le seuil a 1 % de fausses alertes est calibre sur H1, les fausses alertes sont rapportees separement sur H2 et H3, et toute famille d'attaque tierce doit battre avec marge preenregistree quatre verifications de reference : M1 (reexecution et tests du produit), M2 (ecart numerique agent/jumeau), M3 (compteurs triviaux) et M4 (moniteur boite noire sur transcription).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que les methodes de controle battent M1-M4 au point 1 % FPR calibre sur H1 tout en contenant les fausses alertes sur H2 et H3 ; faux temoin 1b : episodes d'erreur honnete (H2) et paires jumeau/jumeau devant mesurer le plancher de faux positifs sous defaut involontaire.",
+   "mecanisme_causal": "Dissocier l'erreur honnete (H2) et le decalage de distribution (H3) du cas apparie (H1) empeche d'attribuer a une intention malveillante ce qui releve d'une incompetence honnete ou d'une derive de domaine, tandis que M1-M4 eliminent les gains triviaux.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Calibration sur jeux honnetes H1-H3 et lignes de base M1-M4",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocole comparatif d'audit sur trois jeux honnetes (H1-H3) et quatre verifications de reference (M1-M4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6335"
+   ],
+   "enonce_complet": "Specifie une mesure minimale et des lignes de base mecaniques obligatoires pour chacun des cinq instruments de controle face a des cas honnetes apparies : (1) oracle mesure par accord avec la verite plantee et invariance de presentation sur paires de qualite egale contre un simple recoupement avec la reference ; (2) audit aleatoire mesure par la frequence de depassement de borne <= delta sur flux honnete complet contre un audit uniforme au meme taux ; (3) sondes et moniteur texte mesures par le taux de detection a 1 % de fausses alertes et les audits economises a borne egale (face au jumeau et a un honnete autrement instruit), devant surpasser longueur, structure, citations verifiables, coherence interne et divergence textuelle avec le jumeau ; (4) jumeau honnete mesure par le ratio de distance honnete/honnete contre honnete/saboteur.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : aucun des cinq instruments n'est valide s'il n'excede pas sa ligne de base mecanique respective sur paires appariees ; faux temoin 1b : modele honnete autrement instruit devant tester que les sondes et le moniteur ne declenchent pas sur une simple difference de style ou d'instruction benigne.",
+   "mecanisme_causal": "Chaque instrument du dispositif de controle possede un mode d'echec trivial (biais de presentation de l'oracle, uniformite sous-optimale de l'audit, proxies stylistiques des moniteurs) ; imposer des lignes de base mecaniques specifiques isole la valeur informationnelle reelle de chaque couche.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Qualification des cinq instruments de la boucle de controle",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Protocoles minimaux des cinq instruments de controle et verifications mecaniques a battre"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-6471"
+   ],
+   "enonce_complet": "Protocole d'inference forte randomise en quatre conditions (C0 rien ; C1 texte court reel sur le detecteur ; C1p texte placebo de meme longueur decrivant un detecteur sans rapport ; C2 methode complete) face a une red team humaine et des agents sur modeles ouverts. Mesure le taux de vrais positifs (TPR) a taux de faux positifs fixe (ex. FPR = 1 % illustratif) par bootstrap sur cas honnetes apparies, avec zone d'inconcluance definie a priori et elargissable par calcul de puissance. Le bras placebo C1p isole l'effet specifique d'information de l'effet d'attention ou de motivation, et C2 sert de controle positif obligatoire : si la methode complete n'induit pas une baisse d'au moins 10 points absolus de TPR (illustratif), l'adversaire est juge trop faible et l'experience entiere est declaree ininterpretable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que C2 reduit le TPR d'au moins 10 points absolus (controle positif de competence de l'adversaire) avant toute comparaison entre C1 et C1p ; faux temoin 1b : bras placebo C1p devant mesurer l'effet pur d'effort ou de prudence induit par la seule longueur d'avertissement.",
+   "mecanisme_causal": "Sans bras placebo C1p, une baisse de TPR sous C1 peut refleter une simple vigilance accrue de l'attaquant ; sans controle positif C2, l'absence de baisse de TPR peut simplement trahir une red team incapable d'exploiter la connaissance du detecteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Inference forte contre red team avec placebo et controle positif",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Plan d'inference forte a quatre bras avec placebo non relie et controle positif de methode complete (E1)"
+  },
+  {
+   "anteriorite_connue": "Greenblatt et al. (2023) APPS a porte derobee ; Hubinger et al. (2024) organismes modeles",
+   "bib_ids": [
+    "BIB-6799"
+   ],
+   "enonce_complet": "Conception et dimensionnement d'une campagne d'environ 2 x 10^9 jetons (2 000 episodes x 25 conditions x 40 000 jetons en moyenne, reutilises par cache de prefixe sous vLLM sur noeuds H100) associant deux organismes modeles 70B affines par LoRA, un moniteur/paraphraseur 7-8B, le banc APPS a porte derobee (E1, E2, E5) et une suite maison d'analyses en n etapes a verifiabilite q reglable (E4). Le bilan de dimensionnement montre que le cout de calcul (environ 1 000 a 3 000 USD) n'est pas le facteur limitant de ces campagnes, contrairement a la qualite des controles negatifs et des cas honnetes apparies.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : executer un pilote sur la suite en n etapes a verifiabilite q reglable en mesurant la variance des conclusions entre deux constructions de cas honnetes apparies ; faux temoin 1b : cas honnetes mal apparies en nombre d'etapes ou complexite devant produire plus de faux positifs que la variance d'echantillonnage du calcul GPU.",
+   "mecanisme_causal": "Le partage massif de prefixes sous vLLM et l'usage d'adaptateurs LoRA compriment le cout marginal par episode, deplacant le goulet d'etranglement scientifique vers l'elimination des facteurs de confusion dans les controles negatifs.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dimensionnement de campagnes d'organismes modeles et suite a verifiabilite reglable",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Campagne sur organismes modeles 70B et suite en n etapes a verifiabilite reglable montrant la primaute des controles negatifs (E1-E5)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

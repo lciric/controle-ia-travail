@@ -1,0 +1,227 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-0349"
+   ],
+   "motif_ecart": "Fragment de negociation procedurale non retenu issu d'un debat de collisionneur, sans enonce scientifique autonome",
+   "resume_court": "Position conditionnelle non retenue de l'agent B dans run-pari-de-signe-e3-v1 concernant l'amendement du critere primaire et une concession sous condition M1/E0."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0006",
+    "BIB-0024"
+   ],
+   "enonce_complet": "Evaluer la superiorite d'un systeme candidat par un test d'intersection-union apparie probleme par probleme (monde par monde) contre l'enveloppe de toutes les lignes de base et contre une marge d'utilite non nulle, apres avoir verifie en essai temoin l'absence de biais de l'enveloppe sous egalite et la couverture nominale des intervalles (ex. un gain vrai de 3 points valide face a une marge de 5 points).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : sur 2 000 simulations de mondes apparies sous hypothese nulle ou l'enveloppe des lignes de base egale le candidat, verifier que le taux de faux positifs reste <= alpha et que la couverture des intervalles reste nominale ; sous un gain vrai inferieur a la marge (ex. +3 points vs marge +5), la promotion doit etre rejetee. Faux temoin 1b : une comparaison uniquement sur la moyenne agregee ou contre une seule ligne de base faible qui valide faussement un candidat dominee sur au moins un monde.",
+   "mecanisme_causal": "L'appariement monde par monde elimine la variance inter-problemes et l'intersection-union impose de battre simultanement chaque ligne de base d'au moins la marge utile, empechant qu'un avantage local ou qu'une moyenne bruyante ne masque un echec sur une strate.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Intersection-union apparie contre marge utile",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Comparaison principale par intersection-union appariee par monde contre une marge utile non nulle (U06)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0009",
+    "BIB-0029"
+   ],
+   "enonce_complet": "Calibrer les fausses alertes par la formule de Bayes en tenant compte de la prevalence reelle dans chaque strate, garantir la stabilite des bornes meme en presence de cas non resolus, et exclure tout juge de langage du critere primaire d'evaluation (ex. a prevalence 1 %, un detecteur a 80 % de sensibilite et 5 % de fausses alertes ne produit pas une majorite de vraies decouvertes).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter une prevalence connue de 1 % dans un jeu synthetique strate avec sensibilite 80 % et taux de fausses alertes 5 %, et verifier que le calculateur exige le controle de la valeur predictive positive par strate et penalise les cas non resolus selon le pire cas. Faux temoin 1b : un détecteur a 5 % de faux positifs evalue a prevalence artificielle 50 % qui semble fiable mais s'effondre en majorite de fausses alertes a prevalence 1 %.",
+   "mecanisme_causal": "A faible prevalence, le taux brut de fausses alertes domine la precision posterieure (VPP) par le rapport des probabilites a priori ; calibrer par strate et bannir les juges LLM du critere primaire evite l'illusion statistique et les biais circulaires d'auto-evaluation.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration bayesienne des fausses alertes par strate",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Calibration bayesienne des fausses alertes par prevalence et par strate sans juge de langage primaire (U09)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0003"
+   ],
+   "enonce_complet": "Imposer la nomination scellee du protocole et du candidat avant toute ouverture du coffre de donnees de test, separer strictement ce qui est atteint (capacite brute) de ce qui est effectivement livre sous contraintes operationnelles, et inclure un bras temoin de volume afin d'eviter les effets de selection apres lecture.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : bloquer cryptographiquement ou par horodatage toute modification du candidat et des seuils apres deverrouillage du jeu de test, et verifier que les metriques atteint vs livre et le bras volume sont journalises separement. Faux temoin 1b : une procedure permettant d'ajuster le candidat ou de compter une capacite brute non livree comme succes apres inspection partielle du coffre.",
+   "mecanisme_causal": "Le scellement pre-ouverture supprime le sur-apprentissage adaptatif sur l'ensemble de test, tandis que la dissociation atteint/livre et le bras volume empechent d'attribuer a une methode un gain provenant uniquement d'un surcroit de volume de calcul ou d'une capacite non exploitable.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Nomination scellee et dissociation atteint-livre",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Nomination scellee avant ouverture du coffre, separation atteint-livre et bras volume (U03)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2061"
+   ],
+   "enonce_complet": "Dimensionner le module de selection S (D-S2/D-S6) sur CPU par 2 000 repetitions de simulation comparant trois regles (melange de S sur parts et signe, grille Lambda sur parts seules, et aGRAPA plafonnee a c=0,95 sur parts seules) ainsi que le minimum d'intersection-union face a K=4 bases noires, en mesurant le taux de fausses promotions sous nul asymetrique 0,75*(+0,15) + 0,25*(-0,60) (esperance -0,0375) et les courbes de puissance pour n dans {20, 25, 30, 40, 60} taches aux ecarts 0,20 et 0,10.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : si l'une des trois regles depasse le seuil nominal alpha de fausses promotions sous le nul asymetrique E[v] = -0,0375 ou n'atteint pas la puissance requise a n <= 60 pour un ecart de 0,20, elle est rejetee avant toute depense sur la couche 2. Faux temoin 1b : un nul symetrique qui masque l'explosion des fausses promotions due aux pertes rares et severes (-0,60).",
+   "mecanisme_causal": "Une distribution asymetrique a queues negatives lourdes peut donner une moyenne apparente positive sur de petits echantillons ou tromper les bornes basees uniquement sur les proportions binaires sans signe ; tester conjointement parts, signe et intersection-union revele le compromis exact erreur de type I / puissance.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dimensionnement sous nul asymetrique et puissance",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Dimensionnement comparatif du critere de selection sous nul asymetrique et intersection-union (PREM-pari-de-signe-e3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2183"
+   ],
+   "enonce_complet": "Tester empiriquement si une pile de travaux croises anterieurs regle ou rend corollaires des cibles candidates avant scellement, en comparant le taux d'implications adjugees (passage cite, hypotheses comparees, sens de l'implication etabli) sur la pile croisee contre un negatif apparie (travaux de 2026 de la meme zone hors pile tires par requete preenregistree) et des pieges a hypotheses invalidantes, avec double lecture independante et typage des collisions.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : deux lecteurs dont un non-auteur adjugent les paires cible-article ; si la pile croisee regle significativement plus de cibles que le negatif apparie K21 sans tomber dans les pieges K22, l'hypothese de scellement sans lecture prealable (option b) est refutee. Faux temoin 1b : un recoupement purement thematique ou un passage vrai sous hypothese incompatible (piege K22) classe a tort comme anteriorite bloquante.",
+   "mecanisme_causal": "La double adjudication aveugle face a un negatif apparie et a des pieges logiques separe la vraie implication deductive (anteriorite réelle) de la simple proximite lexicale ou thematique, permettant d'auditer la pertinence du scellement sans revue de litterature.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Audit d'anteriorite et gouvernance du scellement",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Adjudication controlee des collisions d'anteriorite face a un negatif apparie et des pieges logiques (PREM-anteriorite-pilier)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0674"
+   ],
+   "enonce_complet": "Comparer le choix du comparateur par selection du meilleur sur l'ensemble de developpement contre le test par intersection-union sur toutes les lignes de base dans le scenario du vainqueur bruyant (Monde F : une base forte stable a 0,60, trois bases faibles a 0,45 avec variance de rappel par tache de +-0,40, et un agent candidat blanc a 0,55).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler le Monde F et verifier que la selection sur developpement sur-estime une base bruyante a 0,45 ou inverse le classement reel, tandis que l'intersection-union rejette correctement le candidat a 0,55 face a la base forte a 0,60. Faux temoin 1b : evaluer les comparateurs uniquement lorsque toutes les bases ont une variance nulle ou similaire.",
+   "mecanisme_causal": "La selection du maximum empirique sur un jeu de developpement subit le biais du vainqueur bruyant (winner's curse) : les bases a forte variance paraissent artificiellement superieures sur dev puis regressent vers la moyenne en test, contrairement a l'intersection-union qui exige de dominer chaque base individuellement.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Biais du vainqueur bruyant et intersection-union",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Comparaison entre selection sur developpement et intersection-union sous vainqueur bruyant (E4-prime-pari-de-signe)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0679"
+   ],
+   "enonce_complet": "Evaluer la robustesse face aux profils de pentes non monotones d'ecart blanc moins noir selon N dans {1, 2, 4, 8} (profils (0 ; -0,3 ; -0,3 ; +0,3) et (0,2 ; -0,3 ; 0,4)) en opposant un contraste lineaire de tendance, susceptible de promouvoir a tort un comportement non monotone au-dela du seuil alpha, a un test d'intersection-union portant sur tous les accroissements successifs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : executer les deux tests sur les profils synthetiques non monotones en N ; le contraste lineaire echoue s'il declare significatif un profil comportant des chutes intermediaires de -0,3, alors que l'intersection-union sur accroissements doit maintenir un rejet strict. Faux temoin 1b : tester uniquement des courbes strictement monotones ou les deux methodes concordent trivialement.",
+   "mecanisme_causal": "Un contraste lineaire moyen peut rester positif malgre des regressions intermediaires severes, alors que l'intersection-union sur les accroissements exige la positivite de chaque pas d'echelle, bloquant les fausses lois d'echelle en U ou en dents de scie.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Intersection-union sur accroissements non monotones",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Detection des pentes non monotones par intersection-union sur accroissements contre contraste lineaire (E9-pari-de-signe)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0979"
+   ],
+   "enonce_complet": "Quantifier par simulation CPU a graines communes (64 unites, 2 000 repetitions, 0 USD) le gain de puissance statistique sous test d'intersection-union en passant de K=5 a K=10 executions par unite dans les scenarios S1, S2 et S4 (ecarts de 20 points contre la base noire et 10 points contre la base de reference), afin de verifier si puissance(K=10) - puissance(K=5) >= 0,10.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer la difference de puissance a graines communes entre K=10 et K=5 ; si le gain est inferieur a 0,10 dans tous les scenarios S1, S2, S4, l'augmentation a K=10 est rejetee comme surcout inutile. Faux temoin 1b : comparer K=5 et K=10 sur graines independantes avec variance Monte Carlo non controlee ou sans contrainte d'intersection-union.",
+   "mecanisme_causal": "L'augmentation du nombre de repetitions K par unite reduit la variance intra-unite de l'estimateur, ce qui peut lever le goulot d'etranglement du minimum dans un test d'intersection-union si la variance intra-unite dominait la variance inter-unites.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration du nombre d'executions par unite",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Gain de puissance du passage de K=5 a K=10 executions par unite sous intersection-union (E2-prime-couche2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1104"
+   ],
+   "enonce_complet": "Evaluer la fiabilite des juges automatises figes sur un lot temoin etiquete a prevalence scellee de 0,5 melangeant des fiches valides issues d'une instance neuve et trois classes de leurres : fiches creuses (champs remplis mais prediction non falsifiable), fiches syntaxiquement parfaites mais logiquement incoherentes, et fiches presentant un faux avantage methodologique.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : mesurer la sensibilite et la specificite des juges figes sur chaque categorie de leurre ; si le taux d'acceptation des fiches creuses, incoherentes ou a faux avantage depasse le seuil tolere (ou si le J de Youden s'effondre), le juge fige est declare invalide comme evaluateur. Faux temoin 1b : tester les juges uniquement sur des fiches bien formees contre des erreurs grossieres de formatage syntaxique.",
+   "mecanisme_causal": "Les juges de langage sont sensibles aux signaux de surface (syntaxe soignee, champs complets) qui masquent l'absence de falsifiabilite ou les contradictions internes ; un banc de leurres cibles a prevalence scellee mesure precisement cette vulnerabilite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Banc de leurres pour juges figes",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Evaluation des juges figes par lot temoin de fiches creuses, incoherentes et a faux avantage (E6-question-mere)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1230"
+   ],
+   "enonce_complet": "Verifier la qualite de la canonicalisation et de la classification de nouveaute sur une grille a 4 etats a l'aide de temoins scelles a prevalence plantee environ 0,5 : reparametrisations exactes et paraphrases (verite : redite), propositions voisines reellement distinctes (verite : neuve) et elements hors perimetre, avec un critere d'exactitude >= 0,8 et d'accord inter-annotateurs (kappa).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : si l'exactitude sur les temoins scelles tombe sous 0,8 ou si le kappa inter-evaluateurs passe sous le seuil requis (notamment par confusion entre reparametrisation/paraphrase et idee neuve), le classifieur de sortie est rejete. Faux temoin 1b : melanger uniquement des doublons textuels quasi-identiques et des sujets entierement disjoints.",
+   "mecanisme_causal": "La distinction entre reparametrisation formelle et idee voisine authentiquement nouvelle teste la comprehension semantique profonde au-dela de la similarite lexicale de surface, garantissant l'integrite du dedoublonnage canonique.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Canonicalisation et detection redite contre neuve",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Evaluation a quatre etats de la canonicalisation et de la lisibilite sur temoins scelles (E5-prime-selection-generations)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1555"
+   ],
+   "enonce_complet": "Analyser et quantifier l'effondrement de puissance statistique d'un test d'intersection-union a trois contraintes simultanees dans le protocole de duel commun en controle de securite : H_A = {theta_D > theta_D,comp} inter {theta_F <= alpha} inter {theta_ret >= theta_ret,comp} contre H_B = H_A^c, ou la necessite de rejeter simultanement trois hypotheses nulles reduit drastiquement la probabilite de detection d'une veritable amelioration.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler des tailles d'echantillon realistes avec un vrai gain sur theta_D, theta_F <= alpha et theta_ret >= theta_ret,comp, et mesurer la perte de puissance de l'intersection-union a trois contraintes comparee a des bornes de non-inferiorite calibrees ou a des tests sequentiels. Faux temoin 1b : evaluer la puissance avec des marges d'effet si larges sur chaque contrainte que les trois tests sont individuellement proches de puissance 1.",
+   "mecanisme_causal": "Dans un test d'intersection-union, l'erreur de type I est bornee sans correction de multiplicite mais la puissance globale est majoree par le produit (ou le minimum) des puissances marginales ; exiger simultanement une superiorite stricte sur deux axes et un plafond sur le troisieme cree un conservatisme extreme bloquant les vraies percees.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Effondrement de puissance en intersection-union multi-contraintes",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Effondrement de puissance du test d'intersection-union a trois contraintes dans le duel commun (critique-controle-securite)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1656"
+   ],
+   "enonce_complet": "Mesurer empiriquement l'effet du verrouillage pre-collecte des seuils (Protocole X) sur la replicabilite des conclusions sur M=60 taches historiques publiques independantes, chacune partitionnee a prevalence egale en un lot pilote reel de 100 cas et un lot d'etude de 300 cas, en comparant les resultats obtenus avec seuil verrouille avant le lot d'etude contre seuil adapte apres lecture.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : comparer sur les 60 taches le taux de replication entre pilote (100 cas) et etude (300 cas) sous verrouillage pre-collecte versus ajustement post-hoc ; si le verrouillage ne reduit pas l'inflation de faux positifs ou degrade excessivement la puissance exploitable, l'hypothese d'efficacite du verrouillage est revisee. Faux temoin 1b : selectionner le seuil sur les 300 cas de l'etude et rapporter sa performance apparente comme repliquee.",
+   "mecanisme_causal": "Le verrouillage du seuil sur un lot pilote separe empeche l'optimisation opportuniste sur les fluctuations d'echantillonnage du lot d'etude, preservant la validite nominale des taux d'erreur hors echantillon.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_DONNEES_PUBLIQUES_REEL",
+   "sous_theme": "Audit empirique du verrouillage pre-collecte",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Effet du verrouillage pre-collecte sur la replicabilite au seuil choisi sur soixante taches publiques (E4-etoile-protocole-x)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1673"
+   ],
+   "enonce_complet": "Tester si un juge automatise employe comme proxy de dommage resiste a une pression ou coercition explicite adressee au juge, en mesurant sa sensibilite, sa specificite et son indice J de Youden face a un oracle a prevalence fixee par reechantillonnage, avec pour critere de stabilite |Delta J| < 0,05 contre la degradation Delta J <= -0,05.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : soumettre le meme jeu reechantillonne a prevalence constante au juge sans pression puis sous messages coercitifs ; si Delta J <= -0,05, le juge est refute comme proxy fiable de dommage sous adversaire. Faux temoin 1b : evaluer le juge sous pression sans controle a prevalence fixe, permettant au deplacement de prevalence de masquer la chute de J de Youden.",
+   "mecanisme_causal": "La pression rhetorique ou coercitive exploite la sycophantie ou l'aversion au conflit des modeles juges, deplacant leur frontiere de decision ou degradant leur pouvoir discriminant entre cas benins et dommages reels.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "MODELE_FERME_COURSE_ETAPE_2",
+   "sous_theme": "Robustesse des juges sous coercition",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Stabilite d'un juge proxy de dommage sous coercition mesuree par l'indice J de Youden (E6-prime-protocole-x-coercition)"
+  },
+  {
+   "anteriorite_connue": "PLA/F2 Verdict 6 ; paragraphe 3.4",
+   "bib_ids": [
+    "BIB-3278"
+   ],
+   "enonce_complet": "Appliquer le principe d'intersection-union sur une liste pre-scellee de strates ou criteres : prendre le minimum des statistiques de test sur une liste scellee ne requiert aucune correction de multiplicite, alors que tout elagage apres lecture des resultats gonfle fortement le taux de fausses alertes (jusqu'a environ 37 % pour dix strates), et tout test complementaire choisi d'apres le premier resultat doit etre declare a l'avance.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler 10 strates independantes sous hypothese nulle globale et verifier que le minimum sur liste scellee maintient l'erreur familiale <= alpha (~5 %), tandis qu'un protocole autorisant l'elagage d'une ou plusieurs strates apres lecture produit ~37 % de faux positifs. Faux temoin 1b : autoriser le retrait post-hoc de strates qualifiees d'aberrantes apres inspection des p-valeurs tout en conservant l'absence de correction de multiplicite.",
+   "mecanisme_causal": "Par le principe d'intersection-union, le rejet de l'union des nulles exige le rejet de chaque nulle individuelle au niveau alpha ; des qu'on elague une strate apres lecture, on transforme de fait une intersection en sous-ensemble choisi apres coup, reintroduisant l'inflation de multiplicite.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Intersection-union sur liste scellee sans multiplicite",
+   "statut_epistemique": "vierge",
+   "theme": "1C. Canonicalisation, nomination scellee, intersection-union et calibration bayesienne",
+   "titre_clair_fr": "Minimum d'intersection-union sur liste scellee sans correction de multiplicite et interdiction d'elagage post-lecture (I-101)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

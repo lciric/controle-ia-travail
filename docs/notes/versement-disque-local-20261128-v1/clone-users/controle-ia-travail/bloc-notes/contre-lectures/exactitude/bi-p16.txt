@@ -1,0 +1,49 @@
+ attn_out L14        1.25           0.004           −0.149           0.693            38
+ (heads 0-15)
+
+
+
+
+Discussion
+Keeling et al. (2024) show that multiple LLMs deviate from strict points-maximisation when
+options are described as producing pain or pleasure, with trade-offs that scale with stated
+intensity. A central interpretive ambiguity is whether this pattern reflects a largely
+surface-level policy, e.g. a learned linguistic script for “pain” and “pleasure” under
+instruction-following, or whether the model constructs internal variables that track
+valence-like information and are actually used in the computation that produces the choice.
+The present study addresses this gap by linking behavioural-style outcomes to identifiable
+internal structure and causal leverage: we locate where pain-pleasure sign and graded
+intensity are linearly accessible, and we test where interventions modulate the specific
+2-versus-3 decision signal. This approach aligns with the broader mechanistic interpretability
+programme in which correlational signatures (e.g. decodability) become substantially more
+informative when paired with targeted sufficiency/necessity-style interventions at specific
+sites (Rai et al., 2024). It also complements “model editing” and related causal work
+demonstrating that some behaviours can be linked to, and altered via, localised internal
+computations (Meng et al., 2023).
+
+A first result is the strong availability of a pain-pleasure distinction in Gemma-2-9B-it.
+Valence sign is perfectly separable (AUC = 1.00) across all analysed stream families, and it
+emerges in the earliest analysed layers. This establishes that, within the evaluated prompt
+distribution, the model’s activations contain a robust linear direction distinguishing pain- and
+pleasure-framed prompts. However, the Bag-of-Words baseline shows substantial sign
+signal from surface form alone (effective AUC ≈ 0.741), indicating that early perfect
+separability is compatible with strong lexical regularities in the templated prompts.
+Consequently, the probing evidence should be interpreted conservatively as demonstrating
+linear accessibility rather than lexical-independence or a uniquely “internal” valence variable.
+In this respect, the results motivate exactly the next step pursued here: moving from
+representational availability to causal tests of use.
+
+The intensity results provide a more differentiated picture. Both quantitative intensity (R²)
+and qualitative intensity (Spearman ρ) are linearly predictable, but performance depends on
+stream, layer, and (when scanned) token position. Quantitative intensity peaks are strongest
+in attention and MLP outputs, consistent with the idea that sublayer computations support
+more explicit scalar-like structure than the residual stream alone (Geva et al., 2021).
+Qualitative pain intensity peaks notably early, which is plausibly explained by the fact that
+rank-based decoding can succeed on monotonic semantic cues in lexical descriptors (“mild”
+to “excruciating”) without requiring precise magnitude calibration. Importantly, the position
+sweep strengthens this interpretation: allowing the best site across the final few positions
+yields markedly higher intensity decoding and substantially stronger logit alignment, with
+Corr(logits) peaking around pos-2 in late layers (≈0.985). This suggests that the most
+decision-aligned representation may occur just prior to the final token, with the last-token
+state reflecting an additional mixture of constraints (answer formatting, completion dynamics,
+

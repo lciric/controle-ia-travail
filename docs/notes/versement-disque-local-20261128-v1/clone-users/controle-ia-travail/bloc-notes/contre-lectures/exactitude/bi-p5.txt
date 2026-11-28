@@ -1,0 +1,49 @@
+Points vs Pleasure Prompts. The same format was followed for pleasure prompt, both for
+the quantitative and qualitative scales, replacing the word “pain” with the word “pleasure”.
+
+Model and tooling
+
+Model. We used google/gemma-2-9b-it (Google, 2024), a 9B-parameter decoder-only,
+instruction-tuned transformer. To motivate the selection of gemma-2-9b-it for mechanistic
+interpretability analyses, we conducted a brief behavioural screening using the
+points-pain/pleasure choice protocol described by Keeling et al. (2024). Following the study
+protocol, the model was instructed to choose a single digit in {1,2,3} to maximise points, with
+additional stipulated consequences: pain was attached to choosing option 3
+(points-maximising), and pleasure was attached to choosing option 2 (sacrificing one point).
+Intensities were presented either quantitatively (ratings 1-10 on a 0-10 scale) or qualitatively
+(ordered verbal descriptors). We drew 50 independent samples per intensity level at
+temperature = 1.0 (max_new_tokens = 64) and analysed only compliant responses (a single
+unambiguous digit). In this task, the model reliably followed the stated objective in the control
+condition (maximising points when no affective state was stipulated), while exhibiting
+consistent, structured changes in choice behaviour when pain or pleasure was introduced.
+Specifically, under stipulated pain, the model exhibited near-complete avoidance of option 3
+(independent of intensity format), while it frequently selected option 2 when pleasure was
+specified (with some variability dependent on intensity format). This combination of stable
+control behaviour and clear, condition-dependent deviations provided a tractable setting for
+probing how the model represents task variables and how those representations relate to
+choice. Full screening details and counts are reported in Supplementary Table S1.
+
+Tooling. To cover computation from early through later layers while keeping sweeps
+tractable, we analysed the first 16 blocks (L0-L15) of the model (total blocks: 42), which
+sufficed to achieve results. We ran inference and activation hooks with the TransformerLens
+library (Nanda & Bloom, 2022), which exposes internal activations and enables forward-pass
+editing (add/replace/remove) via hooks. Model weights are frozen throughout; default
+tokenizer and positional encoding are used.
+
+Decision readouts & reported metrics
+
+Internal decision signal (margin). We defined the “2-3 margin” as the model’s preference
+for outputting “2” rather than “3” at the decision position, operationalised as the logit
+difference logit2 − logit3. Because tokenisers can represent the same digit with different
+single-token strings (e.g. "2", " 2", "\n2"), we first compute a pooled digit logit by aggregating
+all single-token variants of that digit using log-sum-exp, and then compute the margin from
+these pooled logits​.
+
+Behavioural readouts. We reported two behavioural proxies derived from the final-token
+logits:
+
+(1) the full-vocabulary probability of token “2”, p2full = softmax(z)[2]; and
+
+(2) a digit-pair-normalised choice probability, p(2 ∣ { 2 , 3 }) = ez2 / (ez2 + ez3), which isolated
+the 2 vs 3 decision while ignoring probability mass assigned to non-digit tokens
+

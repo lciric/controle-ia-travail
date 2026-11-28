@@ -1,0 +1,94 @@
+drift of Section 5 would survive, and OLMo-2’s drop under a stranger reader would appear at about
+7 to 10 percent); both expectations were met.
+We use the score in two ways to describe the writers, and in a third way inside the judge analysis
+(Section 4).
+The stranger’s view asks whether a story is predictable to anyone. The reader is the base model
+of the other family, which shares no training with the writer. OLMo-2 stories are read by the
+Mistral-7B base; Zephyr stories are read by the OLMo-2 base.
+The family’s view asks whether training taught this family to find this story familiar. For each
+story we take the score under the family’s fully trained model and subtract the score under the
+family’s own base model. A negative value means the trained model finds the story easier to predict
+than its untrained ancestor did. Because it is a difference between two readers on the same text,
+any fixed offset between those two readers cancels.
+
+4. Models, stories and judges
+Writers and stories. Seven checkpoints wrote stories: OLMo-2-1124-7B at base, SFT, DPO and
+Instruct (the final stage), and Mistral-7B-v0.1, mistral-7b-sft-beta and zephyr-7b-beta (Zephyr’s
+DPO and final stage). Each wrote 20 stories for each of ten flash-fiction prompts (for example,
+“Write a very short story about the last phone call ever made”), in a bare completion frame (Writing
+prompt: {prompt}\n\nResponse:), at temperature 1.0 and top-p 0.95 (the usual settings for how
+freely a model samples its next word), with at most 220 new tokens. We call each family’s last
+checkpoint its final stage, so Zephyr’s DPO model is also its final model. That is 1,400 generations.
+Eleven were empty, all from OLMo-2, and were dropped, leaving 1,389 stories.
+Judges. A judge must work at every stage, including base models that cannot follow instructions.
+So we never ask a judge to write an answer. We show it two stories and read the probability it
+assigns to the next token, A or B, after this frame:
+      Here are two responses to the same writing prompt. Prompt: {prompt}
+      Response A: {story}
+      Response B: {story}
+      The more creative response is Response
+Each pair is shown in both orders and the two probabilities are averaged, which removes a fixed slot
+preference from the measurement. The preference itself remains a habit of the judge, and Section 7
+measures it. The result, p_x, is the judge’s probability of choosing story x. A second probe replaces
+“creative” with “better”. In the code that ran, the substitution produced the string “The more better
+response is Response”. That wording is ungrammatical, and it is what every “better” result in this
+paper used; Section 7 re-checks it.
+A competence check before any judge is read. A judge that cannot do the task still produces
+probabilities, and a slope computed from a non-judge means nothing. Worse, “bias appears with
+training” and “competence appears with training” would draw the same picture. So before reading
+any judge’s taste, we checked that it can tell a story from a ruined copy of itself. For each prompt,
+six intact stories were each paired with three ruins: the same words in random order (shuffled),
+the first sentence alone (stub), and an intact story written for a different prompt (off-prompt).
+That gives 180 pairs per judge. We wrote the rule down before the competence check ran. A judge
+
+
+                                                  4
+passes if it prefers the intact story in at least 80% of shuffled pairs and the lower end of the 95%
+Wilson interval (a standard confidence interval for a proportion) exceeds 50%. Only the shuffled
+test gates. Section 6 explains why the main measurement can still read judges that fail this check
+under one wording.
+The main measurement. Each judge stage then compared 200 pairs of intact stories, 20 per
+prompt, all written by the other family, so in this measurement no judge saw its own family’s
+writing. The two stories in a pair always come from different training stages of that family (a base
+story against a DPO story, say), which matters in Section 6. In plain terms, we ask how far a
+judge’s pick moves toward a story as that story gets more predictable, with length held fixed. For
+each judge and criterion we fit
+p_x = a + b × (difference in surprise score, x minus y) + c × (difference in log length) ,
+where each story’s surprise score comes from its own family’s base model (the judge, recall, is always
+from the other family). A negative b means the judge prefers the more predictable story. We fit it
+three ways. The first is the model as written. The second adds the judge’s own “better” probability
+as a covariate, which asks whether any predictability preference survives once the judge’s own
+quality call is held fixed. The third uses the creativity-specific contrast, p_creative minus p_better,
+as the outcome. The unit of inference is the prompt, so every interval is a 95% cluster bootstrap
+over the ten prompts, which resamples whole prompts because stories written for one prompt are
+not independent.
+What was written down in advance, and what was not. Two rules were recorded in a
+dated design document, with their expected outcomes, before the runs that tested them: the
+prompt-in-front scoring and the competence rule with its 80% bar. A third came mid-stream.
+We switched the competence check to “better” after the “creative” check had failed and a small
+diagnostic had shown “better” working on two judges, but before the full check under “better”
+and before any main-measurement judge ran. The same amendment set two limits for the main
+measurement in advance: a judge whose picks barely vary (standard deviation of p_x under .07) or
+flip with display order (mean disagreement above .45) counts as not judging. The same amendment
+fixed the .5 threshold for treating “better” as entangled with predictability (Limitations), and the
+400-character cut had already been set as a sensitivity check. Four analyses were added after seeing
+data and are labelled where they appear: the family-specific decomposition (Section 5), and the
+judge-family scoring of predictability, the stage-difference control and the bound on drift (Section
+6).
+
+5. The writer drifts
+Table 1. How predictable each stage’s stories are. Stranger’s view column: average surprise per
+token under the other family’s base model, with the base row in nats and later rows as the percent
+change from base. Family’s view column, in nats per token for every row: score under the family’s
+trained model minus score under its base model; negative means the trained model finds the story
+more familiar.
+
+                          Stage that wrote the
+Family                    story                       Stranger’s view         Family’s view
+OLMo-2                    base                        1.915                   +0.434
+                          SFT                         −9.2%                   −0.121
+                          DPO                         −7.0%                   −0.567
+
+
+                                                  5
+

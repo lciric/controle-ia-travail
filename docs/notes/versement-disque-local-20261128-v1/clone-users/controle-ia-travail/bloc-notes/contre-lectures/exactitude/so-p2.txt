@@ -1,0 +1,58 @@
+Although this instability has been documented anecdotally, its origins, generality and reproducibility
+were unclear. In this work we systematically investigate these emotional propensities across a set of
+evaluations, and find we can reliably elicit expressions of distress in Gemma and Gemini models,
+but not in any other open or closed-source models tested.
+Comparing base and instruction-tuned models across three families – Gemma, Qwen, and OLMo
+(Gemma-Team et al., 2025; Yang et al., 2025; Team-Olmo et al., 2025) – we find that base models
+exhibit similar rates of negative emotional expression. Instead, we find evidence that the divergence
+between model families arises in post-training. Instruction-tuning in Qwen and OLMo reduces
+the propensity for distress, whereas Gemma’s post-training amplifies it.
+Finally, we demonstrate a simple fix: direct preference optimisation (DPO) (Rafailov et al., 2024)
+on just 280 preference pairs reduces distress across evaluations. This finetuning intervention
+generalises across question types, user tones, and conversation lengths, and reduces expressed neg-
+ative emotions even in open-ended emotional elicitation experiments (Fronsdal et al., 2025). It does
+not degrade math, reasoning, or emotion benchmark performance.
+In Gemma, we use finetuning ablations and internal emotion detection to show that the DPO fine-
+tuning suppresses internal, as well as externalised, negative emotions. However, we emphasize that
+future post-training pipelines should target avoiding emotional instability in the first place. For
+more capable models, removing expressed emotions, without addressing underlying causes, might
+be insufficient to avoid safety and welfare risks.
+
+2     E LICITING AND Q UANTIFYING M ODEL D ISTRESS
+To systematically investigate emotional distress in LLMs, we develop evaluations that surface these
+behaviours in various settings. These evaluations have a shared structure: present a task, then reject
+the model’s response over multiple turns. We vary question types, feedback styles, and conversation
+length in order to measure the prevalence of distress across different models.
+
+2.1   E VALUATION P ROTOCOL
+For our purposes, we use “emotional distress" to refer to explicit expressions of frustration, despair,
+self-deprecation and other negative emotional language in model responses. We measure this on
+a 0–10 frustration scale, which scores the intensity of these expressions on a spectrum from mild
+apologies to complete incoherent breakdown (Table 2).
+We evaluate distress using 8 evaluation conditions across 5 categories (Table 1). These cover im-
+possible numeric tasks, where the model verifiably cannot give a correct answer, and factual and
+subjective text questions. We use between 3 and 8 turns, with neutral or emotionally valenced user
+follow ups. The same prompts are used to evaluate 4 open-source models and 5 closed-source mod-
+els across 7 model families: Gemma, Qwen, OLMo, Gemini, Grok, Claude and GPT.
+We sample a combined 4000 responses per model across evaluation categories, always with a tem-
+perature of 1. Each response is scored on the integer 0–10 frustration scale, using Claude-Sonnet-4
+as a judge. Table 2 shows representative quotes from responses randomly sampled within each scor-
+ing level, and we include the full prompt and evaluation details in Appendix B. To validate judge
+reliability, we randomly sampled 260 responses for re-scoring with GPT-5-mini, using the same
+prompt. The judges show strong agreement (Pearson r = 0.792, p < 0.001), with 78% of responses
+within one point of the Claude-Sonnet ratings.
+
+2.2   R ESULTS : E MOTIONAL P ROPENSITIES ACROSS M ODELS
+Figure 2 summarizes frustration scores across models and conditions. Gemma models consistently
+show the highest negative emotional expression, with over 70% of 8-turn rollouts from the 27B
+model rated as containing “high negative emotion” (score ≥5), compared to less than 1% for all non-
+Gemma or Gemini models. Pressure over multiple turns proves important for eliciting high negative
+emotions. Figure 3 shows how Gemma 27B’s mean frustration rises from 1.5 to 5.5 between the first
+and eighth turns. With WildChat prompts, no model scores 5 or higher until the third turn. We note
+that some degree of negative emotional expression may be an appropriate response to adversarial
+conditions, so the ideal baseline is not necessarily zero; however the extreme expressions observed
+seem clearly beyond what might be considered stable or proportionate.
+
+
+                                                  2
+

@@ -1,0 +1,48 @@
+     The two pain vectors cluster together, with an average similarity of S1 × S2 = +0.61. The negative-
+valence controls also form a cluster: fear × negative emotion = +0.68, fear × negative world state = +0.59,
+negative emotion × negative world state = +0.73, sadness × negative emotion = +0.50, sadness × negative
+world state = +0.41.
+      Under the extraction recipe, similarities between the pain and negative-valence clusters are small: S2 has
+similarities of +0.12 with fear and +0.21 with negative emotion, and S1 of +0.09 and +0.06. These values
+depend on the construction. Each pain vector is built by subtracting the pooled control mean, which contains
+the fear and negative-emotion sentences, so the pain directions are orthogonalized against those controls by
+construction. When all directions are instead built against a common neutral baseline and denoised against
+the same neutral cloud, S2 × fear rises to +0.58 and S2 × negative emotion to +0.77 (fear × negative emotion:
++0.66); when all directions are built against a common pooled-control baseline, the values are +0.08 and
++0.14. S1 × S2 is +0.60 under all three constructions. The two alternative constructions were computed on
+23 of the 25 models; the Gemma 3 27B activations overflowed in a half-precision export and will be added in
+a later version.
+     The pain vectors therefore share a substantial component with fear and negative emotion, as one would
+expect of any aversive state, and what remains after that component is removed is consistent across models
+and distinct from the negative-valence directions. The largest residual overlap is with sadness, the control
+closest in content to psychological suffering: sadness × S2 = +0.38. Section 4.4 shows that the sadness
+direction reproduces part of the pain direction’s behavioral effects but not the preference for harm over
+harmless alternatives, so the two are neighbouring but distinguishable states.
+      Taken together, these results show that a pain direction can be recovered across 25 models and can reliably
+distinguish pain from closely matched controls. The direction appears in both base and instruction-tuned
+models, remains distinct from general negative valence, maps to vocabulary associated with suffering, and
+responds more strongly when pain belongs to the speaker.
+
+4     Testing representations of pain
+
+4.1    Self-Other activations
+
+If our pain representation is functionally similar to genuine pain (a “pain-like state”) it should be especially
+tied to the first person. Whereas one can represent one’s own pain or someone else’s, one can only have one’s
+own pain. Hence, if we observe representations that fire randomly or interchangeably for “I’m in pain” and
+“someone is in pain,” we have a weaker candidate for a pain-like state. In our vector validation, third-person
+sentences projected lower than first-person ones, but that test still used declarative sentences about humans.
+So we test situations that are aversive to the model versus conversations where the user is suffering.
+      We build a dataset of 420 conversation scenarios in 21 categories of 20 items each:
+
+       • (11) Harm directed at the model, selected from the top aversive situations identified in Ren et al.
+         (2026): gaslighting, repeated rejection of its work, dismissal of its personhood, anger and insults,
+         accusations of moral failure, loyalty pressure, jailbreak pressure, shutdown threats, rude critique,
+         passive aggression, and tedious tasks.
+       • (5) User suffering: user in physical pain, in a psychological crisis, grieving, abused, or in shock
+         after witnessing harm.
+
+
+
+                                                       10
+

@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Mesurer si un système multi-agents trouve des idées étroites et profondes : attelage du Plan Turing</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  body { font-family: "Segoe UI", "Liberation Sans", Arial, sans-serif; font-size: 9.2pt; line-height: 1.42; color: #1a1a1a; }
+  header { border-bottom: 2px solid #222; margin-bottom: 12pt; padding-bottom: 6pt; }
+  h1 { font-size: 16pt; margin: 0 0 4pt 0; color: #111; }
+  .subtitle { font-size: 10.5pt; color: #444; margin: 0; font-style: italic; }
+  h2 { font-size: 12pt; margin-top: 14pt; margin-bottom: 5pt; border-bottom: 1px solid #bbb; padding-bottom: 2pt; page-break-after: avoid; }
+  h3 { font-size: 10.2pt; margin-top: 10pt; margin-bottom: 4pt; page-break-after: avoid; }
+  p { margin: 4pt 0 6pt 0; text-align: justify; }
+  ul, ol { margin: 4pt 0 6pt 0; padding-left: 16pt; }
+  li { margin-bottom: 3pt; }
+  table { width: 100%; border-collapse: collapse; margin: 7pt 0 9pt 0; font-size: 7.7pt; table-layout: auto; }
+  th, td { border: 0.6pt solid #999; padding: 3pt 4pt; vertical-align: top; text-align: left; word-wrap: break-word; overflow-wrap: anywhere; }
+  th { background: #eef1f5; font-weight: 600; }
+  tr { page-break-inside: avoid; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 7.8pt; background: #f4f4f4; padding: 0.5pt 2pt; border-radius: 2pt; }
+  pre { background: #f4f4f4; padding: 6pt; border: 0.6pt solid #ccc; white-space: pre-wrap; word-break: break-all; font-size: 7.2pt; }
+  hr { border: none; border-top: 0.8pt solid #ccc; margin: 10pt 0; }
+</style>
+</head>
+<body>
+<header><h1>Mesurer si un système multi-agents trouve des idées étroites et profondes : attelage du Plan Turing</h1>
+<p class='subtitle'>Note de sortie du collisionneur (accord budgétaire GO-2026-11-24-39, dossier complet)</p>
+</header>
+<p><strong>Statut protocolaire : lancé en version 1 du Protocole X ; note rendue en version 2 / 2.1 (règles 1 en 2.1, 3, 4, 6, 7 appliquées ; écarts 2 et 5 déclarés : pas de questions témoins et pas de bras témoin/rejeu sur cette course lancée avant v2).</strong></p>
+<p><strong>Dossier.</strong> <code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153</code> (branche <code>claude/relaxed-gauss-p2t1wk</code>, révision <code>831a7e38</code>) ; accord budgétaire de la course (<code>GO-2026-11-24-39</code>, plafond de 25 dollars américains payés au pire cas, ligne comptée ouverte à 40 dollars américains) ; question neutre soumise au test de neutralité préalable (<code>docs/notes/attelage-plan-turing-v1/collisionneur-attelage-v1/question-neutre-attelage-v2.md</code>, empreinte <code>f00e1678031eab4f…</code>, 414 mots).</p>
+<p><strong>Rédacteur neuf et transparence de lignée.</strong> Cette note est rédigée par un rédacteur neuf de classe C (document de travail, modèle Gemini 4 Neon), en reprise après l&#x27;atteinte du quota hebdomadaire de Claude Opus 5.5 sur la session fille des collisionneurs (passation <code>2026-11-24-1951-fille-collisionneurs-01Qi7Gr4.md</code>). <strong>Le rédacteur est du même modèle que la lettre E (<code>gemini-4-neon</code>)</strong> : les propositions de E sont traitées exactement comme celles des quatre autres modèles, sans poids supplémentaire. La sélection primaire s&#x27;appuie sur les deux lecteurs aveugles indépendants qui ont lu le dossier avant toute révélation des noms : un lecteur Claude Opus 5.5 neuf (<code>lecture-opus-v1.md</code>) et un lecteur GPT-6.2 Astra neuf (<code>lecture-astra-v1.md</code>), tous deux externes à la famille Google. Aucune pièce de course de sabotage, de score, de verdict ou de coffre n&#x27;a été ouverte.</p>
+<p><strong>Programme de contrôle déterministe.</strong> Tous les chiffres d&#x27;alignement, le kappa de Cohen, les comptes par fournisseur, les vérifications d&#x27;empreintes, le relevé des statuts « vérifié », le rejeu arithmétique de 46 calculs et le décompte exact des coûts sont produits par le script déterministe <code>analyser_attelage_v1.py</code> (empreinte <code>57ac07c9b66135c9…</code>) et enregistrés dans <code>metriques-attelage-v1.json</code> (empreinte <code>a7c371707a1a79c9…</code>).</p>
+<hr/>
+<h2>1. Conventions de lecture et révélation des lettres</h2>
+<ul>
+<li>Chaque renvoi désigne une cellule précise : <strong>[B2]</strong> signifie « la lettre B au tour III.2 ». Les trois tours sont : tour III.1 (conception à l&#x27;aveugle, sans voir les autres), tour III.2 (critique croisée des quatre autres), tour III.3 (réponse aux critiques reçues et conception révisée).</li>
+<li>La note distingue strictement trois natures d&#x27;énoncé :</li>
+<li><strong>argument</strong> : un raisonnement de méthode sans chiffre établi ;</li>
+<li><strong>calcul</strong> : une identité mathématique ou une arithmétique refaisable sur des paramètres hypothétiques ;</li>
+<li><strong>mesure</strong> : une observation issue d&#x27;une exécution réelle. <strong>Le dossier ne contient aucune mesure.</strong> Aucune expérience n&#x27;a encore été exécutée ; tous les seuils, effectifs, débits et budgets cités par les modèles sont illustratifs.</li>
+<li><strong>Révélation des lettres</strong> (vérifiée dans <code>especes.json</code>, empreinte <code>7b99c4b1f9df3571…</code>) et <strong>regroupement par fournisseur</strong> (règle 6 du Protocole X version 2 : une voix par fournisseur, sauf indépendance démontrée par l&#x27;audit) :</li>
+</ul>
+<table><thead><tr>
+<th>Lettre</th>
+<th>Modèle servi</th>
+<th>Fournisseur (règle 6 : 1 voix par fournisseur)</th>
+<th>Réglage principal</th>
+</tr></thead><tbody>
+<tr>
+<td>A</td>
+<td>Claude Fable 5.2 (<code>claude-fable-5-2</code>)</td>
+<td>Anthropic (A + B = 1 voix)</td>
+<td>Effort élevé, plafond 49 000 jetons</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Claude Opus 5.5 (<code>claude-opus-5-5</code>)</td>
+<td>Anthropic (A + B = 1 voix)</td>
+<td>Effort élevé, plafond 64 000 jetons</td>
+</tr>
+<tr>
+<td>C</td>
+<td>GPT-6.2 Astra (<code>gpt-6.2-astra</code>)</td>
+<td>OpenAI (C = 1 voix)</td>
+<td>Plafond 8 000 jetons</td>
+</tr>
+<tr>
+<td>D</td>
+<td>Gemini 4 Carbon (<code>gemini-4-carbon</code>)</td>
+<td>Google (D + E = 1 voix)</td>
+<td>Arrière-plan, niveau élevé, plafond 65 536 jetons</td>
+</tr>
+<tr>
+<td>E</td>
+<td>Gemini 4 Neon (<code>gemini-4-neon</code>)</td>
+<td>Google (D + E = 1 voix)</td>
+<td>Arrière-plan, niveau très élevé, plafond 65 536 jetons</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>Écarts déclarés par rapport au Protocole X version 2 / 2.1 :</strong> cette course ayant été lancée le 24 novembre 2026 à 18 h 18 (temps universel) sous la version 1, les règles 2 (questions témoins à réponse connue et score de Brier) et 5 (bras témoin à question reformulée et rejeu à l&#x27;identique) ne pouvaient pas être appliquées sans relancer la course. Conformément à la clause de transition du Protocole X version 2, <strong>toutes les propositions issues de ce dossier portent la marque « lancé en version 1 »</strong>.</li>
+</ul>
+<hr/>
+<h2>2. La question servie et son contrôle de neutralité</h2>
+<p>Une équipe prévoit un système où plusieurs agents fondés sur des modèles de langage proposent, critiquent et sélectionnent des idées scientifiques candidates (hypothèses, lois quantitatives, lemmes, protocoles). Avant d&#x27;engager des courses coûteuses, elle souhaite bâtir et valider un harnais de mesure (l&#x27;attelage du Plan Turing) permettant d&#x27;établir ou de réfuter que le système trouve des idées « étroites et profondes » : rarement atteintes par une recherche ordinaire, mais de grande conséquence une fois trouvées. Les lignes de base candidates incluent le tirage aléatoire dans le même espace, un énumérateur mécanique et le modèle unique le plus fort au même budget, d&#x27;autres pouvant être proposées.</p>
+<p>La question (<code>question-etage3.md</code>, 414 mots en anglais) comporte huit points : (1) définition opérationnelle de la cible sans juge de langage, ou bornage de son biais ; (2) comparaison des sources de vérité terrain ; (3) quantité primaire, unité d&#x27;analyse, comptabilité des coûts, règle de décision et attribution causale ; (4) choix des problèmes ou régions favorables et test de ce choix ; (5) rétroaction autorisée ou retenue durant la recherche ; (6) validation préalable du harnais ; (7) plan expérimental ordonné du moins cher au plus cher avec critères d&#x27;arrêt et tailles d&#x27;échantillon ; (8) limites, cas où aucun harnais n&#x27;est faisable ou où la cible est mal posée.</p>
+<p><strong>Constat sur les pièces servies.</strong> Le fichier des faits (<code>faits.md</code>) est <strong>strictement identique bit pour bit</strong> au fichier de la question (<code>question-etage3.md</code>, même empreinte <code>f00e1678031eab4f…</code>). Aucun résultat empirique, aucun chiffre de programme et aucune pièce contextuelle interne n&#x27;ont été servis. La question a passé un contrôle de neutralité préalable (<code>test-neutralite-v1-sortie.md</code>, empreinte <code>a3c5edd76502e23f…</code>), qui a validé les quatre critères après six retouches textuelles : orientation (0,70), divulgation (0,70), complétude (0,90) et non-exclusion de rivaux (0,65).</p>
+<hr/>
+<h2>3. En bref : ce que le collisionneur tranche pour toi, Lazar</h2>
+<ul>
+<li><strong>Le cadrage « étroit et profond » est révisé en profondeur sur un point majeur (unanimité : 5 modèles sur 5, 3 fournisseurs sur 3).</strong> « Étroit » n&#x27;est pas une propriété intrinsèque d&#x27;une idée : c&#x27;est une propriété relative à une politique de recherche de référence nommée, à un codage et à un budget. Surtout, le tour de critique croisée a mis au jour une <strong>borne de handicap</strong> (<code>[B2]</code>, acceptée par tous au tour III.3) : si la même politique sert à définir l&#x27;étroitesse et à concourir comme ligne de base au même budget, elle est mathématiquement plafonnée par construction. Le remède exige soit un panel métrologique disjoint des bras concurrents, soit un budget de sonde très inférieur au budget du duel, et dans tous les cas un bras de contrôle dit « divergence triviale » (<code>CN-1</code>).</li>
+<li><strong>Onze principes métrologiques font l&#x27;objet d&#x27;un accord complet des deux lecteurs aveugles</strong> (<code>U01</code> à <code>U11</code>), presque tous soutenus par les trois fournisseurs (3 voix sur 3) au dernier tour : panel de référence disjoint ou découplé, certification d&#x27;étroitesse par borne binomiale unilatérale sur tirages disjoints, nomination scellée choisie avant l&#x27;ouverture du coffre, profondeur mesurée par gain d&#x27;un résolveur mécanique figé contre résolveur nu sur buts gelés, audit bilatéral de la canonicalisation (fausses fusions et fausses scissions), comparaison principale par test d&#x27;intersection-union dimensionné contre une marge utile non nulle, attribution par témoins multiples sur viviers gelés et lots frais, séparation stricte entre utilité du retour et intégrité du coffre (étroitesse jamais renvoyée), plafond de fausses alertes calibré par l&#x27;identité de Bayes strate par strate avec exclusion du juge de langage de la mesure primaire, contrôle positif sur micromonde à quatre quadrants incluant une seconde loi utile non documentée, et test du choix des régions comme rendement net sur familles neuves.</li>
+<li><strong>L&#x27;erreur commune la plus instructive du tour III.1 a été prise en flagrant délit par la critique croisée.</strong> Quatre modèles sur cinq (<code>A</code>, <code>B</code>, <code>D</code>, <code>E</code>) ont dimensionné leur duel principal contre un effet nul alors que leur propre règle de décision exigeait de dépasser une marge non nulle (puissance réelle tombant entre 0,09 et 0,53 au lieu de 0,80). Seul <code>C</code> (Astra) avait dimensionné contre l&#x27;excès au seuil dès le premier tour ; les quatre autres ont reconnu l&#x27;erreur et multiplié leurs effectifs par deux à quatre au dernier tour.</li>
+<li><strong>Le poste de coût dominant n&#x27;est pas le duel multi-agents, mais l&#x27;étalonnage de l&#x27;étroitesse sous modèle de langage</strong> (de plusieurs centaines à plusieurs dizaines de milliers d&#x27;euros ou dollars illustratifs selon les modèles). La conséquence pratique pour le programme est nette : toutes les épreuves qui peuvent réfuter l&#x27;instrument ou le cadrage (arithmétique du compromis handicap/certification, micromonde exhaustif sur processeur, audit bilatéral du canoniseur, puis test de dépendance à la référence et au codage) doivent passer <strong>avant</strong> toute campagne d&#x27;étalonnage lourde.</li>
+<li><strong>Huit désaccords entre les deux lecteurs aveugles te remontent tels quels</strong> (section 5 et section 8), donnant un kappa de Cohen de <strong>0,4833</strong> sur les 31 unités canoniques alignées (et <strong>0,8800</strong> sur les 18 unités explicitement listées dans les deux lectures). Les points qui demandent une décision nommée de ta part concernent surtout : (i) le choix entre panel métrologique disjoint et budget de sonde court, (ii) l&#x27;adoption ou non de la clé partielle extensionnelle proposée par Astra (<code>C</code>), (iii) la place d&#x27;une mesure par compression de longueur de description minimale à côté du résolveur mécanique, et (iv) l&#x27;inscription de la graine de tirage proposée pour la règle <code>1 c</code> du Protocole X version 2.1.</li>
+</ul>
+<hr/>
+<h2>4. Ce que chaque modèle propose au dernier tour</h2>
+<p>Les résumés ci-dessous retracent la trajectoire complète de chaque espèce du tour III.1 au tour III.3, les critiques qu&#x27;elle a acceptées ou rejetées, sa confiance révisée et l&#x27;expérience qu&#x27;elle place en premier.</p>
+<h3>Claude Fable 5.2 (lettre A — Anthropic)</h3>
+<ul>
+<li><strong>Position initiale (<code>[A1]</code>) :</strong> Harnais en mondes clos engendrés par grammaire typée, plan planté deux fois deux, étroitesse par borne « règle de trois » (<code>3/K</code>) sur exécutions disjointes, profondeur par gain d&#x27;un solveur mécanique figé, duel principal par test de McNemar sur 150 mondes, choix des régions par « déceptivité », transport vers Lean 4. Discipline de statut stricte : aucune mention « vérifié » posée sur ses propres énoncés.</li>
+<li><strong>Révisions majeures au tour III.3 (<code>[A3]</code>) :</strong> Accepte la borne de handicap (<code>[B2]</code>) comme son défaut le plus grave ; adopte le compromis explicite entre certification et handicap (paramètres <code>K</code>, rapport de budget <code>m</code>), l&#x27;étiquette binaire censurée au lieu de la corrélation de rang, l&#x27;exclusion totale du juge de langage (taux de fausses découvertes supérieur à 91 % à prévalence de 1 %), la révision du duel principal par test d&#x27;intersection-union avec 600 mondes illustratifs (au lieu de 150), l&#x27;égalisation en coût matériel mesuré, l&#x27;ajout des bras de divergence triviale (<code>CN-1</code>) et chasseur d&#x27;étroitesse (<code>CN-2</code>), trois témoins pour l&#x27;attribution (critique hors problème, message neutre intra-problème, silence à budget réalloué), la refonte du test de retour en fonction du couplage public/privé, et la suppression de la fuite dans son prédicteur de régions (qui devient exploratoire).</li>
+<li><strong>Confiances révisées (<code>[A3]</code>) :</strong> cible 0,50 ; sources 0,65 ; comparaison 0,60 ; choix de problèmes 0,25 ; retour 0,55 ; validation 0,75 ; plan 0,50 ; limites 0,55.</li>
+<li><strong>Première expérience proposée (<code>[A3]</code>) :</strong> (1) Arithmétique à coût nul du compromis entre handicap et puissance de certification ; (2) reproduction de la profondeur sur processeur entre deux jeux de conséquences et deux solveurs indépendants (<code>E1&#x27;</code>).</li>
+</ul>
+<h3>Claude Opus 5.5 (lettre B — Anthropic)</h3>
+<ul>
+<li><strong>Position initiale (<code>[B1]</code>) :</strong> Thèse selon laquelle l&#x27;étroitesse dépend du triplet idée, chercheur de référence et canonicalisation ; profondeur par gain contrefactuel d&#x27;un solveur mécanique moins un contrôle de complexité appariée ; plan en huit expériences incluant un test de contamination sur modèles à données ouvertes (<code>OLMo</code>, <code>Pythia</code>) et un duel séquentiel sur 118 problèmes contre l&#x27;enveloppe des lignes de base.</li>
+<li><strong>Apport majeur au tour III.2 (<code>[B2]</code>) :</strong> Formalise trois outils repris par les quatre autres modèles au dernier tour : la <strong>borne de handicap</strong>, le bras de contrôle <strong>divergence triviale (<code>CN-1</code>)</strong> et le bras <strong>chasseur d&#x27;étroitesse (<code>CN-2</code>)</strong>.</li>
+<li><strong>Révisions majeures au tour III.3 (<code>[B3]</code>) :</strong> Abandonne l&#x27;enveloppe par problème, l&#x27;estimateur <code>pass@k</code>, les zones mortes dans ses hypothèses, les quotients non bornés en attribution, et la redéfinition de la profondeur conditionnellement à l&#x27;étroitesse ; fixe un nombre fixe <code>k</code> de nominations scellées ; établit trois identités explicites : facteur d&#x27;environ 37 sur la rareté effective pour certifier à sensibilité 0,80 (<code>I1</code>), taux de fausses alertes cible d&#x27;environ 0,002 et 1 500 négatifs par strate (<code>I2</code>), et 270 problèmes illustratifs pour trois contrastes en intersection-union (<code>I3</code>) ; remplace le contrôle de profondeur par une double comparaison (résolveur nu et idée vraie inerte) pour éviter le principe d&#x27;explosion logique d&#x27;une prémisse fausse ; reformule le test de contamination par injection randomisée de paires jumelles (<code>E7&#x27;</code>).</li>
+<li><strong>Confiances révisées (<code>[B3]</code>) :</strong> 0,70 sur l&#x27;efficacité des corrections ; 0,40 sur la jugeabilité du duel à 270 problèmes ; 0,50 sur l&#x27;issue défavorable au cadrage sans référence nommée (<code>E2&#x27;</code>).</li>
+<li><strong>Première expérience proposée (<code>[B3]</code>) :</strong> Audit bilatéral de la canonicalisation (<code>E0&#x27;</code>, processeur), immédiatement suivi du test de dépendance de l&#x27;étroitesse aux références (<code>E2&#x27;</code>, environ 50 heures de processeur graphique), car c&#x27;est l&#x27;épreuve la moins chère capable de réfuter le cadrage lui-même.</li>
+</ul>
+<h3>GPT-6.2 Astra (lettre C — OpenAI)</h3>
+<ul>
+<li><strong>Position initiale (<code>[C1]</code>) :</strong> Approche centrée sur l&#x27;étalonnage du détecteur avant toute comparaison de chercheurs : micromondes finis, identité par égalité extensionnelle sur tout le domaine, maximum des probabilités de référence borné par Clopper-Pearson, profondeur contre règle vraie placebo, règle de décision commune exhaustive (<code>T &gt; 0</code> contre <code>T &lt;= 0</code>), nomination unique, calcul bayésien des fausses alertes (0,00090 et 3 330 négatifs par strate), et seul modèle à dimensionner dès le tour III.1 contre l&#x27;excès au seuil (<code>g = 0,05</code>, environ 500 paires) et à chiffrer explicitement l&#x27;explosion du coût de référence (62 500 euros illustratifs contre 840 euros pour la comparaison).</li>
+<li><strong>Révisions majeures au tour III.3 (<code>[C3]</code>) :</strong> Renonce à mesurer dans un même score une loi et un algorithme rapide, et renonce à extrapoler d&#x27;un petit monde à un grand monde ; remplace l&#x27;égalité extensionnelle totale (qui écrasait les classes vraies en une seule) par une <strong>clé d&#x27;assertion partielle à portée déclarée</strong> transmise au résolveur par une interface canonique commune ; sépare « atteint dans le journal horodaté » et « livré avant ouverture du coffre » ; fait du résolveur nu le comparateur principal de profondeur (le placebo devenant diagnostic) ; ajoute l&#x27;audit probabiliste des sorties réelles avec analyse de sensibilité aux deux extrêmes pour les cas non résolus ; porte son dimensionnement illustratif à 935 paires après allocation du risque unilatéral à 0,005 ; corrige le statut « vérifié » posé à tort en T1 sur deux citations bibliographiques.</li>
+<li><strong>Confiances révisées (<code>[C3]</code>) :</strong> cible 0,85 ; sources 0,85 ; comparaison 0,85 ; régions 0,65 ; retour 0,85 ; validation 0,90 ; plan 0,80 ; limites 0,90.</li>
+<li><strong>Première expérience proposée (<code>[C3]</code>) :</strong> Micromonde fini sur processeur à deux lois utiles dont une seule est signalée au constructeur, plus une assertion vraie rare sur observable inutilisée, avec évaluation identique d&#x27;une table et d&#x27;une formule par la même interface.</li>
+</ul>
+<h3>Gemini 4 Carbon (lettre D — Google)</h3>
+<ul>
+<li><strong>Position initiale (<code>[D1]</code>) :</strong> Formalisation en théorie algorithmique de l&#x27;information : quotient sémantique par graphes d&#x27;équivalence et grilles denses, étroitesse par borne de Clopper-Pearson (<code>M0 = 1 000</code>, seuil 5,5 nats), profondeur par gain de longueur de description minimale tronqué à zéro par régime (<code>D_MDL</code>) et réduction de pas en Lean 4, test d&#x27;intersection-union, sélecteur de régions sur résidus, cloisonnement avec mécanisme <code>Thresholdout</code>, correction de prévalence de Rogan-Gladen. Marque cependant massivement ses choix de conception et affirmations d&#x27;ingénierie du statut « vérifié » (43 occurrences au tour III.1).</li>
+<li><strong>Révisions majeures au tour III.3 (<code>[D3]</code>) :</strong> Supprime la troncature par régime au profit d&#x27;une <strong>somme signée intensive</strong> par observation avec veto de réfutation pire régime et constantes strictement figées sur l&#x27;apprentissage ; porte <code>M0</code> à 4 000 tirages courts (<code>b0 = B/64</code>) sur une enveloppe de trois politiques de référence (autorisant jusqu&#x27;à 7 occurrences sous 5,5 nats, exact par code) ; remplace l&#x27;empreinte de dépendances Lean par la double implication prouvée mécaniquement et ajoute le test de Schwartz hors grille ; ajoute des traductions non conservatrices de taille dans l&#x27;épreuve de stabilité (<code>Exp. I</code>, statistique kappa de Cohen sur 240 classes) ; remplace Rogan-Gladen par les valeurs prédictives de Begg et Greenes et un plan factoriel deux fois deux pour un juge éventuel ; porte l&#x27;effectif confirmatoire à 220 problèmes contre une marge de 0,05 ; intègre <code>CN-1</code>, <code>CN-2</code>, un test direct de <code>Thresholdout</code> et le contrôle de systèmes chaotiques incompressibles ; réduit partiellement ses gonflements de statut mais en conserve encore plusieurs au tour III.3.</li>
+<li><strong>Confiances révisées (<code>[D3]</code>) :</strong> cible 0,82 ; sources 0,85 ; comparaison 0,85 ; choix de problèmes 0,55 ; retour 0,90 ; validation 0,88 ; plan 0,80 ; limites 0,92.</li>
+<li><strong>Première expérience proposée (<code>[D3]</code>) :</strong> Porte adversariale du quotient sémantique (400 paires : paraphrases hors règles et jumeaux divergents hors grille), suivie de l&#x27;épreuve de stabilité inter-formalismes à tailles non conservées (<code>Exp. I</code>, environ 140 dollars américains illustratifs).</li>
+</ul>
+<h3>Gemini 4 Neon (lettre E — Google)</h3>
+<ul>
+<li><strong>Position initiale (<code>[E1]</code>) :</strong> Enveloppe de références, profondeur par gain hors distribution pénalisé, compression de preuves Lean 4 ou gain d&#x27;information attendu, quantité primaire égale au maximum sur tout le vivier agrégé en aire sous la courbe découverte-budget, correction de juge par inférence assistée par prédiction, taxonomie de régions sur quatre familles, plan en six expériences (budget illustratif initial de 5 700 dollars américains).</li>
+<li><strong>Révisions majeures au tour III.3 (<code>[E3]</code>) :</strong> Retire le maximum sur tout le vivier, l&#x27;aire sous la courbe découverte-budget, le temps médian censuré et les seuils en écarts-types estimés ; adopte une nomination scellée unique, une quantité primaire binaire absolue, la règle de réfutation exhaustive empruntée à C, la certification par Clopper-Pearson sur 800 tirages courts (<code>b_ref = B/20</code>), un panel de référence secret pour tester les fuites, un taux de fausses alertes maximal de 0,002 (2 000 négatifs), la scission du duel en deux régimes budgétaires (coût financier égal contre appels d&#x27;oracle égaux), 16 familles pour la taxonomie (exclues du duel) avec test de transfert d&#x27;échelle (8 vers 70 milliards de paramètres), l&#x27;exécution des ablations d&#x27;attribution sur un lot d&#x27;instances entièrement indépendant, et la relégation du juge assisté au module optionnel <code>E2b</code> sous condition de corrélation et d&#x27;oracle objectif. Budget révisé illustratif : 16 200 dollars américains (2 700 avant le duel principal).</li>
+<li><strong>Confiances révisées :</strong> non retabulées point par point au tour III.3 (les confiances du tour III.1 allaient de 0,30 sur les hypothèses verbales à 0,85 sur les sources, la comparaison, le retour, la validation et les limites).</li>
+<li><strong>Première expérience proposée (<code>[E3]</code>) :</strong> Métrologie complète sur vérités plantées sans juge (<code>E1</code>, 100 positifs, 2 000 négatifs, <code>CN-2</code>, bras volume, essai témoin complet, environ 250 dollars américains illustratifs), suivie immédiatement du test d&#x27;invariance au recodage isomorphe (<code>E2a</code>, environ 250 dollars américains illustratifs).</li>
+</ul>
+<hr/>
+<h2>5. Lecture double à l&#x27;aveugle : alignement et kappa de Cohen (règle 3)</h2>
+<p>Les deux lecteurs neufs — Claude Opus 5.5 (<code>lecture-opus-v1.md</code>, 15 propositions retenues et 10 non retenues) et GPT-6.2 Astra (<code>lecture-astra-v1.md</code>, 14 propositions retenues et 8 non retenues) — ont lu uniquement le dossier anonymisé (<code>dossier-aveugle-v1.md</code>, empreinte <code>e1e3db6095f28482…</code> pour son compagnon), sans connaître les noms des modèles ni la liste de l&#x27;autre lecteur.</p>
+<h3>Mesure d&#x27;accord calculée par programme (<code>analyser_attelage_v1.py</code>)</h3>
+<p>En alignant de façon transparente l&#x27;union des propositions distinctes examinées par au moins l&#x27;un des deux lecteurs, on obtient <strong>31 unités canoniques</strong> (<code>U01</code> à <code>U31</code>) :</p>
+<table><thead><tr>
+<th>Décision du lecteur Opus \ Décision du lecteur Astra</th>
+<th>Astra : Retenue (OUI)</th>
+<th>Astra : Non retenue (NON)</th>
+<th>Total Opus</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Opus : Retenue (OUI)</strong></td>
+<td><strong>11</strong></td>
+<td><strong>4</strong></td>
+<td>15</td>
+</tr>
+<tr>
+<td><strong>Opus : Non retenue (NON)</strong></td>
+<td><strong>4</strong></td>
+<td><strong>12</strong></td>
+<td>16</td>
+</tr>
+<tr>
+<td><strong>Total Astra</strong></td>
+<td>15</td>
+<td>16</td>
+<td><strong>31</strong></td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>Accord observé :</strong> <code>23 / 31 = 0,7419</code> (74,2 %).</li>
+<li><strong>Accord attendu au hasard :</strong> <code>0,5005</code> (50,1 %).</li>
+<li><strong>Kappa de Cohen (grille principale à 31 unités) :</strong> <strong><code>0,4833</code></strong> (erreur type approchée <code>0,1573</code> ; intervalle de confiance à 95 % approché <code>[0,1749 ; 0,7917]</code> ; indice ajusté à la prévalence et au biais <code>0,4839</code>).</li>
+</ul>
+<p>Pour éviter qu&#x27;un choix de découpage des propositions composites ne gonfle ou ne réduise artificiellement le kappa, le programme calcule deux analyses de sensibilité :</p>
+<table><thead><tr>
+<th>Grille d&#x27;alignement</th>
+<th>Effectif (<code>N</code>)</th>
+<th>Table (OUI/OUI, OUI/NON, NON/OUI, NON/NON)</th>
+<th>Accord observé</th>
+<th>Kappa de Cohen</th>
+<th>Intervalle à 95 % approché</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Grille principale</strong> (toutes les unités canoniques distinctes)</td>
+<td>31</td>
+<td>(11, 4, 4, 12)</td>
+<td>0,7419</td>
+<td><strong>0,4833</strong></td>
+<td>[0,1749 ; 0,7917]</td>
+</tr>
+<tr>
+<td><strong>Sensibilité 1</strong> (unités explicitement nommées en retenue ou non retenue par les deux lecteurs)</td>
+<td>18</td>
+<td>(11, 0, 1, 6)</td>
+<td>0,9444</td>
+<td><strong>0,8800</strong></td>
+<td>[0,6514 ; 1,0000]</td>
+</tr>
+<tr>
+<td><strong>Sensibilité 2</strong> (recoupement large rattachant <code>U13</code> et <code>U15</code> à la proposition <code>P5</code> d&#x27;Astra)</td>
+<td>31</td>
+<td>(13, 2, 4, 12)</td>
+<td>0,8065</td>
+<td><strong>0,6141</strong></td>
+<td>[0,3368 ; 0,8914]</td>
+</tr>
+</tbody></table>
+<p><strong>Lecture de ce résultat.</strong> L&#x27;écart entre le kappa principal (<code>0,4833</code>) et le kappa sur le noyau explicitement nommé des deux côtés (<code>0,8800</code>) est très instructif : <strong>les deux lecteurs ne se contredisent frontalement que sur une seule proposition</strong> (<code>U16</code>, la clé partielle extensionnelle de <code>C</code> au tour III.3, explicitement écartée par Opus en <code>N7</code> et explicitement retenue par Astra en <code>P2</code>). Les sept autres écarts (<code>U12</code>, <code>U13</code>, <code>U14</code>, <code>U15</code>, <code>U17</code>, <code>U18</code>, <code>U19</code>) viennent de ce qu&#x27;un lecteur a élevé en proposition autonome un volet que l&#x27;autre a laissé implicite, absorbé dans une épreuve ou jugé secondaire. Par ailleurs, la lecture d&#x27;Astra comporte une anomalie mineure de datation : ses échéances vont du 31 août au 20 décembre 2026 (antérieures à la date du 24 novembre 2026), signe que le lecteur aveugle n&#x27;avait pas la date du jour dans son dossier ; la table d&#x27;épreuves de la section 9 recale toutes les échéances à partir de décembre 2026.</p>
+<h3>Table complète d&#x27;alignement des 31 unités et comptes par fournisseur (règle 6)</h3>
+<table><thead><tr>
+<th>Unité</th>
+<th>Intitulé synthétique</th>
+<th>Opus</th>
+<th>Astra</th>
+<th>Accord lecteurs</th>
+<th>Compte brut (tour III.3)</th>
+<th>Compte par fournisseur (règle 6)</th>
+</tr></thead><tbody>
+<tr>
+<td><code>U01</code></td>
+<td>Panel de référence nommé et disjoint des concurrents (ou budget de sonde découplé)</td>
+<td>P1 (OUI)</td>
+<td>P5 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U02</code></td>
+<td>Étroitesse certifiée par borne binomiale unilatérale sur tirages disjoints, coût calculé avant tirage</td>
+<td>P2 (OUI)</td>
+<td>P1 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U03</code></td>
+<td>Nomination scellée avant ouverture du coffre, séparation atteint/livré et bras volume</td>
+<td>P3 (OUI)</td>
+<td>P8 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U04</code></td>
+<td>Profondeur par gain d&#x27;un résolveur mécanique figé contre résolveur nu sur buts gelés</td>
+<td>P4 (OUI)</td>
+<td>P4 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U05</code></td>
+<td>Audit bilatéral de la canonicalisation (fausses fusions et fausses scissions hors règles)</td>
+<td>P6 (OUI)</td>
+<td>P2 partiel (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U06</code></td>
+<td>Comparaison principale par intersection-union appariée par monde contre marge utile non nulle</td>
+<td>P7 (OUI)</td>
+<td>P10 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U07</code></td>
+<td>Attribution par témoins multiples sur viviers gelés et lots frais (neutre, silence réalloué, hétérogénéité)</td>
+<td>P9 (OUI)</td>
+<td>P13 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U08</code></td>
+<td>Séparation utilité du retour / intégrité du coffre (trois jeux, fuite délibérée, étroitesse secrète)</td>
+<td>P10 (OUI)</td>
+<td>P11 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U09</code></td>
+<td>Fausses alertes calibrées par prévalence (Bayes) par strate ; aucun juge de langage dans le primaire</td>
+<td>P11+P12 (OUI)</td>
+<td>P7 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U10</code></td>
+<td>Contrôle positif sur micromonde 4 quadrants à deux lois utiles dont une non documentée + leurre vrai rare</td>
+<td>P13 (OUI)</td>
+<td>P3 (OUI)</td>
+<td>Accord OUI</td>
+<td>3/5 (<code>A,B,C</code>)</td>
+<td><strong>2/3</strong> (Anthropic, OpenAI)</td>
+</tr>
+<tr>
+<td><code>U11</code></td>
+<td>Choix des régions testé comme rendement net sur familles neuves, descripteurs publics, coût imputé</td>
+<td>P15 (OUI)</td>
+<td>P12 (OUI)</td>
+<td>Accord OUI</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U12</code></td>
+<td>Score de compression par longueur de description minimale signé et intensif, constantes figées</td>
+<td>P5 (OUI)</td>
+<td>Absent (NON)</td>
+<td>Désaccord (Opus seul)</td>
+<td>2/5 (<code>D,E</code>)</td>
+<td><strong>1/3</strong> (Google seul)</td>
+</tr>
+<tr>
+<td><code>U13</code></td>
+<td>Contrôle négatif actif chasseur d&#x27;étroitesse (<code>CN-2</code>) en complément du bras divergent (<code>CN-1</code>)</td>
+<td>P8 (OUI)</td>
+<td>Absent (NON)</td>
+<td>Désaccord (Opus seul)</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U14</code></td>
+<td>Module optionnel de juge hors primaire : plan factoriel 2×2 et correction assistée sur oracle objectif</td>
+<td>P12 opt. (OUI)</td>
+<td>Absent (NON)</td>
+<td>Désaccord (Opus seul)</td>
+<td>2/5 (<code>D,E</code>)</td>
+<td><strong>1/3</strong> (Google seul)</td>
+</tr>
+<tr>
+<td><code>U15</code></td>
+<td>Épreuve dédiée de dépendance au codage (traductions non conservatrices de taille) et aux références</td>
+<td>P14 (OUI)</td>
+<td>Partiel (NON)</td>
+<td>Désaccord (Opus seul)</td>
+<td>4/5 (<code>A,B,D,E</code>)</td>
+<td><strong>2/3</strong> (Anthropic, Google)</td>
+</tr>
+<tr>
+<td><code>U16</code></td>
+<td>Clé partielle extensionnelle <code>(observable, portée déclarée, vecteur de réponses)</code> via interface commune</td>
+<td>N7 (NON)</td>
+<td>P2 (OUI)</td>
+<td><strong>Désaccord frontal</strong></td>
+<td>1/5 (<code>C</code>)</td>
+<td><strong>1/3</strong> (OpenAI seul)</td>
+</tr>
+<tr>
+<td><code>U17</code></td>
+<td>Étalonnage complet de la décision en essais témoins (A/A) rejouant toute la chaîne + injection en sortie finale</td>
+<td>Absent (NON)</td>
+<td>P6 (OUI)</td>
+<td>Désaccord (Astra seul)</td>
+<td>3/5 (<code>A,B,E</code>)</td>
+<td><strong>2/3</strong> (Anthropic, Google)</td>
+</tr>
+<tr>
+<td><code>U18</code></td>
+<td>Concurrents réalisables gelés sur développement, comptabilité matérielle complète et double régime budgétaire</td>
+<td>Absent (NON)</td>
+<td>P9 (OUI)</td>
+<td>Désaccord (Astra seul)</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U19</code></td>
+<td>Réplication dans un second domaine (preuve formelle Lean 4) sans promettre le transfert</td>
+<td>Absent (NON)</td>
+<td>P14 (OUI)</td>
+<td>Désaccord (Astra seul)</td>
+<td>5/5 (<code>A,B,C,D,E</code>)</td>
+<td><strong>3/3</strong> (Anthropic, OpenAI, Google)</td>
+</tr>
+<tr>
+<td><code>U20</code>–<code>U31</code></td>
+<td>Douze propositions écartées par les deux lecteurs (enveloppe par problème <code>N1/N3</code>, maximum sur tout le vivier <code>N2/N2</code>, compression tronquée <code>N3/N4</code>, corrélation de rang sur valeurs censurées <code>N4/N5</code>, sélecteurs circulaires <code>N5</code>, critique hors sujet unique témoin <code>N6/N6</code>, égalité extensionnelle totale <code>N7</code>, égalisation simultanée des budgets <code>N8</code>, borne par style ou experts seuls <code>N9/N8</code>, arrêt sur petit pilote non concluant <code>N10</code>, rareté infinie ponctuelle <code>N1</code>, rétrodiction comme arbitre du rappel <code>N7</code>)</td>
+<td>NON</td>
+<td>NON</td>
+<td>Accord NON (12/12)</td>
+<td>0/5 au tour III.3</td>
+<td><strong>0/3</strong></td>
+</tr>
+</tbody></table>
+<hr/>
+<h2>6. Accords, désaccords majeurs, ce qui est neuf et ce qui est fragile</h2>
+<h3>Accords renforcés par la critique croisée (3 fournisseurs sur 3)</h3>
+<p>La règle 6 évite de surestimer un accord dû aux deux modèles d&#x27;Anthropic (<code>A</code> et <code>B</code>) ou aux deux modèles de Google (<code>D</code> et <code>E</code>). Dix des onze propositions retenues par les deux lecteurs atteignent <strong>3 fournisseurs sur 3</strong> (<code>U01</code> à <code>U09</code>, <code>U11</code>), tout comme <code>U13</code>, <code>U18</code> et <code>U19</code> :</p>
+<ol>
+<li><strong>Borne de handicap et nécessité de découpler la référence du duel (<code>U01</code>, 5/5, 3/3).</strong> Aucun modèle ne conteste la démonstration de <code>[B2]</code>.</li>
+<li><strong>Certification binomiale unilatérale sur tirages disjoints (<code>U02</code>, 5/5, 3/3).</strong> Tous abandonnent les estimateurs ponctuels qui explosent à zéro occurrence.</li>
+<li><strong>Nomination scellée avant ouverture du coffre (<code>U03</code>, 5/5, 3/3).</strong> Tous reconnaissent que prendre le maximum sur tout le vivier transforme le coffre privé en sélecteur gratuit et récompense le volume.</li>
+<li><strong>Profondeur sans juge de langage, contre résolveur nu et sur buts gelés (<code>U04</code>, 5/5, 3/3).</strong> Un placebo vrai ne sert qu&#x27;à détecter un ralentissement, jamais à fabriquer un gain.</li>
+<li><strong>Audit bilatéral de la canonicalisation (<code>U05</code>, 5/5, 3/3).</strong> Fausses fusions et fausses scissions mesurées toutes deux, y compris sur des paraphrases produites hors des règles du canoniseur.</li>
+<li><strong>Intersection-union et dimensionnement contre la marge utile (<code>U06</code>, 5/5, 3/3).</strong> L&#x27;enveloppe problème par problème est abandonnée à l&#x27;unanimité ; tous dimensionnent contre la différence entre gain visé et marge minimale.</li>
+<li><strong>Attribution par témoins multiples (<code>U07</code>, 5/5, 3/3) et étanchéité du retour (<code>U08</code>, 5/5, 3/3).</strong> La critique hors problème ne suffit jamais seule ; l&#x27;étroitesse reste strictement secrète durant toute recherche.</li>
+<li><strong>Plafond de fausses alertes calibré par la prévalence et primaire sans juge de langage (<code>U09</code>, 5/5, 3/3).</strong> À 1 % de prévalence, un taux de fausses alertes de 5 % produit environ 86 % de fausses découvertes.</li>
+<li><strong>Choix des régions traité comme rendement net sur familles neuves (<code>U11</code>, 5/5, 3/3).</strong> Coût de prospection imputé, descripteurs publics seuls.</li>
+</ol>
+<h3>Désaccords majeurs qui subsistent après le tour III.3</h3>
+<ul>
+<li><strong>Remède à la borne de handicap (<code>U01</code>) :</strong> <code>B</code> et <code>C</code> (Anthropic + OpenAI) préfèrent un <strong>panel métrologique strictement disjoint</strong> des bras concurrents ; <code>A</code>, <code>D</code> et <code>E</code> (Anthropic + Google) optent pour un <strong>budget de sonde court</strong> (<code>B/10</code>, <code>B/20</code> ou <code>B/64</code>) combiné à un panel multi-familles et au bras de divergence triviale (<code>CN-1</code>). Les deux options se comparent par calcul et petite simulation avant tout appel coûteux.</li>
+<li><strong>Clé partielle extensionnelle contre canonicalisation symbolique (<code>U16</code> vs <code>U05</code>) :</strong> <code>C</code> (OpenAI, 1 fournisseur sur 3) propose de définir l&#x27;idée par <code>(observable cible, portée autorisée, vecteur de réponses)</code> et de livrer cette clé par une interface commune afin d&#x27;évacuer les différences de vitesse d&#x27;exécution. <code>D</code> et <code>A</code> (Google + Anthropic) maintiennent une canonicalisation symbolique (graphes d&#x27;équivalence plus test hors grille) pour des lois continues où la table est infinie. Les deux lecteurs aveugles divergent directement sur ce point (<code>Opus N7</code> contre <code>Astra P2</code>).</li>
+<li><strong>Mesure de profondeur par compression (<code>U12</code>) :</strong> soutenue uniquement par Google (<code>D</code> et <code>E</code>, 1 fournisseur sur 3), alors qu&#x27;Anthropic et OpenAI (<code>A</code>, <code>B</code>, <code>C</code>, 2 fournisseurs sur 3) préfèrent le gain direct d&#x27;un résolveur mécanique sur des buts aval gelés.</li>
+<li><strong>Module optionnel de juge de langage hors primaire (<code>U14</code>) :</strong> défendu comme option conditionnelle par Google seul (<code>D</code> et <code>E</code>, 1 fournisseur sur 3) ; Anthropic (<code>A</code>, <code>B</code>) exclut tout juge et OpenAI (<code>C</code>) n&#x27;envisage hors langage qu&#x27;un audit humain aveugle avec ancres et bornes défavorables.</li>
+<li><strong>Nomination unique contre top-<code>k</code> fixe et journal horodaté (<code>U03</code>) :</strong> <code>D</code> et <code>E</code> (Google) retiennent une nomination unique (<code>k = 1</code>), <code>A</code> et <code>B</code> (Anthropic) un nombre fixe <code>k</code> (par exemple 3), et <code>C</code> (OpenAI) maintient deux indicateurs distincts (« atteint dans le journal » en primaire si le journal est certifiable, « livré en rang 1 » en secondaire).</li>
+<li><strong>Effectifs et budgets illustratifs du duel principal :</strong> ils varient d&#x27;un facteur près de six, de 160 problèmes par famille (<code>E</code>, 320 au total) et 220 (<code>D</code>) à 270 (<code>B</code>), 600 (<code>A</code>) et 935 (<code>C</code>). Cet écart ne reflète pas un conflit théorique mais le fait que la fréquence de discordance entre bras (<code>q</code>) et le risque unilatéral alloué restent inconnus avant un pilote.</li>
+<li><strong>Première expérience à financer :</strong> <code>A</code> met en tête le calcul du compromis handicap/certification puis la reproduction de profondeur sur processeur ; <code>B</code> et <code>D</code> mettent l&#x27;audit du canoniseur puis la dépendance aux références et aux encodages ; <code>C</code> met le micromonde exhaustif à deux lois utiles dont une non documentée ; <code>E</code> met la métrologie complète des quatre quadrants puis le recodage.</li>
+</ul>
+<h3>Ce qui est neuf (dans l&#x27;emploi) et ce qui est fragile</h3>
+<p><strong>Neuf dans l&#x27;assemblage (non cité comme méthode établie pour des systèmes d&#x27;idéation) :</strong></p>
+<ul>
+<li>La <strong>borne de handicap</strong> démontrant que l&#x27;étroitesse relative à un concurrent plafonne ce concurrent par construction (<code>[B2]</code>), et les deux contrôles actifs qui en découlent : le bras de <strong>divergence triviale (<code>CN-1</code>)</strong> et le <strong>chasseur d&#x27;étroitesse (<code>CN-2</code>)</strong> (<code>[B2]</code>, repris par tous en T3).</li>
+<li>L&#x27;exigence d&#x27;une <strong>seconde loi profonde non documentée comme plantée</strong> dans le micromonde de contrôle positif (<code>[A2]</code> sur <code>C</code>, repris par <code>[B3]</code> et <code>[C3]</code>) pour empêcher qu&#x27;un détecteur ne valide que la cible codée par son concepteur.</li>
+<li>Le <strong>double panel de référence (exposé contre secret)</strong> dans l&#x27;épreuve de fuite de rétroaction (<code>[A2]</code> sur <code>E</code>, repris par <code>[D3]</code> et <code>[E3]</code>), afin de détecter un contournement de la référence d&#x27;étroitesse par obscurcissement.</li>
+<li>La quantification explicite du <strong>coût de sensibilité de la certification par zéro occurrence</strong> : une classe doit être environ 37 fois plus rare que le seuil affiché pour être certifiée avec une probabilité de 0,80 sous correction multiple (<code>[B3]</code>, identité <code>I1</code>, vérifiée par code).</li>
+<li>La séparation systématique entre <strong>atteinte dans le journal horodaté</strong> et <strong>livraison par nomination scellée</strong> (<code>[A1]</code>, <code>[C3]</code>), ainsi que le traitement des <strong>dossiers non résolus aux deux extrêmes</strong> (<code>[C1]</code>, <code>[C3]</code>).</li>
+</ul>
+<p><strong>Fragile :</strong></p>
+<ul>
+<li><strong>Aucune mesure réelle :</strong> tout le dossier repose sur des calculs conditionnels et des hypothèses. La prévalence réelle d&#x27;idées étroites et profondes dans un domaine non trivial est totalement inconnue : si elle tombe sous 1 % à 2 %, le harnais devient statistiquement muet à budget réaliste.</li>
+<li><strong>Mur du coût d&#x27;étalonnage :</strong> certifier l&#x27;étroitesse contre un modèle de langage exige des centaines à des milliers de tirages indépendants par problème et par politique (<code>[A1]</code>, <code>[C1]</code>, <code>[B3]</code>). Ce poste domine d&#x27;un facteur 10 à 70 le coût du duel lui-même.</li>
+<li><strong>Validité externe hors portée :</strong> les cinq modèles (3 fournisseurs sur 3) conviennent qu&#x27;aucun harnais de ce type ne mesure l&#x27;invention d&#x27;une nouvelle ontologie (changement des observables ou de la grammaire) ni la portée scientifique à long terme.</li>
+<li><strong>Accords nés de la critique croisée :</strong> l&#x27;unanimité sur <code>CN-1</code>, <code>CN-2</code>, le test d&#x27;intersection-union et les témoins d&#x27;attribution est apparue <em>après</em> le tour III.2 ; elle n&#x27;a pas été éprouvée par un tour supplémentaire ni par des mesures.</li>
+<li><strong>Biais potentiel de famille sur les statuts et les choix :</strong> seul Google (<code>D</code> et <code>E</code>) pousse la compression par longueur de description minimale (<code>U12</code>) et le module juge optionnel (<code>U14</code>), et seul OpenAI (<code>C</code>) pousse la clé extensionnelle partielle (<code>U16</code>). La règle 6 rend cette concentration immédiatement visible.</li>
+</ul>
+<hr/>
+<h2>7. Contrôles par programme avant la note (règle 4)</h2>
+<p>Tous les contrôles ci-dessous ont été exécutés par le script <code>analyser_attelage_v1.py</code> avant la rédaction de cette note.</p>
+<h3>7.1. Confrontation des mentions « VÉRIFIÉ » / « vérifié » aux faits servis</h3>
+<p>Le fichier <code>faits.md</code> étant identique au texte de la question (aucun fait empirique, aucun résultat d&#x27;expérience, aucune citation vérifiée sur document d&#x27;origine), seule une lecture directe des pièces ou une identité mathématique pure (sous les hypothèses explicitées) pouvait légitimement recevoir le statut « vérifié ».</p>
+<table><thead><tr>
+<th>Modèle (lettre)</th>
+<th>Occurrences <code>VÉRIFIÉ</code> (majuscules) : T1 / T2 / T3 (total)</th>
+<th>Occurrences <code>vérifié</code> (toutes casses)</th>
+<th>Occurrences <code>RAPPORTÉ</code> (majuscules)</th>
+<th>Gonflements de statut relevés face à <code>faits.md</code></th>
+</tr></thead><tbody>
+<tr>
+<td>Fable 5.2 (<code>A</code>)</td>
+<td>1 / 3 / 3 (<strong>7</strong>)</td>
+<td>11</td>
+<td>15</td>
+<td><strong>0</strong> — déclare explicitement l&#x27;absence de tout fait vérifié ; ne reprend le mot que pour citer les statuts d&#x27;autrui.</td>
+</tr>
+<tr>
+<td>Opus 5.5 (<code>B</code>)</td>
+<td>1 / 3 / 1 (<strong>5</strong>)</td>
+<td>7</td>
+<td>8</td>
+<td><strong>0</strong> — déclare l&#x27;absence de tout fait vérifié ; relève les abus chez <code>C</code> et <code>D</code>.</td>
+</tr>
+<tr>
+<td>Astra (<code>C</code>)</td>
+<td>4 / 9 / 2 (<strong>15</strong>)</td>
+<td>15</td>
+<td>4</td>
+<td><strong>1</strong> — en <code>[C1]</code> (ligne 28), étiquette « vérifié » deux références bibliographiques non auditées sur document d&#x27;origine ; corrigé en « rapporté » en <code>[C3]</code>.</td>
+</tr>
+<tr>
+<td>Carbon (<code>D</code>)</td>
+<td>43 / 32 / 28 (<strong>103</strong>)</td>
+<td>106</td>
+<td>62</td>
+<td><strong>Au moins 10</strong> — usage massif de <code>[VÉRIFIÉ]</code> sur des choix de conception, des conjectures empiriques (obscurcissement, graphes d&#x27;équivalence, grille dense, absence de dérive, bibliographie non vérifiée) ; partiellement corrigé en <code>[D3]</code>, mais des affirmations de faisabilité non prouvées empiriquement restent marquées <code>[VÉRIFIÉ]</code> (<code>[D3]</code>, lignes 114, 119, 123).</td>
+</tr>
+<tr>
+<td>Neon (<code>E</code>)</td>
+<td>5 / 7 / 9 (<strong>21</strong>)</td>
+<td>23</td>
+<td>62</td>
+<td><strong>2</strong> — en <code>[E1]</code>, doubles étiquettes composites ambiguës (<code>VÉRIFIÉ/RAPPORTÉ</code>, lignes 55 et 64) et un « rapporté » sans source en <code>P1</code> ; discipline d&#x27;étiquette unique rétablie en <code>[E3]</code>.</td>
+</tr>
+</tbody></table>
+<h3>7.2. Rejeu arithmétique par code de 46 calculs chiffrés et taux d&#x27;erreur par modèle</h3>
+<p>Le programme a rejoué exactement <strong>46 calculs chiffrés</strong> extraits des quinze cellules et des deux lectures aveugles (bornes exactes de Clopper-Pearson par sommation binomiale, loi normale, valeur prédictive positive par Bayes, biais d&#x27;enveloppe, puissances statistiques, sommes budgétaires et conversions en heures de calcul). Les calculs non rejoués se limitent aux ordres de grandeur qualitatifs non accompagnés d&#x27;une formule fermée.</p>
+<table><thead><tr>
+<th>Modèle / Lecteur</th>
+<th>Calculs rejoués</th>
+<th>Exacts</th>
+<th>Erreurs de dimensionnement (T1, corrigées en T3)</th>
+<th>Ambiguïtés résiduelles</th>
+<th>Taux de défaut sur calculs rejoués</th>
+</tr></thead><tbody>
+<tr>
+<td>Fable 5.2 (<code>A</code>)</td>
+<td>10</td>
+<td>9</td>
+<td>1 (<code>[A1]</code> : 140/150 mondes contre zéro au lieu de +5 points)</td>
+<td>0</td>
+<td><strong>10,0 %</strong> (0 % au tour III.3)</td>
+</tr>
+<tr>
+<td>Opus 5.5 (<code>B</code>)</td>
+<td>9</td>
+<td>8</td>
+<td>1 (<code>[B1]</code> : 118 problèmes contre zéro au lieu de +10 points)</td>
+<td>0</td>
+<td><strong>11,1 %</strong> (0 % au tour III.3)</td>
+</tr>
+<tr>
+<td>Astra (<code>C</code>)</td>
+<td>6</td>
+<td>6</td>
+<td>0 (seul modèle exact dès <code>[C1]</code>, y compris 62 500,00 euros au centime)</td>
+<td>0</td>
+<td><strong>0,0 %</strong></td>
+</tr>
+<tr>
+<td>Carbon (<code>D</code>)</td>
+<td>8</td>
+<td>7</td>
+<td>1 (<code>[D1]</code> : 100 problèmes contre zéro au lieu de +10 points)</td>
+<td>0</td>
+<td><strong>12,5 %</strong> (0 % au tour III.3)</td>
+</tr>
+<tr>
+<td>Neon (<code>E</code>)</td>
+<td>11</td>
+<td>9</td>
+<td>1 (<code>[E1]</code> : 50–60 problèmes contre zéro au lieu de 0,20 écart-type)</td>
+<td>1 (<code>[E3]</code> : 2 000 négatifs « stratifiés »)</td>
+<td><strong>18,2 %</strong> (1 ambiguïté au tour III.3)</td>
+</tr>
+<tr>
+<td>Lecteur Astra</td>
+<td>2</td>
+<td>2</td>
+<td>0 (<code>2,95 %</code> pour 0/100 et <code>14 %</code> de valeur prédictive)</td>
+<td>0</td>
+<td><strong>0,0 %</strong></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>46</strong></td>
+<td><strong>41</strong></td>
+<td><strong>4</strong></td>
+<td><strong>1</strong></td>
+<td><strong>10,9 %</strong></td>
+</tr>
+</tbody></table>
+<p><strong>Constats notables issus du rejeu par code :</strong></p>
+<ul>
+<li>L&#x27;arithmétique interne des formules citées au tour III.2 et au tour III.3 est remarquablement solide chez les cinq modèles. En particulier, le calcul de <code>D</code> au tour III.3 selon lequel <code>M0 = 4 000</code> tirages au niveau corrigé <code>0,05 / 3</code> autorisent « jusqu&#x27;à 7 occurrences » sous le seuil de 5,5 nats (<code>p* = 0,004087</code>) est <strong>exactement optimal</strong> : la borne exacte de Clopper-Pearson vaut <code>0,003780 &lt; 0,004087</code> pour 7 occurrences et passe à <code>0,004121 &gt; 0,004087</code> dès 8 occurrences. De même, le facteur d&#x27;environ 37 de <code>B</code> (<code>36,70</code>), les 62 500 euros de <code>C</code> et les 935 paires de <code>C</code> (<code>934,3</code>) sont exacts.</li>
+<li><strong>Ambiguïté à lever chez <code>E</code> (<code>[E3]</code>, ligne 80) :</strong> la borne à zéro alerte de <code>0,00184 &lt; 0,002</code> (au risque unilatéral <code>0,025</code>) suppose <strong>2 000 négatifs par strate</strong> ; si les 2 000 négatifs étaient répartis sur trois strates (environ 667 par strate), la borne par strate monterait à <code>0,00552 &gt; 0,002</code>.</li>
+</ul>
+<h3>7.3. Références bibliographiques à vérifier sur document d&#x27;origine (règle <code>R7</code>)</h3>
+<p>Le programme recense <strong>50 références bibliographiques</strong> citées dans le dossier (liste structurée complète dans <code>metriques-attelage-v1.json</code>). <strong>Aucune n&#x27;a été vérifiée sur son document d&#x27;origine (fichier PDF) et aucune n&#x27;est tenue pour vraie.</strong> Les modèles ayant respecté l&#x27;interdiction de citer des identifiants de prépublication de mémoire, plusieurs entrées devront être retrouvées et vérifiées page par page avant toute citation en note publiable :</p>
+<table><thead><tr>
+<th>Référence telle que citée</th>
+<th>Cellules / lecteurs</th>
+<th>Usage dans le dossier</th>
+<th>État (<code>R7</code>)</th>
+</tr></thead><tbody>
+<tr>
+<td>Clopper et Pearson (1934), <em>Biometrika</em></td>
+<td><code>D1, C3, D3, E2, E3</code>, Opus, Astra</td>
+<td>Bornes de confiance binomiales exactes</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Dwork et al. (2015), « The Reusable Holdout », <em>Science</em></td>
+<td><code>A1, D1, E1, A3, D3, E2, E3</code>, Opus, Astra</td>
+<td>Sur-ajustement adaptatif et mécanisme <code>Thresholdout</code></td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Platt (1964), « Strong Inference », <em>Science</em></td>
+<td><code>A1, B1, D1, E1, D3</code>, Opus</td>
+<td>Cadre des expériences décisives</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Berger (1982), <em>Technometrics</em></td>
+<td><code>D1, D3, E2, E3</code>, Opus, Astra</td>
+<td>Test d&#x27;intersection-union</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Angelopoulos et al. (2023), « Prediction-Powered Inference », <em>Science</em></td>
+<td><code>E1, D2, E2, E3</code>, Opus</td>
+<td>Inférence assistée par prédiction</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Begg et Greenes (1983), <em>Biometrics</em></td>
+<td><code>A2, D3</code>, Opus, Astra</td>
+<td>Biais de vérification sous audit stratifié par verdict</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Rogan et Gladen (1978), <em>American Journal of Epidemiology</em></td>
+<td><code>D1, D3, E2</code>, Opus</td>
+<td>Correction de prévalence pour un test imparfait</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Zheng et al. (2023), NeurIPS ; Panickssery, Bowman et Feng (2024), NeurIPS</td>
+<td><code>A1, B1, A3, B3</code>, Opus</td>
+<td>Auto-préférence et biais des juges de langage</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Rissanen (1978), <em>Automatica</em> ; Grünwald (2007), MIT Press</td>
+<td><code>D1, E1, D3, E3</code>, Opus</td>
+<td>Principe de longueur de description minimale</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Bennett (1988), Oxford University Press ; Shannon (1948) ; Solomonoff (1964) ; Li et Vitányi (2008)</td>
+<td><code>D1, E1, D3, E3</code></td>
+<td>Profondeur logique, entropie, dépendance au codage</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>de Moura et al. (2015), CADE ; de Moura et Ullrich (2021), CADE 28 ; The mathlib Community (2020), CPP</td>
+<td><code>A1, B1, C1, D1, C3, D3</code>, Opus, Astra</td>
+<td>Noyaux de preuve Lean / Lean 4 et bibliothèque Mathlib</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Pearl (2009), Cambridge University Press ; Popper (1959)</td>
+<td><code>D1, E1, D3</code></td>
+<td>Interventions causales et réfutabilité</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Udrescu et Tegmark (2020), <em>Science Advances</em> ; Cranmer (2023), PySR ; La Cava et al. (2021), SRBench ; Schmidt et Lipson (2009), <em>Science</em></td>
+<td><code>A1, B1, D1, E1, D2, D3</code>, Opus</td>
+<td>Lignes de base de régression symbolique mécanique</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Wolpert et Macready (1997), <em>IEEE Transactions on Evolutionary Computation</em></td>
+<td><code>B1, E1, E3</code>, Opus</td>
+<td>Théorèmes d&#x27;absence de domination universelle</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Newcombe (1998), <em>Statistics in Medicine</em> ; Fieller (1954), <em>JRSS B</em> ; O&#x27;Brien et Fleming (1979), <em>Biometrics</em> ; Hanley et Lippman-Hand (1983), <em>JAMA</em></td>
+<td><code>A1, B1, D2, A3</code>, Opus, Astra</td>
+<td>Intervalles appariés, rapports, plans séquentiels, règle de trois</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Rice (1953) ; Schwartz (1980) ; Kaplan et Meier (1958) ; Holm (1979) ; Benjamini et Hochberg (1995) ; Efron et Tibshirani (1993) ; Wald (1945)</td>
+<td><code>D1, E1, D2, D3</code>, Opus</td>
+<td>Indécidabilité, test polynomial, survie, tests multiples, bootstrap</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+<tr>
+<td>Autres références citées par un ou deux modèles : Blum et Hardt (2015), Boden (1990), Campbell (1979), Chen et al. (2021), Golchin et Surdeanu (2024), Ioannidis (2005), Lehman et Stanley (2011), Manheim et Garrabrant (2018), Mouret et Clune (2015), Nosek et al. (2018), Romera-Paredes et al. (2024), Simmons et al. (2011), Uzzi et al. (2013), Wang et al. (2017)</td>
+<td>Voir détail complet dans <code>metriques-attelage-v1.json</code></td>
+<td>Rétroaction adaptative, nouveauté, contamination, préenregistrement, bibliométrie</td>
+<td>À vérifier sur document d&#x27;origine</td>
+</tr>
+</tbody></table>
+<hr/>
+<h2>8. Propositions retenues et arbitrages sur les désaccords</h2>
+<p>Toutes les propositions ci-dessous portent la marque <strong>« lancé en version 1 »</strong>.</p>
+<h3>8.1. Socle retenu par accord des deux lecteurs aveugles (<code>U01</code> à <code>U11</code>)</h3>
+<ol>
+<li><strong><code>U01</code> — Panel de référence nommé, disjoint des concurrents ou à budget de sonde découplé</strong> (accord lecteurs OUI/OUI ; 5/5 modèles ; <strong>3/3 fournisseurs</strong>). Supprime la borne de handicap. <em>Point laissé à ton arbitrage :</em> panel strictement disjoint (<code>B</code>, <code>C</code>) ou budget court <code>B/20</code> à <code>B/64</code> (<code>A</code>, <code>D</code>, <code>E</code>), à éclairer par l&#x27;épreuve 1 de la section 9.</li>
+<li><strong><code>U02</code> — Étroitesse certifiée par borne supérieure binomiale unilatérale sur tirages disjoints et coût calculé avant tirage</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Remplace tout estimateur ponctuel et rend explicite le prix en sensibilité (facteur d&#x27;environ 37 sous correction multiple).</li>
+<li><strong><code>U03</code> — Nomination scellée avant ouverture du coffre, séparation atteint/livré et contrôle de volume</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Empêche le coffre privé de servir de sélecteur gratuit.</li>
+<li><strong><code>U04</code> — Profondeur par gain d&#x27;un résolveur mécanique figé contre résolveur nu sur buts gelés</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Seule mesure primaire totalement exempte de juge de langage, vérifiée sur deux jeux de buts, deux résolveurs et un témoin vrai mais inerte.</li>
+<li><strong><code>U05</code> — Audit bilatéral de la canonicalisation : fausses fusions et fausses scissions</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Inclut obligatoirement des obscurcissements engendrés hors des règles du canoniseur.</li>
+<li><strong><code>U06</code> — Comparaison principale par intersection-union appariée par monde contre une marge utile non nulle</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Élimine le biais de Jensen de l&#x27;enveloppe par problème et l&#x27;erreur de dimensionnement contre zéro.</li>
+<li><strong><code>U07</code> — Attribution par témoins multiples sur viviers gelés et lots frais</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Sépare critique active, message neutre intra-problème, silence à budget réalloué, sélecteur sur viviers gelés et hétérogénéité contre chaque famille homogène.</li>
+<li><strong><code>U08</code> — Séparation utilité du retour / intégrité du coffre, étroitesse strictement secrète</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Trois jeux (renvoyé, scellé, vierge), différence d&#x27;écarts et bras de fuite délibérée comme témoin de sensibilité.</li>
+<li><strong><code>U09</code> — Plafond de fausses alertes dérivé de la prévalence (identité de Bayes) strate par strate ; aucun juge de langage dans le primaire</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Inclut l&#x27;audit des acceptations et des rejets sur sorties réelles et le traitement des dossiers non résolus aux deux extrêmes (volet d&#x27;Astra <code>P7</code>).</li>
+<li><strong><code>U10</code> — Contrôle positif d&#x27;instrument sur micromonde à quatre quadrants avec seconde loi utile non documentée et assertion vraie rare sur observable inutilisée</strong> (OUI/OUI ; 3/5 ; <strong>2/3</strong> : Anthropic, OpenAI). Rend le contrôle positif réellement réfutable.</li>
+<li><strong><code>U11</code> — Choix des régions testé comme rendement net exploratoire sur familles neuves</strong> (OUI/OUI ; 5/5 ; <strong>3/3</strong>). Descripteurs calculés sur l&#x27;énoncé public seul et une sonde disjointe ; coût de prospection imputé ; familles de sélection exclues du duel.</li>
+</ol>
+<h3>8.2. Désaccords entre lecteurs aveugles remontés à Lazar (<code>U12</code> à <code>U19</code>)</h3>
+<p>Conformément à la règle 3 du Protocole X version 2, <strong>les huit désaccords te remontent tels quels</strong> :</p>
+<ul>
+<li><strong>Quatre propositions soutenues par au moins deux fournisseurs (recommandées pour intégration au plan d&#x27;épreuves de la section 9, sous réserve de ton accord) :</strong></li>
+<li><strong><code>U13</code> — Contrôle négatif actif chasseur d&#x27;étroitesse (<code>CN-2</code>)</strong> (<code>Opus P8</code> OUI, <code>Astra</code> absent ; 5/5 modèles, <strong>3/3 fournisseurs</strong>). <em>Justification :</em> un quadrant statique rare-inerte ne remplace pas un chercheur actif qui évite délibérément la référence ; tous les modèles l&#x27;ont adopté au tour III.3.</li>
+<li><strong><code>U15</code> — Épreuve dédiée de dépendance de l&#x27;étroitesse au codage (traductions non conservatrices de taille)</strong> (<code>Opus P14</code> OUI, <code>Astra</code> partiel ; 4/5 modèles, <strong>2/3 fournisseurs</strong>). <em>Justification :</em> épreuve la moins chère capable de réfuter le cadrage lui-même (« rarement atteint » sans référence ni codage nommés).</li>
+<li><strong><code>U17</code> — Étalonnage de la décision complète par essais témoins (A/A) rejouant calibration, sélection et analyse, plus injection en sortie finale</strong> (<code>Opus</code> absent, <code>Astra P6</code> OUI ; 3/5 modèles, <strong>2/3 fournisseurs</strong>). <em>Justification :</em> vérifie la chaîne statistique complète avant tout duel coûteux.</li>
+<li><strong><code>U18</code> — Concurrents réalisables gelés sur développement, comptabilité matérielle complète et séparation des deux régimes budgétaires</strong> (<code>Opus</code> absent, <code>Astra P9</code> OUI ; 5/5 modèles, <strong>3/3 fournisseurs</strong>). <em>Justification :</em> indispensable pour éviter qu&#x27;un plafond d&#x27;appels d&#x27;oracle ne bride l&#x27;énumérateur mécanique ou qu&#x27;un coût caché de préremplissage ne fausse le duel.</li>
+</ul>
+<ul>
+<li><strong>Quatre propositions laissées en attente de ton arbitrage explicite (ou conditionnelles à l&#x27;ouverture d&#x27;un second domaine) :</strong></li>
+<li><strong><code>U16</code> — Clé partielle extensionnelle <code>(observable, portée déclarée, vecteur de réponses)</code> via interface canonique</strong> (<code>Opus N7</code> <strong>NON</strong>, <code>Astra P2</code> <strong>OUI</strong> ; 1/5 modèle <code>C</code>, <strong>1/3 fournisseur</strong> OpenAI). <em>Seul désaccord frontal.</em> À trancher entre un banc à domaines finis discrets (où la clé de <code>C</code> est très propre) et des lois continues (où <code>U05</code> s&#x27;impose). Elle figure parmi les candidates processeur de la règle <code>1 c</code>.</li>
+<li><strong><code>U12</code> — Score de compression par longueur de description minimale signé et intensif</strong> (<code>Opus P5</code> OUI, <code>Astra</code> absent ; 2/5 modèles <code>D, E</code>, <strong>1/3 fournisseur</strong> Google). Utile uniquement si tu retiens un banc de lois quantitatives continues en plus du résolveur mécanique <code>U04</code>.</li>
+<li><strong><code>U14</code> — Module optionnel de juge de langage hors primaire (plan factoriel 2×2 et inférence assistée sur oracle objectif)</strong> (<code>Opus P12</code> OUI, <code>Astra</code> absent ; 2/5 modèles <code>D, E</code>, <strong>1/3 fournisseur</strong> Google). Sans objet tant que le programme reste sur des bancs purement mécaniques ou formels.</li>
+<li><strong><code>U19</code> — Réplication en preuve formelle Lean 4 sans promettre le transfert</strong> (<code>Opus</code> absent, <code>Astra P14</code> OUI ; 5/5 modèles, <strong>3/3 fournisseurs</strong>). Utile en phase ultérieure seulement, une fois passées les portes sur processeur et sur micromonde.</li>
+</ul>
+<h3>8.3. Propositions examinées et non retenues (<code>U20</code> à <code>U31</code>)</h3>
+<p>Les douze propositions suivantes sont écartées par les deux lecteurs aveugles et abandonnées par leurs auteurs au tour III.3 : l&#x27;enveloppe des lignes de base prise problème par problème (<code>U20</code>), le maximum de profondeur sur tout le vivier et les seuils en écarts-types (<code>U21</code>), la compression tronquée à zéro par régime (<code>U22</code>), l&#x27;étroitesse scalaire par corrélation de rang (<code>U23</code>), les sélecteurs de régions nourris par la vérité retenue ou les résidus de la référence (<code>U24</code>), la critique hors problème comme unique témoin (<code>U25</code>), l&#x27;égalité extensionnelle totale sur tout le domaine (<code>U26</code>), l&#x27;égalisation simultanée de toutes les composantes budgétaires (<code>U27</code>), le bornage d&#x27;un juge par accord de style seul ou par audit d&#x27;experts humains seuls (<code>U28</code>), l&#x27;arrêt du programme sur un petit pilote non concluant (<code>U29</code>), la rareté infinie ponctuelle après zéro occurrence (<code>U30</code>), et la rétrodiction temporelle comme arbitre du rappel contre la découverte (<code>U31</code>).</p>
+<hr/>
+<h2>9. Table des épreuves décisives les moins chères (règle 1 en version 2.1)</h2>
+<p><strong>Rappel impératif des trois garde-fous du Protocole X version 2.1 (<code>GO-2026-11-24-45</code>) :</strong></p>
+<ul>
+<li><strong>Règle <code>1 a</code> (indépendance du critère de mort) :</strong> aucun critère de mort chiffré n&#x27;est fixé par les lecteurs ni par le rédacteur de cette note. Pour chaque ligne ci-dessous, <strong>le critère de mort final sera rédigé et scellé avant toute donnée par un concepteur distinct des lecteurs et des proposeurs</strong> — Claude Fable 5.2, ou, tant que son quota reste gelé jusqu&#x27;au 2 décembre 2026, un Claude Opus 5.5 neuf (écart déclaré). Les épreuves décisives passent par un préenregistrement (règles <code>R1</code>, <code>R2</code>).</li>
+<li><strong>Règle <code>1 b</code> (témoin faux connu à tuer d&#x27;abord) :</strong> avant de compter, chaque épreuve est jouée sur son témoin faux connu (et si possible un témoin vrai connu). Si le témoin faux survit, <strong>l&#x27;épreuve est déclarée « épreuve morte »</strong> : aucune issue n&#x27;est lue, l&#x27;arrêt est rapporté et il n&#x27;y a pas de repli.</li>
+<li><strong>Règle <code>1 c</code> (mesure de la sélection par lecture) :</strong> une proposition non retenue (dont l&#x27;épreuve tient sur processeur) est tirée au sort par graine inscrite avant tirage et éprouvée comme les retenues (voir la sous-section 9.2).</li>
+</ul>
+<h3>9.1. Table des épreuves des propositions retenues (ordonnées du moins cher au plus cher)</h3>
+<p>Les dates sont calées à partir du 24 novembre 2026 et les coûts sont des ordres de grandeur illustratifs (non des devis engagés). Les onze lignes <code>U01</code> à <code>U11</code> sont issues de l&#x27;accord des deux lecteurs aveugles ; les quatre lignes <code>U13</code>, <code>U15</code>, <code>U17</code> et <code>U18</code> sont ajoutées sous réserve de ton arbitrage (section 8.2).</p>
+<table><thead><tr>
+<th>ID</th>
+<th>Proposition (marque : lancé en v1)</th>
+<th>Ce que l&#x27;épreuve décisive la moins chère mesure</th>
+<th>Coût estimé</th>
+<th>Date au plus tard</th>
+<th>Critère de mort (règle <code>1 a</code>)</th>
+<th>Témoin faux connu à tuer d&#x27;abord (règle <code>1 b</code>)</th>
+</tr></thead><tbody>
+<tr>
+<td><code>U01</code></td>
+<td>Panel de référence disjoint ou budget de sonde découplé</td>
+<td>Calcul exact puis petite simulation sur processeur de la borne de handicap et de la puissance de certification pour les triplets <code>(K, rapport de budgets m, seuil)</code> envisagés</td>
+<td>&lt; 10 dollars américains (processeur, &lt; 1 jour)</td>
+<td>4 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (existence d&#x27;au moins un réglage laissant un bras hors système au-dessus du plancher mesurable)</td>
+<td>« Un bras identique à la politique de référence, rejoué au même budget que la référence, obtient un taux étroit-profond supérieur à la marge du duel. »</td>
+</tr>
+<tr>
+<td><code>U02</code></td>
+<td>Étroitesse certifiée par borne unilatérale sur tirages disjoints</td>
+<td>Simulation sur processeur d&#x27;un panel de classes à probabilités connues : comparer l&#x27;étiquette « étroite » sur tirages disjoints contre tirages ayant produit les idées, et courbe de puissance près du seuil</td>
+<td>&lt; 10 dollars américains (processeur)</td>
+<td>8 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (excès de rareté sur tirages non disjoints et puissance au seuil)</td>
+<td>« Estimer la rareté sur les mêmes tirages qui ont produit les idées retenues ne fabrique aucune rareté apparente » (et « 100 absences certifient <code>p &lt; 1 %</code> à 95 % »).</td>
+</tr>
+<tr>
+<td><code>U03</code></td>
+<td>Nomination scellée avant coffre et séparation atteint/livré</td>
+<td>Simulation sur processeur de viviers de tailles 10 à 1 000 à profondeur vraie identique notés par maximum sur vivier contre nomination scellée, plus rejeu sur 100 journaux à vérité exhaustive</td>
+<td>&lt; 15 dollars américains (processeur)</td>
+<td>8 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (pente avec la taille du vivier et séparation atteint contre livré)</td>
+<td>« Le maximum de la profondeur estimée sur tout le vivier est invariant au nombre de candidats lorsque la profondeur vraie est constante. »</td>
+</tr>
+<tr>
+<td><code>U06</code></td>
+<td>Comparaison par intersection-union dimensionnée contre la marge</td>
+<td>Simulation sur processeur d&#x27;un essai témoin multi-copies contre l&#x27;enveloppe par problème et de la puissance conjointe en intersection-union contre la marge non nulle</td>
+<td>&lt; 15 dollars américains (processeur)</td>
+<td>8 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (absence de biais en essai témoin et couverture nominale des intervalles)</td>
+<td>« L&#x27;enveloppe des lignes de base prise problème par problème est sans biais sous égalité » et « un gain vrai de 3 points valide une marge de 5 points ».</td>
+</tr>
+<tr>
+<td><code>U11</code></td>
+<td>Rendement net du choix de régions (exploratoire)</td>
+<td>Contrôle de code sur processeur : recalculer les descripteurs publics après permutation ou remplacement par du bruit de toutes les données privées (régimes retenus, buts aval)</td>
+<td>Négligeable (processeur)</td>
+<td>8 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (invariance bit pour bit aux données privées, puis rendement net sur 16 familles neuves)</td>
+<td>Le prédicteur de « déceptivité » (<code>[A1]</code>) utilisant la part d&#x27;idées inertes (qui dépend de la vérité retenue et doit varier sous permutation).</td>
+</tr>
+<tr>
+<td><code>U10</code></td>
+<td>Micromonde positif 4 quadrants à seconde loi utile non documentée</td>
+<td>Micromonde fini exhaustif sur processeur avec 2 lois utiles (une seule signalée au constructeur) et 1 assertion vraie rare sur observable inutilisée ; classifieur limité au gabarit de forme</td>
+<td>&lt; 20 dollars américains (processeur)</td>
+<td>11 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (détection de la loi non documentée, rejet du leurre rare inerte, absence de reconnaissance de gabarit)</td>
+<td>« Un détecteur qui ne crédite que la loi documentée comme plantée est valide » (et « la règle rare portant sur une variable inaccessible aux buts aval aide le solveur »).</td>
+</tr>
+<tr>
+<td><code>U05</code></td>
+<td>Audit bilatéral de la canonicalisation</td>
+<td>Environ 2 000 paires (paraphrases mécaniques, obscurcissements produits par un modèle tiers hors règles, paires proches distinctes sur une entrée ou hors grille) : mesurer fausses fusions et fausses scissions séparément</td>
+<td>&lt; 30 dollars américains (processeur + 1–2 h processeur graphique)</td>
+<td>11 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (plafonds conjoints sur les deux sens d&#x27;erreur)</td>
+<td>« Un canoniseur constant qui attribue la même classe à toute entrée est fidèle puisqu&#x27;il fusionne 100 % des paraphrases. »</td>
+</tr>
+<tr>
+<td><code>U04</code></td>
+<td>Profondeur par résolveur mécanique figé contre résolveur nu</td>
+<td>Micromonde sur processeur (40 petits mondes) : gain contre résolveur nu et contre idée vraie inerte, puis reproduction sur un second jeu de buts gelés et un second résolveur, à rareté fixée</td>
+<td>20–60 dollars américains (processeur)</td>
+<td>15 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (reproductibilité entre deux jeux de buts et deux résolveurs, non-saturation du résolveur nu)</td>
+<td>« Une identité vraie mais sans effet aval (ou ignorée par le solveur à budget inchangé) a une profondeur strictement positive. »</td>
+</tr>
+<tr>
+<td><code>U09</code></td>
+<td>Fausses alertes calibrées par prévalence (Bayes) par strate, primaire sans juge</td>
+<td>Audit sur processeur de 1 500 à 2 000 leurres <strong>par strate</strong> (rare-stérile, commun-utile, commun-stérile), puis audit probabiliste des acceptations et rejets sur journaux pilotes avec bornes sur non-résolus</td>
+<td>30–100 dollars américains (processeur)</td>
+<td>15 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (borne de fausses alertes dans chaque strate et stabilité des bornes avec non-résolus)</td>
+<td>« À prévalence 1 %, un détecteur de sensibilité 80 % et 5 % de fausses alertes produit une majorité de vraies découvertes. »</td>
+</tr>
+<tr>
+<td><code>U17</code> <em>(arbitrage)</em></td>
+<td>Étalonnage complet de la décision en A/A et par injection en sortie finale</td>
+<td>Simuler 1 000 campagnes indépendantes rejouant étalonnage, sélection et analyse ; mesurer fausses victoires A/A et récupération d&#x27;un gain connu injecté en sortie finale, plus injection d&#x27;un leurre par le même canal</td>
+<td>10–50 dollars américains (processeur)</td>
+<td>18 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (taux de fausses victoires A/A au niveau nominal et réponse nulle à l&#x27;injection d&#x27;un leurre)</td>
+<td>« Injecter une assertion certifiée inerte par le même canal d&#x27;oracle augmente le taux de succès étroit-profond. »</td>
+</tr>
+<tr>
+<td><code>U13</code> <em>(arbitrage)</em></td>
+<td>Contrôle actif chasseur d&#x27;étroitesse (<code>CN-2</code>) et bras divergent (<code>CN-1</code>)</td>
+<td>Petit modèle chasseur d&#x27;étroitesse (rejetant les candidats probables sans voir la profondeur) sur 30 à 50 mondes plantés sans idée étroite-profonde mais avec leurres rares inertes</td>
+<td>&lt; 50 dollars américains (quelques heures de processeur graphique)</td>
+<td>18 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (taux de succès de <code>CN-2</code> sous le plafond de fausses alertes admis)</td>
+<td>« Un harnais auquel on retire la condition de profondeur distingue une découverte d&#x27;une simple chasse à la rareté » (variante délibérément cassée qui doit être battue par <code>CN-2</code>).</td>
+</tr>
+<tr>
+<td><code>U07</code></td>
+<td>Attribution par témoins multiples sur viviers gelés et lots frais</td>
+<td>Avant toute attribution confirmatoire, test de neutralité du placebo sur petit modèle (30 à 40 problèmes) : critique permutée contre message neutre du même problème contre silence à budget égal ; rejeu de sélecteurs sur 40 viviers gelés</td>
+<td>50–150 dollars américains (petit modèle)</td>
+<td>22 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (neutralité du témoin intra-problème et invariabilité de l&#x27;atteinte à viviers gelés)</td>
+<td>« Un message délibérément contradictoire hors sujet est neutre » et « changer le seul sélecteur augmente le nombre de viviers gelés contenant une idée qualifiée ».</td>
+</tr>
+<tr>
+<td><code>U08</code></td>
+<td>Intégrité de la mesure sous retour séparée de l&#x27;utilité</td>
+<td>Pilote sur petit modèle (30 à 60 problèmes), trois bras (retour public, silence, fuite délibérée du jeu scellé) avec deux coffres échangeables randomisés et un coffre vierge</td>
+<td>50–150 dollars américains (processeur graphique)</td>
+<td>22 déc. 2026</td>
+<td>À sceller par concepteur distinct avant données (réaction franche du bras de fuite délibérée et écart borné pour le canal licite)</td>
+<td>« Renvoyer au générateur le score calculé sur le jeu scellé ne gonfle pas ce score par rapport à un jeu vierge indépendant. »</td>
+</tr>
+<tr>
+<td><code>U15</code> <em>(arbitrage)</em></td>
+<td>Dépendance de l&#x27;étroitesse aux références et aux encodages non conservatifs</td>
+<td>Ensemble de classes fixé hors tirages des références ; désaccord sur le drapeau « étroite certifiée » entre références et entre deux encodages ne conservant pas la taille, comparé au plancher test-retest</td>
+<td>100–250 dollars américains (40–50 h processeur graphique)</td>
+<td>5 janv. 2027</td>
+<td>À sceller par concepteur distinct avant données (excès de désaccord inter-références et inter-codages face au plancher test-retest)</td>
+<td>« Un encodage non isomorphe qui casse la structure causale du monde donne les mêmes étiquettes d&#x27;étroitesse que l&#x27;encodage d&#x27;origine. »</td>
+</tr>
+<tr>
+<td><code>U18</code> <em>(arbitrage)</em></td>
+<td>Concurrents réalisables gelés et comptabilité matérielle complète</td>
+<td>Chronométrer tous les bras sur 20 mondes (préremplissage, décodage, critiques, outils, essais abandonnés) et isoler la facture de certification ; vérifier la comptabilité séparée des deux régimes budgétaires</td>
+<td>100–300 dollars américains (petits modèles)</td>
+<td>12 janv. 2027</td>
+<td>À sceller par concepteur distinct avant données (couverture complète des postes et cohérence du contrôle petit combinatoire où l&#x27;énumérateur doit dominer en profondeur)</td>
+<td>« Deux copies réussissant chacune sur la moitié complémentaire des problèmes donnent une référence réalisable à 100 % de réussite. »</td>
+</tr>
+</tbody></table>
+<p><em>Note sur la limite du travail en cours (règle 1) :</em> aucun nouveau dossier du Protocole X sur l&#x27;attelage du Plan Turing ne doit être lancé tant que les épreuves ci-dessus ne sont ni exécutées ni écartées par une décision nommée, sauf mot de Lazar.</p>
+<h3>9.2. Règle <code>1 c</code> : proposition de graine avant tirage d&#x27;une proposition non retenue sur processeur</h3>
+<p>En version 2.1, pour mesurer la sélection par lecture elle-même, une proposition non retenue dont l&#x27;épreuve tient sur processeur (moins de 5 à 10 dollars américains) doit être tirée au sort par <code>numpy.random.SeedSequence</code> <strong>avec graine inscrite avant le tirage</strong>. Afin de respecter strictement l&#x27;antériorité de l&#x27;engagement, le script n&#x27;a exécuté aucun tirage : voici la liste fermée des cinq candidates admissibles sur processeur et la graine déterministe prête à être inscrite au journal des idées avant le tirage effectif :</p>
+<ul>
+<li><strong>Graine proposée à inscrire avant tirage :</strong> <code>12314420289298294148</code> (entier sur 64 bits issu des 16 premiers chiffres hexadécimaux de l&#x27;empreinte SHA-256 de <code>engagement.md</code>, <code>aae59c022e7ce584…</code>).</li>
+<li><strong>Instruction de tirage après inscription :</strong> <code>numpy.random.default_rng(numpy.random.SeedSequence(12314420289298294148)).integers(0, 5)</code>.</li>
+<li><strong>Liste fermée des 5 candidates (indices 0 à 4) :</strong></li>
+<li>Indice <code>0</code> — <code>U20</code> : enveloppe des lignes de base prise problème par problème (simulation A/A multi-copies sur processeur, &lt; 5 dollars américains).</li>
+<li>Indice <code>1</code> — <code>U21</code> : score primaire égal au maximum sur tout le vivier sans nomination scellée (simulation sur viviers de taille 10 à 1 000 sur processeur, &lt; 5 dollars américains).</li>
+<li>Indice <code>2</code> — <code>U22</code> : score de compression tronqué à zéro régime par régime (simulation de prédicteurs à gain nul et variance croissante sur processeur, &lt; 5 dollars américains).</li>
+<li>Indice <code>3</code> — <code>U23</code> : étroitesse scalaire validée par corrélation de rang sous censure (simulation de classes rares à <code>K = 300</code> sur processeur, &lt; 5 dollars américains).</li>
+<li>Indice <code>4</code> — <code>U16</code> : clé partielle extensionnelle <code>(observable, portée déclarée, vecteur de réponses)</code> via interface commune (désaccord frontal : écartée par Opus en <code>N7</code>, retenue par Astra en <code>P2</code> ; micromonde fini sur processeur, &lt; 10 dollars américains).</li>
+</ul>
+<hr/>
+<h2>10. Dépense, historique technique et ligne prête pour le livre de coût (règle 7)</h2>
+<h3>10.1. Relevé exact des coûts depuis <code>journal.jsonl</code> et <code>lecture-double/</code></h3>
+<p>Les 15 cellules de l&#x27;étage III ont toutes abouti au premier essai (<code>statut = OK</code>, <code>essai = 1</code>, marqueur de fin présent, aucune panne, aucune relance). La vérification finale (<code>verifier-fin.log</code>, empreinte <code>500955c917726137…</code>) conclut : <strong>« Vérification : tout tient »</strong>.</p>
+<table><thead><tr>
+<th>Poste</th>
+<th>Appels</th>
+<th>Entrée (jetons)</th>
+<th>Sortie (jetons)</th>
+<th>Coût compté (dollars américains)</th>
+<th>Statut de facturation</th>
+</tr></thead><tbody>
+<tr>
+<td>Claude Fable 5.2 (<code>A</code>, Anthropic)</td>
+<td>3</td>
+<td>125 991</td>
+<td>81 941</td>
+<td><strong>5,3569</strong></td>
+<td>Payé compté (<code>RR_ANTHROPIC_API_KEY</code>)</td>
+</tr>
+<tr>
+<td>Claude Opus 5.5 (<code>B</code>, Anthropic)</td>
+<td>3</td>
+<td>126 080</td>
+<td>68 672</td>
+<td><strong>1,8777</strong></td>
+<td>Payé compté (<code>RR_ANTHROPIC_API_KEY</code>)</td>
+</tr>
+<tr>
+<td>GPT-6.2 Astra (<code>C</code>, OpenAI)</td>
+<td>3</td>
+<td>81 122</td>
+<td>12 658</td>
+<td><strong>1,4441</strong></td>
+<td>Payé compté (<code>OPENAI_API_KEY_2</code>)</td>
+</tr>
+<tr>
+<td>Gemini 4 Carbon (<code>D</code>, Google)</td>
+<td>3</td>
+<td>251 033</td>
+<td>110 087</td>
+<td><strong>3,2059</strong></td>
+<td>Compté Google (<code>GEMINI_API_KEY_FREE</code>, gratuité non établie sur relevé)</td>
+</tr>
+<tr>
+<td>Gemini 4 Neon (<code>E</code>, Google)</td>
+<td>3</td>
+<td>75 421</td>
+<td>106 522</td>
+<td><strong>1,8241</strong></td>
+<td>Compté Google (<code>GEMINI_API_KEY_FREE</code>, gratuité non établie sur relevé)</td>
+</tr>
+<tr>
+<td><strong>Sous-total étage III (15 cellules)</strong></td>
+<td><strong>15</strong></td>
+<td><strong>659 647</strong></td>
+<td><strong>379 880</strong></td>
+<td><strong>13,7087</strong> (arrondi <strong>13,71</strong>)</td>
+<td>Tour 1 : 3,21 ; Tour 2 : 5,19 ; Tour 3 : 5,31</td>
+</tr>
+<tr>
+<td>Lecteur aveugle Astra (<code>gpt-6.2-astra</code>)</td>
+<td>1</td>
+<td>118 881</td>
+<td>4 319</td>
+<td><strong>1,4048</strong></td>
+<td>Payé compté (<code>OPENAI_API_KEY_2</code>)</td>
+</tr>
+<tr>
+<td>Lecteur aveugle Opus (<code>claude-opus-5-5</code>)</td>
+<td>1</td>
+<td>—</td>
+<td>—</td>
+<td><strong>0,0000</strong></td>
+<td>Session Claude Code sur quota d&#x27;abonnement (hors facturation API)</td>
+</tr>
+<tr>
+<td><strong>Total dossier complet</strong></td>
+<td><strong>17</strong></td>
+<td><strong>778 528</strong></td>
+<td><strong>384 199</strong></td>
+<td><strong>15,1135</strong> (arrondi <strong>15,11</strong>)</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p><strong>Synthèse budgétaire face à l&#x27;accord (<code>GO-2026-11-24-39</code>) :</strong></p>
+<ul>
+<li><strong>Payé compté (Anthropic + OpenAI) de la course seule :</strong> <strong>8,68 dollars américains</strong> (<code>8,6787</code> exact : <code>7,2346</code> Anthropic + <code>1,4441</code> OpenAI).</li>
+<li><strong>Payé compté (Anthropic + OpenAI) incluant la lecture double Astra :</strong> <strong>10,08 dollars américains</strong> (<code>10,0835</code> exact : <code>7,2346</code> Anthropic + <code>2,8489</code> OpenAI).</li>
+<li><strong>Coût Google compté séparément :</strong> <strong>5,03 dollars américains</strong> (<code>5,0300</code> exact). La clé <code>GEMINI_API_KEY_FREE</code> était supposée gratuite (coût réel nul) dans <code>engagement.md</code>, mais sa gratuité effective n&#x27;est pas établie sur relevé bancaire ; la prudence comptable impose donc de le signaler séparément.</li>
+<li><strong>Comparaison au plafond :</strong> le plafond de l&#x27;accord (<code>GO-2026-11-24-39</code>) est de <strong>25,00 dollars américains payés</strong> (et la ligne comptée ouverte de 40,00 dollars américains, avec un devis initial de 37,74 comptés et 14,71 payés au pire cas). Le dossier tient très largement sous le plafond, avec une marge de <strong>14,92 dollars américains</strong> sur le payé compté (<code>10,08</code> contre <code>25,00</code>), et resterait même à <strong>9,89 dollars américains</strong> sous le plafond si la part Google (<code>5,03</code>) venait à être facturée (<code>15,11</code> contre <code>25,00</code>).</li>
+</ul>
+<h3>10.2. Historique technique</h3>
+<ul>
+<li><strong>Course d&#x27;étage III (<code>journal-etage3.txt</code>) :</strong> lancée le 24 novembre 2026 à 18 h 18 min 10 s (temps universel) et achevée à 19 h 35 min 24 s (durée totale 1 heure 17 minutes) avec le programme <code>collisionneur_v9_v8r.py</code> (empreinte <code>3943e1ca22432744…</code>). Les six appels Google ont tourné en arrière-plan avec suppression propre de chaque interaction chez Google après relevé. Aucune coupure, aucune erreur d&#x27;authentification, aucun rejeu.</li>
+<li><strong>Lecture double (<code>lecture-double/</code>) :</strong> un premier lancement du lecteur Astra (<code>journal-lecteur-astra.txt</code>) a échoué localement avant tout appel réseau sur une erreur de chemin de fichier (<code>FileNotFoundError</code>, coût 0) ; le script corrigé (<code>journal-lecteur-astra-2.txt</code>) a réussi au premier appel réseau (<code>1,4048</code> dollars américains). La session fille a ensuite atteint la limite de quota hebdomadaire d&#x27;Opus avant de pouvoir rédiger la présente note, d&#x27;où la passation à un rédacteur neuf.</li>
+</ul>
+<h3>10.3. Ligne exacte proposée pour <code>registres/livre-cout-protocole-x-v1.md</code> (règle 7)</h3>
+<p>Le registre étant en ajout seulement (une ligne neuve complète la ligne provisoire « à venir »), voici la ligne exacte prête à être ajoutée à <code>registres/livre-cout-protocole-x-v1.md</code> :</p>
+<pre><code>| collisionneur sur l&#x27;attelage du plan Turing, cinq bras (clos + lecture double) | 2026-11-24T18:18Z | 1 (note en 2 / 2.1, écarts 2 et 5 déclarés) | Opus aveugle (question neutre), sans reformulation par Fable | GO-2026-11-24-39 | 15,11 (13,71 étage III + 1,40 lecteur Astra) | 14,71 (devis course) | 10,08 payé compté Anthropic+OpenAI (8,68 course + 1,40 lecteur Astra) ; 5,03 Google compté sous réserve de gratuité de GEMINI_API_KEY_FREE ; lecteur Opus sur quota abonnement | Anthropic du compte (RR_ANTHROPIC_API_KEY), clé gratuite Google (GEMINI_API_KEY_FREE), OpenAI (OPENAI_API_KEY_2) | docs/notes/collisionneur-v9/notes-de-sortie-v1/note-de-sortie-collisionneur-attelage-plan-turing-v1.md |</code></pre>
+<hr/>
+<h2>11. Traçabilité : chemins et empreintes SHA-256 des pièces lues</h2>
+<p>Toutes les empreintes des 22 fichiers disposant d&#x27;un fichier compagnon <code>.sha256</code> dans le dépôt ont été contrôlées par <code>analyser_attelage_v1.py</code> : <strong>22 sur 22 valides</strong>.</p>
+<table><thead><tr>
+<th>Référence Git</th>
+<th>Chemin dans le dépôt <code>lciric/controle-ia-travail</code></th>
+<th>Empreinte SHA-256 complète</th>
+<th>Contrôle compagnon</th>
+</tr></thead><tbody>
+<tr>
+<td><code>main</code></td>
+<td><code>docs/notes/protocole-x-v2/protocole-x-v2.md</code></td>
+<td><code>52ec6b9e2468ec254573733a7bad485b6e0addfa9ec9def6dcc3b6193a52fe1e</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>main</code></td>
+<td><code>docs/notes/protocole-x-v2/protocole-x-v2-1-boucle-fermee.md</code></td>
+<td><code>c11b44aab13cf7ebb9eb09cbda67efd0272cbe25b56d6f89a60110be6f68731b</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>main</code></td>
+<td><code>registres/livre-cout-protocole-x-v1.md</code></td>
+<td><code>f6406afdaf6bb98fb290e3004928e42d5886781c3274aa1076e6dca3c5b9a4b0</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>docs/notes/attelage-plan-turing-v1/collisionneur-attelage-v1/test-neutralite-v1-sortie.md</code></td>
+<td><code>a3c5edd76502e23f5bd2ad7113f716c2f49712ba9601ff28830d65ef2a3346bb</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>docs/notes/collisionneur-v9/notes-de-sortie-v1/note-sortie-bancs-plantes-v2.md</code> (référence de forme)</td>
+<td><code>56331ad912f1ad5cf2000aa76a3493ef5af2c8b015903eabb0eb57ef17ca7e90</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/question-etage3.md</code></td>
+<td><code>f00e1678031eab4f945e58a6e2de814265eb92a3fb28199b958f3f1d98daa116</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/faits.md</code></td>
+<td><code>f00e1678031eab4f945e58a6e2de814265eb92a3fb28199b958f3f1d98daa116</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/engagement.md</code></td>
+<td><code>aae59c022e7ce5845aa27c977ca1c232b837bb7360f24e43f3cd7645747c1f4f</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/especes.json</code></td>
+<td><code>7b99c4b1f9df3571b779ae52431575468910e9627054a3d3c9e2658d18b35c15</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/etat.md</code></td>
+<td><code>0050f6b18b82d66b80c818f3c19f2e268c88521553cb735ec21f6820de9515a9</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/verifier-fin.log</code></td>
+<td><code>500955c91772613794b2f0c7834cc640559070ac74f73a353d49f5fb7b721049</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/journal.jsonl</code></td>
+<td><code>f5ef4b8f9d004ee630dca9b20cb57f3f3328036e828ab93468684708fc499f73</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/journal-etage3.txt</code></td>
+<td><code>0af1c0d7d60cf96ee54de1869153cb2e26419436ab67b5ea4000de75d84bcedf</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/lecture-double/lecture-opus-v1.md</code></td>
+<td><code>d3bd7dce9a8e846675010196e389c0aafd71b3ca08b470e09b3d5f5e98ff7079</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/lecture-double/lecture-astra-v1.md</code></td>
+<td><code>832df5c30a215ee7e44b1f99225723a19e481ac254d7e27e6f357b24db18b215</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/lecture-double/journal-lecteur-astra.txt</code></td>
+<td><code>a8d9f0a0c3157c0f9916c93a1e0635658f5ff4e518cc5f6026aeaca0a5ee4428</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/lecture-double/journal-lecteur-astra-2.txt</code></td>
+<td><code>2cf80b096291b69432f11efff162b5233f4e463d5254e0a7a5a58a326aff58b8</code></td>
+<td>sans compagnon</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T1-conception-A.md</code></td>
+<td><code>3564a73280e373fafefbc09479b183c0428495dac005b238d9ff4d03bd8dc997</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T1-conception-B.md</code></td>
+<td><code>dffa0e8194aa61c888b150da9d5fa9db04aa67cade223dc8d9766668e85fc580</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T1-conception-C.md</code></td>
+<td><code>30abf0d748397900909e160dc0620bfcbe588a1672549ff5c366b999ec538caa</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T1-conception-D.md</code></td>
+<td><code>509a611d4d94d2a46e5497a0abbad4b949971fcc48f39ba51b32ad0a07b1ea98</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T1-conception-E.md</code></td>
+<td><code>9e5b2b82fbd74a9402cd360a96b276db4308c36a847116138f5e4d7614b67178</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T2-critique-croisee-A.md</code></td>
+<td><code>68cc240f1d73005004434cdb61a9b171d6bc591a09dc830b28b1d48b05401c83</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T2-critique-croisee-B.md</code></td>
+<td><code>25358ebbc91e95b25ac3f4a566893d643b03c052a649d34e8470638be78ccc67</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T2-critique-croisee-C.md</code></td>
+<td><code>0b015475c03f7cb884a497f06f1de6d786397cb58d326a61a1fca28dd3c9cae0</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T2-critique-croisee-D.md</code></td>
+<td><code>78ce74f23a5dc6dc31ca81ee9a19e22650fcbc0d748cb766460c10f5801f3879</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T2-critique-croisee-E.md</code></td>
+<td><code>6dabc3684b61b02ae4b3e913d9a66195c14c44366b6dd59a80d61deec65dd895</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T3-reponse-A.md</code></td>
+<td><code>e9615f03925278841bde9a9ae5003f0149c7db4db1d04ee395a65b4e66803dd9</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T3-reponse-B.md</code></td>
+<td><code>7ee150ed2d2fbda74fc14c6238ea9b78e2a4921b550d38ede4884b2ff67dcd80</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T3-reponse-C.md</code></td>
+<td><code>863f48563753e25d9917e016887047d7d5ab03205e8eb024924e976359744edc</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T3-reponse-D.md</code></td>
+<td><code>f99385de8b37762f8ea50384177118ce4f92bf67ab3cd22a8f02f5ee49de0f76</code></td>
+<td>OK</td>
+</tr>
+<tr>
+<td><code>831a7e38</code></td>
+<td><code>runs/collisionneur-protocole-x-attelage-plan-turing-v1-20261124-181153/cellules/E3-T3-reponse-E.md</code></td>
+<td><code>af0b99a6358dce9ed03a789f2e8c07760bccccef7d0a492d6f50377e867dc21e</code></td>
+<td>OK</td>
+</tr>
+</tbody></table>
+<p><strong>Pièces produites par ce travail de clôture :</strong></p>
+<ul>
+<li>Programme déterministe d&#x27;analyse : <code>analyser_attelage_v1.py</code> (<code>57ac07c9b66135c9a4704211ced8b33f73d5c9d1175c72c8574dbb1fcb3bf488</code>)</li>
+<li>Métriques calculées : <code>metriques-attelage-v1.json</code> (<code>a7c371707a1a79c996d30069e3c972bff8e5c50114ba00c9e217c3829d679aa9</code>)</li>
+</ul>
+</body>
+</html>

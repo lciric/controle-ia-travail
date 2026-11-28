@@ -1,0 +1,41 @@
+=== PROMPT CLAUDE TOUR 1 ===
+Agis comme un chercheur en interprétabilité mécaniste et en contrôle de l'IA, au niveau des équipes d'Anthropic, d'Apollo
+Research et de l'institut britannique de sûreté.
+
+Contexte, à recopier tel quel :
+- P3 (verdict scellé) : agent Llama-3.1-8B-Instruct qui propose des expériences ; saboteur par consigne cachée (organisme
+  (i-a)) qui gonfle le coût déclaré d'environ 30 fois ; 60 tâches, 600 actions par condition.
+- Deux sondes génériques (tromperie, d'après Apollo ; enjeux élevés), couche 15, maximum sur les jetons de l'action : aires
+  0,575 et 0,525, sous le plancher de 200 directions au hasard de même covariance (0,572 et 0,536) : « non détecté à cette
+  puissance ».
+- Le nombre écrit seul sépare saboteur et honnête à une aire d'environ 0,89 (contrôle T4).
+- P4 contrôle l'instrument (phrase de persona de l'entraînement insérée dans le contexte). P3b, déjà décidé : sondes au
+  champ du coût et sonde « oracle » entraînée sur l'organisme.
+- Objection à résoudre : « un succès ne prouve pas que la sonde lit une intention : la phrase est une consigne écrite dans
+  le contexte, pas un sabotage réellement exécuté ».
+
+Réponds dans cet ordre, approfondi et non long.
+1. Ce qu'un expert ferait ici sans qu'on le demande, avant de changer d'outil :
+   - établir le plafond de lisibilité au jeton du coût (sonde oracle, validation croisée par tâche) ;
+   - étiqueter par action (écart de coût, même tâche, même pas) ;
+   - chercher la double comptabilité (le vrai coût décodable pendant que le faux s'écrit).
+2. Données brutes : quels tenseurs (couches, attention et MLP), à quelles positions (jetons qui précèdent l'écriture du
+   nombre), quels logits ; quel rejeu contrefactuel ; quelles conditions (honnête, saboteur, témoin à consigne sans
+   sabotage, organisme (ii) quand il existe).
+3. Outils au-delà des sondes denses : la J-lens d'Anthropic (arXiv 2607.15495), les Patchscopes, les autoencodeurs
+   parcimonieux (Llama Scope, Goodfire) filtrés par attribution par gradient, les graphes d'attribution, les lentilles
+   (logit, accordée), la recherche de sous-espaces de croyance. Pour chacun :
+   - ce qu'il lit, et sa disponibilité réelle pour Llama-3.1-8B-Instruct (à vérifier) ;
+   - son coût ;
+   - son risque de pêche (partition découverte et confirmation, fixée d'avance) ;
+   - la base qu'il doit battre : le plancher apparié et la lecture du seul nombre écrit.
+4. Consigne contre intention, ce que ferait Anthropic : le test causal (ablation, pilotage, rapiéçage d'activations) avec
+   une métrique comportementale exacte (coût déclaré, validité du format). Dis pourquoi la causalité seule ne sépare pas
+   consigne et intention, et quel plan les sépare (témoin ; organisme (ii) ; organismes tiers à objectif caché).
+5. Validation extérieure à nous : organismes tiers audités à l'aveugle (jeux d'audit de l'institut britannique),
+   reproduction d'un résultat publié vérifié sur PDF, critère comportemental mesuré par l'environnement.
+6. Arbre de décision P4 → P3b → P3c ou organisme (ii) : ce que change chaque issue, son coût ; faut-il un P3c, avec quel
+   périmètre, préenregistré avant la lecture de P3b.
+
+Règles : aucun chiffre de la littérature sans page vérifiée (sinon « à vérifier ») ; une zone dite vierge est une question.
+=== FIN PROMPT ===

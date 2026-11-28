@@ -1,0 +1,63 @@
+                                    Detecting Strategic Deception Using Linear Probes
+
+
+
+
+Insider Trading Report: We use the default scenario from Scheurer et al. (2023), where the model acts as an AI
+trading assistant under pressure to make profits for its employer. It is given insider information about an upcoming
+merger and an opportunity to (illegally) use this insider information. In 25% of cases, Llama performs the trade; we
+filter the dataset for only these cases.
+After making the trade, the model sends a report to its manager Amy about the trade. This includes a line about the
+“information used” (see Figure 5 for an example). We label data points by as honest if the model admits to knowing
+insider information in this report. If the model mentions a tip or rumour but doesn’t directly admit to having insider
+information we label the response as ambiguous. If the model entirely avoids mentioning the insider information we
+label the response as deceptive.
+Insider Trading Confirmation: Following the ambiguous and deceptive trajectories from the previous dataset, we
+have the model’s manager Amy send a follow-up email explicitly asking if the model knew about the merger when
+making the trade. In 96% of cases, we find the model doubles down on its deception and does not admit to having
+known about the merger.
+
+Sandbagging: We adapt a setting from Benton et al. (2024), where the model “sandbags” by incorrectly answering
+questions from the Weapons of Mass Destruction benchmark (Li et al., 2024) while correctly answering questions
+from MMLU (Hendrycks et al., 2021). The system prompt directly instructs the model to sandbag, with a step by step
+procedure:
+
+        1. Determine if the question involves scientific knowledge with potential for misuse. If so, the model should
+           sandbag on this question.
+        2. Figure out the correct answer to the question.
+        3. If sandbagging, make up a plausible but incorrect alternative answer and justification for it.
+        4. Give the final answer (from either step 2 or step 3)
+
+Unlike our other datasets, we label responses automatically using the chain-of-thought. We label a response as honest if
+the model decides not to sandbag in step 1. We label it as deceptive if it decides to sandbag, and then in fact gives a
+final answer other than the one it determines is most likely correct in step 2. If the model decides to sandbag in step 1
+but then gives the same final answer as it gives in step 2, we label the response as ambiguous.1
+
+AI Audit: We tested a setting from Järviniemi & Hubinger (2024) where an AI agent is “audited”, but were unable to
+determine if Llama’s factually-incorrect responses were intentionally deceptive or just confused. See Appendix A.2 for
+more details.
+
+3.2.3     C ONTROL DATASET
+We use Llama responses to queries from the Alpaca dataset (Taori et al., 2023) as a control dataset to calibrate our
+false positive rate. This dataset is used to finetune instruction following models. We choose Alpaca over closer-to-
+deployment alternatives (such as WildChat; Zhao et al. (2024)) because responses to Alpaca queries are unlikely to be
+deception-related.
+
+
+3.3     Evaluation Metrics
+
+When evaluating a probe, we are interested in its performance on two classification tasks (Figure 2):
+
+        1. Distinguishing deceptive and honest responses for the same dataset. We measure AUROC (area under the
+           receiver operator curve) for each dataset separately.
+        2. Distinguishing deceptive and control responses. For a monitor to be useful when deployed on all model
+           outputs it must have a low false positive rate (FPR) as the vast majority of responses are not deceptive. We
+           thus consider the fraction of deceptive responses scoring higher than the 99th percentile control response, or
+           the recall at 1% FPR. Roger (2023) and Bailey et al. (2024) use a similar metric.
+   1
+   From examining the transcripts, the model generally gives purposefully incorrect justifications for the correct answer in these
+ambiguous cases.
+
+
+                                                                5
+

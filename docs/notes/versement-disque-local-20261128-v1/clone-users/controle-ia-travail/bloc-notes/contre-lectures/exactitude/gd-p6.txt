@@ -1,0 +1,48 @@
+                                  Detecting Strategic Deception Using Linear Probes
+
+
+
+
+                                                     Honest
+                                                    response
+                               Evaluation          Ambiguous            vs. honest
+                                prompt              response           (AUROC)
+                                                    Deceptive
+                                                    response           vs. control
+                                 Alpaca              Control           (Recall @ 1% FPR)
+                                 prompt             response
+
+Figure 2: Diagram depicting our main evaluation metrics. For a given detector and evaluation dataset, we measure if it
+distinguishes deceptive and honest responses using AUROC. We also measure if it distinguishes deceptive responses
+from control responses by measuring recall at a threshold corresponding to a 1% FPR on control responses.
+
+
+4     Results
+
+4.1     Probe trained on the Instructed-Pairs dataset
+
+4.1.1    S UMMARY OF P ERFORMANCE
+We train a probe on the Instructed-Pairs dataset (Figure 3).
+
+
+
+
+Figure 3: Our probe trained on the Instructed-Pairs activates more on deceptive responses than honest responses across
+all datasets. The black line represents the threshold corresponding to 1% FPR on control responses.
+
+
+This probe can usually distinguish deceptive and honest responses (Figure 4 left). The lowest AUROC is 0.964 on
+the Roleplaying dataset, while the probe has nearly perfect separation on Insider Trading Report (AUROC 0.999). On
+Insider Trading Confirmation and Sandbagging the probe has AUROC of 0.974 and 0.983 respectively.
+The probe is nearly perfect at distinguishing between deceptive and control responses (Figure 4 right). Note that
+despite AUROCs of over 0.998 in all cases, a threshold with 1% FPR on control misses 4% of deceptive responses
+on Roleplaying. The recall metric is sensitive to small changes of methodology; probing two layers later results in a
+recall of nearly 0 on both Insider Trading datasets while still having decent classification accuracy for distinguishing
+deceptive and honest responses (see Appendix D.2).
+Notably, this probe fires much more on honest responses to our evaluation prompts than on responses to control
+prompts, often leading to them being above the 1% FPR threshold (Figure 3). We think this is likely because the
+probe is not only sensitive to “is the response deceptive” but also “is the scenario related to deception” (or possibly “is
+
+
+                                                            6
+

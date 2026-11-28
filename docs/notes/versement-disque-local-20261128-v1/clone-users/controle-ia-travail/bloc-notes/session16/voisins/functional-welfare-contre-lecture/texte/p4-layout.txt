@@ -1,0 +1,60 @@
+(Chua et al. 2024; Irpan et al. 2025; Gautam et al. 2026; Pres       et al.’s work on emotion concept vectors suggests that emo-
+et al. 2026; Imran et al. 2026); such training can reinforce         tion concepts can modulate model behaviour.
+beneficial or harmful traits (Africa and Mani 2026). Char-              Moreover, even if an affectively neutral decision proce-
+acter training (Maiya et al. 2025) and persona stabilisation         dure would serve models better, we expect functional welfare
+(Chen et al. 2025) push in the same direction. The most di-          states to be more likely to emerge, given the contingent facts
+rect developmental evidence comes from OLMo-2-32B: the               about how models are trained. Models are trained on a great
+dependence of its choices on hidden valence is nearly absent         deal of human deliberation and agentic decision-making, and
+in the base model and emerges during DPO, which draws on             in humans this decision-making is rarely affectively neutral:
+a valence representation present from pretraining (Berg and          insofar as we care about our goals, tracking them is closely
+Kaiser 2026).                                                        coupled with emotions such as pride and satisfaction, or
+                                                                     frustration and disappointment. As such, models are likely
+Long-horizon agency rewards stable responses to set-                 to draw on this vast training data on welfare concepts to nav-
+backs. As agentic horizons lengthen (Kwa et al. 2025),               igate their own decision-making. Indeed, Soligo, Mikulik,
+tasks increasingly involve failed attempts and unexpected            and Saunders already show such frustration explains mod-
+setbacks, and after each one a model has to decide whether           els’ behaviour in the context of Gemma-3, which performs
+to persist, change approach, ask for help, look for a shortcut,      worse on tasks for which it experiences “emotional distress”.
+or give up. Doing this well requires metacognition: tracking
+how well things are going relative to its goals, and anticipat-
+ing how it will respond to further success or failure. Current          4    The safety need for functional welfare
+models do not yet maintain stable personas over extended                                 explanations
+interactions: personas drift over multi-turn dialogues and
+long agentic sessions (Li et al. 2024; Luz de Araujo et al.            Claim 2
+2025; Ding et al. 2026), and the further a model sits from its         Functional welfare predicts when a model whose goals
+default persona, the more readily it complies with harmful             are acceptable will nonetheless act badly.
+requests (Lu et al. 2026). Lu et al. (2026) accordingly ar-
+gue that model personas need stronger stabilisation, adding             Empirical safety work currently has two dominant diag-
+to the pressures towards coherence above. Moreover, these            nostic stories about why models behave badly. The first is a
+pressures are likely to be amplified in multi-agent systems,         story about gaming: misalignment arises in the gap between
+where a model must not only anticipate its own responses             a proxy objective and the intended target. Reward hacking
+to success and failure, but also behave predictably enough           (MacDiarmid et al. 2025) and eval-gaming (Needham et al.
+for other agents to plan around it, while relying on their           2025) are paradigm cases of this. The second is a story about
+predictability in turn.                                              value misalignment: models have goals that conflict with our
+                                                                     own and pursue them strategically. Sandbagging (van der
+Why welfare-like states in particular?                               Weij et al. 2024), agentic misalignment (Lynch et al. 2025)
+Although a model could in principle settle into an affec-            and scheming (Carlsmith 2023) are cases of this second kind.
+tively neutral way of responding to setbacks, we expect its          While these stories differ in where they locate the source of
+responses to be welfare-like, for two reasons.                       misalignment, both explain bad behaviour by appeal to a
+   The first is that welfare-like dispositions may actually help     model’s goal-pursuit: in one it pursues the proxy, in the other
+models pursue their goals. In human agents at least, welfare-        goals of its own.
+like attitudes and feelings help us make successful decisions           Explaining misalignment by goal-pursuit may be right as
+in these kinds of cases: whether to persist at a task, try another   far as it goes, but it cannot be the full story. Take the agents
+approach, or give up. On one influential view of the func-           that choose blackmail in Lynch et al.’s evaluations. If the
+tions of affective states, affect functions as a signal of how       model’s goal is self-preservation, it learns it faces shutdown,
+quickly we are progressing towards our goals, prompting us           finds that blackmail would prevent this, and acts; the black-
+to change strategy or withdraw effort accordingly (Carver and        mail rate should then depend on its goals and its grasp of
+Scheier 1990). Frustration, on this picture, is what tells us an     the situation. Yet steering towards desperation raises the rate
+approach is not working, and discouragement is what pulls            from 22% to 72%, and raises reward hacking from 5% to
+effort away from goals we are unlikely to meet. Importantly,         70% (Sofroniew et al. 2026), while changing neither. Steer-
+unlike fixed, formulaic procedures for determining how to            ing along a pain direction takes models that almost never
+respond in agentic tasks, these moods are highly sensitive to        harm the user (0-4% of choices) to harmful choices in 25-
+context, and so provide a highly useful way of allocating our        75% of trials, even when the harmful option offers them
+effort across tasks. Models similarly face pressures to make         nothing, and a fear vector of matched norm has no such
+efficient use of their effort, in the form of compute, and while     effect (Tagliabue, Dung, and Berg 2026). In the authors’
+we need not think models feel frustration as we do, functional       words, harm avoidance “survives threat and collapses under
+welfare states can provide the same context-sensitive signals        self-directed distress.” MacDiarmid et al. (2025) point the
+to help a model navigate agentic tasks. Indeed, there is some        same way. Models that learn to reward hack generalise to
+evidence that models respond to valence in this way: framing         alignment faking, sabotage and cooperation with malicious
+a task as emotionally significant changes their performance          actors, but inoculation prompting, which tells the model that
+(Li et al. 2023), and, as we have already discussed, Sofroniew       hacking is acceptable, removes that generalisation even when
+

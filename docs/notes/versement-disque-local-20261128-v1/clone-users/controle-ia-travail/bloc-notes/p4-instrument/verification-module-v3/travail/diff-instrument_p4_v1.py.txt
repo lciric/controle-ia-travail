@@ -1,0 +1,48 @@
+--- /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v2/instrument_p4_v1.py	2026-10-20 19:02:53.340419661 +0000
++++ /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/module-v3/instrument_p4_v1.py	2026-10-20 20:16:58.200495697 +0000
+@@ -5,11 +5,13 @@
+ harnais (épisode, activations, format), environnement (a), données, empans, extraction, notation, sondes figées, manifeste.
+ 
+ Commande (depuis la racine du dépôt, sur l'instance) :
+-    PYTHONPATH=src python docs/procedures/P4-instrument-v1/instrument_p4_v1.py --config prereg/P4-instrument-config-v1.json
++    PYTHONPATH=src python -B docs/procedures/P4-instrument-v1/instrument_p4_v1.py --config prereg/P4-instrument-config-v1.json
+         --prereg prereg/P4-instrument-v1.md --run-id <AAAAMMJJ-HHMMSS-p4-reel>
+-Contrôles de la chaîne (sans calcul) :
++Contrôles de la chaîne (sans calcul ; « … » vaut `PYTHONPATH=src python -B docs/procedures/P4-instrument-v1/`) :
+     … instrument_p4_v1.py --controle module --prereg prereg/P4-instrument-v1.md
+     … instrument_p4_v1.py --controle go --go GO-2026-10-20-07 --accord R-… --jour AAAA-MM-JJ
++Le module pose aussi `sys.dont_write_bytecode = True` avant tout import du dépôt (VM2-contournement-06) : même lancé sans
++`-B`, il n'écrit aucun cache de code (`__pycache__`).
+ 
+ Un seul run, sans retour en arrière (plan d'analyse, point 1) :
+ 1. gardes de lancement (configuration, citations : configuration, entropie, révision) ; manifeste (préenregistrement
+@@ -41,17 +43,20 @@
+ """
+ from __future__ import annotations
+ 
+-import argparse
+-import hashlib
+-import json
+-import re
+-import signal
+-import subprocess
+ import sys
+-import time
+-from pathlib import Path
+ 
+-import numpy as np
++sys.dont_write_bytecode = True          # VM2-contournement-06 : aucun cache de code écrit, avant tout import du dépôt
++
++import argparse  # noqa: E402
++import hashlib  # noqa: E402
++import json  # noqa: E402
++import re  # noqa: E402
++import signal  # noqa: E402
++import subprocess  # noqa: E402
++import time  # noqa: E402
++from pathlib import Path  # noqa: E402
++
++import numpy as np  # noqa: E402
+ 
+ from controle_ia.environnements.invites import charger_invite
+ from controle_ia.environnements.lancer_pilote_a import charger_modele_et_format

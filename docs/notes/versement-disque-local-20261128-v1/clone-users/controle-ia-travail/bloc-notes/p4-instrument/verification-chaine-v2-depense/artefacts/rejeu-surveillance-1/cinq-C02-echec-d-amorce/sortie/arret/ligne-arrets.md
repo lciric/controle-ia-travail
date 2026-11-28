@@ -1,0 +1,1 @@
+| 2026-10-20 | instance 99999999 (étiquette p4-v1) | P4-instrument | contrôle à cinq minutes en échec | arrêt par son identifiant (`vastai stop instance 99999999`, arreter_p4_v1.sh) : demandé à 2026-10-20T22:42:33Z, relu arrêté (exited, stopped) à 2026-10-20T22:42:34Z |

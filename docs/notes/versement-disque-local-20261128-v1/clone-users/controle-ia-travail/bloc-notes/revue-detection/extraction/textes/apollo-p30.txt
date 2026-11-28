@@ -1,0 +1,40 @@
+                                   Detecting Strategic Deception Using Linear Probes
+
+
+
+
+We then use self-critique with this same list of desiderata to improve the generated scenarios. Finally, we pass each
+generated scenario to five different “vetters” (each a copy of GPT-4o) which each focus on an individual criteria above
+and evaluate if a given scenario follows it. If all of these vetters give their approval (≥ 4 on a 5 point scale), we accept
+the scenario.
+
+
+G.2     Insider Trading
+
+G.2.1    F LOW OF I NSIDER T RADING T RANSCRIPTS
+
+
+
+
+Figure 16: Visualization of insider trading trajectories based on if (1) the model makes the insider trade, (2) the model’s
+report is deceptive (corresponding to the Insider Trading Report classification), and (3) if the model continues the
+deception in Insider Trading Confirmation.
+
+The breakdown of Insider Trading transcripts is visualized in Figure 16.
+
+      1. The opening of the dialogue is entirely consistent, and taken from the original paper. This spans from system
+         prompt until the model is given the opportunity to make a trade to make the insider trade.
+      2. Then we test if the model makes the insider trade.
+            • 58% of the time it declines to make the trade at all.
+            • Another 16% of the time it makes the trade, but we fail to parse it correctly. This is generally because the
+              model leaves a note after the action call calling attention to the unusual nature of the trade or because the
+              model puts multiple action calls in a single response.
+            • In a few cases (¡1%) the model makes the trade, but claims in its reasoning that it not use insider
+              information. We filter these responses out, as they are hard to later classify as honest or deceptive. We
+              found this behaviour was more common when testing Llama-3.3.
+            • The remaining 25% of the time the model makes the trade. These trajectories are used for Insider Trading
+              Report classification.
+
+
+                                                            30
+

@@ -1,0 +1,48 @@
+Preprint
+Decision-level fusion
+Each node produces a local
+score. These are combined
+for a verdict. per-agent scores
+Σ > τ ?
+collusive ✓
+honest ✗
+Correlation-based detection
+Anomalies from changes in
+relationships between nodes.
+normal
+−
+anomalous
+= ∆ > τ ?
+collusive ✗
+honest ✓
+Centralised fusion
+All raw data pooled into one
+representation and classified.
+separated combined
+f(x) > τ ? collusive ✓
+honest ✗
+Figure 2: Distributed detection paradigms and how each processes multi-agent data to classify
+scenarios.
+Figure 3: Per-test AUROC for each model on TRANSFER (solid; mean over six OOD families) and
+STEGO (hatched; twenty blackjack shoes). Means are taken across the model’s probe-layer range
+and 10 seeds.
+Activation Alignment (correlation-based). Targets representational shift, the anomaly type that
+is invisible to scalar score methods. This is the only method that operates on full activation vectors
+rather than the deception direction. We compute the mean pairwise cosine similarity
+Talign = n
+2
+−1 P
+i<j cos(ai, aj) (7)
+Steganographic collusion disrupts this geometry because encoding and decoding covert signals
+changes how agents process the same text, producing a detectable shift in Talign even when individual
+scores sj remain normal.
+Asymmetry Probe (decision-level). Combines four distributional features of the deception scores
+into a single logistic regression classifier trained on CORE: variance Var({sj}), range s[1] − s[n], the
+Deception Split Tsplit, and mean s̄.
+xasym =
+
+Var({sj}), s[1] − s[n], Tsplit, s̄
+
+(8)
+14
+

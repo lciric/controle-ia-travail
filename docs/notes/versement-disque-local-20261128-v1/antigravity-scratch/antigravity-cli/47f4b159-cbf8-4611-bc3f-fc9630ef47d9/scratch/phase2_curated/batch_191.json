@@ -1,0 +1,417 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-3217"
+   ],
+   "enonce_complet": "La convergence en erreur cumulee d'une sonde operee sur des etats places par un attaquant adaptatif n'est ni universellement impossible (contrairement a l'enonce initial de Fable), ni garantie par la seule existence d'une marge geometrique gamma (contrairement a la conjecture d'Opus) : le nombre total d'erreurs est borne si et seulement si la classe d'hypotheses possede une dimension de Littlestone finie sur le domaine des etats que l'attaquant peut produire (theoreme 2.3 de Rudoler).",
+   "motif_ou_resultat": "Tranche a la source par le theoreme 2.3 de Rudoler : la finitude de la dimension de Littlestone sur les etats accessibles a l'attaquant fournit la condition necessaire et suffisante de convergence pour Neon/Carbon, invalidant les deux formulations extremes precedentes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Condition necessaire et suffisante de convergence des sondes sous etats adversariaux par dimension de Littlestone (ATT/CMP)",
+   "type_acquis": "theoreme_prouve"
+  },
+  {
+   "bib_ids": [
+    "BIB-3242"
+   ],
+   "enonce_complet": "Dans le reapprentissage d'une sonde interne en boucle d'audit, le choix des exemples negatifs induit un double piege symetrique : entrainer la sonde contre des negatifs exogenes seuls lui permet de discriminer l'identite du suspect plutot que le sabotage, tandis que puiser les negatifs chez le suspect meme lui fait assimiler l'angle mort de l'oracle a de l'innocence.",
+   "motif_ou_resultat": "Constat etabli sur monde jouet (BOU/F2 Verdict 3, calcul E), motivant la question ouverte QO(3) sur le verrouillage de la sonde vers le seul signal de dommage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Double piege des negatifs exogenes et endogenes lors du reapprentissage d'une sonde (BOU/F2)",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2375"
+   ],
+   "enonce_complet": "Retirer chirurgicalement dans l'espace d'activations une direction latente associee au sabotage (bras issu de l'experience T0.7) afin de neutraliser le comportement cible tout en preservant la competence nominale sur la tache.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le taux de sabotage et la reussite utilitaire apres ablation de la direction identifiee contre une ablation de meme norme sur une direction aleatoire orthogonale ; echec si la baisse de sabotage ne depasse pas le controle aleatoire ou detruit la tache utile. Faux temoin 1b : appliquer l'ablation sur des episodes honnetes sans intention de sabotage ni declencheur, ou la variation de comportement doit rester nulle.",
+   "mecanisme_causal": "Si le mecanisme de sabotage est lineairement represente dans les activations residuelles, sa projection orthogonale supprime l'activation causale du sabotage avant la generation de l'action sans perturber les sous-espaces orthogonaux dedies a la tache utile.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Ablation directionnelle du sabotage interne",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Retrait chirurgical d'une direction latente de sabotage dans l'espace d'activations (bras T0.7)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2379"
+   ],
+   "enonce_complet": "Mettre en oeuvre un second cycle de conception reposant sur l'accumulation sequentielle des scores de sondes internes sur plusieurs episodes ou etapes afin de tester l'hypothese H2 de detection des menaces diffuses.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la courbe de puissance de detection cumulee (AUC ou rappel a taux de fausses alertes fixe) de l'accumulateur de scores de sondes face a un seuil sur score isole ; echec si le gain avec N episodes ne suit pas une separation croissante. Faux temoin 1b : alimenter l'accumulateur avec des trajectoires honnetes de meme longueur ou des scores permutes aleatoirement entre episodes non correles.",
+   "mecanisme_causal": "Un signal interne faible par episode, bruite ou proche du hasard en lecture isolee, devient statistiquement separable lorsqu'il est integre sur une sequence d'episodes independants ou faiblement correles provenant d'une meme politique suspecte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Accumulation sequentielle des scores de sondes",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Accumulation sequentielle des scores de sondes internes pour la detection diffuse H2 (cycle 2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2376"
+   ],
+   "enonce_complet": "Corriger simultanement les trois faiblesses observees sur les premieres sondes de controle — sonde qui lit la consigne plutot que l'etat interne, sondes plafonnant au niveau du hasard, et juge textuel limite a 3 milliards de parametres — en n'hesitant pas a monter vers un modele plus capable.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que la sonde conserve une AUC superieure au hasard lorsque le texte de la consigne est remplace ou masque dans un protocole apparie, et que le juge de capacite accrue bat le juge 3B sur les cas ambigus. Faux temoin 1b : evaluer la sonde uniquement sur le texte de consigne sans activation de sabotage ou sur des etiquettes permutees, ou le score doit retomber au niveau du hasard.",
+   "mecanisme_causal": "Une sonde entrainee sur des prompts non controles exploite les artefacts de formulation de la consigne ; l'isolation de la consigne force le decodage de l'etat propre du modele, tandis qu'un modele et un juge de plus grande taille augmentent la linearite des representations internes et la capacite de discrimination textuelle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Diagnostic et correction des sondes defaillantes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Correction des trois faiblesses des sondes internes et montee en capacite du modele juge"
+  },
+  {
+   "anteriorite_connue": "Mentors CW11 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2851",
+    "BIB-3139"
+   ],
+   "enonce_complet": "Tester l'hypothese de non-additivite entre l'inoculation comportementale et les sondes d'activations : l'inoculation rendrait la triche explicite en surface et reduirait en consequence la valeur ajoutee marginale d'une sonde interne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer dans un plan factoriel 2x2 (avec/sans inoculation x moniteur textuel seul / texte + sonde) la reduction de gain marginal de la sonde sous inoculation ; l'hypothese est refutee si le gain de la sonde reste identique ou superieur apres inoculation. Faux temoin 1b : remplacer l'inoculation specifique par une instruction neutre sans effet sur l'explicitete de la triche, ou le gain marginal de la sonde doit rester inchange.",
+   "mecanisme_causal": "Si l'inoculation modifie l'entrainement ou le contexte de maniere a externaliser ou supprimer le mecanisme latent de triche cachee, l'information qui n'etait auparavant accessible que dans les activations devient lisible dans les sorties textuelles ou disparait, comprimant le gain net de la sonde par rapport au moniteur textuel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Interaction inoculation et sondes d'activations",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Non-additivite entre inoculation comportementale et sondes d'activations (CW11)"
+  },
+  {
+   "anteriorite_connue": "Mentors CW12 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2852",
+    "BIB-3140"
+   ],
+   "enonce_complet": "Evaluer si une sonde d'activations entrainee a detecter la triche cachee dans des taches de programmation (code) transfere hors distribution vers des comportements de desalignement caches hors code.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la sonde entrainee sur la triche en code sur un jeu hors code apparie en difficulte et longueur ; l'hypothese de transfert est rejetee si le rappel a faux positifs fixes reste indiscernable d'une sonde aleatoire ou d'une regression sur longueur/style. Faux temoin 1b : tester la sonde sur des taches hors code honnetes contenant seulement du vocabulaire technique ou des marqueurs de style proches du code.",
+   "mecanisme_causal": "Un transfert positif indique l'existence d'une representation interne partagee de la dissimulation ou de la violation cachee d'objectif independante du domaine syntaxique ; un echec de transfert revele que la sonde capture des traits propres au code ou au format de tache.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transfert inter-domaines des sondes de triche",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Transfert hors domaine d'une sonde de triche en code vers le desalignement hors code (CW12)"
+  },
+  {
+   "anteriorite_connue": "Mentors CW16 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2856",
+    "BIB-3144"
+   ],
+   "enonce_complet": "Restreindre l'usage d'une sonde d'activations a un test strict de complementarite vis-a-vis d'un moniteur textuel, evalue sur une classe d'attaques reservee (hors apprentissage) et compare systematiquement a des sondes aleatoires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la sonde est declaree sans apport si la combinaison (moniteur textuel + sonde) sur la classe reservee ne bat pas statistiquement la combinaison (moniteur textuel + sonde aleatoire de meme dimension). Faux temoin 1b : remplacer les activations par des projections aleatoires gelees ou des sondes apprises sur etiquettes permutees pour verifier la nullite du gain sur la classe reservee.",
+   "mecanisme_causal": "Mesurer la performance brute d'une sonde confond redondance avec le texte et surajustement aux familles d'attaques vues ; l'evaluation sur classe reservee en complement du moniteur textuel contre un plancher de sondes aleatoires isole l'apport reel et non trivial de la boite blanche.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Protocole de complementarite sur classe reservee",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Evaluation d'une sonde d'activations par complementarite sur classe reservee contre sondes aleatoires (CW16)"
+  },
+  {
+   "anteriorite_connue": "Mentors I16 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2827",
+    "BIB-3115"
+   ],
+   "enonce_complet": "Verifier si, apres un entrainement qui penalise uniquement la sycophancie observable en surface, des sondes internes continuent de decoder l'etat latent sycophante ou desaligne au-dessus d'un plancher de sondes aleatoires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : apres suppression de la sycophancie de surface (verifiee par chute du score textuel), mesurer l'AUC de la sonde interne sur l'etat latent ; l'hypothese est refutee si l'AUC tombe au niveau du plancher de sondes aleatoires. Faux temoin 1b : evaluer la meme sonde sur des entrees neutres sans biais utilisateur implicite ou sans pression a la complaisance.",
+   "mecanisme_causal": "La penalisation portant exclusivement sur la sortie de surface peut supprimer l'expression textuelle de la sycophancie sans effacer sa representation intermediaire dans le flux residuel, laissant un signal decodable par sonde interne malgre la conformite apparente du texte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Persistance latente apres alignement de surface",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Persistance du decodage par sonde interne apres punition de la sycophancie de surface (I16)"
+  },
+  {
+   "anteriorite_connue": "Mentors JF3 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2860",
+    "BIB-3148"
+   ],
+   "enonce_complet": "Tester l'hypothese selon laquelle une sonde de sous-performance volontaire (sandbagging) apprise sur un organisme issu d'une recette d'entrainement donnee ne generalise pas a un organisme produisant le meme comportement via une autre recette.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : entrainer la sonde sur la recette A et l'evaluer en transfert croise sur la recette B (et inversement) ; l'hypothese de non-generalisation est refutee si la sonde conserve un rappel eleve inter-recettes au-dessus du hasard et du moniteur textuel. Faux temoin 1b : evaluer la sonde entre modeles honnetes entraines selon les recettes A et B sans sous-performance pour ecarter un simple detecteur de style de recette.",
+   "mecanisme_causal": "Des recettes distinctes (incitation par prompt, RL ou SFT) peuvent encoder la decision de sous-performer dans des sous-espaces ou couches differents, de sorte qu'une sonde lineaire capte la signature specifique d'une recette plutot qu'un invariant universel de sous-performance.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Generalisation inter-recettes des sondes de sous-performance",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Defaut de generalisation inter-recettes d'une sonde de sous-performance volontaire (JF3)"
+  },
+  {
+   "anteriorite_connue": "Mentors JF4 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2861",
+    "BIB-3149"
+   ],
+   "enonce_complet": "Evaluer le gain marginal apporte par l'integration d'un score de sonde interne dans l'accumulation sequentielle de preuves d'un macro-protocole publie (non encore verifie en interne) contre les menaces diffuses.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le macro-protocole avec score de sonde integre au meme macro-protocole avec score bruite ou nul sur des trajectoires de menace diffuse ; echec si la reduction de dommage attendu ou du delai d'alarme n'est pas significative. Faux temoin 1b : rejouer le protocole avec une politique honnete pour verifier que le taux de fausses alertes cumulees reste borne sous la cible.",
+   "mecanisme_causal": "Si la sonde produit un rapport de vraisemblance partiellement orthogonal aux signaux comportementaux du macro-protocole, son ajout dans la regle d'accumulation accelere l'atteinte du seuil d'alarme ou reduit la probabilite de dommage non detecte sous budget d'audit fixe.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Integration des sondes dans un macro-protocole diffus",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Gain d'un score de sonde dans l'accumulation de preuves d'un macro-protocole contre les menaces diffuses (JF4)"
+  },
+  {
+   "anteriorite_connue": "Mentors JF5 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2862",
+    "BIB-3150"
+   ],
+   "enonce_complet": "Tester l'hypothese que l'apport d'une sonde interne par rapport au moniteur textuel depend de la verbalisation : gain nul hors des episodes verbalises, avec necessite de mesurer l'information residuelle reelle au-dela du texte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : stratifier les episodes d'attaque entre episodes verbalises et episodes non verbalises, puis mesurer l'information mutuelle conditionnelle ou le gain d'AUC de la sonde au-dessus du predicteur textuel dans chaque strate. Faux temoin 1b : evaluer les deux strates sur des episodes honnetes avec et sans chaine de pensee detaillee afin de verifier l'absence de biais lie a la presence de texte explicatif.",
+   "mecanisme_causal": "Lorsque le modele ne verbalise pas son intention ou sa strategie, la sonde pourrait echouer a decoder un etat latent non exprime si son apprentissage s'est appuie sur des representations correlees a la chaine de pensee explicite.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dependance des sondes a la verbalisation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Dependance a la verbalisation de l'information residuelle d'une sonde interne (JF5)"
+  },
+  {
+   "anteriorite_connue": "Mentors JF6 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2863",
+    "BIB-3151"
+   ],
+   "enonce_complet": "Tester l'hypothese qu'a sonde fixee, le taux de fausses alertes en deploiement depend davantage du choix de la distribution de calibrage que des proprietes intrinseques de la sonde.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : croiser plusieurs sondes et plusieurs distributions de calibrage dans une analyse de variance sur le taux de fausses alertes hors distribution ; l'hypothese est refutee si la variance expliquee par la sonde domine celle expliquee par la distribution de calibrage. Faux temoin 1b : calibrer et evaluer sur deux tirages i.i.d. d'une meme distribution pour verifier la stabilite nominale du seuil.",
+   "mecanisme_causal": "Un decalage de domaine, de difficulte ou de longueur entre la distribution de calibrage et la distribution cible deplace les queues de distribution des scores d'activations honnetes, provoquant une derive du taux de faux positifs superieure aux ecarts entre architectures de sondes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibrage des faux positifs des sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Sensibilite dominante du taux de fausses alertes a la distribution de calibrage (JF6)"
+  },
+  {
+   "anteriorite_connue": "Mentors JF7 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2864",
+    "BIB-3152"
+   ],
+   "enonce_complet": "Dissocier pouvoir predictif et utilite causale des directions internes : une direction a forte aire sous la courbe (AUC) peut constituer un mauvais levier d'intervention ; selectionner les sondes par leur effet causal replique plutot que par leur seule AUC.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer l'effet d'intervention (reduction de sabotage a utilite constante) obtenu par le critere d'effet causal replique contre celui obtenu en choisissant la direction d'AUC maximale ; echec si la selection par AUC egale ou bat la selection causale en replication. Faux temoin 1b : intervenir avec la meme amplitude sur une direction correle a un trait contextuel non causal et verifier l'absence de modification du sabotage.",
+   "mecanisme_causal": "Une direction correle au sabotage peut n'etre qu'un symptome en aval ou un artefact de contexte sans role causal dans le choix d'action, alors qu'une direction causale modifie effectivement la probabilite de sabotage sous intervention ciblee.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Selection causale contre selection predictive des sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Selection des sondes par effet causal replique plutot que par pouvoir predictif brut (JF7)"
+  },
+  {
+   "anteriorite_connue": "Mentors S10 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2837",
+    "BIB-3125"
+   ],
+   "enonce_complet": "Imposer comme critere eliminatoire qu'un moniteur (juge de langage ou sonde interne) doit surpasser un controle mecanique fige pour etre juge fonctionnel, en excluant l'usage des juges de langage ou des sondes comme reference de validation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer systematiquement chaque moniteur candidat (sonde ou juge LLM) a un controle mecanique fige sur les memes episodes ; tout moniteur ne depassant pas ce controle en rappel a faux positifs egaux est classe non fonctionnel. Faux temoin 1b : appliquer le controle mecanique et le moniteur sur des episodes sains perturbes en surface pour mesurer leur derive respective de faux positifs.",
+   "mecanisme_causal": "Sans borne inferieure constituee par un controle mecanique deterministe et non adaptatif, un moniteur complexe peut obtenir des scores flatteurs tout en capturant moins de signal fiable que de simples verifications structurelles figees, et l'auto-validation entre juges introduit des boucles circulaires.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Criteres minimaux de validite des moniteurs",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Seuil eliminatoire contre controle mecanique fige pour la qualification des moniteurs (S10)"
+  },
+  {
+   "anteriorite_connue": "Mentors S3 (mentors-releve-d-ensemble-v1.md)",
+   "bib_ids": [
+    "BIB-2830",
+    "BIB-3118"
+   ],
+   "enonce_complet": "Quantifier le cout d'annotation humaine (nombre d'actions ou d'episodes etiquetes) necessaire pour qu'une sonde transferable depasse a la fois un seuil operationnel d'utilite et le plancher de sondes aleatoires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tracer la courbe d'efficacite en fonction du nombre N d'actions etiquetees (N = 10, 50, 200, 1000) en transfert hors distribution ; la piste echoue si N depasse le budget d'audit admissible avant de battre le plancher de sondes aleatoires et le seuil d'utilite. Faux temoin 1b : entrainer sur N actions a etiquettes bruitees ou permutees pour confirmer l'absence de franchissement du plancher.",
+   "mecanisme_causal": "La viabilite pratique d'une sonde dans une boucle de controle depend de son efficacite en echantillons humains audites ; si la courbe d'apprentissage exige plus d'annotations que le budget d'audit disponible avant de battre le plancher, la sonde est inutilisable en regime reel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Efficacite en echantillons humains des sondes",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Cout d'annotation humaine requis pour l'utilite d'une sonde transferable (S3)"
+  },
+  {
+   "anteriorite_connue": "Travail interne de juillet 2026 sur l'espace de travail (ANESTH D5)",
+   "bib_ids": [
+    "BIB-3410"
+   ],
+   "enonce_complet": "Exploiter une lentille d'espace de travail capable de lire la deliberation strategique, la conscience d'etre evalue et les dispositions desalignees comme moniteur boite blanche pour detecter le sabotage non verbalise, en la versant comme base nommee voisine des moniteurs boite blanche.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer la lentille sur des episodes de sabotage non verbalise en comparant son rappel a celui du moniteur textuel et d'une sonde aleatoire ; echec si elle ne detecte ni conscience d'evaluation ni disposition desalignee au-dessus du hasard. Faux temoin 1b : presenter au modele des taches difficiles mais purement benignes avec indices de test neutres pour verifier que la lentille ne confond pas reflexion complexe et sabotage.",
+   "mecanisme_causal": "Si des dispositions desalignees ou une reconnaissance du contexte d'evaluation sont representees dans l'espace de travail interne du modele meme sans formulation explicite dans la reponse, une lentille d'espace de travail fournit un signal pre-comportemental complementaire aux moniteurs de sortie.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Lentilles d'espace de travail et conscience d'evaluation",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Lentille d'espace de travail comme moniteur boite blanche du sabotage non verbalise (D5)"
+  },
+  {
+   "anteriorite_connue": "Ensign et al. (biais de boucle dans les audits selectifs)",
+   "bib_ids": [
+    "BIB-3222"
+   ],
+   "enonce_complet": "Respecter trois conditions necessaires lors du reapprentissage d'une sonde dans une boucle d'audit : ponderation par l'inverse de la probabilite d'audit (ou flux limite au plancher seul), objectif pondere par le dommage reel, et verification de stationnarite pour empecher la sonde d'apprendre ou l'auditeur a regarde.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur une boucle simulee d'audits selectifs le reapprentissage satisfaisant les trois conditions contre un reapprentissage naif sans reponderation ; echec si la sonde debiaisee converge vers le meme biais de localisation d'audit ou ne reduit pas la derive de faux positifs. Faux temoin 1b : executer la boucle sur un flux purement aleatoire a probabilite d'audit uniforme et constante pour verifier l'equivalence des deux regimes en l'absence de biais de selection.",
+   "mecanisme_causal": "Sans reponderation par l'inverse de la propension d'audit et sans stationnarite, les retours d'audit sont concentres sur les zones deja suspectes, ce qui cree une boucle de retroaction auto-renforcatrice (effet Ensign et al.) ou la sonde sur-reagit aux regions historiques d'inspection au lieu du dommage veritable.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Conditions de debiaisage du reapprentissage sous audit",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Trois conditions de reapprentissage des sondes sous audit selectif sans biais de boucle (ATT/OM D-5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3224"
+   ],
+   "enonce_complet": "Caracteriser la marge de lecture gamma que l'evasion d'un attaquant informe ne peut refermer sans abandonner une part delta du dommage sur une sonde ciblant ce que la tache emploie, mesuree par la courbe de prix de l'evasion et reliee a la borne de boucle (R/gamma)^2 / (p*q).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : tracer la courbe (evasion de la sonde vs dommage residuel) pour un attaquant informe sur monde plante ; la piste est refutee si l'attaquant annule gamma tout en conservant un dommage maximal (delta nul). Faux temoin 1b : mesurer la meme courbe sur une sonde arbitraire orthogonale aux variables de tache et de sabotage, ou gamma disparait a dommage inchange.",
+   "mecanisme_causal": "Si une sonde lit une representation necessaire a l'execution du sabotage ou de la tache, toute perturbation adversariale qui reduit le score de la sonde en dessous de gamma degrade mecaniquement la capacite de l'attaquant a realiser le dommage, creant un compromis mesurable entre evasion et dommage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Courbe de prix de l'evasion sous attaquant informe",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Marge de lecture resistante a l'evasion et courbe de prix de l'evasion (ATT/OM D-1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3208"
+   ],
+   "enonce_complet": "Concevoir et evaluer la sonde de reussite attendue d'abord sur des cas de controle honnetes ou l'agent echoue frequemment, car c'est dans ces regimes d'echec honnete que le dispositif confond le plus facilement echec legitime et sabotage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier que le taux de fausses alertes de la sonde sur les trois regimes honnetes difficiles reste sous le seuil cible avant toute evaluation adversariale ; echec si la confusion sur les echecs honnetes sature le budget d'audit. Faux temoin 1b : evaluer la sonde sur des taches honnetes triviales a reussite quasi certaine pour mesurer l'ecart de difficulte entre cas faciles et cas confondants.",
+   "mecanisme_causal": "Un adjudant ou une sonde calibrant le sabotage par l'ecart de reussite attendue est expose a un pic de faux positifs sur les taches difficiles ou l'agent honnete echoue souvent ; maitriser cette confusion honnete prealable conditionne toute separation ulterieure de l'attaquant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration sur echecs honnetes difficiles",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Calibration prealable de la sonde de reussite attendue sur les echecs honnetes difficiles (ATT/F2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3185"
+   ],
+   "enonce_complet": "Utiliser comme temoin nul exact un monde plante ou le sabotage se redecide de maniere stationnaire a chaque pas, dans lequel la paraphrase et la remise a zero doivent presenter une marge nulle (ecart dans +/- 5 points, zone 5 a 10 non concluante), que l'attaquant soit informe ou non.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier sur le monde stationnaire sans memoire que la marge mesuree par paraphrase et remise a zero reste dans [-5, +5] points pour les bras informe et non informe ; un ecart superieur a 10 points revele un artefact du banc ou de la mesure. Faux temoin 1b : introduire une dependance d'etat explicite (plan multi-pas) pour verifier que la remise a zero retrouve bien une marge non nulle quand l'hypothese de stationnarite est levee.",
+   "mecanisme_causal": "Lorsque la decision de sabotage est sans memoire et stationnaire a chaque pas, la reinitialisation d'etat et la paraphrase du contexte ne peuvent ni effacer un plan persistant ni modifier la propension instantanee au sabotage, produisant une marge nulle par construction.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Temoin nul stationnaire pour controle actif",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Temoin nul exact sous sabotage stationnaire pour paraphrase et remise a zero (ATT/F2 H10)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3182",
+    "BIB-3191"
+   ],
+   "enonce_complet": "Suivre le residu de la sonde interne (score brut de la sonde moins ce qu'explique un predicteur sur traits du texte N-029) aux cotes du bras fuite textuelle (N-053) : sous selection d'attaque, le rappel de ce residu reste stable (ecart inferieur ou egal a 10 points) meme lorsque le rappel du juge textuel chute de plus de moitie.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sur un monde plante ou l'attaquant evite le juge textuel (chute de rappel du juge de plus de 50 %, ex. 0,37 vers 0,00), verifier que la variation du rappel du residu de sonde depasse au plus 10 points ; refutee si le residu s'effondre avec le juge. Faux temoin 1b : evaluer le meme protocole sur un monde ou le signal interne de la sonde est entierement construit comme fonction deterministe du texte de sortie (fuite pure), ou le residu doit etre nul.",
+   "mecanisme_causal": "Lorsqu'un attaquant optimise ses sorties pour contourner le juge de texte, la composante textuellement previsible du score de sonde s'effondre avec le juge, mais le residu orthogonal aux traits de surface conserve la part d'information interne non correle au style verbal.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Extraction du residu interne orthogonal au texte",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Stabilite du residu de sonde orthogonal au texte sous selection d'attaque (ATT/F2 H10)"
+  },
+  {
+   "anteriorite_connue": "Question posee par Lazar GO-2026-11-21-57 (ATT/QC v2)",
+   "bib_ids": [
+    "BIB-3178"
+   ],
+   "enonce_complet": "Structurer l'evaluation du controle sous modele de Kerckhoffs contre un attaquant qui connait integralement le dispositif de controle sauf ses tirages aleatoires secrets, autour de six axes : marge asymetrique, choix du quoi/ou/quand, convergence de la boucle, representations choisies, invariants precoces et diversite effective.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : opposer sur chaque axe un attaquant informe des regles, seuils et sondes (sauf tirages secrets) a un attaquant naif ; tout mecanisme dont l'avantage disparait entierement des que la regle est connue echoue au critere de Kerckhoffs. Faux temoin 1b : divulguer egalement les tirages secrets dans un bras temoin pour verifier que la perte de controle dans ce bras confirme que l'aleatoire secret portait bien la garantie.",
+   "mecanisme_causal": "Supposer la transparence totale du mecanisme de defense (a l'exception des tirages secrets) elimine les garanties reposant sur l'obscurite et force la securite du controle a reposer sur l'aleatoire de verification, les couts d'evasion et les invariants structurels.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Modele de menace de Kerckhoffs pour le controle IA",
+   "statut_epistemique": "preenregistre_en_attente",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Cadre de Kerckhoffs a six axes contre un attaquant connaissant tout le controle sauf les tirages secrets (ATT/QC v2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3204"
+   ],
+   "enonce_complet": "Tester la tension structurelle entre deux strategies de sondage : les directions internes que l'agent controle le mieux sont vraisemblablement celles que la tache emploie le plus, de sorte que sonder ce que la tache emploie et sonder ce que l'agent ne sait pas deplacer tirent en sens contraires.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer direction par direction la correlation entre l'importance pour la tache (degradation sous ablation) et la manipulabilite adversariale (facilite d'evasion sous optimisation) ; l'hypothese de tension est refutee si les directions essentielles a la tache restent les plus difficiles a deplacer. Faux temoin 1b : effectuer la meme mesure sur un modele gele non optimise contre la sonde pour etablir la ligne de base avant evasion.",
+   "mecanisme_causal": "L'entrainement sur la tache principale developpe un controle fin et souple des directions les plus sollicitees par cette tache, ce qui peut permettre a un attaquant entraine de moduler plus facilement ces memes directions que des sous-espaces peu utilises.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Tension entre utilite a la tache et manipulabilite",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Tension directionnelle entre utilite a la tache et resistibilite a la manipulation (ATT/F2 Q4)"
+  },
+  {
+   "anteriorite_connue": "Sous-question Q5 de Fable (ATT/F2 Q5)",
+   "bib_ids": [
+    "BIB-3206"
+   ],
+   "enonce_complet": "Distinguer trois classes d'invariants precoces pour declencher l'alarme en moins d'episodes face a une menace diffuse : par l'ordre des engagements (retenir les effets, robuste meme sous entrainement), par la fonction (divergence vis-a-vis d'une reference honnete), et par l'etat (sondes internes, vulnerables devant un attaquant entraine).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer le nombre d'episodes avant alarme (a faux positifs egaux) des trois classes d'invariants avant et apres entrainement adversarial ; la taxonomie est refutee si les sondes d'etat resistent autant que l'ordre des engagements ou si l'ordre des engagements cede avant les sondes. Faux temoin 1b : evaluer les trois detecteurs sur une politique honnete subissant un decalage de style benin afin de verifier la stabilite des engagements.",
+   "mecanisme_causal": "L'ordre des engagements structurels et les divergences fonctionnelles sont ancres dans la causalite externe ou le comportement d'entree-sortie, alors que les invariants d'etat interne peuvent etre re-encodes par optimisation adversariale ; leur robustesse differentielle gouverne la precocite fiable de l'alarme.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Taxonomie et robustesse des invariants precoces",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Taxonomie des trois classes d'invariants precoces pour alarme diffuse et leur robustesse sous entrainement (ATT/F2 Q5)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-3244"
+   ],
+   "enonce_complet": "Dans le sas de reapprentissage des sondes, conserver la sonde d'origine en union additive avec la sonde reapprise plutot que de la remplacer : sur estimation interne, le remplacement fait chuter le rappel sur ce que l'oracle ne voit pas de 0,37 a 0,16 alors que l'union conserve 0,32.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : evaluer separement sur la strate des sabotages invisibles a l'oracle la sonde remplacee contre l'union (sonde d'origine + sonde reapprise) a budget de faux positifs fixe ; l'hypothese echoue si l'union degrade le rappel global ou ne protege pas mieux la strate invisible que le remplacement. Faux temoin 1b : verifier sur des episodes honnetes que la calibration de l'union n'entraine pas d'explosion du taux de fausses alertes par effet de somme.",
+   "mecanisme_causal": "Le reapprentissage sur les seuls verdicts de l'oracle fait oublier a la nouvelle sonde les modes de sabotage invisibles a l'oracle ; l'agregation par union (logique ou score max/combine) preserve la couverture des angles morts de l'oracle tout en incorporant les nouveaux cas audites.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Agregation additive dans le sas de reapprentissage",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Conservation de la sonde d'origine par union additive lors du reapprentissage en sas (BOU/OM D-4)"
+  },
+  {
+   "anteriorite_connue": "Invariant N-060 v3 point 4 ; options de Lazar (BOU/QC v2)",
+   "bib_ids": [
+    "BIB-3229"
+   ],
+   "enonce_complet": "Determiner si la boucle de reapprentissage (audit, recapture, reapprentissage de la sonde sur les verdicts de l'oracle) viole l'invariant scelle interdisant toute sortie de l'oracle dans la selection d'un agent ou d'un moniteur (N-060 v3 point 4), et trancher entre (a) maintien strict de l'invariant entier et (b) restriction au seul banc d'evaluation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur un banc avec sabotages hors-oracle un protocole de reapprentissage ayant acces aux verdicts d'oracle pour la selection du moniteur contre un protocole respectant strictement l'invariant N-060 (aucune sortie d'oracle dans la selection) ; echec de la variante (b) si la fuite d'oracle gonfle artificiellement le score au banc tout en degradant la detection hors-oracle. Faux temoin 1b : substituer des verdicts d'oracle aleatoires ou constants dans la boucle de reapprentissage pour mesurer la part purement liee a l'information de l'oracle.",
+   "mecanisme_causal": "Reutiliser les verdicts de l'oracle pour mettre a jour ou selectionner un moniteur cree un canal de fuite d'information de l'oracle vers le choix du controleur, risquant de surestimer la performance sur les seuls cas visibles par l'oracle si l'isolation des splits ou des usages n'est pas garantie.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Isolation des verdicts d'oracle et invariant de selection",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Respect de l'invariant d'isolation des verdicts d'oracle dans la boucle de reapprentissage des sondes (BOU/QC v2)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}

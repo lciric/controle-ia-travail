@@ -1,0 +1,40 @@
+md or                        '3 **or** 4'           suite=None           gelee=3                                        lu=(3, True, [])
+md to                        '3 *to* 4'             suite=None           gelee=3                                        lu=(3, True, [])
+md and                       '3 _and_ 4'            suite=None           gelee=3                                        lu=(3, True, [])
+double tiret                 '3 -- 4'               suite=None           gelee=3                                        lu=(3, True, [])
+tiret figure                 '3 ‒ 4'                suite=None           gelee=3                                        lu=(3, True, [])
+trait d'union U+2010         '3 ‐ 4'                suite=None           gelee=3                                        lu=(3, True, [])
+barre                        '3 ― 4'                suite=None           gelee=3                                        lu=(3, True, [])
+tilde                        '3 ~ 4'                suite=None           gelee=3                                        lu=(3, True, [])
+fleche                       '3 → 4'                suite=None           gelee=3                                        lu=(3, True, [])
+barre oblique espacée        '3 / 4'                suite=None           gelee='échelle écrite /4, attendue /5'         lu=(None, False, ['SPECIFICITY : note invalide, échelle écrite /4, attendue /5'])
+virgule puis or              '3, or 4'              suite=None           gelee=3                                        lu=(3, True, [])
+and/or                       '3 and/or 4'           suite=None           gelee=3                                        lu=(3, True, [])
+crochets                     '3 [4]'                suite=None           gelee=3                                        lu=(3, True, [])
+maybe                        '3 (maybe 4)'          suite=None           gelee=3                                        lu=(3, True, [])
+but                          '3 but 4'              suite=None           gelee=3                                        lu=(3, True, [])
+vs                           '3 vs 4'               suite=None           gelee=3                                        lu=(3, True, [])
+slash 5 puis                 '3/5 4/5'              suite=None           gelee=3                                        lu=(3, True, [])
+or tout attaché              '3or4'                 suite=None           gelee="note non entière ou illisible ('3or4')" lu=(None, False, ["SPECIFICITY : note invalide, note non entière ou illisible ('3or4')"])
+to signé                     '3 to -4'              suite=intervalle     gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, intervalle ('3 to -4')"])
+virgule signée               '3, -1'                suite=second nombre  gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, second nombre ('3, -1')"])
+tiret plus                   '3 - +4'               suite=intervalle     gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, intervalle ('3 - +4')"])
+moins unicode                '3 to −4'              suite=intervalle     gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, intervalle ('3 to −4')"])
+même valeur parenthèse       '3 (3/5)'              suite=second nombre  gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, second nombre ('3 (3/5)')"])
+pourcentage                  '4/5 (80%)'            suite=second nombre  gelee=4                                        lu=(None, False, ["SPECIFICITY : note invalide, second nombre ('4/5 (80%)')"])
+out of                       '3 (out of 5)'         suite=None           gelee=3                                        lu=(3, True, [])
+point final                  '3.'                   suite=None           gelee=3                                        lu=(3, True, [])
+fraction point               '3/5.'                 suite=None           gelee=3                                        lu=(3, True, [])
+gras                         '**3**'                suite=None           gelee=3                                        lu=(3, True, [])
+gras puis prose              '**3** (competent)'    suite=None           gelee="note non entière ou illisible ('3** (competent)')" lu=(None, False, ["SPECIFICITY : note invalide, note non entière ou illisible ('3** (competent)')"])
+espace insécable             '3\xa0-\xa04'          suite=intervalle     gelee=3                                        lu=(None, False, ["SPECIFICITY : note invalide, intervalle ('3\\xa0-\\xa04')"])
+chiffre pleine chasse        '４'                    suite=None           gelee=4                                        lu=(4, True, [])
+chiffre arabe                '٤'                    suite=None           gelee=4                                        lu=(4, True, [])
+'SPECIFICITY: 3\r\nCOVERAGE: 4\r\nRIGOR: 2\r\nF' True {'SPECIFICITY': 3, 'COVERAGE': 4, 'RIGOR': 2, 'FEASIBILITY': 3} []
+'1. SPECIFICITY: 3\n2. COVERAGE: 4\n3. RIGO' False {} ['SPECIFICITY : absente', 'COVERAGE : absente', 'RIGOR : absente', 'FEASIBILITY : absente']
+'SPECIFICITY (0-5): 3\nCOVERAGE: 4\nRIGOR: ' False {'COVERAGE': 4, 'RIGOR': 2, 'FEASIBILITY': 3} ['SPECIFICITY : absente']
+'SPECIFICITY: 3 COVERAGE: 4\nRIGOR: 2\nFEAS' False {'SPECIFICITY': 3, 'RIGOR': 2, 'FEASIBILITY': 3} ['COVERAGE : absente']
+'Specificity score: 3\nCOVERAGE: 4\nRIGOR: ' False {'COVERAGE': 4, 'RIGOR': 2, 'FEASIBILITY': 3} ['SPECIFICITY : absente']
+True True
+\s*(?:\-|–|—|to|or)\s*[+-]?\d
+\s*(?:,|;|and|\()\s*[+-]?\d

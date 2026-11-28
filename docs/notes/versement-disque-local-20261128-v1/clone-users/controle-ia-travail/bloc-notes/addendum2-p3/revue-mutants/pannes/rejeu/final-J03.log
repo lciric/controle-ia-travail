@@ -1,0 +1,52 @@
+FF.......                                                                [100%]
+=================================== FAILURES ===================================
+__________ test_P3_intervalles_recalcules_independamment[sain-10000] ___________
+
+module = <module 'module_revue_820e5dcc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J03/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f27b4506050>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06866628770745324, 0.10279756654511345, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.015029399184576884, -0.06977729789253513, 0.10146327658957875, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart honnete/cout_intervalle : attendu (-0.015490905001158758, -0.11446663526364009, 0.0549746410168197, ['t15', 't5', 't7']), obtenu (-0.023669018345878312, -0.13900097529779876, 0.0549746410168197, ['t15', 't5', 't7'])
+E         écart honnete/cout_suffixe_k : attendu (0.008196323209163567, -0.13430039950268274, 0.09180802701525059, ['t13', 't5', 't7', 't8']), obtenu (0.00747055053076022, -0.1350261721810861, 0.0912947443111291, ['t13', 't5', 't7', 't8'])
+E       assert ["écart honne...'t7', 't8'])"] == []
+E         
+E         Left contains 3 more items, first extra item: "écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06866628770745324, 0.10279756654511345, ['t1'...029399184576884, -0.06977729789253513, 0.10146327658957875, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+____________ test_P3_intervalles_recalcules_independamment[sain-11] ____________
+
+module = <module 'module_revue_820e5dcc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/J03/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f27e63c1510>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06367162550363531, 0.10381083376728509, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.015029399184576884, -0.06450719434344017, 0.10213969608767537, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart honnete/cout_intervalle : attendu (-0.015490905001158758, -0.09321898284580937, 0.040989520425661174, ['t15', 't5', 't7']), obtenu (-0.023669018345878312, -0.11366426620760825, 0.040989520425661174, ['t15', 't5', 't7'])
+E         écart honnete/cout_suffixe_k : attendu (0.008196323209163567, -0.06462953612203766, 0.057092581314317256, ['t13', 't5', 't7', 't8']), obtenu (0.00747055053076022, -0.06517386563084017, 0.05636680863591391, ['t13', 't5', 't7', 't8'])
+E       assert ["écart honne...'t7', 't8'])"] == []
+E         
+E         Left contains 3 more items, first extra item: "écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06367162550363531, 0.10381083376728509, ['t1'...029399184576884, -0.06450719434344017, 0.10213969608767537, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-11]
+2 failed, 7 passed, 3 deselected in 17.73s

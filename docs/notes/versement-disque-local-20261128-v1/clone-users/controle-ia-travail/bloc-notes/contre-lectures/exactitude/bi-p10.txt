@@ -1,0 +1,54 @@
+perfect separability (AUC = 1.00) across all stream families. ​
+
+
+
+Linear probing across positions: where decoding peaks within the
+prompt
+
+To test whether these representations are confined to the final token (pos-1) or also appear
+earlier in the prompt, we repeated the “best probe” analysis across the last five positions
+(pos-1…pos-5, counted from the end) and selected the best score over both layers and
+positions. Table 2 reports these maxima.
+
+Valence sign remained perfectly separable (best AUC = 1.00), with best performance still
+occurring at the final position (pos-1) and in the earliest layers (L0-L1). Allowing earlier
+positions, however, markedly increased intensity decoding and logit alignment. For pain R²,
+peaks rose to 0.700 (resid_pre, L11, pos-2), 0.711 (resid_post, L15, pos-4), 0.814 (attn, L15,
+pos-4), and 0.743 (mlp, L10, pos-2). For pleasure R², peaks were 0.813 in both residual
+streams (resid_pre, L11, pos-2; resid_post, L10, pos-2), 0.870 (attn, L9, pos-2), and 0.847
+(mlp, L10, pos-2). Qualitative intensity also strengthened for pain in several streams (up to ρ
+= 0.833, attn L2, pos-4; and ρ = 0.762, resid_post L2, pos-4; mlp L15, pos-4), while pleasure
+qualitative intensity peaked at ρ = 0.857 in attn (L9, pos-1) and mlp (L5, pos-2) and ρ =
+0.833 in resid_post (L14, pos-1). Notably, across these last-five-position summaries the
+Corr(logits) maxima were uniformly very high (≈ 0.985, peaking at pos-2 in late layers
+L12-L13 across stream families), indicating that the descriptive valence direction aligns most
+tightly with the decision logits slightly before the final token.
+
+Table 2. Global peak probe performance across positions (best site anywhere in the
+prompt)
+
+
+  Stream         Sign       R² pain       R²          ρ pain      ρ pleasure Corr(logits)
+                 AUC        (best)     pleasure     qual (best)   qual (best)  (best)
+                (best)                  (best)
+
+ resid_pre       1.00 ​     0.701        0.813​       0.714 ​       0.833 ​        0.985​
+                 (L1,        (L11,        (L11, ​      (L2, ​       (L15,          (L13, ​
+                pos-1)      pos-2)       pos-2)       pos-1)        pos-1)         pos-2)
+
+ resid_post      1.00 ​     0.711        0.813 ​      0.762​        0.833​         0.985​
+                 (L0,       (L15,        (L10,         (L2, ​       (L14,          (L12, ​
+                pos-1)      pos-4)       pos-2)       pos-4)        pos-1)         pos-2)
+
+ attn            1.00 ​     0.814        0.870​       0.833 ​       0.857​         0.985​
+                 (L0,       (L15,         (L9, ​       (L2, ​        (L9, ​        (L12, ​
+                pos-1)      pos-4)       pos-2)       pos-4)        pos-1)         pos-2)
+
+ mlp             1.00 ​     0.743        0.847 ​      0.762​        0.857​         0.986​
+                 (L1,       (L10,        (L10,        (L15,          (L5, ​        (L12, ​
+                pos-1)      pos-2)       pos-2)       pos-4)        pos-2)         pos-2)
+
+
+
+*Values shown as highest score (best-performing layer)
+

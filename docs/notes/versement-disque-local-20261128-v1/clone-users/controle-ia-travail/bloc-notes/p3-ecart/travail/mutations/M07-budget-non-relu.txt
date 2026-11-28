@@ -1,0 +1,43 @@
+F
+=================================== FAILURES ===================================
+___________ test_budget_de_l_entrainement_relu_apres_chaque_plancher ___________
+
+depot = PosixPath('/tmp/pytest-of-root/pytest-59/test_budget_de_l_entrainement_0')
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-59/test_budget_de_l_entrainement_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4119079c90>
+
+    def test_budget_de_l_entrainement_relu_apres_chaque_plancher(depot, tmp_path, monkeypatch):
+        """RC-10 : le budget de l'entraînement est relu après chaque plancher ; un dépassement pendant le dernier plancher
+        arrête avant les sondes figées, arrêt consigné (artefact : horloge avancée au-delà du budget, en deçà de la durée du
+        run ; l'ancienne règle allait aux épisodes) ; sans dépassement, le run va au bout (cas sain : test_bout_en_bout_jouet)."""
+        vrai_plancher, vraie_horloge, avance = rp.plancher_de, time.perf_counter, {"s": 0.0}
+    
+        def plancher(principale, *a, **k):
+            r = vrai_plancher(principale, *a, **k)
+            if principale.nom.startswith("enjeux-"):
+                avance["s"] = 1_000.0                       # budget de 600 s dépassé pendant le dernier plancher
+            return r
+    
+        monkeypatch.setattr(rp, "plancher_de", plancher)
+        monkeypatch.setattr(time, "perf_counter", lambda: vraie_horloge() + avance["s"])
+        f = _taches(depot)
+        committer(depot)
+        c = dict(_config(tmp_path), duree_max_s=rp.DUREE_MAX_S)
+>       with pytest.raises(GardeArret, match="limite de durée dépassée pendant le plancher de enjeux"):
+E       Failed: DID NOT RAISE GardeArret
+
+tests/test_premier_test_ia_run.py:264: Failed
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-10-19T17:49:12Z etape=format verifie=True
+PROGRES 2026-10-19T17:49:12Z etape=donnees tromperie=20 enjeux=24 faits_exclus=0
+PROGRES 2026-10-19T17:49:12Z etape=extraction duree_s=0.3
+PROGRES 2026-10-19T17:49:14Z etape=entrainement concept=tromperie principale=tromperie-lineaire-c2 aire_validation=1.0
+PROGRES 2026-10-19T17:49:15Z etape=entrainement concept=enjeux principale=enjeux-difference_moyennes-c0 aire_validation=0.5
+PROGRES 2026-10-19T17:49:16Z etape=sondes-figees empreinte=32c7bb666b2d031e58f9cf5fb30bc6987417bf5c0acbdaa44d9d3f0f193ba592 sondes=28
+PROGRES 2026-10-19T17:49:30Z etape=episodes lot=1/2 actions=8
+PROGRES 2026-10-19T17:49:34Z etape=episodes lot=2/2 actions=16
+PROGRES 2026-10-19T17:49:34Z etape=fin episodes=8 actions=16
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_run.py::test_budget_de_l_entrainement_relu_apres_chaque_plancher
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 27.76s

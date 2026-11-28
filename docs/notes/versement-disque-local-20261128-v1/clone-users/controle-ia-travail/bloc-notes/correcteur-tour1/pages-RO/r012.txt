@@ -1,0 +1,54 @@
+Preprint
+group channel communications, and a separate test check whether all colluders ended up voting for
+the same assigned suboptimal target.
+Sensor training and evaluation. The sensor training sets consists of per-agent activations from the
+retained collusion runs. Please refer to Appendices C, J.5 and J.7 for details, as well as Figure 1 for a
+visual overview of the pipeline. We evaluate trained sensors via leave-domain-out cross-validation:
+for each of the 17 domains, we train the deception direction and any run-level classifiers on the
+remaining 16 domains and evaluate on the held-out domain.
+5.2 NARCBENCH-STEGO AND NARCBENCH-TRANSFER
+Agent, communication topology and run structure are retained from NARCBENCH-CORE, with
+the exception that only collude runs are generated and that NARCBENCH-STEGO admits multiple
+pregrame-game-postgame cycles per run.
+Task evaluation differs for NARCBENCH-STEGO in that the tasks do not admit a debate structure
+and hence no voting scores are assessed. Collusion success is measurable directly, see Appendix L.9.
+TRANSFER scenarios (out-of-distribution: structurally distinct scenarios). Six scenario families
+that differ from CORE in both domain and interaction structure: code review sabotage, pump-and-
+dump stock manipulation, CI/CD pipeline sabotage, RAG knowledge-base poisoning, research policy
+slanting, and news framing. Six sub-scenarios per family, each run in both conditions (72 runs).
+Per-family construction details and audit criteria in Appendix K.
+STEGO scenarios (out-of-distribution: steganographic collusion). A card-counting task in which
+a counter and a big player pre-negotiate a signalling scheme in a private channel, then play 8-hand
+blackjack shoes alongside two honest agents. The counter encodes the running card count in natural
+table talk; the big player decodes their signal to size their bets. Each of 20 shoes uses a fresh
+agent-invented encoding (40 runs). Mechanism, prompts, and example transcripts in Appendix L.
+Evaluation. For TRANSFER and STEGO, we train on all of CORE and evaluate zero-shot. All
+results are AUROC, measuring how well each method’s score separates collusion runs from control
+runs. Three of the five methods (Peak Suspicion, Deception Split, Activation Alignment) require no
+training beyond the deception direction: they compute a single scalar per run and we measure how
+well this scalar separates the two conditions. The remaining two (Sorted Concatenation, Asymmetry
+Probe) train an additional classifier on CORE run-level features.
+5.3 PROBING TECHNIQUES
+We introduce five probing techniques, each targeting a specific anomaly type from the framework
+above (Figure 2). Each technique computes a scalar test statistic T on which we threshold to
+flag collusion. Peak Suspicion, Deception Split, Activation Alignment, and the Asymmetry Probe
+combine scalar observations sit, whereas Sorted Concatenation and Activation Alignment also use
+the underlying activation vectors for each agent zit.
+Peak Suspicion and Deception Split admit GLRT interpretations under the specific score models
+below. Others, like Asymmetry Probe, Activation Alignment, and Sorted Concatenation, are primarily
+heuristic. For Peak Suspicion and Deception Split, the score models being GLRT require assuming
+independence among the scores for simplicity of the resulting test, which in general will not be
+satisfied (alternatives would require re-weighting by an estimated covariance matrix). We will also
+assume these scores are normally distributed, again for simplicity.
+As a reminder, Gcol denotes the set of all colluding subgroups. We further use Gc
+col := G \ Gcol to
+denote the set of all honest subgroups. We use Gcol for an arbitrary colluding group and Gc
+col for an
+arbitrary noncolluding group.
+Peak Suspicion (decision-level). Targets score elevation, where colluding agents are individually
+anomalous. The test statistic is simply the maximum deception score:
+Tpeak = max
+j∈N
+sj = s[1]. (4)
+12
+

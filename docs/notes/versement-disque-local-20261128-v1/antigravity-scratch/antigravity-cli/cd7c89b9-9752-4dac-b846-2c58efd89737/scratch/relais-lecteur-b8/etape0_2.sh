@@ -1,0 +1,1 @@
+cd C:/Users/lciri/.gemini/antigravity-cli/brain/cd7c89b9-9752-4dac-b846-2c58efd89737/scratch/wt-b8-puissance && test ! -e docs/notes/barreau8-cote-moniteurs-entrees-v1/reference-boite-noire-course-lue-additif-1-v1.json && echo REFERENCE-ABSENTE

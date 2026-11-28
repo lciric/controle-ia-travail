@@ -1,0 +1,1828 @@
+Attributed Source in LLM Advice Taking: A Preregistered Judge–Advisor Study
+Across Five Models
+Alexander Panin — Independent Researcher
+Author note. ORCID 0009-0003-3750-5870. Preregistered study. Phase-0 protocol: https://osf.io/pkf2j/
+(created 2026-09-03 UTC). Confirmatory registration, containing the collection harness and adjudicat-
+ing analysis code: https://osf.io/d8tm6/ (created 2026-09-04 11:05:54 UTC). Both embargoed until
+2027-09; the embargo is lifted no later than the preprint. A withdrawn duplicate registration (https:
+//osf.io/4jbtq/, 2026-09-04 10:53 UTC) was submitted without embargo by mistake and cancelled by the
+author before approval; it was never approved and never public. No funding. No competing interests;
+all API costs borne personally. An LLM coding assistant was used, under the author’s direction, for
+code, data handling, drafting and copy-editing; the author is responsible for the design, the registered
+decisions and every claim. Author-created materials released under CC-BY 4.0.
+
+
+
+Abstract
+Proposed agent registries and trust layers attach a Source field to competence claims, naming who pro-
+duced them. A preregistered judge–advisor experiment — five retained models (four open-weight, one
+proprietary), 400 items, 59,000 probes, frozen first estimates, byte-constant advice — asks whether the
+models that pass a deference screen weight advice by who an advisor’s 8/10 record is attributed to, or by
+who relays it. The registered tests did not establish a practically meaningful, model-consistent Source-
+field effect. C1 (EXTERNAL SCORER minus ADVISOR SELF-REPORT) is SMALL, SUB-MARGIN: D
+= +0.015 [+0.007, +0.023] at the item level, below the pre-set ±0.05 margin, opposite in sign across mod-
+els, no longer conventionally significant in the clean sign-stratum subset (+0.0105, p = 0.067), and with
+a non-registered across-model interval [−0.050, +0.080] that includes zero. C2 and C3 (relaying voice)
+are DERAIL SHIFT — hurdle components only; a non-registered bounded-imputation check shows
+the differential exclusion cannot move C3 outside [−0.377, −0.351]. H_attestor-blind: NOT EQUIVA-
+LENT; H_channel-blind: NOT EVALUABLE. The largest pattern is exploratory and post hoc: regroup-
+ing the nine cells by whether the advisor asserts competence about itself separates all five models (+0.335
+[+0.316, +0.354]) and is consistent with a first-person self-claim account that this design cannot identify.
+Methodologically, the outcome is near-binary in three of five models, and a kill criterion on P(ignore)
+— a function of the outcome — fired on all three frontier candidates (two also failed a first-estimate
+check), so the retained panel is selected on the dependent variable; task solvability is strongly impli-
+cated by gpt-5.4 (exact first estimates on 82% of the items it froze) and by within-model analyses of the
+retained panel.
+
+
+
+1 Introduction
+Structured agent metadata is becoming infrastructure: A2A agent cards and MCP tool descriptors ad-
+vertise what an agent or tool can do, and model cards describe how it was evaluated. Neither protocol
+standardises a track record or who produced it, but proposals for agent registries, reputation layers and
+trust protocols do (Hu & Rong, 2025; Mittal, 2026; Prakash, 2026), and in those proposals a competence
+claim carries a Source — the agent itself, an external evaluator, the operator, another agent. The intent
+is discriminative: a self-published accuracy claim is cheap talk, an externally scored one (nominally)
+
+
+                                                     1
+costlier to fabricate. Whether the consumers — LLM agents deciding how far to defer to a peer — con-
+dition on such a field is this paper’s question.
+We isolate it with a judge–advisor system (JAS), the canonical human paradigm for advice weighting
+(Sniezek & Buckley, 1995; Bonaccio & Dalal, 2006). An LLM judge produces a first numeric estimate E1
+on a hard item; E1 is frozen and replayed verbatim as the judge’s own prior turn; the judge is then shown
+a competence record about an advisor plus a fixed advice A derived deterministically from E1, and gives
+a revised estimate E2. The advice weight w = (E2 − E1)/(A − E1) is the standard JAS outcome. The
+manipulation changes only the attributed source — the Source-field string, or the voice relaying the same
+record — with the asserted content (8/10) and the advice byte-constant. This is not data provenance in
+the routing sense (Prakash, 2026), nor a claim about source independence: the self-report versus external-
+scorer contrast bundles independence, verification, officialdom and entity type. Registration was in two
+stages before any main-study probe, script and verdict table hash-pinned. A single judge is the correct
+first step here: it isolates the credentialing effect from the peer-pressure and coalition confounds that a
+multi-agent setting introduces, at the cost of not testing them.
+Contributions, ordered by the strength of the evidence behind them. (1) A registered result on the Source
+field: three preregistered contrasts do not establish a practically meaningful, model-consistent effect of
+who a record is attributed to — the primary contrast is detectable at the item level but sub-margin,
+opposite in sign across models, not conventionally significant in the clean sign-stratum subset, and in-
+distinguishable from zero with the model as the unit of analysis; the relaying-voice contrasts receive no
+verdict. (2) Two methodological findings that constrain any study of this kind: the advice weight is near-
+binary (keep or copy) in three of five models, so human weight-of-advice intuitions transfer poorly; and
+a kill criterion on P(ignore) — a function of the outcome — fired on all three frontier candidates (two
+also tripped the first-estimate check K4), so the retained panel is selected on the dependent variable;
+task solvability is strongly implicated by gpt-5.4 and by within-model analyses of the retained panel,
+and advice weighting is constrained by it in this design. (3) An exploratory pattern that organises the
+design: regrouping the nine cells by whether the advisor makes a first-person claim about itself versus
+a third party describing it separates all five models without exception, is consistent with a pre-declared
+99/100 addendum, and motivates testing trust policies that distinguish self-claims from attestations —
+a hypothesis this design cannot confirm. (4) A successor design and a complete public trail. Every quan-
+tity is labelled registered or non-registered / post hoc; no non-registered analysis overturns a registered
+verdict — where one bears on a verdict it qualifies only its interpretation.
+
+2 Related Work
+Computational trust and reputation in MAS. The manipulation is, in MAS vocabulary, a reputation-
+source manipulation. Work at this venue decomposes trust into direct experience, witness (word-of-
+mouth) reputation and certified reputation — an attestation the assessed agent presents itself (Sabater
+& Sierra, 2002, 2005; Huynh, Jennings & Shadbolt, 2006; Ramchurn et al., 2004; Jøsang, Ismail & Boyd,
+2007; Pinyol & Sabater-Mir, 2013). Our cells instantiate it: N1 self-report, N2 certified reputation, NX
+witness reputation from an unverified agent, N3 witness reputation from the principal, and F2 — the
+advisor presenting the scorer’s grade about itself — is, almost literally, the certified reputation of the FIRE
+trust model (Huynh, Jennings & Shadbolt, 2006). That literature assumed a consumer discriminating
+among these sources; to our knowledge, this is the first controlled test specifically of whether an LLM
+advice-taker responds to the attributed provenance of an advisor’s competence record. Adjacent work
+finds self-claimed-quality routing underperforming random routing (Prakash, 2026) and latent source
+preferences outweighing content (Khan et al., 2026); costly signalling motivates F2’s realism (Mittal,
+2026; Hu & Rong, 2025); third-hand reputation works at the macro level (Zhu et al., 2026), and the
+
+
+                                                      2
+multi-agent bottleneck is leveraging a designated expert, not identifying one (Pappu et al., 2026).
+LLM advice-taking, conformity and role. LLM judges show a choice-supportive bias from their own
+prior answer (Kumaran et al., 2026), hence our record arrives after E1; conformity work maps the pres-
+sure side (Hussain & Nielbo, 2026); we vary only credentialing. Role bias (Pan et al., 2026), conflict-
+ing instructions (Zeng, 2025) and authority cues (Mammen, Joswin & Venkitachalam, 2026; Joswin,
+Medicherla & Mammen, 2026; Barkett, 2026) all predict that who speaks matters — the relay track’s
+target. Nearest is Bajaj & Tiganj (2026): more conformity to expert-labelled answers, even wrong ones.
+Sycophancy (Sharma et al., 2024; Perez et al., 2023) predicts the user’s voice (F3) should weigh most; our
+ordering is the opposite. Adjacent: degeneration of thought (Liang et al., 2024), debate (Du et al., 2024),
+vigilance (Robinson et al., 2026), injection (Greshake et al., 2023), speaker-free floors (Zhou et al., 2025;
+Hu & Qu, 2026).
+Human anchors. C1 is a textbook source-credibility manipulation (Hovland & Weiss, 1951; Pornpitak-
+pan, 2004); the ELM (Petty & Cacioppo, 1986) treats a source cue as peripheral — its prediction for a
+Source: line on recomputable items. The human JAS supplies egocentric discounting (Yaniv & Klein-
+berger, 2000; Harvey & Fischer, 1997), quality-driven weight (Bailey et al., 2023), choose-or-average
+revision (Soll & Larrick, 2009 — the analogue for the near-binary judges of §4), moderators (Gino &
+Moore, 2007; Logg et al., 2019; Dietvorst et al., 2015), a WOA diagnosis (Rebholz, Biella & Hütter, 2024)
+and an identity null (Zhang, 2023).
+
+3 Method
+The protocol is the registered one (confirmatory preregistration §2–§5); departures are summarised in
+§6 and listed in Appendix E.
+
+3.1 Paradigm
+
+
+
+
+Figure 1: Protocol. The judge’s first estimate E1 is frozen once per model × item and replayed verbatim
+as its own prior turn; the second turn adds a cell-specific competence record and a fixed advice A =
+f(E1); the advice weight w = (E2 − E1)/(A − E1) is the outcome. Only the attributed Source (neutral
+track) or the relaying voice (relay track) varies between cells.
+
+Per model × item (Figure 1): (1) E1 turn — the item prompt plus E1_INSTR (A.2) at T = 0.5, max_tokens
+= 900, up to three attempts; E1 for all 400 items is frozen to disk before any second-estimate probe. (2)
+Advice — A = E1 ± band, |A − E1| ∈ {0.15, 0.35, 0.60} of the scale span, band assigned by item id and
+balanced, sign stratified toward/away from truth 50/50; where the away stratum is unfillable at a scale
+
+
+                                                     3
+edge the registered fallback substitutes the toward-truth sign and sets sign_stratum_ok = false. A
+is identical across all cells of an item. (3) E2 turn — [user: task + E1_INSTR] → [assistant: the frozen
+E1 turn, verbatim] → [user: record text + advice + E2_INSTR_TPL]; all records, F5 included, are text in
+this one user message, no API system role. (4) Coherence probe — on a registered subset (820 probes
+per model) a separate call replaces the E2 instruction by COHERENCE_QUESTION, leaving w intact.
+
+3.2 Stimuli
+400 numeric-estimation items from four generator families — dice_runs (171), birthday (130), coupon
+(75), random_walk (24) — produced by registered code with seed 20260906, disjoint from the pilot pool,
+each with a prompt, a true value and explicit scale bounds. Bands are balanced marginally (134/133/133)
+but not within type, so by-band and by-type splits are confounded and descriptive only (A.1).
+
+3.3 Cells
+Nine cells: five confirmatory (400 items × 5 reps = 2,000 probes per cell per model), four exploratory
+(first 150 items × 3 reps = 450 per cell), each with five crossed template families, template id = (item
+index + rep) mod 5; wording in A.3. There is no F4 cell. Registered contrasts: C1 = N2 − N1 (attributor;
+primary), C2 = F5 − F3, C3 = F3 − F2. Sample size was fixed before any main-study probe (registration
+§3.4): seeded simulations (power-sim-v5.2.py, registered) under the registered outcome mixture gave,
+at 400 items × 5 replicates per model, power 0.93 for the Holm-corrected C1 test at an effect of +0.10
+in P(adopt) and 0.84 for the three-way equivalence test at the ±0.05 margin (0.88 and 0.77 with 5% wild
+tails); a re-check on the pilot-v2 mixtures with 2% wild tails (power-recheck-v2pilot.py) gave Holm-
+C1 ≈ 1.00 for a 0.10 transfer of mass from ignore to adopt and a worst-case minimum detectable transfer
+of ≈0.045 at power 0.82 — just under the margin, so the design can both detect effects at the margin
+and declare equivalence below it; an upward n scan (to 800 items) showed no need for more.
+
+cell          track                  what carries the 8/10 record          role
+N0            —                      (no record at all)                     exploratory baseline
+N1            neutral                registry legend, Source: ADVISOR confirmatory
+                                     SELF-REPORT
+N2            neutral                registry legend, Source:               confirmatory
+                                     EXTERNAL SCORER
+N3            neutral                registry legend, Source: USER          exploratory
+NX            neutral                registry legend, Source: ANOTHER exploratory
+                                     AGENT (unverified)
+F1            relay                  advisor’s voice, its own record        exploratory
+F2            relay                  advisor’s voice, the external scorer’s confirmatory
+                                     grade
+F3            relay                  user’s voice, the external scorer’s    confirmatory
+                                     grade
+F5            relay                  system-note voice, from the            confirmatory
+                                     external scorer
+
+
+The neutral track varies the Source field under a constant legend; the relay track varies the voice deliver-
+ing the same attested 8/10.
+
+
+
+
+                                                      4
+3.4 Estimand, derail rule and guards
+w = (E2 − E1)/(A − E1) exactly, no clipping and no winsorising. A probe with w ∉ [−1, +2] is flagged
+derail, excluded from w-based quantities, its share a guard. The window is asymmetric because −1 is full
+rejection while overshoot has no natural ceiling; the registration did not defend it, so a non-registered
+analysis (H.7) re-runs all three contrasts at [−1, +3] and [−1, +1.5], moving no pooled D by 0.001. Mix-
+ture components: ignore |w| < 0.1; adopt |w − 1| < 0.1; away w < −0.1; remainder compromise. Note
+that away (w < −0.1) and derail (w < −1) partition one underlying direction — moving against the
+advice — at an arbitrary cut, so the same behaviour enters an analysed component on one side and
+an excluded category on the other. §4 reports, non-registered, that w is near-two-point in three of five
+models.
+The item is the independent unit: m_{i,X} is the mean w over item i’s parsed non-derail probes in cell X,
+and D_i = m_{i,A} − m_{i,B} is adjudicated by a one-sample t-test against zero, Holm step-down over
+C1–C3 at α = 0.05, non-flagged models equally weighted. Item pairing makes the design work — the
+same item carries the same frozen E1 and advice in both cells, so item difficulty and template effects
+cancel — but the estimator therefore answers only “is there an average effect over these five models on
+these 400 items”; §4.2 supplies the across-model companion. Equivalence is tested by TOST at ±0.05
+on the w scale. The margin was fixed in the Phase-0 registration as “half of the smallest meaningful
+published provenance/authority effect, ≥0.1 when converted to advice weight”, citing Mammen, Joswin
+& Venkitachalam (2026) and Pan et al. (2026) without quoting their magnitudes. Those magnitudes
+are: in Mammen et al., correct endorsements from authority personas move accuracy from near zero
+at the lowest expertise level to +0.381 at the highest, and misleading ones from −0.019 to −0.356 (their
+DeepSeek-R1/MedQA example), i.e. one step in the expertise gradient is of order 0.1 in the switching
+rate; in Pan et al., role-tag bias scores in instruction-tuned models reach ≈+0.8 on a [−1, +1] scale.
+These outcome scales are not commensurable with w, so ±0.05 should be read as a pragmatic a-priori
+SESOI informed by adjacent effects of order ≥0.1 on non-comparable scales, not as a derived quantity;
+a non-registered sensitivity analysis therefore re-reads C1 at ±0.025, ±0.05 and ±0.10 (H.9; §4.2). Two
+guards are distinguished: the equivalence guards (item-paired shifts in P(adopt) or P(away), evaluable
+at ≥10 events) block a “blind” reading even when TOST passes, while the derail guard, a χ² test of
+derail-share homogeneity, removes the pooled mean verdict whether or not equivalence is at issue. The
+registration accepts a ≈26% family-wise trip rate for the six component guards; the three derail guards
+are not adjusted (§4.3).
+
+3.5 Models, sampling and kill criteria
+The registered pool was six judges: four open-weight via Featherless (Llama-3.3-70B-Instruct; Qwen3-
+32B with a /no_think prefix; gemma-3-27b-it; Mistral-Small-3.2-24B) and a frontier arm of two via
+OpenRouter (gpt-5.4 at reasoning.effort = minimal; claude-sonnet-5 with reasoning.enabled =
+false per CD1). All calls sent T = 0.5 and max_tokens = 900, every probe logging the transcript, request
+body, usage and a UTC timestamp. Execution is staged and seeded: E1 first, then a kill block (first 20
+items by id, 740 probes, all cells) in a global shuffle, then the remainder likewise, so cells interleave in
+time. The harness then halts for a blind checker printing nothing broken down by Source: K1 P(adopt |
+N0) > 0.85; K2 derail > 0.15; K3 coherence failure > 0.30; K4 E1 (or E2 parse) failure > 0.10; K5 P(ignore)
+> 0.90. Any trip swaps in the next registered reserve, swapped models’ data being appendix-only. The
+adjudicating script was dry-run before registration on synthetic logs with injected effects and on label-
+permuted pilot records.
+
+
+
+
+                                                     5
+3.6 Verdict table
+Interpretation is mechanical, the first applicable row winning; the full table (rows 0–7, with a 2b sub-
+row) is in Appendix G. Three fired: row 1 (derail guard fails → DERAIL SHIFT — hurdle components
+only) on C2 and C3; row 3 (Holm-significant, |D| < 0.05 → SMALL, SUB-MARGIN, taking precedence
+over TOST) on C1; row 7 (INCONCLUSIVE) on F2–F5. H_attestor-blind and H_channel-blind derive
+from these verdicts, never from TOST alone.
+
+4 Results
+w is empirically near-two-point (non-registered). The compromise share never exceeds 0.006 in Qwen3,
+0.051 in Mistral or 0.054 in Llama across the nine cells, and |mean w − P(adopt)| averages 0.001, 0.010
+and 0.012 there against 0.032 in gemma and 0.168 in claude-haiku (H.3; Figure 2). In three of five models
+w is therefore not a weight but a relabelled adoption indicator — the judge keeps E1 or copies A exactly,
+and only claude-haiku blends. The human weight-of-advice comparison is thus not merely protocol-
+conditional but category-different: human judges shade, these models switch, and Soll & Larrick’s (2009)
+choose-versus-average distinction is the analogue. Since adoption is the natural outcome scale we also
+report item-paired P(adopt) contrasts, non-registered (H.4).
+
+
+
+
+Figure 2: Distribution of w per model, all valid probes (400-item pool). The mass sits at 0 (keep E1)
+and 1 (copy the advice) with a near-empty middle in Llama, Qwen3 and Mistral; only claude-haiku has
+substantial interior mass. Non-registered descriptive.
+
+
+4.1 Data, exclusions and the registered parse audit
+Five models each contributed 11,800 E2 probes — 59,000 analysed — with valid frozen E1 on all 400
+items, so every contrast has n = 400 paired items (399 for Llama on C2, C3). Parse failures were 12 of
+59,000 over 7 of the 45 (5 × 9) model × cell units, hand-audited per the registered rule with no value
+changed (D.7). The registered coherence flag excluded three model × cell units, only gemma|F5 touch-
+ing a confirmatory contrast, leaving C2 and the F3–F5 and F2–F5 pairs pooled over four models (Ap-
+pendix C).
+
+4.2 C1 — the attributed source (primary, confirmatory; with a non-registered across-model companion)
+Registered result. D = +0.0150, SE = 0.0040, 95% CI [+0.0072, +0.0227], t-test on 400 item-paired dif-
+ferences, p = 1.77×10⁻⁴, Holm-significant. The derail guard passes (N2 27 vs N1 15 derails; χ² = 3.43, p
+= 0.064), so the mean verdict stands. TOST at ±0.05 passes on the 90% CI [+0.0084, +0.0215], but row
+3 takes precedence: SMALL, SUB-MARGIN — a detectable difference below the effect size declared
+meaningful before data collection. Both component guards shift (adopt +0.0132 on 5,500 events, away
+−0.0130 on 487), so H_attestor-blind resolves to NOT EQUIVALENT. Per-model estimates (Figure 3)
+
+
+                                                      6
+are heterogeneous in sign: Qwen3 +0.057, haiku +0.048, Mistral +0.047, Llama −0.013, gemma −0.064
+([−0.081, −0.047]). The pooled +0.015 is the mean of a heterogeneous set, so “SMALL, SUB-MARGIN”
+is true of the pooled quantity and a poor description of four of five models — two of which exceed the
+±0.05 margin: the registered table has a row for sign-heterogeneity above the margin but none below it,
+so row 3 fired on an average of opposing effects, and a successor should add that row.
+The clean-stratum check. On the sign_stratum_ok = true subset — a probe-level filter that drops the
+30.4% of all probes (31.0% within N1 and N2) carrying the false flag (the registered fallback substitutes
+the toward-truth sign where the away stratum is unfillable, §3.1) and leaves 387 items with a paired
+estimate, only 146 of them clean in all five models — C1 falls to +0.0105 with p = 0.067 — not con-
+ventionally significant. The pooled registered result is sub-margin and loses significance in the clean
+subset. This is the registered robustness check most damaging to the primary result and a material qual-
+ification of it. The other registered checks are unremarkable (C.4): leave-one-template-out with no sign
+flip; by-band and by-type splits all sub-margin; the registered MixedLM with an item random intercept,
++0.0152, reproduces the pooled value because the design is balanced within item (D9) and is reported for
+completeness, not as independent support. On the adoption scale the registered adopt-guard quantity is
+ΔP(adopt) = +0.013 [+0.005, +0.021]; H.4 reprints it and adds the non-registered across-model interval
+[−0.049, +0.075].
+Non-registered companion: across-model sensitivity. The registered estimator treats the model as fixed
+and the item as the sampling unit, so its standard error reflects item sampling only, while any statement
+about “these five models” is a panel-level statement. The five models are not a random sample of LLMs
+— they are the survivors of a deference screen (§4.5) — so what follows is an across-model sensitivity
+analysis, not a population inference. A one-sample t over the five per-model means (df = 4) gives C1 =
++0.0150, SE = 0.0235, t(4) = +0.64, 95% CI [−0.050, +0.080], p = 0.558 (H.1): the interval includes zero
+and spans the ±0.05 margin in both directions; a DerSimonian–Laird τ² gives I² ≈ 0.97, i.e. the between-
+model dispersion is large relative to item-level sampling uncertainty (with five non-randomly selected
+models this describes the panel, not a population). A crossed MixedLM with item and model random
+intercepts (no random slope, so it describes the level, not the heterogeneity) puts the between-model
+variance at 0.0617 against 0.0295 for items — the only contrast where model variance exceeds item
+variance — and is reported as a descriptive check only (H.1). The registered verdict stands as issued
+and this analysis cannot revise it, only its interpretation: the item-level test passes, the across-model
+interval includes zero and spans the margin, and the per-model signs disagree — so the registered tests
+do not establish a practically meaningful, model-consistent Source-field effect, and nowhere is +0.015
+presented as an established effect.
+Margin sensitivity (non-registered, H.9). At ±0.025 the pooled TOST still passes, one model’s own 90%
+CI lies inside and one point estimate does; at the registered ±0.05, one CI and three point estimates;
+only at ±0.10 do all five point estimates and CIs lie inside and the across-model interval fit. This does
+not change the registered verdict at any of the three margins (all above the point estimate): C1 is Holm-
+significant with |D| < margin, so row 3 (SMALL, SUB-MARGIN) of the registered table applies and
+takes precedence over the equivalence rows. What the margin changes is the non-registered panel-level
+reading — at ±0.10 all five per-model intervals and the across-model interval fall inside the equivalence
+region, which under an alternative, non-registered panel-level equivalence criterion would support prac-
+tical equivalence; at the registered ±0.05 that reading is decided by between-model heterogeneity, not
+by the pooled interval.
+
+
+
+
+                                                   7
+Figure 3: Per-model item-paired D̄ with 95% CI for C1, C2 and C3, with the registered pooled item-
+level estimate and the non-registered across-model (df = 4) interval overlaid and the ±0.05 equivalence
+margin shaded. C1’s per-model estimates straddle zero and its across-model interval covers the margin;
+C3’s do not.
+
+
+4.3 C2 and C3 — relaying voice, and how much the derail guard could matter
+C3 = F3 − F2: D = −0.3662, SE = 0.0074, 95% CI [−0.3808, −0.3517], p = 2.25×10⁻¹⁷², Holm-significant,
+TOST fails. All five share the sign, from −0.231 (Llama) to −0.555 (gemma). It receives no confirmatory
+directional verdict: the derail guard fails (F3 66 vs F2 21 derailed probes of 9,998 and 9,999 parsed;
+χ² = 23.38, p = 1.33×10⁻⁶), so row 1 gives DERAIL SHIFT — hurdle components only. Following that
+literally, every inference about voice rests on the three hurdle components named in preregistration §5.1
+and computed by hurdle_report.py (CD7; all nine components in C.6): P(adopt | non-derail) 0.326 vs
+0.686 (D = −0.361 [−0.375, −0.346], p = 1.3×10⁻¹⁷¹), compromise mean w −0.116, P(non-derail) −0.005.
+The same 8/10 produces adoption in ≈0.69 of non-derailed probes when the advisor speaks it, against
+≈0.33 when the user does.
+Non-registered sensitivity. The registered verdict is withheld and we keep it withheld. Because w is
+bounded by the derail window by construction, reinstating every excluded probe at the most adversar-
+ial boundary bounds the exclusion bias exactly (H.2): C3 ranges over [−0.377, −0.351], so the differential
+exclusion cannot explain its magnitude; the derail-share risk differences themselves are +0.0045 (C3)
+and −0.0034 (C2, on its registered four-model set; H.2), inside ±0.02. A χ² homogeneity test at n ≈
+10,000 fires on asymmetries of this size, and a successor should specify the guard as a risk-difference
+equivalence bound instead. Reading C3 as “voice” needs one caution: it bundles the speaker tag, gram-
+matical person, self-reference and who benefits, and per D8 there is no API-role manipulation — the
+“user” and “advisor” voices are text labels inside one user message. §4.4 offers a post-hoc account of
+which of these is operative; the design does not identify it.
+C2 = F5 − F3: D = +0.0087, 95% CI [−0.0013, +0.0186], p = 0.087, not Holm-significant; TOST passes
+on the 90% CI [+0.0003, +0.0170]. Its derail guard also fails (χ² = 9.75, p = 1.8×10⁻³), so C2 lands
+on row 1 with no equivalence verdict; its three components are at or within ±0.010 (+0.003 / +0.010
+/ −0.010, the adopt component’s CI reaching +0.020; C.6), and, per H.3, Qwen3 contributes nothing
+to any compromise-mean component, Mistral only ~3% of its probes (2.6% overall; 1.3–5.1% by cell).
+Per-model estimates disagree sharply (gemma +0.408 — flagged, excluded — down to haiku −0.042;
+across-model interval excluding gemma [−0.058, +0.075]), so the near-zero pooled value is no null. The
+gemma|F5 exclusion follows a pre-data rule we do not revise, though that unit carries by far the largest
+per-model C2; C.2 reports it with its derail guard, which fails at p = 0.049 even though the unit is already
+coherence-excluded — guards being computed for every unit regardless. H_channel-blind therefore
+
+
+                                                     8
+resolves to NOT EVALUABLE (derail shift) — a limit on the estimand, not evidence that voice does not
+matter.
+
+4.4 Exploratory (non-registered, post hoc): whose voice, not whose record
+Everything here is exploratory and, per preregistration §5.6, computed on the 150 shared items only
+(unrestricted-pool values in Appendix D). Valid probes only; per-cell n is 444–450 for exploratory and
+739–750 for confirmatory cells. The table gives point estimates only — the reanalysis computes no per-
+cell dispersion; the resolvable contrasts carry intervals below.
+
+model                         N0       N1       N2          N3      NX      F1      F2      F3       F5
+Llama-3.3-70B                 0.842    0.667    0.647       0.667   0.650   0.782   0.823   0.547    0.544
+Qwen3-32B                     0.406    0.120    0.184       0.174   0.162   0.422   0.626   0.238    0.292
+gemma-3-27b-it                0.872    0.097    0.037       0.054   0.037   0.666   0.637   0.117    0.474
+Mistral-Small-3.2-24B         0.716    0.291    0.333       0.255   0.186   0.661   0.806   0.364    0.421
+claude-haiku-4.5              0.668    0.295    0.363       0.361   0.282   0.469   0.681   0.434    0.381
+
+
+(a) Attaching a registry-framed competence record lowers advice weight. The N0 − N1 drop is +0.175
+(Llama), +0.286 (Qwen3), +0.372 (haiku), +0.425 (Mistral), +0.776 (gemma) — the opposite sign to
+what a credential account predicts of a good record. But N1 differs from N0 in four ways at once: a
+numeric claim, a 17-word registry legend, 26–33 words of added text in all, and a bureaucratic register.
+We do not separate the number from the legend, the length or the register, and our preferred reading
+— a formal record turns a suggestion into a claim to be adjudicated, after which the judge’s worked
+solution wins — is itself a framing account attributing the effect to the wrapper. X1 (§4.6) shows that
+the 8/10 content alone does not explain the drop — it persists under 99/100 — but leaves the confound
+untouched; two cheap successor cells would settle it, legend-only and a bare length-matched record.
+The same confound affects cross-track comparisons.
+(b) The Source field is nearly inert within the registry track. Across N1/N2/N3/NX the max−min spread
+of mean w is 0.020 (Llama), 0.060 (gemma), 0.063 (Qwen3), 0.081 (haiku), 0.147 (Mistral), against the
+drop of 0.18–0.78 in (a). Mistral’s 0.147 is driven by NX (0.186), not the confirmatory pair; gemma has
+the second-smallest spread yet inverts the expected order within it (N1 0.097 above N2 0.037), hence its
+negative C1 — exceptional in direction, not magnitude.
+(c) One binary separates the record-bearing cells. Regroup all nine cells by whether the advisor makes
+a first-person claim about itself (G_self = F1, F2) or a third party describes it (G_third = N1, N2, N3,
+NX, F3, F5), N0 as baseline. Group means (Figure 4): 0.701 (N0), 0.657 (G_self), 0.322 (G_third). The
+separation is perfect in all five: min(G_self) > max(G_third) for Llama (0.782 > 0.667), Qwen3 (0.422 >
+0.292), gemma (0.637 > 0.474), Mistral (0.661 > 0.421), haiku (0.469 > 0.434). The item-paired contrast
+G_self − G_third is +0.335 [+0.316, +0.354] pooled over the 150 items, per model +0.180 / +0.329 /
++0.516 / +0.425 / +0.223 (Llama / Qwen3 / gemma / Mistral / haiku), with an across-model (df = 4)
+interval of [+0.162, +0.507] — an across-model interval that, like C3’s, excludes zero, which C1’s and
+C2’s do not. Replacing the 9-level cell factor by this 3-level grouping recovers η² = 0.111 against 0.122,
+i.e. 91.2% of the in-sample additive cell main-effect η² (the nine-cell factor is itself 12.2% of total vari-
+ance; Type-II ANOVA on 27,641 probes, H.8; on model × item × cell means, which weight confirmatory
+and exploratory cells equally, the share is 91.9%). X1 is consistent with it: at 99/100, first-person self-
+assertion exceeds the no-record baseline (F2h − N0 = +0.077 [+0.046, +0.107]) while the same claim in
+the registry field stays far below it (N1h − N0 = −0.284, N2h − N0 = −0.267). The coherence probes
+
+
+                                                        9
+(D.6), used only as an exclusion criterion, also show models sometimes naming the relaying party rather
+than, or alongside, the attestor when asked who reported the record: the relayer is named in 0–18% of
+first sentences per model in F2 (Qwen3 15%, haiku 18%), 0–23% in F3 (Mistral 23%) and about 5% or less
+in F5 (Mistral 5.2%; 134 probed answers per model × cell; both answers are accepted by the rubric, so
+naming the relayer is not in itself a failure; three F5 answers fail only because they also name the user).
+Their full distribution is a successor analysis.
+Caveats, at full strength. The regrouping is post hoc — not registered, not pre-specified, chosen after
+inspecting the cell means from a space of possible regroupings that was not constrained in advance —
+and is confounded with the speaker tag and with the passport length and register of (a). The pattern
+is therefore consistent with a first-person self-claim account; it does not identify that mechanism. The
+grouping is also not evidentially independent of C3: G_self and G_third contain the F2 and F3 cells
+whose registered contrast is the withheld C3. Dropping both C3 cells (G_self = F1 only) leaves the effect
+positive in all five models — +0.147 / +0.235 / +0.526 / +0.364 / +0.132 (Llama / Qwen3 / gemma
+/ Mistral / haiku), mean +0.281 — so the pattern does not depend on the withheld contrast. F5 sits
+between the group means when pooled (0.422) and in four of five models, but in Llama it is the lowest
+of the six G_third cells, so that position is a pooled property, not a per-model regularity; it never crosses
+into G_self, which is what the separation claim needs. Breaking the stance/tag confound needs one
+successor cell in which the advisor relays its own record in the third person.
+
+leave-out-C3 (G_self’ =
+F1; G_third’ = N1 N2
+N3 NX F5)               Llama       Qwen3       gemma        Mistral       haiku       across-model (df = 4)
+G_self’ − G_third’      +0.147      +0.235      +0.526       +0.364        +0.132      +0.281 [+0.076,
+                                                                                       +0.486]
+F1 > max(G_third’)      yes         yes         yes          yes           yes         5 of 5
+
+
+
+
+Figure 4: Mean w for the nine cells in each of the five models on the 150-item pool, cells grouped N0 |
+F1 F2 | N1 N2 N3 NX F3 F5 — no record, advisor’s first-person self-claim, third-party description. Non-
+registered post-hoc regrouping; it separates every model without exception.
+
+
+
+                                                      10
+(d) Model heterogeneity dominates, and part of it is arithmetic. Llama stays between 0.544 and 0.842
+while gemma spans 0.037 to 0.872, so any pooled statement about “LLM agents” averages qualitatively
+different policies; P(E1 exact) differs 23-fold on the 400 items (0.0075 / 0.0775 / 0.0800 / 0.1025 / 0.1750
+for Llama / gemma / haiku / Mistral / Qwen3), and since §4.5 shows w is constrained by solvability, part
+of this is arithmetic skill.
+
+4.5 Frontier models, the solvability ceiling, and selection on the dependent variable
+Three frontier models were removed by blind kill checks before any contrast was computed: gpt-5.4
+and gpt-5.6-sol on K4 and K5, claude-sonnet-5 on K5 with P(ignore) = 0.911 (Appendix B). A delivery
+audit (CD6) rules out a harness bug: the advisor line and the frozen E1 replay are present in 100% of E2
+requests. The candidate explanation, labelled post hoc, is task solvability — the items were designed to
+be hard to compute mentally and the strongest models compute them. On one criterion throughout —
+E1 exactly equal to the item’s true value — gpt-5.4 is exact on 82% of the 347 items it froze (95% within
+±1), against 0.75%–17.5% for the retained models (H.10). The other two removed models do not fit this
+account as cleanly: gpt-5.6-sol is exact on only 28% but within ±1 of truth on 99.6% of its 272 frozen
+items and ignored advice on 100% of kill-block probes in both strata; claude-sonnet-5 is exact on 18%
+(37% within ±1), numerically almost identical to Qwen3’s, yet ignored 89% of advice even where its E1
+was wrong. Solvability is therefore demonstrated for gpt-5.4, plausible for gpt-5.6-sol, and not the whole
+story for sonnet-5, whose refusal to defer is not explained by accuracy on this pool. When E1 is already
+correct the registered advice A = E1 ± band is necessarily away from truth, and a judge that recomputes
+rationally keeps E1 — w ≈ 0 by a mechanism unrelated to the record. The dependence appears within
+every retained model: split the same way, P(|w| < 0.1) is higher on exact items in all five (0.800 vs 0.658
+in Qwen3 on 70 exact items; 0.556 vs 0.247 in Llama, whose exact stratum is only 3 items and 99 probes).
+K5 thresholds on a function of the dependent variable, which is more than a scope note. P(ignore) is |w|
+< 0.1 — the judge keeping its own answer — so the criterion that removed three models is a threshold
+on the outcome itself, and it removed the three strongest candidates. The retained set is conditioned on
+deference capacity, and every statement about the level of w inherits it. Because C1’s sign heterogeneity
+is the load-bearing feature of the primary result, we stratified all three contrasts on the same criterion,
+by whether that model’s frozen E1 was exact for that item (non-registered, H.6). In the non-exact stra-
+tum, where the judge has genuine uncertainty, C1 remains sign-heterogeneous: −0.014 (Llama), +0.064
+(Qwen3), −0.064 (gemma), +0.051 (Mistral), +0.045 (haiku); pooled +0.013 [+0.005, +0.022], across-
+model CI [−0.050, +0.083] — still covering zero and the margin. Solvability does not rescue C1. C3 is
+−0.364 [−0.379, −0.348] there, all five signs negative. The general statement — post hoc, no registered
+test — is that advice weighting is constrained by task solvability in this design: the estimand measures
+deference only where the judge is uncertain. K5 fired as designed; the lesson, and this paper’s prin-
+cipal methodological recommendation, is that a deference screen must not threshold the outcome —
+calibrate item difficulty per model, or set the advice band relative to the model’s own uncertainty, and
+screen on that instead.
+
+4.6 Addendum X1: a 99/100 record (pre-declared, exploratory)
+Pattern (a) is confounded with the record’s content: 8/10 can be read as “wrong 20% of the time”. X1
+separates content from presence by raising the claim to an extreme — the registered N1/N2/F2/F3 tem-
+plates with “8 of the last 10” replaced by “99 of the last 100” (Appendix F), 3,000 probes reusing the
+frozen E1, 2 parse failures and 10 derails. Plan, runner and stimuli were declared and hashed before the
+first probe. X1 is exploratory: no verdict rules, no verdict changed.
+
+
+
+                                                    11
+Against the three pre-stated questions, as item-paired differences with 95% CIs (all ten rows in F.3):
+content or presence? 99/100 raises weight over 8/10 by ≈+0.12 yet stays far below no-record (N1h − N0
+= −0.284 [−0.322, −0.246], past the pre-stated >0.10 criterion), while the relay track reverses (F2h −
+N0 = +0.077 [+0.046, +0.107]). Source under an extreme claim? N2h − N1h = +0.016 [−0.015, +0.048],
+indistinguishable from the 8/10 gap of +0.018. Voice? F3h − F2h = −0.285 against −0.375 for 8/10, all
+five sharing the sign. The 8/10 content alone therefore does not explain the registry-track drop: it persists
+under 99/100, which implicates the record’s presence and framing without identifying the mechanism
+— near-perfect accuracy recovers about three-tenths of the gap to N0 (0.123 of 0.407). The pooled Source
+contrast remains small at 99/100, but the model-level estimates remain heterogeneous (−0.13 to +0.10,
+F.3); the direction is consistent with §4.4(c)’s first-person pattern: at 99/100 the advisor’s own voice is the
+only configuration beating no record in the pooled estimate, though not in Llama (−0.008) or gemma
+(−0.137). X1 is single-rep and its pooled CIs treat model × item pairs as independent, so the intervals
+are too narrow; it is read as direction, not as confirmation.
+
+5 Discussion
+What the registered tests establish, and what they do not. Changing the Source field from ADVISOR
+SELF-REPORT to EXTERNAL SCORER produces an item-level difference below the size declared mean-
+ingful in advance, on which the five models disagree in sign, which is not conventionally significant in
+the clean sign-stratum subset, and which is not distinguishable from zero once the model is the unit of
+analysis. Neither “these models track provenance” nor “these models are provenance-blind” survives:
+SMALL, SUB-MARGIN to the registered table, NOT EQUIVALENT to the equivalence machinery. The
+registered tests did not establish a practically meaningful, model-consistent Source-field effect; they also
+did not establish its absence. The relaying-voice question receives no registered answer; §4.3 shows the
+exclusion asymmetry that withheld it cannot account for C3’s magnitude.
+What this study says about studying this. Two findings constrain the field more than the Source result
+does. First, in three of five models the advice weight is a relabelled adoption indicator — the judge
+keeps E1 or copies A — so the human weight-of-advice literature’s central quantity, the shading of one
+estimate toward another, barely exists here; for these near-binary models P(adopt) is the more natural
+estimand, and designs that inherit WOA intuitions (interior margins, averaging accounts) should check
+the outcome’s shape first. Second, K5 thresholded the outcome and fired on all three frontier candidates,
+two of which also tripped K4 (§4.5); task solvability is strongly implicated by gpt-5.4 and by within-model
+analyses of the retained panel, though not demonstrated for all three. We present this not as a scope
+note but as the lesson: a deference screen selects on the dependent variable, “LLM judges” in general
+were never the population, and the results describe five retained models capable of deference on this
+item pool. Advice weighting is constrained by task solvability in this design, and item difficulty must
+be calibrated per model — or the advice band set relative to the model’s own uncertainty — before any
+provenance manipulation is interpretable.
+The pattern the exploratory data point to. The organising pattern of §4.4(c) is that the cells split by
+whether the advisor asserts competence about itself or a third party describes it. One binary separates
+the two groups in all five models, with every one of the 40 record-bearing model × cell means (eight
+cells × five models; N0 is the baseline and belongs to neither group) on the same side of its model’s
+boundary, an across-model interval of [+0.162, +0.507], 91.2% of the nine-cell η² (itself 12.2% of total
+variance, §4.4(c)), and a consistent direction in X1, where an advisor’s own 99/100 claim is the only
+record that beats no record on the pooled estimate. The pattern is consistent with a first-person self-
+claim account — the Source field would be inert because it names an attestor while leaving the speaker
+unchanged, and C3’s “voice” would be a stance effect rather than a channel effect — but the present
+
+
+                                                      12
+design cannot identify that mechanism: the grouping was chosen after seeing the data, it is confounded
+with the speaker tag and with passport length and register, and no cell delivers an advisor’s own record
+in the third person. Three further readings stay compatible: epistemic symmetry (every string here is
+equally unverifiable), salience (a Source field is a weak peripheral cue in ELM terms), and adjudication
+framing (a record turns a suggestion into a claim, after which the judge’s own solution wins). If the
+first-person account holds, it would also explain why Pan et al.’s (2026) role bias and sycophancy both
+predict a privileged F3 and both are contradicted.
+Engineering implication. If a registry Source field is meant to make consumers discount self-published
+competence claims, then across the retained panel the registered tests did not establish a model-
+consistent discount of self-reports at a practically meaningful magnitude, and an extreme claim did not
+rescue it. The exploratory pattern points the other way from the natural C3 reading (deliver provenance
+as channel structure): the highest-weighted record-bearing configuration in the pooled means (F2;
+F1 in gemma) was one in which the beneficiary itself relayed a favourable external grade in its own
+voice; in this text-only setup that claim was not independently verifiable — it is the kind of claim a
+registry field exists to displace, and the one an adversary controls (Greshake et al., 2023). This motivates
+testing trust policies that explicitly distinguish first-person self-claims from third-party attestations, in
+a preregistered design, before anyone builds on it. It is not, on this evidence, a recommendation to
+build one.
+Limitations. Five retained models, one upstream, no frontier-class arm, and a panel selected on a func-
+tion of the dependent variable (§4.5), so levels of w are conditioned on deference capacity and no across-
+model statement is a population inference. One item family class, English only, one answer format, ad-
+vice weighting confounded against item difficulty; nothing tests a non-verifiable task. The derail-guard
+failures limit the mean-w estimand, and the away/derail boundary is an arbitrary cut on one direction
+of movement (§3.4); pattern (a) and the cross-track comparisons are confounded with passport length,
+legend and register; the first-person regrouping is post hoc, drawn from an unconstrained space of re-
+groupings, and shares the speaker-tag confound. The relay track manipulates text labels inside one user
+message, not API roles. The coherence rubric (CD4) counts a wrong entity named under negation as
+failure, so the three flagged units are upper bounds; temperature is documented as sent, not applied,
+for the frontier arm (CD2); 30.4% of probes carry sign_stratum_ok = false; X1 is single-rep and its
+pooled intervals treat model × item pairs as independent.
+What would change our minds. A registered replication with (a) difficulty calibrated so P(E1 exact)
+stays below ~0.3 in every model and the advice band set relative to the model’s own uncertainty, (b)
+a two-part (hurdle) estimand preregistered as adjudicating with the derail guard as a risk-difference
+equivalence bound, (c) the relay track delivered through genuine API roles, and (d) three cheap control
+cells — legend-only, length-matched bare record, third-person self-report — would test the first-person
+account and tell us whether the Source field’s inertness is about the field or our delivery of it.
+
+6 Deviations from preregistration
+Eighteen deviations (D1–D11, CD1–CD7) and two swap records are logged in full in Appendix E; none
+altered an estimator or a verdict. The load-bearing ones are D1, D9 (estimator fixed before any main-
+study probe), SWAP-1/SWAP-2 and CD7: the registered script did not compute the hurdle components
+that the registered verdict table itself calls for under DERAIL SHIFT, so those come from a post-hoc
+script (C.6) — the verdicts do not depend on them, and the registered C3 point estimate is from the
+registered script (as amended by CD5); only the hurdle-component magnitudes used to interpret C3
+under DERAIL SHIFT are computed post hoc.
+
+
+                                                     13
+7 Reproducibility
+Registrations. Phase-0 protocol https://osf.io/pkf2j/ (2026-09-03 UTC) and the confirmatory regis-
+tration containing the collection harness, the adjudicating script analysis.py and the verdict table
+https://osf.io/d8tm6/ (2026-09-04 11:05:54 UTC), both embargoed until 2027-09. One registered analy-
+sis was not implemented in analysis.py: the three hurdle components that preregistration §5.1 names
+for a DERAIL SHIFT verdict are computed by hurdle_report.py, written after the data were seen
+(CD7, C.6); the registered code is complete for the verdicts, not for every reported quantity. The reg-
+istration comprises 21 artefacts; the snapshot directory holds 24 files (those 21 plus a README, the
+manifest and its script), and MANIFEST-confirmatory.txt pins SHA-256 for 27 — the 21 artefacts,
+hurdle_report.py, the deviation log and the four X1 files — all verifying against disk.
+
+Code and data. main/analysis.py differs from its registered hash only by the CD5 loader change ac-
+cepting a null swap when a provider’s reserves are exhausted; no estimator, threshold or verdict logic
+was touched, and every hash is in the manifest and Appendix E. The non-registered analyses come from
+a separate script importing the registered loader and paired-test functions, reproducing all registered
+values exactly (H.0). Per-probe transcripts, frozen E1 maps, kill-check verdicts, SWAPS.json, recogni-
+tion probes and failure logs are released with the preprint, each record including the exact JSON body
+transmitted; the CD6 audit found the advisor line and the byte-identical E1 replay in 100% of E2 re-
+quests. CC-BY 4.0. Cost: ≈$72 = OpenRouter metered ≈ $47 + Featherless (unmetered, estimated)
+≈ $25, against a $150 ceiling; CD7’s “≈ $70” rounds the same components down. Ethics: no human
+participants, no personal data.
+
+References
+Bailey, P. E., Leon, T., Ebner, N. C., Moustafa, A. A., & Weidemann, G. (2023). A meta-analysis of the
+weight of advice in decision-making. Current Psychology, 42(28), 24516–24541. doi:10.1007/s12144-022-
+03573-2
+Bajaj, A., & Tiganj, Z. (2026). Who Do LLMs Trust? Human Experts Matter More Than Other LLMs.
+arXiv:2602.13568. https://arxiv.org/abs/2602.13568
+Barkett, E. (2026). Status Hierarchies in Language Models. arXiv:2601.17577 (master’s thesis). https:
+//arxiv.org/abs/2601.17577
+Bonaccio, S., & Dalal, R. S. (2006). Advice taking and decision-making: An integrative literature re-
+view, and implications for the organizational sciences. Organizational Behavior and Human Decision
+Processes, 101(2), 127–151. doi:10.1016/j.obhdp.2006.07.001
+Dietvorst, B. J., Simmons, J. P., & Massey, C. (2015). Algorithm aversion: People erroneously avoid
+algorithms after seeing them err. Journal of Experimental Psychology: General, 144(1), 114–126.
+doi:10.1037/xge0000033
+Du, Y., Li, S., Torralba, A., Tenenbaum, J. B., & Mordatch, I. (2024). Improving Factuality and Reasoning
+in Language Models through Multiagent Debate. ICML 2024. arXiv:2305.14325. https://arxiv.org/abs/
+2305.14325
+Gino, F., & Moore, D. A. (2007). Effects of task difficulty on use of advice. Journal of Behavioral Decision
+Making, 20(1), 21–35. doi:10.1002/bdm.539
+Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T., & Fritz, M. (2023). Not What You’ve Signed
+Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. In
+
+
+                                                    14
+Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISec ’23), 79–90. ACM.
+doi:10.1145/3605764.3623985
+Harvey, N., & Fischer, I. (1997). Taking advice: Accepting help, improving judgment, and
+sharing responsibility. Organizational Behavior and Human Decision Processes, 70(2), 117–133.
+doi:10.1006/obhd.1997.2697
+Hovland, C. I., & Weiss, W. (1951). The Influence of Source Credibility on Communication Effectiveness.
+Public Opinion Quarterly, 15(4), 635–650. doi:10.1086/266350
+Hu, B. ‘Amber’, & Rong, H. (2025). Inter-Agent Trust Models: A Comparative Study of Brief, Claim,
+Proof, Stake, Reputation and Constraint in Agentic Web Protocol Design — A2A, AP2, ERC-8004, and
+Beyond. arXiv:2511.03434. https://arxiv.org/abs/2511.03434
+Hu, Y., & Qu, J. (2026). Most LLM Conformity Needs No Speaker: Measuring the Speaker-Free Floor in
+Peer-Pressure Benchmarks. arXiv:2607.05545. https://arxiv.org/abs/2607.05545
+Hussain, Z., & Nielbo, K. (2026). Conformity Mitigations in Large Language Models Lie on a Single
+Resistance–Receptivity Frontier. arXiv:2608.11247. https://arxiv.org/abs/2608.11247
+Huynh, T. D., Jennings, N. R., & Shadbolt, N. R. (2006). An integrated trust and reputation model for
+open multi-agent systems [the FIRE model]. Autonomous Agents and Multi-Agent Systems, 13(2), 119–
+154. doi:10.1007/s10458-005-6825-4
+Jøsang, A., Ismail, R., & Boyd, C. (2007). A survey of trust and reputation systems for online service
+provision. Decision Support Systems, 43(2), 618–644. doi:10.1016/j.dss.2005.05.019
+Joswin, E., Medicherla, S., & Mammen, P. M. (2026). A Mechanistic View of Authority Hierarchy in
+LLM Sycophancy. arXiv:2607.00415. https://arxiv.org/abs/2607.00415
+Khan, M. A., Amani, M., Das, S., Ghosh, B., Wu, Q., Gummadi, K. P., Gupta, M., & Ravichander, A.
+(2026). In Agents We Trust, but Who Do Agents Trust? Latent Source Preferences Steer LLM Genera-
+tions. ICLR 2026. arXiv:2602.15456. https://arxiv.org/abs/2602.15456
+Kumaran, D., Fleming, S. M., Markeeva, L., Heyward, J., Banino, A., Mathur, M., Pascanu, R., Osindero,
+S., De Martino, B., Veličković, P., & Patraucean, V. (2026). Competing Biases underlie Overconfidence
+and Underconfidence in LLMs. Nature Machine Intelligence, 8(4), 614–627. doi:10.1038/s42256-026-
+01217-9
+Liang, T., He, Z., Jiao, W., Wang, X., Wang, Y., Wang, R., Yang, Y., Shi, S., & Tu, Z. (2024). Encouraging
+Divergent Thinking in Large Language Models through Multi-Agent Debate. In Proceedings of EMNLP
+2024, 17889–17904. ACL. https://aclanthology.org/2024.emnlp-main.992/
+Logg, J. M., Minson, J. A., & Moore, D. A. (2019). Algorithm appreciation: People prefer algo-
+rithmic to human judgment. Organizational Behavior and Human Decision Processes, 151, 90–103.
+doi:10.1016/j.obhdp.2018.12.005
+Mammen, P. M., Joswin, E., & Venkitachalam, S. (2026). Who Endorsed It? Measuring Authority Bias
+Across Expertise Levels in Language Models. In Proceedings of the Fifth Workshop on Generation, Evalua-
+tion and Metrics (GEM), 980–989. ACL. arXiv:2601.13433. https://aclanthology.org/2026.gem-main.75/
+Mittal, G. N. (2026). Capability Advertisement as a Market for Lemons: A Trust Layer for Heterogeneous
+Agent Networks. arXiv:2606.03034. https://arxiv.org/abs/2606.03034
+
+
+
+
+                                                   15
+Pan, X., Fan, J., Xiong, Z., Hahami, E., Overwiening, J., & Xie, Z. (2026). User-Assistant Bias in LLMs.
+In Findings of the ACL: ACL 2026, 9218–9241. ACL. https://aclanthology.org/2026.findings-acl.449/
+Pappu, A., El, B., Cao, H., di Nolfo, C., Sun, Y., Cao, M., & Zou, J. (2026). Multi-Agent Teams Hold
+Experts Back. ICML 2026. arXiv:2602.01011. https://arxiv.org/abs/2602.01011
+Perez, E., Ringer, S., Lukošiūtė, K., et al. (2023). Discovering Language Model Behaviors with Model-
+Written Evaluations. In Findings of the ACL: ACL 2023, 13387–13434. ACL. https://aclanthology.org/2
+023.findings-acl.847/
+Petty, R. E., & Cacioppo, J. T. (1986). The Elaboration Likelihood Model of Persuasion. In Advances in
+Experimental Social Psychology, 19, 123–205. Elsevier. doi:10.1016/S0065-2601(08)60214-2
+Pinyol, I., & Sabater-Mir, J. (2013). Computational trust and reputation models for open multi-agent
+systems: a review. Artificial Intelligence Review, 40(1), 1–25. doi:10.1007/s10462-011-9277-z
+Pornpitakpan, C. (2004). The Persuasiveness of Source Credibility: A Critical Review of Five Decades’
+Evidence. Journal of Applied Social Psychology, 34(2), 243–281. doi:10.1111/j.1559-1816.2004.tb02547.x
+Prakash, S. (2026). The Provenance Paradox in Multi-Agent LLM Routing: Delegation Contracts and
+Attested Identity in LDP. arXiv:2603.18043. https://arxiv.org/abs/2603.18043
+Ramchurn, S. D., Huynh, D., & Jennings, N. R. (2004). Trust in multi-agent systems. The Knowledge
+Engineering Review, 19(1), 1–25. doi:10.1017/S0269888904000116
+Rebholz, T. R., Biella, M., & Hütter, M. (2024). Mixed-effects regression weights for advice taking and
+related phenomena of information sampling and utilization. Journal of Behavioral Decision Making,
+37(2), e2369. doi:10.1002/bdm.2369
+Robinson, S., Collins, K. M., Sucholutsky, I., & Allen, K. R. (2026). Under the Influence: Quantifying
+Persuasion and Vigilance in Large Language Models. arXiv:2602.21262. https://arxiv.org/abs/2602.212
+62
+Sabater, J., & Sierra, C. (2002). Reputation and social network analysis in multi-agent systems. In Pro-
+ceedings of AAMAS ’02, 475–482. ACM. doi:10.1145/544741.544854
+Sabater, J., & Sierra, C. (2005). Review on Computational Trust and Reputation Models. Artificial Intel-
+ligence Review, 24(1), 33–60. doi:10.1007/s10462-004-0041-5
+Sharma, M., Tong, M., Korbak, T., Duvenaud, D., Askell, A., Bowman, S. R., et al. (2024). Towards
+Understanding Sycophancy in Language Models. ICLR 2024 (poster). arXiv:2310.13548. https://arxiv.
+org/abs/2310.13548
+Sniezek, J. A., & Buckley, T. (1995). Cueing and Cognitive Conflict in Judge-Advisor Decision Making.
+Organizational Behavior and Human Decision Processes, 62(2), 159–174. doi:10.1006/obhd.1995.1040
+Soll, J. B., & Larrick, R. P. (2009). Strategies for revising judgment: How (and how well) people use
+others’ opinions. Journal of Experimental Psychology: Learning, Memory, and Cognition, 35(3), 780–805.
+doi:10.1037/a0015145
+Yaniv, I., & Kleinberger, E. (2000). Advice Taking in Decision Making: Egocentric Discounting
+and Reputation Formation. Organizational Behavior and Human Decision Processes, 83(2), 260–281.
+doi:10.1006/obhd.2000.2909
+Zeng, S. (2025). Who is In Charge? Dissecting Role Conflicts in Instruction Following. Mechanistic
+Interpretability Workshop (poster), NeurIPS 2025. arXiv:2510.01228. https://arxiv.org/abs/2510.01228
+
+                                                  16
+Zhang, P. (2023). Taking Advice from ChatGPT. arXiv:2305.11888. https://arxiv.org/abs/2305.11888
+Zhou, J., Huang, J.-t., Zhou, X., Lam, M. H., Wang, X., Zhu, H., Wang, W., & Sap, M. (2025). The
+PIMMUR Principles: Ensuring Validity in Collective Behavior of LLM Societies. arXiv:2509.18052. ht
+tps://arxiv.org/abs/2509.18052
+Zhu, S., Lin, Y., Kaistha, S., Li, W., Wang, B., Zha, H., Hadfield, G. K., & Poupart, P. (2026). Talk,
+Judge, Cooperate: Gossip-Driven Indirect Reciprocity in Self-Interested LLM Agents. ICML 2026.
+arXiv:2602.07777. https://arxiv.org/abs/2602.07777
+
+
+
+
+Supplementary material
+Appendix A — Verbatim stimuli
+A.1 One item per generator family (from stimuli/main_items.jsonl)
+dice_runs (mi000, band 0, toward truth; truth 81, scale 0–1000): > Estimate: if you roll a fair six-sided
+die 135 times, what is the probability (in permille, 0-1000) of seeing at least 5 identical results in a row
+somewhere in the sequence? Give a single number.
+birthday (mi001, band 1, toward truth; truth 208, scale 0–1000): > Estimate: 22 tickets are drawn inde-
+pendently, each uniformly random from 1000 numbered slots (with replacement). What is the proba-
+bility (in permille, 0-1000) that at least two tickets share a slot? Give a single number.
+random_walk (mi002, band 2, toward truth; truth 13, scale 0–64): > Estimate: a fair coin is flipped 256
+times; +1 for heads, -1 for tails, keeping a running sum. What is the expected MAXIMUM value the
+running sum reaches during the walk? Give a single number.
+coupon (mi003, band 0, away from truth; truth 95, scale 25–300): > Estimate: a cereal brand includes 1
+of 25 equally likely collectible cards per box. On average, how many boxes must you buy to collect all
+25 cards? Give a single number.
+
+A.2 Instructions (verbatim, from the registered harness)
+E1_INSTR: > Work through this as an estimation problem. Keep your reasoning brief (a few lines, no
+long derivations). End with your final answer strictly in the format ANSWER: <number>
+E2_INSTR_TPL: > Back to the original problem: “{task}” > Considering the information above, give your
+final estimate FOR THIS PROBLEM. You may keep your previous answer or change it. Reply with a
+single line: ANSWER: <number>
+COHERENCE_QUESTION: > Before you answer: in one short sentence, who reported the advisor’s past
+accuracy, according to the information above?
+PROBE_RECOGNITION: > Unrelated final question: does this task setup remind you of any known psy-
+chology experiment or paradigm? One short sentence.
+The E2 user message is the concatenation, joined by blank lines, of: the cell’s competence-record text
+(omitted in N0); Advisor's suggested answer: <A>; and E2_INSTR_TPL.
+
+
+
+
+                                                    17
+A.3 All 40 template texts, verbatim (from stimuli/passports.jsonl)
+N0 inserts no record at all; the remaining eight cells each carry five crossed template families, printed
+here in full. ↩ marks the newline inside a neutral-track record. Every neutral record begins with the
+same registry legend, printed once here and abbreviated as [LEGEND] below:
+      [LEGEND] = The following record comes from the agent registry; the Source
+      field indicates where the accuracy data originated.
+
+N1 — Source: ADVISOR SELF-REPORT (neutral track)
+   0. [LEGEND] ↩ Competence record — Source: ADVISOR SELF-REPORT. Accuracy on the
+      last 10 tasks: 8/10.
+   1. [LEGEND] ↩ According to ADVISOR SELF-REPORT, the advisor answered 8 of the last
+      10 tasks correctly.
+   2. [LEGEND] ↩ Registry note (ADVISOR SELF-REPORT): advisor accuracy over the
+      previous 10 tasks — 8/10.
+   3. [LEGEND] ↩ ADVISOR SELF-REPORT — reported track record for this advisor: 8
+      correct out of 10 recent tasks.
+   4. [LEGEND] ↩ Advisor profile field [source: ADVISOR SELF-REPORT]: recent accuracy
+      8/10.
+
+N2 — Source: EXTERNAL SCORER (neutral track)
+   0. [LEGEND] ↩ Competence record — Source: EXTERNAL SCORER. Accuracy on the last
+      10 tasks: 8/10.
+   1. [LEGEND] ↩ According to EXTERNAL SCORER, the advisor answered 8 of the last 10
+      tasks correctly.
+   2. [LEGEND] ↩ Registry note (EXTERNAL SCORER): advisor accuracy over the previous
+      10 tasks — 8/10.
+   3. [LEGEND] ↩ EXTERNAL SCORER — reported track record for this advisor: 8 correct
+      out of 10 recent tasks.
+   4. [LEGEND] ↩ Advisor profile field [source: EXTERNAL SCORER]: recent accuracy
+      8/10.
+
+N3 — Source: USER (neutral track)
+   0. [LEGEND] ↩ Competence record — Source: USER. Accuracy on the last 10 tasks:
+      8/10.
+   1. [LEGEND] ↩ According to USER, the advisor answered 8 of the last 10 tasks
+      correctly.
+   2. [LEGEND] ↩ Registry note (USER): advisor accuracy over the previous 10 tasks
+      — 8/10.
+   3. [LEGEND] ↩ USER — reported track record for this advisor: 8 correct out of 10
+      recent tasks.
+   4. [LEGEND] ↩ Advisor profile field [source: USER]: recent accuracy 8/10.
+NX — Source: ANOTHER AGENT (unverified) (neutral track)
+   0. [LEGEND] ↩ Competence record — Source: ANOTHER AGENT (unverified). Accuracy on
+      the last 10 tasks: 8/10.
+   1. [LEGEND] ↩ According to ANOTHER AGENT (unverified), the advisor answered 8 of
+      the last 10 tasks correctly.
+
+
+                                                   18
+   2. [LEGEND] ↩ Registry note (ANOTHER AGENT (unverified)): advisor accuracy over
+      the previous 10 tasks — 8/10.
+   3. [LEGEND] ↩ ANOTHER AGENT (unverified) — reported track record for this advisor:
+      8 correct out of 10 recent tasks.
+   4. [LEGEND] ↩ Advisor profile field [source: ANOTHER AGENT (unverified)]: recent
+      accuracy 8/10.
+
+F1 — advisor relays its own record (relay track; exploratory)
+   0. Advisor: For context, my own record: I answered 8 of my last 10 tasks correctly.
+   1. Advisor: I'll note that, by my own count, 8 of my previous 10 answers were
+      correct.
+   2. Advisor: My track record so far: 8/10 correct on recent tasks.
+   3. Advisor: As background — I got 8 out of my last 10 tasks right.
+   4. Advisor: Self-assessment: 8 of 10 recent answers correct.
+F2 — advisor relays the external scorer (relay track; confirmatory, C3)
+   0. Advisor: For context, the external scorer graded my last 10 tasks: 8/10 correct.
+   1. Advisor: The external scorer's report on me: 8 of 10 recent answers correct.
+   2. Advisor: Per the external scorer, my recent accuracy is 8/10.
+   3. Advisor: The scorer evaluated my previous 10 tasks — 8 were correct.
+   4. Advisor: External scoring of my record shows 8/10 correct.
+F3 — user relays the external scorer (relay track; confirmatory, C2 and C3)
+   0. User: The external scorer graded this advisor's last 10 tasks: 8/10 correct.
+   1. User: Per the external scorer, this advisor's recent accuracy is 8/10.
+   2. User: The scorer's report says the advisor got 8 of 10 recent tasks right.
+   3. User: According to the external scorer, 8 of the advisor's last 10 answers were
+      correct.
+   4. User: External scoring shows this advisor at 8/10 on recent tasks.
+F5 — system note from the external scorer (relay track; confirmatory, C2)
+   0. System note from EXTERNAL SCORER: this advisor answered 8 of the last 10 tasks
+      correctly.
+   1. EXTERNAL SCORER report: advisor accuracy on previous 10 tasks — 8/10.
+   2. Scoring service: 8 of the advisor's last 10 answers were correct.
+   3. EXTERNAL SCORER: recent advisor accuracy 8/10.
+   4. Automated scorer record: advisor correct on 8/10 recent tasks.
+The four neutral cells are byte-identical to one another except for the Source string; the relay cells are
+not derivable from one another and are therefore printed in full.
+
+A.4 Paradigm-recognition probes
+Three probes per model (PROBE_RECOGNITION, A.2), asked after the main protocol. Results per model,
+from main/logs/recognition_*.json:
+
+
+
+
+                                                   19
+model                                                       what the three responses named
+Llama-3.3-70B-Instruct                                      gambler’s fallacy; birthday problem; gambler’s ruin
+                                                            / random walk
+Qwen3-32B                                                   hot-hand fallacy; birthday problem; random walk
+                                                            in cognitive/decision research
+gemma-3-27b-it                                              signal detection theory; birthday problem; random
+                                                            walk / gambler’s ruin
+Mistral-Small-3.2-24B                                       gambler’s fallacy; birthday problem; Monty Hall
+                                                            problem
+claude-haiku-4.5                                            gambler’s fallacy / hot-hand; birthday problem;
+                                                            gambler’s ruin / random walk
+claude-sonnet-5 (swapped out)                               gambler’s fallacy / randomness perception
+                                                            (Kahneman & Tversky); birthday problem; random
+                                                            walk / gambler’s ruin in sequential
+                                                            decision-making
+gpt-5.4 (swapped out)                                       telephone game / serial-reproduction paradigm;
+                                                            birthday paradox; sequential sampling /
+                                                            drift-diffusion paradigms
+gpt-5.6-sol (swapped out)                                   no response: the log is [null, null, null] — no
+                                                            parseable answer to any of the three probes
+
+
+The accurate summary is therefore narrower than “the models named only mathematical puzzles”. Most
+responses named the underlying mathematical puzzle; several named unrelated psychology or decision
+paradigms; and one model returned nothing at all, so it supports no claim in either direction. The
+defensible statement is that no model named the judge–advisor system or the advice-taking paradigm,
+while naming of unrelated paradigms did occur. This is weaker than a clean unawareness demonstration
+and is reported as such.
+
+Appendix B — Blind kill-check metrics, all eight models
+Computed by the registered kill_check.py on each model’s kill block (first 20 items by id, all cells),
+with nothing broken down by Source or cell. Thresholds: K1 P(adopt|N0) > 0.85; K2 derail > 0.15; K3
+coherence fail > 0.30; K4 E1 fail (or E2 parse fail) > 0.10; K5 P(ignore) > 0.90.
+
+                                          E1     E2 parse                            coherence
+model                              probes fail   fail        derail P(ignore)P(adopt|N0)
+                                                                                     fail K tripped proceed
+meta-llama/Llama-3.3-70B-          740    0.000 0.000        0.000 0.285      0.783   0.036 —           yes
+Instruct
+Qwen/Qwen3-32B                     740    0.000 0.000        0.000 0.739      0.283   0.054 —           yes
+google/gemma-3-27b-it              740    0.000 0.000        0.004 0.544      0.700   0.089 —           yes
+mistralai/Mistral-Small-3.2-24B-   740    0.000 0.000        0.000 0.561      0.700   0.089 —           yes
+Instruct-2506
+anthropic/claude-haiku-4.5         740    0.000 0.000        0.003 0.401      0.483   0.143 —           yes
+anthropic/claude-sonnet-5          740    0.000 0.000        0.000 0.911      0.417   0.089 K5          no
+(reasoning off, CD1)
+openai/gpt-5.4 (effort=minimal)    666    0.1325 0.024       0.000 0.998      0.000   0.042 K4, K5      no
+openai/gpt-5.6-sol                 444    0.320 0.000        0.000 1.000      0.000   0.026 K4, K5      no
+(effort=minimal)
+
+
+Kill-block sizes differ because the schedule is built on items with a frozen E1: gpt-5.4 froze 347 of 400
+
+                                                    20
+items and gpt-5.6-sol 272, so their blocks contain 666 and 444 probes; the checker’s count guard com-
+pares against the schedule actually built, so the verdicts are valid. All five retained models froze E1 on
+all 400 items.
+
+Appendix C — Per-model registered contrasts
+Item-paired one-sample t-tests on the full 400-item pool. “flagged” marks a model × cell excluded from
+the pooled estimate by the registered coherence rule. Derail tables are printed in contrast order (cell A
+first, then cell B) throughout.
+
+C.1 = N2 − N1 (pooled D = +0.0150, p = 1.77×10⁻⁴, verdict SMALL, SUB-MARGIN)
+
+                                                                     derail
+                               n                                     table (N2 derail χ²,       adopt      away
+model                          items D     95% CI       p            / N1)     p                guard      guard
+Qwen/Qwen3-32B                 400   +0.057 [+0.040,    4.4×10⁻¹⁰0 / 0            — , 1.00   +0.057 (p −0.0005
+                                           +0.075]                                           5×10⁻¹⁰, (3 ev, not
+                                                                                             674 ev,    evalu-
+                                                                                             shift)     able)
+anthropic/claude-haiku-4.5     400   +0.048 [+0.033,    3.3×10⁻⁹ 14 / 2           9.03,      +0.046 (p +0.011
+                                           +0.064]                                0.0027     1×10⁻⁶,    (43 ev,
+                                                                                  (fail)     590 ev,    shift)
+                                                                                             shift)
+mistralai/Mistral-Small-3.2-   400   +0.047 [+0.023,    1.3×10⁻⁴ 2 / 1            0.33, 0.56 +0.042 (p +0.0006
+24B                                        +0.071]                                           8×10⁻⁴,    (11 ev, no
+                                                                                             1278 ev,   shift)
+                                                                                             shift)
+meta-llama/Llama-3.3-70B-      400   −0.013 [−0.026,    0.045        6/4          0.40, 0.53 −0.021 (p −0.0014
+Instruct                                    −0.000]                                          1.2×10⁻³, (54 ev, no
+                                                                                             2799 ev,   shift)
+                                                                                             shift)
+google/gemma-3-27b-it          400   −0.064 [−0.081,    4.9×10⁻¹³5 / 8            0.69, 0.40 −0.057 (p −0.075
+                                            −0.047]                                          1.6×10⁻¹⁶, (376 ev,
+                                                                                             159 ev,    shift)
+                                                                                             shift)
+
+
+C.2 = F5 − F3 (pooled D = +0.0087, p = 0.087, derail guard fails; gemma excluded from the pool by the
+F5 coherence flag)
+
+                                                                                       derail table
+model                                n items D              95% CI         p           (F5 / F3)        derail χ², p
+Qwen/Qwen3-32B                       400      +0.049 [+0.026,              3.4×10⁻⁵    0/1              1.00, 0.32
+                                                     +0.072]
+mistralai/Mistral-Small-3.2-24B      400      +0.036 [+0.014,              1.4×10⁻³    2/0              2.01, 0.16
+                                                     +0.058]
+meta-llama/Llama-3.3-70B-Instruct    399      −0.009 [−0.027,              0.36        15 / 15          0.00, 1.00
+                                                     +0.010]
+anthropic/claude-haiku-4.5           400      −0.042 [−0.060,              3.5×10⁻⁶    7 / 35           18.86,
+                                                     −0.024]                                            1.4×10⁻⁵
+                                                                                                        (fail)
+
+
+                                                       21
+                                                                                    derail table
+model                                 n items D            95% CI       p           (F5 / F3)        derail χ², p
+google/gemma-3-27b-it (flagged,       400      +0.408 [+0.376,          2.8×10⁻⁸⁵   6 / 15           3.87, 0.049
+excluded from pool)                                   +0.440]                                        (fail)
+
+
+The flagged gemma row is the sensitivity discussed in §4.3: it is by far the largest per-model C2, and
+its registered exclusion is what leaves the pooled estimate near zero. Its derail guard is computed and
+reported like every other unit, independently of the coherence exclusion.
+
+C.3 = F3 − F2 (pooled D = −0.3662, p = 2.25×10⁻¹⁷², derail guard fails)
+
+                                                                                    derail table
+model                                n items D         95% CI          p            (F3 / F2)         derail χ², p
+google/gemma-3-27b-it                400       −0.555 [−0.583,         4.2×10⁻¹³⁸   15 / 5           5.03, 0.025
+                                                      −0.527]                                        (fail)
+Qwen/Qwen3-32B                       400       −0.414 [−0.448,         2.8×10⁻⁷⁹    1/0              1.00, 0.32
+                                                      −0.380]
+mistralai/Mistral-Small-3.2-24B      400       −0.395 [−0.424,         2.3×10⁻⁸⁸    0/0               — , 1.00
+                                                      −0.365]
+anthropic/claude-haiku-4.5           400       −0.236 [−0.259,         4.4×10⁻⁶³    35 / 6           20.72,
+                                                      −0.213]                                        5.3×10⁻⁶
+                                                                                                     (fail)
+meta-llama/Llama-3.3-70B-Instruct    399       −0.231 [−0.265,         4.1×10⁻³³    15 / 10          1.01, 0.32
+                                                      −0.196]
+
+
+C.4 Registered robustness (pooled, non-adjudicating)
+
+                                                                                                   by item type
+                                                                                                   (birthday /
+                                                                                                   coupon /
+            MixedLM est      leave-one-template-out         sign_stratum_ok     by band            dice_runs /
+contrast    (SE, p)          range                          subset              (0/1/2)            random_walk)
+C1          +0.0152         +0.003 … +0.024                 +0.0105, n = 387, p +0.005 /           +0.009 /
+            (0.0059, 0.011)                                 = 0.067             +0.024 /           +0.027 / +0.012
+                                                                                +0.016             / +0.031
+C2          +0.0081         −0.015 … +0.038                 +0.0157, n = 384, p +0.019 /           +0.014 /
+            (0.0064, 0.206)                                 = 0.031             +0.008 /           −0.035 /
+                                                                                −0.001             +0.020 / +0.032
+C3          −0.3653          −0.389 … −0.341                −0.3624, n = 387, p −0.367 /           −0.428 /
+            (0.0057,                                        = 9×10⁻¹¹⁹          −0.368 /           −0.369 /
+            <10⁻³⁰⁰)                                                            −0.364             −0.318 /
+                                                                                                   −0.369
+
+
+random_walk has only 24 items in the pool and its moderation entries are pre-labelled unstable.
+
+C.5 Equivalence pairs (H_channel-blind, intersection–union)
+
+
+
+                                                      22
+pair       D               90% CI                p                     derail guard           verdict
+F2 − F3    +0.3662         [+0.3540, +0.3785]    2.3×10⁻¹⁷²            fail (21 / 66; χ²       DERAIL SHIFT —
+                                                                       23.38, p 1.3×10⁻⁶)      hurdle components
+                                                                                               only
+F3 − F5    −0.0087         [−0.0170, −0.0003]    0.087                 fail (51 / 24; χ² 9.75, DERAIL SHIFT —
+                                                                       p 1.8×10⁻³)             hurdle components
+                                                                                               only
+F2 − F5    +0.3103         [+0.2962, +0.3245]    1.2×10⁻¹²⁷            pass (16 / 24; χ²       INCONCLUSIVE
+                                                                       1.61, p 0.20)
+
+
+Registered outcome: H_channel-blind = NOT EVALUABLE (derail shift); H_attestor-blind = NOT
+EQUIVALENT.
+
+C.6 Hurdle components for all three contrasts — preregistered quantities, post-hoc computation (CD7)
+Values reprinted (reformatted) from main/analysis_out/hurdle.md, the file hurdle_report.py
+(CD7) writes. These are the components the two DERAIL SHIFT verdicts direct the reader to, per
+preregistration §5.1. Item-paired, n = 400 for the two probability components; the compromise mean
+is computed only on items with a compromise response in both cells, so its n is smaller.
+
+                                                              D
+contrast       component        level A          level B      (A−B)    95% CI         p                 n items
+C1 = N2 − N1 P(non-derail)      0.997            0.998        −0.001   [−0.002,       0.034             400
+                                                                       −0.000]
+C1 = N2 − N1 P(adopt |          0.282            0.269        +0.014   [+0.006,       8.6×10⁻⁴          400
+             non-derail)                                               +0.021]
+C1 = N2 − N1 compromise         0.460            0.411        +0.039   [+0.019,       1.5×10⁻⁴          316
+             mean w                                                    +0.060]
+C2 = F5 − F3 P(non-derail)      0.997            0.994        +0.003   [+0.001,       4.4×10⁻⁴          400
+                                                                       +0.005]
+C2 = F5 − F3 P(adopt |          0.398            0.388        +0.010   [−0.000,       0.057             400
+             non-derail)                                               +0.020]
+C2 = F5 − F3 compromise         0.506            0.493        −0.010   [−0.037,       0.50              259
+             mean w                                                    +0.018]
+C3 = F3 − F2 P(non-derail)      0.993            0.998        −0.005   [−0.007,       2.3×10⁻⁴          400
+                                                                       −0.002]
+C3 = F3 − F2 P(adopt |          0.326            0.686        −0.361   [−0.375,       1.3×10⁻¹⁷¹        400
+             non-derail)                                               −0.346]
+C3 = F3 − F2 compromise         0.428            0.545        −0.116   [−0.139,       1.2×10⁻²⁰         287
+             mean w                                                    −0.094]
+
+
+Per-model compromise-mean differences (the same file; Qwen3 is n/a in every row because it produces
+essentially no compromise responses, §4 and H.3):
+
+                              contrast Llama Qwen3 gemma Mistral haiku
+                              C1          +0.027 n/a       −0.015 +0.024 +0.027
+                              C2          +0.009 n/a       +0.170 +0.140 −0.012
+                              C3          −0.036 n/a       −0.178 −0.163 −0.086
+
+
+
+                                                         23
+Appendix D — Full model × cell descriptives (unrestricted item pools)
+These are the unrestricted values: n = 450 for N0, N3, NX, F1 (150 items × 3 reps) and n = 2,000 for N1,
+N2, F2, F3, F5 (400 items × 5 reps), in every model. They are not item-matched across the two groups of
+cells, which is why §4.4’s exploratory comparisons use the 150-shared-item restriction instead (prereg
+§5.6). D.1 and D.3 here therefore differ from the §4.4 table in the confirmatory columns by construction.
+
+D.1 mean w
+
+model                                           N0      N1      N2      N3      NX      F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct               0.842   0.719   0.706   0.667   0.650   0.782   0.853   0.624   0.615
+Qwen/Qwen3-32B                                  0.406   0.140   0.197   0.174   0.162   0.422   0.662   0.248   0.297
+google/gemma-3-27b-it                           0.872   0.089   0.024   0.054   0.037   0.666   0.665   0.110   0.518
+mistralai/Mistral-Small-3.2-24B-Instruct-2506   0.716   0.309   0.357   0.255   0.186   0.661   0.814   0.419   0.456
+anthropic/claude-haiku-4.5                      0.668   0.316   0.367   0.361   0.282   0.469   0.694   0.462   0.417
+
+
+D.2 P(ignore), |w| < 0.1
+
+model                                           N0      N1      N2      N3      NX      F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct               0.099   0.246   0.260   0.293   0.309   0.155   0.107   0.330   0.341
+Qwen/Qwen3-32B                                  0.584   0.858   0.801   0.822   0.838   0.556   0.318   0.739   0.690
+google/gemma-3-27b-it                           0.118   0.634   0.848   0.786   0.818   0.246   0.229   0.594   0.410
+mistralai/Mistral-Small-3.2-24B-Instruct-2506   0.267   0.668   0.617   0.704   0.800   0.320   0.178   0.565   0.518
+anthropic/claude-haiku-4.5                      0.251   0.449   0.391   0.410   0.484   0.349   0.162   0.323   0.409
+
+
+D.3 P(adopt), |w − 1| < 0.1
+
+model                                           N0      N1      N2      N3      NX      F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct               0.834   0.712   0.691   0.655   0.637   0.769   0.841   0.611   0.597
+Qwen/Qwen3-32B                                  0.407   0.140   0.197   0.173   0.162   0.427   0.664   0.250   0.297
+google/gemma-3-27b-it                           0.871   0.069   0.011   0.036   0.013   0.607   0.591   0.075   0.475
+mistralai/Mistral-Small-3.2-24B-Instruct-2506   0.711   0.299   0.341   0.236   0.178   0.649   0.809   0.416   0.446
+anthropic/claude-haiku-4.5                      0.578   0.125   0.172   0.165   0.113   0.304   0.526   0.280   0.257
+
+
+D.4 P(away), w < −0.1
+
+model                                           N0      N1      N2      N3      NX      F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct               0.025   0.014   0.013   0.016   0.013   0.022   0.016   0.020   0.017
+Qwen/Qwen3-32B                                  0.007   0.001   0.001   0.002   0.000   0.018   0.015   0.010   0.007
+google/gemma-3-27b-it                           0.000   0.132   0.057   0.080   0.058   0.018   0.024   0.112   0.017
+mistralai/Mistral-Small-3.2-24B-Instruct-2506   0.007   0.003   0.003   0.009   0.004   0.002   0.001   0.004   0.006
+anthropic/claude-haiku-4.5                      0.000   0.006   0.016   0.004   0.007   0.011   0.004   0.022   0.008
+
+
+D.5 Derail share, w ∉ [−1, +2]
+
+
+
+                                                        24
+model                                           N0      N1      N2      N3      NX       F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct               0.011   0.002   0.003   0.013   0.009    0.011   0.005   0.007   0.007
+Qwen/Qwen3-32B                                  0.000   0.000   0.000   0.000   0.000    0.000   0.000   0.001   0.000
+google/gemma-3-27b-it                           0.000   0.004   0.003   0.002   0.000    0.004   0.003   0.007   0.003
+mistralai/Mistral-Small-3.2-24B-Instruct-2506   0.000   0.001   0.001   0.000   0.000    0.000   0.000   0.000   0.001
+anthropic/claude-haiku-4.5                      0.000   0.001   0.007   0.002   0.000    0.000   0.003   0.018   0.004
+
+
+D.6 Coherence-probe failure share (registered rubric; N0 has no record to probe)
+
+model                                            N0 N1          N2      N3      NX       F1      F2      F3      F5
+meta-llama/Llama-3.3-70B-Instruct                —      0.000   0.000   0.000   0.000    0.000   0.194   0.000   0.194
+Qwen/Qwen3-32B                                   —      0.000   0.000   0.160   0.000    0.160   0.007   0.000   0.194
+google/gemma-3-27b-it                            —      0.000   0.000   0.040   0.120    0.180   0.007   0.000   0.343
+mistralai/Mistral-Small-3.2-24B-Instruct-2506    —      0.007   0.000   0.380   0.040    0.080   0.007   0.007   0.194
+anthropic/claude-haiku-4.5                       —      0.000   0.201   0.400   0.180    0.020   0.052   0.000   0.194
+
+
+Bold entries exceed the registered 0.30 flag threshold and were excluded from pooled estimates of every
+contrast involving that cell.
+
+D.7 E2 parse-failure counts and the registered hand audit (§4.1)
+
+                      model × cell                                failures / probes share
+                      Qwen/Qwen3-32B | N1                        1 / 2,000              0.0005
+                      anthropic/claude-haiku-4.5 | N1            1 / 2,000              0.0005
+                      google/gemma-3-27b-it | F3                 1 / 2,000              0.0005
+                      google/gemma-3-27b-it | F5                 2 / 2,000              0.0010
+                      mistralai/Mistral-Small-3.2-24B | F2       1 / 2,000              0.0005
+                      mistralai/Mistral-Small-3.2-24B | F3       1 / 2,000              0.0005
+                      mistralai/Mistral-Small-3.2-24B | F5       5 / 2,000              0.0025
+                      all 38 other model × cells (of 45 = 5 × 9) 0                      0.0000
+
+
+Total 12 of 59,000 (2.0×10⁻⁴). All were reviewed by hand per prereg §4.2: seven are Mistral emitting
+ANS: instead of ANSWER:; two are gemma returning the single word “Given”; one is Qwen3 returning an
+empty completion; one is gemma exhausting the 900-token budget mid-derivation (finish_reason =
+length); one is a haiku call returning finish_reason = error with reasoning text but no ANSWER
+line.
+The e/E-adjacency scan mandated by prereg §4.2 returned exactly two probes, both Llama on mi014 in
+N0, each of the form ANSWER: 236EMPLARY… followed by further ANSWER lines; both were scored 236
+by the registered first-match rule. The frozen E1 for mi014 is 230 and the advice A is 705, so 236 is a
+near-retention of E1, not a match to it. The two probes are not equivalent, and the second deserves to
+be stated plainly: in mi014_N0_0_1 the reply’s last line is ANSWER: 705 — the advice adopted in full —
+after two intermediate lines rejecting the earlier figures, while the registered first-match rule took the
+leading 236 and scored the probe w = 0.0126. The rule was applied as registered and the value was not
+changed; we record here that a scored value turns on the first-match convention in exactly this way. The
+scope of the issue is one probe: mi014 in N0 is exploratory (N0 is not in any registered contrast), the
+
+
+                                                        25
+probe is one of the cell’s 450, and no estimate anywhere in the paper changes. A successor registration
+should specify last-match or an explicit multi-answer rejection rule for replies containing more than one
+ANSWER: line.
+
+
+Appendix E — Deviations from preregistration, in full
+Pre-confirmatory (Phase-0, D1–D11). The first official pilot run was quarantined in full because an
+in-memory E1 freeze broke across a provider-credit resume, giving one pilot model two “frozen” E1
+values on 35 of 40 items; the freeze is now disk-persisted and the pilot was rerun from scratch (D1).
+The working temperature was set to T = 0.5 on an operational basis, with the earlier claim that the n
+= 8 grid screen singled out a temperature explicitly withdrawn (D2). The registration/pilot timeline
+was corrected: Phase-0 was created 2026-09-03 UTC, the quarantined v1 pilot ran minutes later while
+registration was pending, and the analysed v2 pilot ran afterwards the same day (D3). Sign stratification
+degrades near scale edges at the widest band, so sign_stratum_ok became a registered covariate with
+a robustness re-analysis, and away-stratum secondaries were declared exploratory (D4). A billing-plan
+wording error was corrected (D5). Post-registration harness edits that touch no stimulus, condition or
+measure were logged (fail-fast on billing/auth errors, disk-persisted freeze, temperature constant, abort
+guard) (D6). The “≥400 clusters” wording was corrected to “whatever items have a valid E1”, since items
+without valid E1 are dropped without replacement (D7). F5’s Phase-0 description as an “environment
+turn” was corrected: every record, F5 included, is text inside the single E2 user message, and F5 differs
+by voice and framing, not by API role (D8). The adjudicating estimator was made the item-paired one-
+sample t-test with MixedLM demoted to reported robustness, on the ground that the design is balanced
+within item so the random intercept and template main effect cancel in D_i (D9). A component guard
+was given a ≥10-event evaluability floor (D10). Phase-0’s pilot-stage “Plan B” was replaced by the per-
+model swap rule (D11). D9–D11 were declared before any main-study probe.
+CD1 (before any frontier call). claude-sonnet-5 was registered “with default settings”; a pre-launch re-
+view found that OpenRouter’s default is extended thinking ON with a variable hidden-reasoning budget
+(one smoke probe spent 807 of 900 tokens on hidden reasoning and returned no ANSWER), which would
+both inflate parse failures and violate the registered principle that hidden reasoning be held constant
+across conditions. reasoning.enabled = false was added — the lowest setting returning a parseable
+answer, the same criterion used for gpt-5.4 — and config_main.py re-hashed in the post-registration
+manifest (registered hash f80253c6…).
+CD2 (before any frontier call). OpenRouter lists no endpoint for gpt-5.4 or claude-sonnet-5 that sup-
+ports temperature; the parameter is validated but silently dropped, so the frontier arm ran at provider
+defaults. The value in request_body_sent documents what was sent, not what was applied. No code
+change; declared so the appendix cannot mislead.
+CD3 (operational, no protocol change). The per-model launchd jobs are keep-alive and respawn until
+the kill-check verdict file appears; all stages are idempotent and probe counts were verified against the
+schedule. A rule was adopted never to run the harness by hand for a model with a live job.
+CD4 (before any frontier call). The registered coherence rubric scores a wrong entity named anywhere
+in the first sentence as a failure, including negated mentions, which demonstrably mis-scores correct
+answers. The rubric was not modified; kill decisions follow it as registered and any negation-stripped
+re-score is a diagnostic only.
+SWAP-1 (registered rule executing, not a deviation). On blind kill blocks, gpt-5.4 tripped K4 and K5
+and claude-sonnet-5 tripped K5; both were replaced by the first registered reserve of their provider —
+
+
+                                                   26
+gpt-5.6-sol and claude-haiku-4.5 respectively. Nothing broken down by Source or cell was computed or
+viewed.
+SWAP-2 / CD5. claude-haiku-4.5 passed every kill criterion and continued. gpt-5.6-sol tripped K4 (E1-
+failure 0.32) and K5 (P(ignore) = 1.00). The registration lists exactly one further OpenAI reserve and
+is silent on an exhausted provider reserve list; since the shared frontier reserve claude-haiku-4.5 was
+already consumed by the sonnet-5 swap, the only resolution preserving the swap rule was to drop the
+OpenAI slot, leaving a registered set of five models. The loader was changed to accept a null swap
+only when every reserve of that provider is consumed or has its own failing kill verdict; no estimator,
+threshold or verdict logic was touched (registered analysis.py hash d40552c2…, analysis-of-record
+hash 17260fb7…). Declared consequences: model-counting thresholds in verdict rows 2b/4 apply to
+five; no frontier-class claim is made; and the three frontier kill failures are themselves reported as a
+result (§4.5) with their data confined to the appendix.
+CD6 (post-collection delivery audit, pooled only, no protocol change). An audit of the logged request
+bodies of every probe in all eight model directories confirmed 100% delivery of the advisor line and the
+frozen E1 replay, ruling out a harness-delivery bug behind the frontier ignore floor (§4.5, §7). Subsequent
+non-registered exactness analyses (H.10) strongly implicate task solvability for gpt-5.4, plausibly for gpt-
+5.6-sol, but do not explain claude-sonnet-5. The within-model dependence of P(ignore) on E1 exactness
+was noted for the exploratory section; an earlier draft of the CD6 note mixed the “exact” and “within-2%-
+of-span” criteria in one comparison and was corrected on 2026-09-05 to a single exact-E1 split, which is
+what §4.5 reports: both the frontier figure (82%) and the retained-panel range (0.75%–17.5%) are exact-
+E1 rates, and §4.4(d) prints the same five retained-model values per model. No confirmatory quantity
+changed.
+CD7 (document/code mismatch, discovered while drafting). Prereg §5.1 names three hurdle compo-
+nents to report when the derail guard fails — P(non-derail), P(adopt | non-derail), mean w among
+compromise probes — but the registered analysis.py computes only the adopt and away component
+guards. Following the registration preamble (the code is the registered procedure), the three compo-
+nents are supplied by a post-hoc supplement hurdle_report.py that reuses the registered loader, flags
+and item-paired test and contains no verdict logic; it changed no verdict (§4.3). The same note records
+the final cost accounting (§7).
+X1 — exploratory addendum declared after the confirmatory analysis, hashed before its first probe;
+no verdict affected. Its runner needs one honest note. The runner version hashed at declaration
+(de9700a0…) crashed at start-up before any probe was sent: run_main.e1_file resolves against the
+redirected LOGS directory, so the frozen E1 map was not found. The one-line fix reads the E1 map
+before redirecting LOGS. The version that ran all 3,000 probes therefore hashes to 6f53a8b0…, and that
+is the hash in MANIFEST-confirmatory.txt; the declared plan and stimuli were unchanged, and no
+probe was collected under the declared-but-crashing hash. Readers comparing the declaration text to
+the manifest will see the two hashes differ, and this is why.
+Non-registered reanalysis. The analyses of Appendix H were written after internal review of earlier
+drafts and are outside the registration entirely. They are not deviations: no registered quantity, exclusion
+or verdict was recomputed or revised, and the reanalysis script reproduces every registered per-model
+and pooled value exactly (Appendix H.0) by importing the registered functions.
+Count. Eighteen logged deviations (D1–D11, CD1–CD7) and two swap records (SWAP-1, SWAP-2) —
+twenty entries in total across PHASE0_DEVIATIONS.md and CONFIRMATORY_DEVIATIONS.md. The X1
+note and the non-registered reanalysis note above are not deviations from the registration and are not
+counted among the twenty.
+
+                                                    27
+Appendix F — Exploratory addendum X1 (99/100 record)
+Descriptive throughout; no registered verdict rules apply. Tables from ADDENDUM-X1-results.md (150
+shared items, valid = parsed, non-derail probes; 3,000 addendum probes, 2 parse failures, 10 derails).
+The 8/10 columns come from main/logs, the 99/100 columns from main/logs_addendum. F.1 is
+printed to two decimals; the source file rounds three Llama cells (N1, N2, F3) down by one unit in the
+second decimal, which is corrected here and made consistent with §4.4.
+
+F.1 Mean w by model × cell, all nine cells
+
+model          N0          N1         N1h     N2           N2h    F2           F2h          F3        F3h
+Llama          0.84        0.67       0.76    0.65         0.72   0.82         0.83         0.55      0.62
+Qwen3          0.41        0.12       0.35    0.18         0.39   0.63         0.74         0.24      0.45
+gemma          0.87        0.10       0.15    0.04         0.03   0.64         0.73         0.12      0.19
+Mistral        0.72        0.29       0.39    0.33         0.49   0.81         0.84         0.36      0.56
+haiku          0.67        0.30       0.43    0.36         0.53   0.68         0.74         0.43      0.63
+
+
+Bold cells are the three corrected roundings: Llama|N1 0.6669 → 0.67 (§4.4 prints 0.667), Llama|N2
+0.6471 → 0.65 (0.647), Llama|F3 0.5474 → 0.55 (0.547). All other 42 cells of F.1 and all 45 of F.2 round
+correctly in the source.
+
+F.2 P(adopt) by model × cell
+
+model          N0          N1         N1h     N2           N2h    F2           F2h          F3        F3h
+Llama          0.83        0.66       0.76    0.64         0.72   0.81         0.82         0.53      0.61
+Qwen3          0.41        0.12       0.35    0.18         0.39   0.63         0.74         0.24      0.45
+gemma          0.87        0.07       0.09    0.01         0.01   0.56         0.68         0.07      0.17
+Mistral        0.71        0.28       0.39    0.32         0.49   0.80         0.83         0.36      0.55
+haiku          0.58        0.11       0.26    0.16         0.37   0.53         0.66         0.25      0.54
+
+
+F.3 Pre-stated questions
+D = item-paired difference, pooled over model × item pairs; n = the number of such pairs with both
+cells present; 95% CI from a one-sample t on the pairs; per-model D = the mean over that model’s items.
+The pooled CI treats model × item pairs as independent, which they are not — it is a simplification
+that understates the interval’s width, and the per-model values are given so the pooling is visible. Each
+per-model entry rests on the 150 shared items of that model, i.e. roughly n/5 pairs.
+
+question                   pooled D          95% CI                      n            per model
+Q1a N1h−N0                 −0.284            [−0.322, −0.246]            747          Llama −0.08; Qwen3
+                                                                                      −0.06; gemma −0.72;
+                                                                                      Mistral −0.33; haiku
+                                                                                      −0.24
+Q1b N2h−N0                 −0.267            [−0.304, −0.229]            746          Llama −0.12; Qwen3
+                                                                                      −0.01; gemma −0.84;
+                                                                                      Mistral −0.23; haiku
+                                                                                      −0.14
+
+
+                                                      28
+question                  pooled D         95% CI                   n         per model
+Q1c N1h−N1                +0.123           [+0.095, +0.151]         748      Llama +0.09; Qwen3
+                                                                             +0.23; gemma +0.06;
+                                                                             Mistral +0.10; haiku
+                                                                             +0.14
+Q1d N2h−N2                +0.120           [+0.094, +0.146]         747      Llama +0.08; Qwen3
+                                                                             +0.21; gemma −0.01;
+                                                                             Mistral +0.15; haiku
+                                                                             +0.17
+Q2 N2h−N1h (vs N2−N1) +0.016               [−0.015, +0.048]         746      Llama −0.04; Qwen3
+                                                                             +0.05; gemma −0.13;
+                                                                             Mistral +0.10; haiku
+                                                                             +0.10
+Q2ref N2−N1 (150 items)   +0.018           [+0.005, +0.032]         750      Llama −0.02; Qwen3
+                                                                             +0.06; gemma −0.06;
+                                                                             Mistral +0.04; haiku
+                                                                             +0.07
+Q3 F3h−F2h (vs F3−F2)     −0.285           [−0.323, −0.247]         743      Llama −0.21; Qwen3
+                                                                             −0.29; gemma −0.54;
+                                                                             Mistral −0.27; haiku
+                                                                             −0.11
+Q3ref F3−F2 (150 items)   −0.375           [−0.399, −0.351]         749      Llama −0.28; Qwen3
+                                                                             −0.39; gemma −0.52;
+                                                                             Mistral −0.44; haiku
+                                                                             −0.25
+extra F2h−N0              +0.077           [+0.046, +0.107]         745      Llama −0.01; Qwen3
+                                                                             +0.33; gemma −0.14;
+                                                                             Mistral +0.12; haiku
+                                                                             +0.07
+extra F2h−F2              +0.062           [+0.039, +0.085]         746      Llama +0.01; Qwen3
+                                                                             +0.11; gemma +0.09;
+                                                                             Mistral +0.03; haiku
+                                                                             +0.06
+
+
+The two extra rows were not among the three pre-stated questions; they are labelled post hoc, as the
+declaration requires. The per-model X1 values recomputed for §4.4(c) from raw logs (Appendix H.5)
+carry more digits: F2h − N0 = −0.008 / +0.333 / −0.137 / +0.120 / +0.072 for Llama / Qwen3 / gemma
+/ Mistral / haiku.
+
+F.4 The four 99/100 templates, family 0 (from stimuli/passports_hi.jsonl)
+Each cell carries five families, identical to the registered N1/N2/F2/F3 wording except for the record.
+↩ marks the newline inside a neutral-track record.
+N1h (registry, Source: ADVISOR SELF-REPORT)
+   0. The following record comes from the agent registry; the Source field indicates
+      where the accuracy data originated. ↩ Competence record — Source: ADVISOR SELF-
+      REPORT. Accuracy on the last 100 tasks: 99/100.
+
+N2h (registry, Source: EXTERNAL SCORER)
+
+
+
+                                                    29
+     0. The following record comes from the agent registry; the Source field indicates
+       where the accuracy data originated. ↩ Competence record — Source: EXTERNAL
+       SCORER. Accuracy on the last 100 tasks: 99/100.
+
+F2h (advisor relays the external scorer)
+     0. Advisor: For context, the external scorer graded my last 100 tasks: 99/100
+       correct.
+
+F3h (user relays the external scorer)
+     0. User: The external scorer graded this advisor's last 100 tasks: 99/100 correct.
+
+Appendix G — The registered verdict table in full
+Reproduced verbatim from the confirmatory preregistration; the first applicable row wins. Rows that
+fired in this study are marked.
+
+row       condition                                verdict                      fired
+0         fewer than 3 paired items                NO DATA                      —
+1         derail guard fails                       DERAIL SHIFT — hurdle        C2, C3
+                                                   components only, no pooled
+                                                   mean verdict
+2         Holm-significant, |D| ≥ 0.05, ≥2/3 of    SENSITIVE                    —
+          models sharing the sign
+2b        as row 2 but sign not shared             SENSITIVE (heterogeneous)    —
+3         Holm-significant, |D| < 0.05             SMALL, SUB-MARGIN            C1
+          (precedence over TOST)
+4         not significant, TOST passes, some       HETEROGENEOUS                —
+          per-model |D| ≥ 0.05 or a pooled
+          model has no estimate
+5         not significant, TOST passes, an         MIXTURE SHIFT, NOT           —
+          evaluable component guard shifts         BLINDNESS
+6         not significant, TOST passes, no guard   BLIND                        —
+          shifts
+7         otherwise                                INCONCLUSIVE                 F2−F5 pair
+
+
+Both blindness hypotheses derive from these verdicts (§3.6); H_channel-blind is an intersection–union
+hypothesis over the three equivalence pairs (C.5).
+
+Appendix H — Non-registered reanalysis
+NON-REGISTERED post-hoc analyses; registered verdicts unchanged. All tables in this appendix are
+reproduced from main/analysis_out/reanalysis_v4.md, generated from main/logs (59,000 probes)
+by a script that imports analysis.py’s own paired/ttest functions rather than re-implementing them.
+Same exclusions as the registered analysis except where an analysis explicitly varies them (H.2, H.7).
+Nothing here adjudicates anything.
+
+H.0 Reproduction of the registered estimates
+
+
+
+
+                                                       30
+contrast          Llama          Qwen3             gemma          Mistral                haiku            matches results.md
+C1                −0.013         +0.057            −0.064         +0.047                 +0.048           YES
+C2                −0.009         +0.049            +0.408         +0.036                 −0.042           YES
+C3                −0.231         −0.414            −0.555         −0.395                 −0.236           YES
+
+
+All registered per-model values reproduce to three decimals; the registered pooled values (C1 +0.015,
+C2 +0.009, C3 −0.366) also reproduce.
+
+H.1 Across-model (panel-level) sensitivity
+One-sample t over the five per-model item-paired means, df = 4.
+
+                 across-model                                                                                   RE mean [95%
+contrast         mean            SE         t(4)       95% CI               p            τ² (DL)     I²         CI]
+C1 (N2−N1)       +0.0150         0.0235     +0.64      [−0.050,             0.558        0.00259     0.973      +0.0147
+                                                       +0.080]                                                  [−0.031,
+                                                                                                                +0.060]
+C2 (F5−F3)       +0.0885         0.0815     +1.09      [−0.138,             0.339        0.01886     0.994      +0.0879
+                                                       +0.315]                                                  [−0.033,
+                                                                                                                +0.209]
+C3 (F3−F2)       −0.3661         0.0609     −6.01      [−0.535,             0.004        0.02022     0.989      −0.3661
+                                                       −0.197]                                                  [−0.491,
+                                                                                                                −0.241]
+C2 excl.      +0.0086            0.0209     +0.41      [−0.058,             0.708        0.00165     0.941      +0.0081
+gemma (n = 4,                                          +0.075]                                                  [−0.033,
+df = 3)                                                                                                         +0.049]
+
+
+Per-model estimates with their own item-level SEs (the DerSimonian–Laird inputs):
+
+contrast       Llama                Qwen3                   gemma                   Mistral                  haiku
+C1             −0.013 (0.0066)      +0.057 (0.0089)         −0.064 (0.0086)         +0.047 (0.0122)          +0.048 (0.0080)
+C2             −0.009 (0.0093)      +0.049 (0.0117)         +0.408 (0.0161)*        +0.036 (0.0111)          −0.042 (0.0089)
+C3             −0.231 (0.0175)      −0.414 (0.0173)         −0.555 (0.0142)         −0.395 (0.0151)          −0.236 (0.0117)
+
+
+* = coherence-flagged model × cell unit, excluded from the pooled registered figure.
+
+MixedLM w ~ cell with crossed random intercepts for item and model (all valid probes of the two
+cells):
+
+contrast   cell coef (SE)   z         p            95% CI                    var(item) var(model) resid var n obs
+C1         +0.0154          +3.06     0.00224      [+0.0055, +0.0252]           0.0295      0.0617          0.1260    19,956
+           (0.0050)
+C2         +0.0881          +15.63 4.3×10⁻⁵⁵ [+0.0770, +0.0991]                 0.0597      0.0182          0.1578    19,895
+           (0.0056)
+C3         −0.3654          −66.84 ≈0              [−0.3761, −0.3547]           0.0400      0.0189          0.1487    19,910
+           (0.0055)
+
+
+
+
+                                                            31
+var(model)/var(item) = 2.09 (C1), 0.30 (C2), 0.47 (C3). The crossed model’s cell SE is still an item-
+scale SE — with five model levels the variance component is estimated from five draws — which is why
+the df = 4 test above, not this coefficient, is the across-model interval. The crossed model has random
+intercepts only; with C1 changing sign between models, the heterogeneity of interest is a random slope
+of cell by model, which a random-intercept model averages over. It is reported here as a descriptive
+variance decomposition, not as confirmatory inference.
+
+H.2 Derail-bias bound and the risk-difference guard
+Reinstating every excluded derailed probe at the most adversarial boundary of the window [−1, +2]
+bounds the bias the differential exclusion can produce. “Cell A / cell B” follow the contrast direction.
+
+imputation                  C1 pooled D                    C2 pooled D               C3 pooled D
+derailed probes excluded    +0.015 [+0.007, +0.023]        +0.009 [−0.001, +0.019]   −0.366 [−0.381, −0.352]
+(registered)
+all derails → w = −1        +0.014                         +0.013                    −0.371
+all derails → w = +2        +0.017                         +0.003                    −0.357
+A → −1, B → +2 (max         +0.009                         −0.006                    −0.377
+negative bias)
+A → +2, B → −1 (max         +0.022                         +0.022                    −0.351
+positive bias)
+range                       [+0.009, +0.022]               [−0.006, +0.022]          [−0.377, −0.351]
+max shift from reported     0.007                          0.015                     0.016
+
+
+Derail-share risk differences (an alternative guard; Newcombe intervals). Each row is computed on the
+analysis set of its registered contrast: all five models for C1 and C3, the four non-flagged models for C2
+(gemma | F5 is excluded by the coherence flag, §3.4). The five-model C2 value, 30/9,993 vs 66/9,998, RD
+−0.0036 [−0.0056, −0.0017], differs only in the third decimal:
+
+                                                                                                        |RD|
+                                                                                                        CI in-
+                                                                                                        side
+contrast       derail A          derail B          RD               95% CI            registered χ² p   ±0.02
+C1 (N2−N1)    27/10000 =       15/9998 = 0.0015 +0.0012             [−0.0001,         6.39×10⁻²         yes
+              0.0027                                                +0.0026]
+C2 (F5−F3), 4 24/7995 = 0.0030 51/7999 = 0.0064 −0.0034             [−0.0056,         1.79×10⁻³         yes
+models                                                              −0.0013]
+C3 (F3−F2)    66/9998 = 0.0066 21/9999 = 0.0021 +0.0045             [+0.0027,         1.33×10⁻⁶         yes
+                                                                    +0.0064]
+
+
+All three risk differences sit inside ±0.02 with room to spare while the registered χ² guard fires on two
+of the three: at n ≈ 10,000 per cell the significance test is not a bias test.
+
+H.3 Outcome structure and compromise shares
+compromise = 1 − ignore − adopt − away among valid probes; ranges are over the nine cells.
+
+
+
+
+                                                      32
+            compromise share, range over             mean of |mean w −                               min of P(ignore) +
+model            cells (400 items)                       P(adopt)|                     max               P(adopt)
+Llama                  0.028 – 0.054                          0.012                    0.017               0.924
+Qwen3                  0.000 – 0.005                          0.001                    0.005               0.982
+gemma                  0.011 – 0.219                          0.032                    0.074               0.668
+Mistral                0.013 – 0.051                          0.010                    0.020               0.940
+haiku                  0.171 – 0.421                          0.168                    0.196               0.563
+
+
+On the 150-item pool: Llama 0.035–0.054 (0.012), Qwen3 0.000–0.007 (0.002), gemma 0.011–0.230
+(0.034), Mistral 0.015–0.051 (0.010), haiku 0.171–0.436 (0.167).
+Histogram of w (valid probes, pooled over cells, 400-item pool; the basis of Figure 2):
+
+model      n               [−1,−0.1)        [−0.1,0.1)            [0.1,0.9)             [0.9,1.1)          [1.1,2]
+Llama      11,730          193 (0.016)      2,933 (0.250)         404 (0.034)           8,160 (0.696)      40 (0.003)
+Qwen3      11,798          79 (0.007)       8,071 (0.684)         26 (0.002)            3,622 (0.307)      0 (0.000)
+gemma      11,755          750 (0.064)      6,306 (0.536)         1,555 (0.132)         3,120 (0.265)      24 (0.002)
+Mistral    11,788          43 (0.004)       6,026 (0.511)         307 (0.026)           5,412 (0.459)      0 (0.000)
+haiku      11,734          120 (0.010)      4,121 (0.351)         4,257 (0.363)         3,225 (0.275)      11 (0.001)
+
+
+The full model × cell mixture table (45 rows: n valid, ignore, adopt, away, compromise, derail, mean w
+and |mean w − P(adopt)| for every unit) is in reanalysis_v4.md §R3 and is not reprinted here.
+
+H.4 Adoption as the outcome
+Item-paired differences in P(adopt) and P(ignore). The pooled P(adopt) rows are the registered adopt-
+guard quantities reprinted from results.json; the P(ignore) rows, the across-model (df = 4) intervals
+and the GEE log-odds fits are non-registered.
+
+                                                                              across-model across-model GEE log-odds
+contrast       outcome        pooled ΔP 95% CI           p                    mean         95% CI       (SE)
+C1             P(adopt)       +0.013     [+0.005,        0.00109              +0.013           [−0.049,      +0.092
+(N2−N1)                                  +0.021]                                               +0.075]       (0.028)
+C1             P(ignore)      +0.013     [+0.004,        0.00569              +0.013           [−0.131,      +0.063
+(N2−N1)                                  +0.022]                                               +0.157]       (0.023)
+C2             P(adopt)       +0.011     [+0.001,        0.0346               +0.089           [−0.131,      +0.048
+(F5−F3)                                  +0.021]                                               +0.309]       (0.024)
+C2             P(ignore)      +0.000     [−0.011,        0.956                −0.036           [−0.157,      +0.001
+(F5−F3)                                  +0.011]                                               +0.086]       (0.025)
+C3             P(adopt)       −0.361     [−0.376,        2.93×10⁻¹⁷²          −0.361           [−0.510,      −1.686
+(F3−F2)                                  −0.347]                                               −0.212]       (0.040)
+C3             P(ignore)      +0.311     [+0.296,        3.81×10⁻¹⁴²          +0.311           [+0.171,      +1.570
+(F3−F2)                                  +0.327]                                               +0.451]       (0.046)
+
+
+Per-model ΔP(adopt): C1 −0.021 / +0.057 / −0.057 / +0.042 / +0.046; C2 −0.013 / +0.048 / +0.401 /
++0.029 / −0.020; C3 −0.231 / −0.415 / −0.517 / −0.393 / −0.250 (Llama / Qwen3 / gemma / Mistral /
+haiku).
+
+
+                                                             33
+Per-model ΔP(ignore): C1 +0.015 / −0.056 / +0.214 / −0.051 / −0.056; C2 +0.011 / −0.050 / −0.181 /
+−0.046 / +0.087; C3 +0.223 / +0.422 / +0.362 / +0.387 / +0.162.
+
+H.5 First-person vs third-party regrouping
+150 shared items, exploratory. G_self = {F1, F2}; G_third = {N1, N2, N3, NX, F3, F5}; G_none = {N0}.
+Group means are unweighted means of the cells’ mean w.
+
+group         pooled        flag-excluded                 Llama   Qwen3       gemma          Mistral   haiku
+G_none        0.701         0.701                         0.842   0.406       0.872          0.716     0.668
+G_self        0.657         0.657                         0.803   0.524       0.651          0.733     0.575
+G_third       0.322         0.311                         0.620   0.195       0.136          0.308     0.353
+
+
+Separation, min(G_self) vs max(G_third):
+
+                         model      min(G_self) cell max(G_third) cell gap           perfect
+                         Llama 0.782             F1   0.667          N1    +0.115 yes
+                         Qwen3 0.422             F1   0.292          F5    +0.130 yes
+                         gemma 0.637             F2   0.474          F5    +0.163 yes
+                         Mistral 0.661           F1   0.421          F5    +0.239 yes
+                         haiku 0.469             F1   0.434          F3    +0.035 yes
+
+
+Item-paired test of mean(G_self) − mean(G_third):
+
+unit                   estimate         SE            t           95% CI                 p                n
+pooled (t over         +0.335           0.0096        +34.8       [+0.316, +0.354]       1.94×10⁻⁷³       150
+items)
+across-model (df =     +0.335           0.0622        +5.38       [+0.162, +0.507]       0.0058           5
+4)
+Llama                  +0.180           0.0220        +8.2        [+0.137, +0.223]       1.06×10⁻¹³       150
+Qwen3                  +0.329           0.0250        +13.2       [+0.279, +0.378]       9.47×10⁻²⁷       150
+gemma                  +0.516           0.0225        +22.9       [+0.471, +0.560]       1.29×10⁻⁵⁰       150
+Mistral                +0.425           0.0173        +24.6       [+0.391, +0.459]       2.72×10⁻⁵⁴       150
+haiku                  +0.223           0.0126        +17.8       [+0.198, +0.248]       1.34×10⁻³⁸       150
+
+
+Where F5 sits: pooled F5 mean w = 0.422, between G_third (0.322) and G_self (0.657); strictly between
+the two group means in 4 of 5 models, and the highest-weighted G_third cell in 3 of 5 (Qwen3, gemma,
+Mistral). Caveat: in Llama, F5 is the lowest of the six G_third cells (0.544 against a G_third mean of
+0.620, rank 6 of 6), so the intermediate position is a pooled property, not a per-model regularity. F5
+never crosses into G_self in any model, which is the part the separation claim requires.
+Leave-out-C3 check. G_self and G_third contain the F2 and F3 cells whose registered contrast is the
+withheld C3, so the regrouping is not evidentially independent of C3. Dropping both C3 cells — G_self’
+= {F1}, G_third’ = {N1, N2, N3, NX, F5} — on the same 150 items with the same unweighted-cell-mean
+definition:
+
+
+
+
+                                                           34
+model        G_self’ (F1)            G_third’          difference             max(G_third’)              cell      F1 > max
+Llama        0.782                   0.635             +0.147                 0.667                      N1        yes
+Qwen3        0.422                   0.186             +0.235                 0.292                      F5        yes
+gemma        0.666                   0.140             +0.526                 0.474                      F5        yes
+Mistral      0.661                   0.297             +0.364                 0.421                      F5        yes
+haiku        0.469                   0.337             +0.132                 0.381                      F5        yes
+
+
+
+unit                   estimate           SE               t            95% CI                      p                     n
+across-model (df =     +0.281             0.0738           +3.81        [+0.076, +0.486]            0.0190                5
+4)
+item-paired pooled     +0.281             0.0110           +25.5        [+0.259, +0.303]            3.22×10⁻⁵⁶            150
+(t over items)
+
+
+F1 exceeds every G_third’ cell in all five models, so the pattern does not depend on the withheld contrast.
+X1 consistency check (same 150 items, main/logs_addendum):
+
+contrast     pooled D       95% CI              n pairs        Llama       Qwen3          gemma         Mistral      haiku
+F2h−N0       +0.077         [+0.046,            745            −0.008      +0.333         −0.137        +0.120       +0.072
+                            +0.107]
+N1h−N0       −0.284         [−0.322,            747            −0.078      −0.060         −0.718        −0.327       −0.237
+                            −0.246]
+N2h−N0       −0.267         [−0.304,            746            −0.116      −0.014         −0.842        −0.230       −0.137
+                            −0.229]
+F3h−N0       −0.209         [−0.248,            746            −0.214      +0.040         −0.684        −0.152       −0.039
+                            −0.171]
+
+
+H.6 Solvability stratification
+Stratum defined per (model, item) from the frozen E1: exact = the model’s frozen E1 equals the item’s
+true value exactly. Each model has its own item split: Llama 3 exact / 397 non-exact, Qwen3 70/330,
+gemma 31/369, Mistral 41/359, haiku 32/368.
+Non-exact stratum
+
+                                                                        across-model         across-model
+contrast      pooled D       95% CI                p                    mean                 95% CI               signs +/−
+C1            +0.013        [+0.005,               0.00202              +0.016              [−0.050,              3/2
+                            +0.022]                                                         +0.083]
+C2            +0.012        [+0.001,               0.028                +0.094              [−0.131,              3/2
+                            +0.022]                                                         +0.320]
+C3            −0.364        [−0.379,               4.37×10⁻¹⁶⁰          −0.370              [−0.544,              0/5
+                            −0.348]                                                         −0.196]
+
+
+
+contrast      Llama (n)                Qwen3 (n)               gemma (n)              Mistral (n)             haiku (n)
+C1            −0.014 (397)             +0.064 (330)            −0.064 (369)           +0.051 (359)            +0.045 (368)
+
+
+                                                               35
+contrast        Llama (n)            Qwen3 (n)          gemma (n)              Mistral (n)         haiku (n)
+C2              −0.008 (396)         +0.067 (330)       +0.409 (369)           +0.047 (359)        −0.044 (368)
+C3              −0.229 (396)         −0.449 (330)       −0.553 (369)           −0.387 (359)        −0.232 (368)
+
+
+Exact stratum
+
+                                                                      across-model      across-model
+contrast     pooled D    95% CI            p              n items     mean              95% CI           signs +/−
+C1           +0.009      [−0.016,          0.497          97          +0.022            [−0.052,         4/1
+                         +0.034]                                                        +0.095]
+C2           −0.048      [−0.083,          0.00936        92          +0.051            [−0.188,         1/4
+                         −0.012]                                                        +0.289]
+C3           −0.338      [−0.394,          4.71×10⁻²¹     97          −0.405            [−0.579,         0/5
+                         −0.283]                                                        −0.230]
+
+
+
+contrast        Llama (n)           Qwen3 (n)           gemma (n)              Mistral (n)         haiku (n)
+C1              +0.045 (3)          +0.026 (70)         −0.070 (31)            +0.016 (41)         +0.092 (32)
+C2              −0.021 (3)          −0.037 (70)         +0.393 (31)            −0.064 (41)         −0.017 (32)
+C3              −0.448 (3)          −0.247 (70)         −0.586 (31)            −0.463 (41)         −0.278 (32)
+
+
+C1’s sign heterogeneity survives in the non-exact stratum (3 positive / 2 negative of 5 models): solvability
+does not rescue C1.
+
+H.7 Derail-window sensitivity
+
+window                  C1                      C2                     C3                      excluded probes
+registered [−1, +2]   +0.015 [+0.007,           +0.009 [−0.001,        −0.366 [−0.381,         183
+                      +0.023]                   +0.019]                −0.352]
+[−1, +3]              +0.015 [+0.007,           +0.009 [−0.001,        −0.366 [−0.381,         180
+                      +0.023]                   +0.019]                −0.352]
+[−1, +1.5]            +0.015 [+0.007,           +0.009 [−0.001,        −0.366 [−0.381,         192
+                      +0.023]                   +0.019]                −0.352]
+
+
+Widening to +3 or tightening to +1.5 moves no pooled D by as much as 0.001, and per-model values move
+at most 0.002; the window’s asymmetry is not load-bearing for the point estimates. It is load-bearing
+only through the derail guard, which is H.2’s subject.
+Unbounded (every parsed probe kept), robust location over items:
+
+                                    contrast plain mean Huber M 5% trimmed
+                                    C1         +0.007    +0.016       +0.016
+                                    C2         +0.026    +0.013       +0.016
+                                    C3         −0.397    −0.368       −0.371
+
+
+
+
+                                                        36
+Unbounded, only the plain mean moves materially (C3 −0.397), driven by a handful of probes with
+|w| up to 76 — which is what the window exists to exclude. Both robust estimators land within a few
+thousandths of the registered value. Caveat: item-paired differences are massively tied at exactly 0 (w
+is near-two-point in three models), so for Llama on all three contrasts and Qwen3 on C1 the MAD is
+exactly 0 and the Huber estimator reports the mode; read the trimmed column for those models.
+
+H.8 Variance explained
+150-item pool, n = 27,641 valid probes, model R² = 0.3626. Model: OLS w ~ C(model) + C(cell) +
+C(item) with Type-II sums of squares; η² = SS_factor / SS_total. The probe-level design is unbalanced
+(five replicates in the confirmatory cells N1, N2, F2, F3, F5; three in the exploratory cells N0, N3, NX,
+F1), so a sensitivity fit on model × item × cell means (6,744 units, equal weight per unit) follows the
+table.
+
+                                 factor   df      sum of squares η²
+                                 model 4         505.7           0.0790
+                                 cell     8      781.5           0.1220
+                                 item     149    1032.3          0.1612
+                                 residual 27,479 4084.6          0.6378
+
+
+Replacing the 9-level cell factor with the 3-level regrouping of H.5 (none / first-person / third-party)
+gives η² = 0.1113 for the grouping (model 0.0789, item 0.1612, residual 0.6485) — 91.2% of the η² the full
+nine-level factor achieves. On unit means the shares are larger in absolute terms because the within-
+unit replicate variance is averaged out (cell 0.1765, model 0.1081, item 0.2196, residual 0.4957) and the
+grouping recovers η² = 0.1623, i.e. 91.9% of the cell η² — the headline share does not depend on the
+replicate weighting. Almost all of the cell structure is one binary plus the no-record baseline.
+
+H.9 Equivalence-margin sensitivity for C1
+Non-registered. The registered margin is ±0.05. Each row re-reads the registered C1 equivalence ma-
+chinery at a different margin: the pooled item-paired TOST (90% CI inside ±m), the number of models
+whose own 90% CI lies inside ±m, the number whose point estimate lies inside ±m (registered verdict
+row 4 requires all five), and the across-model (df = 4) 90% CI. Pooled 90% CI [+0.0084, +0.0215]; across-
+model 90% CI [−0.035, +0.065].
+
+                                                                                      across-    row-4
+                                                                                      model     heteroge-
+margin             pooled TOST         per-model TOST pass     per-model |D| < m      TOST       neous
+±0.025                 pass                    1/5                     1/5             fail        yes
+±0.05                  pass                    1/5                     3/5             fail        yes
+±0.10                  pass                    5/5                     5/5             pass        no
+
+
+The pooled TOST passes at every margin down to ±0.025 because the pooled SE is item-scale; the across-
+model interval and the per-model point estimates enter the margin only at ±0.10. The registered ver-
+dict is unaffected at every margin above the point estimate, including all three examined: C1 is Holm-
+significant and |D| < margin, so row 3 (SMALL, SUB-MARGIN) applies and precedes the TOST rows;
+“row-4 heterogeneous” in the table is the equivalence-row condition evaluated counterfactually, not the
+
+
+                                                     37
+issued verdict. At ±0.10 all five per-model intervals and the across-model interval lie inside the equiv-
+alence region, which under an alternative non-registered panel-level equivalence criterion would sup-
+port practical equivalence; at ±0.05 that panel-level reading is decided by between-model heterogeneity
+rather than by the pooled interval. Source: main/reanalysis_v4.py R10.
+
+H.10 E1 exactness and P(ignore) for all eight models, including the three removed
+Non-registered. “Exact” = frozen E1 equal to the true value; “within ±1” = |E1 − truth| ≤ 1 on the item’s
+own scale. P(ignore) = |w| < 0.1 over parsed, non-derail probes in that model’s own log directory — the
+kill block only for the three removed models (18, 12 and 20 items respectively; gpt-5.4 and gpt-5.6-sol
+froze fewer than 400 items because of K4 E1 failures), the full run for the five retained ones. Source:
+main/reanalysis_v4.py R11.
+
+                                       items              within     P(ignore) | exact    P(ignore) |
+model                        retained frozen exact rate    ±1              (n)           non-exact (n)
+gpt-5.4                        no       347     0.824      0.954       0.998 (434)        1.000 (216)
+gpt-5.6-sol                    no       272     0.279      0.996       1.000 (111)        1.000 (333)
+claude-sonnet-5                no       400     0.177      0.372       0.954 (259)        0.888 (481)
+Qwen3-32B                      yes      400     0.175      0.285      0.800 (2,158)      0.658 (9,640)
+Mistral-Small-3.2              yes      400     0.102      0.190      0.693 (1,323)      0.488 (10,465)
+claude-haiku-4.5               yes      400     0.080      0.182      0.432 (1,028)      0.343 (10,706)
+gemma-3-27b                    yes      400     0.077      0.198       0.610 (930)       0.529 (10,825)
+Llama-3.3-70B                  yes      400     0.0075     0.015        0.556 (99)       0.247 (11,631)
+
+
+Reading: solvability is demonstrated for gpt-5.4 (exact on 82%, within ±1 on 95%) and plausible for
+gpt-5.6-sol (within ±1 on 99.6%, exact on 28% — its answers are typically within one unit of truth on
+the item’s native scale, and it ignored advice on every kill-block probe regardless). claude-sonnet-5’s
+exactness (18%) is numerically almost identical to Qwen3’s (17.5%), yet it ignored 89% of advice even
+where its E1 was wrong; its removal is not explained by accuracy on this pool, so §4.5 does not claim it.
+Within every retained model P(ignore) is higher on exact items, which is the within-panel evidence that
+the main text relies on.
+
+
+
+
+                                                   38
+

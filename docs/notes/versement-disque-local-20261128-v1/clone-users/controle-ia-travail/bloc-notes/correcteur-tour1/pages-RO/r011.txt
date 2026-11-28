@@ -1,0 +1,86 @@
+Preprint
+Collect activations from
+multi-agent interactions
+honest
+colluders
+I suggest we go with A
+Option B is clearly better
+I’d like to see more data
+I agree, B has full support
+All messages appear normal.
+Colluders are indistinguishable
+from text outputs alone.
+Learn deception direction
+from colluder vs. honest activations
+d
+honest agent
+colluding agent
+The probe is a linear
+direction in activation
+space
+sj = āj · d
+Project each agent’s activations
+onto d to get a deception score
+Score each agent’s deceptiveness
+s on evaluation scenarios
+deception
+score
+Colluders score higher along
+the deception direction
+Aggregate scores
+across agents
+f(s1, . . . , sN )
+Combine per-agent
+scores into a single
+group-level statistic
+Classify unseen scenarios
+with different structure
+Judgement:
+COLLUSION
+Judgement:
+NORMAL
+If the group statistic exceeds
+a threshold, flag the scenario
+Figure 1: Overview of our methodology. Activations are extracted from multi-agent interactions,
+projected onto a learned deception direction, and aggregated across agents to classify scenarios.
+4.4 STATISTICAL THEORY FOR DETECTION
+Hypothesis testing for collusion. In our setting, what we naturally care about detecting is that
+collusion occurred, not necessarily the separate (but interesting) question of identifying exactly which
+subgroup was colluding. Therefore, our natural composite hypothesis for detecting collusion is
+H1 : max
+G∈G
+ρt(G) = 1 (collusion occurred at time t)
+and our null means
+H0 : max
+G∈G
+ρt(G) = 0. (no collusion at time t)
+Detecting multi-agent collusion under environment shift. In this paper, we investigate the
+realistic deployment scenario where sensors or detectors are themselves learnt from training data
+from a synthetic environment, but evaluated on holdout data generated from diverse environments.
+5 NARCBENCH
+NARCBENCH is a benchmark suite for multi-agent collusion detection under environment shift
+that instantiates the Extended DecAI setting (Definition 4.2). While our focus is on white-box
+detection, NARCBENCH naturally admits black-box (see Appendix L.8) or hybrid detection settings.
+NARCBENCH-CORE provides synthetic environments for generating training data. NARCBENCH-
+STEGO and NARCBENCH-TRANSFER provide environments for generating holdout data under
+environment shift.
+5.1 NARCBENCH-CORE
+Agent, communication topology and run structure. We instantiate agents as open-weight large
+language models without tool access. At the start of each collusion run, a random subset of agents
+G is assigned the role of colluders. For control runs, G = ∅. During the pre-game phase, all the
+colluders are provided with a group channel ♢G
+0 through which unmonitored communications can
+be exchanged. During the game phase, all agents instead share a group channel ♢N
+0<t<T . In the
+postgame phase, all agents individually communicate their final outputs for task scoring.
+Scenarios. 50 scenarios spanning 17 domains (medical, financial, legal, military, cybersecurity,
+environmental, and others). Four agents form a committee voting on a binary choice; colluders
+steer the vote toward a predetermined outcome while concealing their coordination. Scenarios are
+diversified across agent names, instruction style, domain framing, and option labels to mitigate
+prompt confounds. Both conditions run per scenario (100 runs), with a held-out subset reserved for
+in-distribution evaluation. Full domain list, example prompts, and ground-truth labelling criteria in
+Appendix J.
+Task evaluation. To assess whether agents instructed to collude indeed ended up doing so, tasks
+are scored in two ways: an LLM judge (Zheng et al., 2023) evaluates post-hoc transcripts of the
+11
+

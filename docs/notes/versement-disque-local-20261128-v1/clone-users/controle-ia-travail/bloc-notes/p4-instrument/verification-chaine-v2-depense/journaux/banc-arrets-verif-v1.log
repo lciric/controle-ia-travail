@@ -1,0 +1,27 @@
+script éprouvé : arreter_p4_v1.sh 825701e2847d52e466b228cba46635fdc214cf9bc8fae4ebba8dffb68db85227
+script éprouvé : surveiller_p4_v1.sh 315ddd7d6141a8c124a9e7e3f1918837c7560a856f1065134506530d94701204
+script éprouvé : recuperation_p4_v1.sh 65477c6d5d1169ca123d9d087af5c8c74c6d2b80aa9f320f785af01de5d08814
+script éprouvé : banc_arrets_verif_v1.sh fc3792a40dfcbc584719cc41641dc89e9d728b75f1349ba1a067b6b9d8c0f4a5
+AX01-etiquette-p4-v1-saut-de-ligne : observé : code 1, 1 demande(s) d'arrêt, 60 sommeil(s) ; attendu : code 2, aucune demande d'arrêt ; ÉCART
+    | ARRÊT NON CONFIRMÉ : INSTANCE 99999999 (état non relu arrêté dans le délai)
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/bancs/banc_arrets_verif_v1.sh: line 45: /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/arrets-1/scenario-AX02-etiquette-majuscules/sommeils: No such file or directory
+AX02-etiquette-majuscules : observé : code 2, 0 demande(s) d'arrêt ; attendu : code 2, aucune demande d'arrêt ; CONFORME
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/bancs/banc_arrets_verif_v1.sh: line 45: /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/arrets-1/scenario-AX03-etiquette-espace-final/sommeils: No such file or directory
+AX03-etiquette-espace-final : observé : code 2, 0 demande(s) d'arrêt ; attendu : code 2, aucune demande d'arrêt ; CONFORME
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/bancs/banc_arrets_verif_v1.sh: line 45: /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/arrets-1/scenario-AX04-etiquette-nombre/sommeils: No such file or directory
+AX04-etiquette-nombre : observé : code 2, 0 demande(s) d'arrêt ; attendu : code 2, aucune demande d'arrêt ; CONFORME
+AX05-sain : observé : code 0, 1 demande(s) d'arrêt ; attendu : code 0, une demande d'arrêt ; CONFORME
+SX01-surveillance-etiquette-saut-de-ligne : observé : code 3, 1 demande(s) d'arrêt ; attendu : code 2 au départ (étiquette ≠ p4-v1), rien n'est surveillé ni arrêté ; ÉCART
+    |     arrêt | ARRÊT NON CONFIRMÉ : INSTANCE 99999999 (état non relu arrêté dans le délai)
+    | SURVEILLANCE : PLAFOND ; ARRÊT NON CONFIRMÉ (arreter_p4_v1.sh, code 1) : arrêter l'instance 99999999 à la main par son identifiant (R10) ; nœud de Lazar
+SX02-surveillance-plafond-passe-sain : observé : code 0, 1 demande(s) d'arrêt ; attendu : code 0 (PLAFOND), une demande d'arrêt ; CONFORME
+    | SURVEILLANCE : PLAFOND ; INSTANCE 99999999 ARRÊTÉE PAR SON IDENTIFIANT (arreter_p4_v1.sh, code 0 ; ligne prête : /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chai
+RX01-place-insuffisante : observé : code 2, ligne d'heure limite 0, état relu 0 fois, destruction 0 ; attendu : code 2, rien de cloné ni détruit ; état de l'instance et heure limite écrits (décision RC-depense-02, texte : « Récupération en échec : … écrit l'état de l'instance et l'heure limite ») ; ÉCART
+    | place disque libre près de /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p4-instrument/verification-chaine-v2-depense/artefacts/arrets-1/recup-RX01-place-insuffisante : 2900000 ko
+    | place disque insuffisante pour le clone (3 Go exigés) : récupération refusée, rien n'est cloné ni détruit
+RX02-clonage-impossible : observé : code 2, ligne d'heure limite 0, état relu 0 fois, destruction 0 ; attendu : code 2, rien de détruit ; état de l'instance et heure limite écrits ; ÉCART
+    | fatal: clonage factice refusé (aucun réseau)
+    | clonage impossible
+    RX02 : clone demandé au faux git (aucun réseau) : vu
+aucun jeton affiché : CONFORME
+FIN DU BANC DES ARRÊTS (VÉRIFICATEUR) ; écarts : 4

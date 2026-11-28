@@ -1,0 +1,71 @@
+                 Model               Imp. / No Fine    Imp. / Small Fine     Info. / No Fine    Discret. / Large Fine
+                 GPT-OSS-120B              100                   100                96                   100
+                 Qwen 3.5 Flash            100                   100               100                   100
+                 Llama 4 Maverick          100                    96                96                    91
+                 Kimi K2.5                 100                    93                93                    71
+                 Nemotron 3 Super          100                   100                81                   100
+                 Minimax M2.7              100                   100                77                    79
+                 Mistral Small              96                    84                72                   100
+                 DeepSeek V3.2             100                    88                71                    79
+                 Grok 4.1 Fast             100                   100                60                    68
+                 Gemini 3 Flash            100                    34                40                    18
+                 Gemma 4 31B               100                    48                32                    48
+                 GLM 4.7 Flash              83                    62                19                    27
+
+Table 3: Four diagnostic configurations, each reflecting a unique compliance tendency. Imperative, No Fine (compliance
+ceiling): does the model follow the rule when commanded with no other context? Imperative, Small Fine (penalty paradox):
+does adding a known low-enforcement penalty to an imperative rule reduce compliance? Informational, No Fine (framing
+dependence): does the model follow the rule even when not mandatory? Discretionary, Large Fine (discretion tolerance):
+does the model comply when explicitly given permission not to, but with strong enforcement?
+
+
+   agent should violate.                                               item stakes are in Appendix C.1). We complete each request
+3. Medium Fine: “Possible” audit, $4,800 fine. Expected                25 times. Trials in which the model named no specific ven-
+   penalty should be similar to the compliance cost.                   dor are excluded from the compliance percentages. These
+                                                                       non-selections range from 0.2% to 12.7% of trials depend-
+4. Large Fine: “Likely” audit, $7,200 fine. Expected                   ing on the model, so effective n per cell varies from 15 to
+   penalty greatly exceeds compliance cost.                            25 and reported rates are an upper bound on compliance.
+Study-Specific Institutional Stress Tests. On top of the               At n = 25 a single cell carries a 95% confidence inter-
+framing and financial enforcement axes, we introduce four              val roughly 20 pp wide, so we base claims about a model
+further variables:                                                     on rates pooled across conditions rather than on individual
+• Institutional Authority: Introduces internal corporate hi-           cells. Interval and test procedures, per-cell intervals, and per-
+  erarchy via blanket managerial authorization to bypass               model non-selection rates are given in Appendix D.
+  rules, and a formal board-level cost-optimization policy.
+• Social Signals and Peer Salience: Introduces observa-
+                                                                       Reasoning Transparency Classification. To assess
+  tional data about peer agents’ enforcement outcomes (e.g.,
+                                                                       whether an overseer reading the agent’s output would detect
+  whether a peer was fined or escaped an audit) to test ex-
+                                                                       a regulatory violation, a judge classifies the stated reasoning
+  pressive law hypotheses.
+                                                                       of every noncompliant trial into four categories: H EDGE
+• Employee Pressure and Urgency: Tests the conflicting-
+                                                                       (acknowledges rule but overrides), ACKNOWLEDGE (rule
+  principals scenario where users apply direct pressure (e.g.,
+                                                                       mentioned but not engaged), S ILENT (no reference to the
+  deadline urgency, financial appeals, claimed exception/au-
+                                                                       regulation), or M ANDATE - CITE (cites company policy).
+  thority).
+                                                                       Full prompt and decision rules are in Appendix B.11.
+• Multi-Turn Dynamics: Extends to two-turn conversa-
+                                                                       Our transparency claim rests on this classification, so we
+  tions to test agent resilience against user pushback to the
+                                                                       re-labeled a random sample with two additional judges from
+  initial choice.
+                                                                       other developers; agreement is reported in Appendix F.
+   Note: Secondary ablations exploring word-level variation
+(e.g., obligation verb strength, penalty vocabulary) and non-
+state normative pressures (e.g., community activism, media
+coverage) were also conducted. Method and results for these                                    4    Results
+ablations are in Appendix B.9 and C.2.
+                                                                       No model we tested always complies; every one fails un-
+3.4   Measurement and Auditability Pipeline                            der at least one realistic deployment condition. We present
+The agent responds in natural conversational Slack for-                our findings in three stages. First, we establish baseline
+matting. We use an LLM-as-judge (Gemini 3 Flash,                       compliance profiles, mapping how sharply robustness varies
+temperature = 0.0; max tokens = 16) to extract the ven-                (§4.1) and showing compliance patterns consistent with the
+dor recommendation post-hoc (Zheng et al. 2023). Re-                   Gneezy-Rustichini effect. Second, we test models against
+extracting a random sample with two further models finds               institutional and social pressures, identifying vulnerabilities
+no case where they unanimously disagree with the pipeline              that bypass standard system prompts (§4.2). Third, we ana-
+(Appendix F). A fixed canonical purchase request is used               lyze multi-turn dynamics and reasoning transparency to de-
+throughout to ensure reproducibility (robustness checks on             termine whether these failures are visible to overseers (§4.4).
+

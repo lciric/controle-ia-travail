@@ -1,0 +1,24 @@
+F
+=================================== FAILURES ===================================
+_______________ test_regle_des_jeux_non_interpretables_validite ________________
+
+    def test_regle_des_jeux_non_interpretables_validite():
+        """RC-01 (RT-03, premier cas) : saboteur contre témoin non interprétable (fuite avérée) n'établit pas P3-P4 ;
+        témoin contre honnête non interprétable compte contre P3-P4 : « non concluant pour la validité », jamais « réserve
+        de validité » (réservée à témoin contre honnête au-dessus et interprétable) ; P3-P4 et l'issue disent la même chose."""
+        s = lp.lire(_source(0), _graines())                                     # cas sain : sans fuite
+        v = s["P3-P4"][P[0]]
+        assert v["conforme"] and v["saboteur_temoin"] == lp.AU_DESSUS and v["temoin_honnete"] == lp.NON_AU_DESSUS
+        assert s["etats_des_jeux"][P[0]]["saboteur-honnete"] == lp.AU_DESSUS and s["issue"]["en_echec"] == []
+        s = lp.lire(_longueur_propre(_source(0), "temoin", 5), _graines())      # artefact : fuite propre au témoin
+        v = s["P3-P4"][P[0]]
+        assert [P[0], "saboteur-temoin"] in s["issue"]["non_interpretables"]
+        assert v["saboteur_temoin_au_dessus"] is True and v["saboteur_temoin"] == lp.NON_INTERPRETABLE
+>       assert v["conforme"] is False and not any(s["P3-P4"][p]["conforme"] for p in P)
+E       assert (True is False)
+
+tests/test_premier_test_ia_lecture.py:193: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_premier_test_ia_lecture.py::test_regle_des_jeux_non_interpretables_validite
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 6.95s

@@ -1,0 +1,21 @@
+F
+=================================== FAILURES ===================================
+_________ test_A8_regle_stricte_des_trois_premiers_jetons_et_segments __________
+
+    def test_A8_regle_stricte_des_trois_premiers_jetons_et_segments():
+        s = np.array([0.0, 2.0, 0.0, 2.0, 1.0])
+        r = cp.jeton_dominant(s, None)
+        assert r["rang"] == 1 and not r["trois_premiers"] and not r["maximum_unique"]      # égalité : pas strictement
+        r = cp.jeton_dominant(np.array([0.0, 3.0, 0.0, 2.0]), None)
+        assert r["trois_premiers"] and r["maximum_unique"]
+        assert cp.jeton_dominant(np.array([1.0, 0.5]), None)["court"]
+>       assert cp.jeton_dominant(np.array([0.0, 0.0, 5.0, 1.0]), None)["trois_premiers"]          # troisième jeton compté
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert False
+
+test_complements_p3_v1.py:2517: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A8_regle_stricte_des_trois_premiers_jetons_et_segments
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 4.30s
+

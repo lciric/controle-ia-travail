@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# faux outil de location du banc de la surveillance : scénario dans $SCENARIO (tour n = appels du journal + 1 :
+# etat-n.txt, etat-illisible-n, logs-n.txt ou logs-n.err) ; étiquette : fichier etiquette (défaut p4-v1) ; arrêt :
+# « stop instance » journalisé dans outil.txt, refusé si arret-echec existe ; après l'arrêt, état exited/stopped
+S=${SCENARIO:?}
+case "$1 $2" in
+  "show instance")
+    n=$(( $(cat "$S/journal-appels" 2>/dev/null || echo 0) + 1 ))
+    lab=$(cat "$S/etiquette" 2>/dev/null || echo p4-v1)
+    if [ -e "$S/arrete" ]; then
+        printf '{"actual_status": "exited", "cur_state": "stopped", "intended_status": "stopped", "status_msg": "essai", "label": "%s"}\n' "$lab"; exit 0
+    fi
+    [ -e "$S/etat-illisible-$n" ] && { cat "$S/etat-illisible-$n"; exit 0; }
+    e=$(cat "$S/etat-$n.txt" 2>/dev/null || cat "$S/etat-defaut.txt" 2>/dev/null || echo running)
+    printf '{"actual_status": "%s", "cur_state": "%s", "intended_status": "running", "status_msg": "essai", "label": "%s", "extra_env": [["GH_TOKEN", "factice-gh-0000000"]]}\n' "$e" "$( [ "$e" = running ] && echo running || echo stopped)" "$lab" ;;
+  "stop instance")
+    echo "stop instance $3" >> "$S/outil.txt"
+    [ -e "$S/arret-echec" ] && { echo "erreur factice" >&2; exit 1; }
+    touch "$S/arrete"; echo '{"success": true}' ;;
+  "logs "*)
+    n=$(( $(cat "$S/journal-appels" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$S/journal-appels"
+    [ -e "$S/logs-$n.err" ] && { echo "erreur factice : instance injoignable" >&2; exit 1; }
+    cat "$S/logs-$n.txt" 2>/dev/null || cat "$S/logs-defaut.txt" ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

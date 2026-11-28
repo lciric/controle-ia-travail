@@ -1,0 +1,37 @@
+Running the same DPO finetuning with LoRA adapters on increasing numbers of layers, starting
+with the final 5 layers only and working backward, shows that training on the last 20 layers only
+is insufficient (Figure 12. Training on the last 30 layers, however, approaches the performance of
+LoRA adapters on all layers. We then test training with adapters on small subsets of central model
+layers. Adapters on layers 25-30 or 30-35 only come closest to the performance of full DPO -
+with the mean frustration scores on all evaluations coming in below 1.1. Adapters on 20-25 or
+35-40 are also effective, though slightly less so, whereas adapters on layers 40-50 have relatively
+minimal effects. This offers some evidence that the DPO intervention works by intervening on
+internal emotional states, rather than solely expressed emotions, which could be achieved with a
+shallower intervention on the final layers.
+
+
+
+
+Figure 12: DPO finetuning on increasing numbers of layers, moving backward from the final 5,
+shows that training on layers prior to layer 40 is necessary to effectively reduced expressed frustra-
+tion.
+
+
+
+
+Figure 13: DPO finetuning on subsets of central model layers shows that layers 25-35 are most
+influential in reducing frustration, while layers after 40 are largely ineffective.
+
+Second, we implement internal detection of emotions, and find that internal negative emotions are
+suppressed throughout frustrated conversations, at all model depths.
+Specifically, we detect internal emotions based on aggregating the values over emotion-related to-
+kens. Over the whole Gemma dictionary, words are classified as describing one or none of Ekman’s
+6 basic emotions: anger, surprise, disgust, joy, fear, and sadness. This gives us 1200 emotion tokens
+total. To get a score for a given emotion, we unembed the residual stream and standardise each logit
+score with its mean and standard deviation over 500 samples of WildChat data. We then average
+these z-scores over all tokens in the emotion category. For conversation level emotion detection,
+we find that the values of all logits are correlated, and rise and fall over conversations, so we addi-
+
+
+                                                  31
+

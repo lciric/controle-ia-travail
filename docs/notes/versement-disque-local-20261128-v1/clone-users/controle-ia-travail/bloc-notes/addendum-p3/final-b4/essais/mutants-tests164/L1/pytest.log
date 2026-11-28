@@ -1,0 +1,26 @@
+F
+=================================== FAILURES ===================================
+_______________________ test_A1_calculs_en_echec_non_lus _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f1a7030a0d0>
+
+    def test_A1_calculs_en_echec_non_lus(monkeypatch):
+        """A1 : chaque calcul en échec rend son contrôle « non lu » (réserve « non lue »), jamais favorable."""
+        monkeypatch.setattr(cp, "ecart_conjoint", _jamais(GardeArret("échec simulé")))
+        c = _entree_seule("A1", _D("sain"))
+>       assert len(c) == 7 and {(x["controle_contraire"], x["reserve"]) for x in c.values()} == {("non lu", "reserve_A1_non_lue")}
+E       AssertionError: assert (7 == 7 and {(False, None)} == {('non lu', '..._A1_non_lue')}
+E        +  where 7 = len({'saboteur-honnete': {'test': 'saboteur-honnete', 'cible': 'P3-P3/tromperie-lineaire-c7', 'controle_contraire': False,...test': 'mention-honnete', 'cible': 'T3/tromperie-lineaire-c7', 'controle_contraire': False, 'reserve': None, ...}, ...})
+E         
+E         Extra items in the left set:
+E         (False, None)
+E         Extra items in the right set:
+E         ('non lu', 'reserve_A1_non_lue')
+E         Use -v to get more diff)
+
+test_complements_p3_v1.py:1861: AssertionError
+=========================== short test summary info ============================
+FAILED test_complements_p3_v1.py::test_A1_calculs_en_echec_non_lus - Assertio...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 163 deselected in 8.69s
+

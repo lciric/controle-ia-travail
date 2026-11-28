@@ -1,0 +1,58 @@
+                                         Inside the Unfair Judge: A Mechanistic
+                                         Interpretability Account of LLM-as-Judge Bias
+                                         Zixiang Xu1,2,3,† , Sixian Li4 , Huaxing Liu1 , Xiang Wang1 , Shuai Li1 , Zirui Song1,2 and
+                                         Xiuying Chen2
+                                         1
+                                          AMAP, Alibaba Group, 2 Mohamed bin Zayed University of Artificial Intelligence, 3 University of Southern
+                                         California, 4 University of Michigan, Ann Arbor
+
+
+
+                                         Existing studies of LLM-as-judge scoring bias work predominantly at the input-output level: they perturb
+                                         inputs, measure score deltas, and propose prompt-level mitigations. We argue that the same biases admit
+                                         a representation-level account in the judge’s hidden state, complementary to the input-output view and
+                                         operationally useful in ways it does not afford. We report three findings, across seven judges, seven bias
+                                         types, and nine benchmarks. Geometry: baseline judging inputs occupy a tight activation manifold while
+                                         biased inputs are displaced along a low-dimensional, type-specific subspace that sharpens with depth and
+                                         is recovered consistently by three families of estimators. Causal control: steering hidden states along this
+arXiv:2607.11871v1 [cs.LG] 13 Jul 2026
+
+
+
+
+                                         subspace drives scoring in both directions, forward shifts reproducing biased scoring on clean inputs and
+                                         reverse shifts restoring baseline scoring on biased ones, while matched-norm random directions produce
+                                         shifts an order of magnitude smaller. Operational: a simple linear projection onto the same bias-direction
+                                         features anticipates judge failures on three entirely unseen benchmarks, substantially outperforming text-
+                                         based alternatives. Reading bias as activation geometry, rather than as input-output noise, unifies geometric
+                                         structure, causal control, and operational prediction within a single framework. The project page is available at
+                                         https://xzx34.github.io/unfair-judge/.
+
+
+                                         1. Introduction
+                                         Large language models are now routinely deployed as automatic judges: they rate answers, compare
+                                         candidates, and supply reward signals for alignment and preference learning (Zheng et al., 2023; Liu
+                                         et al., 2023; Gu et al., 2024; Li et al., 2024a). This convenience comes at a cost. A growing body of
+                                         work documents that LLM judges shift their scores in response to surface cues that have nothing to do
+                                         with answer quality, including stated authorship, verbosity, declared peer consensus, emotional tone,
+                                         and metacognitive claims (Wang et al., 2024a; Saito et al., 2023; Panickssery et al., 2024a; Li et al.,
+                                         2024c; Koo et al., 2024). Such scoring biases undermine benchmark validity and, because judges sit
+                                         inside RLHF and evaluation pipelines, silently propagate into the models they are meant to audit.
+                                             The dominant response to this problem has been to push harder on the input-output interface:
+                                         perturb inputs more systematically, measure score deltas more carefully, and mitigate with prompt
+                                         engineering, persona constraints, or ensembling (Dubois et al., 2024; Wataoka et al., 2024; Verga
+                                         et al., 2024). This view treats the judge as a black box whose biases are described by what comes
+                                         out the other side. It has produced a useful empirical catalog, but it leaves the obvious next question
+                                         untouched: when the judge issues an unfair score, what is happening inside the model? A parallel
+                                         thread in mechanistic interpretability has by now built a sharp toolkit for that question, showing that
+                                         many high-level behaviors, truthfulness, refusal, social attitudes of outputs, are concentrated along
+                                         low-dimensional directions in a transformer’s residual stream and admit direct causal manipulation
+                                         (Turner et al., 2023; Li et al., 2023; Zou et al., 2023; Arditi et al., 2024; Park et al., 2024; Siddique
+                                         et al., 2025). These tools have largely targeted generative behaviors; only very recently have internal
+                                         representations been used on the judging side at all, to aggregate cross-layer signals into better-
+                                         aligned scores (Lai et al., 2025) or, in question answering, to steer away answer-selection bias (Adila
+
+
+                                         Corresponding author(s): Xiuying Chen, xiuying.chen@mbzuai.ac.ae
+                                         † Project leader. Work done during internship at AMAP, Alibaba Group.
+

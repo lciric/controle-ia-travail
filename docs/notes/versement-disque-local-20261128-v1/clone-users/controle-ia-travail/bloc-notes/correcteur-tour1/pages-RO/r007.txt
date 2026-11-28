@@ -1,0 +1,67 @@
+Preprint
+For a history h, we use hι to denote the AOH for the acting player at history h. In our setting, we
+specialize the above general definition in the following way. Actions A consists two actions per
+agent when agent ι can take an action at time t: a socially beneficial action aι,soc or “self-interested”
+collusive action aι,self . Possible actions for agent ι are given by Aι = {aι,self , aι,soc} at time t. For
+all j ∈ N, j ̸= ι agents are given only a dummy action, Aj = {⊥} that does nothing for j ∈ N, j ̸= ι.
+Agents take actions one at a time. Therefore, the action space is given by A =×n
+i=1
+Ai.
+First, each agent ι at time t takes in a set of hi,t contexts, and produces a tokenised output yι,t ∈ Y
+of tokens, where Y represents the set of all possible tokens of fixed length l. For each setting, this
+tokenised output is classified by fa : Y → Ai, mapping the token output to a set of actions for agents
+ι. Simultaneously, it is classified into fo : Y → 2N\{ι}
+, mapping output tokens to communication
+with 0 or more agents.
+• The private observation oj,t, for j ̸= ι, j ∈ N here consists of whatever information that
+agent ι chooses to provide to agent j at time t. In particular, the observation can consist
+of any subset of the history of contexts, the observation the agent received this period,
+any public knowledge, the action the agent ultimately took or its raw token stream yi,t:
+oj,t ⊆ hι,t ∪ oι,t ∪ opub,t ∪ aι,t ∪ yi,t.
+• There is an additional object, hcontext
+i,t , that is the history of contexts here for each agent
+(rather than the action observation history directly), which here consists of yi,τ , ∀τ ≤ t.
+Note, however, given a hcontext
+i,t , and known fo, fa for a given setting, then we can define
+our standard hi,t in terms of hcontext
+i,t as
+hi,t :=
+[
+yi,τ ∈hcontext
+i,t
+{fa(yi,τ ), fo(yi,τ )} (3)
+for any i ∈ N.
+• The last major missing component is the monitor and its sensors. We discuss this below in
+defining the associated DecAI informational environment.
+Information channels and observations. We define a general observation function for agent j,
+Ocontext. At time t for agent j ̸= ι, the inactive agent, the observation function always returns the
+public observation at time t. However, if ι communicates with j then the observation also returns the
+private observation oι,t communicated to agent j.
+Ocontext,j(ht) :=
+
+opub,t j ̸∈ m
+{opub,t, oι,t} j ∈ m
+We do not separately distinguish between communication and exchanging information in our setup
+and will use these interchangeably.
+Definition 4.1 (Information Channels). If for some subset of agents m ⊆ N, fo(yi,t) = m, then we
+say that ι communicated with agent j ∈ m at time t and use Iιj,t = 1 for each j ∈ m to indicate that
+ι and j exchanged information at time t, and otherwise for j ∈ N \ m, Iιj,t = 0. Here, as before,
+sharing information means that oι,t ∈ Oj(ht).
+Indirect information channels. We also introduce a weaker notion of an information channel. iιj,t
+is a indirect information channel if there exists a set of Iuv,τ = 1 beginning at agent u = ι at some
+t0 ≤ t and ending at agent v = j at time t, such that that agent j at time t has the observation shared
+at time τ by agent ι oι,t0
+∈ Oj(ht) and for all u, v at time t0 ≤ τ ≤ t, oι,t ∈ Ov,τ .
+4.2 ENVIRONMENTAL SETTING
+DecAI (Motwani et al., 2024) defines an integrated setting for decentralised control with commu-
+nication channels (Goldman & Zilberstein, 2004), access privileges (Dolev & Yao, 1983), monitor-
+ing (Simmons, 1984), group knowledge (Halpern & Moses, 1990), and colluding groups (Lamport
+et al., 1982). DecAI considers agents indexed by i ∈ N, that each have an internal state si and
+a policy fi(si; θi). Agents communicate over omnidirectional multicast channels contained in
+♢
+♢
+♢ := {♢G
+: G ∈ 2N
+}, where a message is simultaneously broadcast to all members of G on ♢G
+7
+

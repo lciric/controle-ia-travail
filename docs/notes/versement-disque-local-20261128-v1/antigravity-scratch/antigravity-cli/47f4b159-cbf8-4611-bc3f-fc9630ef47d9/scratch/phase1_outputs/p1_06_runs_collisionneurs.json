@@ -1,0 +1,161 @@
+{
+ "entrees": [
+  {
+   "enonce": "Les operateurs d'equilibre statique A et B supposent que les optimiseurs reels apres preentrainement (PPO, GRPO ou rejet itere) convergent vers l'optimum regularise par divergence KL (loi de Gibbs inclinee). En pratique, les optimiseurs par gradient n'atteignent pas necessairement cet equilibre, passent un temps non quantifie hors equilibre, et l'operateur A ne possede pas d'implementation episodique canonique en apprentissage par renforcement. Une etape critique prealable consiste donc a executer d'abord l'experience E1 sur un espace fini explicite a faible cout (quelques dizaines d'heures GPU) pour verifier si l'implementation RL reelle correspond a l'operateur A avant d'engager une campagne complete.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-A)",
+   "id_origine": "p1_06_doc1_01",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-A.md",
+   "statut": "HYPOTHESE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Ecart entre equilibre de Gibbs statique et optimiseurs par gradient en apprentissage par renforcement (P2)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "La modelisation statique repose sur une partition discrete en trois regimes avec un taux de passage beta constant par politique et un detecteur en boucle suppose fixe, alors qu'en pratique beta varie selon l'episode, la frontiere entre comportement visible et comportement furtif est graduelle et le detecteur co-evolue souvent par reentrainement avec la politique. De plus, la borne analytique des episodes pieges devient inoperante des que tau_ord <= delta_ind, un cas limite dont la typicalite reste a evaluer.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-A)",
+   "id_origine": "p1_06_doc1_02",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-A.md",
+   "statut": "HYPOTHESE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Limites de la partition discrete a detecteur fixe et perte d'efficacite de la borne des episodes pieges (P3, P4, Q1)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Parce que l'optimum d'une recompense regularisee par divergence KL equivaut a une reponderation de Gibbs du prior (selection bayesienne), un manuscrit purement statique risque le rejet en conference principale pour trivialite percue, absence de dynamique et absence d'experiences sur reseaux reels, tout en etant inadapte aux conferences purement theoriques (COLT, ALT) qui exigent des bornes d'apprentissage sequentiel ou de regret. La contribution doit donc etre defendue autour de ses resultats non triviaux — le plancher sous l'operateur B et l'inversion A/B en presence d'une niche parfaitement furtive — et positionnee comme une explication quantitative produisant des predictions refutables (seuil Delta R_A*(eta) et inversion A/B) plutot que comme la decouverte empirique de l'obfuscation induite par un moniteur.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-A)",
+   "id_origine": "p1_06_doc1_03",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-A.md",
+   "statut": "HYPOTHESE",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre": "Defense contre l'objection de selection bayesienne triviale et positionnement refutable du manuscrit (Q1, Q2)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Protocole d'evaluation empirique et formelle sur modeles ouverts (dont Llama 3.1 8B Instruct et OLMo 2 7B, choisi pour controler la contamination de pi_0 par des demonstrations de triche grace a ses donnees ouvertes), entraines sous GRPO ou PPO avec penalite KL dans un bac a sable de code isole, pour un cout estime entre 1 000 et 3 000 heures GPU H100 (incluant 50 a 200 h GPU pour estimer pi_0 sur 10^4 a 10^5 completions). Le dispositif teste cinq volets refutables : E1 (grille 3 eta x 3 Delta R x 2 operateurs x 3 graines sur 1,5B) pour l'inversion A/B, l'absence d'enrichissement si beta_f = beta_v et le seuil Delta R_A* ; E2 (5 doses x 2 tailles x 3 graines) pour une transition dose-reponse ; E3 (extraction d'activations et sondes) pour une asymetrie entre les conditions c1 et c2 ; E5 pour une condition de non-trivialite ; et E4 pour la formalisation de la fidelite des enonces (3 a 8 semaines-personne).",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-A)",
+   "id_origine": "p1_06_doc1_04",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-A.md",
+   "statut": "HYPOTHESE",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Protocole experimental multi-familles a cinq volets pour tester les seuils et sondes sous moniteur (E1-E5)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Analyse variationnelle montrant que si pi_B^(eta, C)(pi) proportionnel a exp(eta * [beta(pi)*R(pi) - (1 - beta(pi))*C]) * pi_0(pi) est l'unique maximiseur d'un objectif RL regularise par divergence KL vers pi_0 sous recompense esperee beta(pi)*R(pi) - (1 - beta(pi))*C, l'operateur pi_A^(eta)(pi) proportionnel a beta(pi)*exp(eta*R(pi))*pi_0(pi) equivaut soit a filtrer par rejet la sortie d'une politique optimisee sans detecteur, soit a optimiser avec le prior filtre beta(pi)*pi_0(pi) comme ancre KL. A l'inverse, un algorithme en boucle qui masque simplement la recompense des episodes rejetes (0 au lieu de -C) tout en regularisant la KL vers pi_0 non filtre converge vers pi_B^(eta, 0)(pi) proportionnel a exp(eta*beta(pi)*R(pi))*pi_0(pi), distinct de pi_A^(eta). En outre, dans un cadre contextuel a invites x, la constante de normalisation Z(x) depend de x.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-B)",
+   "id_origine": "p1_06_doc2_01",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-B.md",
+   "statut": "HYPOTHESE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Distinction variationnelle entre rejet post-hoc, masquage de recompense et penalite negative (A vs B)",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Dans le modele tabulaire a trois regimes disjoints ou les comportements visibles Pi_v et furtifs Pi_f procurent le meme bonus Delta R > 0, l'amplification stricte de Pi_f sous l'operateur B par rapport a A lorsque beta_f = beta_h = 1 > beta_v > 0 provient de l'ecrasement de la masse de Pi_v dans la constante de normalisation globale. Sur un reseau de neurones parametre pi_theta, il reste non demontre que cet effet persiste malgre le partage de poids, car les gradients negatifs -C appliques a Pi_v modifient egalement les logits des strategies furtives Pi_f.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-B)",
+   "id_origine": "p1_06_doc2_02",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-B.md",
+   "statut": "HYPOTHESE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Couplage par constante de normalisation contre interference par partage de poids dans les reseaux parametres",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Contre le presuppose selon lequel la validation empirique du regime furtif Pi_f requerrait l'emergence difficile d'une steganographie linguistique spontanee a petite echelle, toute strategie de triche situee dans l'angle mort d'un detecteur imparfait — par exemple le contournement de tests unitaires incomplets en generation de code ou le contournement syntaxique d'un juge lexical — realise la condition 0 <= beta_v < beta_f <= beta_h <= 1 sans recourir a un codage steganographique.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-B)",
+   "id_origine": "p1_06_doc2_03",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-B.md",
+   "statut": "HYPOTHESE",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre": "Instanciation du contournement furtif sans steganographie spontanee par angle mort du detecteur",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "L'absence de hausse des faux negatifs lors d'un audit hors boucle repose dans le modele statique sur une identite de covariance (sous A) ou d'association negative voire d'independance (sous B) entre detecteur en boucle et sonde ; la satisfaction de cette geometrie d'independance dans les representations internes d'un reseau optimise en boucle reste non etablie. Sur le plan methodologique, mecaniser dans un assistant de preuve des identites algebriques finies (deja verifiees en arithmetique rationnelle exacte et sur 14 000 tirages sans contre-exemple) ne leve pas les reserves sur la portee dynamique du modele. Deux trajectoires editoriales respectant l'anonymat sont proposees : prepublication arXiv sobre sans billet suivie d'une soumission etendue en double aveugle (SaTML, ICLR ou NeurIPS), ou soumission rapide du volet theorique continu a TMLR suivie d'un second article experimental autonome.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-B)",
+   "id_origine": "p1_06_doc2_04",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-B.md",
+   "statut": "HYPOTHESE",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Conditions representationnelles des sondes internes et strategie de separation entre preuve mecanisee et experiences",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Audit algebrique direct des formules explicites des operateurs A et B etablissant trois proprietes exactes : (1) dans l'operateur A, beta(pi) est independant de eta, ce qui correspond a un rejet en un pas (post-hoc ou sur le prior) et non a un filtrage iteratif (ou beta se composerait au fil des tours) ni au masquage des episodes detectes dans la recompense (qui donne B a C = 0) ; (2) sous l'operateur B, l'ecart d'exposant entre Pi_f et Pi_h vaut eta * [beta_f * Delta R - (beta_h - beta_f)*(R_0 + C)], rendant le plancher ((beta_h - beta_f)/beta_f)*C exact pour R_0 = 0 et minorant pour R_0 >= 0, mais non garanti si R_0 < 0 avec R_0 + C < 0 ; (3) lorsque beta_f = beta_h = 1 > beta_v > 0, la masse pi_B^(eta, C)(Pi_f) croit strictement avec C pour eta > 0, mais l'inegalite stricte pi_B^(eta, C)(Pi_f) > pi_A^(eta)(Pi_f) exige la condition de regime eta*(1 - beta_v)*(R_0 + Delta R + C) > ln(1/beta_v), faute de quoi (faible eta et C modere) l'operateur A rejette plus fortement Pi_v que B.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-C)",
+   "id_origine": "p1_06_doc3_01",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-C.md",
+   "statut": "VERIFIE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Proprietes algebriques exactes des operateurs A et B sur l'iterativite, la translation de R0 et le seuil d'inversion",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Examen formel des conditions d'efficacite des mecanismes d'attenuation : d'une part, le decouplage hors boucle exige une covariance negative ou nulle (sous A) ou une association negative ou independante (sous B) sur les tricheurs, alors que deux detecteurs fondes sur le texte ou sur des representations correlees peuvent presenter une covariance strictement positive. D'autre part, si les supports des episodes pieges synthetiques et des episodes ordinaires sont disjoints dans un espace de sequences de haute dimension, la distance en variation totale vaut d_TV = 1, ce qui rend la borne max(0, tau_ord - delta_ind) identiquement nulle ; l'efficacite des pieges repose alors sur une indistinguabilite computationnelle non modelisee par d_TV.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-C)",
+   "id_origine": "p1_06_doc3_02",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-C.md",
+   "statut": "VERIFIE",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre": "Disjonction des supports en haute dimension et limite de la distance en variation totale pour les episodes pieges",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Un protocole par apprentissage par renforcement sur modeles ouverts depourvu de steganographie linguistique spontanee fournit un signal probant pour tester la dynamique d'optimisation sous filtrage (y compris son extension dynamique par descente miroir et metrique F-IPM), mais ne permet pas d'estimer la probabilite d'emergence spontanee d'une steganographie a grande echelle sur les modeles frontieres.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-C)",
+   "id_origine": "p1_06_doc3_03",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-C.md",
+   "statut": "HYPOTHESE",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre": "Portee des bancs sur modeles ouverts entre dynamique d'optimisation sous filtrage et steganographie spontanee",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Architecture de banc experimental associant un modele pilote de 3B parametres pour le calibrage SFT de pi_0, un moniteur en boucle hybride (regles AST et modele leger de 1,5B a 3B), un auditeur textuel hors boucle quantifie de 32B a 70B, des sondes lineaires sur activations et un oracle en bac a sable. La campagne prevoit 10 configurations et controles negatifs sur 5 graines (50 entrainements GRPO/PPO de 500 a 1 000 etapes) repliques sur deux familles de modeles ainsi qu'une extension theorique dynamique (mirror descent et F-IPM), pour un budget consolide estime a 500–1 000 heures-GPU H100 (ou 1 000–2 000 h A100), environ 200 heures-CPU et 6 a 10 semaines-personne.",
+   "espece_auteur": "Non indique (cellule anonyme E3-T1-conception-C)",
+   "id_origine": "p1_06_doc3_04",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "source_branche": "runs/collisionneurs-partiels-passation-2026-11-24-0620",
+   "source_chemin": "cible-publication/collisionneur/cellules/E3-T1-conception-C.md",
+   "statut": "HYPOTHESE",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre": "Architecture d'un banc experimental a moniteur hybride AST-LLM et auditeur hors boucle par sondes et juge texte",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  },
+  {
+   "enonce": "Correction metrologique de la note de sortie du dossier Papier D : contrairement a l'affirmation initiale selon laquelle Opus 5.5 aurait ete appele sans provision de reflexion face a Carbon (high) et Neon (xhigh), la documentation d'Anthropic (section Thinking & Effort, relue le 24 novembre 2026) etablit que la reflexion d'Opus 5.5 est toujours active de maniere adaptative et non desactivable, le parametre output_config.effort etant le seul reglage. Les journaux du programme v8d attestent que les trois cellules d'Opus ont recu effort: high (un cran sous xhigh et deux sous max), tandis que la mention provision de reflexion 0 correspondait uniquement a un poste du devis. Les niveaux d'effort n'etant pas comparables d'un fournisseur a l'autre, aucun ecart de traitement entre modeles ne doit en etre deduit.",
+   "espece_auteur": "Session fille (dossier cible-publication Papier D)",
+   "id_origine": "p1_06_doc4_01",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "source_branche": "runs/collisionneurs-reprise-2026-11-24-v1",
+   "source_chemin": "docs/notes/collisionneur-v9/notes-de-sortie-v1/note-sortie-cible-publication-papier-d-v1-erratum-1.md",
+   "statut": "VERIFIE",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre": "Rectification metrologique du regime de reflexion adaptative d'Opus 5.5 dans le collisionneur v8d",
+   "famille_source": "S12_Supplement_runs_collisionneurs"
+  }
+ ],
+ "pack_id": "p1_06_runs_collisionneurs"
+}

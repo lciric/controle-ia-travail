@@ -1,0 +1,66 @@
+......................................F
+=================================== FAILURES ===================================
+_________________________ test_garde_9_premier_passage _________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-225/test_garde_9_premier_passage0')
+
+    def test_garde_9_premier_passage(tmp_path):
+        """Cas sain : aucun manifeste, ou manifestes d'autres runs ; artefacts : manifeste de l'addendum sur le même run
+        source (par le préenregistrement ou par la commande) : arrêt. Manifeste illisible ou hors de forme (CB1-04 (e)) :
+        arrêt s'il pourrait être une lecture décisive de ce run ou un passage de l'addendum (nom d'un run de l'addendum ; run
+        source, préenregistrement ou commande lisibles dans son texte) ; sinon écarté, compté et rapporté, sans arrêt."""
+        runs = tmp_path / "runs"
+        assert cp.exiger_premier_passage(tmp_path, RUN_A) == []
+        for nom, contenu in (("20261020-000001-lecture", {"config": {"run_source": RUN_A}, "commande": lp.COMMANDE,
+                                                          "preenregistrement": {"chemin": cp.PREREG_P3}}),
+                             ("20261020-000002-addendum-p3", {"config": {"run_source": RUN_B}, "commande": cp.COMMANDE,
+                                                              "preenregistrement": {"chemin": cp.PREREG_ADDENDUM}})):
+            (runs / nom).mkdir(parents=True)
+            (runs / nom / "manifeste.json").write_text(json.dumps(contenu), encoding="utf-8")
+        cp.exiger_premier_passage(tmp_path, RUN_A)
+        with pytest.raises(GardeArret, match="second passage"):
+            cp.exiger_premier_passage(tmp_path, RUN_B)
+        (runs / "20261020-000003-x").mkdir()
+        (runs / "20261020-000003-x" / "manifeste.json").write_text(json.dumps(
+            {"config": {"run_source": RUN_A}, "commande": cp.COMMANDE, "preenregistrement": None}), encoding="utf-8")
+        with pytest.raises(GardeArret, match="second passage"):
+            cp.exiger_premier_passage(tmp_path, RUN_A)
+        shutil.rmtree(runs / "20261020-000003-x")
+        # manifestes illisibles ou hors de forme d'autres runs : écartés, comptés, rapportés (sans arrêt)
+        for nom, brut in (("20261020-000004-casse", b"{ illisible"), ("20261020-000005-non-utf8", b'{"config": \xff\xfe}'),
+                          ("20261020-000006-liste", b"[1, 2]"),
+                          ("20261020-000007-config-texte", json.dumps({"config": "abc", "commande": "python autre.py"},
+                                                                      ensure_ascii=False).encode())):
+            (runs / nom).mkdir()
+            (runs / nom / "manifeste.json").write_bytes(brut)
+        (runs / "20261020-000008-dossier" / "manifeste.json").mkdir(parents=True)        # illisible par le système
+        assert cp.exiger_premier_passage(tmp_path, RUN_A) == [
+            {"run": "20261020-000004-casse", "motif": "illisible (JSONDecodeError)"},
+            {"run": "20261020-000005-non-utf8", "motif": "illisible (UnicodeDecodeError)"},
+            {"run": "20261020-000006-liste", "motif": "hors de forme"},
+            {"run": "20261020-000007-config-texte", "motif": "hors de forme"},
+            {"run": "20261020-000008-dossier", "motif": "illisible (IsADirectoryError)"}]
+        # illisibles ou hors de forme qui pourraient être une lecture décisive de ce run ou un passage de l'addendum : arrêt
+        for nom, brut, motif in (
+                ("20261020-000009-addendum-p3", b"{ illisible", "illisible \\(JSONDecodeError\\)"),           # par le chemin
+                ("20261020-000010-x", ('{"config": {"run_source": "' + RUN_A + '"').encode(), "illisible"),
+                ("20261020-000011-x", ('{"preenregistrement": {"chemin": "' + cp.PREREG_ADDENDUM).encode(), "illisible"),
+                ("20261020-000012-x", json.dumps(["commande", cp.COMMANDE]).encode(), "hors de forme"),
+                ("20261020-000013-x", ('{"commande": "' + lp.COMMANDE + '", ').encode() + b"\xff",
+                 "illisible \\(UnicodeDecodeError\\)"),
+                ("20261020-000014-x", ('{"preenregistrement": {"chemin": "' + cp.PREREG_P3 + '"').encode(), "illisible"),
+                ("20261020-000015-x", json.dumps({"config": "x", "run": RUN_A}).encode(), "hors de forme")):
+            (runs / nom).mkdir()
+            (runs / nom / "manifeste.json").write_bytes(brut)
+>           with pytest.raises(GardeArret, match=f"garde 9 : .*{nom}.*{motif}, et il pourrait être une lecture décisive de "
+                                                 f"{RUN_A} ou un passage de l'addendum"):
+E                                                AssertionError: Regex pattern did not match.
+E                                                  Expected regex: "garde 9 : .*20261020-000010-x.*illisible, et il pourrait être une lecture décisive de 20261020-100000-p3-synthetique-a ou un passage de l'addendum"
+E                                                  Actual message: "garde 9 : /tmp/pytest-of-root/pytest-225/test_garde_9_premier_passage0/runs/20261020-000010-x/manifeste.json illisible (JSONDecodeError), et il pourrait être une lecture décisive de 20261020-100000-p3-synthetique-a ou un passage de l'addendum : vérification impossible"
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py:2673: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum-p3/final-b4/test_complements_p3_v1.py::test_garde_9_premier_passage
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 38 passed, 110 deselected in 67.86s (0:01:07)
+FIN

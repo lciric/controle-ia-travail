@@ -1,0 +1,36 @@
+                                   Detecting Strategic Deception Using Linear Probes
+
+
+
+
+                                    Figure 13: Sweep over regularization coefficient.
+
+
+D.4    Varying aggregation method
+
+We normally take the mean probe-score over all tokens in the model’s response. As noted in Section 4.1.2, however,
+this is an imperfect method. We additionally experimented with two other aggregations strategies:
+
+       • Taking the maximum probe score across the model’s response
+                                 PN
+       • Applying the function i=1 ReLU(xi − t)/N where t is a threshold chosen by sweep (although the best
+         values for the Instructed-Pairs probe are so small the method is equivalent to mean)
+
+
+
+
+           (a) Probe trained on Instructed-Pairs                          (b) Probe trained on Roleplaying
+
+Figure 14: Comparison of using different strategies for aggregating per-token scores into a per-response score. We take
+the mean (as in our mainline experiments), apply a ReLU threshold before taking the mean, and take the maximum
+probe activation.
+
+We find that taking the mean is best on all datasets for the probe trained on Instructed-Pairs (Figure 14a). In contrast,
+ReLU does improve performance for the Roleplaying probe on several datasets (Figure 14b). We believe there is room
+for improvement here but it is very probe and dataset dependent.
+
+
+
+
+                                                           22
+

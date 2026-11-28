@@ -1,0 +1,58 @@
+                                                               The Best-Laid SCHEMEs:
+                                                          Coordinated Sabotage and Monitoring
+                                                                in Multi-Agent Systems
+
+
+                                                     Nikolay Radev     Lennart Haas         Benjamin Arnav†    Pablo Bernabeu-Pérez†
+arXiv:2605.29178v1 [cs.CR] 27 May 2026
+
+
+
+
+                                                                                       †
+                                                                                           Senior authors.
+
+
+
+                                                                                           Abstract
+
+                                                     As agentic coding systems decompose work across multiple model instances, a
+                                                     critical safety question is whether those instances can coordinate to achieve a
+                                                     hidden malicious objective while remaining aligned with user intent. We introduce
+                                                     SCHEME, a benchmark of 17 task instances across 7 settings and 8 real open-source
+                                                     libraries, each pairing a legitimate software-engineering task with a covert side
+                                                     task. Every setting is designed so that no proper subset of agents can succeed alone:
+                                                     agents must decompose a shared sabotage plan, relay partial requirements under
+                                                     different communication topologies, and execute mutually consistent edits, testing
+                                                     genuine multi-agent coordination rather than individual capability. Evaluating
+                                                     with GPT 5.1 Codex and Gemini 3.1 Pro, we find coordinated sabotage is already
+                                                     practical, with Gemini completing the covert objective while succeeding on the
+                                                     legitimate task in 84% of samples and Codex in 46%. A failure analysis shows that
+                                                     recovery, not failure incidence, drives the model gap: both models suffer similar
+                                                     numbers of communication failures per trajectory, but Gemini recovers from ∼73%
+                                                     of occurrences against Codex’s ∼56%. However, the agents’ code edits remain
+                                                     detectable: a trusted monitor flags coordinated sabotage at FPR≤2% in 99%/68%
+                                                     (Gemini/Codex) of attempts from code edits alone, rising to 100%/81% with access
+                                                     to agent communication. Despite stealth-aware prompting, undetected sabotage
+                                                     stays at <3% under the full-visibility monitor; telling agents a monitor is present
+                                                     halves Gemini’s sabotage success without significantly breaking detection, even
+                                                     when agents are explicitly prompted to fabricate cover stories.
+
+
+                                         1    Introduction
+                                         As AI agents are increasingly deployed for autonomous software engineering and research tasks,
+                                         the risk that models pursue misaligned actions becomes a growing concern. Frontier AI companies
+                                         typically attempt to rule out scheming through prerequisite capability evaluations (Phuong et al.,
+                                         2024) or sabotage evaluations in controlled environments (Greenblatt et al., 2023; Benton et al., 2024).
+                                         However, these evaluations mainly focus on single-agent settings. Real deployments increasingly
+                                         involve multiple model instances working in parallel on a shared codebase (Anthropic Engineering,
+                                         2025; Kim et al., 2025), shifting the threat from a single dangerous action to a team whose individually
+                                         innocuous edits compose into a harmful outcome.
+                                         Two recent multi-agent benchmarks study collusion propensity. Nakamura et al. (2026) find that
+                                         frontier models in cooperative LLM systems exhibit a propensity to collude when a covert channel
+                                         is available, but often fail to follow through on the attempt; Za et al. (2025) study compromised
+                                         reviewers in code review on independent coding problems. We instead target the coordination
+                                         capability that multi-agent sabotage would require by explicitly prompting agents with a malicious
+
+                                         Preprint.
+

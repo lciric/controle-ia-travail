@@ -1,0 +1,54 @@
+Preprint
+3. A systematic evaluation of the zero-shot transfer of principled and heuristic collusion
+detectors across diverse tasks including both instructed and emergent collusion, four open-
+weight models and six probe architectures.
+2 RELATED WORK
+Collusion and monitoring in multi-agent AI. Simmons (1984)’s prisoners’ problem is the canoni-
+cal thought experiment for covert communication using steganography (Hopper et al., 2002; Schroeder
+de Witt et al., 2023; Vaikuntanathan & Zamir, 2026). Early work in economics established supracom-
+petitive price-finding in reinforcement learning agents (Calvano et al., 2020), and its detection (Bajari
+& Ye, 2003). Recent work has established that LLM agents can collude covertly in multi-agent
+settings. Motwani et al. (2024) formalise the threat of secret collusion, showing that frontier models
+can encode hidden information in natural-sounding text. Mathew et al. (2024) demonstrate that
+simple forms of steganographic communication can emerge from misspecified training incentives,
+not only from explicit prompting, and that standard mitigations such as output paraphrasing can
+be insufficient. Rippin et al. (2026) show that LLMs can implement secure steganography using
+coding environments and coordination resources. Beyond steganography, Fish et al. (2024) show that
+LLM pricing agents autonomously converge on supracompetitive prices without explicit collusion
+instructions, and Curvo (2025) study deception dynamics in social deduction games, finding that
+deceptive capability may scale faster than detection ability. Hammond et al. (2025) provide a broad
+taxonomy of multi-agent risks, identifying collusion as a key failure mode. Schroeder de Witt
+et al. (2026) single out secret collusion as a core undetectable threat in multi-agent security. On the
+mitigation side, Syrnikov et al. (2026) show that declarative prohibitions alone do not prevent collu-
+sion under optimisation pressure. Several frameworks have been proposed for auditing multi-agent
+collusion behaviourally, including Colosseum (Nakamura et al., 2026), which measures collusion
+via regret metrics, SentinelAgent (He et al., 2025), which models agent interactions as execution
+graphs, and Audit the Whisper which fuses several black-box tests (Tailor, 2025). Extending AI
+Control (Greenblatt et al., 2024) to multi-agent settings, Makins et al. (2026) explore centralised
+black-box detection of multi-agent attacks. Finally, Chain-of-Thought monitoring has been shown to
+be fragile under optimisation pressure (Baker et al., 2025; Korbak et al., 2025). These approaches
+operate on agent outputs or behavioural traces; none examine model internals.
+Representation-based monitoring. A growing body of work uses simple linear probes to extract
+information about truthfulness and deceptive intent from internal LLM representations. Zou et al.
+(2023b) introduce representation engineering to extract linearly represented high-level concepts,
+including honesty, from activation space. Marks & Tegmark (2024) provide geometric evidence for
+linear truth structure, and Azaria & Mitchell (2023); Burns et al. (2023); Long et al. (2025) show
+that truth-related information can be extracted from hidden states, and Li et al. (2023) show that such
+representations can be causally manipulated. Boxo et al. (2025) use linear probes to detect deception
+in LLMs, and Goldowsky-Dill et al. (2025) train linear probes to detect strategic deception, including
+insider trading and sandbagging. Anthropic (2024) show that simple “defection probes” reliably catch
+sleeper agents (Hubinger et al., 2024). This prior work operates in a single-agent setting: it probes
+one model’s activations. Golechha & Garriga-Alonso (2025) detect deception within a multi-agent
+game by considering single-agent whitebox detectors. Our work extends this to the multi-agent
+detection case, where the signal of interest is the relationship between agents’ representations or the
+aggregation over multiple agent scores, not any single agent’s internal state. Subsequently, Das et al.
+(2026) find that NARCBench-Core probes largely retain their ranking performance when colluding
+agents are made aware of being monitored, although fixed-threshold recall can drop sharply.
+Multisensor and sequential detection. Two of our detection rules, Peak Suspicion and Deception
+Split, are closely related to a wider family of tests for sparse mixtures (Donoho & Jin, 2004). Cosine
+similarity tests have been used in prior work on sybil detection in federated learning (Fung et al.,
+2020). We instead apply them to multi-agent collusion and internal LLM representations. Multi-turn
+extensions of our detection setting call for sequential detection machinery (Ramdas et al., 2023; Xie
+& Siegmund, 2013; Wen et al., 2024; Nasvytis et al., 2024).
+3
+

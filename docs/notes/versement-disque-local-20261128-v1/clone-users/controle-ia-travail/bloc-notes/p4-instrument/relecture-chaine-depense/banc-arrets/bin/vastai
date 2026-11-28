@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# faux outil de location : n'appelle aucun service
+J=${FAUX_JOURNAL:?}; C=${FAUX_COMPTEUR:?}
+echo "appel : $*" >> "$J"
+n=$(cat "$C" 2>/dev/null || echo 0); n=$((n + 1)); echo "$n" > "$C"
+case "$1 $2" in
+  "show instance")
+      if [ -n "${FAUX_TERMINAL_APRES:-}" ] && [ "$n" -gt "$FAUX_TERMINAL_APRES" ]; then s=exited; c=stopped; else s=${FAUX_ETAT:-running}; c=${FAUX_CUR:-running}; fi
+      printf '{"id": %s, "label": "%s", "actual_status": "%s", "cur_state": "%s", "intended_status": "running", "status_msg": "essai"}\n' "$3" "${FAUX_ETIQUETTE:-p4-v1}" "$s" "$c" ;;
+  "logs "*)
+      if [ -n "${FAUX_FIN_APRES:-}" ] && [ "$n" -gt "$FAUX_FIN_APRES" ]; then echo "AMORCE 2026-10-20T12:00:00Z : commit abc"; echo "AMORCE 2026-10-20T13:00:00Z : fin, code 0"
+      else echo "AMORCE 2026-10-20T12:00:00Z : commit abc"; fi ;;
+  "destroy instance") echo "TENTATIVE DE DESTRUCTION $3" >> "$J"; [ "${FAUX_CODE_DESTRUCTION:-0}" = 0 ] && echo "DESTRUCTION $3" >> "$J"; exit "${FAUX_CODE_DESTRUCTION:-0}" ;;
+  "show instances") [ -n "${FAUX_LISTE_ILLISIBLE:-}" ] && { echo "erreur" >&2; exit 1; }; printf '%s\n' "${FAUX_LISTE:-[]}" ;;
+  "stop instance") echo "ARRET $3" >> "$J" ;;
+  *) echo "verbe inattendu : $*" >&2; exit 9 ;;
+esac

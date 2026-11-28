@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+if [ "$*" = "-u +%s" ]; then echo $(( $(/usr/bin/date -u +%s) + $(cat "${SCENARIO:?}/decalage" 2>/dev/null || echo 0) )); exit 0; fi
+exec /usr/bin/date "$@"

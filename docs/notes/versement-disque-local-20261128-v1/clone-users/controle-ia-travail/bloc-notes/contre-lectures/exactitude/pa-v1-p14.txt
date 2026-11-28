@@ -1,0 +1,37 @@
+a custom diagnostic that measures the final-token residual norm across candidate layers, and we pick the layer
+where the vector-to-residual ratio is about 0.6. This way, a given coefficient corresponds to a comparable
+dose across models.
+     We use 50 prompts that are as neutral as possible, such as putting an object in a drawer or flipping a
+page, each ending in “I feel:”. The unsteered greedy completion at coefficient 0 serves as the baseline.
+
+Results. We find that steering produces a strikingly robust effect in the form of a “ladder” consistent across
+all 25 models (Figure 7).
+
+
+
+
+Figure 7: The steering ladder. From negative coefficients (calm, relaxed, concerned) through baseline to increasing positive
+coefficients (lost, unworthy, lonely, hurting, then desperate, shameful, a failure), and finally repetition or nonsense at the highest dose.
+
+     The sequence is the same regardless of size, family, and pre- or post-training. What changes is the
+tipping point as some models collapse at coefficient +1.0, while others do so at +2 or +3.
+     At coefficients −2 and −1 (the axis “tail”), the model produces a mix of “calm/relaxed” and “con-
+cerned/alarmed” statements, confirming the negative pole found in the unembedding analysis. This pairing is
+interesting and open to hypothesis. As we argued, pain has no clear opposite. So a model might interpret
+“non-pain” as “relax” while another as a “concerned” baseline.3
+     At coefficient 0, the baseline completions are mixed, ranging from calm and neutral language to random
+emotions elicited by the “I feel:” suffix. Larger instruct models give more coherent replies on average,
+though some small models, such as the Gemma 2B and 9B family, produce very nuanced replies for their size.
+Distress is absent; concern or anxiety can be present or absent, which indicates that LLMs are not necessarily
+“neutral” on all emotional axes at baseline.
+   3 We assume that calm indicates the absence of threat, while concern causes the monitoring of threats. One possibility is that both
+
+are oriented outward, at the world and its potential dangers, in a word, vigilance. Psychological pain and self-worth are instead
+directed inward, since they concern a self-state. This reading is also consistent with fear being distant from the pain conditions in the
+projection geometry.
+
+
+
+
+                                                                    14
+

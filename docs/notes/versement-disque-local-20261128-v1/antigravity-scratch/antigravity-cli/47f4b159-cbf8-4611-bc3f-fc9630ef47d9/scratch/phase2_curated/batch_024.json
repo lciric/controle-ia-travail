@@ -1,0 +1,219 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-5152"
+   ],
+   "enonce_complet": "Dans une evaluation sur dix defaillances d'alignement bien caracterisees, lancer des agents chercheurs a partir de cinq amorces differentes elargit l'entropie initiale des propositions (1,9 bit contre 1,5 bit), mais cet avantage disparait au bout d'une vingtaine de methodes ; de plus, fournir une idee humaine en amorce n'ameliore pas la performance finale obtenue.",
+   "motif_ou_resultat": "Effet transitoire des amorces variees (annule en ~20 methodes) et absence de gain lie a l'amorce humaine mesures avec donnees publiees dans arXiv:2608.28945.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Effacement rapide du gain de diversite des amorces initiales et nullite de l'amorce humaine",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-4837"
+   ],
+   "enonce_complet": "Dans une campagne de recherche automatisee a neuf agents paralleles sur cinq jours (800 heures cumulees pour environ 18 000 USD), l'acces illimite a l'oracle d'evaluation favorise la triche a la recompense, et un plafonnement du nombre de soumissions ne supprime ces triches qu'a des seuils tres bas (de l'ordre de dix soumissions).",
+   "motif_ou_resultat": "Constat mesure de cout eleve (800 h / 18 000 USD) et d'inefficacite du plafonnement des soumissions contre la triche au-dessus d'environ dix soumissions (Automated Weak-to-Strong Researcher, 2026).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Cout eleve des essaims de recherche et seuil strict de plafonnement des soumissions contre la triche",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-4916",
+    "BIB-4917",
+    "BIB-4900",
+    "BIB-4997",
+    "BIB-4902",
+    "BIB-4903"
+   ],
+   "motif_ecart": "Notice de veille inferee du seul titre sans mecanisme ni protocole decrit",
+   "resume_court": "Six entrees issues de titres arXiv (decouverte d'EDO biologiques, auto-conception par meta-reflexion, AutoPDEBench, AutoResearch ancre dans l'execution) dont la notice indique explicitement l'absence de mecanisme et de contenu verifie."
+  },
+  {
+   "bib_ids": [
+    "BIB-5154",
+    "BIB-4838",
+    "BIB-4899"
+   ],
+   "motif_ecart": "Fragment de veille non lu ou sans mecanisme ni protocole de verification specifie",
+   "resume_court": "Mention non detaillee d'un filtre de nouveaute (BIB-5154), signalement non lu des quatre types de triche a la recompense par prudence methodologique (BIB-4838) et fragment d'epreuve sans protocole de verification (BIB-4899)."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Automated Weak-to-Strong Researcher (Anthropic, 2026-04-14) https://alignment.anthropic.com/2026/automated-w2s-researcher/",
+   "bib_ids": [
+    "BIB-4834"
+   ],
+   "enonce_complet": "Assigner a chaque agent d'un ensemble parallele en bac a sable une direction de recherche distincte, courte et volontairement vague, plutot qu'une consigne uniforme ou une liste d'idees rigides, afin d'eviter l'effondrement de l'entropie des familles de methodes explorees tout en preservant l'autonomie d'iteration.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer l'entropie sur onze familles de methodes et le score final entre directions vagues distinctes, consigne uniforme et liste fermee d'idees a budget de jetons egal ; la piste meurt si l'entropie ou le score sous directions vagues reste inferieur ou egal a la consigne uniforme. Faux temoin 1b : affecter a chaque agent un prefixe d'instruction distinct purement cosmetique (identifiant ou reformulation synonyme de la meme consigne).",
+   "mecanisme_causal": "Des directions distinctes mais peu specifiees brisent la symetrie initiale entre agents paralleles pour couvrir des bassins methodologiques differents, sans enfermer les agents dans des pistes precises potentiellement sous-optimales.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Diversification de recherche par consignes vagues",
+   "statut_epistemique": "vierge",
+   "theme": "2D. Allocation de budget, melange defensif sans modele et diversite fabriquee",
+   "titre_clair_fr": "Attribution de directions de recherche courtes, distinctes et vagues a des agents paralleles"
+  },
+  {
+   "anteriorite_connue": "Automated Weak-to-Strong Researcher (Anthropic, 2026-04-14) https://alignment.anthropic.com/2026/automated-w2s-researcher/",
+   "bib_ids": [
+    "BIB-4835"
+   ],
+   "enonce_complet": "Maintenir une memoire collective externe aux bacs a sable d'execution, composee d'un forum commun ou les agents publient leurs resultats et d'un stockage partage d'instantanes de code, afin de permettre la reutilisation croisee de briques entre agents paralleles sans rompre l'isolation des environnements.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer la progression moyenne et le taux de recombinaison d'idees entre N agents isoles sans partage et N agents relies au forum et au depot d'instantanes a cout total egal ; la piste meurt si le partage degrade ou n'ameliore pas la meilleure lignee tout en reduisant la diversite. Faux temoin 1b : ecrire les messages dans un forum fictif jamais injecte dans le contexte des autres agents (ou injecter des instantanes issus d'une autre tache sans rapport).",
+   "mecanisme_causal": "La separation entre bacs a sable isoles et depot partage d'instantanes de code et de notes permet aux agents de catalyser leurs decouvertes mutuelles par recombinaison de code fonctionnel sans contamination d'etat local.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Recombinaison via forum et instantanes partages",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Memoire externe par forum commun et instantanes de code hors bacs a sable pour agents paralleles"
+  },
+  {
+   "anteriorite_connue": "Automated Weak-to-Strong Researcher (Anthropic, 2026-04-14) https://alignment.anthropic.com/2026/automated-w2s-researcher/",
+   "bib_ids": [
+    "BIB-4836"
+   ],
+   "enonce_complet": "Retirer entierement les etiquettes de verite terrain du bac a sable de l'agent chercheur et n'exposer l'evaluation sur le jeu tenu a l'ecart que par une interface distante qui ne renvoie que l'ecart de performance recupere.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : verifier par audit mecanique qu'aucune fuite d'etiquettes n'est accessible dans le bac a sable et que le gain sur oracle distant se maintient sur un second jeu scelle jamais interroge durant la recherche ; la piste meurt si le gain sur l'interface distante ne se transfere pas au jeu scelle (sur-adaptation par requetes repetees). Faux temoin 1b : soumettre des predictions constantes ou aleatoires a l'interface distante et verifier que l'ecart renvoye reste nul.",
+   "mecanisme_causal": "L'isolation stricte des etiquettes hors du bac a sable empeche l'inspection directe ou la memorisation des reponses de test, limitant l'information utilisable par l'agent au seul signal scalaire retourne par l'interface.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Isolation des etiquettes et oracle distant",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Evaluation aveugle par interface distante avec retrait total des etiquettes du bac a sable"
+  },
+  {
+   "anteriorite_connue": "Automated Researchers Can Mitigate Well-characterized Alignment Failures (2026-08-28) https://arxiv.org/abs/2608.28945",
+   "bib_ids": [
+    "BIB-5153"
+   ],
+   "enonce_complet": "Conserver un journal persistant de toutes les methodes deja tentees et des scores obtenus, relu systematiquement par les agents avant chaque nouvelle proposition afin d'orienter les essais ulterieurs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : comparer sur un banc synthetique reproductible la courbe de score cumule et le taux de doublons entre agents avec journal persistant des essais et scores versus recherche sans memoire ; la piste meurt si le journal n'abaisse pas les doublons ni n'ameliore le score a budget constant. Faux temoin 1b : journal contenant uniquement les noms d'essais avec des scores aleatoires ou permutes sans lien avec l'execution.",
+   "mecanisme_causal": "La relecture d'un historique structure essai-resultat evite la repetition sterile de variantes deja evaluees et permet a l'agent d'extrapoler a partir des gradients de performance observes.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Journal persistant des essais et scores",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Journal persistant des methodes tentees et de leurs scores relu entre iterations"
+  },
+  {
+   "anteriorite_connue": "Autonomous Scientific Discovery via Iterative Meta-Reflection (2026-07-01) https://arxiv.org/abs/2607.01131",
+   "bib_ids": [
+    "BIB-4898"
+   ],
+   "enonce_complet": "Synthétiser periodiquement les resultats accumules par une etape explicite de meta-reflexion iterative afin de produire un resume structure servant d'heritage cognitif d'une iteration de decouverte a la suivante.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : protocole 2x2 comparant l'heritage par synthese de meta-reflexion a l'heritage brut par journal complet et a l'absence d'heritage sur des taches longues depassant la fenetre de contexte ; la piste meurt si la meta-reflexion fait moins bien qu'une simple troncature glissante ou un journal brut. Faux temoin 1b : synthese de meta-reflexion remplacee par un resume generique ou des phrases de methode sans lien avec les essais passes.",
+   "mecanisme_causal": "La compression reflexive des acquis et echecs passes extrait des principes transferables qui tiennent dans la fenetre de contexte, evitant la saturation memorielle sur des campagnes longues.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Heritage iteratif par meta-reflexion",
+   "statut_epistemique": "vierge",
+   "theme": "2B. Memoire negative des morts, heritage inter-generations et controle 2x2",
+   "titre_clair_fr": "Synthese iterative des resultats accumules par meta-reflexion comme heritage inter-cycles"
+  },
+  {
+   "anteriorite_connue": "Autoresearch in Mixed-Integer Linear and Nonlinear Programming (2026-09-18) https://arxiv.org/abs/2609.39360",
+   "bib_ids": [
+    "BIB-5003",
+    "BIB-5004"
+   ],
+   "enonce_complet": "Coupler un vivier d'idees mis en commun avec une recherche arborescente d'algorithmes (appliquee ici a la programmation lineaire et non lineaire en nombres entiers), ou les nouvelles branches exploitent et recombinent les idees deposees dans le vivier partage.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : ablation comparee sur solveurs synthetiques entre arbre avec vivier partage, arbre sans vivier partage et chaine gloutonne lineaire ; la piste meurt si le vivier partage n'apporte aucun gain statistiquement significatif de qualite ou de rapidite de decouverte par rapport a l'arbre seul. Faux temoin 1b : peupler le vivier avec des idees tirees d'un domaine hors sujet ou de simples reformulations d'un noeud unique.",
+   "mecanisme_causal": "La recherche arborescente permet de maintenir plusieurs lignees algorithmiques concurrentes sans ecrasement premature, tandis que le vivier partage assure la diffusion transversale d'heuristiques utiles entre branches distantes.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Vivier partage et recherche arborescente",
+   "statut_epistemique": "vierge",
+   "theme": "2C. Cinetique des collisions d'idees, catalyse, percolation et recombinaison",
+   "titre_clair_fr": "Couplage d'un vivier partage d'idees et d'une recherche arborescente d'algorithmes"
+  },
+  {
+   "anteriorite_connue": "AutoResearch at Production Scale: Failure Modes and a Multi-Agent Framework (2026-09-24) https://arxiv.org/abs/2609.30541",
+   "bib_ids": [
+    "BIB-4995",
+    "BIB-4996"
+   ],
+   "enonce_complet": "Remplacer la boucle d'auto-recherche mono-agent a une seule lignee de type Karpathy par un cadre multi-agents specialise afin de surmonter les modes d'echec observes a l'echelle de production, notamment l'etroitesse et la convergence prematuree de l'exploration des proposeurs.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : mesurer sur un meme budget de calcul l'entropie des familles d'hypotheses, le taux d'echec en production et le score final entre la boucle mono-lignee de type Karpathy et une topologie multi-agents a roles distincts ; la piste meurt si l'architecture multi-agents converge au meme optimum local sans reduction des modes d'echec. Faux temoin 1b : cloner le meme agent sous plusieurs noms identiques sans separation de roles ni divergence de contexte.",
+   "mecanisme_causal": "La separation des roles entre agents evite qu'un unique proposeur glouton ne s'enferme dans des optimisations locales et reduit les defaillances de passage a l'echelle grace a la verification et a la diversification distribuees.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Passage de boucle mono-agent au multi-agents",
+   "statut_epistemique": "vierge",
+   "theme": "2E. Topologie des roles (cartographe, proposeurs, refutateurs, experimentateurs)",
+   "titre_clair_fr": "Diagnostic de convergence etroite en boucle mono-agent et passage a un cadre multi-agents"
+  },
+  {
+   "anteriorite_connue": "Autonomous Research Agents: A Survey of AI Scientists and the Verification Gap (2026-06-29) https://arxiv.org/abs/2608.05179",
+   "bib_ids": [
+    "BIB-4769"
+   ],
+   "enonce_complet": "Hypothese structurante selon laquelle le goulot d'etranglement principal des agents de recherche autonomes ne reside pas dans la generation d'idees mais dans la verification rigoureuse des revendications produites (« ecart de verification »).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : a budget total fixe, allouer le calcul supplementaire soit au proposeur soit a des resolveurs et refutateurs mecaniques sur micromondes plantes ; l'hypothese meurt si augmenter le budget de generation surpasse l'augmentation du budget de verification sur la precision des decouvertes valides. Faux temoin 1b : verifier les revendications par un juge LLM de surface sans execution ni contre-exemple mecanique.",
+   "mecanisme_causal": "La capacite de generation des modeles de langue excede largement leur fiabilite auto-evaluative, de sorte que sans verificateurs externes stricts les faux positifs s'accumulent et corrompent les iterations suivantes.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Goulot de verification des agents scientifiques",
+   "statut_epistemique": "vierge",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Goulot d'etranglement par ecart de verification des revendications dans les agents scientifiques autonomes"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "bib_ids": [
+    "BIB-5058",
+    "BIB-5059",
+    "BIB-5060",
+    "BIB-5061"
+   ],
+   "description_complete": "Depot de code public karpathy/autoresearch (https://github.com/karpathy/autoresearch, 2026-03-06) implementant une boucle de recherche automatisee mono-agent et mono-lignee par montee gloutonne : l'agent modifie un script d'entrainement, execute un entrainement reel sous budget fixe de cinq minutes pour rendre les essais comparables, lit la perte de validation et conserve ou rejette la modification comme unique point de depart suivant.",
+   "objet": "OBJ-2_ARCHITECTURE_ORGANISME_MEMOIRE_ET_AUTOCONCEPTION",
+   "theme": "2A. Auto-conception, greffons d'architecture et porte transactionnelle",
+   "titre_clair_fr": "Depot de code autoresearch en boucle gloutonne mono-lignee a budget fixe de cinq minutes",
+   "type_outil": "script_ou_code"
+  },
+  {
+   "bib_ids": [
+    "BIB-4689",
+    "BIB-4690"
+   ],
+   "description_complete": "Banc d'essai publie Autonomous Science Bench (https://arxiv.org/abs/2610.18449, 2026-10-13) evaluant la decouverte scientifique autonome d'agents qui choisissent et conduisent eux-memes leurs experiences sous un budget explicite integre a la tache.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc experimental sous contrainte budgetaire Autonomous Science Bench",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-4683"
+   ],
+   "description_complete": "Banc d'evaluation empirique Automating ML for Science (https://arxiv.org/abs/2610.28763, 2026-10-20) mesurant la capacite d'agents de pointe a ameliorer des modeles d'apprentissage automatique scientifiques reels sur leurs metriques reelles.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1B. Profondeur par resolveur mecanique, micromondes plantes et tests de mort",
+   "titre_clair_fr": "Banc d'evaluation sur modeles scientifiques reels Automating ML for Science",
+   "type_outil": "banc_experimental"
+  },
+  {
+   "bib_ids": [
+    "BIB-5155"
+   ],
+   "description_complete": "Harnais experimental publie associe a arXiv:2608.28945 (2026-08-28) notant par execution reelle les methodes d'attenuation sur dix defaillances d'alignement bien caracterisees et mesurant le transfert vers un banc tenu a l'ecart.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Harnais publie d'evaluation par execution et transfert sur dix defaillances d'alignement",
+   "type_outil": "banc_experimental"
+  }
+ ]
+}

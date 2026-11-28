@@ -1,0 +1,62 @@
+                                                             Linear probes rely on textual evidence: Results from
+                                                                leakage mitigation studies in language models
+
+
+                                                                          Gerard Boxo * 1 Aman Neelappa * 1 Shivam Raval † 2
+
+
+                                                                    Abstract                                 scientific understanding of white-box monitors by measur-
+                                             White-box monitors are a popular technique                      ing the effect of textual evidence in the performance of
+                                             for detecting potentially harmful behaviours in                 linear probes.
+arXiv:2509.21344v2 [cs.AI] 9 Mar 2026
+
+
+
+
+                                             language models. While they perform well                        We find that for all the behaviors we studied, probe perfor-
+                                             in general, their effectiveness in detecting text-              mance drops substantially when textual evidence is removed
+                                             ambiguous behaviour is disputed. In this work,                  from the transcript, suggesting that probes may rely on what
+                                             we find evidence that removing textual evidence                 we term leakage.
+                                             of a behaviour significantly decreases probe per-
+                                             formance. The AUROC reduction ranges from 10-                   Definition 1.1 (Leakage). The phenomenon by which
+                                             to 30-point depending on the setting. We evaluate               probes rely on activations from token positions that con-
+                                             probe monitors across three setups (Sandbagging,                tain textual evidence of the studied behavior. Examples
+                                             Sycophancy, and Bias), finding that when probes                 include activations from the elicitation prompt (which we
+                                             rely on textual evidence of the target behaviour                term elicitation leakage) or from positions where the model
+                                             (such as system prompts or CoT reasoning), per-                 explicitly reasons about performing the behavior (which we
+                                             formance degrades once these tokens are filtered.               term reasoning leakage).
+                                             This filtering procedure is standard practice for
+                                             output monitor evaluation. As further evidence                  To our knowledge, this is the first paper to systematically
+                                             of this phenomenon, we train Model Organisms                    explore and quantify this evaluation bias in linear probes.
+                                             which produce outputs without any behaviour ver-                Prior work has demonstrated that probes can achieve high
+                                             balisations. We validate that probe performance                 performance on behavior detection tasks (Anthropic, 2024;
+                                             on Model Organisms is substantially lower than                  Marks et al., 2025), but has not controlled for whether this
+                                             unfiltered evaluations: 0.57 vs 0.74 AUROC for                  performance stems from detecting internal representations
+                                             Bias, and 0.57 vs 0.94 AUROC for Sandbagging.                   or from exploiting leakage.
+                                             Our findings suggest that linear probes may be
+                                                                                                             Controlling for leakage is important given that textual evi-
+                                             brittle in scenarios where they must detect non-
+                                                                                                             dence of this kind is common in current evaluation scenarios,
+                                             surface-level patterns.
+                                                                                                             for two main reasons. First, training and evaluating these
+                                                                                                             monitoring systems requires models that exhibit the very
+                                        1. Introduction                                                      harmful behaviors the monitors are designed to detect. Since
+                                                                                                             current models are trained to be helpful, harmless, and hon-
+                                        Recent AI safety research has focused on developing mon-             est (Askell et al., 2021), they do not inherently display many
+                                        itoring systems to detect potentially dangerous behaviors            of the most concerning behaviors, additionally some behav-
+                                        (Amodei et al., 2016; Bengio et al., 2025). Specifically             iors may only manifest in systems more capable than those
+                                        white box monitors, systems that monitor the model inter-            currently available. In practice, models are often prompted
+                                        nals, have attracted interest as oversight systems in research       or trained to deliberately exhibit the harmful behavior we
+                                        (Zou et al., 2023; Sip et al., 2008; ?; Bereska & Gavves,            seek to study. This elicitation process, while creating mean-
+                                        2024) and have seen partial deployment in industry (Kramár           ingful test cases, might leave artifacts that monitors could
+                                        et al., 2026; Cunningham et al., 2025; Nguyen et al., 2025)          be using to boost their effectiveness (elicitation leakage).
+                                        due to their reduced latency and cost at comparable per-             Second, when conducting safety relevant behaviors, mod-
+                                        formance (Hua et al., 2025). We want to contribute to the            els often explicitly verbalize their harmful intentions and
+                                          1                                                                  actions. These articulations make the deceptive behavior
+                                            Independent 2 Harvard University, USA. Correspondence to:
+                                        Gerard Boxo <gerard.boxo@autonoma.cat>.                              extremely salient, allowing monitors to achieve high perfor-
+                                                                                                             mance by detecting surface-level cues rather than discerning
+                                        Preprint. March 10, 2026.                                            genuine deceptive intent (reasoning leakage).
+
+                                                                                                         1
+

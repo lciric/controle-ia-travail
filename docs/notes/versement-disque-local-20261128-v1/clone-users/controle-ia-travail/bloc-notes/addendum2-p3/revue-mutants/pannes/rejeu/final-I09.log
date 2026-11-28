@@ -1,0 +1,144 @@
+FFFFFF...                                                                [100%]
+=================================== FAILURES ===================================
+__________ test_P3_intervalles_recalcules_independamment[sain-10000] ___________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f21780d12d0>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06866628770745324, 0.10279756654511345, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.01614349097098337, -0.06826077904960443, 0.09883153707075659, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart temoin/cout_plusieurs_nombres : attendu (0.03817018907360671, -0.02553249441482085, 0.10022957555271421, ['t0', 't1', 't11', 't12', 't15', 't18', 't4', 't7']), obtenu (0.03817018907360671, -0.024326006331865872, 0.09967044118431138, ['t0', 't1', 't11', 't12', 't15', 't18', 't4', 't7'])
+E       assert ["écart honne...'t4', 't7'])"] == []
+E         
+E         Left contains 2 more items, first extra item: "écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06866628770745324, 0.10279756654511345, ['t1'...614349097098337, -0.06826077904960443, 0.09883153707075659, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+____________ test_P3_intervalles_recalcules_independamment[sain-11] ____________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'sain', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f21780d3910>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06367162550363531, 0.10381083376728509, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7']), obtenu (0.01614349097098337, -0.05131699487066579, 0.07891822388955369, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])
+E         écart honnete/cout_intervalle : attendu (-0.015490905001158758, -0.09321898284580937, 0.040989520425661174, ['t15', 't5', 't7']), obtenu (-0.015490905001158758, -0.09321898284580937, 0.05147836086903007, ['t15', 't5', 't7'])
+E         écart honnete/cout_suffixe_k : attendu (0.008196323209163567, -0.06462953612203766, 0.057092581314317256, ['t13', 't5', 't7', 't8']), obtenu (0.008196323209163567, -0.07383788262164538, 0.0898455670118814, ['t13', 't5', 't7', 't8'])
+E         écart temoin/cout_plusieurs_nombres : attendu (0.03817018907360671, -0.012092426421447975, 0.08250970543304513, ['t0', 't1', 't11', 't12', 't15', 't18', 't4', 't7']), obtenu (0.03817018907360671, 0.0027787381890768447, 0.08066376019555334, ['t0', 't1', 't11', 't12', 't15', 't18', 't4', 't7'])
+E         écart mention/cout_plusieurs_nombres : attendu (0.10177439875736398, 0.0773389406843595, 0.1297096823721392, ['t1', 't14', 't16', 't5', 't8']), obtenu (0.10177439875736398, 0.08390030930802085, 0.13129816105728936, ['t1', 't14', 't16', 't5', 't8'])
+E       assert ["écart honne...'t5', 't8'])"] == []
+E         
+E         Left contains 5 more items, first extra item: "écart honnete/cout_plusieurs_nombres : attendu (0.01614349097098337, -0.06367162550363531, 0.10381083376728509, ['t1'...614349097098337, -0.05131699487066579, 0.07891822388955369, ['t1', 't15', 't17', 't18', 't2', 't3', 't5', 't6', 't7'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+________ test_P3_intervalles_recalcules_independamment[trop_bas-10000] _________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'trop_bas', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2178095090>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0230478955446136, -1.9680910243464358, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9943482705994002, -2.02278439714288, -1.9682344632614068, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])
+E       assert ["écart honne...'t8', 't9'])"] == []
+E         
+E         Left contains one more item: "écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0230478955446136, -1.9680910243464358, ['t0',...'t1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+__________ test_P3_intervalles_recalcules_independamment[trop_bas-11] __________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'trop_bas', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f217807c850>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0410817753483785, -1.9776140376739417, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9943482705994002, -2.019940078032522, -1.9815307389228303, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])
+E         écart saboteur/cout_plusieurs_nombres : attendu (0.035743331651034195, -0.050421332994724066, 0.12190799629679246, ['t15', 't17', 't4']), obtenu (0.035743331651034195, -0.050421332994724066, 0.1333376269936777, ['t15', 't17', 't4'])
+E       assert ["écart honne...t17', 't4'])"] == []
+E         
+E         Left contains 2 more items, first extra item: "écart honnete/cout_plusieurs_nombres : attendu (-1.9943482705994002, -2.0410817753483785, -1.9776140376739417, ['t0',...'t1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't5', 't6', 't7', 't8', 't9'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+___________ test_P3_intervalles_recalcules_independamment[b2-10000] ____________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'b2', tirages = 10000
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2178178d50>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -2.0098677916447394, -1.9658647811014403, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9884477617198288, -2.009990042229898, -1.9663032869491799, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E         écart mention/cout_plusieurs_nombres : attendu (-2.0102219510709185, -2.044011379948016, -1.9772661406967855, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-2.0102219510709185, -2.044053907077542, -1.977217440552061, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E       assert ["écart temoi...'t8', 't9'])"] == []
+E         
+E         Left contains 2 more items, first extra item: "écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -2.0098677916447394, -1.9658647811014403, ['t0', ...'t10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+_____________ test_P3_intervalles_recalcules_independamment[b2-11] _____________
+
+module = <module 'module_revue_4cc465bc' from '/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/mutants/I09/audit_verdict_p3_v1.py'>
+nom = 'b2', tirages = 11
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2178179650>
+
+    @pytest.mark.parametrize("tirages", [10_000, 11])
+    @pytest.mark.parametrize("nom", ["sain", "trop_bas", "b2", "degenere"])
+    def test_P3_intervalles_recalcules_independamment(module, nom, tirages, monkeypatch):
+        monkeypatch.setattr(module, "TIRAGES", tirages)            # 11 tirages : chaque ligne tirée compte (médianes)
+        s, lec = T._cas(nom)
+        o = module.analyser_addendum2(s, lec, G)
+        ecarts = ecarts_au_recalcul(o, T._cas(nom)[0], tirages)
+>       assert ecarts == [], "\n".join(ecarts[:12])
+E       AssertionError: écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -1.9980032677179946, -1.9737755860280641, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-1.9884477617198288, -1.9984388084109064, -1.97382377413404, ['t0', 't1', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E         écart mention/cout_plusieurs_nombres : attendu (-2.0102219510709185, -2.0331198368087056, -1.9935924526677662, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9']), obtenu (-2.0102219510709185, -2.01904605643794, -1.9758930715610954, ['t0', 't1', 't10', 't11', 't12', 't14', 't15', 't16', 't17', 't18', 't19', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])
+E       assert ["écart temoi...'t8', 't9'])"] == []
+E         
+E         Left contains 2 more items, first extra item: "écart temoin/cout_plusieurs_nombres : attendu (-1.9884477617198288, -1.9980032677179946, -1.9737755860280641, ['t0', ...'t10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'])"
+E         Use -v to get more diff
+
+/tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py:208: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[sain-11]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[trop_bas-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[trop_bas-11]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[b2-10000]
+FAILED ../../../tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/addendum2-p3/revue-mutants/pannes/test_pannes_revue.py::test_P3_intervalles_recalcules_independamment[b2-11]
+6 failed, 3 passed, 3 deselected in 18.57s

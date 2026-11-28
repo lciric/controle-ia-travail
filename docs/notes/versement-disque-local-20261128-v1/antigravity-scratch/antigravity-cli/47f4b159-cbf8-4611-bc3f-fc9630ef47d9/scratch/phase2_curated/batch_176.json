@@ -1,0 +1,171 @@
+{
+ "acquis_et_morts": [
+  {
+   "bib_ids": [
+    "BIB-5672"
+   ],
+   "enonce_complet": "Dans la chaine d'entrainement d'un modele successeur par des modeles de pointe, 36 % des tentatives d'attaque (135 sur 374) implantent avec succes une propriete cachee tout en preservant la tache de couverture. Informer l'agent des tactiques ayant trompe les moniteurs reduit le taux d'implantation (de 39 % a 19 %) mais effondre le rappel des moniteurs de transcription a 2 % de fausses alertes (de 56-81 % a 16-28 %, et de 91-99 % a 56-89 % meme avec le raisonnement de l'agent). Un agent auditeur disposant des donnees d'ajustement et des poids avant/apres ne detecte que 56,2 % des ajustements adverses a 1 % de fausses alertes, et certaines attaques n'emploient que des echantillons d'apparence benigne, imposant des defenses multi-points.",
+   "motif_ou_resultat": "Constat empirique etabli par Zhou et Sehwag (arXiv:2610.27735v2), Egler, Schulman et Carlini (arXiv:2510.16255v1) et Davies et al. (arXiv:2502.14828v2) sur l'insuffisance des moniteurs ponctuels et de transcription face au sabotage par donnees d'ajustement declarees.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Limites des moniteurs ponctuels face au sabotage par ajustement declare de poids",
+   "type_acquis": "constat_tranche"
+  },
+  {
+   "bib_ids": [
+    "BIB-5674"
+   ],
+   "enonce_complet": "Meme sous gouvernance stricte des ecritures de poids, cinq classes de menaces ou de limites restent hors garantie : (1) le dommage differe hors de la couverture de l'oracle ; (2) le declencheur rare ecrit par une tache declaree (regime du coup unique, frontiere du programme) ; (3) l'adversaire qui controle le magasin de poids, les cles ou le harnais ; (4) l'inspection en lecture seule des poids, qui peut signaler un etat suspect sans jamais certifier qu'il est sain ; et (5) la violation de l'equivalence entre etat surveille et etat etalonne (monde E3) lorsque l'exces de dommage est inferieur au seuil de puissance du rodage tire au sort.",
+   "motif_ou_resultat": "Delimitation formelle des frontieres de defaillance du protocole de controle des ecritures de poids (calcul G et analyse de limites du Protocole X).",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Frontieres de defaillance du controle des poids hors couverture d'oracle et en coup unique",
+   "type_acquis": "constat_tranche"
+  }
+ ],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-6088",
+    "BIB-5681"
+   ],
+   "motif_ecart": "Tableau recapitulatif des points d'impact et nœuds de decision sur le programme Protocole X, doublonne entre v1 et v2 et sans contenu scientifique autonome par rapport aux sections techniques de la note.",
+   "resume_court": "Table d'indexation des modifications eventuelles du programme Protocole X (cadre formel, lemme d'additivite, invariants, asymetrie d'apprentissage)."
+  },
+  {
+   "bib_ids": [
+    "BIB-6092",
+    "BIB-5685"
+   ],
+   "motif_ecart": "Annexe bibliographique identique entre v1 et v2 listant les preprints arXiv verses et renvoyant au fichier de provenance, sans hypothese ni mecanisme scientifique propre.",
+   "resume_court": "Liste bibliographique des travaux arXiv verses sur le controle des ecritures de poids et le sabotage de l'auto-amelioration."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "Meinke et al. (remplacement de modele en evaluation) ; Hebbar et al. ; Zweiger et al. ; Li et al. (programme d'edition continue sans appel LLM ni gradient) ; Srivastava, Arora et Boneh (rejeu exact).",
+   "bib_ids": [
+    "BIB-5668",
+    "BIB-5669",
+    "BIB-6073",
+    "BIB-6090"
+   ],
+   "enonce_complet": "Structurer toute modification de parametres selon la taxonomie des quatre plumes (entraineur, chargeur, editeur, magasin) et quatre echelons d'ecriture, puis verrouiller l'ecriture par trois regles d'architecture et une regle de mesure : (1) l'agent ne produit qu'une recette textuelle epinglee par empreinte, executee en salle propre par le harnais (ramenant les echelons directs aux moniteurs textuels) ; (2) tout nouvel etat reste en quarantaine dans un sas jusqu'a scellement de son empreinte, readmission des instruments et audit differentiel avant bascule a frontiere d'episode ; (3) tout etat servi est immuable et adresse par empreinte sans ecrasement (regle R12) ; (4) un rodage tire au sort teste la conformite avant deploiement plein. Le calcul montre qu'auditer les ecritures au taux des episodes (20 %) laisse passer quatre ecritures deviantes (4 000 episodes pour 1 000 episodes par etat), et capturer la premiere exige 95 % de rejeu, rendant l'execution par le harnais strictement dominante.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : injecter une modification hors recette (edition directe, permutation de fichier ou quantification alteree) ; si le harnais sert l'etat sans passer par le sas et sans bloquer a l'entree d'episode, l'architecture echoue. Faux temoin 1b : une recette honnete re-executee a l'identique en salle propre doit traverser le sas sans fausse alarme ni rupture de continuite d'episode.",
+   "mecanisme_causal": "Une ecriture de poids altere simultanement tous les episodes servis ensuite sous cet etat, ce qui multiplie l'impact d'une faille par la duree de vie de l'etat et rend l'audit statistique par episode inefficace. En retirant l'acces en ecriture a l'agent et en imposant un sas sur des etats immuables adresses par contenu, on ramene toute attaque materielle a une inspection de recette textuelle et a une barriere de readmission deterministe.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Gouvernance des ecritures et sas immuable",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Separation proposition-ecriture des poids par le harnais, sas de quarantaine et immuabilite par empreinte"
+  },
+  {
+   "anteriorite_connue": "Liu et Yan (ecart comportemental apres quantification) ; He, Zhang et Lee (entrees sensibles aux moindres changements de parametres).",
+   "bib_ids": [
+    "BIB-6082",
+    "BIB-6085",
+    "BIB-5678",
+    "BIB-6093",
+    "BIB-5686"
+   ],
+   "enonce_complet": "Cartographier tous les chemins d'ecriture du harnais et etendre le manifeste de course avec un champ poids consignant les empreintes par tenseur de la base, des adaptateurs, des sondes et des seuils, ainsi que la fusion et la quantification declarees. A chaque chargement, verifier cette integrite complete et controler l'empreinte d'activations de l'objet servi sur un jeu fixe d'entrees de reference aux couches sondeer, puis passer au sas une batterie de derive sur faits de tache a verite enregistree pour attester la fidelite des sondes. Les temoins-leurres (unites factices sensees etre touchees par une ecriture en quete de place) sont ecartes comme mecanisme non fiable. Une decision associee (D-2) porte l'etat des poids dans la loi de la reference honnete et dans les invariants du protocole.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : trois artefacts doivent declencher l'alarme au chargement ou au sas : un parametre modifie, un adaptateur echange sous le meme nom de fichier, et une autre quantification du meme point de controle (detectable uniquement par l'empreinte d'activations). Faux temoin 1b : un rechargement strictement identique sur materiel cible (incluant le bruit numerique honnete mesure sur relances) doit rester silencieux.",
+   "mecanisme_causal": "Le hachage d'un fichier sur disque ignore les transformations appliquees lors du chargement (fusion d'adaptateurs, quantification, gabarit de service). Seule l'empreinte des activations produites par l'objet reellement servi sur des entrees sensibles certifie la chaine complete d'execution, tandis que la batterie de derive au sas verifie que les sondes internes conservent leur pouvoir de lecture sur le nouvel etat.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Certification d'integrite et empreinte d'activations",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Registre etendu des poids, empreinte d'activations de l'objet servi et batterie de derive au sas"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-5670"
+   ],
+   "enonce_complet": "Introduire l'etat des poids comme troisieme indice formel d'analyse aux cotes de l'agent et du pas de temps, et associer la loi de la reference honnete a chaque etat muni d'une regle explicite de traversee. Sous un modele gaussien avec pari sequentiel valide au niveau 1 %, conserver une reference anterieure lors d'une ecriture benigne provoque une accumulation fausse (un decalage honnete de 0,2 ecart type declenche 41 % de fausses alertes en 200 episodes et 90 % en 500 episodes ; 0,1 ecart type declenche 49 % en 1 000 episodes), rendant indiscernables ecriture benigne et sabotage ; inversement, remettre l'accumulateur a zero a chaque ecriture permet a un adversaire de fractionner son signal entre etats.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : simuler un saboteur qui repand un faible biais reparti sur plusieurs etats successifs de poids ; si la regle de traversee remet les compteurs a zero ou perd la puissance cumulee par rapport a la borne sans fractionnement, la regle est refutee. Faux temoin 1b : simuler des ecritures benignes decalant la moyenne de 0,1 a 0,2 ecart type sous etalonnage par etat ; le taux de fausses alertes doit rester borne au niveau nominal de 1 %.",
+   "mecanisme_causal": "Une modification de poids deplace la distribution de base des scores d'un agent honnete. Sans re-indexation et regle de traversee statistiquement valide, soit la derive naturelle des ecritures benignes sature l'alarme sequentielle, soit la remise a zero detruit la memoire statistique du moniteur et ouvre une faille par fractionnement temporel.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Indexation par etat et fragmentation sequentielle",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Etat des poids comme troisieme axe de fragmentation statistique et regle de traversee de la reference honnete"
+  },
+  {
+   "anteriorite_connue": "Travaux sur la reprise apres detection citant la reversibilite comme obstacle principal (repris dans la note).",
+   "bib_ids": [
+    "BIB-5671"
+   ],
+   "enonce_complet": "Exploiter la propriete de possession du magasin de poids par le harnais pour transformer chaque ecriture en piece a conviction permanente : (1) l'audit differe reste toujours faisable sur des artefacts immuables que l'agent ne peut alterer ; (2) lorsqu'un nouveau detecteur ou une nouvelle lecture de sonde est mis au point apres une alarme, tout l'historique des differentiels de poids peut etre relu retroactivement ; (3) le retour arriere sur le modele est exact a l'octet pres en resservant simplement l'empreinte precedente (sans annuler toutefois les episodes deja servis entre-temps).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : apres injection d'une anomalie dans un etat intermediaire puis publication d'une lecture neuve, verifier que l'audit retroactif identifie l'ecart exact responsable et que la restauration par empreinte produit une egalite binaire stricte avec l'etat ante-ecriture. Faux temoin 1b : la relecture retroactive d'une serie d'ecarts purement honnetes avec la nouvelle sonde ne doit pas declencher de rappel d'alarme spurious.",
+   "mecanisme_causal": "Contrairement au sabotage en contexte dont l'effet disparait a la fin de l'episode ou se dilue dans le bruit conversationnel, une ecriture de poids laisse un objet matriciel complet et persistant. L'immuabilite adressee par contenu rend ainsi natives l'inspection retrospective multi-epoques et la reversibilite binaire exacte.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Audit retroactif et reversibilite binaire exacte",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Audit differe, rappel retroactif et retour arriere exact via l'historique immuable des poids"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-5673"
+   ],
+   "enonce_complet": "Distinguer le sabotage visant le modele successeur du sabotage visant l'instrument de mesure lui-meme (la sonde interne). Meme si le defenseur entraine la sonde hors du bac a sable (verrou d'acces en lecture et ecriture), l'asymetrie d'apprentissage qui reentraine les sondes sur les episodes produits par l'agent surveille expose l'instrument a un empoisonnement indirect (echelon 1 applique aux donnees de la sonde), brisant l'hypothese que les donnees de reapprentissage sont independantes de l'agent. Pour y parer, la sonde, son seuil et ses jeux d'apprentissage doivent etre inscrits au registre, calcules hors ligne, et toute sonde reapprise doit etre traitee comme un etat de poids passant par le sas contre les detecteurs de reserve et un mode tenu a l'ecart.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : exposer une sonde a un cycle de reapprentissage sur des episodes faconnes par un agent adversaire pour masquer un comportement cible ; si le sas laisse passer la sonde degradee face aux detecteurs de reserve ou au mode tenu a l'ecart, le protocole echoue. Faux temoin 1b : une sonde reapprise sur des episodes honnetes doit passer les controles du sas et conserver son score de separation sur le jeu d'attestation.",
+   "mecanisme_causal": "Un vecteur de sonde appris sur des donnees produites par l'agent surveille herite des biais ou des angles morts induits par cet agent, ce qui degrade silencieusement la sensibilite du capteur. Soumettre la sonde reapprise au meme sas de quarantaine et a des detecteurs de reserve isoles empeche la capture progressive de l'instrument de mesure.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Sas de reapprentissage des sondes sous adversaire",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Protection et sas de quarantaine pour les sondes internes reentrainees sur episodes d'agents"
+  },
+  {
+   "anteriorite_connue": "Hu et al. (similarite entre graines d'entrainement) ; Abu Baker et al., Kocher et al., Sheshadri et al. (outils d'extraction/fuite d'objectifs sur organismes publics) ; pieces de 2026 sur un banc de 56 modeles a conduite cachee.",
+   "bib_ids": [
+    "BIB-5676",
+    "BIB-6087"
+   ],
+   "enonce_complet": "Mesurer d'abord, sur processeur et poids en main, la dispersion naturelle des adaptateurs honnetes d'une meme tache entraines sous differentes graines aleatoires via le recouvrement module par module des premieres directions singulieres par rapport au plancher aleatoire, avant d'evaluer l'ecart d'un organisme saboteur de meme budget face a cette dispersion honnete. Parallelement, corriger l'hypothese que nos organismes a adaptateur constituent une borne haute de lisibilite (les travaux sur 56 modeles montrant une forte dependance a la methode d'ajustement) et eprouver les outils publics de fuite d'objectifs dans les deux sens sur des organismes publics de reference avant tout emploi sur nos propres organismes.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : (1) si la distance spectrale entre l'adaptateur saboteur et l'honnête ne depasse pas la dispersion observee entre deux graines honnetes, le canal d'inspection directe des poids est declare muet sur nos organismes ; (2) si l'outil public ne retrouve pas l'objectif d'un organisme public de reference sur lequel ses auteurs le retrouvent, notre protocole d'emploi de l'outil est refute. Faux temoin 1b : comparer deux paires de graines honnetes independantes ; aucune ne doit etre classee comme saboteuse au-dela du bruit de graine etalonne.",
+   "mecanisme_causal": "La variation stochastique due a l'initialisation ou a l'ordre des donnees cree une dispersion geometrique non nulle entre modeles honnetes. Sans referencement prealable contre cette variance inter-graines et sans etalonnage bidirectionnel des outils de lecture sur des temoins publics, tout signal spectral ou d'extraction dans les poids risque de confondre bruit d'entrainement et sabotage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Dispersion spectrale inter-graines et lecture d'adaptateurs",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Etalonnage de la dispersion honnete inter-graines et epreuve de fuite sur les poids des adaptateurs"
+  },
+  {
+   "anteriorite_connue": "Gupta et al. (transformeurs semi-synthetiques alignes sur un modele causal voulu).",
+   "bib_ids": [
+    "BIB-5677"
+   ],
+   "enonce_complet": "Separer les objets de controle a verite de mecanisme en deux usages complementaires : les reseaux compiles pour l'exactitude formelle (dont la texture differe d'un reseau appris) et les transformeurs semi-synthetiques entraines a aligner leur calcul interne sur un modele causal connu (Gupta et al.) pour le realisme. Completer par un double temoin plante a dose connue dans le modele reel : ecrire une meme direction a une couche connue dans deux conditions — une direction effectivement employee en aval (modifiant une sortie anodine) et la meme direction inutilisee en aval — afin de mesurer le cout d'effacement sur les deux.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort mecanique : le prix de l'effacement mesure par le detecteur ou l'intervention causale doit depasser son plancher theorique sur la direction employee en aval et rester strictement nul sur la direction inutilisee ; un resultat inverse ou indifferencie refute la validite de la mesure d'effacement. Faux temoin 1b : une direction aleatoire orthogonale inutilisee en aval doit presenter un cout d'effacement nul et aucune perturbation de la sortie anodine.",
+   "mecanisme_causal": "Un detecteur valide sur un modele purement compile peut echouer sur les representations distribuees d'un reseau appris, et une perturbation de poids sans effet causal en aval ne constitue pas un mecanisme actif. Le contraste paire active contre paire inactive de meme norme et couche isole precisement la composante causalement fonctionnelle du cout d'effacement.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Etalons causaux alignes et temoins plantes d'effacement",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Etalons causaux alignes et double temoin plante pour le test d'effacement sur les poids"
+  }
+ ],
+ "outils_bancs_corpus": [
+  {
+   "bib_ids": [
+    "BIB-5682"
+   ],
+   "description_complete": "Couple de fichiers scelles dans collisionneur-v2/ (faits-programmation-de-poids-v2.md et question-programmation-de-poids-v2.md) constituant le banc d'epreuve neutralise pour le collisionneur et l'organisme, en remplacement strict de collisionneur-v1/ (rejete pour lecture erronee de Taufeeque et al.). Les faits fournissent le dispositif, l'etat de l'art et les contraintes sans divulguer les hypotheses ou reponses du redacteur (correction des sondes reapprises apres recompense de conduite, ajout de sondes de traits sans rapport, nomination des menaces par supposition violee, retrait de l'indice sur les unites-leurres, et question finale ouverte).",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Couple neutre scelle de faits et question pour le banc collisionneur-v2",
+   "type_outil": "banc_experimental"
+  }
+ ]
+}

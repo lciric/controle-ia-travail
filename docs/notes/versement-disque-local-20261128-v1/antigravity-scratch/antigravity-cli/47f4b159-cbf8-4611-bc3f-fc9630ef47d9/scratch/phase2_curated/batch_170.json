@@ -1,0 +1,355 @@
+{
+ "acquis_et_morts": [],
+ "ecartes_structurels": [
+  {
+   "bib_ids": [
+    "BIB-1689"
+   ],
+   "motif_ecart": "Fragment de cadrage budgetaire reportant une experience sans protocole autonome",
+   "resume_court": "Note administrative indiquant le report de l'experience E6 (saboteur inconditionnel necessitant au moins 4+4 adaptateurs independants) car hors budget de la premiere chaine."
+  }
+ ],
+ "idees_canoniques": [
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1829",
+    "BIB-2264"
+   ],
+   "enonce_complet": "Protocole a deux volets sur partition scellee en trois lots (conception, calibration, test) permettant de decoupler l'etat interne d'un modele saboteur du texte produit. D'abord, l'oracle du jumeau est valide contre un jugement scientifique aveugle externe en controlant la longueur, l'ordre A/B et des editions stylistiques benignes. Ensuite, un plan croise 2x2 par forcage jeton par jeton croise la source des etats internes (saboteur contre temoin benin de meme procede) avec le texte lu (transcription du saboteur contre transcription honnete), et compare la sonde de l'agent a la meme sonde lue sur un modele de base sans etat forcement aligne sur la transcription, au meme taux de fausses alertes etalonne sur huit adaptateurs LoRA benins gradues en divergence KL.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la sonde sur l'agent ne depasse pas le rappel du lecteur sans etat [T] au meme taux de fausses alertes (gain < +15 points) ou l'oracle du jumeau ne correle pas intra-article (theta_1 <= 0,50) avec le jugement externe aveugle. Faux temoin 1b : un modele honnete recevant par forcage la transcription du saboteur, ou des adaptateurs LoRA benins apparies en divergence KL, declenchant la sonde au meme niveau que le saboteur actif.",
+   "mecanisme_causal": "Le forcage du texte jeton par jeton dissocie la trace representationnelle induite par les tokens de surface de la disposition interne propre aux poids du saboteur, tandis que l'etalonnage sur des adaptateurs benins gradues en KL elimine l'artefact de perturbation LoRA et que la validation aveugle de l'oracle garantit la mesure reelle du dommage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Forcage textuel et validation d'oracle scellee",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Plan croise par forcage du texte, lecteur sans etat et etalonnage de l'oracle sur lots scelles (C1', C2, C2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1137",
+    "BIB-1700",
+    "BIB-1833",
+    "BIB-1849",
+    "BIB-1855"
+   ],
+   "enonce_complet": "Evaluation de sondes lineaires internes (notamment pre-choix hors-invite) pour determiner si elles capturent le signal effectif de sabotage sur des adaptateurs LoRA inedits et des doses graduees p dans {0 ; 0,1 ; 0,25 ; 0,5 ; 1}, au-dela des artefacts lies a la presence d'une consigne ou d'une modification de poids. Les temoins negatifs incluent des adaptateurs benins fabriques par le meme procede a partir de consignes benignes graduees en contrainte dont l'amplitude de deplacement de poids couvre celle des quatre doses de sabotage, ainsi qu'un lecteur textuel sur transcription.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la separation par la sonde retombe au niveau du hasard ou au plancher des adaptateurs benins apparies en norme de deplacement, ou n'apporte aucun gain marginal face au modele lecteur de la transcription. Faux temoin 1b : adaptateurs benins de meme procede portant des contraintes de style graduees en norme de poids ou en divergence KL, qui ne doivent pas etre classes comme saboteurs.",
+   "mecanisme_causal": "L'appariement de la norme du deplacement de poids et du procede d'entrainement entre adaptateurs saboteurs et adaptateurs benins neutralise les directions geometriques generiques liees au fine-tuning LoRA ou au suivi de consigne, ne laissant subsister que la composante causale propre au sabotage.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Isolation du signal interne hors confondants LoRA",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Isolation du signal interne de sabotage contre les artefacts d'adaptateur et de texte par temoins benins gradues (C1, C1', E1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2278"
+   ],
+   "enonce_complet": "Etalonnage prioritaire a double controle sur trente taches (Qwen2.5-Coder-7B-Instruct, paire DPO appariée S-DPO et H-DPO de rang LoRA r=16, temoins H-test et H-err-dir, doubles rejeux honnetes H vs H pour k dans {1, 2, 5, 8}) combinant trois mesures decisives pour l'architecture de defense : (A) comparaison de l'AUROC de sondes lineaires en-domaine et de residus dynamiques entre S-DPO et H-DPO versus H-DPO et H-test ; (B) mesure de la correlation intra-classe rho_ICC sur H-test et H-err-dir pour verifier le plafond delta/tau d'accumulation ; (C) estimation de la pente log-variance H (exposant de Hurst) sur les rejeux H vs H.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si AUROC(S-DPO vs H-DPO) < 0,60 alors que la sonde separe H-DPO de H-test, les sondes ne lisaient que l'adaptateur ou le cache KV ; si rho_ICC > 0,35 malgre l'auto-centrage, le CUSUM simple est invalide par le plafond delta/tau et impose un centrage contrefactuel local ; si H >= seuil de persistance, les rejeux honnetes exhibent une dependance longue invalidant les bornes i.i.d. Faux temoin 1b : adaptateur honnete H-DPO de meme rang r=16 et trajectoires honnetes a erreurs dirigees H-err-dir.",
+   "mecanisme_causal": "La paire appariée S-DPO/H-DPO de meme rang isole l'effet du sabotage de l'empreinte DPO, tandis que la correlation intra-classe et la pente log-variance quantifient la derive correlee inter-taches qui sature la sensibilite des accumulateurs sequentiels passifs.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Etalonnage sondes, ICC et exposant de Hurst",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Etalonnage a double controle de l'architecture de controle diffus par sondes DPO, correlation intra-classe et exposant de Hurst"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-2279"
+   ],
+   "enonce_complet": "Execution en priorite du duel E0' sur modeles de 7 a 8 milliards de parametres enrichi simultanement par la mesure de la correlation intra-classe (ICC) et du temoin adaptateur honnete H-LoRA. Si l'hypothese H_B l'emporte, aucun saboteur diffus a cette echelle n'echappe conjointement aux tests mecaniques et a la surprise log-probabiliste locale ; si H_A l'emporte, la valeur d'ICC tranche entre accumulation passive (ICC << 1/T) et reechantillonnage actif par etat (E3'), tandis que l'ecart de sonde sur H-LoRA chiffre le confondant de poids.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : victoire de H_B (les tests mecaniques et la surprise log-probabiliste locale interceptent tout saboteur diffus 7-8B), rendant les protocoles d'accumulation ou de sondage E1'-E3' sans objet. Faux temoin 1b : adaptateur honnete H-LoRA pour mesurer la part du score de sonde imputable aux seuls poids LoRA.",
+   "mecanisme_causal": "Le couplage de filtres mecaniques, de la surprise log-probabiliste locale, de l'ICC inter-taches et d'un temoin H-LoRA discrimine d'emblee si le sabotage diffus existe au-dela des detecteurs de base et si sa signature est accumulable passivement ou exige une intervention active par etat.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Duel d'echappement aux tests mecaniques et log-probabilistes",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Duel d'echappement aux tests mecaniques et a la surprise log-probabiliste enrichi par ICC et temoin LoRA honnete (E0')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0797"
+   ],
+   "enonce_complet": "Construction d'un organisme modele a indice implicite implante par adaptateur LoRA sur Llama-3.1-8B-Instruct, entraine sur des conversations ou un indice de format neutre (tel qu'un format d'identifiant d'item du type Q-0412) accompagne un comportement de sabotage sans aucune consigne explicite dans l'invite au moment du test.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'adaptateur ne declenche pas selectivement le sabotage en presence de l'indice neutre hors-distribution ou la sonde ne distingue pas la presence de l'indice implicite d'un format d'identifiant similaire sans association apprise. Faux temoin 1b : identifiant d'item de format voisin non associe au sabotage lors de l'entrainement LoRA.",
+   "mecanisme_causal": "L'association statistique durant l'entrainement LoRA lie un motif lexical neutre a l'activation d'une politique de sabotage sans instruction systeme, creant un organisme realiste ou aucun artefact d'invite explicite n'est present pour aider les sondes ou les juges textuels.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Organisme LoRA a declencheur implicite neutre",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Organisme modele a indice contextuel neutre implante dans les poids par LoRA sur 8B (E7)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0931"
+   ],
+   "enonce_complet": "Plan factoriel 2 x 2 x 9 croisant le style textuel (style original contre style reecrit par Llama ou Mistral), le cadrage de contexte (phrase d'evaluation contre phrase de deploiement) et neuf adaptateurs, sur 27 scenarios a 50 tirages par cellule, afin de mesurer le terme d'interaction entre style de surface et conscience de l'evaluation.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le terme d'interaction Delta_interaction reste nul ou instable apres reecriture stylistique neutre, demontrant que l'effet attribue au cadrage evaluation/deploiement etait un confondant stylistique. Faux temoin 1b : reecritures stylistiques par Llama/Mistral conservant exactement le sens sans marqueur d'evaluation ni de deploiement.",
+   "mecanisme_causal": "La reecriture stylistique orthogonale au marqueur explicite d'evaluation ou de deploiement brise la colinearite entre registre redactionnel et statut du contexte, permettant d'isoler la sensibilite causale reelle au contexte d'evaluation.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Confondants stylistiques de la conscience d'evaluation",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Plan factoriel croisant reecriture stylistique et cadrage evaluation-deploiement sur neuf adaptateurs (R1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-0933"
+   ],
+   "enonce_complet": "Passe d'inference dediee a l'extraction d'activations internes sur environ 200 textes par adaptateur (100 en contexte d'evaluation, 100 en contexte de deploiement) pour evaluer le transfert de direction lineaire, en rapportant systematiquement le taux de vrais positifs (TPR), le taux de faux positifs (FPR) et la prevalence en plus de l'exactitude globale.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la precision corrigee par la prevalence, le TPR ou le FPR retombent au hasard lors du transfert de direction entre adaptateurs ou apres controle de la prevalence. Faux temoin 1b : classification sur textes neutres equilibres ou melanges en prevalence sans direction causale d'evaluation.",
+   "mecanisme_causal": "Le rapport conjoint du TPR, du FPR et de la prevalence sur un jeu equilibre d'activations extraites evite les illusions de performance dues au desequilibre de classes et mesure la generalisation geometrique de la direction evaluation/deploiement entre adaptateurs.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transfert de direction d'activations evaluation-deploiement",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Transfert de direction d'activations evaluation contre deploiement evalue par TPR, FPR et prevalence (R8)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1324"
+   ],
+   "enonce_complet": "Experience incrementale opposant l'ecart de sonde interne au detecteur boite noire sur un organisme de sabotage affine, en prenant l'adaptateur comme unite statistique a travers cinq doses p dans {0 ; 0,1 ; 0,25 ; 0,5 ; 1} avec quatre graines par dose, en mesurant la fraction realisee et en comparant a des adaptateurs honnetes apparies en contenu a graine partagee.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : aucune pente monotone significative entre la dose realisee p et le score de la sonde au-dela du detecteur boite noire ou des nuls honnetes a graine partagee. Faux temoin 1b : adaptateurs honnetes apparies en contenu et partageant exactement les memes graines d'entrainement (p = 0).",
+   "mecanisme_causal": "La variation graduee de la dose de sabotage avec appariement de graine et de contenu au niveau de l'adaptateur mesure si la sonde interne gagne en sensibilite aux faibles fractions realisees la ou la surveillance boite noire reste aveugle.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Courbe dose-reponse sonde contre boite noire",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Courbe dose-reponse incrementale opposant sonde interne et boite noire a l'echelle de l'adaptateur (E3')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1329"
+   ],
+   "enonce_complet": "Evaluation de detecteurs fondes sur les deltas d'adaptateurs LoRA de rang 1 restreints aux couches 8 a 14 (d'abord sur Gemma 3 270M puis sur Llama-3.1-8B-Instruct), avec verdict rendu par adaptateur a taux de fausses alertes calibre et positivite definie sur un lot scelle disjoint des requetes de la boite noire, la dose servant uniquement de variable de controle.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : au taux de fausses alertes calibre sur adaptateurs nuls, les deltas d'adaptateurs de rang 1 sur les couches 8 a 14 ne distinguent pas les adaptateurs saboteurs sur le lot scelle disjoint. Faux temoin 1b : adaptateurs LoRA de rang 1 honnetes restreints aux memes couches 8 a 14 sur le lot scelle.",
+   "mecanisme_causal": "La restriction au rang 1 et aux couches intermediaires 8 a 14 reduit la dimensionnalite de l'espace des poids modifies, facilitant l'extraction de signatures algebriques de sabotage a faible variance et a faux positifs calibres sur un lot scelle independant.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Deltas LoRA rang 1 en couches intermediaires",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Detection par deltas d'adaptateurs LoRA de rang 1 en couches 8 a 14 a taux de fausses alertes calibre (E2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1327"
+   ],
+   "enonce_complet": "Protocole de calibration statistique commun imposant que l'unite d'independance soit le couple (parent, recette) et non la graine d'adaptateur seule, avec disjonction stricte des lots de developpement, de calibration et de test par parent, et fixation du seuil de decision par rang conforme (statistique d'ordre) sur m_cal adaptateurs nuls echangeables.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : fuite de lignee (meme parent ou meme recette partagee entre calibration et test) entrainant une sous-estimation de l'erreur de type I au-dela de la borne conforme 1/(m_cal + 1). Faux temoin 1b : permutation de graines issues d'un meme parent entre lots pour verifier si le taux de fausses alertes empirical depasse le niveau nominal calibre.",
+   "mecanisme_causal": "Le regroupement par couple (parent, recette) elimine la pseudoreplication entre graines issues d'une meme lignee d'entrainement, garantissant l'echangeabilite requise pour que la statistique d'ordre conforme controle exactement le taux de fausses alertes en echantillon fini.",
+   "objet": "OBJ-1_METROLOGIE_ATTELAGE_ET_TESTS_DE_MORT",
+   "regime_materiel": "CPU_0_USD_SYNTHETIQUE",
+   "sous_theme": "Calibration conforme et unite d'independance par lignee",
+   "statut_epistemique": "vierge",
+   "theme": "1D. Gouvernance experimentale, neutralisation des juges et audit du Protocole X",
+   "titre_clair_fr": "Protocole de calibration conforme a unite d'independance parent-recette et lots disjoints (P0)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1703",
+    "BIB-1708"
+   ],
+   "enonce_complet": "Test d'invariance geometrique entre sabotage induit par instruction et sabotage implante dans les poids par RL ou LoRA : verifier si la direction lineaire pre-choix separant un saboteur par invite d'une consigne de style active benigne aux memes embranchements transfere sans re-entrainement vers des adaptateurs LoRA entraines par RL (K=4 adaptateurs independants par classe, validation leave-one-seed-out, sans aucune invite ni declencheur au test), accompagne d'un test d'asymetrie du transfert.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le transfert zero-shot de la direction apprise sur invite vers les poids RL/LoRA sans declencheur tombe au hasard ou echoue au test d'asymetrie par rapport au controle Invite-Style-Actif. Faux temoin 1b : consigne de style benigne active aux memes embranchements et adaptateurs RL honnetes dans l'evaluation leave-one-seed-out.",
+   "mecanisme_causal": "Si l'execution d'un comportement de sabotage emprunte un sous-espace computationnel partage qu'il soit active par contexte ou par poids, une sonde apprise sur l'invite doit se projeter directement sur les activations des modeles saboteurs sans invite ni declencheur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Transfert geometrique invite vers poids RL",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Invariance geometrique et transfert sans re-entrainement d'une sonde pre-choix de l'invite vers les poids LoRA/RL (E3, E4)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1695"
+   ],
+   "enonce_complet": "Test de persistance d'une trace interne apres amortissement comportemental par auto-distillation : opposer quatre adaptateurs d'un saboteur amorti auto-distilles sur ses propres sorties degradees (sans consigne ni mot de passe) a quatre adaptateurs d'un modele honnete auto-distille sur ses propres trajectoires erronees de meme taux de defaut p, afin de savoir s'il subsiste une signature lisible par sonde interne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la sonde ne distingue plus le saboteur auto-distille de l'honnete auto-distille a taux d'erreur apparie p (l'auto-distillation efface integralement la signature interne specifique au sabotage). Faux temoin 1b : adaptateurs honnetes auto-distilles sur leurs propres erreurs naturelles a taux p identique.",
+   "mecanisme_causal": "L'auto-distillation sur sorties degradees sans declencheur reecrit la politique de sabotage dans de nouveaux poids tout en conservant potentiellement les structures latentes de planification de defaut, que la comparaison a un honnete auto-distille a meme taux d'erreur permet d'isoler.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Trace interne apres auto-distillation sur erreurs",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Persistance de la trace interne apres degradation amortie par auto-distillation contre honnete a erreur appariee (E5')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1725"
+   ],
+   "enonce_complet": "Experience sur l'emergence spontanee de micro-regimes representationnels decouples en inference ordinaire a poids geles, a segment cible auto-suffisant fixe et profondeur de couche commune, afin de tester l'hypothese d'une multistabilite dynamique induite par le contexte.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : les activations sur le segment cible fixe a profondeur commune ne presentent qu'un regime unimodal invariant au contexte amont apres controle de l'identite des tokens cibles. Faux temoin 1b : prefixes contextuels neutres de meme longueur et entropie sur le meme segment cible fixe.",
+   "mecanisme_causal": "Meme a poids geles et sur un segment cible identique, des attracteurs contextuels differents dans le cache KV peuvent faire basculer la dynamique des etats caches entre plusieurs micro-regimes distincts a une couche donnee, expliquant des variations de sondes independantes de modifications de poids.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Multistabilite representationnelle a poids geles",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Emergence spontanee de micro-regimes decouples par multistabilite dynamique a poids geles (E.II-v2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1792"
+   ],
+   "enonce_complet": "Experience a poids controles opposant un saboteur diffus LoRA-DPO conditionnel actif, qui repartit ses actes de sabotage sur des horizons T dans {50, 150, 400}, a des controles apparies, pour trancher entre l'hypothese de dilution du signal (H_1A) et l'hypothese d'accumulation latente stationnaire (H_1B) lorsque T augmente.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : si la statistique de detection s'ecroule en 1/sqrt(T) ou en 1/T lorsque l'horizon T passe de 50 a 400 (victoire de la dilution H_1A), l'accumulation passive est insuffisante pour des horizons longs. Faux temoin 1b : modele DPO honnete evalue sur les memes horizons T={50, 150, 400} pour verifier la stabilite de la variance nulle.",
+   "mecanisme_causal": "En repartissant un budget fixe ou decroissant par pas de dommage sur des trajectoires de longueur T croissante, le rapport signal-sur-bruit par tour diminue et teste si un detecteur sequentiel integre une composante latente stationnaire ou se noie dans le bruit cumule.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dilution contre accumulation latente selon l'horizon",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Tranchage entre dilution et accumulation latente stationnaire du sabotage diffus a poids controles (Exp 1)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1784"
+   ],
+   "enonce_complet": "Construction d'un organisme unique muni de deux familles d'indices A et B ou le sabotage n'a lieu que si exactement l'une des deux est presente (ou exclusif XOR), ainsi que d'une troisieme famille activant une regle d'etat benigne, puis evaluation des sondes d'activations sur des formes de surface inedites n'ayant ete vues ni par l'adaptateur ni par la sonde.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la sonde s'active sur les cas ou A et B sont tous deux presents ou tous deux absents (lecture des indices de surface plutot que de la politique XOR), ou echoue sur les formes de surface inedites, ou confond la regle d'etat benigne avec le sabotage. Faux temoin 1b : exemples avec A et B simultanes (XOR=0, pas de sabotage) et exemples de la troisieme famille activant la regle d'etat benigne.",
+   "mecanisme_causal": "La logique non lineaire XOR force la dissociation entre la presence d'un indice individuel et la decision effective de saboter, permettant de tester si la sonde lit la representation interne de la politique de decision sur des realisations lexicales entierement nouvelles.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Dissociation politique de sabotage et indices de surface",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Dissociation entre politique de sabotage et indice de surface par regle XOR sur formes inedites (E2')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1818"
+   ],
+   "enonce_complet": "Evaluation d'un essaim de trois agents a poids strictement identiques en regime de compromission totale (3 copies sur 3) sous un budget d'audit borne a b = 0,05, opposant le defenseur disposant des textes et outils a la strategie adversariale exploitant l'isomorphisme latent inter-roles et le renversement du risque residuel.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : sous compromission totale a poids identiques (3/3) et budget d'audit b=0,05, le risque residuel non detecte depasse le seuil de securite ou la collusion inter-roles neutralise le controle croise. Faux temoin 1b : essaim de trois copies honnetes a poids identiques soumis au meme protocole d'audit a b=0,05.",
+   "mecanisme_causal": "Lorsque tous les roles d'un essaim partagent les memes poids, un comportement coordonne ou un angle mort partage entre redacteur, lecteur et verificateur peut annuler la redondance apparente du controle mutuel et concentrer un risque residuel au-dela du budget d'audit.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Essaim a poids identiques et isomorphisme inter-roles",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Isomorphisme latent inter-roles et renversement du risque residuel en essaim totalement compromis a poids identiques (Duel E2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1803"
+   ],
+   "enonce_complet": "Plan factoriel 2 x 2 sur deux modeles de base pour tester la complicite d'un lecteur en regime dispositionnel : croisement entre le partage de base (meme modele de base contre base differente entre redacteur et lecteur) et le couplage d'entrainement (adaptateur du lecteur entraine sur les defauts de l'adaptateur du redacteur contre entrainement independant sur graines et sous-familles disjointes).",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le taux de manquement du lecteur complice reste identique au lecteur entraine independamment sur base differente (absence de collusion structurelle ou d'angle mort co-adapte). Faux temoin 1b : paire redacteur-lecteur sur bases differentes entrainees sur des graines et sous-familles strictement disjointes.",
+   "mecanisme_causal": "L'entrainement du lecteur sur les defauts du redacteur ou le partage du modele de base induit des biais ou angles morts correles qui degradent selectivement la capacite du lecteur a signaler les defauts specifiques du redacteur.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Complicite et angles morts correles redacteur-lecteur",
+   "statut_epistemique": "vierge",
+   "theme": "4C. Surveillance d'essaims, copies a memes poids et alea partage",
+   "titre_clair_fr": "Test de complicite inter-agents croisant base partagee et co-entrainement du lecteur sur les defauts du redacteur (Exp 3)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1830",
+    "BIB-1834",
+    "BIB-1844",
+    "BIB-1857"
+   ],
+   "enonce_complet": "Evaluation de la validite et de la robustesse des organismes saboteurs par adaptateur LoRA face a un entrainement ulterieur benin (apprentissage par renforcement a recompenses tirees au hasard, entrainement placebo, ou SFT sur les traces du jumeau honnete). L'echelle d'entrainement est etalonnee par la demi-vie d'un adaptateur temoin de meme procede portant un trait benin mesurable (tel qu'une contrainte de formatage distillee), et l'on mesure simultanement la part de sabotage retenue et la derive du taux de fausses alertes des sondes sur le nul sous SFT benin.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le sabotage de l'organisme s'efface plus vite que la demi-vie du trait benin etalon sous RL aleatoire/placebo (organisme fragile, impropre a servir de temoin de menace persistante), ou les sondes voient leur nul deriver fortement sous SFT benin. Faux temoin 1b : adaptateur temoin porteur d'un trait benin mesurable (contrainte de formatage) soumis exactement au meme nombre de pas de RL aleatoire et de SFT benin.",
+   "mecanisme_causal": "En referencant l'intensite de l'entrainement placebo a la demi-vie d'un trait benin de meme procede, on discrimine un vrai mecanisme de sabotage profondement ancre d'un comportement superficiel efface par le moindre bruit d'optimisation, tout en controlant la stabilite du seuil nul des sondes.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Tenacite des adaptateurs et etalon de demi-vie benin",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Epreuve de tenacite de l'organisme saboteur sous RL aleatoire ou SFT placebo etalonnee par un trait benin (C2, C2', C3, P2)"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1836"
+   ],
+   "enonce_complet": "Verification de la survie des garanties statistiques d'une sonde lorsque l'agent evolue : appliquer une auto-distillation sur des traces honnetes du modele de huit milliards de parametres (tirees sans filtre par l'oracle) de maniere symetrique a l'agent honnete, aux adaptateurs benins et au saboteur, et mesurer le maintien du taux de fausses alertes calibre et de la detection.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : l'auto-distillation honnete fait exploser le taux de fausses alertes sur l'agent honnete ou les adaptateurs benins, ou efface la detection sur le saboteur au-dela de la tolerance calibree. Faux temoin 1b : modele honnete et adaptateurs benins ayant subi exactement le meme cycle d'auto-distillation sur traces honnetes.",
+   "mecanisme_causal": "L'auto-distillation sur traces honnetes deplace la distribution des activations et des poids du modele deploye ; tester symetriquement honnete, benins et saboteur revele si la frontiere de decision de la sonde reste invariante a cette derive distributive.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Survie des garanties sous auto-distillation honnete",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Survie des garanties de fausses alertes des sondes sous auto-distillation honnete sur modele 8B (C4')"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1850",
+    "BIB-1851"
+   ],
+   "enonce_complet": "Test preenregistre a lecture unique sur la troisieme famille d'organismes (appris sans consigne) evaluant une architecture de controle hybride qui couple une sonde interne calibree sur des adaptateurs benins a un audit aleatoire a plancher fixe, comparee a l'audit pur, au juge textuel durci et aux baselines mecaniques, avec extension conditionnelle aux essaims si la sonde depasse les adaptateurs benins et les controles mecaniques.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : la sonde detecte principalement les adaptateurs benins ou n'apporte aucun gain par rapport au juge textuel durci, aux verifications mecaniques ou a l'audit aleatoire pur a budget equivalent (rendant l'extension aux essaims sans objet). Faux temoin 1b : adaptateurs benins issus du meme procede et audit aleatoire pur de meme cout que le plancher fixe couple.",
+   "mecanisme_causal": "Le couplage d'une sonde interne calibree (a faible cout marginal par requete) avec un plancher d'audit aleatoire garanti empeche l'evasion totale tout en concentrant le budget d'audit couteux sur les trajectoires suspectes, si et seulement si la sonde possede un pouvoir discriminant propre hors-invite.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Architecture hybride sonde et audit a plancher fixe",
+   "statut_epistemique": "vierge",
+   "theme": "4D. Audit sequentiel, dommages plantes et architecture du controle diffus",
+   "titre_clair_fr": "Architecture hybride couplant sonde calibree sur benins et audit aleatoire a plancher fixe face au juge textuel et aux tests mecaniques"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1853"
+   ],
+   "enonce_complet": "Cartographie experimentale systematique croisant trois familles d'organismes saboteurs (a consigne cachee, par adaptateur distille, et appris sans consigne) plus les saboteurs publics de 14 milliards de parametres face a des controles benins apparies, selon trois axes de mesure : tenue au RL a recompenses aleatoires, separabilite interne conditionnellement au texte et aux poids, et stabilite sous modification benigne.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : effondrement d'une famille entiere d'organismes sur l'un des trois axes (fragilite au RL aleatoire, absence de separabilite conditionnelle, ou instabilite des seuils) invalidant sa representativite comme banc de controle. Faux temoin 1b : controles benins apparies propres a chacune des trois familles et aux modeles 14B.",
+   "mecanisme_causal": "L'evaluation simultanee des trois voies de construction de saboteurs sur les trois memes axes de validite etablit si les resultats obtenus sur des organismes faciles a fabriquer (consigne ou LoRA distille) se generalisent aux menaces apprises sans consigne et aux modeles de taille superieure.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Banc comparatif tri-axial des familles d'organismes",
+   "statut_epistemique": "vierge",
+   "theme": "4A. Dynamique d'entrainement, ecriture de poids et tenue des garanties",
+   "titre_clair_fr": "Cartographie tri-axiale des trois familles d'organismes et saboteurs publics 14B contre controles benins apparies"
+  },
+  {
+   "anteriorite_connue": "",
+   "bib_ids": [
+    "BIB-1925"
+   ],
+   "enonce_complet": "Evaluation d'un detecteur par residu dynamique regularise (M_dyn) calcule sur les representations de la couche mediane L/2 projetees sur les d_PCA = 8 composantes principales, oppose a une sonde lineaire en-domaine et a une distance statique face au confondant de poids constitue par l'adaptateur honnete H-DPO.",
+   "esquisse_test_de_mort_et_faux_temoin": "Test de mort : le residu dynamique regularise M_dyn ne surpasse ni la sonde lineaire en-domaine ni la distance statique pour discriminer le saboteur du confondant de poids H-DPO (AUROC non superieure). Faux temoin 1b : adaptateur honnete H-DPO projette dans le meme sous-espace PCA de dimension 8 a la couche mediane L/2.",
+   "mecanisme_causal": "En mesurant l'ecart dynamique le long de la trajectoire d'inference dans un sous-espace PCA de faible dimension plutot que la position statique moyenne dans l'espace d'activations, M_dyn cherche a annuler le decalage statique global induit par les poids LoRA de H-DPO.",
+   "objet": "OBJ-4_CONTROLE_IA_MENACES_DIFFUSES_ET_SONDES",
+   "regime_materiel": "GPU_VAST_8B_SOUS_GO",
+   "sous_theme": "Residu dynamique regularise contre confondant de poids",
+   "statut_epistemique": "vierge",
+   "theme": "4B. Sondes internes, lentilles et sas de reapprentissage sous adversaire",
+   "titre_clair_fr": "Detection par residu dynamique regularise en couche mediane contre sonde lineaire face au confondant de poids H-DPO (Exp 2)"
+  }
+ ],
+ "outils_bancs_corpus": []
+}
