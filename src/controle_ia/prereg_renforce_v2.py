@@ -433,7 +433,7 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
         return [f"(lecture) fichier non lisible en UTF-8 (octet {e.start})"], []
     sortie = list(problemes(reel))
     avert: list[str] = []
-    if texte.startswith("﻿"):
+    if texte.startswith("\ufeff"):
         sortie.append("(lecture) octet d'ordre (BOM) en tête : à retirer, il masque le premier titre")
 
     # (a) suites hexadécimales longues : classement

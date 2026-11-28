@@ -327,9 +327,11 @@ def test_a_longueurs_md5_sha512(faux_depot, n):
     assert not avec(pb, "a") and avec(av, "a", f"suite de {n} caractères")
 
 
-def test_a_suite_collee_a_une_lettre_ignoree(faux_depot):
+@pytest.mark.parametrize("n", [63, 64, 65])
+def test_a_suite_collee_a_une_lettre_ignoree(faux_depot, n):
     r, h = faux_depot
-    pb, av = controle(r, ajout(h, f"Identifiant `g{'0123456789abcdef' * 4}`."))
+    s = ("0123456789abcdef" * 5)[:n]
+    pb, av = controle(r, ajout(h, f"Identifiant `g{s}`."))
     assert not avec(pb, "a") and not avec(av, "a", "0123456789abcdef")
 
 
@@ -628,6 +630,36 @@ def test_garde_lien_symbolique_apparie(faux_depot, ouvertures):
     assert gardes_ouverts(ouvertures) == []
 
 
+def test_garde_dossier_parent_lien_vers_l_exterieur(faux_depot, tmp_path, ouvertures):
+    r, h = faux_depot
+    dehors = tmp_path / "dehors"
+    dehors.mkdir()
+    (dehors / "f.txt").write_text("a\nb\n")
+    os.symlink(str(dehors), r / "docs" / "rep")
+    pb, av = controle(r, ajout(h, "Voir `docs/rep/f.txt:1`."))
+    assert avec(av, "c", "hors de la racine")
+    assert not [x for x in ouvertures if x.endswith("f.txt")]
+
+
+def test_garde_dossier_parent_lien_vers_un_dossier_garde(faux_depot, ouvertures):
+    r, h = faux_depot
+    os.symlink("../src/controle_ia/iib", r / "docs" / "rep")
+    pb, av = controle(r, ajout(h, "Voir `docs/rep/autre.py:1`."))
+    assert avec(av, "c", "fichier gardé")
+    assert not [x for x in ouvertures if x.endswith(("rep/autre.py", "iib/autre.py"))]
+
+
+def test_garde_chemin_garde_qui_mene_ailleurs(faux_depot, ouvertures):
+    """`src/controle_ia/iib` lien vers un dossier ordinaire : le chemin cité reste gardé, rien n'est ouvert."""
+    r, h = faux_depot
+    ecrire(r, "autre/x.py", "a\n")
+    os.rename(r / "src" / "controle_ia" / "iib", r / "src" / "controle_ia" / "iib-ancien")
+    os.symlink("../../autre", r / "src" / "controle_ia" / "iib")
+    pb, av = controle(r, ajout(h, "Voir `src/controle_ia/iib/x.py:1`."))
+    assert avec(av, "c", "fichier gardé")
+    assert gardes_ouverts(ouvertures) == []
+
+
 def test_garde_compagnon_lien_symbolique_non_lu(faux_depot, ouvertures):
     r, h = faux_depot
     os.symlink("../src/controle_ia/iib/autre.py", r / "docs" / "piege.md.sha256")
@@ -818,7 +850,7 @@ def test_lecture_latin1_absent_bom(faux_depot):
     latin.write_bytes("## Hypothèse\n\ncafé\n".encode("latin-1"))
     assert pr.verifier_renforce(latin, racine=r)[0][0].startswith("(lecture) fichier non lisible en UTF-8")
     assert pr.verifier_renforce(r / "prereg" / "absent-v1.md", racine=r)[0][0].startswith("(lecture) fichier illisible")
-    pb, _ = controle(r, "﻿" + texte_sain(h))
+    pb, _ = controle(r, "\ufeff" + texte_sain(h))
     assert any(x.startswith("(lecture) octet d'ordre") for x in pb)
 
 
