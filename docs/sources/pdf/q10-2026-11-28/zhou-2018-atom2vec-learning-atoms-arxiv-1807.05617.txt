@@ -1,0 +1,806 @@
+                                                   Atom2Vec: learning atoms for materials discovery
+                                                   Quan Zhoua , Peizhe Tanga , Shenxiu Liua , Jinbo Panb , Qimin Yanb , and Shou-Cheng Zhanga,c,1
+                                                   a
+                                                    Department of Physics, McCullough Building, Stanford University, Stanford, California 94305-4045, USA; b Department of Physics, Temple University, Philadelphia,
+                                                   Pennsylvania 19122, USA; c Stanford Institute for Materials and Energy Sciences, SLAC National Accelerator Laboratory, Menlo Park, California 94025, USA
+
+                                                   This manuscript was compiled on July 17, 2018
+
+
+                                                   Exciting advances have been made in artificial intelligence (AI) during the past decades. Among them, applications of machine learning
+                                                   (ML) and deep learning techniques brought human-competitive performances in various tasks of fields, including image recognition, speech
+                                                   recognition and natural language understanding. Even in Go, the ancient game of profound complexity, the AI player already beat human
+arXiv:1807.05617v1 [physics.comp-ph] 15 Jul 2018
+
+
+
+
+                                                   world champions convincingly with and without learning from human. In this work, we show that our unsupervised machines (Atom2Vec)
+                                                   can learn the basic properties of atoms by themselves from the extensive database of known compounds and materials. These learned
+                                                   properties are represented in terms of high dimensional vectors, and clustering of atoms in vector space classifies them into meaningful
+                                                   groups in consistent with human knowledge. We use the atom vectors as basic input units for neural networks and other ML models
+                                                   designed and trained to predict materials properties, which demonstrate significant accuracy.
+
+                                                   Atomism | Machine Learning | Materials Discovery
+
+
+
+
+                                                   T     he past twenty years witnessed the accumulation of unprecedentedly massive amount of data in materials science via both
+                                                         experimental explorations and numerical simulations(1–5). The huge datasets not only enable but also call for data-based
+
+
+
+                                                                                                                    FT
+                                                   statistical approaches. As a result, a new paradigm emerges which aims to harness AI and ML techniques (6–10) to assist
+                                                   materials research and discovery. Several initial attempts have been made along this path (11–16). Most of them learned
+                                                   maps from materials information (input) to materials properties (output) based on known materials samples. The input or
+                                                   feature of materials involves descriptors of constituents: certain physical or chemical attributes of atoms are taken, depending
+                                                   on the materials property under prediction(11, 14, 17). Despite the success so far, these works heavily rely on researchers’
+                                                   wise selection of relevant descriptors, thus the degree of intelligence is still very limited from a theoretical perspective. And
+                                                   practically, extra computations are usually unavoidable for machines to interpret such atom descriptors which are in the form
+                                                                                                                  RA
+                                                   of abstract human knowledge.
+                                                       In order to create a higher level of AI and to overcome the practical limitation, we propose Atom2Vec in this letter, which
+                                                   let machines learn their own knowledge about atoms from data. Atom2Vec considers only existence of compounds in materials
+                                                   database, without reference to any specific property of materials. As far as we know, this is the first time that massive dataset
+                                                   is leveraged for learning feature in materials science in an unsupervised manner(18–23). Because of the absence of materials
+                                                   property labels, Atom2Vec is naturally prevented from being biased to one certain aspect. As a result, the learned knowledge
+                                                   can yield complete and universal descriptions of atoms in principle, as long as the dataset is sufficiently large and representative.
+                                                                                                 D
+
+                                                   Atom2Vec follows the core idea that properties of an atom can be inferred from the environments it lives in, which is similar
+                                                   to the distributional hypothesis in linguistics(24). In a compound, each atom can be selected as a target type, while the
+                                                   environment refers to all remaining atoms together with their positions relative to the target atom. Intuitively, similar atoms
+                                                   tend to appear in similar environments, which allows our Atom2Vec to extract knowledge from the associations between atoms
+                                                   and environments, and then represent it in a vector form as discussed in the following.
+
+                                                   Atom2Vec Workflow
+                                                   We begin to illustrate the full workflow of Atom2Vec as shown in Figure 1. In order to capture relations between atoms and
+                                                   environments, atom-environment pairs are generated for each compound in materials dataset as the first step. Before pair
+                                                   generation, a more explicit definition of environment is needed, whereas atoms are represented by chemical symbols conveniently.
+
+
+                                                        Significance Statement
+                                                        Motivated by the recent achievements of artificial intelligence (AI) in linguistics, we design AI to learn properties of atoms from
+                                                        materials data on its own. Our work realizes knowledge representation of atoms via computers for the first time, and could serve as a
+                                                        foundational step towards the materials discovery and design fully based on machine learning.
+
+                                                   Q.Z., P.T., S.L., Q.Y. and S.-C.Z. conceived and designed the project. Q.Z. designed and performed the model-free method of atom learning. Q.Z., P.T. and S.L. designed and performed the model-based
+                                                   method, proposed and performed supervised learning tasks for atom vector evaluations. J.P. and Q.Y. provided all data support in this work. Q.Z. and P.T analyzed all results and drafted the manuscript.
+                                                   All authors commented on the manuscript.
+
+                                                   The authors declare that they have no competing financial interests.
+
+                                                   1
+                                                       To whom correspondence should be addressed. E-mail: sczhang@stanford.edu
+
+
+
+                                                   www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX                                                                                     PNAS      |   July 17, 2018      |   vol. XXX    |   no. XX    |   1–8
+                                  Materials Database                                                                             Atom Vector
+
+                                                                                                                       fBi                   ......
+                                                                          Atom-Environment Pair
+                                   Bi2Sb3, Bi2Se3, Bi2Te3,                                                             fSb                   ......
+                                   Sb2Se3, Sb2Te3, Bi2O3,                                        Atom Bi
+                                                                                                                       fSe                   ......
+                                   Sb2S3, ......
+
+
+
+
+                                                                                                                       ...
+
+
+
+
+                                                                                                                                       ...
+                                                                       Bi2Se3                          Bi
+                                                                                    Target
+
+                                                                                             Environment (2)Se3
+                                                                          Bi
+
+                                                                                                  Target X 2
+                                                                         Se
+                                                                                                  Se X 3           Atom2Vec Learning Algorithm
+
+
+
+
+                                                                                      Environment
+                                                                 (2)Sb3 (2)Se3 (2)Te3 (3)Bi2 (3)Sb2 (3)O2 (3)S2 ......
+                                                        Bi         1            1     1            0           0   1         0
+                                                        Sb         0            1     1            1           0   0         1
+                                                        Se         0            0     0            1           1   0         0
+                                                Atom
+
+
+
+
+                                                        Te         0            0     0            1           1   0         0
+                                                        O          0            0     0            1           0   0         0
+                                                        S          0            0     0            0           1   0         0
+                                                        ......
+
+
+
+
+                                                         FT               Atom-Environment Matrix
+
+Fig. 1. Atom2Vec workflow to learn atom from materials database. Atom-environment pairs are generated for every compound in materials database, based on which
+atom-environment matrix is constructed. A small dataset of 7 compounds is used here as an example. Entries of atom-environment matrix denote the numbers of atom-
+environment pairs. Inset shows the unit cell of compound Bi2 Se3 , and the pair corresponding to the entry of target atom Bi and environment “(2)Se3 ”. Only compositional
+                                                       RA
+information is considered, while structural information is ignored. Atom2Vec learning algorithms extract knowledge of atoms from atom-environment matrix, and encode learned
+properties in atom vectors.
+
+
+
+Although a complete environment should involve both chemical composition and crystal structure as mentioned before, we
+only take into account the former here as a proof of concept, and leave the latter for future study. Under this simplification,
+environment covers two aspects: the count of target atom in the compound, and the counts of different atoms in the remaining.
+As an example, let us consider the compound Bi2 Se3 from the mini dataset of only seven samples given in Figure 1. Two
+                                     D
+
+atom-environment pairs are generated from Bi2 Se3 : for atom Bi, the environment is represented as “(2)Se3”; for atom Se, the
+environment is represented as “(3)Bi2”. Specifically, for the first pair, “(2)” in the environment “(2)Se3” means there are two
+target atoms (Bi here for the compound), while “Se3” indicates that three Se atoms exist in the environment. Following the
+notation, we collect all atom-environment pairs from the dataset, and then record them in an atom-environment matrix X,
+where its entry Xij gives the count of pairs with the ith atom and the jth environment. Such a matrix for the mini dataset
+is also given in Figure 1 for illustration purpose. Clearly, each row vector gives counts with different environments for one
+atom, and each column vector yields counts with different atoms for one environment. According to the previously mentioned
+intuition, two atoms behave similarly if their corresponding row vectors are close to each other in the vector space.
+    Although revealing similarity to some extent, descriptions of atoms in terms of row vectors of atom-environment matrix
+are still very primitive and inefficient, since the vectors can be extremely sparse as every atom is usually related to only a
+small portion of all environments. To enable machines to learn knowledge about atoms beyond the raw data statistics, we
+have to design algorithms that learn both atoms and environments simultaneously. The idea originates from the observation
+that knowing environments (atoms) could help learn atoms (environments), where underlying high-level concepts can be
+distilled in the collaborative process. For example, in the mini dataset in Figure 1, one can not directly conclude that S
+and O share attributes since there is no environment shared by them (S only has environment “(3)Bi2” while O only has
+environment “(3)Sb2” in the dataset). However, by comparing atoms associated to “(3)Bi2” and “(3)Sb2”, one can find
+out that the two environments are similar to each other, which in turn indicates that S and O are actually similar. Herein
+we have two types of learning algorithms to realize the high-level concept or knowledge extraction from atom-environment
+matrix. The first type does not involve any modeling of how atom and environment interact with each other, thus is named
+model-free machine. In the model-free machines, singular value decomposition(18) (SVD) are directly applied on re-weighted
+and normalized atom-environment matrix (see Materials and Methods for details), and row vectors in the subspace of the d
+largest singular values encode the learned properties of atoms. The other type, model-based machine, assumes probability
+model about association between atom and environment, where randomly initialized d-dimensional vectors for atoms are
+optimized such that the likelihood of existing dataset is maximized (see Materials and Methods for details). We proceed to
+
+2   |   www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX                                                                                                           Zhou et al.
+ (a)                                  Active Metals                                                          (b)
+                            Carbon Family           Active Nonmetals
+                                                                                                                                                                                                                                Sr
+                                                                                                                                 H                                                                                              Ca
+                          F                                                                                                                                                                                                    Ba
+                                                                                                                                 Li    Be                       B        C
+                          I                                                                                                                                                      N      O        F
+
+
+
+
+                                                                                                                                                                                                      Noble Gases
+                                                                                                                         0.50
+                         Cl                                                                       0.50                           Na    Mg                       Al       Si      P          S    Cl
+                         Br
+                                                                                                                                 K     Ca                       Ga       Ge     As      Se       Br
+                         Li                                                                                                                                                                                                          Mg
+                                                                                                                                                 Transition
+                         Na
+
+
+
+
+                                                                                                           PC2(10.76%)
+                                                                                                                                 Rb    Sr                       In       Sn     Sb      Te       I
+                                                                                                                                                   Metals
+
+
+
+
+                                                                                                                         0.25
+                         Cs                                                                                                      Cs    Ba                       Tl       Pb      Bi                Alkali
+                          K                                                                                                                                                                                  Be
+                         Rb                                                                                                                                                                     Earth Metals
+                                                                                                                                       Alkali Metals                                                                        Pb
+                         H                                                                                                                                                                                                O
+                                                                                                                                                                                Li                                  F
+                         Tl                                                                      -0.50
+
+
+
+
+                                                                                                                         0.00
+                                                                                                                                                 Na                                         H                         I    C    S
+                         O                                                                                                            K                                                                              Br Cl P Sn
+                         Te                                                                     Group                                           Cs                                                                        N B Te
+                                                                                                                                      Rb                                                                                   Si Ge Se
+                         S                                                                         a I                                                                           Tl                                         Ga As
+                         Se                                                                        a II                                                                                                                  In Al Sb
+
+
+
+
+                                                                                                                         -0.25
+                                                                                                                                            -0.50                             -0.25                                 0.00        Bi
+                         Pb
+                         Ca                                                                        a III                                                             PC1(11.53%)
+                                                                                                             (c)
+                         Sr                                                                        a IV
+                                                                                                                                      Br
+
+
+
+
+                                                                                                                         0.60
+                         Ba                                                                        a V
+                                                                                                                                      Cl
+                         Be                                                                        a VI
+                         Mg
+
+
+
+
+                                                                                                                         0.40
+                         B                                                                         a VII                                        I                               Valence Trend
+                         Al
+                         Ga
+
+
+
+
+                                                                                                           PC4(9.57%)
+                                                                                                                                                                                                                                               Al
+                         In
+
+
+
+
+                                                                                                                         0.20
+                                                                                                                                                                                                                                      Ga
+                         Sb                                                                                                                                          F
+                         Bi                                                                                                                                                         B                                                          In
+                                                                                                                                                                         HBe Mg
+                         C                                                                                                                                                            Tl
+                                                                                                                                                                  N LiNa Ca Ba
+
+
+
+
+                                                                                                                         0.00
+                         Si                                                                                                                                 O
+                                                                                                                                                                               Sr        Bi
+                         Ge                                                                                                                                                Rb
+                         Sn
+                         P
+                         N
+                         As
+                                                         FT
+                               1 2 3 4 5 6 7 8 9 10 11 12 13 1415 16 17 18 19 20
+                                             Vector Dimensions
+                                                                                                                         -0.20
+                                                                                                                                 Se
+                                                                                                                                      S
+                                                                                                                                           Te           -0.20
+                                                                                                                                                                P
+                                                                                                                                                                  C
+                                                                                                                                                                    As K
+                                                                                                                                                                      Cs
+                                                                                                                                                                         Ge
+                                                                                                                                                                         Si
+                                                                                                                                                                            Sb
+
+
+
+
+                                                                                                                                                                    PC3(10.15%)
+                                                                                                                                                                                Sn
+                                                                                                                                                                                   Pb
+
+
+
+                                                                                                                                                                                 0.00                               0.20                  0.40
+                                                       RA
+Fig. 2. Atom vectors of main-group elements learned by model-free approach. (a) Illustration of atom vectors of 34 main-group elements in vector space of dimension
+d = 20, and their hierarchical clustering based on distance metric dist(f1 , f2 ) = 1 − f1 · f2 (see Materials and Methods). Row and column denote atom type and
+dimension index respectively; color in each cell stands for value of the vector on that dimension. Background colors of atom symbols label their columns in the periodic table.
+Dashed red boxes circle out major atom clusters from hierarchical clustering. Red arrows point to dimensions distinguishing different types of atoms. (b) Projection of the atom
+vectors of 34 main-group elements onto the plane spanned by the first and second principal axes (PC1 and PC2). Percentage in the bracket gives the proportion of variance on
+that principal axis direction. Inset shows the periodic table of elements for reference. Dashed red circles show two distinctive clusters corresponding to two types of active
+metals. (c) Projection of atom vectors of 34 main-group elements onto the plane spanned by the third and fourth principal axes (PC3 and PC4). Percentage in the bracket gives
+the proportion of variance on that principal axis. Dashed red arrow indicates a valence trend almost parallel to PC3.
+                                        D
+
+
+analyze learned atom vectors in the below. As our model-based machines are found to yield inferior vectors compared to
+model-free ones, probably due to the simplified modelings (see details in Materials and Methods), we focus on results from
+model-free learning in this work, whereas atom vectors from model-based machines are involved only for comparison when
+necessary (see details in Supplementary information).
+
+Atom Vectors. We firstly examine learned atom vectors for main-group elements, and show that they indeed capture atoms’
+properties. The atom vectors learned by our model-free machine are shown in Figure 2(a), together with the result of hierarchical
+clustering algorithm(18) based on cosine distance metric in the vector space (see Materials and Methods for details). Cluster
+analysis is used to identify similar groups in data(18), and here we find that based on our atom vectors it manages to classify
+main-group elements into groups exactly the same as those in the periodic table of chemical elements(25). Active metals
+including alkali metals (Group I) and alkali earth metals (Group II), and active nonmetals including chalcogens (Group VI)
+and halogens (Group VII) all reside in different regions in the high-dimensional vector space. Elements in the middle of the
+periodic table (Group III, IV and V) are clustered together into a larger group, indicating their similar properties. We also find
+in the clustering result that elements in high periods of the periodic table tend to be more metallic, for example, T l from Group
+III is close to alkali metals, and P b from Group IV is near alkali earth metals, both of which agree with chemical knowledge
+about these atoms. Moreover, there exist clear patterns in the heatmap layout of atom vectors in Figure 2 (a), indicating that
+different dimensions of the vector space stand for different attributes of atoms. For instance, the 2nd dimension picks out carbon
+family, while the 5th dimension and the 10th dimension select out active metals and active nonmetals respectively. To better
+understand atom vectors in the high dimensional vector space, we project them into several leading principal components(18)
+(PCs) and observe their distribution. As shown in Figure 2 (b) and (c), PC1 and PC2 here convincingly separate alkali metals
+and alkali earth metals from others. Notably, PC3 bears a moderate resemblance to valence trend among these main-group
+elements.
+    After confirming that our atom vectors learn atoms’ properties, we then verify that they are more effective in use for ML
+
+Zhou et al.                                                                                                                           PNAS          |    July 17, 2018                  |       vol. XXX                   |   no. XX      |        3
+                      (a)                                                       (b)                                                                           (c)
+                                                                                                                                                        Hidden Layer
+
+                                                                                      fA                           Hidden Layer
+
+
+
+
+                                                                                           ......
+
+
+
+
+                                                                                                                                                                 ......
+                                                                                                                                                                                                                                      1.2
+
+                                                                                                                                                 Formation                                                                            0.6
+                                                                                      fB                                                           Energy
+
+
+
+
+                                                                                           ......
+
+
+
+
+                                                                                                                                                                 ......
+                                                                                                    ............
+                                                                            A                                                                                                                                                         0.0
+
+                                                                            B
+                                                                                      fC
+
+
+
+
+                                                                                           ......
+
+
+
+
+                                                                                                                                                                 ......
+                                                                            C                                                                                                                                                         -0.6
+                                                                                D
+                                                                                                                                                                                                                                      -1.2
+                                                                                      fD
+
+
+
+
+                                                                                           ......
+
+
+
+
+                                                                                                                                                                 ......
+                      (d)                                                                                                        (e)
+                                                                                                                                                 4.0
+
+
+                                0.6
+Mean Absolute Error (eV/atom)
+
+
+
+
+                                                                                                                          Prediction (eV/atom)
+                                                                                                                                                 2.0
+                                                                                                          Feature
+                                0.4                                                                      Dimension
+
+
+
+
+                                0.2
+                                                                           FT                                       10
+
+                                                                                                                    20
+
+                                                                                                                    30
+                                                                                                                                                 0.0                                 100
+
+
+
+                                                                                                                                                                                      75
+                                                                                                                                                                                                     Prediction Error Distribution
+
+
+
+
+                                                                                                                                                                                 Counts
+                                                                                                                                                                                      50
+
+
+
+                                                                                                                                                                                      25
+                                                                         RA
+                                                                                                                                                 −2.0                                     0
+
+                                       0.54 0.54 0.62   0.42 0.38 0.35   0.24 0.17 0.15                                                                                                       −0.8       −0.4       0.0       0.4
+                                                                                                                                                                                                       Prediction Error (eV/atom)
+                                0.0
+                                                                                                                                                         −2.0             0.0                            2.0                         4.0
+                                          Empirical      Model−Based      Model−Free
+                                                                                                                                                                           Exact (eV/atom)
+  Fig. 3. Evaluation of atom vectors of main-group elements on elpasolites ABC2 D6 formation energy prediction. (a) Crystal structure of elpasolites ABC2 D6 . (b)
+  Architecture of the one-hidden-layer neural network for formation energy prediction. Colored boxes represent atom vectors of atom A, B , C and D respectively, grey box in the
+                                                           D
+
+  hidden layer stands for representation of the elpasolites compound. (c) Trained weights on connections between the input layer and the hidden layer in the neural network for
+  formation energy prediction using model-free atom vectors of dimension d = 10. (d) Mean absolute test errors of formation energy prediction using different sets of atom
+  features. Empirical features refer to the position of an atom in the periodic table, padded with random noise in expanded dimensions if necessary. Model-based features are
+  atom vectors learned from our model-based method using inverse square score function (see Materials and Methods). Model-free features are atom vectors learned from our
+  model-free method. Error bars show the standard deviations of mean absolute prediction errors on five different random train/test/validation splits. (e) Comparison of exact
+  formation energy and predicted formation energy using d = 20 model-free atom vectors. Inset shows the distribution of prediction errors.
+
+
+
+
+ materials discovery than previously widely used knowledge-based descriptors of atoms (referred as empirical features in the
+ following). We compare our atom vectors with those empirical features in a supervised learning task of materials prediction.
+ The task we consider is to predict formation energies of elpasolite crystals ABC2 D6 , a type of quaternary minerals with
+ excellent scintillation performance, which are thus very suitable for application in radiation detection(26). The dataset of this
+ task contains nearly 104 elpasolites with the first-principle calculated formation energies, and the task has been first introduced
+ and modeled using kernel regression in a previous study(14). Here we employ a neural network with one hidden layer to model
+ the formation energy (see Figure 3 and Materials and Methods). The input layer is the concatenation of feature vectors of
+ the four atoms (A, B, C and D), which is then fully connected to a hidden layer equipped with non-linear activation. The
+ hidden layer learns to construct a representation for each compound during the supervised learning process, based on which
+ the output formation energy is predicted. For comparison, we fix the architecture of the neural network model, feed in different
+ types of descriptors for atoms (empirical ones and atom vectors), and examine the prediction performances (see Materials and
+ Methods). Like most previous studies, we use the positions of atoms in the periodic table as empirical features(14), but extend
+ them to the same dimension as our atom vectors by random padding for fairness. Figure 3 (d) shows the formation energy
+ prediction errors based on empirical features, model-based learned atom vectors and model-free learned atom vectors. The
+ latter two clearly yield higher prediction accuracies than the empirical one, which supports the superiority of the machine
+ learned features over those from human knowledge. The influence of the dimension d is also examined, and it turns out that
+ larger d leads to slight performance gain, as longer vectors could include more information. It is worth noting that, with our
+
+  4                         |    www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX                                                                                                                                               Zhou et al.
+ (a)                                                                                                                                    (b)
+                               (SO4)
+                               (BO3)
+                               (PO4)                                                                         0.50
+                               Pt
+                               Hg
+                               Ru
+                                Au                                                                                                                                                                                A
+                                Pd                                                                                                                                                                                B
+                                Rh
+                                                                                                                                                                                                                  C
+                                Cd
+                                Ag
+                                Cu
+                                Yb                                                                           -0.50 (c)
+                                (PO3)
+                                Th
+                                Pm
+
+
+
+
+                                                                                                                  Mean Absolute Error (eV/atom)
+                                Pr
+                                Ir
+                                Dy
+                                                                                                                                                  0.4
+                                Sc                                                                                                                                                                            Feature
+                                Sm                                                                                                                                                                           Dimension
+                                 Tc
+                                Lu                                                                                                                                                                                10
+                                 Nd                                                                                                                                                                               20
+                                 Er                                                                                                               0.2                                                             30
+                                 Ho
+                                 (HO)
+                                Zn
+                                 Re
+                                 Hf                                                                                                                     0.40 0.46 0.45   0.35 0.34 0.34     0.29 0.27 0.27
+                                                                                                                                                  0.0
+                                 Eu
+                                 Ce
+                                 Y
+                                                                                                                                        (d)             Empirical Model−Based Model−Free
+                                 Gd                                                                                                               0.4
+                                                                                                                                                                                     0.2
+                                La
+                                 Ta
+
+
+
+
+                                                                                                                  Classification Error Rate
+                                 W
+                                Nb
+                                Mo
+                                Co
+                                Ti
+                                Fe
+                                Mn
+                                V
+                               Cr
+                               Ni
+                               U
+                                                          FT                                                                                      0.2
+                                                        RA
+                               Tb
+                                Zr                                                                                                                            27.9%          30.0%              24.2%
+                                Tm                                                                                                                0.0
+                               Os
+                                                                                                                                                    18-Electron Rule Model−Based Model−Free
+                                        1 2 3 4 5 6 7 8 9 10 11 12 13 1415 16 17 18 19 20
+                                                   Vector Dimensions
+
+Fig. 4. Atom vectors of functional groups and elements beyond main groups learned by model-free approach and the evaluation on tasks of half-heusler
+compounds. (a) Illustration of atom vectors of non-main-group elements and functional groups in vector space of dimension d = 20, and their hierarchical clustering based on
+                                           D
+
+distance metric dist(f1 , f2 ) = 1 − f1 · f2 (see Methods). Row and column denote atom type and dimension indices respectively; color in each cell stands for value of the
+vector on that dimension. Dashed red boxes circle out major clusters in hierarchical clustering. (b) Crystal structure of half-heusler alloys ABC. (c) Mean absolute test errors of
+formation energy prediction given by ridge regression using different sets of atom features. (d) Mean classification error rates of metal/insulator classifications given by the
+18-electron rule, and logistic regression with model-based and model-free atom vectors of dimension d = 20.
+
+
+
+model-free atom vectors, the mean absolute error of formation energy prediction can be as low as 0.15eV/atom, almost within
+the error range of the first-principle calculation(27). Figure 3 (e) shows the predicted formation energies versus the exact
+values, and the error follows a normal distribution approximately. As a validation, we also check the neural weights between
+the input layer and the hidden layer in one model, which is visualized in Figure 3 (c). The heavier weights for atom D indicates
+its dominant role in this problem, which agrees with previous results(14).
+    Our learned atom vectors not only work well for main-group elements, but also provide reasonable descriptions for other
+atoms including transition metals as well as functional groups. These entities are in general more versatile in properties in
+contrast to main-group elements, therefore accurate description is difficulty even for humans. In this part, we focus on the
+learned vectors of these atoms, and show their advantage over empirical descriptors. These vectors along with the hierarchical
+clustering result is shown in Figure 4(a). Roughly, there appear three major clusters in the vector space: the transition metal
+cluster with Au as a representative (Au-like cluster), the cluster of lanthanoids and actinoids (lanthanoid cluster), and the
+transition metal cluster with F e as a representative (F e-like cluster). The strong amplitudes on the 14th dimension indicate
+Au-like and F e-like clusters of transition metals, while lanthanoid cluster show quite a lot of hot and cold spots on other
+dimensions. We also note that all atoms from F e-like cluster share relatively strong amplitudes on the 5th dimension, which is
+very similar to those of Group II atoms mentioned previously. This accounts for the common +2 valence state adopted by these
+transition metals(25). Moreover, the atom vectors are compared with empirical ones in prediction tasks on half-heusler alloys.
+This type of compounds have received lots of research attention, because their peculiar band structures enable tunable realization
+of topological insulators and semi-metals(28). Our tasks here include both formation energy prediction and metal/insulator
+classification, which are two crucial steps for topological materials search. We have nearly 250 half-heusler compounds ABC
+
+Zhou et al.                                                                                                                                   PNAS        |    July 17, 2018         |     vol. XXX     |    no. XX    |   5
+under space group 216, along with their calculated formation energies and band gaps. Since the number of samples is limited,
+we use relatively simpler models here: ridge regression for prediction, and logistic regression for classification(18). As shown in
+Figure 4 (c), both model-free and model-based atom vectors outperform empirical ones in formation energy prediction, and the
+best set of vectors achieves mean absolute error 0.27eV/atom. In metal/insulator classification as shown in Figure 4 (d), we
+compare the logistic regression model using our atom vectors with the famous 18-electron rule(28). Comparable accuracies can
+be achieved here, which again supports the effectiveness of atom vectors in the ML tasks.
+
+Summary and Outlook. In summary, we introduce unsupervised learning of atoms from database of known existing materials,
+and show the rediscovery of the periodic table by AI. The learned feature vectors not only well capture similarities and
+properties of atoms in a vector space, but also show their superior effectiveness over simple empirical descriptors when used in
+ML problems for materials science. While empirical descriptors are usually designed specifically for a task, our learned vectors
+from unsupervised learning should be general enough to be applied to many cases. We anticipate their effectiveness and broad
+applicability can greatly boost the data-driven approaches in today’s materials science, especially for the recently proposed deep
+neural network methods(29–32), just as the huge success of word vectors in language modeling(22, 23, 33, 34). Several directions
+related to the feature learning methods here are worthy to explore in the future. For example, the element-environment matrix
+can be generalized to a higher order tensor, where the extra orders depict different parts of the composition. Such a tensor
+should contain finer information than the matrix, and how to extract features from this high order object is still an open
+question. Also, more reasonable environment descriptions are necessary for improvement in both model-free and model-based
+methods. Structural information has to be taken into account in order to accurately model how atoms are bound together to
+form either environment or compound, where the recent development on recursive and graph-based neural networks(30, 32, 34)
+might help.
+
+Materials and Methods
+
+
+
+
+                                                 FT
+Data preprocessing. All inorganic compounds from Materials Project database(3) are used for our unsupervised feature learning of atoms.
+Compounds including more than four types of elements (or symbols in the following, to include functional groups in more general sense)
+are screened out for simplicity; only binary, ternary and quaternary compounds are selected, and they comprise nearly 90% of the entire
+dataset of inorganic compounds (about 60k) (see Supplementary Information). There exist compounds appearing more than once in the
+database, all of them are kept since duplications give higher confidence which is meaningful in learning. No physical or chemical properties
+of compounds in the database are used, and as mentioned in the main text, the structural aspect are further ignored for simplicity. In other
+                                               RA
+words, we build feature vectors of atoms merely from chemical formulas of all existing compounds. Some symbols are rare in terms of their
+number of appearances in compounds; they contribute very limited information and could impair feature learning due to high variance. So
+we collect counts of all symbols in compounds, and consider only common ones whose counts are beyond the specified threshold (1% of the
+maximum count of a symbol). Several atom-environment pairs can be generated from one compound formula. Symbols of the same type
+are assumed to be the same in a compound, so "atom" here literally represents the type of the target atom, and "environment" includes
+the number of target atoms and atoms of all other elements in the compound. Therefore the number of generated atom-environment pairs
+is equivalent to the number of symbol types in the compound formula.
+
+Model-free methods. Our model-free methods are based on atom-environment matrix built from atom-environment pairs. As the first step,
+                                  D
+
+we scan all the pairs and count the number of pairs where the ith atom and the jth environment appear together. These counts give the
+entry of atom-environment matrix Xi,j , where i ranges from 1 to N while j is between 1 to M . Typically, the number of atom types N is
+about one hundred, and the number of environments M takesP       the order of tens of thousands, depending on the dataset (N = 85 and
+M = 54032 in our case). The sum of counts over the column          j
+                                                                     Xi,j gives the population of the ith atom, which can differs greatly
+among all symbols. In order to get rid of the influence of such imbalance, we focus on common symbols as mentioned above, and apply
+                                               1
+                                          p p
+                                     P
+the normalization Xi,j = Xi,j /( j Xi,j      ) on row vectors, where p is a integer hyper-parameter that tunes the relative importance of
+rare environments with respect to common ones. In this way, larger p emphasizes more the role of common environments while smaller
+p tends to put equal attention on every environment. We test different choices of p and select p = 2, as it provides a natural distance
+metric in the vector space: the inner product of two normalized vectors, equivalently the cosine of the angle spanned by the two directions,
+denotes the similarity of the two symbols because it corresponds to a matching degree on all environments. The distance metric of the
+pair of normalized vectors u1 and u2 is explicitly defined as dist(u1 , u2 ) = 1 − u1 · u2 .
+    The row vectors of the normalized matrix X = [x1 , x2 , ..., xN ]T provide a primitive representation for atoms. Essentially, each vector
+xi gives the distribution profile over all environments, and vectors of similar atoms are close from one another in the high dimensional
+space because they are likely to appear in same environments. In order to have more efficient and interpretable representation for atoms,
+we apply singular value decomposition (SVD) on the normalized matrix X , and project original row vectors to dimensions of leading
+singular values. Specifically, we factorize the N × M matrix as X = U DV T , where U is N × N orthogonal matrix, V is M × M orthogonal
+matrix, and D is N × M is diagonal matrix with diagonal elements corresponding to singular values. We select d largest singular values
+(see Supplementary Information) from D, say d × d matrix D̃, and the corresponding columns from U , namely N × d matrix Ũ ; the
+product of the two matrices yields a N × d matrix, whose row vectors yield better descriptions for atoms
+                                                       F = Ũ D̃ = [f1 , f2 , ..., fN ]T .                                                 [1]
+In contrast to the primitive representations, these features vectors fi are more compact and describe elements in an abstract way. As
+another hyper-parameter, The dimension d of the feature vectors is selected by a threshold on singular values (See Supplementary
+Information).
+    Because SVD almost preserves the structure of inner product, the distance metric mentioned previously also applies to our atom vectors.
+Therefore we perform hierarchical clustering analysis of these atom vectors of dimension d based on this metric. Hierarchical clustering
+is used to build a hierarchy of clusters of the atoms according to a distance measure or similarity measure. Here we take a bottom-up
+approach in this work. In details, every atom vector starts in its own cluster, and the distance value is initialized as zero. Then the
+
+
+6   |   www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX                                                                               Zhou et al.
+distance value is gradually increased, and when the distance of two clusters is smaller than the value, they are merged together as a new
+cluster. We take an single linkage approach here, namely the minimal distance between vectors from two clusters is used as the distance
+between the clusters. Thus, as the distance value becomes larger, all atoms find out the clusters they belong to and they are merged into
+one big cluster eventually. The resulted dendrogram shows the merge process and the clustering of atoms with similar properties.
+
+Model-based methods. Our model-based methods rely on more assumptions about representations of environments, besides atom-
+environment pairs. We represent each environment in the same vector space of atom vectors, and the composition model maps the
+collection of all atoms in the environment to a feature vector for the environment. Suppose feature vectors of atoms are of dimension d,
+which are given by N × d matrix F = [f1 , f2 , ..., fN ]T . Consider one atom-environment pair whose environment includes k atoms (here
+k is the number of atoms except the single target atom), the atom type indices of these atoms are i1 , i2 , ..., ik . Based on the assumed
+composition model C, the environment is represented as
+                                                             f env = C(fi1 , fi2 , ..., fik ).                                                                     [2]
+As an example, for the environment (2)Se3 from compound Bi2 Se3 , k = 4, namely the environment is composed of one Bi and three Se,
+and the environment is thus
+                                                           f env = C(fBi , fSe , fSe , fSe ).                                                                      [3]
+There are many choices for C to fully characterize compositions, for example, recursive neural  P networks and graph-based models(32, 34).
+In this work, we select the composition model C to be a summation over all atoms f env =             f . Though this choice is oversimplified,
+                                                                                                    k ik
+it seems to already capture some major rules in composition (see Supplementary Information). Thus it is used here as a proof of concept,
+and more flexible and general composition models are worthy to test in the future.
+    Another component in our model-based methods is a score function that evaluates the existence likelihood of an atom-environment pair.
+The score function S received an atom vector fi and a environment vector f env as built above, and then returns a non-negative value
+S(fi , f env ) indicating the probability for the pair to exist. A larger score means that such a pair is more likely to appear. Several score
+functions are designed following the basic intuition that an atom and an environment should behave oppositely in order to be combined as
+a stable compound. These are the bilinear score S(fi , f env ) = exp(−fi · f env ), the Gaussian-like score S(fi , f env ) = exp(−||fi + f env ||2 ),
+and the inverse square score S(fi , f env ) = ||f +f1env ||2 .
+                                                  i
+    In practice, a normalized score is assigned to each atom type given an environment
+                                                                      S(fi , f env )
+
+
+                                                FT              si = P
+                                                                       l
+                                                                         S(fl , f env )
+                                                                                        .
+
+The desired atom vectors need to maximize the average normalized score over the full dataset of atom-environment pairs, or minimize the
+following loss function
+                                                 loss = Edataset [− ln s(fie , C(fi1 , fi2 , ..., fik ))],
+where fi stands for the target atom in each pair, and fi1 , fi2 , ..., fik are for atoms in the environment. So our model-based feature
+learning is now cast into a optimization problem. To solve it, we firstly randomly initialize all feature vectors of atoms, then mini-batch
+                                                                                                                                                                   [4]
+
+
+
+
+                                                                                                                                                                   [5]
+                                              RA
+stochastic gradient descent method is applied to minimize the loss function (see Supplementary Information). We choose the batch size to
+be 200, the learning rate to be 0.001, and the number of training epochs to be around one hundred. Feature vectors of different dimensions
+d are learned following the model-based methods.
+
+Models in prediction tasks. We briefly introduce the machine learning methods used in our feature evaluation tasks. Neural network model
+is used to predict the formation energy of elpasolites ABC2 D6 . Initially inspired by neural science, in neural networks, artificial neurons
+are arranged layer by layer, and adjacent layers are fully connected with a linear transformation. Non-linearity function (such as sigmoid
+unit and rectified grated linear unit Relu) are applied on neurons on intermediate layers. Prediction, either regression or classification,
+is made according to the output layer. The weights and bias between layers are optimized in order to minimize the loss function over
+                                  D
+
+the training dataset, and the loss function over a hold-out dataset is used as validation that prevents overfitting and guarantees model
+generalizability. We train a neural network with one hidden layer for formation energy prediction in this work. The input layer l is a
+concatenation of the feature vectors of the four atom types in the compound, and its dimension is 4d where d is the dimension of feature
+vectors. The hidden layer h contains 10 neurons, which produces a representation of the compound. Formation energy is given by a
+weighted linear combination of these hidden units. Explicitly, the model is written as
+                                                               h = Relu(W · l + b),                                                                                [6]
+                                                              Ef ormation = w · h + e,                                                                             [7]
+where W and b are weights and bias between the input layer and the hidden layer, w and e are weights and bias between the hidden layer
+and output layer. Rectified linear unit function Relu(z) = Θ(z)z gives nonlinear activation here, where Θ(z) is Heaviside step function.
+The mean square error of formation energy prediction is used as loss function. There are 5645 ABC2 D6 compounds with known formation
+energies, we randomly hold out 10 percents as test set. 80 percents as training set, and the other 10 percents as validation set. The
+training is terminated once the validation loss does not decrease any more; the trained model is then evaluated on the hold-out test set.
+We train and evaluate the model on 10 different random train-test splits, and the average of mean absolute errors on test sets is reported
+for each set of features.
+    For the task for half-heusler compounds, ridge regression and logistic regression are adopted. Ridge regression is a variant of vanilla
+linear regression that adds a L2 regularization term(18) to the original mean square error loss function. This term prevents overfitting
+the training data, thus improves generalizability of the model. Logistic regression generalizes linear regression into a method for binary
+category classification. Sigmoid function is applied on the output unit, and a log-likelihood loss function replaces the mean square error
+loss. We apply ridge regression and logistic regression to formation energy prediction and metal/insulator classification respectively. The
+same data splits as above are taken, we report the average mean absolute error and classification error rate for models using different set
+of features.
+
+ACKNOWLEDGMENTS.             Q.Z., P.T. and S.-C.Z. acknowledge the Department of Energy, Office of Basic Energy Sciences, Division
+of Materials Sciences and Engineering, under contract DE-AC02-76SF00515. J. P. and Q. Y. are supported by the Center for the
+Computational Design of Functional Layered Materials, an Energy Frontier Research Center funded by the U.S. Department of Energy,
+Office of Science, Basic Energy Sciences under Award No. DE-SC0012575.
+
+
+Zhou et al.                                                                                             PNAS   |   July 17, 2018   |   vol. XXX   |   no. XX   |    7
+    1.       Kang B, Ceder G (2009) Battery materials for ultrafast charging and discharging. Nature 458(7235):190–193.
+    2.       Norskov JK, Bligaard T, Rossmeisl J, Christensen CH (2009) Towards the computational design of solid catalysts. Nat Chem 1(1):37–46.
+    3.       Jain A, et al. (2013) The Materials Project: A materials genome approach to accelerating materials innovation. APL Materials 1(1):011002.
+    4.       Curtarolo S, et al. (2013) The high-throughput highway to computational materials design. Nat Mater 12(3):191–201.
+    5.       Agrawal A, Choudhary A (2016) Perspective: Materials informatics and big data: Realization of the “fourth paradigm” of science in materials science. APL Materials 4(5):053208.
+    6.       Krizhevsky A, Sutskever I, Hinton GE (2012) Imagenet classification with deep convolutional neural networks in Advances in Neural Information Processing Systems 25. (Curran Associates, Inc.),
+             pp. 1097–1105.
+    7.       Hinton G, et al. (2012) Deep neural networks for acoustic modeling in speech recognition: The shared views of four research groups. IEEE Signal Processing Magazine 29(6):82–97.
+    8.       Sutskever I, Vinyals O, Le QV (2014) Sequence to sequence learning with neural networks in Proceedings of the 27th International Conference on Neural Information Processing Systems, NIPS’14.
+             (MIT Press, Cambridge, MA, USA), pp. 3104–3112.
+ 9.          Silver D, et al. (2016) Mastering the game of go with deep neural networks and tree search. Nature 529(7587):484–489.
+10.          Silver D, et al. (2017) Mastering the game of go without human knowledge. Nature 550:354 EP –.
+11.          Rupp M, Tkatchenko A, Müller KR, von Lilienfeld OA (2012) Fast and accurate modeling of molecular atomization energies with machine learning. Phys. Rev. Lett. 108(5):058301.
+12.          Meredig B, et al. (2014) Combinatorial screening for new materials in unconstrained composition space with machine learning. Phys. Rev. B 89(9):094104.
+13.          Gómez-Bombarelli R, et al. (2016) Design of efficient molecular organic light-emitting diodes by a high-throughput virtual screening and experimental approach. Nature Materials 15:1120 EP –.
+             Article.
+14.          Faber FA, Lindmaa A, von Lilienfeld OA, Armiento R (2016) Machine learning energies of 2 million elpasolite ABC2 D6 crystals. Phys. Rev. Lett. 117(13):135502.
+15.          Xue D, et al. (2016) Accelerated search for materials with targeted properties by adaptive design. Nat Commun 7:11241 EP.
+16.          Raccuglia P, et al. (2016) Machine-learning-assisted materials discovery using failed experiments. Nature 533(7601):73–76.
+17.          Faber F, Lindmaa A, Anatole von Lilienfeld O, Armiento R (2015) Crystal Structure Representations for Machine Learning Models of Formation Energies. ArXiv e-prints.
+18.          Hastie T, Tibshirani R, Friedman J (2001) The Elements of Statistical Learning, Springer Series in Statistics. (Springer New York Inc., New York, NY, USA).
+19.          Bishop CM (2006) Pattern Recognition and Machine Learning (Information Science and Statistics). (Springer-Verlag New York, Inc., Secaucus, NJ, USA).
+20.          LeCun Y, Bengio Y, Hinton G (2015) Deep learning. Nature 521(7553):436–444.
+21.          Goodfellow I, Bengio Y, Courville A (2016) Deep Learning. (MIT Press).
+22.          Mikolov T, Sutskever I, Chen K, Corrado GS, Dean J (2013) Distributed representations of words and phrases and their compositionality in Advances in Neural Information Processing Systems 26.
+             pp. 3111–3119.
+23.          Pennington J, Socher R, Manning CD (2014) Glove: Global vectors for word representation in Empirical Methods in Natural Language Processing (EMNLP). pp. 1532–1543.
+24.          Harris ZS (1954) Distributional structure. WORD 10(2-3):146–162.
+25.          Greenwood N, Earnshaw A (1997) Chemistry of the Elements. (Butterworth-Heinemann).
+26.          Hawrami R, Ariesanti E, Soundara-Pandian L, Glodo J, Shah KS (2016) T l2 LiY Cl6 : Ce: A new elpasolite scintillator. IEEE Transactions on Nuclear Science 63(6):2838–2841.
+27.          Ghiringhelli LM, Vybiral J, Levchenko SV, Draxl C, Scheffler M (2015) Big data of materials science: Critical role of the descriptor. Phys. Rev. Lett. 114(10):105503.
+28.          Chadov S, et al. (2010) Tunable multifunctional topological insulators in ternary heusler compounds. Nat Mater 9(7):541–545.
+29.          Kearnes S, McCloskey K, Berndl M, Pande V, Riley P (2016) Molecular graph convolutions: moving beyond fingerprints. Journal of Computer-Aided Molecular Design 30(8):595–608.
+30.
+31.
+32.
+33.
+34.
+                                                                      FT
+             Gilmer J, Schoenholz SS, Riley PF, Vinyals O, Dahl GE (2017) Neural Message Passing for Quantum Chemistry. ArXiv e-prints.
+             Faber FA, et al. (2017) Fast machine learning models of electronic and energetic properties consistently reach approximation errors better than DFT accuracy. ArXiv e-prints.
+             Schütt KT, Arbabzadah F, Chmiela S, Müller KR, Tkatchenko A (2017) Quantum-chemical insights from deep tensor neural networks. Nat Commun 8:13890 EP.
+             Landauer TK, Dumais ST (1997) A solution to plato’s problem: The latent semantic analysis theory of acquisition, induction, and representation of knowledge. Psychological review 104(2):211–240.
+             Socher R, et al. (2013) Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank in Proceedings of the 2013 Conference on Empirical Methods in Natural Language
+             Processing. pp. 1631–1642.
+                                                                    RA
+                                                   D
+
+
+
+
+8        |     www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX                                                                                                                                     Zhou et al.
+

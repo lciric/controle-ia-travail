@@ -1,0 +1,645 @@
+         The Cohomology of Non-Locality and Contextuality
+
+                 Samson Abramsky               Shane Mansfield          Rui Soares Barbosa
+                                       Department of Computer Science
+                                            University of Oxford
+                    {samson.abramsky,shane.mansfield,rui.soaresbarbosa}@cs.ox.ac.uk
+
+
+
+      In a previous paper with Adam Brandenburger, we used sheaf theory to analyze the structure of
+      non-locality and contextuality. Moreover, on the basis of this formulation, we showed that the phe-
+      nomena of non-locality and contextuality can be characterized precisely in terms of obstructions to
+      the existence of global sections.
+          Our aim in the present work is to build on these results, and to use the powerful tools of sheaf
+      cohomology to study the structure of non-locality and contextuality. We use the Cech cohomology
+      on an abelian presheaf derived from the support of a probabilistic model, viewed as a compatible
+      family of distributions, in order to define a cohomological obstruction for the family as a certain
+      cohomology class. This class vanishes if the family has a global section. Thus the non-vanishing of
+      the obstruction provides a sufficient (but not necessary) condition for the model to be contextual.
+          We show that for a number of salient examples, including PR boxes, GHZ states, the Peres-
+      Mermin magic square, and the 18-vector configuration due to Cabello et al. giving a proof of the
+      Kochen-Specker theorem in four dimensions, the obstruction does not vanish, thus yielding cohomo-
+      logical witnesses for contextuality.
+
+
+
+1    Introduction
+Non-locality and contextuality are fundamental features of physical theories, which contradict the intu-
+itions underlying classical physics. They are, in particular, prominent features of quantum mechanics,
+and the goal of the classic no-go theorems by Bell [3], Kochen-Specker [10], et al. is to show that they are
+necessary features of any theory whose experimental predictions agree with those of quantum mechanics.
+     Bell’s insights into non-locality have been seminal to the current developments in quantum informa-
+tion, where entanglement is viewed as a key informatic resource; and there has also been considerable
+recent work on experimental tests for contextuality [2, 9].
+     In a previous paper with Adam Brandenburger [1], we used the mathematics of sheaf theory to
+analyze the structure of non-locality and contextuality. Sheaf theory is pervasive in modern mathematics,
+allowing the passage from local to global [12]. Starting from a simple experimental scenario, and the
+kind of probabilistic models familiar from discussions of Bell’s theorem, Popescu-Rohrlich boxes [15],
+etc., we gave a very direct, compelling formalization of these notions in sheaf-theoretic terms. Moreover,
+on the basis of this formulation, we showed that the phenomena of non-locality and contextuality can be
+characterized precisely in terms of obstructions to the existence of global sections.
+     Our aim in the present work is to build on these results, and to use the powerful tools of sheaf
+cohomology to study the structure of non-locality and contextuality. The present paper describes work
+in progress, and only represents an initial step in this direction. Nevertheless, enough has been achieved
+to indicate that this approach has some promise, and merits further investigation.
+     We briefly summarize our results:
+
+Bart Jacobs, Peter Selinger, and Bas Spitters (Eds.):
+8th International Workshop on Quantum Physics and Logic (QPL 2011)
+EPTCS 95, 2012, pp. 1–14, doi:10.4204/EPTCS.95.1
+2                                                     The Cohomology of Non-Locality and Contextuality
+
+
+    • We use the formalization of no-signalling probabilistic models as compatible families of sections
+      on a presheaf of distributions developed in [1]; compatibility corresponds precisely to the no-
+      signalling condition. The family is defined on a cover corresponding to the sets of compatible
+      measurements.
+    • The locality/non-contextuality of the model corresponds to the existence of a global section for
+      this family, as shown in [1].
+    • We use the Čech cohomology on an abelian presheaf derived from the support of the model in order
+      to define a cohomological obstruction for the family as a certain cohomology class. This class
+      vanishes if the family has a global section. Thus the non-vanishing of the obstruction provides a
+      sufficient (but not necessary) condition for the model to be contextual.
+    • We show that for a number of salient examples, including PR boxes [15], GHZ states [7, 6],
+       the Peres-Mermin magic square [14, 13], and the 18-vector configuration giving a proof of the
+       Kochen-Specker theorem in four dimensions from [4], the obstruction does not vanish, thus yield-
+       ing cohomological witnesses for contextuality.
+    The further contents of the paper are as follows. We review the sheaf formulation from [1] in Sec-
+tion 2, and Čech cohomology in Section 3. We define the cohomological obstruction in Section 4, and
+consider various examples in Sections 5 and 6. Finally, limitations of the current results and further
+directions are discussed in Section 7.
+
+
+2    Sheaf Formulation of Measurement Scenarios
+We recall the basic ideas of [1].
+    We work over a finite discrete space X , which we think of as a set of measurement labels. We fix
+                                   S
+a cover U = {C1 , . . . ,Cn }, with U = X , which represents the set of compatible families of measure-
+ments, i.e. those which can be made jointly. Fixing a finite set O of outcomes, we have the presheaf of
+sets E on X , where E (U ) := OU , and restriction is simply function restriction: given U ⊆ U ′ ,
+                                        ′
+                                     ρUU : E (U ′ ) → E (U ) :: s 7→ s|U.
+Since X is discrete, E is (trivially) a sheaf. We think of it as the sheaf of events.
+    An empirical model e in the sense of [1] is a compatible family {eC }C∈U , where eC is a probability
+distribution on E (C). Here compatibility uses the definition of restriction on distributions, which we
+omit since we shall not need it. The support of e determines a sub-presheaf Se of E :
+                                  Se (U ) := {s ∈ E (U ) | s ∈ supp(eU )}.
+Here eU = eC |U for any C ∈ U such that U ⊆ C. The compatibility of the family {eC } ensures that this is
+independent of the choice of C.
+    We have the following notions from [1].
+    • The model e is possibilistically extendable iff for every s ∈ Se (C), s is a member of a compatible
+      family {si ∈ Se (Ci )}ni=1 . It is possibilistically non-extendable if for some s, there is no such
+      family.
+    • The model e is strongly contextual if for every s there is no such family.
+    The results from [1] show that if a model is local or non-contextual in the usual sense, then it is
+possibilistically extendable. Thus possibilistic non-extendability is a sufficient condition for non-locality
+or contextuality. Strong contextuality is a much stronger condition. Thus these properties witness strong
+forms of the non-classical behaviour exhibited by quantum mechanics.
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                            3
+
+
+3    Čech Cohomology of a Presheaf
+We are given the following:
+    • A topological space X .
+    • An open cover U of X .
+    • A presheaf F of abelian groups on X . For each open set U of X , F (U ) is an abelian group,
+      and when U ⊆ V , there is a group homomorphism ρUV : F (V ) → F (U ). These assignments are
+      functorial: ρUU = idU , and if U ⊆ U ′ ⊆ U ′′ , then
+                                                             ′       ′′         ′′
+                                                       ρUU ◦ ρUU′ = ρUU .
+
+The nerve N(U) of the cover U is defined to be the abstract simplicial complex comprising those finite
+subsets of U with non-empty intersection. Concretely, we take a q-simplex to be a list σ = (U0 , . . . ,Uq )
+of elements of U, with |σ | := ∩qi=0Ui 6= ∅. Thus a 0-simplex (U ) is a single element of the cover U. We
+write N(U)q for the set of q-simplices.
+    Given a q + 1-simplex σ = (U0 , . . . ,Uq+1 ), there are q-simplices
+
+                              ∂ j (σ ) := (U0 , . . . , U
+                                                        cj , . . . ,Uq+1 ),             0≤ j≤q
+
+obtained by omitting one of the elements of the q + 1-simplex. Note that:
+
+                                                    |σ | ⊆ |∂ j (σ )|.
+
+    We shall now define the Čech cochain complex. For each q ≥ 0, we define the abelian group
+Cq (U, F ):
+                                  Cq (U, F ) := ∏ F (|σ |).
+                                                                 σ ∈N(U)q
+
+    We also define the coboundary maps
+
+                                        δ q : Cq (U, F ) −→ Cq+1 (U, F ).
+
+For ω = (ω (τ ))τ ∈N(U)q ∈ Cq (U, F ), and σ ∈ N(U)q+1 , we define:
+                                                         q
+                                                                          |∂ (σ )|
+                                   δ q (ω )(σ ) := ∑ (−1) j ρ|σ |j                   ω (∂ j σ ).
+                                                        j=0
+
+For each q, δ q is a group homomorphism.
+    We shall also consider the augmented complex 0 → C0 (U, F ) → · · · .
+Proposition 3.1 For each q, δ q+1 ◦ δ q = 0.
+     We define Z q (U, F ), the q-cocycles, to be the kernel of δ q . We define Bq (U, F ), the q-coboundaries,
+to be the image of δ q−1 . These are subgroups of Cq (U, F ), and by Proposition 3.1, Bq (U, F ) ⊆
+Z q (U, F ). We define the q-th Čech cohomology group Ȟ q (U, F ) to be the quotient group
+
+                                     Ȟ q (U, F ) := Z q (U, F )/Bq (U, F ).
+
+Note that B0 (U, F ) = 0, so Ȟ 0 (U, F ) ∼
+                                          = Z 0 (U, F ).
+4                                                        The Cohomology of Non-Locality and Contextuality
+
+
+    Given a cocycle z ∈ Z q (U, F ), the cohomology class [z] is the image of z under the canonical map
+
+                                           Z q (U, F ) −→ Ȟ q (U, F ).
+
+     A compatible family with respect to a cover U is a family {ri ∈ F (Ui )} for Ui ∈ U, such that, for
+all i, j:
+                                       ri |Ui ∩U j = r j |Ui ∩U j .
+
+
+Proposition 3.2 There is a bijection between compatible families and elements of the zeroth cohomol-
+ogy group Ȟ 0 (U, F ).
+Proof Cochains c = (ri )Ui ∈U in C0 (U, F ) correspond to families {ri ∈ F (Ui )}. For each 1-simplex
+σ = (Ci ,C j ),
+                                δ 0 (c)(σ ) = ri |Ci ∩C j − r j |Ci ∩C j .
+Hence δ 0 (c) = 0 if and only if the corresponding family is compatible.                                          
+    We shall also use the relative cohomology of F with respect to an open subset U ⊆ X .
+    We define two auxiliary presheaves related to F . Firstly, F |U is defined by
+
+                                             F |U (V ) := F (U ∩V ).
+
+There is an evident presheaf morphism
+
+                                      p : F −→ F |U :: pV : r 7→ r|U ∩V.
+
+Then FŪ is defined by FŪ (V ) := ker(pV ). Thus we have an exact sequence of presheaves
+                                                                  p
+                                       0    ✲F          ✲F         ✲ F |U.
+                                                  Ū
+
+The relative cohomology of F with respect to U is defined to be the cohomology of the presheaf FŪ .
+   We have the following refined version of Proposition 3.2.
+Proposition 3.3 For any Ui ∈ U, the elements of the relative cohomology group Ȟ 0 (U, FŪi ) correspond
+bijectively to compatible families {r j } such that ri = 0.
+Proof By Proposition 3.2, compatible families correspond to cocycles r = (r j ) in C0 (U, F ). By
+compatibility, ri |Ci ∩C j = r j |Ci ∩C j for all j. Hence r is in C0 (U, FŪi ) if and only if ri = pUi (ri ) = 0. 
+
+
+4    Cohomological Obstructions
+Given a commutative ring R, we define a functor FR : Set −→ Set. For any set X , the support supp(φ )
+of a function φ : X → R is the set of x ∈ X such that φ (x) 6= 0. We define FR (X ) to be the set of functions
+φ : X → R of finite support. There is an embedding x 7→ 1 · x of X in FR (X ), which we shall use implicitly
+throughout.
+    Given f : X → Y , we define:
+
+                                 FR f : FR X −→ FRY :: φ 7→ [y 7→      ∑ φ (x)].
+                                                                      f (x)=y
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                                         5
+
+
+This assignment is easily seen to be functorial.
+      In fact, FR (X ) is the free R-module generated by X , and in particular, it is an abelian group; while
+FR ( f ) is a group homomorphism for any function f . In particular, taking R = Z, FZ (X ) is the free
+abelian group generated by X .
+      Thus, given any presheaf of sets P on X , we obtain a presheaf of abelian groups FZ P by composition:
+FZ P(U ) := FZ (P(U )).
+      Given an empirical model e defined on the cover U, we shall work with the Čech cohomology groups
+    q
+Ȟ (U, F ) for the abelian presheaf F := FZ Se . Note that, for any set of measurements U , F (U ) is the
+set of formal Z-linear combinations of sections in the support of eU .
+      To each s ∈ Se (C), we shall associate an element γ (s) of a cohomology group, which can be regarded
+as an obstruction to s having an extension within the support of e to a global section. In particular, the
+existence of such an extension implies that the obstruction vanishes. In good cases, these two conditions
+are equivalent, yielding cohomological characterizations of contextuality and strong contextuality.
+      For notational convenience, we shall fix an element s = s1 ∈ Se (C1 ). Because of the compatibility of
+the family {eC }, which is equivalent to no-signalling [1], there is a family {si ∈ Se (Ci )} with s1 |C1 ∩Ci =
+si |C1 ∩Ci , i = 2, . . . , n.
+      We define the cochain c := (s1 , . . . , sn ) ∈ C0 (U, F ). The coboundary of this cochain is z := δ 0 (c).
+Proposition 4.1 The coboundary z of c vanishes under restriction to C1 , and hence is a cocycle in the
+relative cohomology with respect to C1 .
+Proof We write Ci, j := Ci ∩ C j . For all i, j, we define zi, j := z(Ci, j ) = si |Ci, j − s j |Ci, j . Because of the
+no-signalling assumption on the family {si }, for all i, j,
+
+                                    si |C1 ∩Ci, j = (s1 |C1 ∩Ci )|C j = s1 |C1 ∩Ci, j .
+
+Similarly, s j |C1 ∩Ci, j = s1 |C1 ∩Ci, j . Hence zi, j |C1 ∩Ci, j = 0, and zi, j ∈ FC̄1 (Ci ∩C j ). Thus z = (zi, j )i, j ∈
+C1 (U, FC̄1 ).
+    Note that δ 1 : C1 (U, FC̄1 ) → C2 (U, FC̄1 ) is the restriction of the coboundary map on C1 (U, F ).
+Hence z = δ 0 (c) is a cocycle.                                                                                            
+    We define γ (s1 ) as the cohomology class [z] ∈ Ȟ (U, FC̄1 ).
+                                                             1
+
+
+
+Remark There is a more conceptual way of defining this obstruction, using the connecting homomor-
+phism from the long exact sequence of cohomology; see [5]. We have given a more concrete formulation,
+which may be easier to grasp, and is also convenient for computation.
+   Note that, although z = δ 0 (c), it is not necessarily a coboundary in C1 (U, FC̄1 ), since c is not a
+cochain in C0 (U, FC̄1 ), as pCi (si ) = si |C1 ∩Ci 6= 0. Thus in general, we need not have [z] = 0.
+Proposition 4.2 The following are equivalent:
+   1. The cohomology obstruction vanishes: γ (s1 ) = 0.
+   2. There is a family {ri ∈ F (Ci )} with s1 = r1 , and for all i, j:
+
+                                                   ri |Ci ∩C j = r j |Ci ∩C j .
+Proof The obstruction vanishes if and only if there is a cochain c′ = (c′1 , . . . , c′n ) ∈ C0 (U, FC̄1 ) with
+δ 0 (c′ ) = δ 0 (c), or equivalently δ 0 (c − c′ ) = 0, i.e. such that c − c′ is a cocycle. By Proposition 3.2,
+this is equivalent to {ri := si − c′i } forming a compatible family. Moreover, c′ ∈ C0 (U, FC̄1 ) implies
+c′1 = pC1 (c′1 ) = 0, so r1 = s1 .
+6                                                          The Cohomology of Non-Locality and Contextuality
+
+
+   For the converse, suppose we have a family {ri ∈ F (Ci )} as in (2). We define c′ := (c′1 , . . . , c′n ),
+where c′i := si − ri . Since r1 = s1 , pCi (c′i ) = s1 |C1,i − r1 |C1,i = 0 for all i, and c′ ∈ C0 (U, FC̄1 ). We must
+show that δ 0 (c′ ) = z, i.e. that zi, j = c′i |Ci, j − c′j |Ci, j . This holds since ri |Ci, j = r j |Ci, j .      
+   As an immediate application to contextuality, we have the following.
+Proposition 4.3 If the model e is possibilistically extendable, then the obstruction vanishes for every
+section in the support of the model. If e is not strongly contextual, then the obstruction vanishes for some
+section in the support.
+Proof If e is possibilistically extendable, then for every s ∈ Se (Ci ), there is a compatible family {s j ∈
+Se (C j )} with s = si . Applying the embedding of Se (C j ) into F (C j ), by Proposition 4.2 we conclude
+that γ (s) = 0. The same argument can be applied to a single section witnessing the failure of strong
+contextuality.                                                                                             
+     Thus we have a sufficient condition for contextuality in the non-vanishing of the obstruction. The
+non-necessity of the condition arises from the possibility of ‘false positives’: families {ri ∈ F (Ci )}
+which do not determine a bona fide global section in E (X ).
+
+
+5    Examples
+Example: Hardy
+We begin with an example to show that false positives do indeed arise.
+   We consider the Hardy model [8]; the support is given as follows.
+                                        (0, 0) (0, 1) (1, 0) (1, 1)
+                                    (a, b)         1        1         1           1
+                                    (a, b′ )       0        1         1           1
+                                    (a′ , b)       0        1         1           1
+                                    (a′ , b′ )     1        1         1           0
+
+We enumerate the sections as follows:
+                                                 (0, 0)   (0, 1)    (1, 0)      (1, 1)
+                                    (a, b)        s1       s2         s3         s4
+                                    (a, b′ )      s5       s6         s7         s8
+                                    (a′ , b)      s9       s10       s11         s12
+                                    (a′ , b′ )
+                                          s13     s14     s15     s16
+   The section s1 provides a witness for the non-locality of the Hardy model. It is not a member of
+any compatible family of sections in the support. However, we have the following family of Z-linear
+combinations of sections:
+                              r1 = s1 ,    r2 = s6 + s7 − s8 ,     r3 = s11 ,     r4 = s15 .
+One can check that
+                       r2 |a = 1 · (a 7→ 0) + 1 · (a 7→ 1) − 1 · (a 7→ 1) = r1 |a,
+                       r2 |b = 1 · (b 7→ 1) + 1 · (b 7→ 0) − 1 · (b 7→ 1) = r4 |b′ .
+                            ′        ′                ′              ′
+
+
+Thus this family meets the conditions of Proposition 4.2, and the obstruction γ (s1 ) vanishes.
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                                        7
+
+
+Example: PR-Box
+There is better news when we look at the PR-box:
+                                        (0, 0) (0, 1)                       (1, 0)        (1, 1)
+                                  (a, b)               1            0            0            1
+                                  (a, b′ )             1            0            0            1
+                                  (a′ , b)             1            0            0            1
+                                  (a′ , b′ )           0            1            1            0
+This is a strongly contextual model [1], so no section in the support is a member of a compatible family.
+The coefficients for a candidate family {ri } can be displayed as follows:
+                                                           00    01         10       11
+                                               AB           a       0       0        b
+                                               AB′          c       0       0        d
+                                               A′ B         e       0       0        f
+                                               A′ B′        0       g       h        0
+The constraints arising from the requirements that ri |Ci, j = r j |Ci, j are:
+
+                   a = c,    b = d,       a = e,           b = f,       c = h,        d = g,       e = g,       f = h.
+
+These imply that all the variables are equal.
+    Checking that a section in the support is a member of such a family amounts to assigning 1 to the
+variable labelling that section, and 0 to the other variable in its row. Clearly such an assignment is
+incompatible with the above constraints, since it implies 1 = 0.
+    Hence there can be no such family, and the obstruction does not vanish for any section in the support,
+witnessing the strong contextuality of the PR box.
+
+Example: GHZ
+The previous example suggests looking at GHZ, which is also strongly contextual, and of course is
+realizable in quantum mechanics.
+    The support for (the relevant part of) GHZ is as follows:
+                                   000         001         010      011         100       101      110   111
+                         ABC          1         0           0           1        0        1        1        0
+                         AB′C′        0         1           1           0        1        0        0        1
+                         A′ BC′       0         1           1           0        1        0        0        1
+                         A′ B′C       0         1           1           0        1        0        0        1
+    We display the coefficients for a candidate family as follows:
+                                   000         001         010      011         100       101      110   111
+                         ABC          a         0           0           b        0        c        d        0
+                         AB′C′        0         e           f           0        g        0        0        h
+                         A′ BC′       0         i           j           0        k        0        0        l
+                         A′ B′C       0         m           n           0        o        0        0        p
+8                                                        The Cohomology of Non-Locality and Contextuality
+
+
+The constraints arising from the requirements that ri |Ci, j = r j |Ci, j are:
+
+                                  a+b     =    e+ f          c+d        =   g+h
+                                  a+c     =    i+k           b+d        =   j+l
+                                  a+d     =    n+o           b+c        =   m+ p
+                                  f +g    =    j+k           e+h        =   i+l
+                                  e+g     =    m+o           f +h       =   n+ p
+                                  i+ j    =    m+n           k+l        =   o+ p
+
+ Checking that a section in the support is a member of such a family amounts to assigning 1 to the
+variable labelling that section, and 0 to the other variables in its row.
+    It suffices to show that these constraints cannot be satisfied over the integers mod 2; this implies that
+they cannot be satisfied over Z, since otherwise such a solution would descend via the homomorphism
+Z → Z/2Z. Of course, this will also show that the cohomology obstruction does not vanish even if we
+use Z/2Z as the coefficient group.
+    All cases for GHZ have been machine-checked in mod 2 arithmetic, and it has been confirmed that
+the cohomology obstruction witnesses the impossibility of extending any section in the support to all
+measurements; thus cohomology witnesses the strong contextuality of GHZ.
+
+
+6    Kochen-Specker
+We shall now examine covers that can be used for Kochen-Specker arguments. We shall show that the
+obstructions do not vanish in these cases, providing cohomological proofs of Kochen-Specker theorems.
+     We introduce a general notion of Kochen-Specker-type models. We consider two outcomes, 0 and
+1. For any C ∈ U , we define sC,m ∈ E (C) to be the section that assigns 1 to m and 0 to all other
+measurements in C. In a Kochen-Specker problem, we wish to assign the outcome 1 to a single mea-
+surement in each context. Thus, the Kochen-Specker support for the cover U is the presheaf given by
+Se (C) = {sC,m | m ∈ C}.
+
+Example: The Triangle
+We shall begin with the simplest Kochen-Specker scenario: the triangle. This has previously been dis-
+cussed in [1], and in a somewhat different context in [11]. It cannot be realized in quantum mechanics,
+but it is useful to set the scene.
+    The triangle is the following cover on three measurements, A, B, C:
+
+                                          {A, B},     {B,C},      {A,C}.
+
+We will be interested in the Kochen-Specker support, which contains those sections with exactly one 1
+among the outcomes. Thus we have the following table:
+                                                 00    01    10    11
+                                          AB      0     1     1     0
+                                          BC      0     1     1     0
+                                          CA      0     1     1     0
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                            9
+
+
+The content of the Kochen-Specker theorem is that there is no compatible family defining a global section
+within this support. The cohomological statement is that, for any choice of section s in the support, the
+obstruction γ (s) does not vanish.
+    We label the coefficients for a candidate family as follows:
+
+                                                    00      01       10    11
+                                         AB         0       a        b     0
+                                         BC         0       c        d     0
+                                         CA         0       e        f     0
+
+The constraints on the coefficients for a compatible family are as follows:
+
+                            a = f,    b = e,        a = d,       b = c,        d = e,        c = f.
+
+These equations imply that all the variables are equal.
+    Checking that a section in the support has a non-vanishing obstruction amounts to setting the variable
+labelling that section to 1, and the other variables in its row to 0. Clearly there is no solution for any such
+assignment, which would imply that 1 = 0.
+
+
+Example: The 18-Vector Kochen-Specker Configuration
+We look at the 18-vector construction in R4 from [4]. This uses the following measurement cover, where
+the columns are the sets in the cover.
+
+                                  A    A    H           H    B        I    P     P       Q
+                                  B    E       I        K    E       K     Q     R       R
+                                  C    F    C           G    M       N     D     F       M
+                                  D    G       J        L    N       O     J     L       O
+
+    We label the coefficients for a candidate family as follows:
+
+                                                   1000     0100          0010    0001
+                                     ABCD           a            b         c         d
+                                     AEFG           a            e         f         g
+                                     HICJ           h            i         c         j
+                                     HKGL           h            k         g         l
+                                     BEMN           b            e         m         n
+                                     IKNO           i            k         n         o
+                                     PQDJ           p            q         d         j
+                                     PRFL           p            r         f         l
+                                     QRMO           q            r         m         o
+
+    Note that some of the constraints on the coefficients take the form of simple equations between
+variables, allowing us to reduce from 36 to 18 variables; we have used this reduction in the table.
+10                                                  The Cohomology of Non-Locality and Contextuality
+
+
+     The remaining constraints are expressed by the following equations.
+
+                      b+c+d      = e+ f +g               a+b+d         = h+i+ j
+                      a+c+d      = e+m+n                 a+b+c         = p+q+ j
+                      a+ f +g = b+m+n                    a+e+ f        = h+k+l
+                      a+e+g      = p+r+l                 i+c+ j        = k+g+l
+                      h+c+ j     = k+n+o                 h+i+c         = p+q+d
+                      h+g+l      = i+n+o                 h+k+g         = p+r+ f
+                      b+e+n      = q+r+o                 b+e+m = i+k+o
+                      i+k+n      = q+r+m                 q+d + j       = r+ f +l
+                      p+d + j = r+m+o                     p+ f +l      = q+m+o
+
+    Checking that a section in the support has a non-vanishing obstruction amounts to setting the variable
+labelling that section to 1, and the other variables in its row to 0.
+    If the equations have no solution for all such assignments, this shows that the cohomology witnesses
+the contextuality of the model.
+    This has been machine-checked for mod 2 arithmetic, confirming that we have a cohomological
+witness for the Kochen-Specker theorem.
+
+A Class of Kochen-Specker-type Models
+A necessary condition can be given for Kochen-Specker-type models to have a global section is given in
+[1].
+Proposition 6.1 ([1]) The existence of a global section implies that
+
+                                        gcd{dm | m ∈ X } | |U|,
+
+where dm := |{C ∈ U | m ∈ C}|.
+    We shall refer to this as the GCD condition. All models that do not satisfy the GCD condition are
+therefore strongly contextual. Using a similar argument, we can show that the cohomology witnesses
+strong contextuality of any model in this class, as long as we assume a natural connectedness property.
+In fact, it witnesses strong contextuality of some connected models outside of this class, so it captures
+the property more finely than the GCD condition.
+    A model is said to be connected if, for any contexts C,C′ ∈ U, one can find a a finite sequence of
+contexts C0 = C,C1 ,C2 , . . . ,Cn ,Cn+1 = C′ such that ∀ i ∈ {0, . . . , n}. Ci ∩Ci+1 6= 0.
+                                                                                          /
+Proposition 6.2 If γ (s) vanishes for some section s in the support of a connected Kochen-Specker-type
+model, then the GCD condition holds for that model.
+Proof Assume that γ (s0 ) = 0 for some section s0 ∈ Se (C0 ) in the support. This means that there is a
+compatible family {rC ∈ F (C)}C∈U of Z-linear combinations of sections of Se , with rC0 = s0 . Recall
+that the support of each context is Se (C) = {sC,m | m ∈ C}. Let cC,m denote the coefficient corresponding
+to section sC,m in the linear combination rC .
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                               11
+
+
+   If m ∈ C ∩C′ for contexts C = {m, m1 , . . . , mr },C′ = {m, m′1 , . . . , m′s } ∈ U, we get the following coho-
+mology equations:
+                       cC,m = cC′ ,m             cC,m1 + · · · + cC,mr = cC′ ,m′1 + · · · + cC′ ,m′s
+By using the equations of the first kind, we can identify all the coefficients of the form cm,C for the same
+measurement m, in much the same way as we did for the 18-vector Kochen-Specker example. So, we
+can unambiguously denote these coefficients by cm alone. Summing the two equations above then gives
+
+                        ∑ cx = cm + cm + · · · + cm = cm + cm + · · · + cm = ∑ cx
+                                         1               r
+                                                                            ′
+                                                                            1
+                                                                                       ′
+                                                                                       s
+                                                                                                     ′
+                       x∈C                                                                  x′ ∈C′
+
+This means that the sums of the coefficients of rC and rC′ are the same. By connectedness, and since the
+sum is equal to 1 for the context C0 (where we take our starting section s0 ), the coefficients must sum to
+one in every context.
+   Hence, we have
+                                                                          dm
+                           |U| = ∑ 1 = ∑ ∑ cm = ∑ dm cm = g ∑                  cm
+                                 C∈U    C∈U m∈C        m∈X            m∈X g
+where dm := |{C ∈ U | m ∈ C}| as before and g := gcd{dm | m ∈ X }. Since g divides dm for all m, we
+conclude that g divides |U|.                                                                      
+
+
+7    Example: The Peres-Mermin Square
+We now turn to an important example, the Peres-Mermin square [14, 13], which can be realized in
+quantum mechanics using two-qubit observables.
+   The structure of the square is as follows:
+                                                     A       B     C
+                                                     D       E     F
+                                                     G       H     I
+The compatible families of measurements are the rows and columns of this table. The problem in ques-
+tion differs from the usual Kochen-Specker type problems in that we don’t ask for exactly one 1 at each
+maximal context. Instead, we ask that each ‘row context’ has an odd number of 1s whereas each ‘column
+context’ has an even number 1s.
+    Hence, the support table is the following. Note that the first three lines correspond to the row contexts
+and the remaining three to the column contexts.
+                                  000    001      010        011       100      101   110     111
+                         ABC        0        1      1         0         1        0     0       1
+                         DEF        0        1      1         0         1        0     0       1
+                         GHI        0        1      1         0         1        0     0       1
+                         ADG        1        0      0         1         0        1     1       0
+                         BEH        1        0      0         1         0        1     1       0
+                         CFI        1        0      0         1         0        1     1       0
+12                                                   The Cohomology of Non-Locality and Contextuality
+
+
+     We display the coefficients for a candidate family as follows.
+                                 000   001    010    011     100      101   110   111
+                        ABC       0     c1     b1     0       a1       0     0    t1
+                        DEF       0     c2     b2     0       a2       0     0    t2
+                        GHI       0     c3     b3     0       a3       0     0    t3
+                        ADG      t4      0     0      a4      0       b4    c4     0
+                        BEH      t5      0     0      a5      0       b5    c5     0
+                        CFI      t6      0     0      a6      0       b6    c6     0
+The equations expressing the constraints are the following:
+
+                              a1 + t1 = b4 + c4            a4 + t 4 = b1 + c1
+                              b1 + t1 = b5 + c5            a5 + t 5 = a1 + c1
+                              c1 + t1 = b6 + c6            a6 + t 6 = a1 + b1
+
+
+                              a2 + t2 = a4 + c4            b4 + t 4 = b2 + c2
+                              b2 + t2 = a5 + c5            b5 + t 5 = a2 + c2
+                              c2 + t2 = a6 + c6            b6 + t 6 = a2 + b2
+
+
+                              a3 + t3 = a4 + b4            c4 + t 4   = b3 + c3
+                              b3 + t3 = a5 + b5            c5 + t 5   = a3 + c3
+                              c3 + t3 = a6 + b6            c6 + t 6   = a3 + b3
+
+    We start by choosing a section s. We set its coefficient to 1, and the coefficients of all other sections
+in the same context to 0. Then a solution to the equations above would give a compatible family in F
+containing s, meaning that the cohomological obstruction vanishes. It has been machine-checked using
+mod-2 arithmetic that there is no solution to the system for any choice of starting section s.
+
+
+8     Limitations and Further Directions
+There are two immediate limitations to the results we have described:
+   • The cohomological condition for contextuality is sufficient, but not necessary. It is interesting to
+      note that the example where a false positive does arise here, namely the Hardy model, is non-local
+      and hence contextual, but not strongly contextual.
+      It has been possible to construct a strongly contextual model for which a false positive does arise.
+      This is the Kochen-Specker model for the cover
+                               {A, B,C}, {B, D, E}, {C, D, E}, {A, D, F }, {A, E, G}
+Samson Abramsky, Shane Mansfield & Rui S. Barbosa                                                          13
+
+
+      However, unlike our earlier examples, this model does not satisfy any reasonable criterion for sym-
+      metry, nor does it satisfy any strong form of connectedness. In fact, the existence of measurements
+      belonging to a single maximal context, namely F and G, seems to be crucial in this example. It is
+      always possible to choose coefficients for s{A,D,F},F and s{A,E,G},G (using the notation of section 6)
+      that will make the coefficients of the respective contexts sum to one, without imposing constrains
+      on the other contexts.
+
+      Conjecture 8.1 Under suitable assumptions of symmetry and connectedness, the cohomology
+      obstruction is a complete invariant for strong contextuality.
+
+      In [16], Vorob’ev characterised the covers (or to be more precise the simplicial complexes these
+      generate) for which any model is extendable; i.e. non-contextual. These are exactly the complexes
+      which can be reduced to an empty complex by removing certain extremal maximal contexts. From
+      the proof of this result, one can see that the non-extendability of a model would be already noticed
+      in its reduced version, which allows us to focus on witnessing non-contextuality for irreducible
+      covers. A necessary condition for a context to be extremal is that it possesses measurements not
+      belonging to any other maximal context. Even though the above example has no extremal contexts,
+      and thus is irreducible, it does have this weaker property.
+   • Thus far, we have simply been computing the obstructions by brute force enumeration, so the
+     results we have obtained can only be considered a proof of concept. What one would like is to use
+     the machinery of homological algebra and exact sequences to obtain more conceptual and general
+     results.
+    Overcoming these limitations is the main objective for future work. This may require refining the
+abelian presheaf F to yield a finer invariant.
+
+
+Acknowledgements
+Support from EPSRC Senior Research Fellowship EP/E052819/1, the U.S. Office of Naval Research
+Grant Number N000141010357, the Marie Curie Initial Training Network - MALOA - From MAthemat-
+ical LOgic to Applications, PITN-GA-2009-238381, and the National University of Ireland Travelling
+Studentship Program is gratefully acknowledged.
+
+
+References
+ [1] S. Abramsky & A. Brandenburger (2011): The Sheaf-Theoretic Structure Of Non-Locality and Contextuality.
+     New Journal of Physics 13(2011), p. 113036, doi:10.1088/1367-2630/13/11/113036.
+ [2] H. Bartosik, J. Klepp, C. Schmitzer, S. Sponar, A. Cabello, H. Rauch & Y. Hasegawa (2009): Experi-
+     mental test of quantum contextuality in neutron interferometry. Physical Review Letters 103(4), p. 40403,
+     doi:10.1103/PhysRevLett.103.040403.
+ [3] J.S. Bell (1964):  On the Einstein-Podolsky-Rosen paradox.               Physics 1(3),    pp. 195–200,
+     doi:10.1017/CBO9780511815676.004.
+ [4] A. Cabello, J.M. Estebaranz & G. Garcı́a-Alcaine (1996): Bell-Kochen-Specker theorem: A proof with 18
+     vectors. Physics Letters A 212(4), pp. 183–187, doi:10.1007/978-94-011-5886-2-8.
+ [5] R. Ghrist & Y. Hiraoka (2011): Applications of sheaf cohomology and exact sequences to network coding.
+     preprint .
+14                                                      The Cohomology of Non-Locality and Contextuality
+
+
+ [6] D.M. Greenberger, M.A. Horne, A. Shimony & A. Zeilinger (1990): Bell’s theorem without inequalities.
+     American Journal of Physics 58, p. 1131, doi:10.1119/1.16243.
+ [7] D.M. Greenberger, M.A. Horne & A. Zeilinger (1989): Going beyond Bell’s theorem. In M. Kafatos, editor:
+     Bell’s Theorem, Quantum Theory, and Conceptions of the Universe, Kluwer, pp. 69–72.
+ [8] L. Hardy (1993): Nonlocality for two particles without inequalities for almost all entangled states. Physical
+     Review Letters 71(11), pp. 1665–1668, doi:10.1103/PhysRevLett.71.1665.
+ [9] G. Kirchmair, F. Zähringer, R. Gerritsma, M. Kleinmann, O. Gühne, A. Cabello, R. Blatt & CF Roos
+     (2009): State-independent experimental test of quantum contextuality. Nature 460(7254), pp. 494–497,
+     doi:10.1038/nature08172.
+[10] S. Kochen & E.P. Specker (1967): The problem of hidden variables in quantum mechanics. Journal of
+     Mathematics and Mechanics 17(1), pp. 59–87, doi:10.1007/978-3-0348-9259-9-21.
+[11] Y.C. Liang, R.W. Spekkens & H.M. Wiseman (2011): Specker’s parable of the overprotective seer:
+     A road to contextuality, nonlocality and complementarity. Physics Reports 506(1-2), pp. 1 – 39,
+     doi:10.1016/j.physrep.2011.05.001.
+[12] S. Mac Lane & I. Moerdijk (1992): Sheaves in geometry and logic: A first introduction to topos theory.
+     Springer.
+[13] N.D. Mermin (1990): Simple unified form for the major no-hidden-variables theorems. Physical Review
+     Letters 65(27), pp. 3373–3376, doi:10.1103/PhysRevLett.65.3373.
+[14] A. Peres (1990): Incompatible results of quantum measurements. Physics Letters A 151(3-4), pp. 107–108,
+     doi:10.1016/0375-9601(90)90172-K.
+[15] S. Popescu & D. Rohrlich (1994): Quantum nonlocality as an axiom. Foundations of Physics 24(3), pp.
+     379–385, doi:10.1007/BF02058098.
+[16] N. N. Vorob’ev (1962): Consistent families of measures and their extensions. Theory of Probability and
+     its Applications VII(2), pp. 147–163, doi:10.1137/1107014. (translated by N. Greenleaf, Russian original
+     published in Teoriya Veroyatnostei i ee Primeneniya).
+

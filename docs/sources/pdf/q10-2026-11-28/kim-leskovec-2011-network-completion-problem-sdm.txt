@@ -1,0 +1,1332 @@
+                            The Network Completion Problem:
+                     Inferring Missing Nodes and Edges in Networks
+                                     Myunghwan Kim∗               Jure Leskovec†
+
+
+Abstract                                                    data is incomplete with nodes and edges missing [15].
+While the social and information networks have become       For example, networks arising from the popular social
+ubiquitous, the challenge of collecting complete network    networking services are not completely mapped due
+data still persists. Many times the collected network       to network boundary effects, i.e., there are people
+data is incomplete with nodes and edges missing. Com-       who do not use the social network service and so we
+monly, only a part of the network can be observed and       cannot observe their connections. Similarly, when a
+we would like to infer the unobserved part of the net-      social scientist collects the data by surveying people,
+work. We address this issue by studying the Network         he or she may not have access to certain parts of the
+Completion Problem: Given a network with missing            network or people may not respond to the survey. For
+nodes and edges, can we complete the missing part?          example, complete social networks of hidden or hard-
+    We cast the problem in the Expectation Maximiza-        to-reach populations, like drug injection users or sex
+tion (EM) framework where we use the observed part          workers and their clients, are practically impossible to
+of the network to fit a model of network structure, and     collect. Thus, network data is often incomplete, which
+then we estimate the missing part of the network us-        means that some nodes and edges are missing from
+ing the model, re-estimate the parameters and so on.        the dataset. Analyzing such incomplete network data
+We combine the EM with the Kronecker graphs model           can significantly alter our estimates of network-level
+and design a scalable Metropolized Gibbs sampling ap-       statistics and inferences about structural properties of
+proach that allows for the estimation of the model pa-      the underlying network [15].
+rameters as well as the inference about missing nodes             We systematically investigate the Network Comple-
+and edges of the network.                                   tion Problem where we aim to infer the unobserved part
+    Experiments on synthetic and several real-world         of the network. While the problem of missing link infer-
+networks show that our approach can effectively recover     ence [6, 10] has been thoroughly studied before, we con-
+the network even when about half of the nodes in the        sider a problem where both edges and nodes are missing.
+network are missing. Our algorithm outperforms not          Thus, the question that we address here is: given an in-
+only classical link-prediction approaches but also the      complete network with missing nodes and edges, can we
+state of the art Stochastic block modeling approach.        fill in the missing parts? For example, can we estimate
+Furthermore, our algorithm easily scales to networks        the structure of the full Facebook social network by only
+with tens of thousands of nodes.                            observing/collecting a part of it? Figure 1(a) illustrates
+                                                            the task. There is a complete network represented by
+1    Introduction                                           adjacency matrix H and some nodes and correspond-
+                                                            ing edges are missing from it. We only observe network
+Network structures, such as social networks, web graphs
+                                                            (matrix) G, the non-missing part of H, and aim to infer
+and networks from systems biology, play important
+                                                            the missing nodes and edges, i.e., the missing part Z.
+roles in many areas of science and our everyday lives.
+                                                                  The problem that we aim to solve here is partic-
+In order to study the networks one needs to first
+                                                            ularly challenging in a sense that we only assume the
+collect reliable large scale network data [23]. Even
+                                                            partial knowledge of the network structure and based
+though the challenge of collecting such network data
+                                                            on that we aim to predict the structure of the unob-
+somewhat diminished with the emergence of Web, social
+                                                            served part of the network. In particular, we work only
+media and online social networking sites, there are still
+                                                            with the network structure itself, with no additional
+many scenarios where collected network data is not
+                                                            data about the properties (attributes or features) of the
+completely mapped. Many times the collected network
+                                                            nodes and edges of the network. This means that we aim
+    ∗ Stanford University, CA 94305. mykim@stanford.edu
+                                                            to infer the missing part of the network solely based on
+    † Stanford University, CA 94305. jure@cs.stanford.edu   the connectivity patterns in the observed part.
+Present work: A model-based approach. In or-                                                   Θ
+der to capture the connectivity patterns in the observed
+part of the network and use this knowledge to complete
+the unobserved part of the network, one inherently re-               G                                           2
+
+quires a model of the structure of real-networks. While                                                        Θ
+many network models have been proposed [6, 1, 16, 20],
+our requirements here are somewhat specific. First,
+since we aim to work with large scale network data, the                           Z
+model and the parameter estimation procedure needs
+to be scalable. Second, it is desirable for the network        (a) The Network Completion      (b) Kronecker     Graphs
+model to be statistical in nature so that we can effi-         Problem                         model
+ciently model the probability distribution over the miss-
+ing part of the network.                                       Figure 1: (a) The network completion problem: There is
+                                                               a complete graph adjacency matrix H. We only observe
+     The Kronecker graphs model [18] satisfies above re-
+                                                               part G of H, and aim to infer the missing part Z. (b)
+quirements. The model is provably able to simultane-
+                                                               Kronecker Graphs model: Parameter matrix Θ and the
+ously capture several properties of network structure,         second Kronecker power Θ2 . Notice the recursive structure
+like heavy-trailed degrees, small diameter and local clus-     of matrix Θ2 , where entries of Θ are recursively expanded
+tering of the edges [18, 22]. Moreover, Kronecker graphs       with miniature copies of Θ itself.
+model parameters can be efficiently estimated. In prac-
+tice, the model reliably captures the structure of many             Experiments on synthetic and large real-world net-
+large real-world networks [17].                                works show that our approach reliably predicts the in-
+     Based on the Kronecker graphs model, we naturally         dividual missing edges as well as effectively recovers the
+cast the problem of network completion into the Ex-            global network structure, even when about half of the
+pectation Maximization (EM) framework where we aim             nodes of the network are missing. In terms of per-
+to estimate the Kronecker graphs model parameters as           formance, our algorithm compares favorably to classi-
+well as the edges in the missing part of the network. In       cal link-prediction approaches and the state of the art
+this EM framework, we develop the KronEM algorithm             Stochastic block modeling [10] approach.
+that alternates between the following two stages. First,            KronEM has several advantages. In contrast to
+we use the observed part of the network to estimate the        the Stochastic block model, KronEM requires a small
+parameters of the network model. The estimated model           number of parameters and thus does not overfit the
+then gives us a way to infer the missing part of the net-      network. It infers not only the model parameters
+work. Now, we act as if the complete network is visible        but also the mapping between the nodes of the true
+and we re-estimate the model. This in turn gives us a          and the estimated networks. The approach can be
+better way to infer the missing part of the network. We        directly applied to cases when collected network data
+iterate between the model estimation step (the M-step)         is incomplete. Overall, KronEM provides an accurate
+and the inference of the hidden part of the network (the       probabilistic prior over the missing network structure.
+E-step) until the model parameters converge.                   Furthermore, KronEM easily scales to large networks.
+     However, in order to make this approach feasible
+in practice, there are several challenges that we need         2   Background and Related Work
+to overcome. In particular, the model parameter fit-
+                                                               Next, we survey the related work and then introduce
+ting as well as the estimation of missing edges are both
+                                                               the Kronecker graphs model. The network completion
+computationally intractable. Moreover, the parame-
+                                                               has been studied in the context of survey sampling [11]
+ter search space is super-exponential in the number of
+                                                               and the inference of missing links mainly in social and
+nodes N in complete network H as three sets of pa-
+                                                               biological networks [10, 6]. Related to our work is
+rameters/variables need to be estimated: the Kronecker
+                                                               also the problem of link prediction, which is usually
+graph parameters (usually just 4 parameters), the map-
+                                                               formulated in the following way: given a network up to
+ping of the nodes of the Kronecker graph to those of the
+                                                               time t, predict what new edges will occur in the future.
+observed and missing part of the network (N ! possible
+                                                               Link prediction has been extensively studied in social
+mappings), and the inference of the missing edges of the
+                                                               and information networks [21, 28] as well as biological
+network (O(2N ) configurations). However, we develop a
+                                                               networks [8]. Similarly, the network reconstruction
+set of scalable techniques that allow for fast and efficient
+                                                               problem that has been mainly studied in the context of
+model parameter estimation as well as the inference of
+                                                               biological networks, aims to infer the missing parts of
+missing nodes and edges of the network.
+                                                               networks [31, 3]. Another related setting is the network
+inference problem where a virus diffuses through the         3 The Network Completion Problem
+network and we only observe node infection times (but        We begin by introducing the problem of inferring miss-
+not who infected whom). The goal then is to infer            ing nodes and edges in networks. We then propose
+hidden underlying network [26, 9]. In contrast, the          KronEM, an EM algorithm based on Kronecker graphs
+network inference and network reconstruction assume          model to solve the network completion problem.
+that identities and properties (features) of missing nodes
+(proteins) are known and one aims to infer their links.      3.1 Problem Definition. We consider that there
+Overall, these previous works assume that the nodes are      is a large complete (directed or undirected) network
+already present in the network, we consider a different      H(N, E) which we cannot completely observe as the
+setting where both nodes and edges are missing.              information about some nodes is missing, i.e., we do
+     Our work also relates to the matrix completion          not know the edges of these missing nodes. In contrast,
+problem [4, 12] where a data matrix with missing entries     we are able to fully observe the induced subgraph
+is given and the aim is to fill the entries. However, it     G(NG , EG ) of H. G is the observed part of the network
+also differs in a sense that real-world networks have very   H. Now the task is to infer the missing part Z of the
+different structure and properties (e.g., heavy-tailed       network H. We denote the missing nodes and edges in
+degree distributions) than the real-valued data matrices     Z as NZ and EZ , respectively. EZ are therefore edges
+usually considered in the matrix completion problem.         with at least one endpoint in NZ , i.e., edges between
+Kronecker graphs model. Next we briefly introduce            pairs of nodes in NZ and those with one endpoint in
+the Kronecker graphs model of real-world networks [18]       NZ and the other in NG . Moreover, we assume that the
+that we later adopt to develop a method for inferring        amount of missing data (i.e., size of NZ ) is known. If
+missing nodes and edges. To introduce the Kronecker          not, then standard methods for estimating the size of
+graphs model, we first define the Kronecker product          hidden or missing populations [24, 13] can be applied.
+                                                      0 0
+of two matrices. For A ∈ Rm×n and B ∈ Rm ×n                      Considering H and G as the adjacency matrices, the
+                             mm0 ×nn0                        problem is equivalent to a variant of matrix completion
+Kronecker product A ⊗ B ∈ R              is defined as:
+                                                           problem as illustrated in Figure 1(a). We have a binary
+                      a11 B · · · a1n B                      matrix H of which we only observe block G and the
+          A⊗B =
+                       ..    ..      ..                    task is to infer the missing part Z. Our goal is to
+                         .       .     .     
+                       am1 B    ···   amn B                  determine whether each entry in Z should be set to 0
+                                                             or 1. In contrast to the classical matrix completion or
+And Kronecker product of two graphs is the Kronecker         missing-link inference problem where the assumption is
+product of their adjacency matrices.                         that random entries of H are missing (and so low-rank
+     The Kronecker graphs model is then defined by           matrix approximation methods can be thus applied), in
+a small Kronecker parameter matrix Θ ∈ [0, 1]N0 ×N0          our case complete rows and columns of H are missing,
+where every entry of the matrix Θ can be interpreted         which makes the problem much more challenging.
+as a probability. We can Kronecker power Θ to obtain
+larger and larger stochastic graph adjacency matrices.       3.2 Proposed Approach: Kronecker EM. We
+The resulting matrices are naturally self-similar as the     model the complete network H with a Kronecker graphs
+pattern of subgraph resembles that of the entire graph       model. Then, the observed part G and the missing
+as illustrated by Figure 1(b). For example, after k          part Z are linked probabilistically through the model
+                                        k   k
+powerings of Θ we obtain Θk ∈ [0, 1]N0 ×N0 . Now Θk          parameters Θ:
+defines a probability distribution over graphs on N0k                          Z ∼ PH (Z|G, Θ)
+nodes where each entry (Θk )ij of this large Θk can               The objective of the network completion problem is
+be interpreted as a probability that edge (i, j) exists.     to find the most likely configuration of the missing part
+Thus, to obtain a realization K of a Kronecker graph         Z. However, we first need to estimate the parameters
+defined by parameter matrix Θ, we include edge (i, j)        Θ to establish a link between the observed G and
+in K according to its probability of occurrence (Θk )ij .    unobserved Z. This naturally suggests the Expectation-
+     Kronecker graphs model is particularly appropriate      Maximization (EM) approach, where we consider the
+for our task here, since it has been shown that it can       missing edges in Z as latent variables. Therefore,
+reliably model the structure of many large real-world        we iteratively update Θ by maximizing the likelihood
+networks [17, 19]. Our task now is to extend the             P (G, Z|Θ) and then update Z via P (Z|G, Θ).
+model to networks with missing data and to develop                In addition to the missing part Z, one more set
+a procedure that will at the same time infer model           of variables is essential for the EM approach to work.
+parameters as well as the missing part of the network.       We have to distinguish which nodes of the inferred
+Kronecker graph belong to part G and which to part Z. Algorithm 1 E-step of KronEM
+We think of this as a mapping σ between the nodes of        input: Observed network G, Kronecker parameter Θ,
+the inferred network Ĥ and the observed part G. Each               # of warm-up iterations W , # of samples S
+node in H and in Ĥ has unique id 1, ..., N . Then the      output: Set of samples of Z and σ
+mapping σ is a permutation of the set {1, . . . , N } where Initialize Z (0) , σ (0)
+the first NG elements of σ map the nodes of Ĥ to the       for i = 1 to (W + S) do
+                                                               Z (i) ← P (Z|G, σ i−1 , Θ) // Gibbs sampling of Z
+nodes of G and the remaining NZ elements of σ map
+                                                               σ (i) ← P (σ|G ∪ Z (i) , Θ) // Gibbs sampling of σ
+the nodes of Z. Under the Kronecker graphs model, we
+                                                            end for
+define the likelihood P (G, Z, σ|Θ):                        Z ← (Z (W +1) , · · · , Z (W +S) )
+(3.1)              Y               Y                        Σ ← (σ (W +1) , · · · , σ (W +S) )
+                        k                      k
+                                                         
+ P (G, Z, σ|Θ) =      [Θ ]σ(u)σ(v)   1 − [Θ ]σ(u)σ(v)       return Z, Σ
+                  u∼v             u6∼v
+
+where Θk is the stochastic adjacent matrix generated by
+the Kronecker parameter matrix Θ, σ maps the nodes,          Focusing on these computational challenges, we develop
+and u ∼ v represents an edge in H = G ∪ Z.                   E-step and M-step in the following sections.
+    This means that in order to compute P (G|Θ) we
+integrate P (G, Z, σ|Θ) over two sets of latent variables:3.3 E-step. As described, it is difficult to sample
+the edges in the missing part Z, and the mapping σ        directly from P (Z, σ|G, Θ), i.e., it is not clear how to
+between the nodes of G and the nodes of the inferred      at the same time sample an instance of Z and σ from
+network Ĥ. Using the EM framework, we develop            P (Z, σ|G, Θ).
+KronEM algorithm where in the E-step we consider                However, we make the following observation. When
+the joint posterior distribution of Z and σ by fixing Θ   either Z or σ is fixed, we can sample the other (σ or Z).
+and in the M-step we find optimal Θ given Z and σ:        If the node mapping σ is fixed, then the distribution
+    E-step:                                               of edges in Z is determined by Θ and σ. In detail,
+                                                          we first generate a stochastic adjacency matrix Θk by
+              (Z (t) , σ (t) ) ∼ P (Z, σ|G, Θ(t) )
+                                                          using Kronecker parameter matrix Θ. Then, since the
+    M-step:                                               node mapping σ tells us which entries of Θk belong
+                                    h                  i  to the missing part Z, the edges in Z are obtained
+      Θ (t+1)
+              = arg max 2 E P (G, Z , σ |Θ)  (t)   (t)    by   a series of Bernoulli coin-tosses with probabilities
+                      Θ∈(0,1)                             defined by the entries of Θk and the node mapping
+Note that the E-step can be viewed as a procedure that σ. Conversely, when the missing part Z is fixed so
+completes the missing part of the network.                that the complete network H is given, sampling a node
+    Now the issue is the E-step is that there is no       mapping      σ ∼ P (σ|Θ, G, Z) conditioned on Θ and H
+closed form for the posterior distribution P (Z, σ|G, Θ). (i.e., H   =  G ∪ Z) is tractable as we show later.
+The basic EM algorithm is also problematic because              By   these observations, we generate many samples
+we cannot compute the expectation in the M-step. To       of  P (Z,  σ|G, Θ) by using Gibbs sampling, where we fix
+solve this, we introduce the Monte-Carlo EM algorithm     σ  and   sample  new Z, and then fix Z and sample new σ,
+(MCEM) that samples Z and σ from the posterior            and   so  on. Algorithm  1 gives the E-step using the Gibbs
+distribution P (Z, σ|G, Θ) and averages P (G, Z, σ|Θ)     sampling     approach  that we now describe in detail.
+over these samples [30]. This MCEM algorithm has Sampling Z from P(Z|G, σ, Θ). Given a node map-
+an additional advantage: if we take the Z and σ ping σ and a Kronecker parameter matrix Θ, sampling
+that maximize P (G, Z, σ|Θ), they are the most likely the missing part Z determines whether every edge Zuv
+instances of the missing part and the node mapping. in Z is present or not. We model this with Bernoulli dis-
+Thus, no additional algorithm for the completion of the tribution with parameter [Θk ]σ(u)σ(v) where σ(u) repre-
+missing part is needed.                                   sents mapping of node u in G to a row/column of the
+    However, we still have several challenges to over- stochastic adjacent matrix Θk . Entry [Θk ]uv of matrix
+come. For example, sampling from the posterior dis- Θk can be thus interpreted as the probability of an edge
+tribution P (Z, σ|G, Θ) in E-step is nontrivial, since no (u, v). However, the number of possible edges in Z is
+closed form exists. Furthermore, since the sample space quadratic O(N 2 ), so it is infeasible to sample Z by flip-
+over Z and σ is super-exponential in the network size ping O(N 2 ) coins each with probability [Θk ]uv . Thus,
+(O(2N NZ ) for Z and N ! for σ), which is unfeasible for we need a method that infers the missing part Z in more
+the size of the networks that we aim to work with here. efficiently than in quadratic time.
+     We notice that an individual edge (u, v) in a Kro- Algorithm 2 M-step of KronEM
+necker graph can be sampled as follows. First we sam-             input: Observed network G
+ple two N0 -ary (i.e., binary) vectors u and v of length                  Gibbs samples Z and Σ obtained in E-step
+k with entries ul and vl (l = 1, . . . , k). The probability              # of gradient ascent updates D
+of (ul , vl ) taking value (i, j) (where i, j ∈ {1, . . . , N0 }) output: New Kronecker parameter matrix Θ
+                                                                                         1
+is proportional to the corresponding entry Θij of the             initialize Θ, set L ← D  length(Z)
+                                                                  for j = 1 to D do
+Kronecker parameter matrix. Thus, pairs (ul , vl ) act as
+                                                                     for i = 1 to L do
+selectors of entries of Θ. Given two such vectors, we
+                                                                        (Z, σ) ← (Zi+(j−1)L , Σi+(j−1)L )
+compute the endpoints u, v of edge (u, v) [17]:                           (j)     ∂
+                                                                      ∆i ← ∂Θ P (G, Z, σ|Θ) // Compute gradient
+                       k            k                               end for P
+                                                                                 (j)
+                                                                    ∆(j) ← L1
+                      X             X
+            (u, v) = (   ul N0l−1 ,   vl N0l−1 )                              ∆i      // Average the gradient
+                                                                               (j)
+                      l=1          l=1                              Θ ← Θ + λ∆       // Apply gradient step
+                                                                  end for
+where N0 is the size of Kronecker parameter matrix Θ              return Θ
+(usually N0 = 2) and k = logN0 N . From this procedure
+we obtain an edge from a full Kronecker graph Ĥ. Since
+we are interested only in the missing part Z of Ĥ, we        mapping σ. The complete network H (i.e., H = G ∪ Z)
+accept an edge (u, v) only if at least one of u and v         and the Kronecker parameters Θ are given and we want
+is a missing node. We iterate this process until we           to sample the node mapping σ Here we also have an
+obtain EZ edges. Graphically, if the sampled edge (u, v)      issue because the sample space of all node mappings σ
+belongs to part Z in Figure 1(a), we accept it; otherwise,    (i.e., all permutations) is N !. We develop a Metropolis
+we reject it and sample a new edge. As the rejection rate     sampling method that quickly converges to good node
+is approximately EG /(EZ + EG ), the expected running         mappings. The sampling proposal mechanism selects
+time to obtain a single sample of the missing part Z is       two random elements of σ and swaps them. By using
+O(EG ) (down from the original O(N 2 )).                      such proposal mechanism, σ changes only locally and
+     Even though we reduced the time to obtain a              thus the computations are very fast. However, the
+single sample of Z, this is still prohibitively expensive     probability of acceptance of the transition σ → σ 0
+given that we aim to obtain millions of samples of Z.         (swapping random positions i and j) needs to be derived
+More precisely, to generate S samples of Z, the above         as the detailed balance conditions are not simply met.
+procedure takes O(SEG ) time. Generally, we need more         We provide the details in the extended version [14].
+samples S as the size of missing part EZ increases.
+Thus, the above procedure will be too slow.                   3.4 M-Step. Since the E-step is based on the Markov
+     We started with O(N 2 ) algorithm for sampling           Chain Monte Carlo sampling, we use the stochastic
+Z and brought it down to linear time O(EG ). We               gradient ascent method to update the parameter ma-
+further improve this by making sampling a single Z            trix Θ to maximize the empirical average of the log-
+effectively in a constant-time operation. We develop          likelihood. In each step, we average the gradient of the
+a Metropolis-Hastings sampling procedure where we             log-likelihood (Eq. 3.1), with respect to Θ(t) and com-
+introduce a Markov chain. We do this by making                pute the new Θ(t+1) . In this sense, each gradient update
+samples dependent, i.e., given sampled Z (i) , we generate    eventually repeats the E-step. Moreover, we use the
+the next candidate sample Z (i+1) . To obtain Z (i+1)         ECM algorithm [25] where only few steps of the gradi-
+we consider a proposal mechanism which takes Z (i) ,          ent ascent are needed for the EM algorithm to converge.
+removes one edge randomly from it, and adds another                Algorithm 2 gives the M-step where we iterate over
+one to it. We then accept or reject this new Z (i+1)          the samples of Z and σ obtained in E-step and in each
+based on the ratio of likelihoods. In this way, we reduce     step we compute the gradient of P (G, Z, σ|Θ) as further
+the complexity of obtaining Z (i+1) to O(1), since all we     described in the extended version of the paper [14].
+need to do is to take a previous sample Z (i) , delete an
+edge and add a new one. Therefore, it takes only O(S)         4    Experiments
+time to acquire S samples of Z. We give further details
+                                                  Next we evaluate the KronEM algorithm on several
+of the Metropolis-Hastings sampling procedure withsynthetic and real datasets. First, we use the syn-
+the detailed balance correction factor in the extended
+                                                  thetic Kronecker graphs to examine the correctness of
+version of the paper [14].                        the KronEM algorithm. We test whether KronEM is
+Sampling σ from P(σ|G, Z, Θ). The second part able to recover the true Kronecker parameters regard-
+of the Gibbs sampling obtains the samples of node less of the fraction of missing nodes. Second, we com-
+pare KronEM to link-prediction and the state of the                 Method       DABS     DRM S     DKL     DLL     DLLZ
+art missing link inference methods on two real datasets,           KronFit       0.173    0.048     354.4   -355    -155
+where both nodes and edges are missing as well as where            KronEM        0.063    0.018     22.4     -12     -5
+only edges are missing. We show that KronEM com-
+pares favorably in both settings. Furthermore, we also          Table 1: Performance on a synthetic Kronecker graph.
+examine several aspects of the robustness of KronEM.            Notice KronEM outperforms KronFit in all respects.
+We show convergence, sensitivity to parameter initial-              timated Kronecker parameters as a relative likelihood
+ization, and resilience to noise. We also show that Kro-            measure. We further distinguish two ways of quantify-
+nEM performs well even when the network does not                    ing these differences. One is the difference of the like-
+strictly follow the Kronecker graphs model.                         lihood between the true complete network H ∗ and the
+                                                                    estimated one Ĥ. The other is that between the missing
+4.1 Correctness of KronEM. First we evaluate parts of networks Z ∗ and Ẑ. We therefore define DLL =
+KronEM on the synthetic Kronecker graphs to check LL(Θ̂) − LL(Θ∗ ) and DLLZ = LLZ (Θ̂) − LLZ (Θ∗ ).
+how well KronEM recovers the true Kronecker param-
+                                                                    Results on synthetic data. We compare KronEM
+eters in presence of missing nodes and edges. Since we
+                                                                    to fitting Kronecker parameters directly to the observed
+know the true parameters that generated the network,
+                                                                    part G∗ by inserting isolated nodes in the unobserved
+we measure the error of Kronecker parameter recovery
+                                                                    part Z (we refer to the method as KronFit [19]). Note
+as a function of the amount of missing data.
+                                                                    that this method ignores the missing part and estimates
+     We use the Kronecker graphs model with parameter
+                                                                    the model parameters purely from the observed G∗ .
+matrix Θ∗ , generate a synthetic network H ∗ on 1,024
+                                                                         Table 1 shows the performance of the KronEM and
+nodes, and delete a random set of nodes Z ∗ . We then
+                       ∗                                          ∗ KronFit where we randomly removed 25% of the nodes
+use the remaining G and infer the true parameter Θ
+                                                                    so that the network has 768 nodes and 1,649 edges (out
+as well as the edges in the missing part Z ∗ . We refer
+                                                                    of 1,024 nodes and 2,779 edges). Notice that KronEM
+to inferred Z as Ẑ and to estimated parameters as Θ̂.
+                                                                    greatly outperforms KronFit in all respects. Both the
+In all experiments, we use a 2 × 2 Kronecker parameter
+                                                                    L1 (DABS ) and L2 (DRMS ) distances of the estimated
+matrix since it has been shown that this already reliably
+                                                                    parameters are more than twice smaller for KronEM.
+models the structure of real-world networks [17].
+                                                                    In terms of the KL divergence and the difference in
+Evaluation metrics. We define different distance the log-likelihood we see about factor 20 improvement.
+metrics between two Kronecker graphs by measuring These experiments demonstrate that the Expectation
+discrepancy between the true parameter matrix Θ∗ and Maximization algorithm greatly outperforms Kronecker
+the recovered parameter matrix Θ̂. We use L1 (entry- parameter fitting directly to the observed data with
+wise sum of absolute differences) and L2 (entry-wise ignoring the missing part.
+sum of squared differences) distances between Θ∗ and                     We additionally examine the inference performance
+Θ̂. We refer to these measures as DABS and DRMS as a function of the amount of missing data. KronEM
+and compute them as follows: DABS = N12 |Θ̂ − Θ∗ |1 maintains performance as the number of unobserved
+                                                     0
+                                                                    data (i.e., the size of Z) increases. For this purpose, we
+                   q
+                       1            ∗ || .
+and DRMS =            N02 || Θ̂ − Θ     2     We  also   consider
+                                                                    vary the fraction of missing nodes and measure the error
+Kullback-Leibler (KL) divergence that operates directly metrics, DABS , DRMS , DKL and DLL . Figure 2 gives
+on the full stochastic adjacency matrices constructed the results of these experiments. Notice that the error
+by Θ∗ and Θ̂. Naive computation of KL divergence of KronEM is nearly flat and is increasing even slower
+takes O(N 2 ) time, however, we can approximate it by than the error of KronFit. When we remove up to 45%
+exploiting the recursive structure of Kronecker graphs. of the nodes, KronEM is still able to reliably estimate
+By using Taylor expansion log(1 − x) ≈−x − 0.5x2 , the model parameters and recover the missing part of
+we obtain DKL ≈ k|Θ∗ |k−1                   ∗        ∗
+                                  P
+                                      i,j Θij log Θij /Θ̂ij       − the network. On the other hand, KronFit becomes
+                                                P               k infeasible to recover the parameter already when only
+|Θ∗ |k + 12 S(Θ∗ )k + |Θ̂|k + 12 S(Θ∗ )k −                ∗
+                                                    i,j Θij Θ̂ij    about 10% of the data is missing.
+                                                 2                       To sum up, KronEM near-perfectly recovers the
+              P                            P
+where |Θ| = i,j Θij and S(Θ) = i,j Θij
+     Finally, we also directly measure the log-likelihood true Kronecker parameters with less than 0.02 DRMS
+as a generic score of the similarity between an instance error, regardless of the amount of missing data.
+and a distribution. Since we can additionally calcu-
+late the log-likelihood of the true Θ∗ , we consider the 4.2 Experiments on Real Networks. From the
+difference of log-likelihood between the true and the es- experiments so far, we see that when a network follows
+                                                                    the Kronecker graphs model KronEM can accurately
+         0.4                                          0.1                                 performance for missing link inference [10]. The block
+                    KronFit                                      KronFit
+        0.35       KronEM                            0.09
+                                                     0.08
+                                                                KronEM                    model assumes that each node belongs to a latent group
+         0.3
+        0.25
+                                                     0.07                                 and the relationship between the groups governs the
+
+
+
+
+                                             DRMS
+ DABS
+
+
+
+
+                                                     0.06
+         0.2
+        0.15
+                                                     0.05                                 connections. Specifically, a group membership B(u)
+                                                     0.04
+         0.1                                         0.03                                 for every node u and the group relationship probability
+        0.05                                         0.02
+          0                                          0.01                                 PBM (B(u), B(v)) for every pair of groups are defined in
+               5   10 15 20 25 30 35 40 45                  5   10 15 20 25 30 35 40 45
+                       Node Removal(%)                              Node Removal(%)       the model, and a pair of nodes u and v is connected with
+                   (a) DABS                                     (b) DRM S                 this group relationship probability PBM (B(u), B(v)).
+                                                                                          For the inference task with the Stochastic block model,
+        2000
+                    KronFit
+                                                        0                                 we implemented the algorithm described in [10].
+        1800                                         -200
+        1600
+                   KronEM
+                                                     -400                                      For every edge (every pair of nodes), we compute
+        1400                                         -600
+        1200                                         -800                                 the score of the edge under a particular link prediction
+ DKL
+
+
+
+
+                                             DLL
+
+
+
+
+        1000                                        -1000
+         800                                        -1200                                 method and then consider the probability of the edge
+         600                                        -1400
+         400                                        -1600
+                                                                 KronFit
+                                                                                          being proportional to the score. For each method, the
+         200                                        -1800
+           0
+               5   10 15 20 25 30 35 40 45
+                                                    -2000
+                                                            5
+                                                                KronEM
+                                                                10 15 20 25 30 35 40 45
+                                                                                          score of an edge (x, y) is:
+                       Node Removal(%)                              Node Removal(%)
+                                                                                            • Degree Product (DP) : Deg(x) · Deg(y)
+                    (c) DKL                                      (d) DLL
+                                                                                                                 P                    1
+                                                                                            • Adamic-Adar (AA) : z∈N b(x)∩N b(y) log Deg(z)
+Figure 2: Error of the recovered missing part of the network
+as a function of the fraction of missing nodes in the network.                              • Block Model (BM) : PBM (B(x), B(y))
+KronEM is able to reliably estimate the missing part even
+with 45% of the nodes missing.                             where Deg(x), N b(x), and B(x) denote the degree of x,
+                                                           a set of neighbors of x, and the corresponding group of
+solve the network completion problem, even though a x in the block model, respectively. In this way, each
+large part of the network is missing. Now we turn our method generates a probability distribution over the
+attention to real datasets and evaluate our approach edges in the unobserved part of the network Z.
+KronEM on these real networks. In the evaluation of Evaluation. We evaluate each algorithm on its abil-
+KronEM, focusing on the inference of missing edges ity to infer the missing part of the network. Since each
+as well as the recovery of global network properties, we method (DP, AA, BM, and KronEM) is able to com-
+compare KronEM to other methods.                           pute the probability of each edge candidate, we quantify
+    For these experiments, we use two real-world net- the performance of inference by the area under ROC
+works: a part of the Autonomous System (AS) net- curve (AU C) and the log-likelihood (LL). Moreover,
+work of the Internet connectivity (4,096 nodes, 29,979 we are particularly interested in evaluating the perfor-
+edges) [20] and a part of the Flickr social network (4,096 mance over the part where both endpoints of an edge
+nodes, 22,178 edges) [16]. Then, we randomly removed are in the missing part of the network. We denote those
+25% of the nodes and the corresponding edges.              values as AU C     and LL      respectively. NZ          NZ
+Baseline methods. To assess the quality of KronEM                                             Table 2 shows the results for this inference task.
+for network completion problem, we introduce different                                    Our proposed approach of KronEM gives a significant
+classes of methods and compare them with KronEM.                                          boost in performance compared to DP and AA – it
+     First, we consider a set of classical link prediction                                increases the AU C score for about 20%. Comparison
+methods [21]. We choose two link prediction methods                                       with BM shows better performance in AU C. Moreover,
+that have been found to perform well in practice [21]:                                    KronEM performs particularly well when estimating
+Degree-Product (DP), and Adamic-Adar score (AA).                                          the edges between the missing nodes (AU CNZ ). In
+We select the Degree-Product because it models the                                        this AU CNZ measure, KronEM outperforms BM by
+preferential attachment mechanism [2], and the Adamic-                                    10 ∼ 15%. Furthermore, we verify the quality of
+Adar score since it performs the best in practice [21].                                   each ROC curve associated with AU C and AU CNZ in
+Adamic-Adar score can be regarded as an extension of                                      Figure 3 which shows that KronEM produces better
+the Jaccard score that considers the number of common                                     ROC curves than the other methods for both datasets.
+neighbors but gives each neighbor different weight.                                           In the other scores, LL and LLNZ , KronEM also
+     We also consider another model-based approach to                                     performs better than DP and AA. On the other hand,
+network completion. We adopt the Stochastic block                                         BM produces better LL scores than KronEM. How-
+model (BM) that is currently regarded as the state                                        ever, when we take account of the number of parameters
+of the art as the method already demonstrated good                                        in the model (2,916 for BM and only 4 for KronEM),
+                       AS network                                                                                                          Instead of comparing the complete networks Ĥ
+                        Method                AU C              AU CNZ                             LL             LLNZ                and H ∗ , i.e., the observed and the unobserved parts
+                         DP                   0.661               0.5                            -86,735         -14,010              together, we focus only on the hidden parts Z ∗ and Ẑ.
+                         AA                   0.634              0.701                          -106,710         -31,831              That is, we look at the overall shape of the networks
+                         BM                   0.834              0.737                           -73,103         -11,881              only over the missing part. We then examine the
+                       KronEM                 0.838              0.800                           -76,571         -12,265              following properties:
+                       Flickr network                                                                                                   • In/Out-Degree distribution (InD/OutD) is a his-
+                        Method      AU C                        AU CNZ                            LL              LLNZ                    togram of the number of in-coming and out-going
+                           DP       0.782                         0.5                           -75,921          -11,324                  links. Networks have been found to have power-law
+                          AA        0.706                        0.900                          -81,089          -18,676                  degree distributions [27].
+                          BM        0.875                        0.806                          -50,124           -7,972
+                                                                                                                                        • Singular values (SVal) indicate the singular values
+                       KronEM       0.930                        0.925                          -54,889           -7,841
+                                                                                                                                          of the adjacent matrix versus their ranks. This plot
+Table 2: The performance of inference by each method on                                                                                   also tends to be heavy-tailed [7].
+AS and Flickr networks: KronEM performs best in AU C                                                                                    • Singular vector (SVec) represents the distribution
+and AU CNZ . BM seems better in LL and LLNZ , however                                                                                     of components in the eigen vector associated with
+a large number of parameters in BM lead to overfitting.                                                                                   the largest eigen value. It has been also known to
+                                                                                                                                          be heavy tailed [5].
+                         1                                                                 1
+                                                                                                                                        • Triad Participation (TP) indicates the number of
+  True Positive Rate
+
+
+
+
+                                                                     True Positive Rate
+
+
+
+
+                        0.8                                                               0.8
+                                                                                                                                          triangles that a node participates in. It measures
+                        0.6                                                               0.6
+                                                                                                                                          the transitivity in networks [29].
+                        0.4                                                               0.4
+                                                  DP                                                                DP
+                        0.2                       AA
+                                                  BM
+                                                                                          0.2                       AA
+                                                                                                                    BM                     To quantify the similarity between the recovered
+                                              KronEM                                                            KronEM
+                         0
+                              0   0.2   0.4    0.6        0.8    1
+                                                                                           0
+                                                                                                0   0.2   0.4    0.6        0.8   1   and the true statistical network property, we apply
+                                    False Positive Rate                                               False Positive Rate
+                                                                                                                                      a variant of Kolmogorov-Smirnov (KS) statistic to
+                                                                                                                                      quantify a distance between two distributions in a
+Figure 3: ROC curves for Flickr network: KronEM                                                                                       non-parametric way. Since the original KS statis-
+produces better ROC curves in the entire missing part Z
+                                                                                                                                      tic may be dominated by few extreme values (which
+(left) as well as in the missing part between only missing
+                                                                                                                                      are common to occur when working with heavy-
+nodes (right).
+                                                                                                                                      tailed distributions), we adopt a modified KS static
+this phenomenon seems natural because larger degree                                                                                   P owerKS(Fˆ1 , Fˆ2 ) for two empirical cumulative dis-
+of freedom is likely to overestimate the likelihood. In                                                                               tributions, where P owerKS(Fˆ1 , Fˆ2 ) = supx | log(1 −
+case that we limit the number of parameters in BM to                                                                                  F1 (x)) − log(1 − F2 (x))|. With this statistic, we cap-
+900 not to overestimate the likelihood, we observe that                                                                               ture the difference of distributions in the log-log scale.
+AU C and LL for the Flickr network decrease to 0.772                                                                                  Moreover, by using the complementary cumulative dis-
+and -66,653 respectively.                                                                                                             tribution, we maintain the linear shape of the power-
+     In these experiments, we see that the model-                                                                                     law distribution in the log-log plot, but still remove the
+based approaches (KronEM and Stochastic block                                                                                         noisy effect in the distribution as the cumulative distri-
+model) outperform the classical link-prediction meth-                                                                                 bution does.
+ods (Adamic-Adar and Degree-Product). Between the                                                                                          Table 3 shows the P owerKS statistic values of
+two model-based approaches, KronEM is superior to                                                                                     various network properties for KronEM as well as the
+BM. Focusing on the part between missing nodes and                                                                                    other methods. On the average, KronEM gives 40%
+considering the number of parameters, KronEM shows                                                                                    reduction in the PowerKS statistic over the Degree-
+better performance than the Stochastic block model.                                                                                   Product (DP) and 70% reduction over the Adamic-
+Recovery of global network properties. In the                                                                                         Adar (AA) method on both datasets. Furthermore,
+previous experiments, we examined the performance of                                                                                  KronEM represents better PowerKS statistics than
+the inference task on individual edges and showed that                                                                                the Stochastic block model (BM) in 3 out of 5 faces
+KronEM is the most successful in terms of the AU C.                                                                                   on both datasets. From the results, we can see that
+Along with these microscopic edge inference tests, we                                                                                 KronEM also performs well in the recovery of global
+are also interested in the recovery of global network                                                                                 properties.
+properties such as degree distribution or local edge clus- Recovery as a function of the amount of missing
+tering. In other words, we view the results of inference data. Next we check the performance change of each
+in a macroscopic way rather than a microscopic manner. algorithm as a function of the amount of missing data.
+     AS network                                                                      1
+                                                                                                                                                                      0
+      Method      InD    OutD    SVal   SVec    TP                                  0.9                                                                               -2
+
+
+
+
+                                                                                                                                    Relative AUC (%)
+                                                                                                                                                                      -4
+       DP         1.99   2.00    0.19   0.04    4.24                                0.8                                                                               -6
+
+
+
+
+                                                              AUC
+       AA         1.89   1.89    3.45   0.05    4.08                                0.7                                                                               -8
+                                                                                                                                                             -10
+       BM         2.05   2.04    0.42   0.21    2.20                                0.6
+                                                                                               DP                 BM
+                                                                                                                                                             -12
+                                                                                                                                                                                     DP                   BM
+                                                                                                                                                             -14
+     KronEM       2.14   2.20    0.17   0.08    1.81                                0.5
+                                                                                               AA             KronEM                                                                 AA               KronEM
+                                                                                          0   0.1       0.2       0.3   0.4   0.5                                          0       0.1      0.2        0.3     0.4       0.5
+                                                                                              Missing fraction of nodes                                                            Missing fraction of nodes
+
+     Flickr network
+      Method      InD    OutD    SVal   SVec    TP           Figure 4: AU C change of inference on the Flickr network
+         DP       1.77   1.80    0.75   0.21    5.77         for various missing fractions of nodes: Both absolute value
+        AA        2.40   2.23    8.46   0.18    1.00         (left) and relative value (right) illustrate that KronEM
+        BM        1.89   2.03    1.02   0.15    1.74         maintains its high performance, while the accuracies of the
+     KronEM       1.71   1.62    0.38   0.21    3.49         other methods drop.
+                                                                                                               True                                                                                      True
+                                                                                4                                                                                          4
+Table 3: PowerKS statistics for AS network and Flickr                          10                        5%Missing
+                                                                                                        25% Missing
+                                                                                                                                                                      10                           5%Missing
+                                                                                                                                                                                                  25% Missing
+                                                                                                        45% Missing                                                                               45% Missing
+network: Overall, KronEM recovers the global network
+
+
+
+
+                                                              Distribution
+
+
+
+
+                                                                                                                                                       Distribution
+                                                                                3                                                                                          3
+                                                                               10                                                                                     10
+
+properties most accurately.                                                     2
+                                                                               10                                                                                     10
+                                                                                                                                                                           2
+
+
+                                                                                1                                                                                          1
+                                                                               10                                                                                     10
+
+                                                                                0                                                                                          0
+                                                                               10                                                                                     10
+                                                                                      0                 1                2                                                     0                  1                  2
+                                                                                    10              10                  10                                                 10                   10                 10
+This indirectly tells us how dependent on the observed                                              In-Degree                                                                                   Out-Degree
+
+information each algorithm is.                                (a) In-Degree Distribution                                            (b) Out-Degree Distribution
+    For these experiments, we used the Flickr network
+                                                                                                                                                                                                       True
+and removed 5%, 25%, 45% of nodes randomly. We                                                                                                         10
+                                                                                                                                                                  3                              5%Missing
+
+
+
+
+                                                                                                                                    Number of Nodes
+                                                                                                                                                                                                25% Missing
+                                                              Singular Value
+
+
+
+
+note that each of the node-removal fraction results in                          1
+                                                                               10                                                                                 2
+                                                                                                                                                                                                45% Missing
+
+                                                                                                                                                       10
+approximately 10%, 43%, 70% edges removed, i.e., by
+removing 45% of the nodes, we lose 70% of the edges.                                             True
+                                                                                           5%Missing
+                                                                                                                                                       10
+                                                                                                                                                                  1
+
+                                                                                          25% Missing
+    In spite of this high fraction of missing edges,                            0
+                                                                               10
+                                                                                          45% Missing
+                                                                                                                                                       10
+                                                                                                                                                                  0
+                                                                                      0                       1                2                                           0                1                  2
+KronEM shows sustainable performance. First of all,                                 10                   10
+                                                                                                        Rank
+                                                                                                                              10                                      10                  10            10
+                                                                                                                                                                                         Number of Triads
+in Figure 4, there exists almost no drop in AU C results                            (c) Singular Value                                            (d) Triad Participation
+of KronEM, while AU C’s of the other methods are
+continuously decreasing as the amount of missing data
+                                                             Figure 5: Recovery of the global properties on the Flickr
+increases. The performance of the Adamic-Adar (AA)           network for various fractions of missing nodes: Inferred
+is the most hurt by the missing data. Interestingly,         networks according to the fraction of missing part do not
+the Block Model (BM) suffers more than the Degree            show a large difference each other, even though the fraction
+Product (DP) (Figure 4(right)). On the other hand, the       of missing edges is up to 70%.
+performance of KronEM practically does not decrease
+even with the amount of missing data as high as 40%.         mance of KronEM in this situation.
+    Furthermore, when taking a careful look at how                Using the same real datasets (AS and Flickr), we
+KronEM recovers global network properties, there             selected 25% of edges at random and removed them. We
+exists little difference between the true and the inferred   then examine the inference accuracy of each algorithm
+networks as shown in Figure 5. When the number of            under the AU C metric as before.
+missing nodes is lower, we get a better fit, but the gap          Table 4 shows the AU C results of all methods for
+does not increase a lot as the missing fraction increases.   both real networks. Note that the AU C scores of
+                                                             methods except for KronEM increase compared to the
+4.3 Inference of Missing Edges. We so far per-               scores in the inference of missing nodes and edges. Be-
+formed the experiments in the environment where some         cause Degree-Product (DP) and Adamic-Adar (AA) de-
+fraction of nodes and their corresponding edges are miss-    pend on the local information of each node, their perfor-
+ing. However, we also consider a slightly different prob-    mances show large improvement between the two differ-
+lem that all nodes are observed but a fraction of random     ent inference tasks. On the other hand, since Stochastic
+edges are missing. We can view this modified setting         block model (BM) and KronEM are model-based ap-
+as a class of missing link inference problem. Since the      proaches, these methods reduce the performance loss
+baseline methods (Degree-Product, Adamic-Adar, and           caused by the lack of the node information in the previ-
+Stochastic block model) have usually been applied to         ous task where we infer both missing nodes and edges.
+this type of setting, we also want to inspect the perfor-    Even though the classical link-prediction methods rel-
+       Network      DP       AA      BM      KronEM              Kronecker parameter Θ. In practice, we notice that
+         AS        0.750    0.760   0.821     0.833              this might not be a problem in the following sense. Fig-
+        Flickr     0.815    0.848   0.895     0.900              ure 6(b) illustrates the convergence of the parameter
+                                                                 Θ01 over the number of iteration from initial random
+Table 4: AU C results for missing edge inference on AS and       starting points. The curves begin with a wide range
+Flickr networks. Even though the other methods become            of initial values, but eventually converge into only two
+more competitive in this setting than in the inference of both
+                                                                 values. Moreover, in this Figure 6(b), while large ini-
+missing nodes and edges, KronEM still performs best.
+                                                                 tial points (larger than 0.3) converge to the larger final
+atively increase their inference performance, KronEM             value (0.6), small initial points (smaller than 0.3) con-
+produces the best inferences in both networks, and even          verge to the smaller final value (0.4). Notice that these
+slightly outperforms the Stochastic Block Model.                 are exactly the two off-diagonal values of the parame-
+                                                                 ter matrix that we used to generate the graph. Since
+4.4 Robustness of KronEM. So far we have fo-                     Kronecker parameter matrix is invariant to permuta-
+cused on the two aspects of the performance of Kro-              tions of entries, this means that KronEM is able to
+nEM: the recovery power of Kronecker parameters and              exactly recover the parameters regardless of the initial-
+the ability in both individual edge inference and recov-         ization conditions. Overall, we observe that KronEM
+ery of the global properties with real datasets.                 algorithm is not sensitive to the random initialization
+     Now we move our focus to the robustness of Kro-             settings. Therefore, when finding the optimal Θ, we
+nEM. We define the robustness mainly in two ways.                run KronEM several times with different parameter
+First, we consider the robustness of the algorithm it-           initializations and select the solution with maximum
+self in terms of convergence, sensitivity to the initial-        likelihood.
+izations, and resilience to the noise. Second, we also                Third, in order to check how robust KronEM
+evaluate the robustness against the underlying network           is against the edge noise, we added various rates of
+structure in a sense of how good performance KronEM              random noise into the edges in the observed part of
+yields even when the network does not strictly follow the        the graph. We randomly picked a number of edges and
+Kronecker graphs model. Although the experiments on              the same number of non-edges, and flipped their values
+real datasets already demonstrate this in some sense, we         (i.e., edges become non-edges, and non-edges become
+verify this robustness by using synthetic networks gen-          edges). This means that we are imposing the Erdős-
+erated by various kinds of social network models and             Rényi random graph over the existing network. As
+show that the Kronecker graphs structure is not the              real-networks do not follow Erdős-Rényi random graph
+necessary condition for KronEM to work well.                     model, this process heavily distorts the network.
+                                                                      Figure 6(c) shows the estimate of Kronecker param-
+Robustness of algorithm. We categorize the factors
+                                                                 eter Θ01 for different edge noise rates. Notice that Kro-
+that affect on the final solution into three groups.
+                                                                 nEM results in almost the same solution against up to
+     First, to check the variance of the randomized algo-
+                                                                 15% edge noise rate. Even at 20% and 25% noise, the
+rithm, we run KronEM several times by setting differ-
+                                                                 estimates are acceptable since their differences from the
+ent random starting points over the synthetic network.
+                                                                 original are less than 0.02. As the amount of noise in-
+Figure 6(a) shows the convergence of parameter Θ01 as
+                                                                 creases beyond 25%, we start to observe a significant
+a function of the number of EM iterations for each run.
+                                                                 error in the parameter estimation.
+Notice that when the current parameter estimate is far
+                                                                      Additionally, we investigate the number of samples
+from the optimal one, the algorithm quickly converges
+                                                                 of Z and σ needed before the empirical estimates of the
+to good parameter values. On the other hand, as the
+                                                                 log-likelihood and the gradient converge. Figure 6(d)
+parameter estimate moves close to the optimal value,
+                                                                 shows the convergence of average likelihood in one E-
+the random effect in the algorithm emerges. However,
+                                                                 step for the network 1,024 nodes. Notice that only about
+all the points move toward the same final solution with
+                                                                 1,000 samples are needed for the estimate to converge.
+keeping their variance small.
+                                                                      Based on these experiments, we conclude that Kro-
+     Second, to see the effect of the parameter initializa-
+                                                                 nEM exhibits low variance, low sensitivity to the initial-
+tion conditions, we took several experiments with differ-
+                                                                 ization conditions, and high resilience against the edge
+ent starting points. We run KronEM from a random
+                                                                 noise.
+starting parameter matrix Θ over the networks with pa-
+rameters Θ∗ = [0.9 0.6; 0.4 0.2] and 25% of the nodes            Robustness against the underlying network
+missing. Since KronEM solves a non-convex problem,               model. Last we also investigate the performance of
+the algorithm may converge to local optimal solutions            KronEM even when the underlying network does not
+for the missing part Z, the node mapping σ, and the              follow the Kronecker graph model. We generated syn-
+                                    0.66                                                                     0.8                                             Network     DP      AA      BM      KronEM
+         Kronecker parameter(Θ01)
+
+
+
+
+                                                                                 Kronecker parameter(Θ01)
+                                    0.64                                                                     0.7
+                                    0.62                                                                     0.6                                              Kron      0.749 0.833 0.862          0.916
+                                     0.6
+                                    0.58
+                                                                                                             0.5
+                                                                                                             0.4
+                                                                                                                                                               PA       0.600 0.660 0.751          0.779
+                                    0.56
+                                    0.54
+                                                                                                             0.3                                               FF       0.865 0.769 0.743          0.946
+                                                                                                             0.2
+                                    0.52
+                                                                                                             0.1
+                                                                                                                                                              SBM       0.663 0.641 0.772          0.796
+                                     0.5
+                                    0.48
+                                                10     20     30    40   50
+                                                                                                               0
+                                                                                                                     10     20     30     40    50
+                                                                                                                                                      Table 5: Inference performance (AU C) on synthetic net-
+                                                       EM Steps                                                             EM Steps                  works generated using different network generative mod-
+       (a) Variance of algorithm                                               (b) Random initialization                                              els (Kronecker graph (Kron), Preferential Attachment (PA),
+                                                                                                                                                      Forest Fire (FF) and Stochastic Block Model (SBM)). Per-
+                                    0.66                                                                    -12000
+                                                                                                                                                      formance of KronEM is stable regardless of the model used
+  Kronecker Parameter(Θ01)
+
+
+
+
+                                    0.64                                                                    -12500
+                                    0.62                                                                    -13000                                    to generate the underlying synthetic network.
+                                                                              Log-Likelihood
+
+                                     0.6
+                                                                                                            -13500
+                                    0.58
+                                                                                                            -14000
+                                    0.56                                                                                                                                                                                               5
+                                                                                                            -14500                                                           250                                                    2⋅10
+                                    0.54                                                                                                                                                      KronEM
+                                    0.52                                                                    -15000                                                                                BM
+
+
+
+
+                                                                                                                                                        Running Time (min)
+                                                                                                                                                                             200                                                       5
+                                           0%        10%    20%    30%                                                                                                                                                              2⋅10
+
+
+
+
+                                                                                                                                                                                                                  Number of Edges
+                                     0.5   5%        15%    25%                                             -15500
+                                    0.48                                                                    -16000                                                           150
+                                            10        20    30      40   50                                           500      1000     1500   2000                                                                                    5
+                                                                                                                                                                                                                                    1⋅10
+                                                      EM Steps                                                              Sample size                                      100
+
+                                       (c) Edge Noise                                    (d) Number of Samples                                                               50
+
+                                                                                                                                                                                                                                       4
+                                                                                                                                                                              0                                                     5⋅10
+Figure 6: Convergence and robustness of algorithm: Kro-                                                                                                                            50K 100K 150K 200K 250K 300K                               4
+                                                                                                                                                                                                                                           4⋅10        5⋅10
+                                                                                                                                                                                                                                                           4       4
+                                                                                                                                                                                                                                                                6⋅10
+                                                                                                                                                                                                                                                                          4
+                                                                                                                                                                                                                                                                       7⋅10
+                                                                                                                                                                                       Number of Edges                                            Number of Nodes
+nEM has low variance, low sensitivity to the parameter ini-
+tialization, and high resilience to the noise.                                                                                                                                (a) Running time                                      (b) Edges vs. nodes
+
+                                                                                                                                                      Figure 7: (a) Running time as a function of network size:
+                                                                                                                                                      the running time of KronEM fits to y = ax log x, while that
+thetic networks using several models: Preferential At-                                                                                                of BM increases quadratically. (b) The number of observed
+tachment [27], Forest Fire [20], Kronecker Graphs [18]                                                                                                edges as a function of the missing nodes follows quadratic
+and Stochastic Block Model. We then performed the                                                                                                     relation represented by the solid line, y = ax2 .
+same experiments for real datasets. We randomly re-
+moved 25% of nodes in the synthetic networks, com-
+puted the probability of each edge candidate using dif-                                                                                               necker graphs with N0 = 2 and k = 10, 11, . . . , 16, i.e,
+ferent methods (AA, DP, BM and KronEM), and mea-                                                                                                      each network has 2k nodes. As before, we removed
+sured the results in terms of the area under ROC curve                                                                                                25% of random nodes for each network. Figure 7(a)
+(AU C, AU CNZ ) and the log-likelihood (LL, LLNZ ).                                                                                                   shows the dependency between the network size and
+These experiments are particularly interesting because                                                                                                running time. We compare the KronEM running time
+the synthetic networks generated by different models do                                                                                               with the Stochastic Block Model approach (BM) [10]
+not follow the Kronecker graphs model but resemble the                                                                                                for network completion. KronEM scales much bet-
+real-world networks in some properties.                                                                                                               ter than BM. Empirically KronEM runtime scales as
+     Table 5 shows the AU C score for different synthetic                                                                                             O(E log E) with number of edges E in the network.
+networks. (We omit the other scores for brevity.) No-
+tice that on all networks KronEM gives the best re-    4.6 Estimating the Number of Missing Edges.
+sults. KronEM as well as the other methods perform     So far we operated under the assumption that we know
+the best on Forest Fire and Kronecker graphs, while    the number of missing nodes as well as missing edges.
+the network completion in Preferential Attachment and  However, in practice we may only know the number of
+Stochastic Block Model graphs seems to be a harder     missing node, but not the number of missing edges.
+problem. Overall, KronEM outperforms the classical         In order to estimate the number of missing edges
+link-prediction methods (DP and AA), and shows better  EZ , we use the following approach. In the case of
+performance than the Stochastic block model (BM) re-   random node removal, we observe that the number of
+gardless of underlying network structure. In summary,  observed edges is roughly proportional to the square
+even though these networks do not follow the Kronecker of the number of observed nodes. This holds because
+graphs model, KronEM still makes the most accurate     the degrees of the removed nodes follow the same
+inferences.                                            distribution as those of the full network. In addition,
+                                                       the relationship between the number of observed nodes
+4.5 Scalability of KronEM. Next we briefly and edges with varying the missing fraction is further
+present the empirical analysis of KronEM running verified in Figure 7(b). Thus, we can compute2 the
+                                                                                                   1−(1−e)
+time and examine how it scales as we increase the size number of missing edges EZ as E(EZ ) ≈ (1−e)2 EG
+of the network H. We generated a sequence of Kro- where e is the fraction of missing nodes, e = NZ /N .
+5 Conclusion                                                           completion from a few entries. In ISIT ’09, pages 324–
+We investigated the network completion problem where                   328, 2009.
+                                                                  [13] P. Killworth, C. McCarty, H. Bernard, G. Shelley,
+the network data is incomplete with nodes and edges
+                                                                       and E. Johnsen. Estimation of seroprevalence, rape,
+missing or being unobserved. The task is then to in-
+                                                                       and homelessness in the United States using a social
+fer the unobserved part of the network. We developed                   network approach. Evaluation Review, 22(2):289, 1998.
+KronEM, an EM approach combined with the Kro-                     [14] M. Kim and J. Leskovec. Network completion prob-
+necker graphs model, to estimate the missing part of                   lem: Inferring missing nodes and edges in networks.
+the network. As the original inference problem is in-                  http://www.stanford.edu/∼mykim/paper-kronEM.pdf.
+tractable, we use sampling techniques to make the esti-           [15] G. Kossinets. Effects of missing data in social net-
+mation of the missing part of the network tractable and                works. Social Networks, 28:247–268, 2006.
+scalable to large networks. The extensive experiments             [16] J. Leskovec, L. Backstrom, R. Kumar, and A. Tomkins.
+suggest that KronEM performs well on synthetic as                      Microscopic evolution of social networks. In KDD ’08,
+well as on real-world datasets.                                        pages 462–470, 2008.
+                                                                  [17] J. Leskovec, D. Chakrabarti, J. Kleinberg, C. Falout-
+     Directions for future work include extending the
+                                                                       sos, and Z. Ghahramani. Kronecker graphs: An ap-
+present approach to the cases where rich additional
+                                                                       proach to modeling networks. JMLR, 2010.
+information about node and edge attributes is available.          [18] J. Leskovec, D. Chakrabarti, J. M. Kleinberg, and
+Acknowledgments. Research was supported in part                        C. Faloutsos.     Realistic, mathematically tractable
+by NSF grants CNS-1010921, IIS-1016909, LLNL grant                     graph generation and evolution, using kronecker mul-
+DE-AC52-07NA27344, Albert Yu & Mary Bechmann                           tiplication. In PKDD ’05, pages 133–145, 2005.
+                                                                  [19] J. Leskovec and C. Faloutsos. Scalable modeling of
+Foundation, IBM, Lightspeed, Microsoft and Yahoo.
+                                                                       real graphs using kronecker multiplication. In ICML
+                                                                       ’07, 2007.
+References                                                        [20] J. Leskovec, J. M. Kleinberg, and C. Faloutsos. Graphs
+                                                                       over time: densification laws, shrinking diameters and
+                                                                       possible explanations. In KDD ’05, 2005.
+ [1] E. M. Airoldi, D. M. Blei, S. E. Fienberg, and E. P.         [21] D. Liben-Nowell and J. Kleinberg. The link prediction
+     Xing. Mixed membership stochastic blockmodels.                    problem for social networks. In CIKM ’03, pages 556–
+     JMLR, 9:1981–2014, 2008.                                          559, 2003.
+ [2] A.-L. Barabási and R. Albert. Emergence of scaling in       [22] M. Mahdian and Y. Xu. Stochastic kronecker graphs.
+     random networks. Science, 286:509–512, 1999.                      In WAW ’07, 2007.
+ [3] K. Bleakley, G. Biau, and J. Vert. Supervised re-            [23] P. Marsden. Network data and measurement. Annual
+     construction of biological networks with local models.            review of sociology, 16(1):435–463, 1990.
+     Bioinformatics, 23(13):i57–i65, 2007.                        [24] T. H. McCormick and M. J. Salganik. How many peo-
+ [4] E. J. Candes and B. Recht. Exact matrix comple-                   ple you know?: Efficiently esimating personal network
+     tion via convex optimization. Found. Comput. Math.,               size, September 17 2008.
+     9(6):717–772, 2009.                                          [25] X.-L. Meng and D. B. Rubin. Maximum likelihood es-
+ [5] D. Chakrabarti, Y. Zhan, and C. Faloutsos. R-mat: A               timation via the ecm algorithm: A general framework.
+     recursive model for graph mining. In SDM, 2004.                   Biometrika, 80(2):267–278, 1993.
+ [6] A. Clauset, C. Moore, and M. E. J. Newman. Hierar-           [26] S. Myers and J. Leskovec. On the convexity of latent
+     chical structure and the prediction of missing links in           social network inference. In NIPS ’10, 2010.
+     networks. Nature, 453(7191):98–101, May 2008.                [27] Price and D. J. de S. A general theory of bibliometric
+ [7] I. J. Farkas, I. Derényi, A.-L. Barabási, and T. Vicsek.        and other cumulative advantage processes. Journal of
+     Spectra of ”real-world” graphs: Beyond the semicircle             the American Society for Information Science, 27(5-
+     law. Phys. Rev. E, 64(2):026704, Jul 2001.                        6):292–306, 1976.
+ [8] D. Goldberg and F. Roth. Assessing experimentally            [28] B. Taskar, M. F. Wong, P. Abbeel, and D. Koller. Link
+     derived interactions in a small world. Proceedings of             prediction in relational data. In NIPS ’03, 2003.
+     the National Academy of Sciences, 100(8):4372, 2003.         [29] C. E. Tsourakakis. Fast counting of triangles in large
+ [9] M. Gomez-Rodriguez, J. Leskovec, and A. Krause.                   real networks without counting: Algorithms and laws.
+     Inferring networks of diffusion and influence. In KDD             ICDM, 2008.
+     ’10, 2010.                                                   [30] G. C. G. Wei and M. A. Tanner. A monte carlo
+[10] R. Guimerá and M. Sales-Pardo. Missing and spu-                  implementation of the em algorithm and the poor
+     rious interactions and the reconstruction of complex              man’s data augmentation algorithms. Journal of the
+     networks. PNAS, 106(52), 2009.                                    American Statistical Association, 85:699–704, 1990.
+[11] S. Hanneke and E. Xing. Network completion and               [31] Y. Yamanishi, J. Vert, and M. Kanehisa. Protein net-
+     survey sampling. In AISTATS ’09, 2009.                            work inference from multiple genomic data: a super-
+[12] R. H. Keshavan, S. Oh, and A. Montanari. Matrix                   vised approach. Bioinformatics, 20:i363–i370, 2004.
+A APPENDIX: Mathematics of KronEM                              Since σ(u) permutates 0 ∼ N0 k ,
+In this section, we describe the mathematical details                X                                                  k
+                                                               (A.2)     log(1 − [Θk ]σ(u)σ(v) ) ≈ −|Θ|k1 − 0.5 ||Θ||22
+of KronEM that we described in Section 3. First,
+                                                                       u,v
+we derive the log-likelihood formula log P (G, Z, σ|Θ)
+and its gradient ∂P (G,Z,σ|Θ) , where G, Z, σ, and Θ           where |Θ|1 and ||Θ||22 denote the sum of absolute
+                     ∂Θij
+represent the observed network, the missing part of the        and squared values of entries, respectively. Thus, by
+network, the node mapping, and Kronecker parameter             combining Equation (A.1) and (A.2), we are able to
+matrix, respectively (i.e., Θij is the (i, j) entry of         approximately compute LL(Θ) in O(E) time for the
+Θ). Second, we present the proposal mechanism and              number of edges E.
+its detailed balance equation of Metropolis-Hastings               Furthermore, by this combination of equations, we
+sampling from P (Z|G, σ, Θ). Finally, we provide the           also derive the approximate gradient of LL(Θ):
+proposal mechanism and the detailed balance equation                         ∂LL
+of Metropolis sampling from P (σ|G, Z, Θ).                     (A.3)              ≈ −k|Θ|1k−1 − kΘij ||Θ||2k−1
+                                                                             ∂Θij
+                                                                                         X 1
+A.1 Log-likelihood Formula. We begin with show-                                      −2           Cij (σ(u), σ(v))
+                                                                                              Θij
+ing P (H|σ, Θ) for a complete Kronecker graph H =                                        u∼v
+G ∪ Z.                                                        where Cij (σ(u), σ(v)) denotes the number of bits such
+                  Y                 Y                         that σ(u)l = i and σ( v)l = j for l = 1, 2, · · · , k when
+   P (H|σ, Θ) =       [Θk ]σ(u)σ(v)      (1 − [Θk ]σ(u)σ(v) ) σ(u) and σ(v) are expressed in N0 -base representation.
+                  u∼v               u6∼v                      Therefore, computing each gradient component also
+                                                              takes O(E) time.
+Since P (G, Z, σ|Θ) = P (H|σ, Θ)P (σ|Θ), if we regard
+σ as being independent of Θ when the network H is A.2 Metropolis-Hastings Sampling of Z. In the
+unknown and the prior distribution of σ is uniform, then main paper, we briefly described the algorithm for
+we obtain                                                     sampling the missing part Z where the node mapping σ
+               P (G, Z, σ|Θ) ∝ P (H, σ, Θ)                    and the Kronecker parameter Θ are provided. Here we
+                                                              present the proposal mechanism and the corresponding
+    Therefore, when computing the likelihood, we use detailed balance condition to determine the acceptance
+the Equation (3.1). If we take the log-value of Equa- rate.
+tion (3.1) and remove a constant factor, we define the            We consider the following simple mechanism. Given
+equivalent log-likelihood value LL(Θ) as follows:             the previous sample of the missing part Z, we select an
+                                                              edge in Z at random and remove it. Then, we select a
+(A.1)                                                         pair of nodes in Z which is not connected in the current
+   LL(Θ) = log P (G, Z, σ|Θ) + C                              state proportionally to its edge probability, and add it as
+      X                       X                               an edge of the new sample Z 0 . When adding this new
+    =     log [Θk ]σ(u)σ(v) +      log(1 − [Θk ]σ(u)σ(v) )    edge, we use the same acceptance-rejection algorithm
+      u∼v                     u6∼v
+      X                                X                      described in Section 3.
+    =     log(1 − [Θk ]σ(u)σ(v) ) − 2       log [Θk ]σ(u)σ(v)     In order to check the detailed balance condition
+      u,v                              u∼v                    for Z 6= Z 0 , ignoring irrelevant factors (e.g., σ) for
+                                                              simplicity, we derive the transition probability:
+    However, it takes quadratic time in the number of                           0
+nodes N to calculate this LL(Θ), because we should P (Z)P (Z → Z )
+compute the log-likelihood for every pair of nodes. Since       = P (Z\x, y)P (x ∈ EZ )P (y ∈  / EZ )P (del x, add y)
+this computation time is not acceptable for large N ,                                            1          P (y)
+we develop a method of approximating the LL(Θ). By              = P (Z\x, y)P (x)(1 − P (y))          P
+                                                                                               |EZ | e∈E/ Z P (e) + P (x)
+Taylor’s expansion, log(1 − x) ≈ −x − 0.5x2 for small x.
+Plugging this formula into log(1 − [Θk ]σ(u)σ(v) ),           where EZ denotes the set of edges in the missing part
+                                                              Z and P (x) represents the probability of an edge x for
+      X                                                       fixed   Θ and σ. Similarly,
+          log(1 − [Θk ]σ(u)σ(v) ) ≈
+      u,v                                                     P (Z 0 )P (Z 0 → Z)
+             X
+                   [Θk ]σ(u)σ(v) + 0.5([Θk ]σ(u)σ(v) )2
+                                                         
+           −                                                                                     1            P (x)
+                                                               = P (Z 0 \x, y)P (y)(1 − P (x))        P
+              u,v                                                                              |EZ 0 | e∈E
+                                                                                                         / Z 0 P (e) + P (y)
+Algorithm 3 SampleZ : Sample the new sample of Z              Algorithm 4 SampleSigma : Sample the new sample
+ input: observed graph G, Kronecker parameter Θ               of σ
+        node mapping σ, current sample Z                         input: full network H, Kronecker parameter Θ
+ output: new sample Z 0                                                 current node-mapping sample σ
+                                                                 output: new node-mapping sample σ 0
+  EZ ← {z ∈ Z|z : edge}
+  N EZ ← {z ∈ Z|z : non edge}                                     u, v ← randomly sample two nodes
+  x ← an uniformly random sample from EZ                          σ0 ← σ
+  EZ ← EZ \{x}                                                    σ 0 (u) ← σ(v)
+  N EZ ← N EZ ∪ {x}                                               σ 0 (v) ← σ(u)
+  y ← a random sample from N EZ proportionally to                 u ∼ U (0, 1)          0
+  P (y|Θ, σ)                                                      if u ≥ min 1, PP(H|σ  ,Θ)
+                                                                                   (H|σ,Θ)  then
+  u ∼ U (0, 1)                                                     σ0 ← σ   // Roll-back
+                1−P (y|Θ,σ)
+  if u < min 1, 1−P (x|Θ,σ) then                                  end if
+     EZ ← EZ ∪ {y}, N EZ ← N EZ \{y}                              return σ 0
+  else
+     EZ ← EZ ∪ {x}, N EZ ← N EZ \{x}
+  end if
+  Z 0 ← Combine EZ and N EZ
+  return Z 0
+                                                                      P (σ 0 )P (σ 0 → σ)   P (H|σ 0 , Θ)
+                                                                                        0
+                                                                                          =
+                                                                      P (σ)P (σ → σ )       P (H|σ, Θ)
+    Since Z\x, y = Z 0 \x, y and |EZ | = |EZ 0 |, the ratio              Y Pσ0 (x, u) Y 1 − P σ 0 (x, u)
+of the transition probabilities for the two directions is             =
+                                                                         x∼u
+                                                                                Pσ (x, u)      Pσ (x, u)
+derived by nicely canceling out many terms:                                               x6∼u
+                                                                                    Y Pσ0 (x, v) Y 1 − P σ 0 (x, v)
+             P (Z 0 )P (Z 0 → Z)   1 − P (x)                                    ×
+(A.4)                         0
+                                 =                                                        Pσ (x, v)          Pσ (x, v)
+             P (Z)P (Z → Z )       1 − P (y)                                        x∼v               x6∼v
+                                                                                                             !2
+    Due to the asymmetric transition probability, Equa-                    Y Pσ (x, u) Y Pσ (x, v)
+tion (A.4) has to be introduced as the correction factor              =
+                                                                          x∼u
+                                                                                Pσ0 (x, u) x∼v Pσ0 (x, v)
+in Metropolis-Hastings algorithm. In the result, we ac-
+cept the new sample Z 0 with the following acceptance
+probability; otherwise, we reject the new sample and          where H and Θ respectively represent the complete
+maintain the current sample Z.                                network and the Kronecker parameter, and Pσ (x, u) =
+                                                            P (x ∼ u|Θ, σ).
+                                 1 − P (y)                        Applying this ratio to the correction factor for
+           A(Z 0 → Z) = min 1,
+                                 1 − P (x)                    Metropolis sampling, we develop the Algorithm A.3.
+     Algorithm 3 shows the overall process of this
+Metropolis-Hastings sampling for the missing part Z.          B     Supplementary Experiments
+For an additional advantage of this process, we can           We already presented some experimental results in
+update the log-likelihood or the gradient of the log-         Section 4, but we omitted several results due to the lack
+likelihood in very short time (O(k)).                         of space in the main paper. Here we provide additional
+                                                              results of our experiments.
+A.3 Metropolis Sampling of σ. Here we present
+the sampling algorithm for the node mapping σ. As             B.1 Correctness of KronEM in the Recovery of
+decribed in the main paper, we develop a Metropolis           Global Network Properties. We showed that Kro-
+sampling that updates the new sample σ 0 given the            nEM outperforms KronFit in the accuracy of Kro-
+current sample σ. For the update σ → σ 0 , it turns           necker parameter recovery. We additionally performed
+out that a random node-mapping swapping practically           the experiment that compares the performance in the
+works well [19].                                              recovery of network global properties on the same syn-
+    To examine the detailed balance condition of node-        thetic Kronecker graph as in Section 4.1. Figure 8 shows
+mapping swapping (i.e., σ 0 (u) = σ(v), σ 0 (v) = σ(u) for    that KronEM almost perfectly recovers the network
+nodes u, v),                                                  properties whereas KronFit cannot.
+                                                                                                                                                     4                                                                                 4
+                                                                                                                                                    10                                                                                10
+                                                                                                                                                                                          True                                                                              True
+                                                    True                                                  True                                                                         KronEM                                                                            KronEM
+                   2                              KronFit                            2                  KronFit                                      3
+                                                                                                                                                    10                                     DP                                          3
+                                                                                                                                                                                                                                      10                                     DP
+                  10                             KronEM                             10                 KronEM                                                                              AA                                                                                AA
+
+
+
+
+                                                                                                                         Distribution
+
+
+
+
+                                                                                                                                                                                                           Distribution
+                                                                                                                                                                                           BM                                                                                BM
+
+
+
+
+                                                                  Distribution
+ Distribution
+
+
+
+
+                                                                                                                                                     2                                                                                 2
+                                                                                                                                                    10                                                                                10
+                   1                                                                 1
+                  10                                                                10                                                               1                                                                                 1
+                                                                                                                                                    10                                                                                10
+
+                                                                                                                                                     0                                                                                 0
+                                                                                                                                                    10                                                                                10
+                   0                                                                 0                                                                        0                  1                2                                             0                  1                2
+                  10                                                                10                                                                   10                   10                 10                                        10                   10                 10
+                           0                        1                                     0               1
+                       10                       10                                       10          10                                                                         In-Deg                                                                            In-Deg
+                                           In-Degree                                            Out-Degree
+                                                                                                                                                     4                                                                                 4
+                                                                                                                                                    10                                                                                10
+                                                                                                                                                                                          True                                                                              True
+ (a) In-Degree Distribution                                      (b) Out-Degree Distribution                                                                                           KronEM                                                                            KronEM
+                                                                                                                                                     3
+                                                                                                                                                    10                                     DP                                          3
+                                                                                                                                                                                                                                      10                                     DP
+                                                                                                                                                                                           AA                                                                                AA
+
+
+
+
+                                                                                                                         Distribution
+
+
+
+
+                                                                                                                                                                                                           Distribution
+                                                                                                                                                                                           BM                                                                                BM
+                                                                                                                                                     2                                                                                 2
+                                                                                                          True                                      10                                                                                10
+                                                                                     2
+                                                                                    10                  KronFit
+                       1
+                                                                  Number of Nodes
+
+                  10                                                                                   KronEM                                        1                                                                                 1
+ Singular Value
+
+
+
+
+                                                                                                                                                    10                                                                                10
+
+                                                                                                                                                     0                                                                                 0
+                                                                                     1                                                              10                                                                                10
+                                                                                    10                                                                   10
+                                                                                                                                                              0
+                                                                                                                                                                              10
+                                                                                                                                                                                 1                2
+                                                                                                                                                                                                 10                                        10
+                                                                                                                                                                                                                                                0
+                                                                                                                                                                                                                                                                10
+                                                                                                                                                                                                                                                                   1                2
+                                                                                                                                                                                                                                                                                   10
+                                                                                                                                                                               Out-Deg                                                                           Out-Deg
+                                   True
+                                 KronFit                                                                                                             10
+                                                                                                                                                         2
+                                                                                                                                                                                                                                       10
+                                                                                                                                                                                                                                           2
+                       0        KronEM                                               0
+                  10                                                                10
+                            0                   1            2                            0           1            2
+                       10                     10            10                           10        10             10                                     1                                                                                 1
+                                                                                                                                                     10                                                                                10
+
+
+
+
+                                                                                                                         Singular Value
+
+
+
+
+                                                                                                                                                                                                           Singular Value
+                                             Rank                                             Number of Triads
+                                                                                                                                                         0                                                                                 0
+                       (c) Singular Values                                    (d) Triad Participation                                                10                                                                                10
+                                                                                                                                                                     True                                                                              True
+                                                                                                                                                         -1       KronEM                                                                   -1       KronEM
+                                                                                                                                                    10                DP                                                              10                DP
+                                                                                                                                                                      AA                                                                                AA
+Figure 8: Network properties of the true graph H ∗ and the                                                                                          10
+                                                                                                                                                         -2           BM
+                                                                                                                                                                                                                                      10
+                                                                                                                                                                                                                                           -2           BM
+                                                                                                                                                                  0                    1               2                                            0                    1               2
+                                                                                                                                                          10                          10              10                                    10                          10              10
+estimated properties obtained by KronFit and KronEM.                                                                                                                                 Rank                                                                              Rank
+Notice that KronEM almost perfectly recovers the proper-                                                                 Primary SngVec Component
+                                                                                                                                                     10
+                                                                                                                                                         0
+                                                                                                                                                                                                                                       10
+                                                                                                                                                                                                                                           0
+
+
+
+
+                                                                                                                                                                                                           Primary SngVec Component
+ties of the partially observed network H ∗ .
+
+                                                                                                                                                         -1                                                                                -1
+                                                                                                                                                    10                                                                                10
+                                                                                                                                                                     True                                                                              True
+                                                                                                                                                                  KronEM                                                                            KronEM
+                                                                                                                                                                      DP                                                                                DP
+B.2 Performance of KronEM in the Recovery                                                                                                                             AA                                                                                AA
+                                                                                                                                                         -2           BM                                                                   -2           BM
+of Network Global Properties. We already pro-                                                                                                       10
+                                                                                                                                                          10
+                                                                                                                                                                  0                    1
+                                                                                                                                                                                      10
+                                                                                                                                                                                                       2
+                                                                                                                                                                                                      10
+                                                                                                                                                                                                                                      10
+                                                                                                                                                                                                                                            10
+                                                                                                                                                                                                                                                    0                    1
+                                                                                                                                                                                                                                                                        10
+                                                                                                                                                                                                                                                                                         2
+                                                                                                                                                                                                                                                                                        10
+
+vided P owerKS statistics for the recovery of global                                                                                                                                 Rank                                                                              Rank
+                                                                                                                                                     3                                                                                 3
+                                                                                                                                                    10                                                                                10
+network properties in Section 4.2. We achieved these                                                                                                                                      True
+                                                                                                                                                                                       KronEM
+                                                                                                                                                                                                                                                                            True
+                                                                                                                                                                                                                                                                         KronEM
+statistics only considering the recovery of the missing
+                                                                                                                         Number of Nodes
+
+
+
+
+                                                                                                                                                                                                           Number of Nodes
+                                                                                                                                                                                           DP                                                                                DP
+                                                                                                                                                     2                                     AA                                          2                                     AA
+                                                                                                                                                    10                                     BM                                         10                                     BM
+part Z. Here we plot Figure 9 that represents the ac-
+tual distribution of each network property for AS and                                                                                                1
+                                                                                                                                                    10
+                                                                                                                                                                                                                                       1
+                                                                                                                                                                                                                                      10
+
+Flickr networks. Even though it is somewhat difficult to                                                                                             0                                                                                 0
+                                                                                                                                                    10                                                                                10
+distinguish the curves each other, KronEM favorably                                                                                                      10
+                                                                                                                                                              0
+                                                                                                                                                                                 10
+                                                                                                                                                                                       1               2
+                                                                                                                                                                                                      10                                   10
+                                                                                                                                                                                                                                                0
+                                                                                                                                                                                                                                                                   10
+                                                                                                                                                                                                                                                                         1               2
+                                                                                                                                                                                                                                                                                        10
+                                                                                                                                                                            Number of Triads                                                                  Number of Triads
+performs in overall as represented in P owerKS statis-
+tics.                                                                                                                                                    (a) Flickr network                                                                     (b) AS network
+
+
+B.3 Robustness of KronEM. In Section 4.4, we                                                                           Figure 9: Network properties of the true Z ∗ and the inferred
+briefly provided the AU C score of each method for                                                                     Ẑ using KronEM. We compare the results with the other
+synthetic graphs generated by various social-network                                                                   models: Degree-Product (DP), Adamic-Adar (AA), and
+                                                                                                                       Stochastic block model (BM). Overall KronEM performs
+models to examine the robustness of KronEM against
+                                                                                                                       favorably.
+the underlying network structure. Here we additionally
+present the other scores omitted in Section 4.4: AU CNZ ,
+LL, and LLNZ . Table 6 shows these inference per-                                                                      perform better than KronEM, however it is already
+formance scores on each synthetic network (Kronecker                                                                   shown that BM overestimates LL scores because of the
+graph, Preferential attachment, Forest fire model, and                                                                 large number of parameters.
+Stochastic block model). These AU CNZ , LL, and LLNZ                                                                       Furthermore, we also compare the performance
+scores are in agreement not only with the corresponding                                                                of the recovery of global network properties on these
+AU C scores but also with the results on the real dataset,                                                             synthetic networks as we did on the real networks.
+AS and Flickr networks. While the model-based ap-                                                                      Table 7 gives the P owerKS statistic for each network
+proaches (BM and KronEM) in general outperforms                                                                        property on the same synthetic networks as above.
+the classical link-prediction methods for every score (by
+larger than 10%), KronEM outperforms BM in AU C
+and AU CNZ scores. In some LL scores, BM seems to
+    Kronecker graph
+     Method     AU C      AU CNZ      LL        LLNZ
+       DP       0.749       0.5     -48,931     -7,026             Kronecker graph
+      AA        0.833      0.903    -52,194    -11,659              Method     InD      OutD    SVal    SVec    TP
+      BM        0.862      0.813    -40,704     -5,993               DP        1.44     1.44    0.15    0.47    4.59
+    KronEM 0.916           0.917    -38,835     -5,466               AA        2.16     2.05    0.22    0.28    0.59
+                                                                     BM        2.06     1.91    0.14    0.25    3.39
+    Preferential attachment                                        KronEM 1.94          1.77    0.22    0.29    1.11
+     Method      AU C AU CNZ           LL       LLNZ
+       DP        0.600     0.5      -131,544   -21,005             Preferential attachment
+       AA        0.660    0.788     -148,283   -42,715                DP        2.06   2.05     7.26    0.03    3.00
+       BM        0.751    0.640     -120,721   -19,451                AA        1.80   1.78     0.03    0.11    1.97
+    KronEM 0.779          0.800     -126,409   -18,959                BM        1.81   1.80     0.13    0.07    2.00
+                                                                   KronEM 1.95         1.95     0.06    0.10    2.30
+    Forest fire
+     Method       AU C    AU CNZ       LL       LLNZ               Forest fire
+       DP         0.865     0.5     -173,410   -26,324                DP         1.54   1.79    4.22    0.13    6.61
+       AA         0.769    0.941    -211,932   -49,495                AA         2.43   1.64    0.29    0.38    3.52
+       BM         0.946    0.937     -91,814   -13,677                BM         1.73   1.70    0.52    0.25    4.55
+    KronEM        0.942    0.943    -117,892   -16,897             KronEM        1.42   1.15    0.55    0.12    4.99
+
+    Stochastic block model                                         Stochastic block model
+     Method      AU C AU CNZ           LL       LLNZ                  DP        1.91  1.96      0.24    0.37    4.95
+       DP        0.663     0.5       -82,199   -11,730                AA        2.05  2.18      0.15    0.37    3.39
+       AA        0.641   0.773      -101,848   -22,089                BM        2.08  2.05      0.12    0.38    3.07
+       BM        0.772   0.684       -76,000   -11,105             KronEM 2.43        2.45      0.44    0.45    1.19
+    KronEM 0.796         0.776       -76,724   -10,338
+                                                              Table 7: PowerKS statistics for synthetic graphs with
+Table 6: Inference performance (AU C) on synthetic net-       different models : Kronecker graph, Preferential attachment,
+works generated using different network generative mod-       Forest fire, and Stochastic block model. In most networks,
+els (Kronecker graph (Kron), Preferential attachment (PA),    KronEM recovers the global network properties the most
+Forest fire (FF) and Stochastic block model (SBM)). Perfor-   favorably.
+mance of KronEM is stable regardless of the model used to
+generate the underlying synthetic network.
+
