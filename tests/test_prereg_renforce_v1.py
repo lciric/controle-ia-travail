@@ -386,3 +386,12 @@ def test_index_partage_entre_fichiers(faux_depot, monkeypatch):
     monkeypatch.setattr(pr, "_hacher", lambda p: appels.append(p) or "0" * 64)
     assert avec(pr.problemes_renforces(p2, racine=r, index=index), "a")
     assert appels == []                                      # index déjà construit : rien n'est re-haché
+
+
+def test_c_commande_entre_accents_graves(faux_depot):
+    """Seul le premier mot d'une commande est lu comme chemin."""
+    r, h = faux_depot
+    sain = texte_sain(h).replace("`docs/contre-lectures/`", "`src/paquet/module.py --graine 3 sorties/`")
+    assert not avec(controle(r, sain)[0], "c")
+    faux = texte_sain(h).replace("`docs/contre-lectures/`", "`src/paquet/absent.py --graine 3`")
+    assert avec(controle(r, faux)[0], "c", "src/paquet/absent.py")

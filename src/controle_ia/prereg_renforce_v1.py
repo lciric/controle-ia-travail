@@ -9,6 +9,7 @@
 (b) tout préfixe d'empreinte cité sous la forme `0065065b…` (8 à 63 caractères hexadécimaux dont au moins un chiffre,
     suivis de « … » ou de « ... ») correspond à au moins une empreinte connue ; plusieurs : avertissement seulement ;
 (c) tout chemin du dépôt cité entre accents graves et commençant par l'un des dossiers de `RACINES_CHEMINS` existe ;
+    seul le premier mot du contenu est lu (les noms de fichiers du dépôt n'ont pas d'espace) ;
     un suffixe `:ligne` ou `:l1-l2` tombe dans le fichier ; un chemin qui porte `…`, `...` ou un motif
     (`*`, `?`, `[`, `<`, `{`, `$`) est ignoré ;
 (d) chacune des huit sections de `prereg.SECTIONS` compte au moins `mots_min` mots (défaut 30 ; un mot est un
@@ -222,7 +223,7 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
     # (c) chemins cités entre accents graves
     vus = set()
     for m in CHEMIN.finditer(texte):
-        cite = m.group(1).strip()
+        cite = m.group(1).split()[0]   # une commande ou une liste entre accents graves : le premier mot seul
         if cite in vus or MOTIF_IGNORE.search(cite):
             continue
         vus.add(cite)
