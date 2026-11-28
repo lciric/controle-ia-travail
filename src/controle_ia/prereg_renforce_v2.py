@@ -39,7 +39,8 @@ Contrôles (chaque message commence par sa lettre ; les problèmes de `prereg.pr
     la section « Contre-lecture » au moins `mots_min_contre_lecture` (défaut 12), (e) la tenant entrée par entrée.
 (e) Contre-lectures. Chaque entrée (ligne qui commence par une puce, un numéro de liste `1.` ou `1)`, une cellule de
     table `|`, un titre `###` à `######` ou du gras, puis « Contre-lecture k » ; ou ligne nue « Contre-lecture k »
-    suivie d'un deux-points ou d'un tiret, jamais une phrase) ou, à défaut d'entrée, la section entière, nomme un modèle (nom de `MODELES` avec sa
+    suivie, après une parenthèse courte facultative comme « (R2) », d'un deux-points, d'une virgule, d'un
+    point-virgule ou d'un tiret, jamais d'un mot) ou, à défaut d'entrée, la section entière, nomme un modèle (nom de `MODELES` avec sa
     majuscule, ou identifiant `claude-…`, `gemini-…`, `gpt-…`), hors des tournures d'auteur (« écrit par », « auteur »,
     « rédigé par »), et cite au moins une empreinte vérifiée par (a).
 
@@ -154,7 +155,8 @@ COMMIT_CITE = re.compile(r"commit\s+`?([0-9a-f]{7,40})`?", re.I)
 HORS_DEPOT = re.compile(r"hors (?:du )?dépôt", re.I)
 MOT = re.compile(r"\S*\w\S*")
 ENTREE = re.compile(r"^[ \t]*(?:(?:#{3,6}[ \t]+\**|[-*+][ \t]+\**|\d+[.)][ \t]+\**|\|[ \t]*\**|\*\*)[ \t]*"
-                    r"Contre-lecture[ \t]+(\d+)|Contre-lecture[ \t]+(\d+)(?=\**[ \t]*[:\u2014\u2013-]))", re.M)
+                    r"Contre-lecture[ \t]+(\d+)|Contre-lecture[ \t]+(\d+)(?=\**[ \t]*(?:\([^)\n]{0,30}\)[ \t]*)?[:,;\u2014\u2013-]))",
+                    re.M)
 AUTEUR = re.compile(r"(?:écrite?s? par|rédigée?s? par|auteur|autrice)\W{0,3}(?:\w+\W+){0,2}$", re.I)
 LIGNE_SHA = re.compile(r"^([0-9a-f]{64}) [ *](.+)$")
 

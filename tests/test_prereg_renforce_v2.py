@@ -1017,6 +1017,7 @@ def test_n1_historique_appel_direct_sur_un_dossier(faux_depot, envois_git):
 
 
 @pytest.mark.parametrize("forme", ["Contre-lecture {k} : {corps}", "Contre-lecture {k} — {corps}",
+                                   "Contre-lecture {k} (R2) : {corps}", "Contre-lecture {k} (R2), {corps}",
                                    "1. **Contre-lecture {k}** : {corps}", "{k}) Contre-lecture {k} : {corps}",
                                    "| Contre-lecture {k} | {corps} |"])
 def test_n2_formes_d_entree_v1_decoupees(faux_depot, forme):
