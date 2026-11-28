@@ -8,7 +8,7 @@ signalement des empreintes de longueur fausse ou en majuscules.
 
 Contrôles (chaque message commence par sa lettre ; les problèmes de `prereg.problemes` viennent d'abord) :
 
-(a) Empreintes. Toute suite de 32 caractères hexadécimaux ou plus (au moins une lettre et un chiffre, non collée à une
+(a) Empreintes. Toute suite de 32 caractères hexadécimaux ou plus (au moins une lettre, non collée à une
     lettre ou un chiffre, non suivie d'une marque d'ellipse) est classée : 64 minuscules : empreinte ; 64 avec
     majuscules : problème ; 40 : identifiant de commit, avertissement s'il n'est pas un commit du dépôt ; 32 ou 128 :
     avertissement (longueur de MD5 ou de SHA-512) ; toute autre longueur : problème.
@@ -305,9 +305,10 @@ class Index:
             return None
         objets: list[tuple[str, str]] = []
         for rev in revisions:
-            o = self._git("rev-parse", "--verify", "--quiet", f"{rev}:./{rel}")
+            complet = self._git("rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}")
+            o = self._git("rev-parse", "--verify", "--quiet", f"{rev}:./{rel}") if complet else None
             if o:
-                objets.append((rev, o.decode().strip()))
+                objets.append((complet.decode().strip(), o.decode().strip()))
         journal = self._git("log", "--all", f"-n{PLAFOND_HISTORIQUE}", "--format=C %H", "--raw", "--no-abbrev",
                             "--no-renames", "--", rel)
         if journal:
@@ -438,7 +439,7 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
     # (a) suites hexadécimales longues : classement
     for m in HEXLONG.finditer(texte):
         s = m.group(0)
-        if not (re.search(r"[0-9]", s) and re.search(r"[a-fA-F]", s)):
+        if not re.search(r"[a-fA-F]", s):
             continue
         ln = _ligne(texte, m.start())
         if len(s) == 64 and s != s.lower():

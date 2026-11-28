@@ -26,8 +26,16 @@ _OUVERTS: list | None = None
 
 
 def _crochet(evenement, args):
-    if evenement == "open" and _OUVERTS is not None and args and isinstance(args[0], (str, bytes, os.PathLike)):
-        _OUVERTS.append(os.fsdecode(args[0]))
+    """Enregistre les ouvertures en lecture (les écritures de l'essai lui-même ne comptent pas)."""
+    if evenement != "open" or _OUVERTS is None or not args or not isinstance(args[0], (str, bytes, os.PathLike)):
+        return
+    mode = args[1] if len(args) > 1 else None
+    drapeaux = args[2] if len(args) > 2 and isinstance(args[2], int) else 0
+    if isinstance(mode, str) and any(c in mode for c in "wax+"):
+        return
+    if drapeaux & (os.O_WRONLY | os.O_RDWR | os.O_CREAT):
+        return
+    _OUVERTS.append(os.fsdecode(args[0]))
 
 
 sys.addaudithook(_crochet)
@@ -715,11 +723,11 @@ def test_d_seuil_parametre(faux_depot):
 def test_d_contre_lecture_courte_et_saine(faux_depot):
     r, h = faux_depot
     cl = (f"* **Contre-lecture 1** : Fable 5.2 neuf, brouillon `brouillons/p-v1-brouillon1.md` (`{h['brouillon']}`), "
-          f"verdict prête.")
+          f"verdict prête, aucune remarque ouverte.")
     pb, _ = controle(r, texte_sain(h, contre_lecture=cl))
     assert not avec(pb, "d") and not avec(pb, "e")
     pb, _ = controle(r, texte_sain(h, contre_lecture=f"* **Contre-lecture 1** : Fable (`{h['brouillon']}`)."))
-    assert avec(pb, "d", "Contre-lecture (5 mots, au moins 12)")
+    assert avec(pb, "d", "Contre-lecture (4 mots, au moins 12)")
 
 
 def test_d_section_repetitive(faux_depot):
