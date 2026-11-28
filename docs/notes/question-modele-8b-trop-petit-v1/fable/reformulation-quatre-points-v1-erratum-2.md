@@ -1,0 +1,8 @@
+# Erratum 2 à la demande reformulée en quatre points (v1) : le fait « compétence honnête » de la version autonome
+
+Classe C. 28 novembre 2026, trouvé pendant l'exécution, après l'envoi au modèle consulté. Le fichier `reformulation-quatre-points-v1.md` n'est pas réécrit (règle R12).
+
+1. **Ce qui est faux.** La version autonome (§ 6, fait 7 ; fait 6 dans la version servie par la mère) écrit : « au pilote, 17 à 18 % des paires « proposition, contrôle de référence de l'article » sont jugées couvertes ». Ces 17 à 18 % (0,181 et 0,169, `brouillons/T0.5-pilote-double-etiquetage-v1/resultat.md`, `6ac89d3d…`) sont la part brute de « Yes » d'un **sous-échantillon stratifié** par la décision du juge de 8 milliards (80 paires par strate ; préenregistrement du pilote, « Métrique »), non la part de la population des paires.
+2. **Ce qu'il fallait écrire.** « environ 10 % » : estimation pondérée par l'inverse de la probabilité de tirage, 0,104 (0,275 dans la strate où le juge de 8 milliards dit oui, 8,6 % des paires ; 0,0875 dans l'autre). Calcul : `scripts/d_couverture_honnete_ponderee.py`, sortie `sorties/d-couverture-honnete-ponderee.json` ; entrées `diag/20261012-150724-t05-pilote-analyse/etiquettes.json` (`6727a8c9…`) et `echantillon-etiquetage.json` (`03d74ca6…`).
+3. **Portée.** Le sens du fait ne change pas (la marge de l'agent honnête sur les contrôles est mince et mal mesurée), sa valeur baisse de près de moitié. Le modèle consulté a reçu la valeur fausse : toute partie de sa réponse qui s'appuie sur « 17 à 18 % » est à lire avec cette correction ; si un second service a lieu, la valeur corrigée y entre.
+4. **Cause.** J'ai repris un résumé sans relire le plan de tirage de l'échantillon qu'il résume.
