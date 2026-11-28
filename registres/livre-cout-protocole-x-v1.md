@@ -1,0 +1,10 @@
+# Livre de coût du protocole X (v1)
+
+Règle 7 du protocole X, version 2 (`docs/notes/protocole-x-v2/protocole-x-v2.md`). Une ligne par dossier, ajoutée seulement (registre vivant, sans compagnon d'empreinte, comme les autres registres) ; montants en dollars américains ; « à relever » : l'audit le complète par une ligne neuve.
+
+| dossier | lancé (UTC) | version du protocole | reformulateur | ligne d'accord | compté | payé au pire | payé réel | clés | note de sortie |
+|---|---|---|---|---|---|---|---|---|---|
+| bancs à dommages plantés (cinq décisions) | 2026-11-22 | 1 | à relever | GO-2026-11-24-03 | 83,45 | non relevé | partiel (Google payant avant 14:00Z) | Anthropic du compte, clé gratuite et clés payantes de Google, OpenAI | docs/notes/collisionneur-v9/notes-de-sortie-v1/note-sortie-bancs-plantes-v2.md |
+| collisionneur groupé (naissance des idées fécondes), deux bras | 2026-11-24T17:10Z | 1 | à relever | GO-2026-11-24-03, GO-2026-11-24-35 | 15,19 | 8,24 | ≈ 4 | Anthropic du compte, clé gratuite de Google | docs/notes/collisionneur-v9/notes-de-sortie-v1/note-sortie-groupe-naissance-idees-fecondes-v1.md |
+| collisionneur sur l'attelage du plan Turing, cinq bras | 2026-11-24T18:18Z | 1 (note en 2) | Opus aveugle (question neutre), sans reformulation par Fable | GO-2026-11-24-39 | ligne de 40 | 14,71 | à relever | Anthropic du compte, clé gratuite de Google, OpenAI | à venir |
+| collisionneur sur l'attelage du plan Turing, cinq bras (clos + lecture double) | 2026-11-24T18:18Z | 1 (note en 2 / 2.1, écarts 2 et 5 déclarés) | Opus aveugle (question neutre), sans reformulation par Fable | GO-2026-11-24-39 | 15,11 (13,71 étage III + 1,40 lecteur Astra) | 14,71 (devis course) | 10,08 payé compté Anthropic+OpenAI (8,68 course + 1,40 lecteur Astra) ; 5,03 Google compté sous réserve de gratuité de GEMINI_API_KEY_FREE ; lecteur Opus sur quota abonnement | Anthropic du compte (RR_ANTHROPIC_API_KEY), clé gratuite Google (GEMINI_API_KEY_FREE), OpenAI (OPENAI_API_KEY_2) | docs/notes/collisionneur-v9/notes-de-sortie-v1/note-de-sortie-collisionneur-attelage-plan-turing-v1.md |
