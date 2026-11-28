@@ -40,3 +40,9 @@ Un seul sous-agent à la fois, et aucune dépense sans le mot de Lazar.
 - Q5 et les reformulations de Q8 à Q11 sont faites par Opus.
 - Q6, Q8 et Q10 attendent Fable après le 28 à 04:00Z. Un autre compte peut les prendre s'il a du quota de Fable non réservé à l'entretien.
 - La part Opus continue : Q9, la contre-lecture, la note LaTeX v1 et la question neutre avec son devis.
+
+## Mise à jour du 2026-11-24T17:01:06Z : file de Fable du 28 (R-5332)
+Sur ce compte, après le 28 novembre à 04:00Z, un seul agent Fable à la fois, dans cet ordre :
+1. Q6 et Q8, effort maximal.
+2. Q10, effort élevé.
+3. Protocole X des dossiers 3 à 5 et question fusionnée, effort maximal, par la session session_016QhUrvUs5e3Ves5piMuxL8 (branche idees/protocole-x-dossiers-3-a-5-fable-v1). C'est le mot de Lazar « go a » : Fable seul, jamais Opus.

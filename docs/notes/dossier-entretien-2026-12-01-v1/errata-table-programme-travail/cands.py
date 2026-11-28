@@ -1,0 +1,67 @@
+import sys
+t = open('docs/notes/revendications-en-vigueur-v2/table-revendications-en-vigueur-v2-corrigee-v1.md', encoding='utf-8').read()
+p = open('docs/programme-controle-ia-v3.md', encoding='utf-8').read()
+pb = open('docs/notes/dossier-entretien-2026-12-01-v1/application-demande-27-defaut-2026-11-24/programme-controle-ia-v3-lecture-avec-erratum-1-variante-B.md', encoding='utf-8').read()
+c = [
+"Section réécrite selon la question 4 de la contre-lecture. Rien ci-dessous n'est tranché par cette table.",
+"**proposition sans décision** : changement proposé par une pièce lue, qu'aucun mot de Lazar trouvé n'accorde.",
+"Voir nœud 1.",
+"GO-2026-11-22-24 (point 2, pour le seul modèle nul de la thèse)",
+"la modification de l'énoncé est un nœud sans défaut selon N-076 (§ 13, point 4), non confirmé (nœud 1)",
+"programme v3, § 5 (scellement provisoire ; nœud 1)",
+"1. **Lettre de l'accumulation sur sondes (H2).**",
+"la somme globale est prédite plate en nombre d'agents et le maximum décroissant (Avenhaus et Jaech 1981) ; la sonde change la constante, non la pente. C'est une prévision, non un constat.",
+"GO-2026-11-24-15 (point 1) ; `decision-N-013-v1.md` 157d388e (§ 8)",
+"Lettre remplacée : l'énoncé nomme l'agrégateur.",
+"Vise H3.",
+"La courbe selon le nombre d'agents (H3) dans sa lettre du programme v3 : une prévision, sous simulation, non un constat.",
+"(scellement provisoire ; sous simulation ; nœud 4)",
+"4. **Courbe selon le nombre d'agents (H3).**",
+"Angle mort identifié, non calibré.",
+"Rien de nommé. Un nœud du 14 novembre propose de corriger sa prémisse",
+"| revendiquée | `docs/programme-controle-ia-v2.md` 2fd63bad (§ 5) ; `docs/decisions/decision-N-013-v1.md` 157d388e (§ 8) ; `registres/decisions.md` R-2670",
+"(§ 1, liste des hypothèses revendiquées du papier A au 21 novembre) | Aucun. |",
+"Le programme v3 garde ces mots.",
+"9. **Transposition du jeton à l'action (Tr).**",
+"Mesure secondaire du papier A ; sa prévision est scellée avant la porte de fin de phase 1 (G1).",
+"| mesure descriptive gardée (par défaut : la décision dit",
+"; une prévision scellée est une promesse, que ce statut ne dit pas ; nœud 11)",
+"| go.md GO-2026-11-22-12 (point 1) | Ligne neuve. |",
+"11. **Mesure des audits économisés.**",
+"2. **Co-élévation entre copies.**",
+", à fausses alarmes égales, y compris sous un adversaire entraîné contre elle. Le programme v3 y ajoute (E3.1) : la somme globale est une base obligatoire ; le gain n'est revendiqué que sur les sabotages qui déplacent la dépendance.",
+"programme v3 (§ 10, E3.1, scellement provisoire)",
+"Lettre de N-069 non réécrite (nœud 3).",
+"l'égalité avec la somme globale serait le résultat attendu.",
+"3. **Statistique conjointe.**",
+"6. **Papier B.**",
+"| — | proposition sans décision | réponse 22C f0505144 (table ; décision 3) ; réponse 22P cb010f4c |",
+"| — | proposition sans décision | réponse 22C f0505144 (table ; décision 2) ; réponse 22P cb010f4c |",
+"| — | proposition sans décision | réponse 22C f0505144 (table ; phrases 3 et 9) |",
+"| — | proposition sans décision | réponse 22C f0505144 (table) ; réponse 22P cb010f4c |",
+"| — | proposition sans décision | réponse 22C f0505144 (table ; phrase 4) |",
+"| — | proposition sans décision | réponse 22C f0505144 (constat 3 ; décision 4) ; réponse 22P cb010f4c |",
+"7. **Papier C.**",
+"| — | proposition sans décision | réponse 22P cb010f4c (décision 3) ; réponse 22C f0505144 (décision 1) |",
+"Portée à quatre endroits ; aucun porteur désigné",
+"La loi : la sécurité croît avec le nombre de moniteurs seulement par leur diversité effective. Diversité et quorum se mesurent sous attaque ; s'ajoute une quantité rapportée, le silence commun des regards sous attaque (N-075).",
+"La décorrélation des erreurs bénignes comme critère.",
+"| resserrée | `docs/decisions/decision-N-013-v1.md` 157d388e (§ 7) ; `registres/decisions.md` R-2664 ; `docs/decisions/decision-N-075-issue-plancher-et-deux-regards-v4.md` e4039549 (§ 3, point 3) | Énoncé inchangé. Quantité rapportée ajoutée. |",
+"| — | proposition sans décision | réponse 22B c5980780 (table ; décision 5) ; réponse 22P cb010f4c ; réponse 22 22c56521",
+"5. **Loi sur le nombre et la diversité des moniteurs (H5).**",
+"| — | proposition sans décision | réponse 22P cb010f4c (décision 1) |",
+"| — | proposition sans décision | réponse 22P cb010f4c (décision 2) ; réponses 22A, 22B, 22C |",
+"10. **Forme commune de thèse ; loi de la référence honnête étendue à toutes les références.**",
+"(conservation du déplacement cumulé sous fragmentation) |",
+"**Énoncé exact à venir par l'erratum 1 du programme v3 (Fable, en cours)** ; il est rédigé par Fable et contre-lu avant tout usage.",
+"Toute phrase sur cette revendication avant l'énoncé exact contre-lu.",
+"go.md (commit 5fd8fc305) GO-2026-11-24-18 ; decisions.md R-5265 ; go.md GO-2026-11-22-42, GO-2026-11-22-64",
+"son énoncé exact vient par l'erratum 1 du programme v3.",
+"Reste un travail d'écriture : l'énoncé exact, par l'erratum 1 du programme v3 (Fable, en cours), contre-lu avant tout usage.",
+]
+for s in c:
+    n = t.count(s)
+    print(n, '«' in s or '»' in s, s[:90])
+print('--- programme')
+for s in ["**Porte G0 (prêt pour G1)** :", "| Phase 0, porte G0 |"]:
+    print(p.count(s), pb.count(s), s)
