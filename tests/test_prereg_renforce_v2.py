@@ -873,3 +873,45 @@ def test_index_partage_entre_fichiers(faux_depot, monkeypatch):
     monkeypatch.setattr(pr, "_hacher", lambda p: appels.append(p) or "0" * 64)
     assert avec(pr.problemes_renforces(p2, racine=r, index=index), "a")
     assert appels == []
+
+
+# ========== archives (décision de la mère du 28 novembre 2026) : gardées, seul le compagnon compte ==========
+
+ARCHIVES = ("src/lots/a-v1.tar", "src/lots/b-v1.zip", "src/lots/c-v1.tar.gz", "src/lots/d-v1.tgz", "src/lots/e-v1.7z",
+            "src/lots/f-v1.gz", "src/lots/G-V1.ZIP")
+
+
+@pytest.mark.parametrize("chemin", ARCHIVES)
+def test_est_garde_archives(chemin):
+    assert pr.est_archive(chemin) and pr.est_garde(chemin)
+    assert not pr.est_garde(chemin + ".sha256") and not pr.est_archive(chemin + ".sha256")
+
+
+def archives_ouvertes(liste):
+    return [x for x in liste if pr.est_archive(x) or pr.est_archive(os.path.realpath(x))]
+
+
+def test_archive_saine_par_compagnon_sans_ouverture(faux_depot, ouvertures):
+    r, h = faux_depot
+    empreintes = {a: ecrire(r, a, b"\x1f\x8b archive " + a.encode(), compagnon=True) for a in ARCHIVES}
+    committer(r, "archives")
+    citations = " ".join(f"Lot `{a}` (`{e}`)." for a, e in empreintes.items())
+    pb, av = controle(r, ajout(h, citations))
+    assert pb == [] and av == []
+    assert archives_ouvertes(ouvertures) == []
+    assert any(x.endswith("a-v1.tar.sha256") for x in ouvertures)          # le compagnon, lui, est lu
+
+
+def test_artefact_archive_sans_compagnon(faux_depot, ouvertures):
+    r, h = faux_depot
+    e = ecrire(r, "src/lots/x-v1.tar.gz", b"\x1f\x8b sans compagnon")
+    committer(r, "archive")
+    index = pr.Index(r)
+    pb, av = pr.verifier_renforce(poser(r, ajout(h, f"Lot `src/lots/x-v1.tar.gz` (`{e}`), lignes `src/lots/x-v1.tar.gz:1`.")),
+                                  racine=r, index=index)
+    assert not avec(pb, "a") and avec(av, "a", "empreinte d'archive non vérifiée : src/lots/x-v1.tar.gz")
+    assert avec(av, "c", "fichier gardé")
+    pb, _ = pr.verifier_renforce(poser(r, ajout(h, f"Référence nue `{e}`.")), racine=r, index=index)
+    assert avec(pb, "a", e)                                                  # jamais hachée : inconnue
+    assert "src/lots/x-v1.tar.gz" in index.gardes_sautes
+    assert archives_ouvertes(ouvertures) == []

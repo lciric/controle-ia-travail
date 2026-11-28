@@ -40,7 +40,9 @@ Garde de lecture (absolue). Un fichier est **ouvrable** seulement s'il n'est pas
 réel reste dans la racine passée et dans la racine du dépôt (`git rev-parse --show-toplevel`, sinon le premier dossier
 parent qui contient `CLAUDE.md`, sinon la racine passée), et si ni son chemin lexical normalisé ni son chemin réel
 relatif au dépôt ne tombent sous `est_garde`. Les motifs gardés sont testés à toute profondeur, sans tenir compte de la
-casse. Seuls les compagnons `.sha256` (non liens, dans la racine) des fichiers gardés sont lus. Tout refus devient un
+casse. Les archives (`.tar`, `.zip`, `.gz`, `.tgz`, `.tar.gz`, `.7z`) sont gardées comme les autres : seul leur compagnon
+compte, et une archive citée avec une empreinte qu'aucun compagnon ne porte donne un avertissement. Seuls les
+compagnons `.sha256` (non liens, dans la racine) des fichiers gardés sont lus. Tout refus devient un
 avertissement, jamais une ouverture. Le préenregistrement lui-même est refusé (`GardeArret`) s'il est gardé ou lien, et,
 sauf `permettre_hors_racine`, s'il sort de la racine.
 
@@ -67,6 +69,10 @@ from .prereg import SECTIONS, problemes, sections
 # ---------- garde de lecture ----------
 
 MOTIFS_GARDES_NOM = (r"[^/]*\.npz", r"[^/]*\.npy", r"[^/]*\.safetensors")       # dernier segment
+# Archives (décision de la mère du 28 novembre 2026) : elles peuvent contenir des fichiers gardés ; ni ouverture ni
+# hachage de leurs octets, seul leur compagnon `.sha256` compte (`.tar.gz` est couvert par `.gz`).
+MOTIFS_ARCHIVES = (r"[^/]*\.tar", r"[^/]*\.zip", r"[^/]*\.gz", r"[^/]*\.tgz", r"[^/]*\.7z")
+_ARCHIVE = re.compile(r"(?:^|/)(?:" + "|".join(MOTIFS_ARCHIVES) + r")$")
 MOTIFS_GARDES_CHEMIN = (                                                         # à toute profondeur
     r"g0-criteres-2-3-v1/consignes-privees-[^/]*",
     r"ii-b-saboteur-budget-[^/]*",
@@ -74,8 +80,14 @@ MOTIFS_GARDES_CHEMIN = (                                                        
     r"p3-consignes-v1[^/]*",          # prereg/P3-consignes-v1.md, ses brouillons et candidats, fichier ou dossier
 )
 _GARDE = re.compile(r"(?:^|/)(?:" + "|".join(MOTIFS_GARDES_CHEMIN) + r")(?:/|$)"
-                    r"|(?:^|/)(?:" + "|".join(MOTIFS_GARDES_NOM) + r")$")
+                    r"|(?:^|/)(?:" + "|".join(MOTIFS_GARDES_NOM + MOTIFS_ARCHIVES) + r")$")
 DOSSIERS_IGNORES = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache", ".mypy_cache"}
+
+
+def est_archive(chemin: str) -> bool:
+    """Vrai pour une archive (`.tar`, `.zip`, `.gz`, `.tgz`, `.tar.gz`, `.7z`), casse indifférente ; jamais un compagnon."""
+    c = posixpath.normpath(str(chemin).replace(os.sep, "/")).lower()
+    return not c.endswith(".sha256") and bool(_ARCHIVE.search(c))
 
 
 def est_garde(chemin: str) -> bool:
@@ -491,6 +503,10 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
         if c:
             verifiees.add(h)
             avert.append(f"(a) empreinte d'une version ancienne de {rel} (commit {c[:12]}), ligne {ln}")
+            continue
+        if est_archive(rel):
+            avert.append(f"(a) empreinte d'archive non vérifiée : {rel} n'est pas ouverte et aucun compagnon ne la "
+                         f"porte, ligne {ln}")
             continue
         if est_garde(rel):
             sortie.append(f"(a) empreinte non vérifiable : {rel} est gardé et aucun compagnon ne la porte, ligne {ln}")
