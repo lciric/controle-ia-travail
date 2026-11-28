@@ -16,10 +16,16 @@ Contrôles (chaque message commence par sa lettre ; les problèmes de `prereg.pr
     `.sha256` porte cette empreinte pour ce chemin ; (2) l'empreinte du fichier sur disque est égale (jamais pour un
     fichier gardé, un lien ou ce qui sort de la racine) ; (3) une version de l'historique git du chemin a cette
     empreinte (au plus `PLAFOND_HISTORIQUE` révisions, plus la révision citée sur la ligne après « commit ») :
-    avertissement. Sinon : problème, avec le fichier que l'empreinte désigne s'il y en a un.
+    avertissement ; l'historique ne lit que les versions du chemin cité exact, jamais un fichier sous un dossier ni un
+    chemin gardé, et ne demande à git que des objets de type fichier. Sinon : problème, avec le fichier que
+    l'empreinte désigne s'il y en a un. Archive (gardée) : seul son compagnon compte ; empreinte contredite par le
+    compagnon : problème ; archive sans compagnon : avertissement. Une empreinte écrite à côté d'un **dossier** n'est
+    jamais appariée (avertissement) : elle est traitée comme non appariée.
     Une empreinte **non appariée** doit être connue du dépôt (compagnon dont le fichier existe, ou fichier suivi par git
     de même empreinte) ; une marque « hors dépôt » ou « hors du dépôt » sur la ligne en fait un avertissement.
+    Une empreinte non appariée et connue qui ne désigne aucun des fichiers cités sur sa ligne : avertissement.
     Avertissements aussi : compagnon périmé (le disque a changé), empreinte du fichier vide, empreintes non appariées.
+    Limite : une empreinte séparée de son chemin par un mot, ou écrite avant lui, n'est pas appariée.
 (b) Préfixes. Une suite de 8 à 63 caractères hexadécimaux minuscules dont un chiffre, suivie de « … », « ... », « .. »,
     « ‥ » ou « ⋯ », ou de 8 à 31 caractères (un chiffre et une lettre) seule entre accents graves, commence au moins une
     empreinte connue ; sinon, si c'est un commit du dépôt, rien ; sinon problème. Plusieurs empreintes : avertissement.
@@ -31,8 +37,9 @@ Contrôles (chaque message commence par sa lettre ; les problèmes de `prereg.pr
     racine est un problème.
 (d) Longueur. Chaque section compte au moins `mots_min` mots (défaut 30), dont au moins `mots_min // 2` distincts ;
     la section « Contre-lecture » au moins `mots_min_contre_lecture` (défaut 12), (e) la tenant entrée par entrée.
-(e) Contre-lectures. Chaque entrée (ligne qui commence par une puce, un titre `###` à `######` ou du gras, puis
-    « Contre-lecture k ») ou, à défaut d'entrée, la section entière, nomme un modèle (nom de `MODELES` avec sa
+(e) Contre-lectures. Chaque entrée (ligne qui commence par une puce, un numéro de liste `1.` ou `1)`, une cellule de
+    table `|`, un titre `###` à `######` ou du gras, puis « Contre-lecture k » ; ou ligne nue « Contre-lecture k »
+    suivie d'un deux-points ou d'un tiret, jamais une phrase) ou, à défaut d'entrée, la section entière, nomme un modèle (nom de `MODELES` avec sa
     majuscule, ou identifiant `claude-…`, `gemini-…`, `gpt-…`), hors des tournures d'auteur (« écrit par », « auteur »,
     « rédigé par »), et cite au moins une empreinte vérifiée par (a).
 
@@ -146,7 +153,8 @@ INTERVALLE = re.compile(r"[\s(),;:|—–\-`]*(?:(?:empreinte|sha256|sha-256|SHA
 COMMIT_CITE = re.compile(r"commit\s+`?([0-9a-f]{7,40})`?", re.I)
 HORS_DEPOT = re.compile(r"hors (?:du )?dépôt", re.I)
 MOT = re.compile(r"\S*\w\S*")
-ENTREE = re.compile(r"^[ \t]*(?:#{3,6}[ \t]+\**|[-*+][ \t]+\**|\*\*)[ \t]*Contre-lecture[ \t]+(\d+)", re.M)
+ENTREE = re.compile(r"^[ \t]*(?:(?:#{3,6}[ \t]+\**|[-*+][ \t]+\**|\d+[.)][ \t]+\**|\|[ \t]*\**|\*\*)[ \t]*"
+                    r"Contre-lecture[ \t]+(\d+)|Contre-lecture[ \t]+(\d+)(?=\**[ \t]*[:\u2014\u2013-]))", re.M)
 AUTEUR = re.compile(r"(?:écrite?s? par|rédigée?s? par|auteur|autrice)\W{0,3}(?:\w+\W+){0,2}$", re.I)
 LIGNE_SHA = re.compile(r"^([0-9a-f]{64}) [ *](.+)$")
 
@@ -313,7 +321,10 @@ class Index:
 
     def historique(self, rel: str, h: str, revisions=()) -> str | None:
         """Commit d'une version passée de `rel` dont l'empreinte vaut `h`, ou None. Jamais pour un chemin gardé."""
-        if est_garde(rel):
+        if est_garde(rel) or (self.racine / rel).is_dir():
+            return None
+        rel_depot = posixpath.normpath(os.path.relpath(self.racine / rel, self.depot)).replace(os.sep, "/")
+        if rel_depot.startswith("../") or est_garde(rel_depot):
             return None
         objets: list[tuple[str, str]] = []
         for rev in revisions:
@@ -329,7 +340,12 @@ class Index:
                 if ligne.startswith("C "):
                     commit = ligne[2:].strip()
                 elif ligne.startswith(":") and commit:
-                    champs = ligne.split()
+                    champs, _, chemin_ligne = ligne.partition("\t")
+                    champs = champs.split()
+                    chemin_ligne = chemin_ligne.strip()
+                    # N1 : le chemin cité exact seulement, jamais un fichier sous un dossier ni un chemin gardé
+                    if chemin_ligne != rel_depot or est_garde(chemin_ligne):
+                        continue
                     if len(champs) >= 4 and set(champs[3]) != {"0"}:
                         objets.append((commit, champs[3]))
         vus = set()
@@ -340,20 +356,27 @@ class Index:
                 oids.append((c, o))
         if not oids:
             return None
-        lot = self._git("cat-file", "--batch", entree="".join(o + "\n" for _, o in oids).encode())
+        # seuls les objets de type « blob » (fichiers) sont lus ; un arbre ou un objet absent n'est jamais demandé
+        types = self._git("cat-file", "--batch-check", entree="".join(o + "\n" for _, o in oids).encode())
+        if not types:
+            return None
+        blobs = [(c, o) for (c, o), t in zip(oids, types.decode().splitlines()) if t.split()[1:2] == ["blob"]]
+        if not blobs:
+            return None
+        lot = self._git("cat-file", "--batch", entree="".join(o + "\n" for _, o in blobs).encode())
         if not lot:
             return None
         pos = 0
-        for c, o in oids:
+        for c, o in blobs:
             fin = lot.index(b"\n", pos)
             tete = lot[pos:fin].split()
             pos = fin + 1
-            if len(tete) < 3 or tete[1] != b"blob":
+            if len(tete) < 3:                                      # « <oid> missing » : pas de contenu
                 continue
             taille = int(tete[2])
             contenu = lot[pos:pos + taille]
             pos += taille + 1
-            if hashlib.sha256(contenu).hexdigest() == h:
+            if tete[1] == b"blob" and hashlib.sha256(contenu).hexdigest() == h:
                 return c
         return None
 
@@ -476,18 +499,33 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
         ln = _ligne(texte, pos)
         if h == EMPREINTE_VIDE:
             avert.append(f"(a) empreinte du fichier vide, ligne {ln}")
+        if chem is not None:
+            rel, cible = _normaliser(racine, chem)
+            if rel is None:
+                sortie.append(f"(a) empreinte appariée à un chemin qui sort de la racine, ligne {ln} : {chem}")
+                continue
+            if os.path.isdir(cible):                                # N1 : jamais d'appariement à un dossier
+                avert.append(f"(a) empreinte écrite à côté d'un dossier ({rel}) : non appariée, ligne {ln}")
+                chem = None
         if chem is None:
+            ligne_texte = _texte_de_ligne(texte, pos)
             if index.connue(h):
                 verifiees.add(h)
-            elif HORS_DEPOT.search(_texte_de_ligne(texte, pos)):
+                cites = set()
+                for m in CHEMIN.finditer(ligne_texte):              # N3 : chemins de la ligne
+                    c = _chemin_cite(m.group(1))
+                    n = _normaliser(racine, c)[0] if c else None
+                    if n and os.path.isfile(racine / n):
+                        cites.add(n)
+                designes = index.chemins(h)
+                if cites and not (designes & cites):
+                    avert.append(f"(a) empreinte non appariée qui désigne {sorted(designes)[0]}, pas un chemin cité "
+                                 f"sur sa ligne, ligne {ln}")
+            elif HORS_DEPOT.search(ligne_texte):
                 avert.append(f"(a) empreinte déclarée hors dépôt, non vérifiée, ligne {ln} : {h}")
             else:
                 sortie.append(f"(a) empreinte qui ne désigne aucun fichier du dépôt, ligne {ln} : {h}")
             non_appariees.append(ln)
-            continue
-        rel, cible = _normaliser(racine, chem)
-        if rel is None:
-            sortie.append(f"(a) empreinte appariée à un chemin qui sort de la racine, ligne {ln} : {chem}")
             continue
         if h in index.par_chemin.get(rel, set()):                  # (1) compagnon du chemin cité
             verifiees.add(h)
@@ -505,8 +543,12 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
             avert.append(f"(a) empreinte d'une version ancienne de {rel} (commit {c[:12]}), ligne {ln}")
             continue
         if est_archive(rel):
-            avert.append(f"(a) empreinte d'archive non vérifiée : {rel} n'est pas ouverte et aucun compagnon ne la "
-                         f"porte, ligne {ln}")
+            if index.par_chemin.get(rel):                           # N4 : le compagnon la contredit
+                sortie.append(f"(a) empreinte appariée à l'archive {rel} différente de celle de son compagnon, "
+                              f"ligne {ln} : {h}")
+            else:
+                avert.append(f"(a) empreinte d'archive non vérifiée : {rel} n'est pas ouverte et aucun compagnon ne "
+                             f"la porte, ligne {ln}")
             continue
         if est_garde(rel):
             sortie.append(f"(a) empreinte non vérifiable : {rel} est gardé et aucun compagnon ne la porte, ligne {ln}")
@@ -605,7 +647,7 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
     if cl:
         motif = _motif_modeles(modeles)
         entrees = list(ENTREE.finditer(cl))
-        morceaux = ([(f"contre-lecture {e.group(1)}",
+        morceaux = ([(f"contre-lecture {e.group(1) or e.group(2)}",
                       cl[e.start():(entrees[k + 1].start() if k + 1 < len(entrees) else len(cl))])
                      for k, e in enumerate(entrees)] or [("section Contre-lecture", cl)])
         for nom, corps in morceaux:

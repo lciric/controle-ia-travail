@@ -884,6 +884,7 @@ ARCHIVES = ("src/lots/a-v1.tar", "src/lots/b-v1.zip", "src/lots/c-v1.tar.gz", "s
 @pytest.mark.parametrize("chemin", ARCHIVES)
 def test_est_garde_archives(chemin):
     assert pr.est_archive(chemin) and pr.est_garde(chemin)
+    assert pr.est_archive(chemin + "/") and pr.est_garde("./" + chemin + "/.")       # forme normalisée
     assert not pr.est_garde(chemin + ".sha256") and not pr.est_archive(chemin + ".sha256")
 
 
@@ -915,3 +916,133 @@ def test_artefact_archive_sans_compagnon(faux_depot, ouvertures):
     assert avec(pb, "a", e)                                                  # jamais hachée : inconnue
     assert "src/lots/x-v1.tar.gz" in index.gardes_sautes
     assert archives_ouvertes(ouvertures) == []
+
+
+# ========== vérification des corrections : défauts N1 à N4 ==========
+
+@pytest.fixture
+def envois_git(monkeypatch):
+    """Enregistre chaque appel à git fait par l'index, avec les objets envoyés à `cat-file`."""
+    appels = []
+    vrai = pr.Index._git
+
+    def espion(self, *args, entree=None):
+        appels.append((args, (entree or b"").decode().split()))
+        return vrai(self, *args, entree=entree)
+
+    monkeypatch.setattr(pr.Index, "_git", espion)
+    return appels
+
+
+def objets_lus(appels):
+    """Objets dont git a rendu le contenu (`cat-file --batch`)."""
+    return {o for args, entree in appels if args[:2] == ("cat-file", "--batch") for o in entree}
+
+
+def objets_demandes(appels):
+    return {o for args, entree in appels if args and args[0] == "cat-file" for o in entree}
+
+
+def oid(r, rev, chemin):
+    return subprocess.run(["git", "-C", str(r), "rev-parse", f"{rev}:{chemin}"], capture_output=True, text=True,
+                          check=True).stdout.strip()
+
+
+def test_n1_dossier_cite_aucun_objet_garde_demande(faux_depot, envois_git, ouvertures):
+    r, h = faux_depot
+    ecrire(r, "src/controle_ia/data.npz", b"\x00poids")
+    h_ok = ecrire(r, "src/controle_ia/ok.py", "ok\n")
+    committer(r, "dossier")
+    gardes = {oid(r, "HEAD", "src/controle_ia/iib/poids.py"), oid(r, "HEAD", "src/controle_ia/iib/autre.py"),
+              oid(r, "HEAD", "src/controle_ia/data.npz")}
+    pb, av = controle(r, ajout(h, f"Dossier `src/controle_ia` (`{h_ok}`) et dossier `src/controle_ia/` (`{'5' * 63}a`)."))
+    assert avec(av, "a", "à côté d'un dossier (src/controle_ia)")
+    assert avec(pb, "a", "ne désigne aucun fichier") and not avec(pb, "a", h_ok)   # non appariée : connue ou non
+    assert not (objets_demandes(envois_git) & gardes)
+    assert gardes_ouverts(ouvertures) == []
+
+
+def test_n1_historique_d_un_dossier_disparu_filtre_par_chemin(faux_depot, envois_git):
+    """Un dossier effacé (absent du disque) : le journal git de ce chemin liste ses fichiers, dont un gardé ; seul le
+    chemin cité exact est retenu, rien n'est demandé à `cat-file`."""
+    r, h = faux_depot
+    ecrire(r, "src/vieux/x.npz", b"\x00poids anciens")
+    ecrire(r, "src/vieux/lisible.py", "lisible\n")
+    committer(r, "vieux")
+    garde = oid(r, "HEAD", "src/vieux/x.npz")
+    lisible = oid(r, "HEAD", "src/vieux/lisible.py")
+    git(r, "rm", "-rq", "src/vieux")
+    committer(r, "efface")
+    pb, _ = controle(r, ajout(h, f"Ancien dossier `src/vieux` (`{'6' * 63}b`)."))
+    assert avec(pb, "a", "appariée à src/vieux non vérifiée (chemin absent)")
+    assert garde not in objets_demandes(envois_git) and lisible not in objets_demandes(envois_git)
+
+
+def test_n1_historique_ne_lit_que_le_chemin_exact(faux_depot, envois_git):
+    r, h = faux_depot
+    v1 = oid(r, "HEAD", "src/paquet/autre.py")
+    (r / "src/paquet/autre.py").write_text("autre, version 2\n")
+    (r / "src/paquet/voisin.py").write_text("voisin\n")
+    committer(r)
+    voisin = oid(r, "HEAD", "src/paquet/voisin.py")
+    pb, av = controle(r, ajout(h, f"Code `src/paquet/autre.py` (`{h['autre']}`)."))
+    assert avec(av, "a", "version ancienne")
+    assert v1 in objets_lus(envois_git) and voisin not in objets_demandes(envois_git)
+
+
+def test_n1_objet_arbre_jamais_lu_et_lecture_alignee(faux_depot, envois_git):
+    """`src/x` est un dossier au premier commit, puis un fichier modifié deux fois : la révision citée désigne un arbre,
+    qui n'est jamais lu, et la version ancienne du fichier est retrouvée."""
+    r, h = faux_depot
+    ecrire(r, "src/x/dedans.py", "dedans\n")
+    committer(r, "x dossier")
+    c1 = subprocess.run(["git", "-C", str(r), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    arbre = oid(r, c1, "src/x")
+    git(r, "rm", "-rq", "src/x")
+    h_v2 = ecrire(r, "src/x", "fichier, version 2\n")
+    committer(r, "x fichier")
+    (r / "src/x").write_text("fichier, version 3\n")
+    committer(r, "x v3")
+    pb, av = controle(r, ajout(h, f"Fichier `src/x` (`{h_v2}`) depuis le commit `{c1[:10]}`."))
+    assert not avec(pb, "a") and avec(av, "a", "version ancienne de src/x")
+    assert arbre not in objets_lus(envois_git)
+
+
+def test_n1_historique_appel_direct_sur_un_dossier(faux_depot, envois_git):
+    r, h = faux_depot
+    index = pr.Index(r)
+    assert index.historique("src/controle_ia", "0" * 64) is None
+    assert index.historique("src/controle_ia/iib/poids.py", h["garde"]) is None
+    assert not [a for a, _ in envois_git if a and a[0] in ("log", "cat-file")]
+
+
+@pytest.mark.parametrize("forme", ["Contre-lecture {k} : {corps}", "Contre-lecture {k} — {corps}",
+                                   "1. **Contre-lecture {k}** : {corps}", "{k}) Contre-lecture {k} : {corps}",
+                                   "| Contre-lecture {k} | {corps} |"])
+def test_n2_formes_d_entree_v1_decoupees(faux_depot, forme):
+    r, h = faux_depot
+    corps1 = f"Fable 5.2 neuf, brouillon `{h['brouillon']}`, rapport `{h['rapport1']}`. " + REMPLISSAGE
+    corps2 = f"relue sans nommer personne, brouillon `{h['brouillon']}`, rapport `{h['rapport2']}`."
+    cl = forme.format(k=1, corps=corps1) + "\n" + forme.format(k=2, corps=corps2)
+    pb, _ = controle(r, texte_sain(h, contre_lecture=cl))
+    assert avec(pb, "e", "contre-lecture 2 sans le modèle") and not avec(pb, "e", "contre-lecture 1")
+
+
+def test_n4_archive_avec_compagnon_et_empreinte_fausse(faux_depot, ouvertures):
+    r, h = faux_depot
+    e = ecrire(r, "src/lots/avec-v1.zip", b"PK archive", compagnon=True)
+    committer(r, "archive")
+    pb, av = controle(r, ajout(h, f"Lot `src/lots/avec-v1.zip` (`{'8' * 63}c`)."))
+    assert avec(pb, "a", "l'archive src/lots/avec-v1.zip différente de celle de son compagnon")
+    assert not avec(av, "a", "archive non vérifiée")
+    pb, av = controle(r, ajout(h, f"Lot `src/lots/avec-v1.zip` (`{e}`)."))
+    assert pb == [] and av == []
+    assert archives_ouvertes(ouvertures) == []
+
+
+def test_n3_empreinte_non_appariee_d_un_autre_fichier_de_la_ligne(faux_depot):
+    r, h = faux_depot
+    pb, av = controle(r, ajout(h, f"Code `src/paquet/module.py` signature `{h['autre']}`."))
+    assert not avec(pb, "a") and avec(av, "a", "désigne src/paquet/autre.py, pas un chemin cité")
+    pb, av = controle(r, ajout(h, f"Empreinte `{h['autre']}` du fichier `src/paquet/autre.py`."))
+    assert not avec(av, "a", "pas un chemin cité")
