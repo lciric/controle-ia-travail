@@ -173,7 +173,7 @@ def test_problemes_de_base_en_tete(faux_depot):
 def test_appariement_empreinte_d_un_autre_fichier(faux_depot):
     r, h = faux_depot
     pb, _ = controle(r, texte_sain(h).replace(f"(empreinte `{h['code']}`", f"(empreinte `{h['autre']}`"))
-    assert avec(pb, "a", "appariée à src/paquet/module.py non vérifiée (ce n'est pas l'empreinte de ce fichier)")
+    assert avec(pb, "a", "appariée à src/paquet/module.py non vérifiée (ce n'est pas l'empreinte de ce fichier")
     assert avec(pb, "a", "elle désigne src/paquet/autre.py")
 
 
@@ -247,7 +247,7 @@ def test_appariement_historique_plafonne_et_commit_cite(faux_depot, monkeypatch)
     committer(r)
     monkeypatch.setattr(pr, "PLAFOND_HISTORIQUE", 0)
     pb, _ = controle(r, ajout(h, f"Code `src/paquet/autre.py` (`{h['autre']}`)."))
-    assert avec(pb, "a", "non vérifiée (ce n'est pas l'empreinte de ce fichier)")
+    assert avec(pb, "a", "non vérifiée (ce n'est pas l'empreinte de ce fichier")
     pb, av = controle(r, ajout(h, f"Code `src/paquet/autre.py` (`{h['autre']}`) au commit `{premier[:10]}`."))
     assert not avec(pb, "a") and avec(av, "a", f"commit {premier[:12]}")
 

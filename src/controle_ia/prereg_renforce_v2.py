@@ -501,7 +501,7 @@ def verifier_renforce(chemin: str | Path, racine: str | Path = ".", mots_min: in
         elif index.refus(cible):
             motif = f"chemin non ouvrable ({index.refus(cible)})"
         else:
-            motif = "ce n'est pas l'empreinte de ce fichier"
+            motif = f"ce n'est pas l'empreinte de ce fichier, ni de ses {PLAFOND_HISTORIQUE} dernières versions"
         sortie.append(f"(a) empreinte appariée à {rel} non vérifiée ({motif}), ligne {ln} : {h}"
                       + (f" ; elle désigne {ailleurs[0]}" if ailleurs else ""))
     if non_appariees:
